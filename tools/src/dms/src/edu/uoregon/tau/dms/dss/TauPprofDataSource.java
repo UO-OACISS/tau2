@@ -52,13 +52,13 @@ public class TauPprofDataSource extends DataSource {
         FunctionProfile functionProfile = null;
         UserEventProfile userEventProfile = null;
 
-        Node node = null;
-        Context context = null;
         edu.uoregon.tau.dms.dss.Thread thread = null;
 
         meanData = new Thread(-1, -1, -1, 1);
-        meanData.initializeFunctionList(0);
         FunctionProfile meanProfile = null;
+        
+        totalData = new Thread(-2, -2, -2, 1);
+        FunctionProfile totalProfile = null;
 
         int nodeID = -1;
         int contextID = -1;
@@ -113,30 +113,26 @@ public class TauPprofDataSource extends DataSource {
             //Set the metric name.
             String metricName = getMetricName(inputString);
 
-            //Need to call increaseVectorStorage() on all objects that
-            // require it.
-            this.getTrialData().increaseVectorStorage();
             //Only need to call addDefaultToVectors() if not the first run.
-            if (!(this.firstMetric())) {
+            if (!(this.getFirstMetric())) {
 
-                for (Iterator i1 = this.getTrialData().getFunctions(); i1.hasNext();) {
+                for (Iterator i1 = this.getFunctions(); i1.hasNext();) {
                     Function tmpFunc = (Function) i1.next();
                     tmpFunc.incrementStorage();
                 }
 
                 this.meanData.incrementStorage();
 
-                for (Enumeration e3 = this.getNCT().getNodes().elements(); e3.hasMoreElements();) {
-                    node = (Node) e3.nextElement();
-                    for (Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements();) {
-                        context = (Context) e4.nextElement();
-                        for (Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements();) {
-                            thread = (edu.uoregon.tau.dms.dss.Thread) e5.nextElement();
+                for (Iterator it = this.getNodes(); it.hasNext();) {
+                    Node node = (Node) it.next();
+                    for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                        Context context = (Context) it2.next();
+                        for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                            thread = (Thread) it3.next();
                             thread.incrementStorage();
-                            for (Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements();) {
+                            for (Enumeration e6 = thread.getFunctionProfiles().elements(); e6.hasMoreElements();) {
                                 FunctionProfile ref = (FunctionProfile) e6.nextElement();
-                                //Only want to add an element if this
-                                // mapping existed on this thread.
+                                //Only want to add an element if this function existed on this thread.
                                 //Check for this.
                                 if (ref != null)
                                     ref.incrementStorage();
@@ -207,21 +203,29 @@ public class TauPprofDataSource extends DataSource {
                 //Common things to grab
                 if ((lineType != 6) && (lineType != -1)) {
                     this.getFunctionDataLine1(inputString);
-                    function = this.getTrialData().addFunction(functionDataLine1.s0, 1);
+                    function = this.addFunction(functionDataLine1.s0, 1);
 
                     // get/create the FunctionProfile for mean
                     meanProfile = meanData.getFunctionProfile(function);
                     if (meanProfile == null) {
                         meanProfile = new FunctionProfile(function, 1);
-                        meanData.addFunctionProfile(meanProfile, function.getID());
+                        meanData.addFunctionProfile(meanProfile);
                     }
                     function.setMeanProfile(meanProfile);
+
+                    // get/create the FunctionProfile for total
+                    totalProfile = totalData.getFunctionProfile(function);
+                    if (totalProfile == null) {
+                        totalProfile = new FunctionProfile(function, 1);
+                        totalData.addFunctionProfile(totalProfile);
+                    }
+                    function.setTotalProfile(totalProfile);
 
                 }
 
                 switch (lineType) {
                 case 0:
-                    if (this.firstMetric()) {
+                    if (this.getFirstMetric()) {
                         //Grab the group names.
                         groupNamesString = getGroupNames(inputString);
                         if (groupNamesString != null) {
@@ -229,45 +233,53 @@ public class TauPprofDataSource extends DataSource {
                             while (st.hasMoreTokens()) {
                                 String tmpString = st.nextToken();
                                 if (tmpString != null) {
-                                    Group group = this.getTrialData().addGroup(tmpString);
+                                    Group group = this.addGroup(tmpString);
                                     function.addGroup(group);
                                 }
                             }
                         }
                     }
 
-                    function.setTotalExclusive(metric, functionDataLine1.d0);
-                    function.setTotalExclusivePercent(metric, functionDataLine1.d1);
+                    
+                    totalProfile.setExclusive(metric, functionDataLine1.d0);
+                    totalProfile.setExclusivePercent(metric, functionDataLine1.d1);
+                    
                     break;
                 case 1:
-                    function.setTotalInclusive(metric, functionDataLine1.d0);
-                    function.setTotalInclusivePercent(metric, functionDataLine1.d1);
+
+                    totalProfile.setInclusive(metric, functionDataLine1.d0);
+                    totalProfile.setInclusivePercent(metric, functionDataLine1.d1);
+
+                    
+
+                    //Set number of calls/subroutines/inclusivePerCall.
+                    inputString = br.readLine();
+                    bytesRead += inputString.length();
+
+                    this.getFunctionDataLine2(inputString);
+
+                    //Set the values.
+
+                    totalProfile.setNumCalls(functionDataLine2.d0);
+                    totalProfile.setNumSubr(functionDataLine2.d1);
+                    totalProfile.setInclusivePerCall(metric, functionDataLine2.d2);
+
+                    
                     break;
                 case 2:
                     //Now set the values correctly.
-                    if ((this.getTrialData().getMaxMeanExclusiveValue(metric)) < functionDataLine1.d0) {
-                        this.getTrialData().setMaxMeanExclusiveValue(metric, functionDataLine1.d0);
-                    }
-                    if ((this.getTrialData().getMaxMeanExclusivePercentValue(metric)) < functionDataLine1.d1) {
-                        this.getTrialData().setMaxMeanExclusivePercentValue(metric, functionDataLine1.d1);
-                    }
+                
 
                     meanProfile.setExclusive(metric, functionDataLine1.d0);
                     meanProfile.setExclusivePercent(metric, functionDataLine1.d1);
                     break;
                 case 3:
                     //Now set the values correctly.
-                    if ((this.getTrialData().getMaxMeanInclusiveValue(metric)) < functionDataLine1.d0) {
-                        this.getTrialData().setMaxMeanInclusiveValue(metric, functionDataLine1.d0);
-                    }
-                    if ((this.getTrialData().getMaxMeanInclusivePercentValue(metric)) < functionDataLine1.d1) {
-                        this.getTrialData().setMaxMeanInclusivePercentValue(metric, functionDataLine1.d1);
-                    }
 
                     meanProfile.setInclusive(metric, functionDataLine1.d0);
                     meanProfile.setInclusivePercent(metric, functionDataLine1.d1);
 
-                    //Set number of calls/subroutines/usersec per call.
+                    //Set number of calls/subroutines/inclusivePerCall.
                     inputString = br.readLine();
                     bytesRead += inputString.length();
 
@@ -278,17 +290,7 @@ public class TauPprofDataSource extends DataSource {
                     meanProfile.setNumSubr(functionDataLine2.d1);
                     meanProfile.setInclusivePerCall(metric, functionDataLine2.d2);
 
-                    //Set the max values.
-                    if ((this.getTrialData().getMaxMeanNumberOfCalls()) < functionDataLine2.d0)
-                        this.getTrialData().setMaxMeanNumberOfCalls(functionDataLine2.d0);
 
-                    if ((this.getTrialData().getMaxMeanNumberOfSubRoutines()) < functionDataLine2.d1)
-                        this.getTrialData().setMaxMeanNumberOfSubRoutines(functionDataLine2.d1);
-
-                    if ((this.getTrialData().getMaxMeanInclusivePerCall(metric)) < functionDataLine2.d2)
-                        this.getTrialData().setMaxMeanInclusivePerCall(metric, functionDataLine2.d2);
-
-                    function.setMeanValuesSet(true);
                     break;
                 case 4:
                     if ((function.getMaxExclusive(metric)) < functionDataLine1.d0)
@@ -302,23 +304,18 @@ public class TauPprofDataSource extends DataSource {
                     contextID = array[1];
                     threadID = array[2];
 
-                    node = this.getNCT().getNode(nodeID);
-                    if (node == null)
-                        node = this.getNCT().addNode(nodeID);
-                    context = node.getContext(contextID);
-                    if (context == null)
-                        context = node.addContext(contextID);
+                    Node node = this.addNode(nodeID);
+                    Context context = node.addContext(contextID);
                     thread = context.getThread(threadID);
                     if (thread == null) {
                         thread = context.addThread(threadID);
-                        thread.initializeFunctionList(this.getTrialData().getNumFunctions());
                     }
 
                     functionProfile = thread.getFunctionProfile(function);
 
                     if (functionProfile == null) {
                         functionProfile = new FunctionProfile(function);
-                        thread.addFunctionProfile(functionProfile, function.getID());
+                        thread.addFunctionProfile(functionProfile);
                     }
                     functionProfile.setExclusive(metric, functionDataLine1.d0);
                     functionProfile.setExclusivePercent(metric, functionDataLine1.d1);
@@ -335,7 +332,7 @@ public class TauPprofDataSource extends DataSource {
                     if ((function.getMaxInclusivePercent(metric)) < functionDataLine1.d1)
                         function.setMaxInclusivePercent(metric, functionDataLine1.d1);
 
-                    thread = this.getNCT().getThread(nodeID, contextID, threadID);
+                    thread = this.getThread(nodeID, contextID, threadID);
                     functionProfile = thread.getFunctionProfile(function);
 
                     functionProfile.setInclusive(metric, functionDataLine1.d0);
@@ -376,7 +373,7 @@ public class TauPprofDataSource extends DataSource {
                     // check.
                     //Assuming is that user events do not change for each
                     // counter value.
-                    if (this.firstMetric()) {
+                    if (this.getFirstMetric()) {
                         //The first line will be the user event heading ...
                         // skip it.
                         br.readLine();
@@ -388,8 +385,6 @@ public class TauPprofDataSource extends DataSource {
                         int numberOfLines = getNumberOfUserEvents(inputString);
                         for (int j = 0; j < numberOfLines; j++) {
                             //Initialize the user list for this thread.
-                            if (j == 0)
-                                (this.getNCT().getThread(nodeID, contextID, threadID)).initializeUsereventList(this.getTrialData().getNumUserEvents());
 
                             s1 = br.readLine();
                             bytesRead += s1.length();
@@ -400,12 +395,12 @@ public class TauPprofDataSource extends DataSource {
                             // System.out.println("noc:"+usereventDataLine.i0+"min:"+usereventDataLine.d1+"max:"+usereventDataLine.d0+"mean:"+usereventDataLine.d2);
 
                             if (usereventDataLine.i0 != 0) {
-                                userEvent = this.getTrialData().addUserEvent(usereventDataLine.s0);
-                                userEventProfile = thread.getUserEvent(userEvent.getID());
+                                userEvent = this.addUserEvent(usereventDataLine.s0);
+                                userEventProfile = thread.getUserEventProfile(userEvent);
 
                                 if (userEventProfile == null) {
                                     userEventProfile = new UserEventProfile(userEvent);
-                                    thread.addUserEvent(userEventProfile, userEvent.getID());
+                                    thread.addUserEvent(userEventProfile);
                                 }
 
                                 userEventProfile.setUserEventNumberValue(usereventDataLine.i0);
@@ -418,7 +413,7 @@ public class TauPprofDataSource extends DataSource {
 
                             }
                         }
-                        //Now set the userevents flag.
+                        //Now set the userEvents flag.
                         setUserEventsPresent(true);
                     }
                     break;
@@ -437,9 +432,9 @@ public class TauPprofDataSource extends DataSource {
             br.close();
 
             if (UtilFncs.debug) {
-                System.out.println("The total number of threads is: " + this.getNCT().getTotalNumberOfThreads());
-                System.out.println("The number of mappings is: " + this.getTrialData().getNumFunctions());
-                System.out.println("The number of user events is: " + this.getTrialData().getNumUserEvents());
+                System.out.println("The total number of threads is: " + this.getTotalNumberOfThreads());
+                System.out.println("The number of mappings is: " + this.getNumFunctions());
+                System.out.println("The number of user events is: " + this.getNumUserEvents());
             }
 
             //Set firstRead to false.
@@ -452,9 +447,9 @@ public class TauPprofDataSource extends DataSource {
         }
 
         //System.out.println("Processing callpath data ...");
-        if (CallPathUtilFuncs.isAvailable(getTrialData().getFunctions())) {
+        if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
             setCallPathDataPresent(true);
-            CallPathUtilFuncs.buildRelations(getTrialData());
+            CallPathUtilFuncs.buildRelations(this);
         } else {
             //System.out.println("No callpath data found.");
         }
@@ -694,7 +689,7 @@ public class TauPprofDataSource extends DataSource {
         String str = getMappingNameTokenizer.nextToken();
 
         //Just do the group check once.
-        if (!(this.groupCheck())) {
+        if (!(this.getGroupCheck())) {
             //If present, "GROUP=" will be in this token.
             int tmpInt = str.indexOf("GROUP=");
             if (tmpInt > 0) {
@@ -703,7 +698,7 @@ public class TauPprofDataSource extends DataSource {
             this.setGroupCheck(true);
         }
 
-        if (groupNamesPresent()) {
+        if (getGroupNamesPresent()) {
             str = getMappingNameTokenizer.nextToken();
             return str;
         }
@@ -740,6 +735,26 @@ public class TauPprofDataSource extends DataSource {
 
     }
 
+    
+    protected boolean firstMetric;
+
+    protected void setFirstMetric(boolean firstMetric) {
+        this.firstMetric = firstMetric;
+    }
+
+    protected boolean getFirstMetric() {
+        return firstMetric;
+    }
+
+    protected boolean groupCheck = false;
+
+    protected void setGroupCheck(boolean groupCheck) {
+        this.groupCheck = groupCheck;
+    }
+    protected boolean getGroupCheck() {
+        return groupCheck;
+    }
+    
     //Instance data.
     private LineData functionDataLine1 = new LineData();
     private LineData functionDataLine2 = new LineData();

@@ -5,12 +5,23 @@ import java.awt.*;
 import java.io.*;
 import java.text.*;
 
+/**
+ * Function
+ * This class represents a "function".  A function is defined over all threads
+ * in the profile, so per-thread data is not stored here.
+ *  
+ * <P>CVS $Id: Function.java,v 1.3 2005/01/06 22:46:56 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.3 $
+ * @see		FunctionProfile
+ */
+
 public class Function implements Serializable, Comparable {
 
     public Function(String name, int id, int numMetrics) {
         this.name = name;
         this.id = id;
-        doubleList = new double[numMetrics * 15];
+        doubleList = new double[numMetrics * STORAGE_SIZE];
     }
 
     public int getID() {
@@ -24,17 +35,15 @@ public class Function implements Serializable, Comparable {
     public String toString() {
         return name;
     }
-    
-    //######
-    //Storage control.
-    //######
+
+    // Storage control
     public int getStorageSize() {
-        return doubleList.length / 15;
+        return doubleList.length / STORAGE_SIZE;
     }
 
     public void incrementStorage() {
         int currentLength = doubleList.length;
-        double[] newArray = new double[currentLength + 15];
+        double[] newArray = new double[currentLength + STORAGE_SIZE];
         for (int i = 0; i < currentLength; i++) {
             newArray[i] = doubleList[i];
         }
@@ -43,20 +52,15 @@ public class Function implements Serializable, Comparable {
 
     public void incrementStorage(int increase) {
         int currentLength = doubleList.length;
-        double[] newArray = new double[currentLength + (increase * 15)];
+        double[] newArray = new double[currentLength + (increase * STORAGE_SIZE)];
         for (int i = 0; i < currentLength; i++) {
             newArray[i] = doubleList[i];
         }
         doubleList = newArray;
     }
-
-    //######
     //End - Storage control.
-    //######
 
-    //######
-    //Group section.
-    //######
+    // Group section
     public void addGroup(Group group) {
         //Don't add group if already a member.
         if (this.isGroupMember(group))
@@ -73,123 +77,106 @@ public class Function implements Serializable, Comparable {
         return groups.contains(group);
     }
 
-
     public Vector getGroups() {
         return groups;
     }
 
-    public void setGroupsSet(boolean groupsSet) {
-        this.groupsSet = groupsSet;
-    }
-
-    public boolean groupsSet() {
-        return groupsSet;
-    }
 
 
-    //######
     //Call path section.
-    //######
     public void addParent(Function parent, Function callPath) {
-        // example:
-        // fullpath = a => b => c => d
-        // parent = c
-        // we are d
-
-        if (parents == null)
-            parents = new HashSet();
-
-        parents.add(parent);
-
-        if (parentCallPathSets == null)
-            parentCallPathSets = new HashMap();
-
-        // we maintain a set of callpaths for each parent, retrieve the set for
-        // this parent
-        Set callPathSet = (Set) parentCallPathSets.get(parent);
-
-        if (callPathSet == null) {
-            callPathSet = new HashSet();
-            parentCallPathSets.put(parent, callPathSet);
-        }
-
-        callPathSet.add(callPath);
+        meanProfile.addParent(parent, callPath);
+//        // example:
+//        // fullpath = a => b => c => d
+//        // parent = c
+//        // we are d
+//
+//        if (parents == null)
+//            parents = new HashSet();
+//
+//        parents.add(parent);
+//
+//        if (parentCallPathSets == null)
+//            parentCallPathSets = new HashMap();
+//
+//        // we maintain a set of callpaths for each parent, retrieve the set for this parent
+//        Set callPathSet = (Set) parentCallPathSets.get(parent);
+//
+//        if (callPathSet == null) {
+//            callPathSet = new HashSet();
+//            parentCallPathSets.put(parent, callPathSet);
+//        }
+//
+//        callPathSet.add(callPath);
     }
 
     public Iterator getParents() {
-        if (parents == null)
-            return new DssIterator();
-        return parents.iterator();
+        return meanProfile.getParents();
+//        if (parents == null)
+//            return new DssIterator();
+//        return parents.iterator();
     }
 
     public Iterator getChildren() {
-        if (children == null)
-            return new DssIterator();
-        return children.iterator();
+        return meanProfile.getChildren();
+//        if (children == null)
+//            return new DssIterator();
+//        return children.iterator();
     }
 
     public Iterator getParentCallPathIterator(Function parent) {
-        if (parentCallPathSets != null)
-            if (parentCallPathSets.get(parent) != null)
-                return ((Set) parentCallPathSets.get(parent)).iterator();
-        return new DssIterator();
+        return meanProfile.getParentCallPathIterator(parent);
+//        if (parentCallPathSets != null)
+//            if (parentCallPathSets.get(parent) != null)
+//                return ((Set) parentCallPathSets.get(parent)).iterator();
+//        return new DssIterator();
     }
 
     public Iterator getChildCallPathIterator(Function child) {
-        if (childCallPathSets == null)
-            return new DssIterator();
-        return ((Set) childCallPathSets.get(child)).iterator();
+        return meanProfile.getChildCallPathIterator(child);
+//        if (childCallPathSets == null)
+//            return new DssIterator();
+//        return ((Set) childCallPathSets.get(child)).iterator();
     }
 
     public void addChild(Function child, Function callPath) {
-
-        // example:
-        // fullpath = a => b => c => d
-        // child = d
-        // we are c
-
-        
-                    
-        if (children == null)
-            children = new TreeSet();
-
-        children.add(child);
-
-        if (childCallPathSets == null)
-            childCallPathSets = new TreeMap();
-
-        // we maintain a set of callpaths for each child, retrieve the set for
-        // this child
-        Set callPathSet = (Set) childCallPathSets.get(child);
-
-        if (callPathSet == null) {
-            callPathSet = new TreeSet();
-            childCallPathSets.put(child, callPathSet);
-        }
-
-        callPathSet.add(callPath);
-
-    
-
+        meanProfile.addChild(child, callPath);
+//        
+//        // example:
+//        // fullpath = a => b => c => d
+//        // child = d
+//        // we are c
+//
+//        if (children == null)
+//            children = new TreeSet();
+//
+//        children.add(child);
+//
+//        if (childCallPathSets == null)
+//            childCallPathSets = new TreeMap();
+//
+//        // we maintain a set of callpaths for each child, retrieve the set for this child
+//        Set callPathSet = (Set) childCallPathSets.get(child);
+//
+//        if (callPathSet == null) {
+//            callPathSet = new TreeSet();
+//            childCallPathSets.put(child, callPathSet);
+//        }
+//
+//        callPathSet.add(callPath);
     }
 
-   
-    
-    public void setCallPathObject(boolean b) {
-        callPathObject = b;
+    public void setCallPathFunction(boolean b) {
+        callPathFunction = b;
     }
 
-    public boolean isCallPathObject() {
-        return callPathObject;
+    public boolean isCallPathFunction() {
+        return callPathFunction;
     }
 
-    //######
     //End - Call path section.
-    //######
 
-    //######
     //Begin - Color section.
-    //######
     public void setColor(Color color) {
         this.color = color;
     }
@@ -212,14 +199,9 @@ public class Function implements Serializable, Comparable {
     public void setSpecificColor(Color specificColor) {
         this.specificColor = specificColor;
     }
-
-    //######
     //End - Color section.
-    //######
 
-    //######
     //Max values section.
-    //######
     public void setMaxInclusive(int metric, double d) {
         this.insertDouble(metric, 0, d);
     }
@@ -276,35 +258,17 @@ public class Function implements Serializable, Comparable {
         return this.getDouble(metric, 4);
     }
 
-    //######
     //End - Max values section.
-    //######
 
-    //######
     //Mean section.
-    //######
-   
     public void setMeanProfile(FunctionProfile fp) {
         this.meanProfile = fp;
     }
-    
+
     public FunctionProfile getMeanProfile() {
         return meanProfile;
     }
-    
-////    public void setMeanInclusiveValue(int metric, double d) {
-//       // meanProfile.setInclusiveValue(metric, d);
-// //   }
-//    
-//    public void setMeanExclusiveValue(int metric, double d) {
-//    }
-//
-//    public void setMeanInclusivePercentValue(int metric, double d) {}
-//    public void setMeanExclusivePercentValue(int metric, double d) {}
-//    public void setMeanNumberOfCalls(double d) {}
-//    public void setMeanNumberOfSubRoutines(double d) {}
-//    public void setMeanUserSecPerCall(int metric, double d) {}
-//    
+
     public double getMeanInclusive(int metric) {
         return meanProfile.getInclusive(metric);
     }
@@ -316,7 +280,7 @@ public class Function implements Serializable, Comparable {
     public double getMeanInclusivePercent(int metric) {
         return meanProfile.getInclusivePercent(metric);
     }
-  
+
     public double getMeanExclusivePercent(int metric) {
         return meanProfile.getExclusivePercent(metric);
     }
@@ -332,149 +296,70 @@ public class Function implements Serializable, Comparable {
     public double getMeanInclusivePerCall(int metric) {
         return meanProfile.getInclusivePerCall(metric);
     }
-//
-//    
-    public void setMeanValuesSet(boolean meanValuesSet) {
-        this.meanValuesSet = meanValuesSet;
-    }
 
-    public boolean getMeanValuesSet() {
-        return meanValuesSet;
-    }
-
-    //######
     //End - Mean section.
-    //######
 
-    //######
     //Total section.
-    //######
-    public void setTotalInclusive(int metric, double d) {
-        this.insertDouble(metric, 10, d);
-    }
-
     public double getTotalInclusive(int metric) {
-        return this.getDouble(metric, 10);
-    }
-
-    public void setTotalExclusive(int metric, double d) {
-        this.insertDouble(metric, 11, d);
+        return totalProfile.getInclusive(metric);
     }
 
     public double getTotalExclusive(int metric) {
-        return this.getDouble(metric, 11);
-    }
-
-    public void setTotalInclusivePercent(int metric, double d) {
-        this.insertDouble(metric, 12, d);
+        return totalProfile.getExclusive(metric);
     }
 
     public double getTotalInclusivePercent(int metric) {
-        return this.getDouble(metric, 12);
-    }
-
-    public void setTotalExclusivePercent(int metric, double d) {
-        this.insertDouble(metric, 13, d);
+        return totalProfile.getInclusivePercent(metric);
     }
 
     public double getTotalExclusivePercent(int metric) {
-        return this.getDouble(metric, 13);
+        return totalProfile.getExclusivePercent(metric);
     }
-
-    public void setTotalNumCalls(double i) {
-        totalNumCalls = i;
-    }
-
 
     public double getTotalNumCalls() {
-        return totalNumCalls;
+        return totalProfile.getNumCalls();
     }
-
-    public void setTotalNumSubr(double i) {
-        totalNumSubr = i;
-    }
-
 
     public double getTotalNumSubr() {
-        return totalNumSubr;
-    }
-
-    public void setTotalInclusivePerCall(int metric, double d) {
-        this.insertDouble(metric, 14, d);
+        return totalProfile.getNumSubr();
     }
 
     public double getTotalInclusivePerCall(int metric) {
-        return this.getDouble(metric, 14);
+        return totalProfile.getInclusivePerCall(metric);
     }
 
-    //######
-    //End - Total section.
-    //######
+    public void setTotalProfile(FunctionProfile fp) {
+        this.totalProfile = fp;
+    }
 
-    //####################################
-    //Interface code.
-    //####################################
+    public FunctionProfile getTotalProfile() {
+        return totalProfile;
+    }
 
-    //######
-    //Comparable section.
-    //######
     public int compareTo(Object inObject) {
         Integer thisInt = new Integer(this.id);
-        return thisInt.compareTo(new Integer(((Function)inObject).getID()));
-        
+        return thisInt.compareTo(new Integer(((Function) inObject).getID()));
         //return name.compareTo(((Function)inObject).getName());
     }
 
-    //######
-    //End - Comparable section.
-    //######
-
-    //####################################
-    //End - Interface code.
-    //####################################
-
-    //######
     //Private section.
-    //######
     private void insertDouble(int metric, int offset, double d) {
-            doubleList[(metric * 15) + offset] = d;
+        doubleList[(metric * STORAGE_SIZE) + offset] = d;
     }
 
     private double getDouble(int metric, int offset) {
-            return doubleList[(metric * 15) + offset];
+        return doubleList[(metric * STORAGE_SIZE) + offset];
     }
 
-    private int insertSpaces(char[] inArray, int position, int number) {
-        for (int i = 0; i < number; i++) {
-            inArray[position] = '\u0020';
-            position++;
-        }
-        return position;
-    }
+    private final static int STORAGE_SIZE = 5;
 
-    //######
-    //End - Private section.
-    //######
-
-    //####################################
-    //Instance data.
+    // instance data
     private String name = null;
     private int id = -1;
 
     private Vector groups = null;
 
-    //    private Vector parents = null;
-    //    private Vector children = null;
-    //    private Vector callPathIDSParents = null;
-    //    private Vector callPathIDSChildren = null;
-
-    private Set children;
-    private Set parents;
- 
-    
-    private Map childCallPathSets;
-    private Map parentCallPathSets;
-    private boolean callPathObject = false;
+    private boolean callPathFunction = false;
 
     //Color Settings.
     private boolean colorFlag = false;
@@ -484,21 +369,9 @@ public class Function implements Serializable, Comparable {
     private double[] doubleList = null;
     private double maxNumCalls = 0;
     private double maxNumSubr = 0;
-    private double totalNumCalls = 0;
-    private double totalNumSubr = 0;
 
-    private boolean meanValuesSet = false;
-    private boolean groupsSet = false;
-
-    //Instance values used to calculate the meanProfile values for derived values
-    // (such as flops)
-    private int counter = 0;
-    private double totalExclusiveValue = 0;
-    private double totalInclusiveValue = 0;
 
     private FunctionProfile meanProfile;
-    
-    //####################################
-    //End - Instance data.
-    //####################################
+    private FunctionProfile totalProfile;
+
 }

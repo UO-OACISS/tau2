@@ -109,5 +109,4 @@ public class UserEvent implements Serializable, Comparable {
     private double maxUserEventSumSquared = 0;
     private double maxUserEventStdDev = 0;
 
-
 }

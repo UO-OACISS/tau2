@@ -5,101 +5,99 @@ import java.text.*;
 
 public class FunctionProfile implements Comparable {
 
-    public FunctionProfile(Function func) {
-        doubleList = new double[5];
-        this.function = func;
+    public FunctionProfile(Function function) {
+        this(function, 1);
     }
 
-    public FunctionProfile(Function func, int capacity) {
-        doubleList = new double[capacity * 5];
-        this.function = func;
+    public FunctionProfile(Function function, int numMetrics) {
+        if (numMetrics < 1) {
+            System.out.println ("poopie");
+        }
+        doubleList = new double[numMetrics * METRIC_SIZE];
+        this.function = function;
     }
 
     public Function getFunction() {
         return function;
     }
 
-    // helpers
     public String getName() {
         return function.getName();
     }
 
-    public void setInclusive(int metric, double inDouble) {
-        this.insertDouble(metric, 0, inDouble);
+    public void setInclusive(int metric, double value) {
+        this.insertDouble(metric, 0, value);
     }
 
     public double getInclusive(int metric) {
         return this.getDouble(metric, 0);
     }
 
-    public void setExclusive(int metric, double inDouble) {
-        this.insertDouble(metric, 1, inDouble);
+    public void setExclusive(int metric, double value) {
+        this.insertDouble(metric, 1, value);
     }
 
     public double getExclusive(int metric) {
         return this.getDouble(metric, 1);
     }
 
-    public void setInclusivePercent(int metric, double inDouble) {
-        this.insertDouble(metric, 2, inDouble);
+    public void setInclusivePercent(int metric, double value) {
+        this.insertDouble(metric, 2, value);
     }
 
     public double getInclusivePercent(int metric) {
         return this.getDouble(metric, 2);
     }
 
-    public void setExclusivePercent(int metric, double inDouble) {
-        this.insertDouble(metric, 3, inDouble);
+    public void setExclusivePercent(int metric, double value) {
+        this.insertDouble(metric, 3, value);
     }
 
     public double getExclusivePercent(int metric) {
         return this.getDouble(metric, 3);
     }
 
-    public void setNumCalls(double inDouble) {
-        if (inDouble == 0) {
-            System.out.println("fuck");
-        }
-        numCalls = inDouble;
+    public void setNumCalls(double value) {
+        numCalls = value;
     }
 
     public double getNumCalls() {
         return numCalls;
     }
 
-    public void setNumSubr(double inDouble) {
-        numSubr = inDouble;
+    public void setNumSubr(double value) {
+        numSubr = value;
     }
 
     public double getNumSubr() {
         return numSubr;
     }
 
-    public void setInclusivePerCall(int metric, double inDouble) {
-        this.insertDouble(metric, 4, inDouble);
+    public void setInclusivePerCall(int metric, double value) {
+        this.insertDouble(metric, 4, value);
     }
 
     public double getInclusivePerCall(int metric) {
         return this.getDouble(metric, 4);
     }
 
-    public void addCall(double exclusive, double inclusive) {
-        if (calls == null)
-            calls = new Vector();
-        double[] arr = new double[2];
-        arr[0] = exclusive;
-        arr[1] = inclusive;
-        calls.add(arr);
-    }
+    // unused profile calls
+    //    public void addCall(double exclusive, double inclusive) {
+    //        if (calls == null)
+    //            calls = new Vector();
+    //        double[] arr = new double[2];
+    //        arr[0] = exclusive;
+    //        arr[1] = inclusive;
+    //        calls.add(arr);
+    //    }
 
     public int getStorageSize() {
-        return doubleList.length / 5;
+        return doubleList.length / METRIC_SIZE;
     }
 
     public void incrementStorage() {
         int currentLength = doubleList.length;
-        //can use a little space here ... space for speed! :-)
-        double[] newArray = new double[currentLength + 5];
+        double[] newArray = new double[currentLength + METRIC_SIZE];
 
         for (int i = 0; i < currentLength; i++) {
             newArray[i] = doubleList[i];
@@ -107,9 +105,7 @@ public class FunctionProfile implements Comparable {
         doubleList = newArray;
     }
 
-    //######
     //Call path section.
-    //######
     public void addParent(Function parent, Function callPath) {
         // example:
         // fullpath = a => b => c => d
@@ -124,8 +120,7 @@ public class FunctionProfile implements Comparable {
         if (parentCallPathSets == null)
             parentCallPathSets = new TreeMap();
 
-        // we maintain a set of callpaths for each parent, retrieve the set for
-        // this parent
+        // we maintain a set of callpaths for each parent, retrieve the set for this parent
         Set callPathSet = (Set) parentCallPathSets.get(parent);
 
         if (callPathSet == null) {
@@ -163,14 +158,12 @@ public class FunctionProfile implements Comparable {
     public void addChild(FunctionProfile child) {
         if (childProfiles == null)
             childProfiles = new TreeSet();
-
         childProfiles.add(child);
     }
 
     public void addParent(FunctionProfile parent) {
         if (parentProfiles == null)
             parentProfiles = new TreeSet();
-
         parentProfiles.add(parent);
     }
 
@@ -200,8 +193,7 @@ public class FunctionProfile implements Comparable {
         if (childCallPathSets == null)
             childCallPathSets = new TreeMap();
 
-        // we maintain a set of callpaths for each child, retrieve the set for
-        // this child
+        // we maintain a set of callpaths for each child, retrieve the set for this child
         Set callPathSet = (Set) childCallPathSets.get(child);
 
         if (callPathSet == null) {
@@ -213,23 +205,23 @@ public class FunctionProfile implements Comparable {
     }
 
     public boolean isCallPathObject() {
-        return function.isCallPathObject();
+        return function.isCallPathFunction();
     }
 
-    //######
     //End - Call path section.
-    //######
 
-    //####################################
     //Private section.
-    //####################################
     private void insertDouble(int metric, int offset, double inDouble) {
-        int actualLocation = (metric * 5) + offset;
-        doubleList[actualLocation] = inDouble;
+        try {
+            int actualLocation = (metric * METRIC_SIZE) + offset;
+            doubleList[actualLocation] = inDouble;
+        } catch (Exception e) {
+            System.out.println("poopie");
+        }
     }
 
     private double getDouble(int metric, int offset) {
-        int actualLocation = (metric * 5) + offset;
+        int actualLocation = (metric * METRIC_SIZE) + offset;
         return doubleList[actualLocation];
     }
 
@@ -237,12 +229,13 @@ public class FunctionProfile implements Comparable {
         return this.function.compareTo(((FunctionProfile) inObject).function);
     }
 
-    private Function function = null;
+    private Function function;
     private double[] doubleList;
-    private double numCalls = 0;
-    private double numSubr = 0;
+    private double numCalls;
+    private double numSubr;
 
-    private Vector calls = null;
+    // unused profile calls
+    //private Vector calls;
 
     private Set children;
     private Set parents;
@@ -252,5 +245,6 @@ public class FunctionProfile implements Comparable {
 
     private Map childCallPathSets;
     private Map parentCallPathSets;
-    private boolean callPathObject = false;
+
+    private static final int METRIC_SIZE = 5;
 }

@@ -148,8 +148,6 @@ public class HPMToolkitDataSource extends DataSource {
                 //Close the file.
                 br.close();
 
-                //Set firstRead to false.
-                this.setFirstMetric(false);
 
                 time = (System.currentTimeMillis()) - time;
                 //System.out.println("Time to process file (in milliseconds): " + time);
@@ -166,9 +164,9 @@ public class HPMToolkitDataSource extends DataSource {
     private void initializeThread() {
         // create the mapping, if necessary
         if (header2.s1 == null)
-            function = this.getTrialData().addFunction(header1.s0 + ", " + header2.s0, 1);
+            function = this.addFunction(header1.s0 + ", " + header2.s0, 1);
         else
-            function = this.getTrialData().addFunction(header1.s0 + ", " + header2.s0 + " lines " + header2.s1,
+            function = this.addFunction(header1.s0 + ", " + header2.s0 + " lines " + header2.s1,
                     1);
 
         // System.out.println("**** " + header1.s0 + ", " + header2.s0 + " lines
@@ -180,24 +178,21 @@ public class HPMToolkitDataSource extends DataSource {
         threadID = (threadID == -1) ? 0 : threadID;
 
         //Get the node,context,thread.
-        node = this.getNCT().getNode(nodeID);
+        node = this.getNode(nodeID);
         if (node == null)
-            node = this.getNCT().addNode(nodeID);
+            node = this.addNode(nodeID);
         context = node.getContext(contextID);
         if (context == null)
             context = node.addContext(contextID);
         thread = context.getThread(threadID);
         if (thread == null) {
             thread = context.addThread(threadID);
-            thread.setDebug(this.debug());
-            thread.initializeFunctionList(this.getTrialData().getNumFunctions());
-            thread.initializeUsereventList(this.getTrialData().getNumUserEvents());
         }
 
         functionProfile = thread.getFunctionProfile(function);
         if (functionProfile == null) {
             functionProfile = new FunctionProfile(function);
-            thread.addFunctionProfile(functionProfile, function.getID());
+            thread.addFunctionProfile(functionProfile);
         }
 
         initialized = true;
@@ -358,15 +353,8 @@ public class HPMToolkitDataSource extends DataSource {
         metric = newMetric.getID();
         newMetricCount = this.getNumberOfMetrics();
 
-        // System.out.println("" + metricCount + ", " + newMetricCount + ",
-        // " + (metric+1));
-        while (metricCount < newMetricCount) {
-            //Need to call increaseVectorStorage() on all objects that
-            // require it.
-            this.getTrialData().increaseVectorStorage();
-            metricCount++;
-        }
-        while (thread.getNumberOfMetrics() < newMetricCount) {
+
+        while (thread.getNumMetrics() < newMetricCount) {
             thread.incrementStorage();
         }
         while (function.getStorageSize() < newMetricCount) {
@@ -458,15 +446,7 @@ public class HPMToolkitDataSource extends DataSource {
         timeMetric = metric;
         newMetricCount = this.getNumberOfMetrics();
 
-        // System.out.println("" + metricCount + ", " + newMetricCount + ",
-        // " + (metric+1));
-        while (metricCount < newMetricCount) {
-            //Need to call increaseVectorStorage() on all objects that
-            // require it.
-            this.getTrialData().increaseVectorStorage();
-            metricCount++;
-        }
-        while (thread.getNumberOfMetrics() < newMetricCount) {
+        while (thread.getNumMetrics() < newMetricCount) {
             thread.incrementStorage();
         }
         while (function.getStorageSize() < newMetricCount) {

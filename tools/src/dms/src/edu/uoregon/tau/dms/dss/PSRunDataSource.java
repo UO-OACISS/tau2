@@ -53,14 +53,12 @@ public class PSRunDataSource extends DataSource {
             for (Enumeration e = v.elements(); e.hasMoreElements();) {
                 files = (File[]) e.nextElement();
                 for (int i = 0; i < files.length; i++) {
-                    System.out.println("Processing data file, please wait ......");
                     long time = System.currentTimeMillis();
 
                     StringTokenizer st = new StringTokenizer(files[i].getName(), ".");
 
                     if (st.countTokens() == 3) {
-                        // increment the node counter - there's a file for each
-                        // node
+                        // increment the node counter - there's a file for each node
                         nodeID++;
                     } else {
                         String prefix = st.nextToken();
@@ -93,22 +91,15 @@ public class PSRunDataSource extends DataSource {
                         processHardwareCounter(key, value);
                     }
 
-                    // generate summary statistics
-                    //Remove after testing is complete.
-                    //this.setMeanDataAllMetrics(0);
-
                     if (UtilFncs.debug) {
-                        System.out.println("The total number of threads is: "
-                                + this.getNCT().getTotalNumberOfThreads());
-                        System.out.println("The number of mappings is: "
-                                + this.getTrialData().getNumFunctions());
-                        System.out.println("The number of user events is: "
-                                + this.getTrialData().getNumUserEvents());
+                        System.out.println("The total number of threads is: " + this.getTotalNumberOfThreads());
+                        System.out.println("The number of mappings is: " + this.getNumFunctions());
+                        System.out.println("The number of user events is: " + this.getNumUserEvents());
                     }
 
                     time = (System.currentTimeMillis()) - time;
-                    System.out.println("Done processing data file!");
-                    System.out.println("Time to process file (in milliseconds): " + time);
+                    //System.out.println("Done processing data file!");
+                    //System.out.println("Time to process file (in milliseconds): " + time);
                 }
             }
             //Generate derived data.
@@ -124,7 +115,7 @@ public class PSRunDataSource extends DataSource {
 
     private void initializeThread() {
         // create the mapping, if necessary
-        function = this.getTrialData().addFunction("Entire application", 1);
+        function = this.addFunction("Entire application", 1);
 
         // make sure we start at zero for all counters
         nodeID = (nodeID == -1) ? 0 : nodeID;
@@ -132,24 +123,21 @@ public class PSRunDataSource extends DataSource {
         threadID = (threadID == -1) ? 0 : threadID;
 
         //Get the node,context,thread.
-        node = this.getNCT().getNode(nodeID);
+        node = this.getNode(nodeID);
         if (node == null)
-            node = this.getNCT().addNode(nodeID);
+            node = this.addNode(nodeID);
         context = node.getContext(contextID);
         if (context == null)
             context = node.addContext(contextID);
         thread = context.getThread(threadID);
         if (thread == null) {
             thread = context.addThread(threadID);
-            thread.setDebug(this.debug());
-            thread.initializeFunctionList(this.getTrialData().getNumFunctions());
-            thread.initializeUsereventList(this.getTrialData().getNumUserEvents());
         }
 
         functionProfile = thread.getFunctionProfile(function);
         if (functionProfile == null) {
             functionProfile = new FunctionProfile(function);
-            thread.addFunctionProfile(functionProfile, function.getID());
+            thread.addFunctionProfile(functionProfile);
         }
     }
 
@@ -157,39 +145,29 @@ public class PSRunDataSource extends DataSource {
         thread.incrementStorage();
         function.incrementStorage();
         functionProfile.incrementStorage();
-        try {
-            double eventValue = 0;
-            eventValue = Double.parseDouble(value);
+        double eventValue = 0;
+        eventValue = Double.parseDouble(value);
 
-            metric = this.getNumberOfMetrics();
-            //Set the metric name.
-            Metric newMetric = this.addMetric(key);
-            if (metric < this.getNumberOfMetrics()) {
-                //Need to call increaseVectorStorage() on all objects that
-                // require it.
-                this.getTrialData().increaseVectorStorage();
-            }
-            metric = newMetric.getID();
+        metric = this.getNumberOfMetrics();
+        //Set the metric name.
+        Metric newMetric = this.addMetric(key);
+        metric = newMetric.getID();
 
-            functionProfile.setExclusive(metric, eventValue);
-            functionProfile.setInclusive(metric, eventValue);
-            functionProfile.setInclusivePerCall(metric, eventValue);
-            functionProfile.setNumCalls(1);
-            functionProfile.setNumSubr(0);
+        functionProfile.setExclusive(metric, eventValue);
+        functionProfile.setInclusive(metric, eventValue);
+        functionProfile.setInclusivePerCall(metric, eventValue);
+        functionProfile.setNumCalls(1);
+        functionProfile.setNumSubr(0);
 
-            if ((function.getMaxExclusive(metric)) < eventValue) {
-                function.setMaxExclusive(metric, eventValue);
-                function.setMaxInclusive(metric, eventValue);
-            }
-            if (function.getMaxInclusivePerCall(metric) < eventValue)
-                function.setMaxInclusivePerCall(metric, eventValue);
-            function.setMaxNumCalls(1);
-            function.setMaxNumSubr(0);
-
-        } catch (Exception e) {
-            System.out.println("An error occurred while parsing the XML data!");
-            e.printStackTrace();
+        if ((function.getMaxExclusive(metric)) < eventValue) {
+            function.setMaxExclusive(metric, eventValue);
+            function.setMaxInclusive(metric, eventValue);
         }
+        if (function.getMaxInclusivePerCall(metric) < eventValue)
+            function.setMaxInclusivePerCall(metric, eventValue);
+        function.setMaxNumCalls(1);
+        function.setMaxNumSubr(0);
+
     }
 
     //####################################

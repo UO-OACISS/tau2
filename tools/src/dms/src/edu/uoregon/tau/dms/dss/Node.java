@@ -1,97 +1,89 @@
-/* 
- Name: Node.java
- Author:     Robert Bell
- Description:  
- */
-
 package edu.uoregon.tau.dms.dss;
 
 import java.util.*;
 
+/**
+ * This class represents a Node.  It contains a set of Contexts and an ID.
+ *  
+ * <P>CVS $Id: Node.java,v 1.3 2005/01/06 22:46:56 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.3 $
+ * @see		DataSource
+ * @see		Context
+ */
 public class Node implements Comparable {
-    public Node() {
-        contexts = new Vector();
-    }
 
-    public Node(int nodeID) {
+    private int nodeID = -1;
+    private Map contexts = new TreeMap();
+
+    /**
+     * Creates a Node with the given ID.  This constructor is not public because Nodes should 
+     * only be created by DataSource.addNode(...)
+     * @param nodeID		ID of this Node
+     */
+    Node(int nodeID) {
         this.nodeID = nodeID;
-        contexts = new Vector();
     }
 
-    public void setNodeID(int nodeID) {
-        this.nodeID = nodeID;
-    }
-
+    /**
+     * Returns the Node's ID.
+     * @return				the ID of this node
+     */
     public int getNodeID() {
         return nodeID;
     }
 
-    //Adds the specified context to the list of contexts. 
-    public void addContext(Context context) {
-        if (context.getContextID() < 0) {
-            //System.out.println("Error - Invalid context id (id less than zero). Context not added!");
-            return;
-        }
-
-        int pos = this.getContextPosition(context);
-        if (pos >= 0) {
-            //System.out.println("Error - Context already present. Context not added!");
-        } else
-            contexts.insertElementAt(context, (-(pos + 1)));
-    }
-
-    //Creates a context with the specified context id and adds it to the list of contexts.
+    /**
+     * Creates a Context with the given ID and adds it to the set of Contexts for this node.
+     * If a Context with the given ID already exists, nothing is added.
+     * @param 	contextID	ID for new Context
+     * @return				Newly added (or existing) Context
+     */
     public Context addContext(int contextID) {
-        Context context = null;
-        if (contextID < 0) {
-            //System.out.println("Error - Invalid context id (id less than zero). Context not added!");
-            return null;
-        }
+        Object obj = contexts.get(new Integer(contextID));
 
-        int pos = this.getContextPosition(new Integer(contextID));
-        if (pos >= 0) {
-            //System.out.println("Error - Context already present. Context not added!");
-        } else {
-            context = new Context(nodeID, contextID);
-            contexts.insertElementAt(context, (-(pos + 1)));
-        }
+        // return the Node if found
+        if (obj != null)
+            return (Context) obj;
+
+        // otherwise, add it and return it
+        Context context = new Context(this.nodeID, contextID);
+        contexts.put(new Integer(contextID), context);
         return context;
     }
 
-    public Vector getContexts() {
-        return contexts;
+    /**
+     * Returns an iterator over the Contexts.
+     * @return				Iterator over this Node's Contexts 
+     */
+    public Iterator getContexts() {
+        return contexts.values().iterator();
     }
 
-    //Gets the context with the specified context id.  If the context is not found, the function returns
-    //null.
+    /**
+     * Returns the context with the given id.  
+     * @param 	contextID	ID of context		
+     * @return				Requested Context, or null if not found
+     */
     public Context getContext(int contextID) {
-        Context context = null;
-        int pos = getContextPosition(new Integer(contextID));
-        if (pos >= 0)
-            context = (Context) contexts.elementAt(pos);
-        return context;
+        return (Context) contexts.get(new Integer(contextID));
     }
 
+    /**
+     * Returns the number of contexts for this node. 
+     * @return				Number of Contexts
+     */
     public int getNumberOfContexts() {
         return contexts.size();
     }
 
-    private int getContextPosition(Integer integer) {
-        return Collections.binarySearch(contexts, integer);
-    }
-
-    private int getContextPosition(Context context) {
-        return Collections.binarySearch(contexts, context);
-    }
-
+    /**
+     * Compares this Node to another Node or Integer.
+     */
     public int compareTo(Object obj) {
         if (obj instanceof Integer)
             return nodeID - ((Integer) obj).intValue();
         else
             return nodeID - ((Node) obj).getNodeID();
     }
-
-    //Instance data.
-    int nodeID = -1;
-    Vector contexts;
 }

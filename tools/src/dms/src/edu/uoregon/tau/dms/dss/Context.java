@@ -1,126 +1,114 @@
-/* 
- Name:       Context.java
- Author:     Robert Bell
- Description:  
- */
-
 package edu.uoregon.tau.dms.dss;
 
 import java.util.*;
 
+/**
+ * This class represents a Context.  It contains a set of Threads, a nodeID and an contextID.
+ *  
+ * <P>CVS $Id: Context.java,v 1.3 2005/01/06 22:46:56 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.3 $
+ * @see		Node
+ * @see		Thread
+ */
 public class Context implements Comparable {
 
-    public Context() {
-        threads = new Vector();
-    }
+    private int nodeID = -1;
+    private int contextID = -1;
+    private Map threads = new TreeMap();
 
-    public Context(int nodeID, int contextID) {
+    /**
+     * Creates a Context with the given IDs.  This constructor is not public because Contexts should 
+     * only be created by Node.addContext(...)
+     * 
+     * @param nodeID		ID of the node this context is a member of
+     * @param contextID		ID of this context
+     */
+    Context(int nodeID, int contextID) {
         this.nodeID = nodeID;
         this.contextID = contextID;
-        threads = new Vector();
     }
 
-    public void setThreadId(int nodeID) {
-        this.nodeID = nodeID;
-    }
-
-    public int getThreadID() {
+    /**
+     * Returns the Contexts NodeID, the ID of the Node this Context belongs to.
+     *
+     * @return				NodeID of this Context.
+     */
+    public int getNodeID() {
         return nodeID;
     }
 
-    public void setContextID(int contextID) {
-        this.contextID = contextID;
-    }
-
+    /**
+     * Returns the Context's ID.
+     *
+     * @return				the ID of this Context
+     */
     public int getContextID() {
         return contextID;
     }
 
-    //Adds the specified thread to the list of threads.
-    public void addThread(Thread thread) {
-        if (thread.getThreadID() < 0) {
-            //System.out.println("Error - Invalid thread id (id less than zero). Thread not added!");
-            return;
-        }
-
-        int pos = this.getThreadPosition(thread);
-        if (pos >= 0) {
-            //System.out.println("Error - Thread already present. Thread not added!");
-        } else
-            threads.insertElementAt(thread, (-(pos + 1)));
-    }
-
-    //Creates a thread with the specified thread id and adds it to the list of threads.
+    /**
+     * Creates a thread with the specified threadID (with default capacity 1) and adds it to the 
+     * list of threads.  If a Thread with the given ID already exists, nothing is added.
+     * @param 	threadID	ID for new Thread
+     * @return				Newly added (or existing) Thread
+     */
     public Thread addThread(int threadID) {
-        Thread thread = null;
-        if (threadID < 0) {
-            //System.out.println("Error - Invalid thread id (id less than zero). Thread not added!");
-            return null;
-        }
-
-        int pos = this.getThreadPosition(new Integer(threadID));
-        if (pos >= 0) {
-            //System.out.println("Error - Thread already present. Thread not added!");
-        } else {
-            thread = new Thread(nodeID, contextID, threadID);
-            threads.insertElementAt(thread, (-(pos + 1)));
-        }
-        return thread;
+        return addThread(threadID, 1);
     }
 
-    //Creates a thread with the specified thread id and capacity and adds it to the list of threads.
+    /**
+     * Creates a thread with the specified threadID and capacity (number of metrics) and adds it 
+     * to the list of threads.  If a Thread with the given ID already exists, nothing is added.
+     * @param 	threadID	ID for new Thread
+     * @param 	capacity	Number of metrics to allocate space for
+     * @return				Newly added (or existing) Thread
+     */
     public Thread addThread(int threadID, int capacity) {
-        Thread thread = null;
-        if (threadID < 0) {
-            //System.out.println("Error - Invalid thread id (id less than zero). Thread not added!");
-            return null;
-        }
+        Object obj = threads.get(new Integer(threadID));
 
-        int pos = this.getThreadPosition(new Integer(threadID));
-        if (pos >= 0) {
-            //System.out.println("Error - Thread already present. Thread not added!");
-        } else {
-            thread = new Thread(nodeID, contextID, threadID, capacity);
-            threads.insertElementAt(thread, (-(pos + 1)));
-        }
+        // return the Node if found
+        if (obj != null)
+            return (Thread) obj;
+
+        // otherwise, add it and return it
+        Thread thread = new Thread(this.nodeID, this.contextID, threadID, capacity);
+        threads.put(new Integer(threadID), thread);
         return thread;
     }
 
-    public Vector getThreads() {
-        return threads;
+    /**
+     * Returns an iterator over the Threads.
+     * @return				Iterator over this Context's Threads 
+     */
+    public Iterator getThreads() {
+        return threads.values().iterator();
     }
 
-    //Gets the thread with the specified thread id.  If the thread is not found, the function returns
-    //null.
+    /**
+     * Returns the Thread with the given id.  
+     * @param 	threadID	ID of thread		
+     * @return				Requested Thread, or null if not found
+     */
     public Thread getThread(int threadID) {
-        Thread thread = null;
-        int pos = getThreadPosition(new Integer(threadID));
-        if (pos >= 0)
-            thread = (Thread) threads.elementAt(pos);
-        return thread;
+        return (Thread) threads.get(new Integer(threadID));
     }
 
+    /**
+     * Returns the number of Threads for this Context. 
+     * @return				Number of Threads
+     */
     public int getNumberOfThreads() {
         return threads.size();
     }
 
-    private int getThreadPosition(Integer integer) {
-        return Collections.binarySearch(threads, integer);
-    }
-
-    private int getThreadPosition(Thread thread) {
-        return Collections.binarySearch(threads, thread);
-    }
-
+    /**
+     * Compares this Context to another Context or Integer.
+     */
     public int compareTo(Object obj) {
         if (obj instanceof Integer)
             return contextID - ((Integer) obj).intValue();
         else
             return contextID - ((Context) obj).getContextID();
     }
-
-    //Instance data.
-    int nodeID = -1;
-    int contextID = -1;
-    Vector threads;
 }

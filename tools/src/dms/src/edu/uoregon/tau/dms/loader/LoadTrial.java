@@ -190,13 +190,11 @@ public class LoadTrial {
             dataSource = new HPMToolkitDataSource(v);
             break;
         case 5:
-            v = new Vector();
             filelist = new File[sourceFiles.length];
             for (int i = 0; i < sourceFiles.length; i++) {
                 filelist[i] = new File(sourceFiles[i]);
             }
-            v.add(filelist);
-            dataSource = new GprofDataSource(v, fixNames);
+            dataSource = new GprofDataSource(filelist, fixNames);
             break;
         case 6:
             v = new Vector();

@@ -149,7 +149,7 @@ public class XMLSupport {
 //                    for (Enumeration e3 = threads.elements(); e3.hasMoreElements();) {
 //                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
 //                        Vector functionProfiles = thread.getFunctionList();
-//                        Vector userevents = thread.getUsereventList();
+//                        Vector userEvents = thread.getUsereventList();
 //                        //Write out the node,context and thread ids.
 //                        writeIDs(xwriter, thread.getNodeID(),
 //                                 thread.getContextID(), thread.getThreadID());
@@ -207,8 +207,8 @@ public class XMLSupport {
 //                            }
 //                        }
 //                        //Write out user event data for this thread.
-//                        if (userevents != null) {
-//                            for (Enumeration e4 = userevents.elements(); e4.hasMoreElements();) {
+//                        if (userEvents != null) {
+//                            for (Enumeration e4 = userEvents.elements(); e4.hasMoreElements();) {
 //                                UserEventProfile userevent = (UserEventProfile) e4.nextElement();
 //                                if (userevent != null) {
 //                                    writeBeginObject(xwriter, 17);

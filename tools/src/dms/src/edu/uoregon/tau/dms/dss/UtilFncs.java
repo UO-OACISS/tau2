@@ -230,13 +230,13 @@ public class UtilFncs {
         case 10:
             return "per call value";
         case 12:
-            return "number of userevents";
+            return "number of userEvents";
         case 14:
-            return "minimum number of userevents";
+            return "minimum number of userEvents";
         case 16:
-            return "maximum number of userevents";
+            return "maximum number of userEvents";
         case 18:
-            return "mean number of userevents";
+            return "mean number of userEvents";
         case 20:
             return "Standard Deviation of User Event Value";
         default:
@@ -681,8 +681,7 @@ public class UtilFncs {
             dataSource = new HPMToolkitDataSource(v);
             break;
         case 5:
-            v.add(sourceFiles);
-            dataSource = new GprofDataSource(v, fixGprofNames);
+            dataSource = new GprofDataSource(sourceFiles, fixGprofNames);
             break;
         case 6:
             v.add(sourceFiles);

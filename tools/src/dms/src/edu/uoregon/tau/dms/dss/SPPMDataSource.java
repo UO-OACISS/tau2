@@ -106,14 +106,12 @@ public class SPPMDataSource extends DataSource {
 
                 if (UtilFncs.debug) {
                     System.out.println("The total number of threads is: "
-                            + this.getNCT().getTotalNumberOfThreads());
-                    System.out.println("The number of mappings is: " + this.getTrialData().getNumFunctions());
+                            + this.getTotalNumberOfThreads());
+                    System.out.println("The number of mappings is: " + this.getNumFunctions());
                     System.out.println("The number of user events is: "
-                            + this.getTrialData().getNumUserEvents());
+                            + this.getNumUserEvents());
                 }
 
-                //Set firstRead to false.
-                this.setFirstMetric(false);
 
                 time = (System.currentTimeMillis()) - time;
                 System.out.println("Done processing data file!");
@@ -135,7 +133,7 @@ public class SPPMDataSource extends DataSource {
     private void initializeThread() {
         // create the mapping, if necessary
 
-        function = this.getTrialData().addFunction(eventName, 1);
+        function = this.addFunction(eventName, 1);
 
         // make sure we start at zero for all counters
         nodeID = (nodeID == -1) ? 0 : nodeID;
@@ -143,24 +141,21 @@ public class SPPMDataSource extends DataSource {
         threadID = (threadID == -1) ? 0 : threadID;
 
         //Get the node,context,thread.
-        node = this.getNCT().getNode(nodeID);
+        node = this.getNode(nodeID);
         if (node == null)
-            node = this.getNCT().addNode(nodeID);
+            node = this.addNode(nodeID);
         context = node.getContext(contextID);
         if (context == null)
             context = node.addContext(contextID);
         thread = context.getThread(threadID);
         if (thread == null) {
             thread = context.addThread(threadID);
-            thread.setDebug(this.debug());
-            thread.initializeFunctionList(this.getTrialData().getNumFunctions());
-            thread.initializeUsereventList(this.getTrialData().getNumUserEvents());
         }
 
         functionProfile = thread.getFunctionProfile(function);
         if (functionProfile == null) {
             functionProfile = new FunctionProfile(function);
-            thread.addFunctionProfile(functionProfile, function.getID());
+            thread.addFunctionProfile(functionProfile);
         }
     }
 
@@ -293,11 +288,6 @@ public class SPPMDataSource extends DataSource {
         metric = this.getNumberOfMetrics();
         //Set the metric name.
         Metric newMetric = this.addMetric(metricName);
-        if (metric < this.getNumberOfMetrics()) {
-            //Need to call increaseVectorStorage() on all objects that require
-            // it.
-            this.getTrialData().increaseVectorStorage();
-        }
         metric = newMetric.getID();
 
         if (inclusiveEqualsExclusive) {

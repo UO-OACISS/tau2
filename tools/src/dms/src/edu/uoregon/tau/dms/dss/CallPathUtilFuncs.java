@@ -1,5 +1,7 @@
 /*
- * Name: CallPathUtilFuncs.java Author: Robert Bell Description:
+ * Name: CallPathUtilFuncs.java 
+ * Author: Robert Bell 
+ * Description:
  */
 
 package edu.uoregon.tau.dms.dss;
@@ -11,16 +13,14 @@ public class CallPathUtilFuncs {
     public CallPathUtilFuncs() {
     }
 
-    public static boolean isAvailable(Iterator l) {
-        Function func = null;
-        String s = null;
+    public static boolean checkCallPathsPresent(Iterator l) {
         boolean result = false;
         while (l.hasNext()) {
-            func = (Function) l.next();
-            s = func.getName();
+            Function function = (Function) l.next();
+            String s = function.getName();
             if (s != null) {
                 if (s.indexOf("=>") > 0) {
-                    func.setCallPathObject(true);
+                    function.setCallPathFunction(true);
                     result = true;
                 }
             }
@@ -28,7 +28,7 @@ public class CallPathUtilFuncs {
         return result;
     }
 
-    public static int buildRelations(TrialData td) {
+    public static int buildRelations(DataSource dataSource) {
         Function callPath = null;
         Function child = null;
         Function parent = null;
@@ -37,7 +37,7 @@ public class CallPathUtilFuncs {
         String childName = null;
         int location = -1;
 
-        for (Iterator it = td.getFunctions(); it.hasNext();) {
+        for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
             callPath = (Function) it.next();
             s = callPath.getName();
             location = s.lastIndexOf("=>");
@@ -51,8 +51,8 @@ public class CallPathUtilFuncs {
                     parentName = s;
 
                 //Update parent/child relationships.
-                parent = td.getFunction(parentName);
-                child = td.getFunction(childName);
+                parent = dataSource.getFunction(parentName);
+                child = dataSource.getFunction(childName);
 
                 if (parent == null || child == null) {
                     return -1;
@@ -67,12 +67,12 @@ public class CallPathUtilFuncs {
         return 0;
     }
 
-    public static void buildThreadRelations(TrialData td, edu.uoregon.tau.dms.dss.Thread thread) {
+    public static void buildThreadRelations(DataSource dataSource, edu.uoregon.tau.dms.dss.Thread thread) {
 
         if (thread.relationsBuilt())
             return;
 
-        for (Iterator it = thread.getFunctionListIterator(); it.hasNext();) {
+        for (Iterator it = thread.getFunctionProfileIterator(); it.hasNext();) {
             FunctionProfile callPath = (FunctionProfile) it.next();
             if (callPath != null && callPath.isCallPathObject()) {
 
@@ -92,8 +92,8 @@ public class CallPathUtilFuncs {
                         parentName = s;
 
                     //Update parent/child relationships.
-                    FunctionProfile parent = thread.getFunctionProfile(td.getFunction(parentName));
-                    FunctionProfile child = thread.getFunctionProfile(td.getFunction(childName));
+                    FunctionProfile parent = thread.getFunctionProfile(dataSource.getFunction(parentName));
+                    FunctionProfile child = thread.getFunctionProfile(dataSource.getFunction(childName));
 
                     if (parent == null || child == null) {
                         
@@ -110,25 +110,25 @@ public class CallPathUtilFuncs {
         }
     }
 
-    public static void trimCallPathData(TrialData td, edu.uoregon.tau.dms.dss.Thread thread) {
+    public static void trimCallPathData(DataSource dataSource, edu.uoregon.tau.dms.dss.Thread thread) {
 
         //Create a pruned list from the global list.
         //Want to grab a reference to the global list as
         //this list contains null references for mappings
         //which do not exist. Makes lookup much faster.
-        Vector threadFunctionList = thread.getFunctionList();
+        Vector threadFunctionList = thread.getFunctionProfiles();
 
         //Check to make sure that we have not trimmed before.
         if (thread.trimmed())
             return;
 
-        for (Iterator l1 = td.getFunctions(); l1.hasNext();) {
+        for (Iterator l1 = dataSource.getFunctions(); l1.hasNext();) {
             Function function = (Function) l1.next();
 
             if ((function.getID()) < (threadFunctionList.size())) { // only consider those that are possible on this thread
 
                 FunctionProfile fp = (FunctionProfile) threadFunctionList.elementAt(function.getID());
-                if ((!(function.isCallPathObject())) && (fp != null)) {
+                if ((!(function.isCallPathFunction())) && (fp != null)) {
                     for (Iterator l2 = function.getParents(); l2.hasNext();) {
                         // get parent
                         Function parent = (Function) l2.next();
@@ -156,8 +156,7 @@ public class CallPathUtilFuncs {
                         for (Iterator l3 = function.getChildCallPathIterator(child); l3.hasNext();) {
                             Function callPath = (Function) l3.next();
 
-                            //Only add this child if there is an existing
-                            // callpath to which
+                            //Only add this child if there is an existing callpath to which
                             //this rightfully child belongs.
 
                             if ((callPath.getID() < threadFunctionList.size())

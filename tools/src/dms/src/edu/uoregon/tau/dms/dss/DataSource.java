@@ -1,17 +1,41 @@
 package edu.uoregon.tau.dms.dss;
 
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Vector;
-
+import java.util.*;
 import java.io.*;
-import java.sql.*
-;
+import java.sql.*;
+
+/**
+ * This class represents a data source.  After loading, data is availiable through the
+ * public methods.
+ *  
+ * <P>CVS $Id: DataSource.java,v 1.4 2005/01/06 22:46:56 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.4 $
+ * @see		TrialData
+ * @see		NCT
+ */
 public abstract class DataSource {
 
+    private boolean userEventsPresent = false;
+    private boolean callPathDataPresent = false;
+    private boolean groupNamesPresent = false;
+
+    // data structures
+    private Vector metrics = null;
+    protected Thread meanData = null;
+    protected Thread totalData = null;
+    private Map nodes = new TreeMap();
+
+
+    private Map functions = new TreeMap();
+    private Map groups = new TreeMap();
+    private Map userEvents = new TreeMap();
+
+    
+    // just a holder for the output of getMaxNCTNumbers(), makes subsequent calls instantaneous
+    private int[] maxNCT = null;
+
     public DataSource() {
-        this.setTrialData(new TrialData());
-        this.setNCT(new NCT());
     }
 
     abstract public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException;
@@ -20,162 +44,128 @@ public abstract class DataSource {
 
     abstract public void cancelLoad();
 
-    public boolean debug() {
-        return UtilFncs.debug;
-    }
-
-    private boolean profileStatsPresent = false;
-    private boolean profileCallsPresent = false;
-    private boolean userEventsPresent = false;
-    private boolean callPathDataPresent = false;
-    private boolean aggregatesPresent = false;
-    private boolean groupNamesPresent = false;
-
-    // data structures
-    private TrialData trialData = null;
-    private NCT nct = null;
-    protected Thread meanData = null;
-
     public Thread getMeanData() {
         return meanData;
     }
 
-    protected Vector metrics = null;
-    private int[] maxNCT = null;
-
-    // temp
-
-    protected boolean firstMetric;
-
-    protected void setFirstMetric(boolean firstMetric) {
-        this.firstMetric = firstMetric;
+    public Thread getTotalData() {
+        return totalData;
     }
 
-    protected boolean firstMetric() {
-        return firstMetric;
-    }
-
-    /**
-     * Sets this data session's NCT object.
-     * 
-     * @param nct
-     *            NCT object.
-     */
-    public void setNCT(NCT nct) {
-        this.nct = nct;
-    }
-
-    /**
-     * Gets this data session's NCT object.
-     * 
-     * @return An NCT object.
-     */
-    public NCT getNCT() {
-        return nct;
-    }
-
-    /**
-     * Sets this data session's TrialData object.
-     * 
-     * @param trialData
-     *            TrialData object.
-     */
-    public void setTrialData(TrialData trialData) {
-        this.trialData = trialData;
-    }
-
-    /**
-     * Gets this data session's TrialData object.
-     * 
-     * @return A TrialData object.
-     */
-    public TrialData getTrialData() {
-        return trialData;
-    }
-
-    protected void setUserEventsPresent(boolean userEventsPresent) {
-        this.userEventsPresent = userEventsPresent;
-    }
-
+  
     protected void setCallPathDataPresent(boolean callPathDataPresent) {
         this.callPathDataPresent = callPathDataPresent;
     }
 
-    protected void setProfileStatsPresent(boolean profileStatsPresent) {
-        this.profileStatsPresent = profileStatsPresent;
-    }
-
-    protected void setProfileCallsPresent(boolean profileCallsPresent) {
-        this.profileCallsPresent = profileCallsPresent;
-    }
-
-    protected void setAggregatesPresent(boolean aggregatesPresent) {
-        this.aggregatesPresent = aggregatesPresent;
+    public boolean getCallPathDataPresent() {
+        return callPathDataPresent;
     }
 
     protected void setGroupNamesPresent(boolean groupNamesPresent) {
         this.groupNamesPresent = groupNamesPresent;
     }
 
-    public boolean profileStatsPresent() {
-        return profileStatsPresent;
-    }
-
-    public boolean profileCallsPresent() {
-        return profileCallsPresent();
-    }
-
-    public boolean aggregatesPresent() {
-        return aggregatesPresent;
-    }
-
-    public boolean groupNamesPresent() {
+    public boolean getGroupNamesPresent() {
         return groupNamesPresent;
     }
 
-    public boolean userEventsPresent() {
+    protected void setUserEventsPresent(boolean userEventsPresent) {
+        this.userEventsPresent = userEventsPresent;
+    }
+
+    public boolean getUserEventsPresent() {
         return userEventsPresent;
     }
 
-    public boolean callPathDataPresent() {
-        return callPathDataPresent;
+    
+    public Function addFunction(String name, int numMetrics) {
+        Object obj = functions.get(name);
+
+        // return the function if found
+        if (obj != null)
+            return (Function) obj;
+
+        // otherwise, add it and return it
+        Function function = new Function(name, functions.size(), numMetrics);
+        functions.put(name, function);
+        return function;
     }
 
-    protected boolean groupCheck = false;
-
-    protected void setGroupCheck(boolean groupCheck) {
-        this.groupCheck = groupCheck;
+    public Function getFunction(String name) {
+        return (Function) functions.get(name);
     }
 
-    protected boolean groupCheck() {
-        return groupCheck;
+    public int getNumFunctions() {
+        return functions.size();
     }
 
-    //Gets the maximum id reached for all nodes, context, and threads.
-    //This takes into account that id values might not be contiguous (ie, we do
-    // not
-    //simply get the maximum number seen. For example, there might be only one
-    // profile
-    //in the system for n,c,t of 0,1,234. We do not want to just return [1,1,1]
-    // representing
-    //the number of items, but the actual id values which are the largest (ie,
-    // return [0,1,234]).
+    public Iterator getFunctions() {
+        return functions.values().iterator();
+    }
+    
+    
+    public UserEvent addUserEvent(String name) {
+        Object obj = userEvents.get(name);
+
+        if (obj != null)
+            return (UserEvent) obj;
+
+        UserEvent userEvent = new UserEvent(name, userEvents.size()+1);
+        userEvents.put(name, userEvent);
+        return userEvent;
+    }
+    
+    public UserEvent getUserEvent(String name) {
+        return (UserEvent) userEvents.get(name);
+    }
+    public int getNumUserEvents() {
+        return userEvents.size();
+    }
+    public Iterator getUserEvents() {
+        return userEvents.values().iterator();
+    }
+
+    
+    public Group addGroup(String name) {
+        Object obj = groups.get(name);
+
+        if (obj != null)
+            return (Group) obj;
+
+        Group group = new Group(name,groups.size()+1);
+        groups.put(name, group);
+        return group;
+    }
+
+    public Iterator getGroups() {
+        return groups.values().iterator();
+    }
+    
+
+
+
+    
+    
+    /**
+     * Retrieves the highest value found for each of node, context thread.  For example, 
+     * if the two threads in the system are (1,0,512) and (512,0,1), it will return [512,0,512].
+     * 
+     * @return int[3] 3 numbers indicating the largest values for node, context, and thread respectively
+     */
     public int[] getMaxNCTNumbers() {
         if (maxNCT == null) {
             maxNCT = new int[3];
-            for (int i = 0; i < 3; i++) {
-                maxNCT[i] = 0;
-            }
-            for (Enumeration e1 = (this.getNCT().getNodes()).elements(); e1.hasMoreElements();) {
-                Node node = (Node) e1.nextElement();
+            
+            for (Iterator it = this.getNodes(); it.hasNext();) {
+                Node node = (Node) it.next();
                 if (node.getNodeID() > maxNCT[0])
                     maxNCT[0] = node.getNodeID();
-                for (Enumeration e2 = (node.getContexts()).elements(); e2.hasMoreElements();) {
-                    Context context = (Context) e2.nextElement();
+                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                    Context context = (Context) it2.next();
                     if (context.getContextID() > maxNCT[1])
                         maxNCT[1] = context.getContextID();
-                    for (Enumeration e3 = (context.getThreads()).elements(); e3.hasMoreElements();) {
-                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
+                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
                         if (thread.getThreadID() > maxNCT[2])
                             maxNCT[2] = thread.getThreadID();
                     }
@@ -186,58 +176,48 @@ public abstract class DataSource {
         return maxNCT;
     }
 
-    // Metrics Stuff
-
     /**
-     * Set a Vector of metrics for this DataSession. The DataSession object will
-     * maintain a reference to the Vector of metric values. To clear this
-     * reference, call setMetric(Metric) with null.
+     * Set the Vector of Metrics for this DataSource.
      * 
      * @param metrics
-     *            Vector of metric values to be saved.
+     *            Vector of Metrics
      */
     public void setMetrics(Vector metrics) {
         this.metrics = metrics;
     }
 
     /**
-     * Adds a metric to this data sessions metrics. The DataSession object will
-     * maintain a reference to the Vector of metric values. To clear this
-     * reference, call setMetric(String) with null.
+     * Adds a metric to the DataSource's metrics vector.
      * 
      * @param metric
-     *            name of metric.
-     * 
-     * @return Metric the newly added metric.
+     *            Metric to be added
      */
-    public int addMetric(Metric metric) {
+    public void addMetric(Metric metric) {
         if (this.metrics == null) {
             this.metrics = new Vector();
         }
 
-        //Try getting the metric.
-
-        // int index = metrics.indexOf(metric);
-        // didn't work. so do it manually.
-        int index = -1;
-        Enumeration e = metrics.elements();
-        for (int i = 0; e.hasMoreElements(); i++) {
-            Metric m = (Metric) e.nextElement();
-            if (m.equals(metric)) {
-                index = i;
-                break;
-            }
-        }
-        if (index == -1) {
-            metric.setID(this.getNumberOfMetrics());
-            metrics.add(metric);
-        } else {
-            metric.setID(((Metric) (metrics.elementAt(index))).getID());
-        }
-        return metric.getID();
+        metric.setID(this.getNumberOfMetrics());
+        metrics.add(metric);
     }
 
+    /**
+     * Adds a metric to the DataSource's metrics vector (given as a String).
+     * 
+     * @param metric
+     *            Name of metric to be added
+     */
     public Metric addMetric(String metricName) {
+
+        if (metrics != null) {
+            for (Iterator it = metrics.iterator(); it.hasNext(); ) {
+                Metric metric = (Metric) it.next();
+                if (metric.getName().equals(metricName))
+                    return metric;
+            }
+        }
+            
+        
         Metric metric = new Metric();
         metric.setName(metricName);
         addMetric(metric);
@@ -245,20 +225,16 @@ public abstract class DataSource {
     }
 
     /**
-     * Get a Vector of metric values for this DataSession. The DataSession
-     * object will maintain a reference to the Vector of metric values. To clear
-     * this reference, call setMetric(String) with null.
+     * Get a the Vector of Metrics
      * 
-     * @return Vector of metric values
+     * @return Vector of Metrics
      */
     public Vector getMetrics() {
         return this.metrics;
     }
 
     /**
-     * Get the metric with the given id.. The DataSession object will maintain a
-     * reference to the Vector of metric values. To clear this reference, call
-     * setMetric(String) with null.
+     * Get the metric with the given id. 
      * 
      * @param metricID
      *            metric id.
@@ -266,7 +242,6 @@ public abstract class DataSource {
      * @return Metric with given id.
      */
     public Metric getMetric(int metricID) {
-        //Try getting the matric.
         if ((this.metrics != null) && (metricID < this.metrics.size()))
             return (Metric) this.metrics.elementAt(metricID);
         else
@@ -284,7 +259,6 @@ public abstract class DataSource {
      * @return The metric name as a String.
      */
     public String getMetricName(int metricID) {
-        //Try getting the metric name.
         if ((this.metrics != null) && (metricID < this.metrics.size()))
             return ((Metric) this.metrics.elementAt(metricID)).getName();
         else
@@ -306,14 +280,12 @@ public abstract class DataSource {
             return -1;
     }
 
-    // Private Methods
-
     /*
      * After loading all data, this function should be called to generate all
      * the derived data
      */
-    public void generateDerivedData() {
-        for (Enumeration e = this.getNCT().getThreads().elements(); e.hasMoreElements();) {
+    protected void generateDerivedData() {
+        for (Enumeration e = this.getThreads().elements(); e.hasMoreElements();) {
             ((Thread) e.nextElement()).setThreadDataAllMetrics();
         }
         this.setMeanData(0, this.getNumberOfMetrics() - 1);
@@ -337,14 +309,9 @@ public abstract class DataSource {
          *     excl = sum(all threads, excl) 
          *     call = sum(all threads, call) 
          *     subr = sum(all threads, subr) 
-         *     inclpercent = incl / (max(all incls for total)) * 100 
-         *     exclpercent = excl / (max(all incls for total)) * 100 
+         *     inclpercent = incl / (sum(max(all incls for each thread)) * 100 
+         *     exclpercent = excl / (sum(max(all incls for each thread)) * 100 
          *     inclpercall = incl / call
-
-         * 
-         *     inclpercent = incl / sum(max incl for each thread) * 100 
-         *     exclpercent = excl / sum(max incl for each thread) * 100 
-
          * 
          * for the mean: 
          *   for each function: 
@@ -361,31 +328,30 @@ public abstract class DataSource {
 
         double[] exclSum = new double[numMetrics];
         double[] inclSum = new double[numMetrics];
-        double[] maxInclSum = new double[numMetrics];
         double callSum = 0;
         double subrSum = 0;
 
         double topLevelInclSum[] = new double[numMetrics];
 
-        for (int i = 0; i < numMetrics; i++) {
-            maxInclSum[i] = 0;
-        }
-
-        TrialData trialData = this.getTrialData();
-        Iterator l = trialData.getFunctions();
+        Iterator l = this.getFunctions();
 
         if (meanData == null) {
             meanData = new Thread(-1, -1, -1, numMetrics);
-            meanData.initializeFunctionList(this.getTrialData().getNumFunctions());
         }
 
+        if (totalData == null) {
+            totalData = new Thread(-2, -2, -2, numMetrics);
+        }
+
+        // must always iterate through all metrics regardless to find the top level timers, I think???
         for (int i = 0; i < numMetrics; i++) {
-            for (Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements();) {
-                Node node = (Node) e1.nextElement();
-                for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
-                    Context context = (Context) e2.nextElement();
-                    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
-                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
+
+            for (Iterator it = this.getNodes(); it.hasNext();) {
+                Node node = (Node) it.next();
+                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                    Context context = (Context) it2.next();
+                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                        Thread thread = (Thread) it3.next();
                         topLevelInclSum[i] += thread.getMaxInclusive(i);
                     }
                 }
@@ -399,10 +365,17 @@ public abstract class DataSource {
             FunctionProfile meanProfile = meanData.getFunctionProfile(function);
             if (meanProfile == null) {
                 meanProfile = new FunctionProfile(function, numMetrics);
-                meanData.addFunctionProfile(meanProfile, function.getID());
+                meanData.addFunctionProfile(meanProfile);
             }
-
             function.setMeanProfile(meanProfile);
+
+            // get/create the FunctionProfile for total
+            FunctionProfile totalProfile = totalData.getFunctionProfile(function);
+            if (totalProfile == null) {
+                totalProfile = new FunctionProfile(function, numMetrics);
+                totalData.addFunctionProfile(totalProfile);
+            }
+            function.setTotalProfile(totalProfile);
 
             callSum = 0;
             subrSum = 0;
@@ -411,16 +384,15 @@ public abstract class DataSource {
                 inclSum[i] = 0;
             }
 
-            // this must be stored somewhere else, but I'm going to compute it
-            // since I don't know where
+            // this must be stored somewhere else, but I'm going to compute it since I don't know where
             int numThreads = 0;
 
-            for (Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements();) {
-                Node node = (Node) e1.nextElement();
-                for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
-                    Context context = (Context) e2.nextElement();
-                    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
-                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
+            for (Iterator it = this.getNodes(); it.hasNext();) {
+                Node node = (Node) it.next();
+                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                    Context context = (Context) it2.next();
+                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
                         FunctionProfile functionProfile = thread.getFunctionProfile(function);
 
                         if (functionProfile != null) { // only if this function was called for this nct
@@ -444,9 +416,9 @@ public abstract class DataSource {
 
             // we don't want to set the calls and subroutines if we're just computing mean data for a derived metric!
             if (startMetric == 0) {
-                // set the totals for all but percentages - need to do those later...
-                function.setTotalNumCalls(callSum);
-                function.setTotalNumSubr(subrSum);
+
+                totalProfile.setNumCalls(callSum);
+                totalProfile.setNumSubr(subrSum);
 
                 // mean is just the total / numThreads
                 meanProfile.setNumCalls((double) callSum / numThreads);
@@ -454,45 +426,177 @@ public abstract class DataSource {
             }
 
             for (int i = startMetric; i <= endMetric; i++) {
-                function.setTotalExclusive(i, exclSum[i]);
-                function.setTotalInclusive(i, inclSum[i]);
-                function.setTotalInclusivePerCall(i, inclSum[i] / function.getTotalNumCalls());
+
+                totalProfile.setExclusive(i, exclSum[i]);
+                totalProfile.setInclusive(i, inclSum[i]);
+                totalProfile.setInclusivePerCall(i, inclSum[i] / totalProfile.getNumCalls());
 
                 // mean data computed as above in comments
-
                 meanProfile.setExclusive(i, exclSum[i] / numThreads);
                 meanProfile.setInclusive(i, inclSum[i] / numThreads);
                 meanProfile.setInclusivePerCall(i, inclSum[i] / numThreads / meanProfile.getNumCalls());
 
-                if (inclSum[i] > maxInclSum[i]) {
-                    maxInclSum[i] = inclSum[i];
-                }
+                totalProfile.setInclusivePercent(i, totalProfile.getInclusive(i) / topLevelInclSum[i] * 100);
+                totalProfile.setExclusivePercent(i, totalProfile.getExclusive(i) / topLevelInclSum[i] * 100);
             }
-
-        }
-
-        // now compute percentages since we now have max(all incls for total)
-        // for each function
-        l = trialData.getFunctions();
-        while (l.hasNext()) {
-
-            Function function = (Function) l.next();
-
-            for (int i = startMetric; i <= endMetric; i++) {
-                if (maxInclSum[i] != 0) {
-                    //                    function.setTotalInclusivePercent(i, function.getTotalInclusive(i)
-                    //                            / maxInclSum[i] * 100);
-                    //                    function.setTotalExclusivePercent(i, function.getTotalExclusive(i)
-                    //                            / maxInclSum[i] * 100);
-                    function.setTotalInclusivePercent(i, function.getTotalInclusive(i)
-                            / topLevelInclSum[i] * 100);
-                    function.setTotalExclusivePercent(i, function.getTotalExclusive(i)
-                            / topLevelInclSum[i] * 100);
-                }
-
-            }
-            function.setMeanValuesSet(true);
         }
     }
 
+    
+    
+
+    /**
+     * Creates and then adds a node with the given id to the the list of nodes. 
+     * The postion in which the node is added is determined by given id.
+     * A node is not added if the id is < 0, or that node id is already
+     * present. Adds do not have to be consecutive (ie., nodes can be added out of order).
+     * The node created will have an id matching the given id.
+     *
+     * @param	nodeID The id of the node to be added.
+     * @return	The Node that was added.
+     */
+    public Node addNode(int nodeID) {
+        Object obj = nodes.get(new Integer(nodeID));
+
+        // return the Node if found
+        if (obj != null)
+            return (Node) obj;
+
+        // otherwise, add it and return it
+        Node node = new Node(nodeID);
+        nodes.put(new Integer(nodeID), node);
+        return node;
+    }
+
+    /**
+     * Gets the node with the specified node id.  If the node is not found, the function returns null.
+     *
+     * @param	nodeID The id of the node sought.
+     * @return	The node found (or null if it was not).
+     */
+    public Node getNode(int nodeID) {
+        return (Node) nodes.get(new Integer(nodeID));
+    }
+    
+    /**
+     * Returns the number of nodes in this NCT object.
+     *
+     * @return	The number of nodes.
+     */
+    public int getNumberOfNodes() {
+        return nodes.size();
+    }
+
+    /**
+     * Returns the list of nodes in this object as a Vector.
+     *
+     * @return	A Vector of node objects.
+     */
+    public Iterator getNodes() {
+        return nodes.values().iterator();
+    }
+
+
+
+   
+
+    //Returns the total number of contexts in this trial.
+    public int getTotalNumberOfContexts() {
+        int totalNumberOfContexts = -1;
+        for (Iterator it = this.getNodes(); it.hasNext();) {
+            Node node = (Node) it.next();
+            totalNumberOfContexts += (node.getNumberOfContexts());
+        }
+        return totalNumberOfContexts;
+    }
+
+    //Returns the number of contexts on the specified node.
+    public int getNumberOfContexts(int nodeID) {
+        return ((Node) getNode(nodeID)).getNumberOfContexts();
+    }
+
+    //Returns all the contexts on the specified node.
+    public Iterator getContexts(int nodeID) {
+        Node node = getNode(nodeID);
+        if (node != null) {
+            return node.getContexts();
+        }
+        return null;
+    }
+
+    //Returns the context on the specified node.
+    public Context getContext(int nodeID, int contextID) {
+        Node node = getNode(nodeID);
+        if (node != null) {
+            return node.getContext(contextID);
+        }
+        return null;
+    }
+
+    
+    //Returns the total number of threads in this trial.
+    public int getTotalNumberOfThreads() {
+        int totalNumberOfThreads = -1;
+        for (Iterator it = this.getNodes(); it.hasNext();) {
+            Node node = (Node) it.next();
+            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                Context context = (Context) it2.next();
+                totalNumberOfThreads += (context.getNumberOfThreads());
+            }
+        }
+        return totalNumberOfThreads;
+    }
+
+    //Returns the number of threads on the specified node,context.
+    public int getNumberOfThreads(int nodeID, int contextID) {
+        return (this.getContext(nodeID, contextID)).getNumberOfThreads();
+    }
+
+    public Vector getThreads() {
+        Vector vector = new Vector();
+        for (Iterator it = this.getNodes(); it.hasNext();) {
+            Node node = (Node) it.next();
+            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                Context context = (Context) it2.next();
+                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+                    vector.add(thread);
+                }
+            }
+        }
+        return vector;
+    }
+
+    public Vector getThreads(int nodeID) {
+        Vector vector = new Vector();
+        Node node = this.getNode(nodeID);
+        for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+            Context context = (Context) it2.next();
+            for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+                vector.add(thread);
+            }
+        }
+        return vector;
+    }
+
+    public Iterator getThreads(int nodeID, int contextID) {
+        Context context = this.getContext(nodeID, contextID);
+        if (context != null)
+            return context.getThreads();
+        return null;
+    }
+
+    public Thread getThread(int nodeID, int contextID, int threadID) {
+        Vector vector = null;
+        Context context = this.getContext(nodeID, contextID);
+        Thread thread = null;
+        if (context != null)
+            thread = context.getThread(threadID);
+        return thread;
+    }
+    
+    protected boolean debug() {
+        return UtilFncs.debug;
+    }
 }

@@ -47,9 +47,7 @@ public class MpiPDataSource extends DataSource {
         Function function = null;
         FunctionProfile functionProfile = null;
 
-        Node node = null;
-        Context context = null;
-        edu.uoregon.tau.dms.dss.Thread thread = null;
+       
         int nodeID = -1;
         int contextID = -1;
         int threadID = -1;
@@ -93,9 +91,6 @@ public class MpiPDataSource extends DataSource {
             //Set the metric name.
             String metricName = "Time";
 
-            //Need to call increaseVectorStorage() on all objects that
-            // require it.
-            this.getTrialData().increaseVectorStorage();
 
             metric = this.getNumberOfMetrics();
             this.addMetric(metricName);
@@ -210,7 +205,7 @@ public class MpiPDataSource extends DataSource {
                     if (inputString != null) {
                         getCallsiteData(inputString);
 
-                        function = this.getTrialData().addFunction(eventNames[callsiteData.i0], 1);
+                        function = this.addFunction(eventNames[callsiteData.i0], 1);
 
                         if (callsiteData.i1 >= 0) {
                             if ((function.getMaxExclusive(metric)) < callsiteData.d5) {
@@ -230,22 +225,16 @@ public class MpiPDataSource extends DataSource {
                             nodeID = callsiteData.i1;
                             contextID = 0;
                             threadID = 0;
-                            node = this.getNCT().getNode(nodeID);
-                            if (node == null)
-                                node = this.getNCT().addNode(nodeID);
-                            context = node.getContext(contextID);
-                            if (context == null)
-                                context = node.addContext(contextID);
-                            thread = context.getThread(threadID);
+                            Node node = this.addNode(nodeID);
+                            Context context = node.addContext(contextID);
+                            Thread thread = context.getThread(threadID);
                             if (thread == null) {
                                 thread = context.addThread(threadID);
-                                thread.setDebug(this.debug());
-                                thread.initializeFunctionList(this.getTrialData().getNumFunctions());
                             }
                             functionProfile = thread.getFunctionProfile(function);
                             if (functionProfile == null) {
                                 functionProfile = new FunctionProfile(function);
-                                thread.addFunctionProfile(functionProfile, function.getID());
+                                thread.addFunctionProfile(functionProfile);
                             }
                             functionProfile.setExclusive(metric, callsiteData.d5);
                             functionProfile.setExclusivePercent(metric, callsiteData.d3);
@@ -287,16 +276,16 @@ public class MpiPDataSource extends DataSource {
 
                 long inclusive = (stopTime.getTime() - startTime.getTime()) * 1000;
 
-                function = this.getTrialData().addFunction(".MpiP.Application", 1);
+                function = this.addFunction(".MpiP.Application", 1);
 
-                for (Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements();) {
-                    node = (Node) e1.nextElement();
-                    for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
-                        context = (Context) e2.nextElement();
-                        for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
-                            thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
+                for (Iterator it = this.getNodes(); it.hasNext();) {
+                    Node node = (Node) it.next();
+                    for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                        Context context = (Context) it2.next();
+                        for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                            edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
 
-                            Vector functions = thread.getFunctionList();
+                            Vector functions = thread.getFunctionProfiles();
 
                             double exclusive = inclusive;
                             double numSubroutines = 0;
@@ -324,7 +313,7 @@ public class MpiPDataSource extends DataSource {
 
                             functionProfile = new FunctionProfile(function);
 
-                            thread.addFunctionProfile(functionProfile, function.getID());
+                            thread.addFunctionProfile(functionProfile);
                             //				functionProfile =
                             // thread.getFunction(mappingID);
 
@@ -361,8 +350,6 @@ public class MpiPDataSource extends DataSource {
 
             }
 
-            //Set firstRead to false.
-            this.setFirstMetric(false);
 
             //                time = (System.currentTimeMillis()) - time;
             //                System.out.println("Done processing data file!");

@@ -69,9 +69,6 @@ public class DynaprofDataSource extends DataSource {
             for (Enumeration e = v.elements(); e.hasMoreElements();) {
                 System.out.println("Processing data, please wait ......");
                 long time = System.currentTimeMillis();
-                //Need to call increaseVectorStorage() on all objects that
-                // require it.
-                this.getTrialData().increaseVectorStorage();
 
                 files = (File[]) e.nextElement();
                 for (int i = 0; i < files.length; i++) {
@@ -91,11 +88,6 @@ public class DynaprofDataSource extends DataSource {
                     // header of the papiprobe
                     //output of each file, we only need to get this information
                     // from the first file.
-
-                    //Since each file contains all metric information for that
-                    // thread, reset to
-                    //indicate that we are back at the first metric.
-                    this.setFirstMetric(true);
 
                     if (!(this.headerProcessed())) {
                         //If header is present, its lines will begin with '#'
@@ -133,9 +125,6 @@ public class DynaprofDataSource extends DataSource {
                             metric = 0;
                         }
 
-                        for (int j = this.getNumberOfMetrics(); j > 0; j--)
-                            this.getTrialData().increaseVectorStorage();
-                        //this.increaseVectorStorage();
                         this.setHeaderProcessed(true);
                     }
 
@@ -145,16 +134,15 @@ public class DynaprofDataSource extends DataSource {
                     contextID = nct[1];
                     threadID = nct[2];
 
-                    node = this.getNCT().getNode(nodeID);
+                    node = this.getNode(nodeID);
                     if (node == null)
-                        node = this.getNCT().addNode(nodeID);
+                        node = this.addNode(nodeID);
                     context = node.getContext(contextID);
                     if (context == null)
                         context = node.addContext(contextID);
                     thread = context.getThread(threadID);
                     if (thread == null) {
                         thread = context.addThread(threadID);
-                        thread.setDebug(this.debug());
                         for (int j = this.getNumberOfMetrics(); j > 0; j--)
                             thread.incrementStorage();
                         //For Dynaprof, we can be reasonable sure that
@@ -163,7 +151,6 @@ public class DynaprofDataSource extends DataSource {
                         // Thread.initializeFunctionList(...)
                         //in TauOutputSession for more details on the
                         // positioning in that class.
-                        thread.initializeFunctionList(this.getTrialData().getNumFunctions());
                     }
                     if (this.debug())
                         System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
@@ -208,14 +195,14 @@ public class DynaprofDataSource extends DataSource {
                             System.out.println("incl.max:" + functionDataLine.d5);
                         }
                         if (!totalLine && functionDataLine.i1 != 0) {
-                            function = this.getTrialData().addFunction(functionDataLine.s0,
+                            function = this.addFunction(functionDataLine.s0,
                                     this.getNumberOfMetrics());
 
                             functionProfile = thread.getFunctionProfile(function);
 
                             if (functionProfile == null) {
                                 functionProfile = new FunctionProfile(function, this.getNumberOfMetrics());
-                                thread.addFunctionProfile(functionProfile, function.getID());
+                                thread.addFunctionProfile(functionProfile);
                             }
 
                             functionProfile.setExclusive(metric, functionDataLine.d0);
@@ -266,14 +253,14 @@ public class DynaprofDataSource extends DataSource {
                                 System.out.println("incl.max:" + functionChildDataLine.d5);
                             }
                             if (functionDataLine.i1 != 0) {
-                                function = this.getTrialData().addFunction(
+                                function = this.addFunction(
                                         functionChildDataLine.s0 + " > child", this.getNumberOfMetrics());
 
                                 functionProfile = thread.getFunctionProfile(function);
 
                                 if (functionProfile == null) {
                                     functionProfile = new FunctionProfile(function, this.getNumberOfMetrics());
-                                    thread.addFunctionProfile(functionProfile, function.getID());
+                                    thread.addFunctionProfile(functionProfile);
                                 }
 
                                 //Since this is the child thread, increment the
@@ -313,14 +300,14 @@ public class DynaprofDataSource extends DataSource {
                                     thread.setMaxInclusivePerCall(metric, usecCall);
 
                                 //Add as a call path from the parent above.
-                                function = this.getTrialData().addFunction(
+                                function = this.addFunction(
                                         functionDataLine.s0 + " => " + functionChildDataLine.s0
                                                 + " > child  ", this.getNumberOfMetrics());
                                 functionProfile = thread.getFunctionProfile(function);
 
                                 if (functionProfile == null) {
                                     functionProfile = new FunctionProfile(function, this.getNumberOfMetrics());
-                                    thread.addFunctionProfile(functionProfile, function.getID());
+                                    thread.addFunctionProfile(functionProfile);
                                 }
 
                                 functionProfile.setExclusive(metric, functionChildDataLine.d3);
@@ -365,9 +352,9 @@ public class DynaprofDataSource extends DataSource {
                 //this.setMeanDataAllMetrics(0);
 
                 System.out.println("Processing callpath data ...");
-                if (CallPathUtilFuncs.isAvailable(getTrialData().getFunctions())) {
+                if (CallPathUtilFuncs.checkCallPathsPresent(getFunctions())) {
                     setCallPathDataPresent(true);
-                    CallPathUtilFuncs.buildRelations(getTrialData());
+                    CallPathUtilFuncs.buildRelations(this);
                 } else {
                     System.out.println("No callpath data found.");
                 }

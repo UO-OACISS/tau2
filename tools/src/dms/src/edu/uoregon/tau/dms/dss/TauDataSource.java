@@ -61,7 +61,7 @@ public class TauDataSource extends DataSource {
         // might skip that first file (for example if the name were profile.-1.0.0) and thus skip
         // setting the metric name.
         //Reference bug08.
-        
+
         boolean metricNameProcessed = false;
 
         Function func = null;
@@ -70,9 +70,7 @@ public class TauDataSource extends DataSource {
         UserEvent userEvent = null;
         UserEventProfile userEventProfile = null;
 
-        Node node = null;
-        Context context = null;
-        edu.uoregon.tau.dms.dss.Thread thread = null;
+  
         int nodeID = -1;
         int contextID = -1;
         int threadID = -1;
@@ -85,40 +83,31 @@ public class TauDataSource extends DataSource {
         String groupNamesString = null;
         StringTokenizer genericTokenizer;
 
-
-        boolean validFilesFound = false;
-
         // iterate through the vector of File arrays (each directory)
         for (Enumeration e = v.elements(); e.hasMoreElements();) {
-
-            //Need to call increaseVectorStorage() on all objects that require it.
-            this.getTrialData().increaseVectorStorage();
 
             //Reset metricNameProcessed flag.
             metricNameProcessed = false;
 
             //Only need to call addDefaultToVectors() if not the first run.
-            if (!(metric == 0)) {
+            if (metric != 0) { // If this isn't the first metric, call i
 
-                for (Iterator i1 = this.getTrialData().getFunctions(); i1.hasNext();) {
-                    Function tmpFunc = (Function) i1.next();
-                    tmpFunc.incrementStorage();
+                for (Iterator it = this.getFunctions(); it.hasNext();) {
+                    Function function = (Function) it.next();
+                    function.incrementStorage();
                 }
 
-                for (Enumeration e3 = this.getNCT().getNodes().elements(); e3.hasMoreElements();) {
-                    node = (Node) e3.nextElement();
-                    for (Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements();) {
-                        context = (Context) e4.nextElement();
-                        for (Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements();) {
-                            thread = (edu.uoregon.tau.dms.dss.Thread) e5.nextElement();
+                for (Iterator it = this.getNodes(); it.hasNext();) {
+                    Node node = (Node) it.next();
+                    for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                        Context context = (Context) it2.next();
+                        for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                            Thread thread = (Thread) it3.next();
                             thread.incrementStorage();
-                            for (Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements();) {
-                                FunctionProfile ref = (FunctionProfile) e6.nextElement();
-                                //Only want to add an element if this
-                                // mapping existed on this thread.
-                                //Check for this.
-                                if (ref != null)
-                                    ref.incrementStorage();
+                            for (Enumeration e6 = thread.getFunctionProfiles().elements(); e6.hasMoreElements();) {
+                                FunctionProfile fp = (FunctionProfile) e6.nextElement();
+                                if (fp != null)  // fp == null would mean this thread didn't call this function
+                                    fp.incrementStorage();
                             }
                         }
                     }
@@ -133,7 +122,6 @@ public class TauDataSource extends DataSource {
                 if (abort)
                     return;
 
-
                 int[] nct = this.getNCT(files[i].getName());
                 if (nct != null) {
 
@@ -145,22 +133,18 @@ public class TauDataSource extends DataSource {
                     contextID = nct[1];
                     threadID = nct[2];
 
-                    node = this.getNCT().getNode(nodeID);
-                    if (node == null)
-                        node = this.getNCT().addNode(nodeID);
-                    context = node.getContext(contextID);
-                    if (context == null)
-                        context = node.addContext(contextID);
-                    thread = context.getThread(threadID);
+                    Node node = this.addNode(nodeID);
+                    Context context = node.addContext(contextID);
+                    Thread thread = context.getThread(threadID);
                     if (thread == null) {
                         thread = context.addThread(threadID);
-                        thread.setDebug(this.debug());
                     }
 
                     // First Line (e.g. "601 templated_functions")
                     inputString = br.readLine();
                     if (inputString == null) {
-                        throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nLooking for 'templated_functions' line");
+                        throw new DataSourceException("Unexpected end of file: " + files[i].getName()
+                                + "\nLooking for 'templated_functions' line");
                     }
                     genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 
@@ -177,11 +161,11 @@ public class TauDataSource extends DataSource {
                         metricNameProcessed = true;
                     }
 
-                    
                     // Second Line (e.g. "# Name Calls Subrs Excl Incl ProfileCalls")
                     inputString = br.readLine();
                     if (inputString == null) {
-                        throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nLooking for '# Name Calls ...' line");
+                        throw new DataSourceException("Unexpected end of file: " + files[i].getName()
+                                + "\nLooking for '# Name Calls ...' line");
                     }
                     if (i == 0) {
                         //Determine if profile stats or profile calls data is present.
@@ -190,50 +174,42 @@ public class TauDataSource extends DataSource {
                     }
 
                     for (int j = 0; j < numFunctions; j++) {
-                        //On the off chance that we start supporting
-                        // profiles with no functionProfiles in them
-                        //(for example only userevents), don't initialize
-                        // the function list until now.
-                        //Just as for userevents, this will cut down on
-                        // storage.
-                        if (j == 0 && (metric == 0))
-                            thread.initializeFunctionList(this.getTrialData().getNumFunctions());
 
                         inputString = br.readLine();
                         if (inputString == null) {
-                            throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nOnly found " + (j-2) + " of " + numFunctions  + " Function Lines");
+                            throw new DataSourceException("Unexpected end of file: " + files[i].getName()
+                                    + "\nOnly found " + (j - 2) + " of " + numFunctions + " Function Lines");
                         }
 
                         this.getFunctionDataLine(inputString);
                         String groupNames = this.getGroupNames(inputString);
-                        //Calculate usec/call
-                        double usecCall = functionDataLine.d1 / functionDataLine.i0;
+
+                        //Calculate inclusive/call
+                        double inclusivePerCall = functionDataLine.d1 / functionDataLine.i0;
 
                         if (functionDataLine.i0 != 0) {
-                            func = this.getTrialData().addFunction(functionDataLine.s0, 1);
+                            func = this.addFunction(functionDataLine.s0, 1);
 
                             functionProfile = thread.getFunctionProfile(func);
 
                             if (functionProfile == null) {
                                 functionProfile = new FunctionProfile(func);
-                                thread.addFunctionProfile(functionProfile, func.getID());
+                                thread.addFunctionProfile(functionProfile);
                             }
 
                             //When we encounter duplicate names in the profile.x.x.x file, treat as additional
                             //data for the name (that is, don't just overwrite what was there before).
                             //See todo item 7 in the ParaProf docs directory.
-                            functionProfile.setExclusive(metric,
-                                    functionProfile.getExclusive(metric) + functionDataLine.d0);
-                            functionProfile.setInclusive(metric,
-                                    functionProfile.getInclusive(metric) + functionDataLine.d1);
+                            functionProfile.setExclusive(metric, functionProfile.getExclusive(metric)
+                                    + functionDataLine.d0);
+                            functionProfile.setInclusive(metric, functionProfile.getInclusive(metric)
+                                    + functionDataLine.d1);
                             if (metric == 0) {
-                                functionProfile.setNumCalls(functionProfile.getNumCalls()
-                                        + functionDataLine.i0);
-                                functionProfile.setNumSubr(functionProfile.getNumSubr()
-                                        + functionDataLine.i1);
+                                functionProfile.setNumCalls(functionProfile.getNumCalls() + functionDataLine.i0);
+                                functionProfile.setNumSubr(functionProfile.getNumSubr() + functionDataLine.i1);
                             }
                             functionProfile.setInclusivePerCall(metric,
-                                    functionProfile.getInclusivePerCall(metric) + usecCall);
+                                    functionProfile.getInclusivePerCall(metric) + inclusivePerCall);
 
                             //Set the max values (thread max values are calculated in the
                             // edu.uoregon.tau.dms.dss.Thread class).
@@ -245,51 +221,46 @@ public class TauDataSource extends DataSource {
                                 func.setMaxNumCalls(functionDataLine.i0);
                             if (func.getMaxNumSubr() < functionDataLine.i1)
                                 func.setMaxNumSubr(functionDataLine.i1);
-                            if (func.getMaxInclusivePerCall(metric) < usecCall)
-                                func.setMaxInclusivePerCall(metric, usecCall);
+                            if (func.getMaxInclusivePerCall(metric) < inclusivePerCall)
+                                func.setMaxInclusivePerCall(metric, inclusivePerCall);
 
-                            if (!(func.groupsSet())) {
-                                if (metric == 0) {
-                                    if (groupNames != null) {
-                                        StringTokenizer st = new StringTokenizer(groupNames, " |");
-                                        while (st.hasMoreTokens()) {
-                                            String groupName = st.nextToken();
-                                            if (groupName != null) {
-                                                // The potential new group is
-                                                // added here. If the group is already present,
-                                                // then the addGroup function will just return the
-                                                // already existing group id. See the TrialData
-                                                // class for more details.
-                                                Group group = this.getTrialData().addGroup(
-                                                        groupName);
-                                                func.addGroup(group);
-                                            }
-                                        }
+                            if (metric == 0 && groupNames != null) {
+                                StringTokenizer st = new StringTokenizer(groupNames, " |");
+                                while (st.hasMoreTokens()) {
+                                    String groupName = st.nextToken();
+                                    if (groupName != null) {
+                                        // The potential new group is added here. If the group is already present,
+                                        // then the addGroup function will just return the
+                                        // already existing group id. See the TrialData
+                                        // class for more details.
+                                        Group group = this.addGroup(groupName);
+                                        func.addGroup(group);
                                     }
                                 }
                             }
 
                         }
 
-                        //Process the appropriate number of profile call lines.
-                        for (int k = 0; k < functionDataLine.i2; k++) {
-                            //this.setProfileCallsPresent(true);
-                            inputString = br.readLine();
-                            genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-                            //Arguments are evaluated left to right.
-                            functionProfile.addCall(
-                                    Double.parseDouble(genericTokenizer.nextToken()),
-                                    Double.parseDouble(genericTokenizer.nextToken()));
-                        }
+                        // unused profile calls
+
+//                        //Process the appropriate number of profile call lines.
+//                        for (int k = 0; k < functionDataLine.i2; k++) {
+//                            //this.setProfileCallsPresent(true);
+//                            inputString = br.readLine();
+//                            genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+//                            //Arguments are evaluated left to right.
+//                            functionProfile.addCall(Double.parseDouble(genericTokenizer.nextToken()),
+//                                    Double.parseDouble(genericTokenizer.nextToken()));
+//                        }
                     }
 
                     //Process the appropriate number of aggregate lines.
                     inputString = br.readLine();
 
-                    
                     //A valid profile.*.*.* will always contain this line.
                     if (inputString == null) {
-                        throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nLooking for 'aggregates' line");
+                        throw new DataSourceException("Unexpected end of file: " + files[i].getName()
+                                + "\nLooking for 'aggregates' line");
                     }
                     genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
                     //It's first token will be the number of aggregates.
@@ -306,7 +277,7 @@ public class TauDataSource extends DataSource {
                         inputString = br.readLine();
                         if (inputString != null) {
                             genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-                            //It's first token will be the number of userevents
+                            //It's first token will be the number of userEvents
                             tokenString = genericTokenizer.nextToken();
                             int numUserEvents = Integer.parseInt(tokenString);
 
@@ -314,13 +285,14 @@ public class TauDataSource extends DataSource {
                             br.readLine();
                             for (int j = 0; j < numUserEvents; j++) {
                                 if (j == 0) {
-                                    thread.initializeUsereventList(this.getTrialData().getNumUserEvents());
                                     setUserEventsPresent(true);
                                 }
 
                                 inputString = br.readLine();
                                 if (inputString == null) {
-                                    throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nOnly found " + (j-2) + " of " + numUserEvents + " User Event Lines");
+                                    throw new DataSourceException("Unexpected end of file: "
+                                            + files[i].getName() + "\nOnly found " + (j - 2) + " of "
+                                            + numUserEvents + " User Event Lines");
                                 }
 
                                 this.getUserEventData(inputString);
@@ -328,13 +300,12 @@ public class TauDataSource extends DataSource {
                                 // User events
                                 if (usereventDataLine.i0 != 0) {
 
-                                    userEvent = this.getTrialData().addUserEvent(
-                                            usereventDataLine.s0);
-                                    userEventProfile = thread.getUserEvent(userEvent.getID());
+                                    userEvent = this.addUserEvent(usereventDataLine.s0);
+                                    userEventProfile = thread.getUserEventProfile(userEvent);
 
                                     if (userEventProfile == null) {
                                         userEventProfile = new UserEventProfile(userEvent);
-                                        thread.addUserEvent(userEventProfile, userEvent.getID());
+                                        thread.addUserEvent(userEventProfile);
                                     }
 
                                     userEventProfile.setUserEventNumberValue(usereventDataLine.i0);
@@ -350,8 +321,6 @@ public class TauDataSource extends DataSource {
                         }
                     }
 
-                    validFilesFound = true;
-
                     br.close();
                     inReader.close();
                     fileIn.close();
@@ -360,27 +329,28 @@ public class TauDataSource extends DataSource {
             metric++;
         }
 
-        //        if (!validFilesFound)
-        //            throw new Exception("No valid profiles found");
+       
 
+//        time = (System.currentTimeMillis()) - time;
+//        System.out.println("Time to process (in milliseconds): " + time);
+//        time = System.currentTimeMillis();
+
+        
         //Generate derived data.
         this.generateDerivedData();
 
-        if (CallPathUtilFuncs.isAvailable(getTrialData().getFunctions())) {
+        if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
             setCallPathDataPresent(true);
-            CallPathUtilFuncs.buildRelations(getTrialData());
+            CallPathUtilFuncs.buildRelations(this);
         }
 
-        //        time = (System.currentTimeMillis()) - time;
-        //        System.out.println("Done processing data!");
-        //        System.out.println("Time to process (in milliseconds): " + time);
+//        time = (System.currentTimeMillis()) - time;
+//        System.out.println("Time to process (in milliseconds): " + time);
     }
-
 
     public String toString() {
         return this.getClass().getName();
     }
-
 
     //profile.*.*.* string processing methods.
     private int[] getNCT(String string) {
@@ -392,45 +362,37 @@ public class TauDataSource extends DataSource {
             nct[1] = Integer.parseInt(st.nextToken());
             nct[2] = Integer.parseInt(st.nextToken());
 
-            if (nct[0] < 0 || nct[1] < 0 || nct[2] < 0) { 
+            if (nct[0] < 0 || nct[1] < 0 || nct[2] < 0) {
                 // I'm 99% sure that this doesn't happen anymore
-
-//                UtilFncs.systemError(new ParaProfError(this.toString() + ": getNCT(...)",
-//                        "An error occurred while processing file: " + string,
-//                        "This file will be ignored!"), null, null);
                 return null;
             }
             return nct;
         } catch (Exception e) {
             // I'm 99% sure that this doesn't happen anymore
-
-//            UtilFncs.systemError(new ParaProfError(this.toString() + ": getNCT(...)",
-//                    "An error occurred while processing file: " + string,
-//                    "This file will be ignored!"), null, null);
             return null;
         }
     }
 
     private String getMetricName(String inString) {
-            String tmpString = null;
-            int tmpInt = inString.indexOf("_MULTI_");
+        String tmpString = null;
+        int tmpInt = inString.indexOf("_MULTI_");
 
-            if (tmpInt > 0) {
-                //We are reading data from a multiple counter run.
-                //Grab the counter name.
-                tmpString = inString.substring(tmpInt + 7);
-                return tmpString;
-            }
-
-            tmpInt = inString.indexOf("hw_counters");
-            if (tmpInt > 0) {
-                //We are reading data from a hardware counter run.
-                return "Hardware Counter";
-            }
-
-            //We are not reading data from a multiple counter run or hardware
-            // counter run.
+        if (tmpInt > 0) {
+            //We are reading data from a multiple counter run.
+            //Grab the counter name.
+            tmpString = inString.substring(tmpInt + 7);
             return tmpString;
+        }
+
+        tmpInt = inString.indexOf("hw_counters");
+        if (tmpInt > 0) {
+            //We are reading data from a hardware counter run.
+            return "Hardware Counter";
+        }
+
+        //We are not reading data from a multiple counter run or hardware
+        // counter run.
+        return tmpString;
 
     }
 
@@ -445,7 +407,7 @@ public class TauDataSource extends DataSource {
         }
 
         if (quoteCount == 0) {
-            throw new DataSourceException("Looking for function line, found '" + string + "' instead"); 
+            throw new DataSourceException("Looking for function line, found '" + string + "' instead");
         }
 
         StringTokenizer st2;
@@ -476,7 +438,7 @@ public class TauDataSource extends DataSource {
         functionDataLine.i1 = Integer.parseInt(st2.nextToken()); //Subroutines
         functionDataLine.d0 = Double.parseDouble(st2.nextToken()); //Exclusive
         functionDataLine.d1 = Double.parseDouble(st2.nextToken()); //Inclusive
-        if (this.profileStatsPresent())
+        if (this.getProfileStatsPresent())
             functionDataLine.d2 = Double.parseDouble(st2.nextToken()); //SumExclSqr
         functionDataLine.i2 = Integer.parseInt(st2.nextToken()); //ProfileCalls
 
@@ -484,85 +446,109 @@ public class TauDataSource extends DataSource {
 
     private String getGroupNames(String string) {
 
-            // first, count the number of double-quotes to determine if the
-            // function contains a double-quote
-            int quoteCount = 0;
-            for (int i = 0; i < string.length(); i++) {
-                if (string.charAt(i) == '"')
-                    quoteCount++;
-            }
+        // first, count the number of double-quotes to determine if the
+        // function contains a double-quote
+        int quoteCount = 0;
+        for (int i = 0; i < string.length(); i++) {
+            if (string.charAt(i) == '"')
+                quoteCount++;
+        }
 
-            // there is a quote in the name of the timer/function
-            // we assume that TAU_GROUP="..." is there, so the end of the name
-            // must be (at quoteCount - 2)
+        // there is a quote in the name of the timer/function
+        // we assume that TAU_GROUP="..." is there, so the end of the name
+        // must be (at quoteCount - 2)
+        int count = 0;
+        int i = 0;
+        while (count < quoteCount - 2 && i < string.length()) {
+            if (string.charAt(i) == '"')
+                count++;
+            i++;
+        }
+
+        StringTokenizer getMappingNameTokenizer = new StringTokenizer(string.substring(i + 1), "\"");
+        String str = getMappingNameTokenizer.nextToken();
+
+        //Just do the group check once.
+        if (!(this.getGroupCheck())) {
+            //If present, "GROUP=" will be in this token.
+            int tmpInt = str.indexOf("GROUP=");
+            if (tmpInt > 0) {
+                this.setGroupNamesPresent(true);
+            }
+            this.setGroupCheck(true);
+        }
+
+        if (getGroupNamesPresent()) {
+            str = getMappingNameTokenizer.nextToken();
+            return str;
+        }
+        //If here, this profile file does not track the group names.
+        return null;
+    }
+
+    private void getUserEventData(String string) {
+
+        // first, count the number of double-quotes to determine if the
+        // user event contains a double-quote
+        int quoteCount = 0;
+        for (int i = 0; i < string.length(); i++) {
+            if (string.charAt(i) == '"')
+                quoteCount++;
+        }
+
+        StringTokenizer st2;
+
+        if (quoteCount == 2) { // proceed as usual
+            StringTokenizer st1 = new StringTokenizer(string, "\"");
+            usereventDataLine.s0 = st1.nextToken();
+            st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+        } else {
+
+            // there is a quote in the name of the user event
             int count = 0;
             int i = 0;
-            while (count < quoteCount - 2 && i < string.length()) {
+            while (count < quoteCount && i < string.length()) {
                 if (string.charAt(i) == '"')
                     count++;
                 i++;
             }
 
-            StringTokenizer getMappingNameTokenizer = new StringTokenizer(string.substring(i + 1),
-                    "\"");
-            String str = getMappingNameTokenizer.nextToken();
+            usereventDataLine.s0 = string.substring(1, i - 1);
+            st2 = new StringTokenizer(string.substring(i + 1), " \t\n\r");
+        }
 
-            //Just do the group check once.
-            if (!(this.groupCheck())) {
-                //If present, "GROUP=" will be in this token.
-                int tmpInt = str.indexOf("GROUP=");
-                if (tmpInt > 0) {
-                    this.setGroupNamesPresent(true);
-                }
-                this.setGroupCheck(true);
-            }
-
-            if (groupNamesPresent()) {
-                str = getMappingNameTokenizer.nextToken();
-                return str;
-            }
-            //If here, this profile file does not track the group names.
-            return null;
+        usereventDataLine.i0 = (int) Double.parseDouble(st2.nextToken()); //Number of calls
+        usereventDataLine.d0 = Double.parseDouble(st2.nextToken()); //Max
+        usereventDataLine.d1 = Double.parseDouble(st2.nextToken()); //Min
+        usereventDataLine.d2 = Double.parseDouble(st2.nextToken()); //Mean
+        usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard Deviation
     }
 
-    private void getUserEventData(String string) {
-
-            // first, count the number of double-quotes to determine if the
-            // user event contains a double-quote
-            int quoteCount = 0;
-            for (int i = 0; i < string.length(); i++) {
-                if (string.charAt(i) == '"')
-                    quoteCount++;
-            }
-
-            StringTokenizer st2;
-
-            if (quoteCount == 2) { // proceed as usual
-                StringTokenizer st1 = new StringTokenizer(string, "\"");
-                usereventDataLine.s0 = st1.nextToken();
-                st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
-            } else {
-
-                // there is a quote in the name of the user event
-                int count = 0;
-                int i = 0;
-                while (count < quoteCount && i < string.length()) {
-                    if (string.charAt(i) == '"')
-                        count++;
-                    i++;
-                }
-
-                usereventDataLine.s0 = string.substring(1, i - 1);
-                st2 = new StringTokenizer(string.substring(i + 1), " \t\n\r");
-            }
-
-            usereventDataLine.i0 = (int) Double.parseDouble(st2.nextToken()); //Number of calls
-            usereventDataLine.d0 = Double.parseDouble(st2.nextToken()); //Max
-            usereventDataLine.d1 = Double.parseDouble(st2.nextToken()); //Min
-            usereventDataLine.d2 = Double.parseDouble(st2.nextToken()); //Mean
-            usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard Deviation
+    
+    
+    
+    protected void setProfileStatsPresent(boolean profileStatsPresent) {
+        this.profileStatsPresent = profileStatsPresent;
     }
 
+    public boolean getProfileStatsPresent() {
+        return profileStatsPresent;
+    }
+
+    private boolean profileStatsPresent = false;
+
+    
+
+    protected boolean groupCheck = false;
+
+    protected void setGroupCheck(boolean groupCheck) {
+        this.groupCheck = groupCheck;
+    }
+    protected boolean getGroupCheck() {
+        return groupCheck;
+    }
+    
+    
     //Instance data.
     private LineData functionDataLine = new LineData();
     private LineData usereventDataLine = new LineData();

@@ -31,12 +31,8 @@ public class DBDataSource extends DataSource {
 
     public int getProgress() {
         return DatabaseAPI.getProgress();
-        
-        
-        //        if (totalItems != 0)
-//            return (int) ((float) itemsDone / (float) totalItems * 100);
-//        return 0;
     }
+
     public void cancelLoad() {
         abort = true;
         return;
@@ -75,26 +71,29 @@ public class DBDataSource extends DataSource {
             //System.out.println("Found " + numberOfMetrics + " metrics.");
             for (int i = 0; i < numberOfMetrics; i++) {
                 this.addMetric(databaseAPI.getMetricName(i));
-                this.getTrialData().increaseVectorStorage();
             }
 
             //Add the functionProfiles.
             ListIterator l = databaseAPI.getIntervalEvents();
             
             meanData = new Thread(-1,-1,-1, numberOfMetrics);
-            meanData.initializeFunctionList(this.getTrialData().getNumFunctions());
+            totalData = new Thread(-2,-2,-2, numberOfMetrics);
     
-            totalItems += this.getTrialData().getNumFunctions();
+            totalItems += this.getNumFunctions();
             
             while (l.hasNext()) {
                 IntervalEvent ie = (IntervalEvent) l.next();
                 
-                function = this.getTrialData().addFunction(ie.getName(), numberOfMetrics);
+                function = this.addFunction(ie.getName(), numberOfMetrics);
 
                 FunctionProfile meanProfile = new FunctionProfile(function, numberOfMetrics);
                 function.setMeanProfile(meanProfile);
-                meanData.addFunctionProfile(meanProfile,function.getID());
-                
+                meanData.addFunctionProfile(meanProfile);
+
+                FunctionProfile totalProfile = new FunctionProfile(function, numberOfMetrics);
+                function.setTotalProfile(totalProfile);
+                totalData.addFunctionProfile(totalProfile);
+
                 
                 //Add element to the localMap for more efficient lookup later
                 // in the function.
@@ -103,9 +102,8 @@ public class DBDataSource extends DataSource {
                 IntervalLocationProfile ilp = ie.getMeanSummary();
 
                 if (ie.getGroup() != null) {
-                    Group group = this.getTrialData().addGroup(ie.getGroup());
+                    Group group = this.addGroup(ie.getGroup());
                     function.addGroup(group);
-                    function.setGroupsSet(true);
                     this.setGroupNamesPresent(true);
                 }
 
@@ -120,53 +118,38 @@ public class DBDataSource extends DataSource {
                     meanProfile.setNumCalls(ilp.getNumCalls());
                     meanProfile.setNumSubr(ilp.getNumSubroutines());
 
-                    if ((this.getTrialData().getMaxMeanExclusiveValue(i)) < ilp.getExclusive(i)) {
-                        this.getTrialData().setMaxMeanExclusiveValue(i, ilp.getExclusive(i));
-                    }
-                    if ((this.getTrialData().getMaxMeanExclusivePercentValue(i)) < ilp.getExclusivePercentage(i)) {
-                        this.getTrialData().setMaxMeanExclusivePercentValue(i,
-                                ilp.getExclusivePercentage(i));
-                    }
-                    if ((this.getTrialData().getMaxMeanInclusiveValue(i)) < ilp.getInclusive(i)) {
-                        this.getTrialData().setMaxMeanInclusiveValue(i, ilp.getInclusive(i));
-                    }
-                    if ((this.getTrialData().getMaxMeanInclusivePercentValue(i)) < ilp.getInclusivePercentage(i)) {
-                        this.getTrialData().setMaxMeanInclusivePercentValue(i,
-                                ilp.getInclusivePercentage(i));
-                    }
-
-                    if ((this.getTrialData().getMaxMeanInclusivePerCall(i)) < ilp.getInclusivePerCall(i)) {
-                        this.getTrialData().setMaxMeanInclusivePerCall(i,
-                                ilp.getInclusivePerCall(i));
-                    }
-
-                    if ((this.getTrialData().getMaxMeanNumberOfCalls()) < ilp.getNumCalls()) {
-                        this.getTrialData().setMaxMeanNumberOfCalls(ilp.getNumCalls());
-                    }
-
-                    if ((this.getTrialData().getMaxMeanNumberOfSubRoutines()) < ilp.getNumSubroutines()) {
-                        this.getTrialData().setMaxMeanNumberOfSubRoutines(
-                                ilp.getNumSubroutines());
-                    }
+                   
                 }
 
                 
                 meanData.setThreadDataAllMetrics();
 
-                function.setMeanValuesSet(true);
 
                 ilp = ie.getTotalSummary();
                 for (int i = 0; i < numberOfMetrics; i++) {
-                    function.setTotalExclusive(i, ilp.getExclusive(i));
-                    function.setTotalExclusivePercent(i,
-                            ilp.getExclusivePercentage(i));
-                    function.setTotalInclusive(i, ilp.getInclusive(i));
-                    function.setTotalInclusivePercent(i,
-                            ilp.getInclusivePercentage(i));
-                    function.setTotalInclusivePerCall(i, ilp.getInclusivePerCall(i));
-                    function.setTotalNumCalls(ilp.getNumCalls());
-                    function.setTotalNumSubr(ilp.getNumSubroutines());
+//                    function.setTotalExclusive(i, ilp.getExclusive(i));
+//                    function.setTotalExclusivePercent(i,
+//                            ilp.getExclusivePercentage(i));
+//                    function.setTotalInclusive(i, ilp.getInclusive(i));
+//                    function.setTotalInclusivePercent(i,
+//                            ilp.getInclusivePercentage(i));
+//                    function.setTotalInclusivePerCall(i, ilp.getInclusivePerCall(i));
+//                    function.setTotalNumCalls(ilp.getNumCalls());
+//                    function.setTotalNumSubr(ilp.getNumSubroutines());
 
+
+                
+                    totalProfile.setExclusive(i, ilp.getExclusive(i));
+                    totalProfile.setExclusivePercent(i,
+                            ilp.getExclusivePercentage(i));
+                    totalProfile.setInclusive(i, ilp.getInclusive(i));
+                    totalProfile.setInclusivePercent(i,
+                            ilp.getInclusivePercentage(i));
+                    totalProfile.setInclusivePerCall(i, ilp.getInclusivePerCall(i));
+                    totalProfile.setNumCalls(ilp.getNumCalls());
+                    totalProfile.setNumSubr(ilp.getNumSubroutines());
+
+                
                 }
             }
 
@@ -178,18 +161,15 @@ public class DBDataSource extends DataSource {
             
             while (l.hasNext()) {
                 IntervalLocationProfile fdo = (IntervalLocationProfile) l.next();
-                node = this.getNCT().getNode(fdo.getNode());
+                node = this.getNode(fdo.getNode());
                 if (node == null)
-                    node = this.getNCT().addNode(fdo.getNode());
+                    node = this.addNode(fdo.getNode());
                 context = node.getContext(fdo.getContext());
                 if (context == null)
                     context = node.addContext(fdo.getContext());
                 thread = context.getThread(fdo.getThread());
                 if (thread == null) {
                     thread = context.addThread(fdo.getThread(), numberOfMetrics);
-                    thread.setDebug(this.debug());
-                    thread.initializeFunctionList(this.getTrialData().getNumFunctions());
-
                 }
 
                 //Get Function and FunctionProfile.
@@ -200,12 +180,12 @@ public class DBDataSource extends DataSource {
                 //mappingID =
                 // ((FunIndexFunIDPair)localMap.elementAt(pos)).paraProfId;
 
-                function = this.getTrialData().getFunction(databaseAPI.getIntervalEvent(fdo.getIntervalEventID()).getName());
+                function = this.getFunction(databaseAPI.getIntervalEvent(fdo.getIntervalEventID()).getName());
                 functionProfile = thread.getFunctionProfile(function);
                 
                 if (functionProfile == null) {
                     functionProfile = new FunctionProfile(function, numberOfMetrics);
-                    thread.addFunctionProfile(functionProfile, function.getID());
+                    thread.addFunctionProfile(functionProfile);
                 }
 
                 for (int i = 0; i < numberOfMetrics; i++) {
@@ -255,7 +235,7 @@ public class DBDataSource extends DataSource {
             l = databaseAPI.getAtomicEvents();
             while (l.hasNext()) {
                 AtomicEvent ue = (AtomicEvent) l.next();
-                this.getTrialData().addUserEvent(ue.getName());
+                this.addUserEvent(ue.getName());
             }
 
             l = databaseAPI.getAtomicEventData();
@@ -263,9 +243,9 @@ public class DBDataSource extends DataSource {
                 AtomicLocationProfile alp = (AtomicLocationProfile) l.next();
 
                 // do we need to do this?
-                node = this.getNCT().getNode(alp.getNode());
+                node = this.getNode(alp.getNode());
                 if (node == null)
-                    node = this.getNCT().addNode(alp.getNode());
+                    node = this.addNode(alp.getNode());
                 context = node.getContext(alp.getContext());
                 if (context == null)
                     context = node.addContext(alp.getContext());
@@ -275,18 +255,17 @@ public class DBDataSource extends DataSource {
                 }
 
 
-                if (thread.getUsereventList() == null) {
-                    thread.initializeUsereventList(this.getTrialData().getNumUserEvents());
+                if (thread.getUserEventProfiles() == null) {
                     setUserEventsPresent(true);
                 }
 
-                userEvent = this.getTrialData().getUserEvent(databaseAPI.getAtomicEvent(alp.getAtomicEventID()).getName());
+                userEvent = this.getUserEvent(databaseAPI.getAtomicEvent(alp.getAtomicEventID()).getName());
 
-                userEventProfile = thread.getUserEvent(userEvent.getID());
+                userEventProfile = thread.getUserEventProfile(userEvent);
 
                 if (userEventProfile == null) {
                     userEventProfile = new UserEventProfile(userEvent);
-                    thread.addUserEvent(userEventProfile, userEvent.getID());
+                    thread.addUserEvent(userEventProfile);
                 }
 
                 userEventProfile.setUserEventNumberValue(alp.getSampleCount());
@@ -299,9 +278,9 @@ public class DBDataSource extends DataSource {
             }
 
             //System.out.println("Processing callpath data ...");
-            if (CallPathUtilFuncs.isAvailable(getTrialData().getFunctions())) {
+            if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
                 setCallPathDataPresent(true);
-                if (CallPathUtilFuncs.buildRelations(getTrialData()) != 0) {
+                if (CallPathUtilFuncs.buildRelations(this) != 0) {
                     setCallPathDataPresent(false);
                 }
             }

@@ -8,11 +8,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.11 2005/01/04 01:05:47 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.12 2005/01/06 22:46:56 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class DatabaseAPI {
 
@@ -648,8 +648,6 @@ public class DatabaseAPI {
     static int itemsDone;
 
     public static int getProgress() {
-        System.out.println("itemsDone = (" + itemsDone + "/" + totalItems + ")");
-
         if (totalItems != 0)
             return (int) ((float) itemsDone / (float) totalItems * 100);
         return 0;
@@ -669,10 +667,11 @@ public class DatabaseAPI {
 
     public synchronized int saveParaProfTrial(Trial trial, int saveMetricIndex) throws DatabaseException {
         long start = System.currentTimeMillis();
-        TrialData mapping = trial.getDataSource().getTrialData();
 
+        DataSource dataSource = trial.getDataSource();
+        
         //Build an array of group names. This speeds lookup of group names.
-        Iterator groupIterator = mapping.getGroups();
+        Iterator groupIterator = dataSource.getGroups();
 
         List groupList = new ArrayList();
 
@@ -702,7 +701,7 @@ public class DatabaseAPI {
         // create the intervalEvents
         //    System.out.print("Creating the intervalEvents:");
 
-        for (Iterator it = mapping.getFunctions(); it.hasNext();) {
+        for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
             Function f = (Function) it.next();
             if (f != null) {
                 // create a intervalEvent
@@ -756,7 +755,7 @@ public class DatabaseAPI {
 
         // create the user events
         //    System.out.print("\nCreating user events:");
-        for (Iterator it = mapping.getUserEvents(); it.hasNext();) {
+        for (Iterator it = dataSource.getUserEvents(); it.hasNext();) {
             UserEvent ue = (UserEvent) it.next();
             if (ue != null) {
                 //            System.out.print(".");
@@ -783,17 +782,15 @@ public class DatabaseAPI {
 
         //    System.out.print("\nCreating the intervalEvent / user event data:");
         StringBuffer groupsStringBuffer = new StringBuffer(10);
-        Vector nodes = trial.getDataSource().getNCT().getNodes();
-        for (Enumeration e1 = nodes.elements(); e1.hasMoreElements();) {
-            Node node = (Node) e1.nextElement();
-            Vector contexts = node.getContexts();
-            for (Enumeration e2 = contexts.elements(); e2.hasMoreElements();) {
-                Context context = (Context) e2.nextElement();
-                Vector threads = context.getThreads();
-                for (Enumeration e3 = threads.elements(); e3.hasMoreElements();) {
-                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
-                    Vector intervalEvents = thread.getFunctionList();
-                    Vector userevents = thread.getUsereventList();
+
+        for (Iterator it = trial.getDataSource().getNodes(); it.hasNext();) {
+            Node node = (Node) it.next();
+            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                Context context = (Context) it2.next();
+                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+                    Vector intervalEvents = thread.getFunctionProfiles();
+                    Vector userevents = thread.getUserEventProfiles();
                     //Write out intervalEvent data for this thread.
                     for (Enumeration e4 = intervalEvents.elements(); e4.hasMoreElements();) {
                         FunctionProfile fp = (FunctionProfile) e4.nextElement();
