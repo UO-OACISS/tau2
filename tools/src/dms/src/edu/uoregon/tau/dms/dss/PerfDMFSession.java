@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.6 2004/05/27 20:25:43 khuck Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.7 2004/06/09 20:56:43 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -468,12 +468,12 @@ public class PerfDMFSession extends DataSession {
 		return atomicEvent;
 	}
 	
-	public void saveApplication(Application app) {
-		app.saveApplication(db);
+	public int saveApplication(Application app) {
+		return app.saveApplication(db);
 	}
 
-	public void saveExperiment(Experiment exp) {
-		exp.saveExperiment(db);
+	public int saveExperiment(Experiment exp) {
+		return exp.saveExperiment(db);
 	}
 
 	// override the saveTrial method
