@@ -1297,6 +1297,7 @@ int  MPI_Finalize(  )
 
   TAU_PROFILE_STOP(tautimer); 
 
+  Tau_stop_top_level_timer_if_necessary();
   return returnVal;
 }
 
@@ -1324,6 +1325,7 @@ char *** argv;
   int  size;
 
   
+  Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   

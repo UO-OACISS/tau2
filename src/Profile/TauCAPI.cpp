@@ -501,11 +501,45 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
   return;
 }
 
+/* We need a routine that will create a top level parent profiler and give
+ * it a dummy name for the application, if just the MPI wrapper interposition
+ * library is used without any instrumentation in main */
+extern "C" void Tau_create_top_level_timer_if_necessary(void)
+{
+  int tid = RtsLayer::myThread();
+  FunctionInfo *ptr;
+  if (Profiler::CurrentProfiler[tid] == NULL) 
+  {
+    ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
+    if (ptr)
+    {
+      Tau_start_timer(ptr);
+    }
+  }
+}
+
+extern "C" void Tau_stop_top_level_timer_if_necessary(void)
+{
+  int tid = RtsLayer::myThread();
+  if (Profiler::CurrentProfiler[tid] && 
+      Profiler::CurrentProfiler[tid]->ParentProfiler == NULL && 
+      strcmp(Profiler::CurrentProfiler[tid]->ThisFunction->GetName(), ".TAU application") == 0)
+  {
+    DEBUGPROFMSG("Found top level .TAU application timer"<<endl;);  
+    TAU_GLOBAL_TIMER_STOP();
+  }
+}
+
+    
+
+
+
+
 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.39 $   $Date: 2003/12/18 20:56:52 $
- * VERSION: $Id: TauCAPI.cpp,v 1.39 2003/12/18 20:56:52 sameer Exp $
+ * $Revision: 1.40 $   $Date: 2004/01/05 19:10:00 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.40 2004/01/05 19:10:00 sameer Exp $
  ***************************************************************************/
 
