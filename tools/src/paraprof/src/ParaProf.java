@@ -41,6 +41,8 @@ public class ParaProf implements ParaProfObserver, ActionListener{
      //**********
     
     private int type = -1;
+    private boolean dump = false;
+    private int dumptype = -1;
     String filePrefix = null;
     
     public ParaProf(){
@@ -229,9 +231,14 @@ public class ParaProf implements ParaProfObserver, ActionListener{
   
     // Main entry point
     static public void main(String[] args){
-
+	//Bring ParaProf into being!
 	ParaProf paraProf = new ParaProf();
 
+	//######
+	//Process command line arguments.
+	//ParaProf has numerous modes of operation. A number of these mode
+	//can be specified on the command line.
+	//######
 	int position = 0;
 	String argument = null;
 	//Deal with help and debug individually, then the rest.
@@ -239,7 +246,23 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	while (position < args.length) {
 	    argument = args[position++];
 	    if (argument.equalsIgnoreCase("HELP")) {
-		System.out.println("paraprof/FileList filetype [pprof|profile|dynaprof] | prefix [filename prefix] | help | debug");
+		System.out.println("-----------------------------------");
+		System.out.println("ParaProf accepts the arguments below.");
+		System.out.println("If an incorrect combination is given, an error will be generated.");
+		System.out.println("For any assitance, please email tau-bugs@cs.uoregon.edu");
+		System.out.println("Thank you!");
+		System.out.println("------");
+		System.out.println("help - prints this message.");
+		System.out.println("debug - Causes ParaProf to output debugging information (some to file, and some to the standard out).");
+		System.out.println("prefix  - prefix path for ParaProf to look for profile data (the default is the current directory).");
+		System.out.println("filetype [pprof|profile|dynaprof] - the type of profile data to look for.");
+		System.out.println("dump [pprof|standard] - Data is dumped to the standard out.");
+		System.out.println("------");
+		System.out.println("Some examples:");
+		System.out.println("paraprof/ParaProf debug");
+		System.out.println("paraprof/ParaProf prefix /tmp/data debug");
+		System.out.println("paraprof/ParaProf prefix /tmp/data filetype dynaprof");
+		System.out.println("-----------------------------------");
 		System.exit(0);
 	    }
 	}
@@ -256,6 +279,10 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	while (position < args.length) {
 	    argument = args[position++];
 	    if (argument.equalsIgnoreCase("FILETYPE")){
+		if(args.length==position){
+		    System.out.println("No file type given!");
+		    System.exit(0);
+		}
 		argument = args[position++];
 		if(argument.equalsIgnoreCase("pprof"))
 		    paraProf.type = 0;
@@ -263,15 +290,44 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    paraProf.type = 1;
 		else if(argument.equalsIgnoreCase("dynaprof"))
 		    paraProf.type = 2;
+		else{
+		    System.out.println("Unrecognized file type: " + argument);
+		    System.exit(0);
+		}
 	    }
 	    else if (argument.equalsIgnoreCase("PREFIX")){
 		argument = args[position++];
 		paraProf.filePrefix = argument;
 	    }
+	    if (argument.equalsIgnoreCase("DUMP")){
+		paraProf.dump = true;
+		if(args.length==position){
+		    System.out.println("No dump type given!");
+		    System.exit(0);
+		}
+		argument = args[position++];
+		if(argument.equalsIgnoreCase("pprof"))
+		    paraProf.dumptype = 0;
+		else if(argument.equalsIgnoreCase("standard"))
+		    paraProf.dumptype = 1;
+		else{
+		    System.out.println("Unrecognized dump type: " + argument);
+		    System.exit(0);
+		}
+	    }
 	}
-	
+	//######
+	//End - Process command line arguments.
+	//######
+
+	if(paraProf.dump){
+	    System.out.println("ParaProf will dump to the standard out with dump type: " + paraProf.dumptype);
+	    System.exit(0);
+	}
+
+
 	ParaProf.runtime = Runtime.getRuntime();
-	
+
 	if(UtilFncs.debug){
 	    //Create and start the a timer, and then add racy to it.
 	    javax.swing.Timer jTimer = new javax.swing.Timer(8000, paraProf);
