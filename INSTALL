@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.cs.uoregon.edu/research/paracomp/tau    **
 *****************************************************************************
-**    Copyright 1997-2004				   	   	   **
+**    Copyright 1997-2005				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.13                          *
+ *                           Version 2.14                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -666,14 +666,14 @@ II) Platforms :
         g) HP Alpha Linux clusters with g++.
 	i) Microsoft Windows. Tested with MS Visual C++ v6.0.
 	j) IBM SP AIX (RS6000) systems with KCC, and xlC compilers.
-	k) PowerPC Linux with g++.
+	k) PowerPC Linux (Power4, Blue Gene/L) with g++ and xlC based compilers.
 	l) IA-64 Linux with g++, SGI Pro64 and Intel C++/C/F90 compilers.
-	m) Apple OS X (Darwin) with c++, IBM xlf compilers.
+	m) Apple OS X (Darwin) with c++, IBM xlC, and xlf compilers.
 	n) Hitachi SR8000 with KCC, g++, Hitachi cc and f90 compilers. 
         o) NEC SX-5 system with NEC c++, cc, and f90 compilers.
         p) Cray SV-1 with Cray Compilers.
         q) Cray X1 with Cray compilers.
-        r) AMD Opteron and IA-64 Linux systems with GNU compilers.
+        r) AMD Opteron (Cray RedStorm) and IA-64 Linux systems with GNU compilers.
 	   
 
    TAU may work with minor modifications on other platforms.
