@@ -3,8 +3,8 @@
 
 #Makefile creates the ParaProf jar file.
 ##########################
-CONFIG_ARCH=x86_64
-TAUROOT=/home/users/bertie/Robert/Code/x86_64/tau2
+CONFIG_ARCH=apple
+TAUROOT=/Users/bertie/Robert/Code/apple/tau2
 
 BASE_SOURCES=ApplicationManager.java PPMLPanel.java ParaProfTreeCellRenderer.java StaticMainWindowData.java \
              BinWindow.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
@@ -17,7 +17,7 @@ BASE_SOURCES=ApplicationManager.java PPMLPanel.java ParaProfTreeCellRenderer.jav
              UserEventWindow.java DBConfiguration.java Metric.java SavedPreferences.java UserEventWindowPanel.java \
              ParaProfManager.java StatWindow.java LoadTrialPanel.java \
              ParaProfManagerTableModel.java StatWindowPanel.java ParaProfLisp.java ParaProfLispPrimitives.java \
-             PPML.java StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java
+             PPML.java StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java DisplayProperties.java
 
 NEW_SOURCES=$(BASE_SOURCES) ParaProfImageOutput.java
 
