@@ -221,7 +221,7 @@ The following  command-line options are available to configure:
    README.JAVA on instructions on using TAU with Java 2 applications. 
    This option should only be used for configuring TAU to use JVMPI for 
    profiling and tracing of Java applications. It should not be used for 
-   configuring jracy, which uses java from the user's path. 
+   configuring paraprof, which uses java from the user's path. 
 
 -dyninst=<directory>
    Specifies the location of the DynInst (dynamic instrumentation) package. 
@@ -287,7 +287,7 @@ The following  command-line options are available to configure:
    This is the default option; it specifies summary profile files to be 
    generated at the end of execution. Profiling generates aggregate statistics 
    (such as the total time spent in routines and statements), and can be used 
-   in conjunction with the profile browser jracy to analyse the performance. 
+   in conjunction with the profile browser paraprof to analyse the performance. 
    Wallclock time is used for profiling  program entities. 
    
 -PROFILECALLPATH 
@@ -448,7 +448,7 @@ Usage: installtau [OPTIONS]
    this distribution.
 
    Make installs the library and its stub makefile  in <prefix>/<arch>/lib 
-   subdirectory and installs utilities such as pprof and jracy in 
+   subdirectory and installs utilities such as pprof and paraprof in 
    <prefix>/<arch>/bin subdirectory.
 
    
@@ -476,7 +476,7 @@ Usage: installtau [OPTIONS]
    % cd examples/instrument
    % ./simple
    % pprof
-   % jracy
+   % paraprof
 
    To use tau_instrumentor, the C++ source code instrumentor: 
    a. Install pdtoolkit. [ Ref: http://www.acl.lanl.gov/pdtoolkit ] 
@@ -518,21 +518,35 @@ Usage: installtau [OPTIONS]
    library whereas SP has minimal instrumentation in the top level routine
    and relies on the instrumented MPI wrapper library. 
  
-4. jracy.
+4. Paraprof.
 
-   jracy is the GUI for TAU performance analysis. It requires Java 1.2+. An
+   Paraprof is the GUI for TAU performance analysis. It requires Java 1.2+. An
    earlier version of the profile browser, racy, was implemented using Tcl/Tk.
    It is also available in this distribution but support for racy will be 
-   gradually phased out. Users are encouraged to use jracy instead. jracy 
+   gradually phased out. Users are encouraged to use paraprof instead. Paraprof 
    does *not* require -jdk=<dir> option to be specified (which is used for 
    configuring TAU for analyzing Java applications). The 'java' jvm program 
    should be in the user's path.
-   NOTE: If jracy does not work properly, please rebuild jRacy.jar file by
-   % cd tau-xxx/tools/src/jRacy
+   NOTE: If paraprof does not work properly, please rebuild Paraprof.jar file by
+   % cd tau-xxx/tools/src/paraprof
    % make clean; make
    Before you do this, please ensure that javac (1.2+) is in your path. 
 
-5. TAU System Requirements :
+5. Performance Database: PerfDB
+
+   PerfDB is a tool related to the TAU framework.  The PerfDB database is
+   designed to store and provide access to TAU profile data.  A number of
+   utility programs have been written in Java to load the data into PerfDB
+   and to query the data.  With PerfDB, users can perform performance analyses 
+   such as regression analysis, scalability analysis across multiple trials, 
+   and so on.  An unlimited number of comparative analyses are available
+   through the PerfDB toolkit.  Work is being done to provide the user
+   with standard analysis tools, and an API has been developed to access the
+   data with standard Java classes. For further information, please refer to 
+   tools/src/perfdb/doc/README file for installation and usage instructions. 
+
+
+6. TAU System Requirements :
    -------------------------
 I) The Profiling Library needs a recent C++ compiler. Our recommended list:
 	a) Kuck and Associates' (http://www.kai.com) KCC compiler
@@ -555,6 +569,9 @@ II) Platforms :
 	        iv) 	Fujitsu C++/f90 compiler suite,
 		v)      KAI KAP/Pro compiler suite.
 		vi)     Intel C++/C/F90 compiler suite.
+                vii)    NAGWare F90 compilers.
+                viii)   Leahy F90 compilers.
+                ix)     Absoft F90 compilers.
 	c) Sun Solaris2 with g++, KCC. 
 	d) HP PA-RISC systems running HP-UX with g++, and aCC. 
 	e) Cray T3E with Cray C++ compiler, and KAI KCC.
@@ -564,35 +581,28 @@ II) Platforms :
 	j) IBM SP AIX (RS6000) systems with KCC, and xlC compilers.
 	k) PowerPC Linux with g++.
 	l) IA-64 Linux with g++, SGI Pro64 and Intel C++/C/F90 compilers.
-	m) Apple OS X (Darwin) with c++.
+	m) Apple OS X (Darwin) with c++, IBM xlf compilers.
 	n) Hitachi SR8000 with KCC, g++, Hitachi cc and f90 compilers. 
-        o) NEC SX-5 system with NEC c++, cc, and f90 compilers
+        o) NEC SX-5 system with NEC c++, cc, and f90 compilers.
+        p) Cray SV-1 with Cray Compilers.
+        q) Cray X1 with Cray compilers.
+        r) AMD Opteron and IA-64 Linux systems with GNU compilers.
 	   
 
    TAU may work with minor modifications on other platforms.
 	
 III) Software Requirements :
-   a) Tcl/Tk
+   a) java
+   paraprof requires Java 1.2+. Java can be downloaded from http://www.sun.com
+
+   b) Tcl/Tk
    TAU's GUI racy needs Tcl 7.4/Tk 4.0 or better. The default is 8.0. 
    Tcl/Tk can be downloaded from http://www.scriptics.com. 
    NOTE: Tcl/Tk is only required for running the profile browser racy. The
-   current version of TAU supports the new Java based jracy profile browser that
+   current version of TAU supports the new Java based paraprof profile browser that
    replaces the Tcl/Tk based racy. 
-   
-   b) xauth
-   The display needs to be secure. xhost+ should not be used. Xauth style
-   security is required. See TAU FAQ on how to use this. Contact your 
-   system administrator if your X-server is not configured for Xauth 
-   cookies. 
-
-   c) xrdb
-   The configure script ensures that the display is ok using xrdb.
-
-   d) java
-   jracy requires Java 1.2+. Java can be downloaded from http://www.sun.com
-
     
-6. Modifying user's Makefile for Tracing/Profiling.
+7. Modifying user's Makefile for Tracing/Profiling.
 
    TAU provides a makefile stub file which is placed in the installation
    directory <prefix>/<arch>/lib/Makefile.tau[-optionlist]. Users need to 
@@ -600,7 +610,7 @@ III) Software Requirements :
    and TAU_DEFS appropriately in their makefiles. See (examples/instrument/
    Makefile)  
 
-7. Examples of configuration and usage on the IBM SP
+8. Examples of configuration and usage on the IBM SP
         
      % cd tau-2.x
      Example I:
@@ -617,7 +627,7 @@ III) Software Requirements :
        each thread
      % pprof
        This is the text based profile browser.
-     % jracy  
+     % paraprof  
      
      Example II:
      Profiling an MPI program using the TAU MPI wrapper library.
@@ -627,7 +637,7 @@ III) Software Requirements :
      % cd examples/pi
      % make 
      % poe cpi -procs 4 -rmpool 2
-     % pprof or racy
+     % pprof or paraprof
        Note: Using the MPI Profiling Interface TAU can generate profile data for 
        all MPI routines as well.
      
@@ -656,7 +666,7 @@ III) Software Requirements :
        performance date when executed.
      % klargest
      % pprof
-     % racy
+     % paraprof
      
      Example IV:
      Tracing an MPI program (compiled with KCC) and displaying the traces in 
@@ -688,7 +698,7 @@ III) Software Requirements :
      % poe stommel -procs 2 -rmpool 2 
      % pprof
    
-8. Using TAU with POOMA
+9. Using TAU with POOMA
    Set the environment variable TAUDIR to point to the directory where TAU is
    installed. Follow the following procedure.
 
@@ -737,7 +747,7 @@ III) Software Requirements :
     % cd $POOMASUITE
     % SimpleJacobi --pooma-threads <n>
     % pprof
-    % jracy 
+    % paraprof 
        
     
     
