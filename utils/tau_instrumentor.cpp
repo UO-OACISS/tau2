@@ -35,6 +35,7 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
 }
  
 static const char *toName(pdbItem::templ_t v) ;
+static const char *toName(pdbItem::store_t v) ;
 void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
   PDB::routinevec routines = pdb.getRoutineVec();
@@ -44,9 +45,14 @@ void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() && 
 	 ((*rit)->storageClass() != pdbItem::ST_EXT)) 
     {
-	if (((*rit)->parentClass()) == 0) 
-	{ 
-	  // There's no parent class. No need to add CT(*this)
+	
+	if ((*rit)->isStatic()) 
+	{
+	  cout <<" STATIC "<< (*rit)->fullName() <<endl;
+	}
+	if ((((*rit)->parentClass()) == 0) || (*rit)->isStatic())
+	{ // If it is a static function or if 
+	  // there's no parent class. No need to add CT(*this)
           itemvec.push_back(new itemRef(*rit, true));
 	}
 	else
@@ -73,7 +79,7 @@ void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
       { 
   	// templates need some processing. Give it a false for isTarget arg.
 	// target helps identify if we need to put a CT(*this) in the type
-	if (((*te)->parentClass()) == 0) 
+	if ((((*te)->parentClass()) == 0) && (tekind != pdbItem::TE_STATMEM)) 
 	{ 
 	  // There's no parent class. No need to add CT(*this)
           itemvec.push_back(new itemRef(*te, true)); // False puts CT(*this)
