@@ -15,6 +15,10 @@ TAUROOTDIR	= ../..
 
 include $(TAUROOTDIR)/include/Makefile
 
+CXX		= $(TAU_CXX)
+
+CC		= $(TAU_CC)
+
 CFLAGS        	= $(TAUINC) $(TAUDEFS)
 
 LIBS 	      	= $(TAULIBS)
