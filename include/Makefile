@@ -94,6 +94,18 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 
 #PCL#include $(TAUROOT)/include/makefiles/PCLMakefile.stub	  #ENDIF#
 
+############# Fortran Compiler #############
+#GNU_FORTRAN#TAU_F90         = g77      $(ABI)    #ENDIF#
+#SGI_FORTRAN#TAU_F90         = f90      $(ABI)    #ENDIF#
+#IBM_FORTRAN#TAU_F90         = xlf90    $(ABI)    #ENDIF#
+#IBM64_FORTRAN#TAU_F90       = xlf90    $(ABI)    #ENDIF#
+#CRAY_FORTRAN#TAU_F90        = f90      $(ABI)    #ENDIF#
+#PGI_FORTRAN#TAU_F90         = pgf90    $(ABI)    #ENDIF#
+#ABSOFT_FORTRAN#TAU_F90      = f90      $(ABI)    #ENDIF#
+#FUJITSU_FORTRAN#TAU_F90     = F90      $(ABI)    #ENDIF#
+#SUN_FORTRAN#TAU_F90         = f90      $(ABI)    #ENDIF#
+#COMPAQ_FORTRAN#TAU_F90      = f90      $(ABI)    #ENDIF#
+#KAI_FORTRAN#TAU_F90         = guidef90 $(ABI)    #ENDIF#
 
 
 ############# Profiling Options #############
@@ -167,19 +179,19 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
-#GNU#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
-#SGIMP#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
-#SP1#TAU_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
-#SP164BIT#TAU_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
+#GNU_FORTRAN#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
+#SGI_FORTRAN#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
+#IBM_FORTRAN#TAU_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
+#IBM64_FORTRAN#TAU_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
 
-#CRAYKAI#TAU_FORTRANLIBS	       =        #ENDIF#
-#PGI#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902        #ENDIF#
+#CRAY_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
+#PGI_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902        #ENDIF#
 #PGI1.7#LEXTRA = -lstd -lstrm#ENDIF#
 #PGI1.7#TAUHELPER = $(TAUROOT)/src/Profile/TauPGIHelper.cpp #ENDIF#
-#FUJITSU#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/fj90rt0.o -L$(EXTRADIR)/lib -lfj9i6 -lfj9f6 -lfj9e6        #ENDIF#
-#SOL2CC#TAU_FORTRANLIBS	       = -lfui -lfai -lfai2 -lfsumai -lfprodai -lfminlai -lfmaxlai -lfminvai -lfmaxvai -lfsu -lsunmath        #ENDIF#
+#FUJITSU_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/fj90rt0.o -L$(EXTRADIR)/lib -lfj9i6 -lfj9f6 -lfj9e6        #ENDIF#
+#SUN_FORTRAN#TAU_FORTRANLIBS	       = -lfui -lfai -lfai2 -lfsumai -lfprodai -lfminlai -lfmaxlai -lfminvai -lfmaxvai -lfsu -lsunmath        #ENDIF#
 #SOL2#EXTRALIBS = -lsocket -lnsl      #ENDIF#
-#USE_DECCXX#TAU_FORTRANLIBS =  $(EXTRADIR)/lib/cmplrs/fort90/for_main.o -L$(EXTRADIR)/lib -L$(EXTRADIR)/lib/cmplrs/fort90 -L$(EXTRADIR)/lib/cmplrs/fort90 -lUfor -lfor -lFutil -lm -lmld -lexc -lc #ENDIF#
+#COMPAQ_FORTRAN#TAU_FORTRANLIBS =  $(EXTRADIR)/lib/cmplrs/fort90/for_main.o -L$(EXTRADIR)/lib -L$(EXTRADIR)/lib/cmplrs/fort90 -L$(EXTRADIR)/lib/cmplrs/fort90 -lUfor -lfor -lFutil -lm -lmld -lexc -lc #ENDIF#
 
 #MPI#TAU_MPI_WRAPPER_LIB= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTauMpi$(TAU_OPTIONS) #ENDIF#
 

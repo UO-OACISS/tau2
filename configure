@@ -164,6 +164,7 @@ dyninst=no
 java=no
 openmp=no
 ibmxlc=no
+fortran_compiler=no
 
 # debug:
 # echo $arguments
@@ -196,7 +197,19 @@ do
 #      exit 1
     fi
     shift
-   ;;
+    ;;
+
+  -fortran=*)
+    myarg=`echo $arg | sed 's/-fortran=//'`
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai ] 
+    then
+      fortran_compiler=$myarg
+    else
+      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq' , and 'kai' "
+      exit 1
+    fi
+    shift
+    ;;
 
   -gnu)
       c_compiler=gcc
@@ -789,9 +802,9 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
   fi
 fi
 
-if [ $machine = t3e -a $cxx_compiler = KCC ]
+if [ $machine = t3e -a $cxx_compiler = KCC -a $fortran_compiler = no ]
   then
-      fixmakeargs="$fixmakeargs CRAYKAI"
+      fixmakeargs="$fixmakeargs CRAY_FORTRAN"
 fi
 
 if [ $debugprof = yes ]
@@ -830,12 +843,16 @@ case $cxx_compiler in
    cxx)
       echo "Default C++ compiler will be the Compaq cxx C++ compiler"
       fixmakeargs="$fixmakeargs USE_DECCXX"
-      f90loaded=`which f90 | sed -e 's/f90/../g' | grep "^no"`
-      if [ "x$f90loaded" = "x" ]
-      then
-  	# f90 module has been loaded and which f90 returns a path	
-        extradir="`which f90 | sed s/f90/../`"
-	echo "Found f90 in `which f90`"
+      if [ $fortran_compiler = no ]
+      then 
+        f90loaded=`which f90 | sed -e 's/f90/../g' | grep "^no"`
+        if [ "x$f90loaded" = "x" ]
+        then
+    	  # f90 module has been loaded and which f90 returns a path	
+          extradir="`which f90 | sed s/f90/../`"
+	  echo "Found f90 in `which f90`"
+        fi
+        fixmakeargs="$fixmakeargs COMPAQ_FORTRAN"
       fi
       ;;
 
@@ -843,6 +860,10 @@ case $cxx_compiler in
       echo "Default C++ compiler will be IBMs xlC C++ compiler"
       fixmakeargs="$fixmakeargs USE_IBMXLC"
       ibmxlc=yes
+      if [ $fortran_compiler = no ] 
+      then
+        fixmakeargs="$fixmakeargs IBM_FORTRAN"
+      fi
       ;;
 
    NCC)
@@ -860,8 +881,7 @@ case $cxx_compiler in
       echo "Default C++ compiler will be PGI pgCC C++ Compiler"
       pgi=yes
       pgiflag=`pgCC -help | head -1 | grep 1.7 | wc -l`
-      extradir=`which pgCC | sed s/pgCC/../`
-
+	
       if [ $pgiflag = 1 ] 
       then
 	echo  "Using PGI ver 1.7 Compiler"
@@ -869,13 +889,23 @@ case $cxx_compiler in
       else
         fixmakeargs="$fixmakeargs PGI PGICC"
       fi
+
+      if [ $fortran_compiler = no ]
+      then 
+        extradir=`which pgCC | sed s/pgCC/../`
+        fixmakeargs="$fixmakeargs PGI_FORTRAN"
+      fi
       ;;
 
    FCC)
       echo "Default C++ compiler will be Fujitsu C++ Compiler"	 
       fujitsu=yes
-      extradir=`which FCC | sed s/FCC/../`
       fixmakeargs="$fixmakeargs FUJITSU"
+      if [ $fortran_compiler = no ]
+      then 
+        extradir=`which FCC | sed s/FCC/../`
+        fixmakeargs="$fixmakeargs FUJITSU_FORTRAN"
+      fi
       ;;
 
    guidec++)
@@ -884,6 +914,11 @@ case $cxx_compiler in
       fixmakeargs="$fixmakeargs KAI GUIDE OPENMP"
       openmp=yes
       tauoptions="${tauoptions}-guide"
+      if [ $fortran_compiler = no ]
+      then
+        fixmakeargs="$fixmakeargs KAI_FORTRAN"
+      fi
+        
       ;;
 
    *)
@@ -892,6 +927,83 @@ case $cxx_compiler in
       ;;
 
 esac
+
+######################################################################
+# Set default F90 compiler in all Makefiles
+case $fortran_compiler in
+   gnu)
+      echo "Default Fortran compiler will be GNU g77"
+      fixmakeargs="$fixmakeargs GNU_FORTRAN"
+      ;;
+
+   sgi)
+      echo "Default Fortran compiler will be SGI f90"
+      fixmakeargs="$fixmakeargs SGI_FORTRAN"
+      ;;
+
+   ibm)
+      echo "Default Fortran compiler will be IBM xlf90"
+      fixmakeargs="$fixmakeargs IBM_FORTRAN"
+      ;;
+
+   ibm64)
+      echo "Default Fortran compiler will be IBM xlf90 (64 bits)"
+      fixmakeargs="$fixmakeargs IBM64_FORTRAN"
+      ;;
+
+   cray)
+      echo "Default Fortran compiler will be Cray f90"
+      fixmakeargs="$fixmakeargs CRAY_FORTRAN"
+      ;;
+
+   pgi)
+      echo "Default Fortran compiler will be PGI pgf90"
+      extradir=`which pgCC | sed s/pgCC/../`
+      fixmakeargs="$fixmakeargs PGI_FORTRAN"
+      ;;
+
+   absoft)
+      echo "Default Fortran compiler will be Absoft f90"
+      fixmakeargs="$fixmakeargs IBM64_FORTRAN"
+      ;;
+
+   fujitsu)
+      echo "Default Fortran compiler will be Fujitsu F90"
+      extradir=`which FCC | sed s/FCC/../`
+      fixmakeargs="$fixmakeargs FUJITSU_FORTRAN"
+      ;;
+
+   sun)
+      echo "Default Fortran compiler will be SUN f90" 
+      fixmakeargs="$fixmakeargs SUN_FORTRAN"
+      ;;
+
+   compaq)
+      echo "Default Fortran compiler will be Compaq f90"
+      f90loaded=`which f90 | sed -e 's/f90/../g' | grep "^no"`
+      if [ "x$f90loaded" = "x" ]
+      then
+        # f90 module has been loaded and which f90 returns a path
+        extradir="`which f90 | sed s/f90/../`"
+        echo "Found f90 in `which f90`"
+      fi
+      fixmakeargs="$fixmakeargs COMPAQ_FORTRAN"
+      ;;
+
+   kai)
+      echo "Default Fortran compiler will be KAI guidef90"
+      fixmakeargs="$fixmakeargs KAI_FORTRAN"
+      ;;
+
+   no)
+      ;;
+
+   *)
+      ;;
+
+esac
+
+
 
 ######################################################################
 # Set MPI options
@@ -1267,6 +1379,11 @@ case $machine in
         if [ $detectxdev = sgimp -o $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
           then
             fixmakeargs="$fixmakeargs SGIMP"
+            if [ $fortran_compiler = no ] 
+	    then
+              fixmakeargs="$fixmakeargs SGI_FORTRAN"
+	    fi
+	      
         fi
 	;;
 
@@ -1284,9 +1401,9 @@ case $machine in
  	  then
 	    fixmakeargs="$fixmakeargs SOL2PAPI"
 	fi
-	if [ $cxx_compiler = CC ]  
+	if [ $cxx_compiler = CC -a $fortran_compiler = no ]  
 	  then
-	    fixmakeargs="$fixmakeargs SOL2CC"
+	    fixmakeargs="$fixmakeargs SUN_FORTRAN"
         fi
 	 
 		

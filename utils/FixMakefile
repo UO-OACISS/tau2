@@ -599,10 +599,6 @@ fi
 	echo "NOTE: Using Standard C++ Library"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     SOL2CC)
-	echo "NOTE: Solaris2 CC compiler specific options used"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
      SOL2PAPI)
 	echo "NOTE: Using PAPI on Solaris (static library) ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -631,6 +627,51 @@ fi
 	echo "NOTE: Using SGI CC with no exceptions for compiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     GNU_FORTRAN)
+	echo "NOTE: GNU Fortran compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SGI_FORTRAN)
+	echo "NOTE: SGI f90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     IBM_FORTRAN)
+	echo "NOTE: IBM xlf90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     IBM64_FORTRAN)
+	echo "NOTE: IBM 64 bit f90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAY_FORTRAN)
+	echo "NOTE: Cray f90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PGI_FORTRAN)
+	echo "NOTE: PGI pgf90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     ABSOFT_FORTRAN)
+	echo "NOTE: Absoft f90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     FUJITSU_FORTRAN)
+	echo "NOTE: Fujitsu F90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SUN_FORTRAN)
+	echo "NOTE: Sun f90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     COMPAQ_FORTRAN)
+	echo "NOTE: Compaq f90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     KAI_FORTRAN)
+	echo "NOTE: KAI guidef90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+
      *)
 	echo "ERROR: Unknown argument directive \`$1' to FixMakefile"
 	;;
