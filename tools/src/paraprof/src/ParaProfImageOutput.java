@@ -68,7 +68,16 @@ public class ParaProfImageOutput{
 		ImageOutputStream imageOut = ImageIO.createImageOutputStream(f);
 		writer.setOutput(imageOut);
 		IIOImage iioImage = new IIOImage(bi,null,null);
-		writer.write(bi);
+
+
+		//Try setting quality.
+		ImageWriteParam iwp = writer.getDefaultWriteParam();
+		float compressionQuality = 0.25F;
+		iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+		iwp.setCompressionQuality(compressionQuality);
+		System.out.println("Qulity is: " + iwp.getCompressionQuality());
+
+		writer.write(null, iioImage, iwp);
 
 		System.out.println("Done saving image.");
 	    }
