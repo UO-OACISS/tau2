@@ -10,6 +10,8 @@ import java.awt.*;
 import javax.swing.*;
 import java.io.*;
 import java.text.*;
+import java.awt.print.*;
+
 public class UtilFncs {
 
     // left pad : pad string 's' up to length plen, but put the whitespace on
@@ -36,35 +38,35 @@ public class UtilFncs {
         return s.concat(new String(padchars, 0, len));
     }
 
-//    public static double adjustDoublePresision(double d, int precision) {
-//        String result = null;
-//        try {
-//            String formatString = "#.#";
-//            for (int i = 0; i < (precision - 1); i++) {
-//                formatString = formatString + "#";
-//            }
-//            // 	    if(d < 0.001){
-//            // 		for(int i=0;i<4;i++){
-//            // 		    formatString = formatString+"0";
-//            // 		}
-//            // 	    }
-//
-//            formatString = formatString + "E0";
-//
-//            DecimalFormat dF = new DecimalFormat(formatString);
-//            result = dF.format(d);
-//        } catch (Exception e) {
-//            UtilFncs.systemError(e, null, "UF01");
-//        }
-//
-//        try {
-//            return Double.parseDouble(result);
-//
-//        } catch (java.lang.NumberFormatException e) {
-//            //	    System.out.println ("Uh oh! " + d);
-//            return d;
-//        }
-//    }
+    //    public static double adjustDoublePresision(double d, int precision) {
+    //        String result = null;
+    //        try {
+    //            String formatString = "#.#";
+    //            for (int i = 0; i < (precision - 1); i++) {
+    //                formatString = formatString + "#";
+    //            }
+    //            // 	    if(d < 0.001){
+    //            // 		for(int i=0;i<4;i++){
+    //            // 		    formatString = formatString+"0";
+    //            // 		}
+    //            // 	    }
+    //
+    //            formatString = formatString + "E0";
+    //
+    //            DecimalFormat dF = new DecimalFormat(formatString);
+    //            result = dF.format(d);
+    //        } catch (Exception e) {
+    //            UtilFncs.systemError(e, null, "UF01");
+    //        }
+    //
+    //        try {
+    //            return Double.parseDouble(result);
+    //
+    //        } catch (java.lang.NumberFormatException e) {
+    //            //	    System.out.println ("Uh oh! " + d);
+    //            return d;
+    //        }
+    //    }
 
     // format a double for display within 'width' chars, kind of like C-printf's %G
     public static String formatDouble(double d, int width) {
@@ -94,7 +96,7 @@ public class UtilFncs {
             // now we reduce that format string as follows
 
             // first, do the minimum of 'width' or the length of the regular toString
-            
+
             int min = width;
             if (formatString.length() < min)
                 min = formatString.length();
@@ -107,13 +109,13 @@ public class UtilFncs {
             formatString = formatString.substring(0, min);
 
             // remove trailing dot
-            if (formatString.charAt(formatString.length()-1) == '.')
-                formatString = formatString.substring(0,formatString.length()-2);
-            
+            if (formatString.charAt(formatString.length() - 1) == '.')
+                formatString = formatString.substring(0, formatString.length() - 2);
+
             DecimalFormat dF = new DecimalFormat(formatString);
 
             str = dF.format(d);
-       	    //System.out.println ("value: " + d + ", width: " + width + ", returning: '" + lpad(str,width) + "'");
+            //System.out.println ("value: " + d + ", width: " + width + ", returning: '" + lpad(str,width) + "'");
             return lpad(str, width);
 
         }
@@ -242,16 +244,16 @@ public class UtilFncs {
         return null;
     }
 
-//    public static int exists(int[] ref, int i) {
-//        if (ref == null)
-//            return -1;
-//        int test = ref.length;
-//        for (int j = 0; j < test; j++) {
-//            if (ref[j] == i)
-//                return j;
-//        }
-//        return -1;
-//    }
+    //    public static int exists(int[] ref, int i) {
+    //        if (ref == null)
+    //            return -1;
+    //        int test = ref.length;
+    //        for (int j = 0; j < test; j++) {
+    //            if (ref[j] == i)
+    //                return j;
+    //        }
+    //        return -1;
+    //    }
 
     public static int exists(Vector ref, int i) {
         //Assuming a vector of Integers.
@@ -318,9 +320,8 @@ public class UtilFncs {
                         System.out.println(ParaProfError.contactString);
                 } else {
                     if ((paraProfError.showPopup) && (paraProfError.popupString != null))
-                        JOptionPane.showMessageDialog(paraProfError.component,
-                                paraProfError.popupString, "ParaProf Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(paraProfError.component, paraProfError.popupString,
+                                "ParaProf Error", JOptionPane.ERROR_MESSAGE);
                     if (paraProfError.location != null)
                         System.out.println("Location: " + paraProfError.location);
                     if (paraProfError.s0 != null)
@@ -355,277 +356,273 @@ public class UtilFncs {
     //Print the passed in data session data out to a file or to the console.
     //If the passed in File object is null, data is printed to the console.
     // Component can be null.
-    
-//    public static void outputData(DataSource dataSource, File file, Component component) {
-//        try {
-//            boolean toFile = false;
-//            PrintWriter out = null;
-//            TrialData trialData = dataSource.getTrialData();
-//            int numberOfMetrics = dataSource.getNumberOfMetrics();
-//            StringBuffer output = new StringBuffer(1000);
-//
-//            if (file != null) {
-//                out = new PrintWriter(new FileWriter(file));
-//                toFile = true;
-//            }
-//
-//            //######
-//            //Metric data.
-//            //######
-//            if (toFile) {
-//                out.println("<metrics>");
-//                out.println("<numofmetrics>" + numberOfMetrics + "</numofmetrics>");
-//            } else {
-//                System.out.println("<metrics>");
-//                System.out.println("<numofmetrics>" + numberOfMetrics + "</numofmetrics>");
-//            }
-//            for (int metric = 0; metric < numberOfMetrics; metric++) {
-//                if (toFile)
-//                    out.println(dataSource.getMetricName(metric));
-//                else
-//                    System.out.println(dataSource.getMetricName(metric));
-//            }
-//            if (toFile)
-//                out.println("</metrics>");
-//            else
-//                System.out.println("</metrics>");
-//            //######
-//            //End - Metric data.
-//            //######
-//
-//            //####################################
-//            //Global Data.
-//            //####################################
-//
-//            //######
-//            //Function data.
-//            //######
-//            
-//            Vector list = new Vector();
-//            for (Iterator functionIterator = trialData.getFunctions(); functionIterator.hasNext();) {
-//                list.add(functionIterator.next());
-//            }
-//
-//            
-//             //Name to ID map.
-//            if (toFile) {
-//                out.println("<funnameidmap>");
-//                out.println("<numoffunctions>" + list.size() + "</numoffunctions>");
-//            } else {
-//                System.out.println("<funnameidmap>");
-//                System.out.println("<numoffunctions>" + list.size() + "</numoffunctions>");
-//            }
-//            
-//            for (Enumeration e = list.elements(); e.hasMoreElements();) {
-//                Function f = (Function) e.nextElement();
-//                if (toFile)
-//                    out.println("\"" + f.getName() + "\""
-//                            + f.getID());
-//                else
-//                    System.out.println("\"" + f.getName() + "\""
-//                            + f.getID());
-//            }
-//            if (toFile)
-//                out.println("</funnameidmap>");
-//            else
-//                System.out.println("</funnameidmap>");
-//
-//            if (toFile)
-//                out.println("id mincl(..) mexcl(..) minclp(..) mexclp(..) museccall(..) mnoc mnos");
-//            else
-//                System.out.println("id mincl(..) mexcl(..) minclp(..) mexclp(..) museccall(..) mnoc mnos");
-//            for (Enumeration e = list.elements(); e.hasMoreElements();) {
-//                output.delete(0, output.length());
-//                Function function = (Function) e.nextElement();
-//                output.append(function.getID() + " ");
-//                for (int metric = 0; metric < numberOfMetrics; metric++) {
-//                    output.append(function.getMeanInclusiveValue(metric) + " ");
-//                    output.append(function.getMeanExclusiveValue(metric) + " ");
-//                    output.append(function.getMeanInclusivePercentValue(metric) + " ");
-//                    output.append(function.getMeanExclusivePercentValue(metric) + " ");
-//                    output.append(function.getMeanUserSecPerCall(metric) + " ");
-//                }
-//                output.append(function.getMeanNumberOfCalls() + " ");
-//                output.append(function.getMeanNumberOfSubRoutines() + "");
-//                if (toFile)
-//                    out.println(output);
-//                else
-//                    System.out.println(output);
-//            }
-//            //######
-//            //End - Function data.
-//            //######
-//
-//            //######
-//            //User event data.
-//            //######
-//            
-//            
-//            
-//            
-//
-//            //list = trialData.getMapping(2);
-//
-//            list = null;
-//            
-//            
-//            //Name to ID map.
-//            if (toFile) {
-//                out.println("<usereventnameidmap>");
-//                out.println("<numofuserevents>" + list.size() + "</numofuserevents>");
-//            } else {
-//                System.out.println("<usereventnameidmap>");
-//                System.out.println("<numofuserevents>" + list.size() + "</numofuserevents>");
-//            }
-//            for (Enumeration e = list.elements(); e.hasMoreElements();) {
-//                Function function = (Function) e.nextElement();
-//                if (toFile)
-//                    out.println("\"" + function.getName() + "\""
-//                            + function.getID());
-//                else
-//                    System.out.println("\"" + function.getName() + "\""
-//                            + function.getID());
-//            }
-//            if (toFile)
-//                out.println("</usereventnameidmap>");
-//            else
-//                System.out.println("</usereventnameidmap>");
-//            //######
-//            //End - User event data.
-//            //######
-//
-//            //####################################
-//            //End - Global Data.
-//            //####################################
-//
-//            //######
-//            //Thread data.
-//            //######
-//            if (toFile) {
-//                out.println("<threaddata>");
-//                out.println("funid incl(..) excl(..) inclp(..) exclp(..) useccall(..) mnoc mnos");
-//                out.println("usereventid num min max mean");
-//                out.println("<numofthreads>" + dataSource.getNCT().getTotalNumberOfThreads()
-//                        + "</numofthreads>");
-//            } else {
-//                System.out.println("<threaddata>");
-//                System.out.println("id incl(..) excl(..) inclp(..) exclp(..) useccall(..) noc nos");
-//                System.out.println("usereventid num min max mean");
-//                System.out.println("<numofthreads>" + dataSource.getNCT().getTotalNumberOfThreads()
-//                        + "</numofthreads>");
-//            }
-//
-//            String test = null;
-//
-//            for (Enumeration e1 = dataSource.getNCT().getNodes().elements(); e1.hasMoreElements();) {
-//                Node node = (Node) e1.nextElement();
-//                for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
-//                    Context context = (Context) e2.nextElement();
-//                    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
-//                        Thread thread = (Thread) e3.nextElement();
-//                        ListIterator l = null;
-//                        if (toFile)
-//                            out.println("<thread>" + thread.getNodeID() + ","
-//                                    + thread.getContextID() + "," + thread.getThreadID()
-//                                    + "</thread");
-//                        else
-//                            System.out.println("<thread>" + thread.getNodeID() + ","
-//                                    + thread.getContextID() + "," + thread.getThreadID()
-//                                    + "</thread");
-//                        if (toFile)
-//                            out.println("<functiondata>");
-//                        else
-//                            System.out.println("<functiondata>");
-//                        l = thread.getFunctionListIterator();
-//                        while (l.hasNext()) {
-//                            output.delete(0, output.length());
-//                            FunctionProfile functionProfile = (FunctionProfile) l.next();
-//                            if (functionProfile != null) {
-//                                output.append(functionProfile.getFunction().getID() + " ");
-//                                for (int metric = 0; metric < numberOfMetrics; metric++) {
-//                                    output.append(functionProfile.getInclusiveValue(metric) + " ");
-//                                    output.append(functionProfile.getExclusiveValue(metric) + " ");
-//                                    output.append(functionProfile.getInclusivePercentValue(metric)
-//                                            + " ");
-//                                    output.append(functionProfile.getExclusivePercentValue(metric)
-//                                            + " ");
-//                                    output.append(functionProfile.getInclusivePerCall(metric) + " ");
-//                                }
-//                                output.append(functionProfile.getNumberOfCalls() + " ");
-//                                output.append(functionProfile.getNumberOfSubRoutines() + "");
-//                                if (toFile)
-//                                    out.println(output);
-//                                else
-//                                    System.out.println(output);
-//                            }
-//                        }
-//                        if (toFile)
-//                            out.println("</functiondata>");
-//                        else
-//                            System.out.println("</functiondata>");
-//                        if (toFile)
-//                            out.println("<usereventdata>");
-//                        else
-//                            System.out.println("<usereventdata>");
-//                        l = thread.getUsereventListIterator();
-//                        while (l.hasNext()) {
-//                            output.delete(0, output.length());
-//                            UserEventProfile uep = (UserEventProfile) l.next();
-//                            if (uep != null) {
-//                                output.append(uep.getUserEvent().getID() + " ");
-//                                for (int metric = 0; metric < numberOfMetrics; metric++) {
-//                                    output.append(uep.getUserEventNumberValue() + " ");
-//                                    output.append(uep.getUserEventMinValue() + " ");
-//                                    output.append(uep.getUserEventMaxValue() + " ");
-//                                    output.append(uep.getUserEventMeanValue() + "");
-//                                }
-//                                if (toFile)
-//                                    out.println(output);
-//                                else
-//                                    System.out.println(output);
-//                            }
-//                        }
-//                        if (toFile)
-//                            out.println("</usereventdata>");
-//                        else
-//                            System.out.println("</usereventdata>");
-//                    }
-//                }
-//            }
-//
-//            if (toFile)
-//                out.println("</threaddata>");
-//            else
-//                System.out.println("</threaddata>");
-//            //######
-//            //End - Thread data.
-//            //######
-//
-//            //Flush output buffer and close file if required.
-//            if (out != null) {
-//                out.flush();
-//                out.close();
-//            }
-//
-//        } catch (Exception exception) {
-//            UtilFncs.systemError(new ParaProfError("UF05",
-//                    "File write error! Check console for details.",
-//                    "An error occurred while trying to save txt file.", null, exception,
-//                    component, null, null, true, false, false), null, null);
-//        }
-//    }
-//    //####################################
-//    //End - Test system state functionProfiles.
-//    //####################################
-//    
-    
-    
-    
-    
-    
+
+    //    public static void outputData(DataSource dataSource, File file, Component component) {
+    //        try {
+    //            boolean toFile = false;
+    //            PrintWriter out = null;
+    //            TrialData trialData = dataSource.getTrialData();
+    //            int numberOfMetrics = dataSource.getNumberOfMetrics();
+    //            StringBuffer output = new StringBuffer(1000);
+    //
+    //            if (file != null) {
+    //                out = new PrintWriter(new FileWriter(file));
+    //                toFile = true;
+    //            }
+    //
+    //            //######
+    //            //Metric data.
+    //            //######
+    //            if (toFile) {
+    //                out.println("<metrics>");
+    //                out.println("<numofmetrics>" + numberOfMetrics + "</numofmetrics>");
+    //            } else {
+    //                System.out.println("<metrics>");
+    //                System.out.println("<numofmetrics>" + numberOfMetrics + "</numofmetrics>");
+    //            }
+    //            for (int metric = 0; metric < numberOfMetrics; metric++) {
+    //                if (toFile)
+    //                    out.println(dataSource.getMetricName(metric));
+    //                else
+    //                    System.out.println(dataSource.getMetricName(metric));
+    //            }
+    //            if (toFile)
+    //                out.println("</metrics>");
+    //            else
+    //                System.out.println("</metrics>");
+    //            //######
+    //            //End - Metric data.
+    //            //######
+    //
+    //            //####################################
+    //            //Global Data.
+    //            //####################################
+    //
+    //            //######
+    //            //Function data.
+    //            //######
+    //            
+    //            Vector list = new Vector();
+    //            for (Iterator functionIterator = trialData.getFunctions(); functionIterator.hasNext();) {
+    //                list.add(functionIterator.next());
+    //            }
+    //
+    //            
+    //             //Name to ID map.
+    //            if (toFile) {
+    //                out.println("<funnameidmap>");
+    //                out.println("<numoffunctions>" + list.size() + "</numoffunctions>");
+    //            } else {
+    //                System.out.println("<funnameidmap>");
+    //                System.out.println("<numoffunctions>" + list.size() + "</numoffunctions>");
+    //            }
+    //            
+    //            for (Enumeration e = list.elements(); e.hasMoreElements();) {
+    //                Function f = (Function) e.nextElement();
+    //                if (toFile)
+    //                    out.println("\"" + f.getName() + "\""
+    //                            + f.getID());
+    //                else
+    //                    System.out.println("\"" + f.getName() + "\""
+    //                            + f.getID());
+    //            }
+    //            if (toFile)
+    //                out.println("</funnameidmap>");
+    //            else
+    //                System.out.println("</funnameidmap>");
+    //
+    //            if (toFile)
+    //                out.println("id mincl(..) mexcl(..) minclp(..) mexclp(..) museccall(..) mnoc mnos");
+    //            else
+    //                System.out.println("id mincl(..) mexcl(..) minclp(..) mexclp(..) museccall(..) mnoc mnos");
+    //            for (Enumeration e = list.elements(); e.hasMoreElements();) {
+    //                output.delete(0, output.length());
+    //                Function function = (Function) e.nextElement();
+    //                output.append(function.getID() + " ");
+    //                for (int metric = 0; metric < numberOfMetrics; metric++) {
+    //                    output.append(function.getMeanInclusiveValue(metric) + " ");
+    //                    output.append(function.getMeanExclusiveValue(metric) + " ");
+    //                    output.append(function.getMeanInclusivePercentValue(metric) + " ");
+    //                    output.append(function.getMeanExclusivePercentValue(metric) + " ");
+    //                    output.append(function.getMeanUserSecPerCall(metric) + " ");
+    //                }
+    //                output.append(function.getMeanNumberOfCalls() + " ");
+    //                output.append(function.getMeanNumberOfSubRoutines() + "");
+    //                if (toFile)
+    //                    out.println(output);
+    //                else
+    //                    System.out.println(output);
+    //            }
+    //            //######
+    //            //End - Function data.
+    //            //######
+    //
+    //            //######
+    //            //User event data.
+    //            //######
+    //            
+    //            
+    //            
+    //            
+    //
+    //            //list = trialData.getMapping(2);
+    //
+    //            list = null;
+    //            
+    //            
+    //            //Name to ID map.
+    //            if (toFile) {
+    //                out.println("<usereventnameidmap>");
+    //                out.println("<numofuserevents>" + list.size() + "</numofuserevents>");
+    //            } else {
+    //                System.out.println("<usereventnameidmap>");
+    //                System.out.println("<numofuserevents>" + list.size() + "</numofuserevents>");
+    //            }
+    //            for (Enumeration e = list.elements(); e.hasMoreElements();) {
+    //                Function function = (Function) e.nextElement();
+    //                if (toFile)
+    //                    out.println("\"" + function.getName() + "\""
+    //                            + function.getID());
+    //                else
+    //                    System.out.println("\"" + function.getName() + "\""
+    //                            + function.getID());
+    //            }
+    //            if (toFile)
+    //                out.println("</usereventnameidmap>");
+    //            else
+    //                System.out.println("</usereventnameidmap>");
+    //            //######
+    //            //End - User event data.
+    //            //######
+    //
+    //            //####################################
+    //            //End - Global Data.
+    //            //####################################
+    //
+    //            //######
+    //            //Thread data.
+    //            //######
+    //            if (toFile) {
+    //                out.println("<threaddata>");
+    //                out.println("funid incl(..) excl(..) inclp(..) exclp(..) useccall(..) mnoc mnos");
+    //                out.println("usereventid num min max mean");
+    //                out.println("<numofthreads>" + dataSource.getNCT().getTotalNumberOfThreads()
+    //                        + "</numofthreads>");
+    //            } else {
+    //                System.out.println("<threaddata>");
+    //                System.out.println("id incl(..) excl(..) inclp(..) exclp(..) useccall(..) noc nos");
+    //                System.out.println("usereventid num min max mean");
+    //                System.out.println("<numofthreads>" + dataSource.getNCT().getTotalNumberOfThreads()
+    //                        + "</numofthreads>");
+    //            }
+    //
+    //            String test = null;
+    //
+    //            for (Enumeration e1 = dataSource.getNCT().getNodes().elements(); e1.hasMoreElements();) {
+    //                Node node = (Node) e1.nextElement();
+    //                for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
+    //                    Context context = (Context) e2.nextElement();
+    //                    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
+    //                        Thread thread = (Thread) e3.nextElement();
+    //                        ListIterator l = null;
+    //                        if (toFile)
+    //                            out.println("<thread>" + thread.getNodeID() + ","
+    //                                    + thread.getContextID() + "," + thread.getThreadID()
+    //                                    + "</thread");
+    //                        else
+    //                            System.out.println("<thread>" + thread.getNodeID() + ","
+    //                                    + thread.getContextID() + "," + thread.getThreadID()
+    //                                    + "</thread");
+    //                        if (toFile)
+    //                            out.println("<functiondata>");
+    //                        else
+    //                            System.out.println("<functiondata>");
+    //                        l = thread.getFunctionListIterator();
+    //                        while (l.hasNext()) {
+    //                            output.delete(0, output.length());
+    //                            FunctionProfile functionProfile = (FunctionProfile) l.next();
+    //                            if (functionProfile != null) {
+    //                                output.append(functionProfile.getFunction().getID() + " ");
+    //                                for (int metric = 0; metric < numberOfMetrics; metric++) {
+    //                                    output.append(functionProfile.getInclusiveValue(metric) + " ");
+    //                                    output.append(functionProfile.getExclusiveValue(metric) + " ");
+    //                                    output.append(functionProfile.getInclusivePercentValue(metric)
+    //                                            + " ");
+    //                                    output.append(functionProfile.getExclusivePercentValue(metric)
+    //                                            + " ");
+    //                                    output.append(functionProfile.getInclusivePerCall(metric) + " ");
+    //                                }
+    //                                output.append(functionProfile.getNumberOfCalls() + " ");
+    //                                output.append(functionProfile.getNumberOfSubRoutines() + "");
+    //                                if (toFile)
+    //                                    out.println(output);
+    //                                else
+    //                                    System.out.println(output);
+    //                            }
+    //                        }
+    //                        if (toFile)
+    //                            out.println("</functiondata>");
+    //                        else
+    //                            System.out.println("</functiondata>");
+    //                        if (toFile)
+    //                            out.println("<usereventdata>");
+    //                        else
+    //                            System.out.println("<usereventdata>");
+    //                        l = thread.getUsereventListIterator();
+    //                        while (l.hasNext()) {
+    //                            output.delete(0, output.length());
+    //                            UserEventProfile uep = (UserEventProfile) l.next();
+    //                            if (uep != null) {
+    //                                output.append(uep.getUserEvent().getID() + " ");
+    //                                for (int metric = 0; metric < numberOfMetrics; metric++) {
+    //                                    output.append(uep.getUserEventNumberValue() + " ");
+    //                                    output.append(uep.getUserEventMinValue() + " ");
+    //                                    output.append(uep.getUserEventMaxValue() + " ");
+    //                                    output.append(uep.getUserEventMeanValue() + "");
+    //                                }
+    //                                if (toFile)
+    //                                    out.println(output);
+    //                                else
+    //                                    System.out.println(output);
+    //                            }
+    //                        }
+    //                        if (toFile)
+    //                            out.println("</usereventdata>");
+    //                        else
+    //                            System.out.println("</usereventdata>");
+    //                    }
+    //                }
+    //            }
+    //
+    //            if (toFile)
+    //                out.println("</threaddata>");
+    //            else
+    //                System.out.println("</threaddata>");
+    //            //######
+    //            //End - Thread data.
+    //            //######
+    //
+    //            //Flush output buffer and close file if required.
+    //            if (out != null) {
+    //                out.flush();
+    //                out.close();
+    //            }
+    //
+    //        } catch (Exception exception) {
+    //            UtilFncs.systemError(new ParaProfError("UF05",
+    //                    "File write error! Check console for details.",
+    //                    "An error occurred while trying to save txt file.", null, exception,
+    //                    component, null, null, true, false, false), null, null);
+    //        }
+    //    }
+    //    //####################################
+    //    //End - Test system state functionProfiles.
+    //    //####################################
+    //    
+
     public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames) {
         DataSource dataSource = null;
-        
+
         Vector v = new Vector();
         File filelist[];
         switch (fileType) {
@@ -686,7 +683,7 @@ public class UtilFncs {
             break;
         case 5:
             v.add(sourceFiles);
-            dataSource = new GprofDataSource(v,fixGprofNames);
+            dataSource = new GprofDataSource(v, fixGprofNames);
             break;
         case 6:
             v.add(sourceFiles);
@@ -696,17 +693,26 @@ public class UtilFncs {
             break;
         }
 
-
         return dataSource;
-}
+    }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    public static void print(Printable printable) {
+        PrinterJob job = PrinterJob.getPrinterJob();
+        PageFormat defaultFormat = job.defaultPage();
+        PageFormat selectedFormat = job.pageDialog(defaultFormat);
+        if (defaultFormat != selectedFormat) { // only proceed if the user did not select cancel
+            job.setPrintable(printable, selectedFormat);
+            if (job.getPrintService() != null) {
+                if (job.printDialog()) { // only proceed if the user did not select cancel
+                    try {
+                        job.print();
+                    } catch (PrinterException e) {
+                        // TODO: Do Something!!!!!!!!!!!!!!!!!!!!!!!1
+                    }
+                }
+            }
+        }
+
+    }
+
 }
