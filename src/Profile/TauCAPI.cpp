@@ -48,7 +48,7 @@ using namespace std;
    the C layer, it remains unchanged. However, we should probably change the 
    name of this method to tau_get_functioninfo or something. */
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void * tau_get_profiler(char *fname, char *type, TauGroup_t group)
+extern "C" void * tau_get_profiler(char *fname, char *type, TauGroup_t group, char *gr_name)
 {
   FunctionInfo *f;
   //Profiler *p;
@@ -59,7 +59,7 @@ extern "C" void * tau_get_profiler(char *fname, char *type, TauGroup_t group)
   if (group == TAU_MESSAGE)
     f = new FunctionInfo(fname, type, group, "MPI", true);
   else 
-    f = new FunctionInfo(fname, type, group, fname, true);
+    f = new FunctionInfo(fname, type, group, gr_name, true);
 //  p = new Profiler(f, group, true);
 
   return (void *) f;
@@ -157,6 +157,24 @@ extern "C" void tau_disable_instrumentation(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" TauGroup_t tau_enable_group_name(char * group)
+{
+  return TAU_ENABLE_GROUP_NAME(group);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" TauGroup_t tau_disable_group_name(char * group)
+{
+  return TAU_DISABLE_GROUP_NAME(group);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" TauGroup_t tau_get_profile_group(char * group)
+{
+  return TAU_GET_PROFILE_GROUP(group);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void tau_enable_group(TauGroup_t group)
 {
   TAU_ENABLE_GROUP(group);
@@ -239,7 +257,8 @@ extern "C" void tau_event_disable_stddev(void *ue)
 
 ///////////////////////////////////////////////////////////////////////////
 
-extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group)
+extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group, 
+	char *group_name)
 {
 #ifdef DEBUG_PROF
   printf("Inside tau_profile_timer_ fname=%s *ptr = %x\n", fname, *ptr);
@@ -254,7 +273,7 @@ extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
         break;
       }
     }
-    *ptr = tau_get_profiler(fname, type, group);
+    *ptr = tau_get_profiler(fname, type, group, group_name);
   }
 
 #ifdef DEBUG_PROF
@@ -267,8 +286,8 @@ extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: tjaqua $
- * $Revision: 1.17 $   $Date: 2001/02/16 23:54:17 $
- * VERSION: $Id: TauCAPI.cpp,v 1.17 2001/02/16 23:54:17 tjaqua Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.18 $   $Date: 2002/01/09 22:51:04 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.18 2002/01/09 22:51:04 sameer Exp $
  ***************************************************************************/
 

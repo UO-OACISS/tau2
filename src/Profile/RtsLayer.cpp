@@ -133,6 +133,59 @@ int& RtsLayer::TheContext(void)
 
 /////////////////////////////////////////////////////////////////////////
 
+ProfileMap_t& RtsLayer::TheProfileMap(void) {
+  static ProfileMap_t profilemap;
+  
+  return profilemap;
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+
+TauGroup_t RtsLayer::getProfileGroup(char * ProfileGroup) {
+
+  ProfileMap_t::iterator it = TheProfileMap().find(string(ProfileGroup));
+  TauGroup_t gr;
+  if (it == TheProfileMap().end())
+  {
+#ifdef DEBUG_PROF
+    cout <<ProfileGroup << " not found, adding ... "<<endl;
+#endif /* DEBUG_PROF */
+    gr = generateProfileGroup();
+    TheProfileMap()[string(ProfileGroup)] = gr; // Add
+    return gr; 
+  }
+  else
+    return (*it).second; // The group that was found
+
+}
+
+/////////////////////////////////////////////////////////////////////////
+
+TauGroup_t RtsLayer::disableProfileGroupName(char * ProfileGroup) {
+
+  return disableProfileGroup(getProfileGroup(ProfileGroup)); 
+
+}
+
+/////////////////////////////////////////////////////////////////////////
+
+TauGroup_t RtsLayer::enableProfileGroupName(char * ProfileGroup) {
+
+  return enableProfileGroup(getProfileGroup(ProfileGroup));
+
+}
+
+/////////////////////////////////////////////////////////////////////////
+
+TauGroup_t RtsLayer::generateProfileGroup(void) {
+  static TauGroup_t key =  0x00000001;
+  key = key << 1;
+  return key;
+}
+
+/////////////////////////////////////////////////////////////////////////
+
 TauGroup_t RtsLayer::enableProfileGroup(TauGroup_t ProfileGroup) {
   TheProfileMask() |= ProfileGroup; // Add it to the mask
   DEBUGPROFMSG("enableProfileGroup " << ProfileGroup <<" Mask = " 
@@ -316,9 +369,11 @@ double TauWindowsUsecD(void)
 	  PerfClockCheckedBefore = true;
 	  if(PerformanceClock)
 	  {
+#ifdef DEBUG_PROF
 		  cout << "Frequency high part is: " << Frequency.HighPart << endl;
 		  cout << "Frequency low part is: " << Frequency.LowPart << endl;
 		  cout << "Frequency quad part is: " << (double) Frequency.QuadPart << endl;			
+#endif /* DEBUG_PROF */
 		  //Shall be using Frequency.QuadPart and assuming a double as the main TAU
 		  //system does.
 		  
@@ -872,6 +927,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2001/10/02 21:03:19 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.27 2001/10/02 21:03:19 sameer Exp $ 
+ * $Revision: 1.28 $   $Date: 2002/01/09 22:51:03 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.28 2002/01/09 22:51:03 sameer Exp $ 
  ***************************************************************************/

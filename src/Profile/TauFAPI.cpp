@@ -39,7 +39,7 @@
 #define VALID_NAME_CHAR(x) (isprint(x))
 
 extern "C" {
-void * tau_get_profiler(char *, char *, TauGroup_t);
+void * tau_get_profiler(char *, char *, TauGroup_t, char *gr_name);
 void tau_start_timer(void *);
 void tau_stop_timer(void *);
 void tau_exit(char *);
@@ -77,7 +77,7 @@ void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
   
   if (*ptr == 0) 
   {
-    *ptr = tau_get_profiler(fname, (char *)" ", *group);
+    *ptr = tau_get_profiler(fname, (char *)" ", *group, fname);
   }
 
 #ifdef DEBUG_PROF 
@@ -102,7 +102,7 @@ void tau_profile_timer_(void **ptr, char *infname, int slen)
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
     
-    *ptr = tau_get_profiler(fname, (char *)" ", TAU_DEFAULT);
+    *ptr = tau_get_profiler(fname, (char *)" ", TAU_USER, fname);
   }
 
 #ifdef DEBUG_PROF 
@@ -274,7 +274,7 @@ void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
 #ifdef DEBUG_PROF
     printf("tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
-    *ptr = tau_get_profiler(fname, (char *)" ", TAU_DEFAULT);
+    *ptr = tau_get_profiler(fname, (char *)" ", TAU_USER, fname);
   }
 
 #ifdef DEBUG_PROF 
@@ -416,9 +416,9 @@ void tau_profile_timer(int **profiler, char *fname, int len)
     strncpy(name, fname, len);
     name[len]='\0';
 
-    *profiler = (int *) tau_get_profiler(name, (char *)" ", TAU_DEFAULT);
+    *profiler = (int *) tau_get_profiler(name, (char *)" ", TAU_USER, name);
 #else 
-    *profiler = (int *) tau_get_profiler(fname, (char *)" ", TAU_DEFAULT);
+    *profiler = (int *) tau_get_profiler(fname, (char *)" ", TAU_USER, fname);
 #endif /* HP_FORTRAN */
   }
 }
@@ -525,7 +525,7 @@ void tau_profile_timer__(void **ptr, char *fname, int *flen)
 #ifdef DEBUG_PROF
     printf("tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
-    *ptr = tau_get_profiler(fname, " ", TAU_DEFAULT);
+    *ptr = tau_get_profiler(fname, " ", TAU_USER, fname );
   }
 
 #ifdef DEBUG_PROF 
@@ -627,6 +627,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.22 $   $Date: 2002/01/09 02:02:20 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.22 2002/01/09 02:02:20 sameer Exp $ 
+ * $Revision: 1.23 $   $Date: 2002/01/09 22:51:04 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.23 2002/01/09 22:51:04 sameer Exp $ 
  ***************************************************************************/
