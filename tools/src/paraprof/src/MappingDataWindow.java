@@ -232,14 +232,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    showMetaData.addActionListener(this);
 	    optionsMenu.add(showMetaData);
 	    
-	    box = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-	    box.addActionListener(this);
-	    optionsMenu.add(box);
-	    
-	    box = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
-	    box.addActionListener(this);
-	    optionsMenu.add(box);
-	    
 	    optionsMenu.addMenuListener(this);
 	    //######
 	    //End - Options menu.

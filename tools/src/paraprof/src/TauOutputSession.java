@@ -1,3 +1,4 @@
+
 /* 
    TauOutputSession.java
    
@@ -47,6 +48,9 @@ public class TauOutputSession extends ParaProfDataSession{
 
     public void run(){
 	try{
+	    //Record time.
+	    long time = System.currentTimeMillis();
+
 	    //######
 	    //Frequently used items.
 	    //######
@@ -81,7 +85,8 @@ public class TauOutputSession extends ParaProfDataSession{
 	    v = (Vector) initializeObject;
 	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
 		System.out.println("Processing data, please wait ......");
-		long time = System.currentTimeMillis();
+		if(this.debug())
+		    this.outputToFile("Processing data, please wait ......");
 		//Need to call increaseVectorStorage() on all objects that require it.
 		this.getGlobalMapping().increaseVectorStorage();
 		    
@@ -90,7 +95,7 @@ public class TauOutputSession extends ParaProfDataSession{
 		//Only need to call addDefaultToVectors() if not the first run.
 		if(!(metric==0)){
 		    if(this.debug())
-			System.out.println("Increasing the storage for the new metric.");
+			this.outputToFile("Increasing the storage for the new metric.");
 		    
 		    for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
 			GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
@@ -147,6 +152,10 @@ public class TauOutputSession extends ParaProfDataSession{
 		    if(nodeID<0||contextID<0||threadID<0){
 			System.out.println("Invalid n,c,t id: " + nct[0] + "," + nct[1] + "," + nct[2] +" ... not processing this file:");
 			System.out.println(files[i].getCanonicalPath());
+			if(this.debug()){
+			    this.outputToFile("Invalid n,c,t id: " + nct[0] + "," + nct[1] + "," + nct[2] +" ... not processing this file:");
+			    this.outputToFile(files[i].getCanonicalPath());
+			}
 		    }
 		    else{
 			node = this.getNCT().getNode(nodeID);
@@ -161,8 +170,8 @@ public class TauOutputSession extends ParaProfDataSession{
 			    thread.setDebug(this.debug());
 			}
 			if(this.debug())
-			    System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
-
+			    this.outputToFile("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
+			
 			//####################################
 			//First  Line
 			//####################################
@@ -170,6 +179,10 @@ public class TauOutputSession extends ParaProfDataSession{
 			if(inputString == null){
 			    System.out.println("Error processing file: " + files[i].getName());
 			    System.out.println("Unexpected end of file!");
+			    if(this.debug()){
+				this.outputToFile("Error processing file: " + files[i].getName());
+				this.outputToFile("Unexpected end of file!");
+			    }
 			    return;
 			}
 			genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
@@ -194,6 +207,10 @@ public class TauOutputSession extends ParaProfDataSession{
 			if(inputString == null){
 			    System.out.println("Error processing file: " + files[i].getName());
 			    System.out.println("Unexpected end of file!");
+			    if(this.debug()){
+				this.outputToFile("Error processing file: " + files[i].getName());
+				this.outputToFile("Unexpected end of file!");
+			    }
 			    return;
 			}
 			if(i==0){
@@ -222,6 +239,10 @@ public class TauOutputSession extends ParaProfDataSession{
 			    if(inputString==null){
 				System.out.println("Error processing file: " + files[i].getName());
 				System.out.println("Unexpected end of file!");
+				if(this.debug()){
+				    this.outputToFile("Error processing file: " + files[i].getName());
+				    this.outputToFile("Unexpected end of file!");
+				}
 				return;
 			    }
 			    this.getFunctionDataLine(inputString);
@@ -312,8 +333,8 @@ public class TauOutputSession extends ParaProfDataSession{
 								Double.parseDouble(genericTokenizer.nextToken()));
 			    }
 			    if(this.debug()){
-				this.outputToFile("######");
 				this.outputToFile("done processing profile calls for function: " + functionDataLine.s0);
+				this.outputToFile("######");
 			    }
 			}
 			if(this.debug()){
@@ -377,6 +398,10 @@ public class TauOutputSession extends ParaProfDataSession{
 				    if(inputString==null){
 					System.out.println("Error processing file: " + files[i].getName());
 					System.out.println("Unexpected end of file!");
+					if(this.debug()){
+					    this.outputToFile("Error processing file: " + files[i].getName());
+					    this.outputToFile("Unexpected end of file!");
+					}
 					return;
 				    }
 				    this.getUserEventData(inputString);
@@ -425,20 +450,35 @@ public class TauOutputSession extends ParaProfDataSession{
 		    }
 		}
 		time = (System.currentTimeMillis()) - time;
-		System.out.println("Done processing data!");
-		System.out.println("Time to process (in milliseconds): " + time);
 	    }
 	    //Generate mean data.
 	    this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
 
 	    System.out.println("Processing callpath data ...");
+	    if(this.debug())
+		this.outputToFile("Processing callpath data ...");
 	    if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
 		setCallPathDataPresent(true);
 		CallPathUtilFuncs.buildRelations(getGlobalMapping());
 	    }
-	    else
+	    else{
 		System.out.println("No callpath data found.");
+		if(this.debug())
+		    this.outputToFile("No callpath data found.");
+	    }
 	    System.out.println("Done - Processing callpath data!");
+	    if(this.debug())
+		this.outputToFile("Done - Processing callpath data!");
+
+	    System.out.println("Done processing data!");
+	    System.out.println("Time to process (in milliseconds): " + time);
+	    if(this.debug()){
+		this.outputToFile("Done processing data!");
+		this.outputToFile("Time to process (in milliseconds): " + time);
+	    }
+
+	    this.flushDebugFileBuffer();
+	    this.closeDebugFile();
 
 	    //Need to notify observers that we are done.  Be careful here.
 	    //It is likely that they will modify swing elements.  Make sure
