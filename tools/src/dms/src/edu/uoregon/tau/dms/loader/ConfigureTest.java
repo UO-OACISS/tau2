@@ -204,10 +204,9 @@ public class ConfigureTest {
 	    String version = "none";
 
 	    while (resultSet.next() != false) {
-		resultSet.next();
 		version = resultSet.getString(1);
 	    }
-
+	    
 	    
 	    if (!version.equals("2.13.7")) {
 		// they're using a newer version
@@ -220,7 +219,7 @@ public class ConfigureTest {
 
 	} catch (Exception e) {
 	    
-	    //e.printStackTrace();
+	    e.printStackTrace();
 	    
 
 	    // The schema does not have the version table, it must be older than 2.13.7 (or whatever comes after 2.13.6)
