@@ -30,7 +30,7 @@
 /* Which platforms support mallinfo? */
 #ifndef TAU_HASMALLINFO
 #if (defined (__linux__) || defined (_AIX) || defined(sgi) || \
-     defined(sun) || defined (__alpha))
+     defined(sun) || defined (__alpha) || defined (CRAYCC))
 #ifndef TAU_CATAMOUNT
 #define TAU_HASMALLINFO 1 
 #endif /* TAU_CATAMOUNT does not have mallinfo */
@@ -125,7 +125,7 @@ double TauGetMaxRSS(void)
   return used/1024.0;
 #endif /* TAU_HASMALLINFO */
 
-#ifndef TAU_WINDOWS
+#if (! (defined (TAU_WINDOWS) || defined (CRAYCC)))
   /* if not, use getrusage */
   struct rusage res;
   getrusage(RUSAGE_SELF, &res);
@@ -288,8 +288,8 @@ void TauTrackMuseEvents(void)
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2004/10/14 23:46:19 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.9 2004/10/14 23:46:19 sameer Exp $ 
+ * $Revision: 1.10 $   $Date: 2004/10/18 23:06:06 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.10 2004/10/18 23:06:06 sameer Exp $ 
  ***************************************************************************/
 
 	
