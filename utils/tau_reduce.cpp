@@ -122,12 +122,11 @@ void initialize(){
   //read in first line
   getLine();
 
-  //NOW WHAT TO DO WITH THIS INFORMATION?????
   //for now, check to make sure it includes a "dep" string
-  if(strstr(line,".dep")==NULL){
-    printf("Incorrect format (should contain \".dep\") in file %s: %s\n", dumpfilename, line);
-    exit(0);
-  }//if
+  //if(strstr(line,".dep")==NULL){
+  //printf("Incorrect format (should contain \".dep\") in file %s: %s\n", dumpfilename, line);
+  //exit(0);
+  //}//if
   
   //read in second line, which contains the number of functions and version
   getLine();
@@ -867,7 +866,7 @@ int main (int argc, char *argv[]){
 
 /***************************************************************************
  * $RCSfile: tau_reduce.cpp,v $   $Author: ntrebon $
- * $Revision: 1.4 $   $Date: 2002/07/25 23:09:24 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.4 2002/07/25 23:09:24 ntrebon Exp $
+ * $Revision: 1.5 $   $Date: 2002/07/26 16:51:12 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.5 2002/07/26 16:51:12 ntrebon Exp $
  ***************************************************************************/
 
