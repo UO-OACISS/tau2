@@ -1069,6 +1069,12 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 else
 		  is_if_stmt = false;
 
+      		if ((is_if_stmt == false) && (!((inbuf[0] == 'c') || (inbuf[0] == 'C') || (inbuf[0] == '!'))) && 
+	  	    (strstr(inbuf,"IF") != NULL))
+                { /* only if the earlier clause was false will this be executed */
+		  is_if_stmt = true;
+                }
+
 	        if (lit == it)
 		{ /* Has body begin already written the beginning of the statement? */
 		  /* No. Write it (since it is same as lit) */
@@ -1381,8 +1387,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.45 $   $Date: 2003/07/15 17:57:49 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.45 2003/07/15 17:57:49 sameer Exp $
+ * $Revision: 1.46 $   $Date: 2003/10/21 18:40:47 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.46 2003/10/21 18:40:47 sameer Exp $
  ***************************************************************************/
 
 
