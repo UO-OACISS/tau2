@@ -803,7 +803,7 @@ int main (int argc, char *argv[]){
 #endif //TAU_WINDOWS
 
   if(!df){
-    fprintf(stderr,"You must enter a filename that specifies a pprof dump file in the current directory!\n\n");
+    fprintf(stderr,"You must enter a filename that specifies a pprof dump file\n\n");
     errflag=true;
   }//if
 
@@ -866,8 +866,8 @@ int main (int argc, char *argv[]){
 }//main
 
 /***************************************************************************
- * $RCSfile: tau_reduce.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2002/07/25 21:46:42 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.3 2002/07/25 21:46:42 sameer Exp $
+ * $RCSfile: tau_reduce.cpp,v $   $Author: ntrebon $
+ * $Revision: 1.4 $   $Date: 2002/07/25 23:09:24 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.4 2002/07/25 23:09:24 ntrebon Exp $
  ***************************************************************************/
 
