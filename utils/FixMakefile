@@ -870,6 +870,10 @@ ALPHATIMERS)
 	echo "NOTE: IBM XLF compiler for Apple Mac OS X options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     IBMXLCAPPLE)
+	echo "NOTE: IBM xlC/xlc++ compiler for Apple Mac OS X options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      IBM64_FORTRAN)
 	echo "NOTE: IBM 64 bit f90 compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

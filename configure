@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.acl.lanl.gov/tau		           **
@@ -227,7 +227,7 @@ do
       then
         cxx_compiler=$myarg
       else
-        testxlc=`echo $myarg | sed -e 's/xlC//'`
+        testxlc=`echo $myarg | sed -e 's/xl//'`
 	if [ "y$testxlc" = "y$myarg" ]
         then
           echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc' and 'c++'"
@@ -245,7 +245,7 @@ do
       then
         pdt_cxx_compiler=$myarg
       else
-        testxlc=`echo $myarg | sed -e 's/xlC//'`
+        testxlc=`echo $myarg | sed -e 's/xl//'`
         if [ "y$testxlc" = "y$myarg" ]
         then
           echo "WARNING: valid options for pdt_c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC' and 'c++'"
@@ -1269,9 +1269,17 @@ case $cxx_compiler in
       fi
       ;;
 
-   *xlC*)
+   *xl*)
       echo "Default C++ compiler will be IBMs xlC C++ compiler"
       fixmakeargs="$fixmakeargs USE_IBMXLC"
+      if [ "$machine" = "apple" ] 
+      then
+        fixmakeargs="$fixmakeargs IBMXLCAPPLE"
+	if [ $fortran_compiler = no ] 
+        then
+          fixmakeargs="$fixmakeargs IBMXLFAPPLE"
+        fi
+      fi
       ibmxlc=yes
       if [ $fortran_compiler = no ] 
       then
