@@ -91,10 +91,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 	    int fontSize = trial.getPreferences().getBarHeight();
 	    spacing = trial.getPreferences().getBarSpacing();
       
-	    int tmpXWidthCalc = 0;
-      
-	    String tmpString = null;
-      
 	    //Create font.
 	    MonoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
 	    //Compute the font metrics.
@@ -117,60 +113,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		Integer listValue = null;
 		String s = null;
 		
-		//**********
-		//Set panel size.
-		//Now we have reached here, we can calculate the size this panel
-		//needs to be.  We might have to call a revalidate to increase
-		//its size.
-		int yHeightNeeded = 0;
-		int xWidthNeeded = 0;
-		yHeightNeeded = yHeightNeeded + (spacing);
-		l1 = cPTWindow.getDataIterator(); 
-		while(l1.hasNext()){
-		    gme1 = (GlobalMappingElement) l1.next();
-		    //Don't draw callpath mapping objects.
-		    if(!(gme1.isCallPathObject())){
-			l2 = gme1.getParentsIterator();
-			while(l2.hasNext()){
-			    listValue = (Integer)l2.next();
-			    yHeightNeeded = yHeightNeeded + (spacing);
-			}
-			if((gme1.getMappingName().length())> xWidthNeeded)
-			    xWidthNeeded=gme1.getMappingName().length();
-			yHeightNeeded = yHeightNeeded + (spacing);
-			l2 = gme1.getChildrenIterator();
-			while(l2.hasNext()){
-			    listValue = (Integer)l2.next();
-			    yHeightNeeded = yHeightNeeded + (spacing);
-			}
-			yHeightNeeded = yHeightNeeded + (spacing);
-			yHeightNeeded = yHeightNeeded + (spacing);
-		    }
-		}
 		
-		if(this.debug){
-		    yHeightNeeded = yHeightNeeded + (spacing);
-		    l1 = cPTWindow.getDataIterator();
-		    while(l1.hasNext()){
-			gme1 = (GlobalMappingElement) l1.next();
-			yHeightNeeded = yHeightNeeded + (spacing);
-		    }
-		}
-		
-		boolean sizeChange = false;   
-		//Resize the panel if needed.
-		if(xWidthNeeded > xPanelSize){
-		    xPanelSize = xWidthNeeded+10;
-		    sizeChange = true;
-		}
-		if(yHeightNeeded > yPanelSize){
-		    yPanelSize = yHeightNeeded+10;
-		    sizeChange = true;
-		}
-		if(sizeChange && instruction==0)
-		    revalidate();
-		//End - Set panel size. 
-		//**********
 		
 		
 		yCoord = yCoord + (spacing);
