@@ -18,7 +18,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/users/sameer/tau2
+TAUROOT=/research/paraducks/apps/pdt/dev/tau2
 #######################################################################
  
 include include/Makefile
@@ -46,8 +46,8 @@ BASIC = utils src/Profile
 EXPORTS = utils src/Profile 
 
 # Example Programs
-EXAMPLES = examples/matrix examples/instrument examples/pi examples/threads \
-examples/cthreads examples/fortran examples/f90
+EXAMPLES = examples/instrument examples/pi examples/threads \
+examples/cthreads examples/fortran examples/f90 examples/NPB2.3
 
 # PC++ Support
 #PCXX#PCXX=lang_support/pc++#ENDIF#
