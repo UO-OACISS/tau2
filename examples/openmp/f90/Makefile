@@ -15,9 +15,11 @@ TAUROOTDIR	= ../../..
 
 include $(TAUROOTDIR)/include/Makefile
 
-CXX		= $(TAU_CXX)
+# NOTE: For PGI compilers, we need to add the -mp OpenMP option
 
-CC		= $(TAU_CC)
+CXX		= $(TAU_CXX) -mp
+
+CC		= $(TAU_CC) -mp
 
 FFLAGS        	= 
 
@@ -32,8 +34,7 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -f
 
-#F90		= f90 $(ABI)
-F90		= guidef90 $(ABI)
+F90		= $(TAU_F90) -mp
 
 TARGET	      	= mandel
 
