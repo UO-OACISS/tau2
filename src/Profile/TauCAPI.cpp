@@ -94,6 +94,11 @@ extern "C" void Tau_stop_timer(void * function_info)
 #pragma omp critical
   printf("STOP tid = %d, profiler= %x\n", RtsLayer::myThread(), p);
 */
+    if (p->ThisFunction != f)
+    {
+      printf("TAU: Runtime overlap in timers: %s and %s\n",
+        p->ThisFunction->GetName(), f->GetName());
+    }
     p->Stop();
     delete p;
   }
@@ -495,7 +500,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.37 $   $Date: 2003/11/14 19:50:36 $
- * VERSION: $Id: TauCAPI.cpp,v 1.37 2003/11/14 19:50:36 sameer Exp $
+ * $Revision: 1.38 $   $Date: 2003/12/06 00:18:17 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.38 2003/12/06 00:18:17 sameer Exp $
  ***************************************************************************/
 
