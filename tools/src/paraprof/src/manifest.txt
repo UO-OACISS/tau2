@@ -1,1 +1,2 @@
+Class-Path: ../../dms/dms.jar
 Main-Class: paraprof/ParaProf
