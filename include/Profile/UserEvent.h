@@ -35,13 +35,13 @@
 class TauUserEvent {
     
   public: 
-    STORAGE(TAU_EVENT_DATATYPE, MinValue);
-    STORAGE(TAU_EVENT_DATATYPE, MaxValue);
-    STORAGE(TAU_EVENT_DATATYPE, SumValue);
-    STORAGE(TAU_EVENT_DATATYPE, SumSqrValue); 
-    STORAGE(TAU_EVENT_DATATYPE, LastValueRecorded);
-    STORAGE(TAU_EVENT_DATATYPE, UserFunctionValue);
-    STORAGE(long, NumEvents);
+    TAU_STORAGE(TAU_EVENT_DATATYPE, MinValue);
+    TAU_STORAGE(TAU_EVENT_DATATYPE, MaxValue);
+    TAU_STORAGE(TAU_EVENT_DATATYPE, SumValue);
+    TAU_STORAGE(TAU_EVENT_DATATYPE, SumSqrValue); 
+    TAU_STORAGE(TAU_EVENT_DATATYPE, LastValueRecorded);
+    TAU_STORAGE(TAU_EVENT_DATATYPE, UserFunctionValue);
+    TAU_STORAGE(long, NumEvents);
     bool DisableMin, DisableMax, DisableMean, DisableStdDev, MonotonicallyIncreasing;
     string EventName;
     long EventId;
@@ -106,6 +106,6 @@ TAU_STD_NAMESPACE vector<TauUserEvent*>& TheEventDB(void);
 
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2004/08/13 00:43:30 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.9 2004/08/13 00:43:30 sameer Exp $ 
+ * $Revision: 1.10 $   $Date: 2004/11/02 20:27:06 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.10 2004/11/02 20:27:06 sameer Exp $ 
  ***************************************************************************/
