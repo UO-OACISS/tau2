@@ -346,12 +346,51 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
       }//if
     }//else
     // line[0] has '"' - start loop from 1 to get the entire function name
-    for (j=1; line[j] != '"'; j++) {
+    /* CHECK IF name has " in it. How many quotes are there? */
+    int numquotes = 0;
+    int idx = 0;
+    int stringlength = strlen(line);
+    
+    for (idx = 0; idx < stringlength; idx++)
+      if (line[idx] == '"') numquotes++;
+
+    if (numquotes <= 4)
+    {
+      for (j=1; line[j] != '"'; j++) {
         func[j-1] = line[j];
-    }//for
-    func[j-1] = '\0'; // null terminate the string
+      }//for
+      func[j-1] = '\0'; // null terminate the string
     // At this point line[j] is '"' and the has a blank after that, so
     // line[j+1] corresponds to the beginning of other data.
+    }
+    else 
+    { /* numquotes is >4 */
+
+#ifdef DEBUG
+      printf("numquotes for line = %d [%s]\n", numquotes, line);
+#endif /* DEBUG */
+
+      /* start with 3 less:  1 for " in the beg & 2 for groups */
+      numquotes -= 3; /* for groups */
+      for (j = 1; numquotes != 0; j ++)
+      { 
+#ifdef DEBUG
+	printf("idx = %d\n", j);
+#endif /* DEBUG */
+        func[j-1] = line [j]; 
+        if (line [j] == '"') numquotes--; 
+        if (j == stringlength) break;
+      }
+      func[j -1 ] = '\0'; 
+#ifdef DEBUG
+      printf("idx = %d, line [idx] = %s, func = %s\n", j, &line[j], func);
+#endif /* DEBUG */
+      
+    }
+
+#ifdef DEBUG
+    printf("INHERE: line[j+1] = %s\n", &line[j+1]);
+#endif /* DEBUG */
 
     //Now find the groups that this function is a member of.
     //Note that older files might not have this, so don't
@@ -444,6 +483,9 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
         funcDB[functionName].groupNames = createdGNSpace;
       }//if
     }//else
+#ifdef DEBUG
+    printf("numinvocations = %d\n", numinvocations);
+#endif /* DEBUG */
     for(k = 0; k < numinvocations; k++) {
       if(fgets(line,SIZE_OF_LINE,fp) == NULL) {
 	perror("Error in fgets: Cannot read invocation data ");
@@ -640,11 +682,51 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
       }//if
     }//else
     // the function name is enclosed in "", so begin at index 1 and continue until we
-    // find the closing quote to get the function name.
-    for (j=1; line[j] != '"'; j++) {
-      func[j-1] = line[j];
-    }//for
-    func[j-1] = '\0'; // null terminate the string
+
+    /* CHECK IF name has " in it. How many quotes are there? */
+    int numquotes = 0;
+    int idx = 0;
+    int stringlength = strlen(line);
+    
+    for (idx = 0; idx < stringlength; idx++)
+      if (line[idx] == '"') numquotes++;
+
+    if (numquotes <= 4)
+    {
+      for (j=1; line[j] != '"'; j++) {
+        func[j-1] = line[j];
+      }//for
+      func[j-1] = '\0'; // null terminate the string
+    // At this point line[j] is '"' and the has a blank after that, so
+    // line[j+1] corresponds to the beginning of other data.
+    }
+    else 
+    { /* numquotes is >4 */
+#ifdef DEBUG
+  printf("numquotes for line = %d [%s]\n", numquotes, line);
+#endif /* DEBUG */
+      /* start with 3 less:  1 for " in the beg & 2 for groups */
+      numquotes -= 3; /* for groups */
+      for (j = 1; numquotes != 0; j ++)
+      { 
+#ifdef DEBUG
+	printf("idx = %d\n", j);
+#endif /* DEBUG */
+        func[j-1] = line [j]; 
+        if (line [j] == '"') numquotes--; 
+        if (j == stringlength) break;
+      }
+      func[j -1 ] = '\0'; 
+#ifdef DEBUG
+      printf("idx = %d, line [idx] = %s, func = %s\n", j, &line[j], func);
+#endif /* DEBUG */
+      
+    }
+
+#ifdef DEBUG
+    printf("INHERE: line[j+1] = %s\n", &line[j+1]);
+#endif /* DEBUG */
+
     // At this point line[j] is '"' and the has a blank after that, so
     // line[j+1] corresponds to the beginning of other data.
     if (!profilestats) { // SumExclSqr is not there 
@@ -2637,6 +2719,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.42 $   $Date: 2004/02/27 22:29:38 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.42 2004/02/27 22:29:38 sameer Exp $                                
+ * $Revision: 1.43 $   $Date: 2004/10/14 22:34:41 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.43 2004/10/14 22:34:41 sameer Exp $                                
  ***************************************************************************/
