@@ -6,7 +6,7 @@
   Description:  
 */
 
-package ParaProf;
+package paraprof;
 
 //import ParaProf.dss.*;
 import java.util.*;

@@ -6,7 +6,7 @@
   Description:  
 */
 
-package ParaProf;
+package paraprof;
 import java.util.*;
 import java.lang.*;
 import java.io.*;

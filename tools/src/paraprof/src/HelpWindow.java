@@ -7,7 +7,7 @@
   Description:  This class provides detailed help information for the user.
 */
 
-package ParaProf;
+package paraprof;
 
 import java.util.*;
 import java.awt.*;

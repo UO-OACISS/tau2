@@ -6,7 +6,7 @@
   Description:  Some useful functions for the system.
 */
 
-package ParaProf;
+package paraprof;
 import java.util.*;
 import java.lang.*;
 import java.io.*;

@@ -11,7 +11,7 @@
   1) Add clipping support to this window. 
 */
 
-package ParaProf;
+package paraprof;
 
 import java.util.*;
 import java.awt.*;

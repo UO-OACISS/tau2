@@ -6,7 +6,7 @@
   Description:  The container for the MappingDataWindowPanel.
 */
 
-package ParaProf;
+package paraprof;
 
 import java.util.*;
 import java.awt.*;

@@ -7,7 +7,7 @@
           It also holds all the drawing information for this mapping.
 */
 
-package ParaProf;
+package paraprof;
 
 import java.util.*;
 import java.lang.*;

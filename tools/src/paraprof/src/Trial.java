@@ -17,7 +17,7 @@
           It is NOT resistant to change in that format at all.
 */
 
-package ParaProf;
+package paraprof;
 
 import java.io.*;
 import java.util.*;

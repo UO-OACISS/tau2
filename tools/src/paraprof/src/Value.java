@@ -6,7 +6,7 @@
   Description:  
 */
 
-package ParaProf;
+package paraprof;
 
 import javax.swing.tree.*;
 

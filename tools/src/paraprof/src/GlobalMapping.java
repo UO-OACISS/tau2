@@ -18,7 +18,7 @@
           about those mappings. 
 */
 
-package ParaProf;
+package paraprof;
 
 import java.util.*;
 import java.awt.*;

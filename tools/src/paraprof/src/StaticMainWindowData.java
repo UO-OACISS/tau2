@@ -10,7 +10,7 @@
           StaticMainWindow, and its subwindows, are handled by this object only.  
 */
 
-package ParaProf;
+package paraprof;
 
 import java.util.*;
 import java.lang.*;
