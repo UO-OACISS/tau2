@@ -1681,6 +1681,11 @@ EOF
 
   }
 
+  int bar(MPI_Request request)
+  {
+    return MPI_Grequest_complete(request);
+  }
+
 EOF
   cat <<EOF > mpi2datarep.C
   #include <mpi.h>
