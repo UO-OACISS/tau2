@@ -100,7 +100,7 @@ fi
 	echo "s@^PCXX_OPT=\(.*\)@PCXX_OPT=$pcxxopt@g" >> $sedout
         ;;
      useropt=*)
-        useropt=`echo $1 | sed -e 's/^useropt=//' -e 's/_/ /'`
+        useropt=`echo $1 | sed -e 's/^useropt=//' -e 's/#/ /g'`
 	echo "s@^USER_OPT=\(.*\)@USER_OPT=$useropt@g" >> $sedout
         ;;
 
@@ -108,7 +108,7 @@ fi
 # Set the TAUROOT variable
 ###############################################################
      tauroot=*)
-        tauroot=`echo $1 | sed -e 's/^tauroot=//' -e 's/_/ /'`
+        tauroot=`echo $1 | sed -e 's/^tauroot=//' `
 	echo "s@^TAUROOT=\(.*\)@TAUROOT=$tauroot@g" >> $sedout
         ;;
 
@@ -116,11 +116,11 @@ fi
 # Set the default compilers
 ###############################################################
      c_compiler=*)
-        c_compiler=`echo $1 | sed -e 's/^c_compiler=//' -e 's/_/ /'`
+        c_compiler=`echo $1 | sed -e 's/^c_compiler=//' `
 	echo "s@^CONFIG_CC=\(.*\)@CONFIG_CC=$c_compiler@g" >> $sedout
         ;;
      cxx_compiler=*)
-        cxx_compiler=`echo $1 | sed -e 's/^cxx_compiler=//' -e 's/_/ /'`
+        cxx_compiler=`echo $1 | sed -e 's/^cxx_compiler=//'`
 	echo "s@^CONFIG_CXX=\(.*\)@CONFIG_CXX=$cxx_compiler@g" >> $sedout
         ;;
 

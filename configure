@@ -244,7 +244,7 @@ do
     ;;
 
   -useropt=*)
-    useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/ /_/g'`
+    useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/ /#/g'`
     shift
     ;;
 
