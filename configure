@@ -698,6 +698,10 @@ detectarch=unknown
 detectarch=`cd utils; ./archfind` 
 detectxdev=`cd utils; ./archfind -x` 
 detectspec=`cd utils; ./archfind -s` 
+if [ "x$detectarch" = "x" ] 
+  then
+    detectarch=unknown
+fi
 
 
 ###############################################################
@@ -717,6 +721,8 @@ if [ $tauarch = unknown -o $tauarch = none ]
           then
             echo I could not determine the architecture of this host
             echo You must give me a hint.
+	    echo Perhaps, the C compiler is not working.
+            echo Please check the licenses. 
             exit 0
         fi
         echo I think this is a $machine...
