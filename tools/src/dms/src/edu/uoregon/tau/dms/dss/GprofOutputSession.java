@@ -180,9 +180,9 @@ public class GprofOutputSession extends ParaProfDataSession{
 			    }
 			    else if(inputString.charAt(length-1)==']'){
 				if(parent)
-				    parents.add(getParentChildLineData(inputString));
+				    parents.add(getParentLineData(inputString));
 				else
-				    children.add(getParentChildLineData(inputString));
+				    children.add(getChildLineData(inputString));
 			    }
 			}
 			else if(inputString.charAt(length-1)==']'){
@@ -239,15 +239,53 @@ public class GprofOutputSession extends ParaProfDataSession{
 	    int numberOfTokens = st.countTokens();
 
 	    //Skip the first token.
+		// Entries are numbered with consecutive integers. 
+		// Each function therefore has an index number, which 
+		// appears at the beginning of its primary line. Each 
+		// cross-reference to a function, as a caller or 
+		// subroutine of another, gives its index number as 
+		// well as its name. The index number guides you if 
+		// you wish to look for the entry for that function.
 	    st.nextToken();
+
+		// This is the percentage of the total time that was 
+		// spent in this function, including time spent in 
+		// subroutines called from this function. The time 
+		// spent in this function is counted again for the 
+		// callers of this function. Therefore, adding up these 
+		// percentages is meaningless.
 	    lineData.d0 = Double.parseDouble(st.nextToken());
+
+		// This is the total amount of time spent in this 
+		// function. This should be identical to the number 
+		// printed in the seconds field for this function in 
+		// the flat profile.
 	    lineData.d1 = Double.parseDouble(st.nextToken());
+
+		// This is the total amount of time spent in the 
+		// subroutine calls made by this function. This should 
+		// be equal to the sum of all the self and children 
+		// entries of the children listed directly below this 
+		// function.
 	    lineData.d2 = Double.parseDouble(st.nextToken());
 
+		// This is the number of times the function was called. 
+		// If the function called itself recursively, there are 
+		// two numbers, separated by a `+'. The first number 
+		// counts non-recursive calls, and the second counts 
+		// recursive calls. 
 	    if(numberOfTokens!=7)
 		lineData.i0 = 1;
-	    else
-		lineData.i0 = Integer.parseInt(st.nextToken());
+	    else {
+		String tmpStr = st.nextToken();
+		if (tmpStr.indexOf("+") >= 0) {
+		} else {
+	    	StringTokenizer st2 = new StringTokenizer(tmpStr, "+");
+			lineData.i0 = Integer.parseInt(st2.nextToken());
+			// do this?
+			// lineData.i0 += Integer.parseInt(st2.nextToken());
+		}
+		}
 	    
 	    lineData.s0 = st.nextToken(); //Name
 	}
@@ -257,22 +295,64 @@ public class GprofOutputSession extends ParaProfDataSession{
 	return lineData;
     }
 
-    private LineData getParentChildLineData(String string){
+    private LineData getParentLineData(String string){
 	LineData lineData = new LineData();
 	try{
 	    StringTokenizer st1 = new StringTokenizer(string, " \t\n\r");
 	    
+		// get the estimate of the amount of time spent in self when 
+		// it was called from parent
 	    lineData.d0 = Double.parseDouble(st1.nextToken());
+		// get the estimate of the amount of time spent in subroutines 
+		// of self when self was called from parent. The sum of the 
+		// self and children fields is an estimate of the amount of 
+		// time spent within calls to self from parent.
 	    lineData.d1 = Double.parseDouble(st1.nextToken());
 	    
-	    StringTokenizer st2 = new StringTokenizer(st1.nextToken(), "/");
-	    lineData.i0 = Integer.parseInt(st2.nextToken());;
-	    lineData.i1 = Integer.parseInt(st2.nextToken());;
+	   	StringTokenizer st2 = new StringTokenizer(st1.nextToken(), "/");
+		// the number of times self was called from parent 
+	    lineData.i0 = Integer.parseInt(st2.nextToken());
+		// the total number of nonrecursive calls to self from all its parents
+	    lineData.i1 = Integer.parseInt(st2.nextToken());
 
 	    lineData.s0 = st1.nextToken(); //Name
 	}
 	catch(Exception e){
-	    UtilFncs.systemError(e, null, "GOS03");
+		System.out.println("***\n" + string + "\n***");
+		e.printStackTrace();
+		UtilFncs.systemError(e, null, "GOS03");
+	}
+	return lineData;
+    }
+
+    private LineData getChildLineData(String string){
+	LineData lineData = new LineData();
+	try{
+	    StringTokenizer st1 = new StringTokenizer(string, " \t\n\r");
+	    
+		// get the estimate of the amount of time spent directly 
+		// in child when it was called from self
+	    lineData.d0 = Double.parseDouble(st1.nextToken());
+		// get the estimate of the amount of time spent in 
+		// subroutines of child when child was called from self. 
+		// The sum of the self and children fields is an estimate 
+		// of the total time spent in calls to child from self
+	    lineData.d1 = Double.parseDouble(st1.nextToken());
+	    
+		// This ratio is used to determine how much of self and 
+		// children time gets credited to parent.
+	   	StringTokenizer st2 = new StringTokenizer(st1.nextToken(), "/");
+		// get the number of calls to child from self
+	    lineData.i0 = Integer.parseInt(st2.nextToken());
+		// get the total number of nonrecursive calls to report. 
+	    lineData.i1 = Integer.parseInt(st2.nextToken());
+
+	    lineData.s0 = st1.nextToken(); //Name
+	}
+	catch(Exception e){
+		System.out.println("***\n" + string + "\n***");
+		e.printStackTrace();
+		UtilFncs.systemError(e, null, "GOS03");
 	}
 	return lineData;
     }
