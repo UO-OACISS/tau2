@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <vtf3.h> /* VTF3 header file */
 #include <map>
+#include <vector>
 #include <stack>
 using namespace std;
 int debugPrint = 0;
@@ -55,7 +56,7 @@ struct {
 /* Global data */
 int sampgroupid = 0;
 int sampclassid = 0; 
-stack <unsigned int> *callstack;
+vector<stack <unsigned int> > callstack;
 int *offset = 0; 
 
 
@@ -531,7 +532,9 @@ int main(int argc, char **argv)
   }
   
   /* create a callstack on each thread/process id */
-  callstack = new stack<unsigned int> [totalnidtids](); 
+  dprintf("totalnidtids  = %d\n", totalnidtids);
+  //callstack = new stack<unsigned int> [totalnidtids](); 
+  callstack.resize(totalnidtids);
 
   /* Define group ids */
   char name[1024];
@@ -606,9 +609,9 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau2vtf.cpp,v $   $Author: amorris $
- * $Revision: 1.6 $   $Date: 2004/09/01 19:01:35 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.6 2004/09/01 19:01:35 amorris Exp $
+ * $RCSfile: tau2vtf.cpp,v $   $Author: sameer $
+ * $Revision: 1.7 $   $Date: 2004/10/29 00:41:14 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.7 2004/10/29 00:41:14 sameer Exp $
  ***************************************************************************/
 
 
