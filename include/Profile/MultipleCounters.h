@@ -150,8 +150,9 @@ class MultipleCounterLayer
   static firstListType initArray[SIZE_OF_INIT_ARRAY];
   static secondListType functionArray[MAX_TAU_COUNTERS];
   static int numberOfActiveFunctions;
-  static char * names[MAX_TAU_COUNTERS];
+  static char ** names[MAX_TAU_COUNTERS];
   static bool counterUsed[MAX_TAU_COUNTERS];
+  static int numberOfCounters[MAX_TAU_COUNTERS];
 };
 
 #endif /* TAU_MULTIPLE_COUNTERS */
