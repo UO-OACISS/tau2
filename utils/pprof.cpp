@@ -45,7 +45,9 @@
 # include <fcntl.h>
 # include <map.h>
 # include <limits.h>
-
+#ifdef DEC_ALPHA 
+# include <float.h>
+#endif /* DEC_ALPHA */
 #ifdef KAI
 # include <algobase>
 using namespace std;
@@ -2895,7 +2897,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 1998/08/09 22:14:08 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.10 1998/08/09 22:14:08 sameer Exp $                                                   
+ * $Revision: 1.11 $   $Date: 1998/08/10 01:35:56 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.11 1998/08/10 01:35:56 sameer Exp $                                                   
  ***************************************************************************/
 

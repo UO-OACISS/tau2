@@ -12,14 +12,14 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=default
-CONFIG_CC=gcc
-CONFIG_CXX=g++
+CONFIG_ARCH=sgi8k
+CONFIG_CC=cc
+CONFIG_CXX=CC
 PCXX_OPT=-g
 USER_OPT=-g
 #######################################################################
  
-#MIPSR8K#ISA          = -mips4		   #ENDIF#
+ISA          = -mips4		   #ENDIF##MIPSR8K#
 
 ############# Standard Defines ##############
 CC = $(CONFIG_CC) $(ABI) $(ISA)
@@ -37,7 +37,7 @@ LINKER	= $(CC)
 #PTX#LEXTRA = -lseq#ENDIF#
 #SP1#CEXTRA = -D__SP1__#ENDIF#
 #CM5#CEXTRA = -D__CM5__#ENDIF#
-#SGIMP#CEXTRA = -D__SGIMP__#ENDIF#
+CEXTRA = -D__SGIMP__#ENDIF##SGIMP#
 #PCXX#RUNTIME1 = pcxx_merge#ENDIF#
 #PCXX#RUNTIME2 = pcxx_convert#ENDIF#
 #PCXX#RUNTIME3 = pcxx_dump#ENDIF#
@@ -53,6 +53,7 @@ CEXTRA		+= $(WARNINGSOPT)
 
 # Compiler specific flags
 #KAI#COMPSPECIFIC = -DKAI#ENDIF#
+#DEC_ALPHA#COMPSPECIFIC = -DDEC_ALPHA#ENDIF#
 
 
 SAGE1DIR=
