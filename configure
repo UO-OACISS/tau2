@@ -1481,7 +1481,7 @@ fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt 
 ######################################################################
 # discover the paths for standard system include directories
 
-if [ $cxx_compiler = pgCC ] 
+if [ $cxx_compiler = pgCC -o $cxx_compiler = g++ ] 
 then
 cat << EOF > get_stdinc.C
 #include <stddef.h>
