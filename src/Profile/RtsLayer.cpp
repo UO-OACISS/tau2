@@ -267,30 +267,10 @@ double getUserTimeInSec(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
-double RtsLayer::getUSecD (int tid) {
-
-#ifdef TAU_PCL
-  return PCL_Layer::getCounters(tid);
-#else  // TAU_PCL 
-#ifdef TAU_PAPI
-  return PapiLayer::getCounters(tid);
-#else  // TAU_PAPI
-#ifdef CPU_TIME
-  return getUserTimeInSec();
-#else // CPU_TIME
-#ifdef SGI_HW_COUNTERS
-  return RtsLayer::GetEventCounter();
-#else  //SGI_HW_COUNTERS
-
-#ifdef SGI_TIMERS
-  struct timespec tp;
-  clock_gettime(CLOCK_SGI_CYCLE,&tp);
-  return (tp.tv_sec * 1e6 + (tp.tv_nsec * 1e-3)) ;
-
-#else 
-#if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS)) 
-#if (defined(TAU_WINDOWS))
+double TauWindowsUsecD(void)
+{
+#ifdef TAU_WINDOWS
+  
   //First need to find out whether we have performance
   //clock, and if so, the frequency.
   static bool PerfClockCheckedBefore = false;
@@ -360,7 +340,43 @@ double RtsLayer::getUSecD (int tid) {
 	  _ftime(&tp);
 	  return ( (double) tp.time * 1e6 + tp.millitm * 1e3);
   }
-#else
+#endif /* TAU_WINDOWS */
+}
+///////////////////////////////////////////////////////////////////////////
+
+double RtsLayer::getUSecD (int tid) {
+
+#ifdef TAU_PCL
+  return PCL_Layer::getCounters(tid);
+#else  // TAU_PCL 
+#ifdef TAU_PAPI
+#ifdef TAU_PAPI_WALLCLOCKTIME
+  return PapiLayer::getWallClockTime();
+#else /* TAU_PAPI_WALLCLOCKTIME */
+#ifdef TAU_PAPI_VIRTUAL
+  return PapiLayer::getVirtualTime();
+#else  /* TAU_PAPI_VIRTUAL */
+  return PapiLayer::getCounters(tid);
+#endif /* TAU_PAPI_VIRTUAL */
+#endif /* TAU_PAPI_WALLCLOCKTIME */
+#else  // TAU_PAPI
+#ifdef CPU_TIME
+  return getUserTimeInSec();
+#else // CPU_TIME
+#ifdef SGI_HW_COUNTERS
+  return RtsLayer::GetEventCounter();
+#else  //SGI_HW_COUNTERS
+
+#ifdef SGI_TIMERS
+  struct timespec tp;
+  clock_gettime(CLOCK_SGI_CYCLE,&tp);
+  return (tp.tv_sec * 1e6 + (tp.tv_nsec * 1e-3)) ;
+
+#else  // SGI_TIMERS
+#if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS)) 
+#if (defined(TAU_WINDOWS))
+  return TauWindowsUsecD();
+#else // TAU_WINDOWS 
   struct timeval tp;
   gettimeofday (&tp, 0);
   return ( (double) tp.tv_sec * 1e6 + tp.tv_usec );
@@ -723,6 +739,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 2000/04/06 18:51:57 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.20 2000/04/06 18:51:57 sameer Exp $ 
+ * $Revision: 1.21 $   $Date: 2000/08/17 01:06:14 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.21 2000/08/17 01:06:14 sameer Exp $ 
  ***************************************************************************/

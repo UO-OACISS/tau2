@@ -103,7 +103,6 @@ FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,FunctionInfo**);
 
 void Profiler::Start(int tid)
 { 
-     
       DEBUGPROFMSG("Profiler::Start: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
@@ -160,6 +159,7 @@ void Profiler::Start(int tid)
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall = 0;
 #endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
+
       }  
 }
 
@@ -463,7 +463,9 @@ int Profiler::StoreData(int tid)
 	}
 	header = new char[256];
 
-#if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) || defined (TAU_PAPI))
+#if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) \
+	|| (defined (TAU_PAPI) && \
+         (!(defined(TAU_PAPI_WALLCLOCKTIME) || (defined (TAU_PAPI_VIRTUAL))))))
 	sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
 #else  // SGI_TIMERS, TULIP_TIMERS 
 	sprintf(header,"%d templated_functions\n", numFunc);
@@ -715,8 +717,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.40 $   $Date: 2000/07/22 21:04:00 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.40 2000/07/22 21:04:00 sameer Exp $ 
+ * $Revision: 1.41 $   $Date: 2000/08/17 01:06:15 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.41 2000/08/17 01:06:15 sameer Exp $ 
  ***************************************************************************/
 
 	

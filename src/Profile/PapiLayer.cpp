@@ -91,7 +91,7 @@ long long PapiLayer::getCounters(int tid)
       if(PAPI_thread_init(NULL,0) != PAPI_OK)
       {
 	cout << "There was a problem with papi's thread init" << endl;
-	return -1;
+//	return -1;
       }
 
 
@@ -283,7 +283,7 @@ long long PapiLayer::getCounters(int tid)
      if(PAPI_thread_init(NULL,0) != PAPI_OK)
        {
 	 cout << "There was a problem with papi's thread init" << endl;
-	 return -1;
+//	 return -1;
        }
 
       char * EnvironmentVariable = NULL;
@@ -382,6 +382,40 @@ long long PapiLayer::getCounters(int tid)
 }
 
 #endif
+
+/////////////////////////////////////////////////
+int PapiLayerInit(void)
+{ 
+     // Initialization routine for PAPI timers
+     if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
+           cout << "Wrong version of PAPI library" << endl;
+           return -1;
+       }
+  
+     if(PAPI_thread_init(NULL,0) != PAPI_OK)
+       {
+//	 cout << "There was a problem with papi's thread init" << endl;
+	 return -1;
+       }
+     
+     return 0;
+}
+
+/////////////////////////////////////////////////
+long long PapiLayer::getWallClockTime(void)
+{ // Returns the wall clock time from PAPI interface
+  static int initflag = PapiLayerInit();
+
+  return PAPI_get_real_usec();
+}
+
+/////////////////////////////////////////////////
+long long PapiLayer::getVirtualTime(void)
+{ // Returns the virtual (user) time from PAPI interface
+  static int initflag = PapiLayerInit();
+
+  return PAPI_get_virt_usec();
+}
 
 /////////////////////////////////////////////////
 //
