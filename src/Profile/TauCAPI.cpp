@@ -287,16 +287,23 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 
 #ifdef TAU_MPI
 TAU_REGISTER_EVENT(sendevent,"Message size sent to all nodes");
+TauUserEvent**& TheMsgVolEvent()
+{
+  static TauUserEvent **u = 0; 
+  return u;
+}
+/* OLD 
 TauUserEvent **u;
+*/
 int register_events(void)
 {
   char str[256];
   int i;
-  u = (TauUserEvent **) malloc(sizeof(TauUserEvent *)*tau_totalnodes(0,0));
+  TheMsgVolEvent() = (TauUserEvent **) malloc(sizeof(TauUserEvent *)*tau_totalnodes(0,0));
   for (i =0; i < tau_totalnodes(0,0); i++)
   {
     sprintf(str, "Message size sent to node %d", i);
-    u[i] = (TauUserEvent *) new TauUserEvent((const char *)str);
+    TheMsgVolEvent()[i] = (TauUserEvent *) new TauUserEvent((const char *)str);
   }
   return 0;
 }
@@ -309,7 +316,7 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
         RtsLayer::myNode(), type, destination, length);
 #endif /* DEBUG_PROF */
   TAU_EVENT(sendevent, length);
-  u[destination]->TriggerEvent(length, RtsLayer::myThread());
+  TheMsgVolEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
   TAU_TRACE_SENDMSG(type, destination, length);
 }
 
@@ -422,7 +429,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.33 $   $Date: 2003/07/18 18:48:17 $
- * VERSION: $Id: TauCAPI.cpp,v 1.33 2003/07/18 18:48:17 sameer Exp $
+ * $Revision: 1.34 $   $Date: 2003/07/22 17:39:52 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.34 2003/07/22 17:39:52 sameer Exp $
  ***************************************************************************/
 
