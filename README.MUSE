@@ -11,8 +11,21 @@
 *************************************************************************
 *			USING TAU WITH MUSE	 	      		*	
 * Author	: Suravee Suthikulpanit (suravee@cs.uoregon.edu)	*
-* Date		: 10/23/2003						*
-* Version	: 1.0							*	
+* Date		: 2/6/2004						*
+* Version	: 1.1							*
+* Log Change	:							*
+*		- (1) Restructure struct package to be ready for 	*
+*		multiple double values, multiple handlers, 		*
+* 		multiple filters.					*
+*		- Add partial support for (1)				*
+* 		- Move package_selector stuff into TauMusePackages.cpp	*
+*		- Add API TauMuseCreate ()				*
+* 		- Add package context_switch.				*
+*		- Add package accumulator_sock_send.			*
+*		- Add package accumulator_sock_recv.			*
+*		- Add support for new socket_filter.			*
+*		- Change encoding for process_scheduling		*
+*		- Lengthen size of current_directory to fix a bug.	*
 *************************************************************************
 
 MAGNET: 
@@ -27,6 +40,8 @@ MUSE: MAGNET User-Space Environment.
 
 	For more information, please refer to http://public.lanl.gov/radiant/
 
+MUSE NOTE:
+	- Tested with muse-0.9.0.2-1.
 
 INSTALLATION:
 
@@ -37,6 +52,11 @@ INSTALLATION:
    and MUSE has to be install on the executing machine.  Also, magnetd has to be
    running with the appropriate handlers and filters installed.
 
+   -muse is used when monotonically increasing data is monitored. "double TauMuseQuery()"
+   is automatically called for every entry and exit point of every function in
+   a target application.  A monitored double value is returned while -1 is returned
+   in case of error.
+
 USAGE:
 
    TAU provides different packages which are predefined set of MUSE handlers and
@@ -44,51 +64,85 @@ USAGE:
    various performance matrices.
    
    The name of the package routine is set by the user using the environment 
-   variable TAU_MUSE_PACKAGE. By default, it is set to "TAU_count".
+   variable TAU_MUSE_PACKAGE. 
 
+   =============================================================================
    LIST OF PACKAGES:
-   
+   =============================================================================
+   MODE OF OPERATION: -muse (By default, TAU_MUSE_PACKAGE=count)
+
    1) Package Name:	count
-   This package keeps track of number of MAGNET instrumentation points executed
-   in the LINUX kernel caused by the profiled program.  These counts are event 
-   records according to the specified PID.  
-	
+	This package keeps track of number of MAGNET instrumentation points executed
+	in the LINUX kernel caused by the profiled program.  These counts are event 
+	records according to the specified PID.  
 	Handler	:	TAU_count
 	Filter	:	process_filter
 	Command	:	
-		create TAU_count
-		addfilter <handlerID> process_filter pid=<pid>
+	create TAU_count
+	addfilter <handlerID> process_filter pid=<pid>
+	Usage   : Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=TAU_count
 
-   Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=TAU_count
-
-
-   2)
-   These packages keep track of statistics by monitoring MAGNET events 
-   MAGNET_TASK_CTX_IN and MAGNET_TASK_CTX_OUT of the specified PID. 
- 
-   2.1) Package Name: busy_time
-  	total time in millisec of processors in BUSY state doing work 
+   2) Package Name: 	busy_time
+  	Total time in millisec of processors in BUSY state doing work 
 	for the specified PID.
-
-	Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=busy_time
-
-   2.2) Package Name: idle_time
-  	total time in millisec of processors in Idle state. 
-
-	Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=idle_time
-
-   2.3) Package Name: total_time 
-  	total time in millisec of processors in execution for the 
-	specified PID. 
-	
-	Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=total_time
-
 	Handler :	process_scheduling
 	Filter	:	process_filter
 	Command	:
-		create process_scheduling
-		addfilter <handlerID> process_filter pid=<pid> event=258 //MAGNET_TASK_CTX_IN	
-		addfilter <handlerID> process_filter pid=<pid> event=259 //MAGNET_TASK_CTX_OUT	
+	create process_scheduling
+	addfilter <handlerID> process_filter pid=<pid> event=258 //MAGNET_TASK_CTX_IN	
+	addfilter <handlerID> process_filter pid=<pid> event=259 //MAGNET_TASK_CTX_OUT	
+	Usage   : Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=busy_time
+
+   3) Package Name: 	idle_time
+  	Total time in millisec of processors in Idle state. 
+	Handler :	process_scheduling
+	Filter	:	process_filter
+	Command	:
+	create process_scheduling
+	addfilter <handlerID> process_filter pid=0 event=258 //MAGNET_TASK_CTX_IN	
+	addfilter <handlerID> process_filter pid=0 event=259 //MAGNET_TASK_CTX_OUT	
+	Usage   : Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=idle_time
+
+   4) Package Name: 	total_time 
+  	Total time in millisec of processors in execution for the 
+	specified PID. 
+	Handler :	process_scheduling
+	Filter	:	process_filter
+	Command	:
+	create process_scheduling
+	addfilter <handlerID> process_filter pid=<pid> event=258 //MAGNET_TASK_CTX_IN	
+	addfilter <handlerID> process_filter pid=<pid> event=259 //MAGNET_TASK_CTX_OUT	
+	Usage   : Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=total_time
+	
+   5) Package Name: 	context_switch
+  	Total number of context switches for the specified PID. 
+	Handler :	process_scheduling
+	Filter	:	process_filter
+	Command	:
+	create process_scheduling
+	addfilter <handlerID> process_filter pid=<pid> event=258 //MAGNET_TASK_CTX_IN	
+	addfilter <handlerID> process_filter pid=<pid> event=259 //MAGNET_TASK_CTX_OUT	
+	Usage   : Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=context_switch
+
+   6) Package Name: 	accumulator_sock_send
+  	Total number of bytes sent out on sockets for a specified pid. 
+	Handler :	accumulator
+	Filter	:	socket_filter
+	Command	:
+	create process_scheduling
+	addfilter <handlerID> socket_filter=<pid> event=3 //MAGNET_SOCK_SEND
+	Usage   : Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=accumulator_sock_send
+
+   7) Package Name: 	accumulator_sock_recv
+  	Total number of bytes received through sockets for a specified pid. 
+	Handler :	accumulator
+	Filter	:	socket_filter
+	Command	:
+	create process_scheduling
+	addfilter <handlerID> socket_filter=<pid> event=4 //MAGNET_SOCK_RECV
+	Usage   : Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=accumulator_sock_recv
+
+   ----------------------------------------------------------------------------
  
 NOTE: 
 	Some configuration should be modified according to machine.
@@ -99,13 +153,6 @@ NOTE:
 	recommend since it will significantly impact the performance of profiling.)
  
 BUGS:
-
-1) magnetd frozen up on when kill with (Ctrl-c) at step 
-
-Closed server 0 on socket 7
-
-Terminating  --  library update thread.
-
-Terminating  --  data collection thread.
-
-
+TODO:
+	- Finish up support for Multiple counters/handlers/filters.
+	- Merge with MULTIPLECOUNTERS.
