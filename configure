@@ -148,6 +148,7 @@ tauprefix=unknown
 tauoptions=
 pdt_root_dir="."
 pdt=no
+dyninst=no
 java=no
 
 # debug:
@@ -260,6 +261,12 @@ do
   -pdt=*)
       pdt=yes
       pdtdir=`echo $arg | sed -e 's/-pdt=//'`
+    shift
+    ;;
+
+  -dyninst=*)
+      dyninst=yes
+      dyninstdir=`echo $arg | sed -e 's/-dyninst=//'`
     shift
     ;;
 
@@ -409,6 +416,7 @@ do
     echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+)."
+    echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-mpiinc=<dir> ............. Specify location of MPI include dir and use"
     echo "                           the TAU MPI Profiling and Tracing Interface."
     echo "-mpilib=<dir> ............. Specify location of MPI library dir and use"
@@ -1280,6 +1288,11 @@ fi
 if [ $java = yes ]
   then
     fixmakeargs="$fixmakeargs JAVA jdkdir=$jdkdir"
+fi
+
+if [ $dyninst = yes ]
+  then
+    fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
 fi
 
 if [ $pcl = yes ]
