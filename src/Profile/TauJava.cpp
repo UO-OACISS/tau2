@@ -37,6 +37,7 @@
 
 
 static JVMPI_Interface *tau_jvmpi_interface;
+int TauJavaLayer::NumThreads = 0;
 #define CALL(routine) (tau_jvmpi_interface->routine)
 
 // profiler agent entry point
@@ -61,12 +62,14 @@ extern "C" {
     tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_METHOD_EXIT, NULL);
     tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_THREAD_START, NULL);
     tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_THREAD_END, NULL);
+    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_JVM_SHUT_DOWN, NULL);
 
 
     if ((sbrk(1024*1024*4)) == (void *) -1) {
       fprintf(stdout, "TAU>ERROR: sbrk failed\n");
       exit(1);
     }
+
 
 #ifdef DEBUG_PROF 
     fprintf(stdout, "TAU> .... ok \n\n");
@@ -94,6 +97,9 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
   case JVMPI_EVENT_THREAD_END:
     TauJavaLayer::ThreadEnd(event);
     break;
+  case JVMPI_EVENT_JVM_SHUT_DOWN:
+    TauJavaLayer::ShutDown(event);
+    break;
   /* Use Monitor contended enter, entered and exit events as well */
   default:
     fprintf(stdout, "TAU> Event not registered\n");
@@ -103,12 +109,26 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
 
 void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 {
-  int i;
-  char funcname[2048], funcsig[1024];
+  int i, k;
+  char funcname[2048], groupname[1024];
 #ifdef DEBUG_PROF
     fprintf(stdout, "TAU> Class Load : %s\n", event->u.class_load.class_name);
 #endif /* DEBUG_PROF */
   static int j = TAU_PROFILE_SET_NODE(0);
+  
+
+#ifdef DEBUG_PROF
+  printf("Loading Class: %s\n", event->u.class_load.class_name);
+/*
+  for(k = 0; k < event->u.class_load.num_instance_fields; k++)
+  {
+    printf("Class : %s Instances : field %s sig %s\n", 
+	event->u.class_load.class_name,
+	event->u.class_load.instances[k].field_name, 
+	event->u.class_load.instances[k].field_signature);
+  }
+*/
+#endif /* DEBUG_PROF */
 
   for (i = 0; i < event->u.class_load.num_methods; i++)
   {
@@ -116,15 +136,14 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 
     sprintf(funcname, "%s  %s", event->u.class_load.class_name, 
 	event->u.class_load.methods[i].method_name); 
-/*
-    sprintf(funcsig,"%s", event->u.class_load.methods[i].method_signature);
-*/
+    sprintf(groupname, "%s", event->u.class_load.class_name); 
+
     TAU_MAPPING_CREATE(funcname, " ",
 	  (long)  event->u.class_load.methods[i].method_id, 
-		     funcname); 
+		     groupname); 
 #ifdef DEBUG_PROF 
-    printf("TAU> %s, id: %ld\n", funcname,
-		event->u.class_load.methods[i].method_id);
+    printf("TAU> %s, id: %ld group:  %s\n", funcname,
+		event->u.class_load.methods[i].method_id, groupname);
 #endif /* DEBUG_PROF */
     /* name, type, key, group name  are the four arguments above */
   }
@@ -140,37 +159,70 @@ void TauJavaLayer::MethodEntry(JVMPI_Event *event)
   TAU_MAPPING_PROFILE_START(TauTimer);
 
 #ifdef DEBUG_PROF 
-  fprintf(stdout, "TAU> Method Entry %s %s:%ld \n", 
+  fprintf(stdout, "TAU> Method Entry %s %s:%ld ", 
   		TauMethodName->GetName(), TauMethodName->GetType(), 
 	 	(long) event->u.method.method_id);
+#endif /* DEBUG_PROF */
+  int *tid = (int *) CALL(GetThreadLocalStorage)(event->env_id);
+  if (tid == (int *) NULL) 
+       tid = RegisterThread(event);
+#ifdef DEBUG_PROF 
+  printf(" TID = %d\n", (*tid));
 #endif /* DEBUG_PROF */
 }
 
 void TauJavaLayer::MethodExit(JVMPI_Event *event)
 {
-
   TAU_MAPPING_PROFILE_STOP();
 
+  int *tid = (int *) CALL(GetThreadLocalStorage)(event->env_id);
 #ifdef DEBUG_PROF
-  fprintf(stdout, "TAU> Method Exit : %ld\n",
-	 	(long) event->u.method.method_id);
+  fprintf(stdout, "TAU> Method Exit : %ld, TID = %d\n",
+	 	(long) event->u.method.method_id, (*tid));
 #endif /* DEBUG_PROF */
 }
 
+int * TauJavaLayer::RegisterThread(JVMPI_Event *event)
+{ /* returns tid pointer */
+  JVMPI_RawMonitor numthreads_lock = CALL(RawMonitorCreate)("num threads lock");
+  /* Set up the thread id */
+  int *tid = (int *) malloc (sizeof (int));
+  CALL(RawMonitorEnter)(numthreads_lock);
+  (*tid) = TauJavaLayer::NumThreads++;
+  CALL(RawMonitorExit)(numthreads_lock);
+  CALL(SetThreadLocalStorage)(event->env_id, tid); 
+  return tid;
+
+}
 void TauJavaLayer::ThreadStart(JVMPI_Event *event)
 {
+  int *tid = RegisterThread(event);
+
 #ifdef DEBUG_PROF
-    fprintf(stdout, "TAU> Thread Start : \n");
+  fprintf(stdout, "TAU> Thread Start : id = %d, name = %s, group = %s\n", 
+	(*tid), event->u.thread_start.thread_name, 
+	event->u.thread_start.group_name);
 #endif /* DEBUG_PROF */
 
 }
 
 void TauJavaLayer::ThreadEnd(JVMPI_Event *event)
 {
+  int *tid = (int *) CALL(GetThreadLocalStorage)(event->env_id);
 #ifdef DEBUG_PROF
-    fprintf(stdout, "TAU> Thread End : \n");
+  fprintf(stdout, "TAU> Thread End : id = %d \n", (*tid));
 #endif /* DEBUG_PROF */
     TAU_PROFILE_EXIT("END...");
 }
 
+void TauJavaLayer::ShutDown(JVMPI_Event *event)
+{
+  int *tid = (int *) CALL(GetThreadLocalStorage)(event->env_id);
+#ifdef DEBUG_PROF
+  fprintf(stdout, "TAU> JVM SHUT DOWN : id = %d \n", (*tid));
+#endif 
+  
+}
 /* EOF : TauJava.cpp */
+
+
