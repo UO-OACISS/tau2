@@ -64,7 +64,7 @@ int  dynamictrace = FALSE;
 extern char *mergededffile; /* name of merged edf file */
 extern char **edfnames; /* names of edf files, if specified by the user */
 extern int edfspecified; /* whether edf files are specified by the user */
-extern "C" int get_nodeid(int edf_file_index); /* returns nid */ 
+extern int get_nodeid(int edf_file_index); /* returns nid */ 
 
 #ifndef TAU_NEC
 extern "C" {
