@@ -16,12 +16,12 @@ Priority  -      1<--------3--------5--------7-------->10
     destination immediately. (4)
 
 4.) Update to use profile.*.*.* files instead of pprof dump files. Rather
-    should allow both, but assume profile.*.*.* files as default. (4)
+    should allow both, but assume profile.*.*.* files as default. (5)
 
 5.) Add support for multiple counters. (6)
 
 6.) Advanced example. Show use of macros, repository of common instrumentation
-    scenarios, scenarios other than removal of lightweight routines, etc. (4)
+    scenarios, scenarios other than removal of lightweight routines, etc. (5)
 
 7.) Add regular expression package. Current implemntation copies expressions
     into file list, and leaves it up to the tau_instrumentor to evaluate them.
@@ -40,3 +40,6 @@ Priority  -      1<--------3--------5--------7-------->10
 
 11.) Anaylze performance. In particular look at the impact large syntax trees have
      on tool performance. (3)
+
+12.) Allow totals on a per-node basis as well as cumulative totals. (Requires the
+     ability to read from profile files.) (5)
