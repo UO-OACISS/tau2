@@ -6,11 +6,11 @@
 
 # To build tau2vtf you must have libvtf3.lib
 # use "nmake /f makefile.win32 "VTF=<path\to\libvtf3.lib> tau2vtf
-# (e.g. nmake /f makefile.win32 "VTF=c:\" tau2vtf
+# (e.g. nmake /f makefile.win32 "VTF=c:\" tau2vtf)
 
 # To build dll's for use with java
 # use "nmake /f makefile.win32 "JDK=<path\to\jdk> java
-# (e.g. nmake /f makefile.win32 "JDK=c:\j2sdk1.4.2_05"
+# (e.g. nmake /f makefile.win32 "JDK=c:\j2sdk1.4.2_05" java)
 
 CFLAGS= $(CFLAGS) /O2 /Gd /nologo /TP /EHsc -I .
 CC=cl
