@@ -19,15 +19,17 @@ END_EXCLUDE_LIST
 # wildcard characters (* and ?) to exclude/include routines in specific files.
 # These options may be used in conjunction with the routine include/exclude 
 # lists as shown above. Uncomment the # to make the rule active.
-# BEGIN_FILE_INCLUDE_LIST
-# foo.cpp
-# *.C
-# END_FILE_INCLUDE_LIST
+#
+#BEGIN_FILE_INCLUDE_LIST
+#foo.cpp
+#*.C
+#END_FILE_INCLUDE_LIST
 # only instruments routines in foo.cpp and all files with .C suffix.
 # or 
-# BEGIN_FILE_EXCLUDE_LIST
-# f*.c
-# impl?.C
-# END_FILE_EXCLUDE_LIST
-# excludes files f*.c and impl?.C (such as implA.C, foo.c)
-
+#
+#BEGIN_FILE_EXCLUDE_LIST
+#f*.c
+#impl?.C
+#END_FILE_EXCLUDE_LIST
+# excludes files f*.c and impl?.C (such as implA.C, foo.c).
+# Either include or exclude lists should be specified, but not both.
