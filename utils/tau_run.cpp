@@ -190,7 +190,8 @@ void errorFuncNull(BPatchErrorLevel level, int num, const char **params)
 } 
 // END OF TEST3 code
  
-// Constraints for instrumentation 
+// Constraints for instrumentation. Returns true for those modules that 
+// shouldn't be instrumented. 
 int moduleConstraint(char *fname)
 { // fname is the name of module/file 
   int len = strlen(fname);
@@ -200,15 +201,17 @@ int moduleConstraint(char *fname)
      ((fname[len-3] == '.') && (fname[len-2] == 'c') && (fname[len-1] == 'c')) || 
       (strcmp(fname, "LIBRARY_MODULE") == 0))
   {
-    return true;
+    /* It is ok to instrument this module. Constraint doesn't exist. */
+    return false;
   }
   else
   {
-    return false;
+    return true;
   }
 }
 
-// Constriant for routines 
+// Constriant for routines. The constraint returns true for those routines that 
+// should not be instrumented.
 int routineConstraint(char *fname)
 { // fname is the function name
   if ((strncmp(fname, "Tau", 3) == 0) ||
@@ -220,11 +223,18 @@ int routineConstraint(char *fname)
             (strncmp(fname, "threaded_func", 13) == 0) ||
             (strncmp(fname, "The", 3) == 0)) 
   {
-    return true;
+    return true; /* Don't instrument */
   }
   else
-  { 
-    return false; 
+  { /* Should the routine fname be instrumented? */
+    if (instrumentEntity(string(fname)))
+    { /* Yes it should be instrumented. Return false */
+      return false; 
+    }
+    else
+    { /* No. The selective instrumentation file says: don't instrument it */
+      return true;
+    }
   }
 }
 
@@ -275,26 +285,34 @@ int main(int argc, char **argv)
   // parse the command line arguments 
   if ( argc < 2 )
   {
-    fprintf (stderr, "usage: %s [-Xrun<Taulibrary> ] <application> [args]\n", argv[0]);
+    fprintf (stderr, "usage: %s [-Xrun<Taulibrary> ] [-f <inst_req> ] <application> [args]\n", argv[0]);
     fprintf (stderr, "%s instruments and executes <application> to generate performance data\n", argv[0]);
     fprintf (stderr, "e.g., \n");
-    fprintf (stderr, "%%%s -XrunTAU a.out 100 \n", argv[0]);
-    fprintf (stderr, "Loads libTAU.so from $LD_LIBRARY_PATH and executes a.out \n"); 
+    fprintf (stderr, "%%%s -XrunTAU -f sel.dat a.out 100 \n", argv[0]);
+    fprintf (stderr, "Loads libTAU.so from $LD_LIBRARY_PATH, loads selective instrumentation requests from file sel.dat and executes a.out \n"); 
     exit (1);
   }
-  else if ( strncasecmp (argv[1], "-Xrun", 5) == 0 )
-  { // Load the library.
-    loadlib = true;
-    sprintf(libname,"lib%s.so", &argv[1][5]);
-    fprintf(stderr, "%s> Loading %s ...\n", argv[0], libname);
-    argv++;
+  else 
+  {
+    if ( strncasecmp (argv[1], "-Xrun", 5) == 0 )
+    { // Load the library.
+      loadlib = true;
+      sprintf(libname,"lib%s.so", &argv[1][5]);
+      fprintf(stderr, "%s> Loading %s ...\n", argv[0], libname);
+      argv++;
+    }
+    else
+    { /* No -Xrun<> was specified. Load libTAU.so anyway */
+      loadlib=true;
+      sprintf(libname, "libTAU.so"); 
+    }
+    if (strncasecmp (argv[1], "-f", "3") == 0)
+    { // Load the selective instrumentation file 
+      processInstrumentationRequests(argv[2]);
+      dprintf("Loading instrumentation requests file %s\n", argv[2]);
+      argv += 2;
+    }
   }
-  else
-  { /* No -Xrun<> was specified. Load libTAU.so anyway */
-    loadlib=true;
-    sprintf(libname, "libTAU.so"); 
-  }
-
   // Register a callback function that prints any error messages
   bpatch->registerErrorCallback(errorFunc1);
 
@@ -366,7 +384,7 @@ int main(int argc, char **argv)
 
 
 
-    if (moduleConstraint(fname)) 
+    if (!moduleConstraint(fname)) 
     { // constraint 
 
       for (i=0; i < p->size(); i++) 
@@ -428,7 +446,7 @@ int main(int argc, char **argv)
     dprintf("%s", modulename);
 
 
-    if (moduleConstraint(fname)) 
+    if (!moduleConstraint(fname)) 
     { // constraint
 
       for (i=0; i < p->size(); i++)
