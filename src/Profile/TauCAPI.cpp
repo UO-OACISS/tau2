@@ -34,6 +34,7 @@ using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include "Profile/Profiler.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 ///////////////////////////////////////////////////////////////////////////
 // Wrappers for corresponding C++ functions follow
@@ -266,12 +267,42 @@ extern "C" TauGroup_t Tau_disable_all_groups(void)
   return TAU_DISABLE_ALL_GROUPS();
 }
 
+#ifdef TAU_MPI
+TAU_REGISTER_EVENT(sendevent,"Message size sent to all nodes");
+TauUserEvent **u;
+extern "C" int totalnodes(void);
+int register_events(void)
+{
+  char str[256];
+  int i;
+  u = (TauUserEvent **) malloc(sizeof(TauUserEvent *)*totalnodes());
+  for (i =0; i < totalnodes(); i++)
+  {
+    sprintf(str, "Message size sent to node %d", i);
+    u[i] = (TauUserEvent *) new TauUserEvent((const char *)str);
+  }
+  return 0;
+}
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
+{
+  static int initialize = register_events();
+#ifdef DEBUG_PROF
+  printf("Node %d: Tau_trace_sendmsg: type %d dest %d len %d\n", 
+        RtsLayer::myNode(), type, destination, length);
+#endif /* DEBUG_PROF */
+  TAU_EVENT(sendevent, length);
+  u[destination]->TriggerEvent(length, RtsLayer::myThread());
+  TAU_TRACE_SENDMSG(type, destination, length);
+}
+
+#else /* !TAU_MPI */
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
 {
   TAU_TRACE_SENDMSG(type, destination, length);
 }
-
+#endif /* TAU_MPI */
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_recvmsg(int type, int source, int length)
 {
@@ -366,8 +397,8 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: bertie $
- * $Revision: 1.25 $   $Date: 2002/04/03 18:58:37 $
- * VERSION: $Id: TauCAPI.cpp,v 1.25 2002/04/03 18:58:37 bertie Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.26 $   $Date: 2002/07/11 00:05:28 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.26 2002/07/11 00:05:28 sameer Exp $
  ***************************************************************************/
 

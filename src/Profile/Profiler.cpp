@@ -896,8 +896,10 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	  
     	  vector<TauUserEvent*>::iterator it;
     	  for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++)
-	    {
+	  {
 	      
+	    if ((*it)->GetNumEvents(tid)) 
+            { 
 	      DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
 			   (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid) 
 			   << "\n Max " << (*it)->GetMax(tid) << "\n Mean " 
@@ -907,7 +909,8 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	      fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
 		      (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
 		      (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
-	    }
+            }
+	  }
 	}
 	// End of userevents data 
 	
@@ -1120,15 +1123,18 @@ int Profiler::StoreData(int tid)
     	  for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++)
     	  {
       
-	    DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
-              (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid) 
-              << "\n Max " << (*it)->GetMax(tid) << "\n Mean " 
-	      << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid) 
-	      << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
+	    if ((*it)->GetNumEvents(tid)) 
+            { 
+	      DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
+                (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid) 
+                << "\n Max " << (*it)->GetMax(tid) << "\n Mean " 
+	        << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid) 
+	        << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
 
-     	    fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
-	    (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
-	    (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+     	      fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
+	        (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+	        (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+            }
     	  }
 	}
 	// End of userevents data 
@@ -1334,15 +1340,17 @@ int Profiler::DumpData(bool increment, int tid)
     	  for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++)
     	  {
       
-	    DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
-              (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid) 
-              << "\n Max " << (*it)->GetMax(tid) << "\n Mean " 
-	      << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid) 
-	      << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
+            if ((*it)->GetNumEvents(tid)) { 
+	      DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
+                (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid) 
+                << "\n Max " << (*it)->GetMax(tid) << "\n Mean " 
+	        << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid) 
+	        << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
 
-     	    fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
-	    (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
-	    (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+     	      fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
+	      (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+	      (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+            }
     	  }
 	}
 	// End of userevents data 
@@ -1855,15 +1863,17 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	vector<TauUserEvent*>::iterator it;
 	for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++){
 	  
-	  DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
-		       (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid)
-		       << "\n Max " << (*it)->GetMax(tid) << "\n Mean "
-		       << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid)
-		       << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
+	  if ((*it)->GetNumEvents(tid)) {
+	    DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
+              (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid)
+	      << "\n Max " << (*it)->GetMax(tid) << "\n Mean "
+	      << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid)
+              << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
 	  
-	  fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n",
-		  (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
-		  (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+	    fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n",
+	      (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+	      (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+          }
 	}
       }
       
@@ -2023,15 +2033,17 @@ int Profiler::StoreData(int tid){
 	vector<TauUserEvent*>::iterator it;
 	for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++){
 	  
-	  DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
-		       (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid)
-		       << "\n Max " << (*it)->GetMax(tid) << "\n Mean "
-		       << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid)
-		       << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
+	  if ((*it)->GetNumEvents(tid)) {
+	    DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
+	      (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid)
+	      << "\n Max " << (*it)->GetMax(tid) << "\n Mean "
+	      << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid)
+	      << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
 	  
-	  fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n",
-		  (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
-		  (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+	    fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n",
+	      (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+	      (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+          }
 	}
       }
       
@@ -2248,16 +2260,18 @@ int Profiler::DumpData(bool increment, int tid){
 	
 	vector<TauUserEvent*>::iterator it;
 	for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++){
+	  	  
+	  if ((*it)->GetNumEvents(tid)) {
+	    DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
+	      (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid)
+	      << "\n Max " << (*it)->GetMax(tid) << "\n Mean "
+	      << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid)
+	      << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
 	  
-	  DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
-		       (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid)
-		       << "\n Max " << (*it)->GetMax(tid) << "\n Mean "
-		       << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid)
-		       << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
-	  
-	  fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n",
-		  (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
-		  (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+	    fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n",
+	      (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+	      (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+          }
 	}
       }
       
@@ -2480,8 +2494,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.74 $   $Date: 2002/05/06 12:23:35 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.74 2002/05/06 12:23:35 sameer Exp $ 
+ * $Revision: 1.75 $   $Date: 2002/07/11 00:05:30 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.75 2002/07/11 00:05:30 sameer Exp $ 
  ***************************************************************************/
 
 	
