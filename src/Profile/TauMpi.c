@@ -1028,6 +1028,7 @@ int * argc;
 char *** argv;
 {
   int  returnVal;
+  int  rank;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()", " ", TAU_MESSAGE);
   TAU_PROFILE_INIT(*argc, *argv);
@@ -1036,6 +1037,8 @@ char *** argv;
   returnVal = PMPI_Init( argc, argv );
 
   TAU_PROFILE_STOP(tautimer);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  TAU_PROFILE_SET_NODE(rank);
 
   return returnVal;
 }
