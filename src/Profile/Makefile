@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/research/paraducks/users/bertie/temptau/tau2
+TAUROOT=/home/grads/sameer/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -83,8 +83,8 @@ ARFLAGS	      = rcv
 ##################################################################
 
 ############# For SGI CC compiler, replace AR accordingly #######
-AR			= $(CXX) -ar 		   #ENDIF##SGICC#
-ARFLAGS			= -o			   #ENDIF##SGICC#
+#SGICC#AR			= $(CXX) -ar 		   #ENDIF#
+#SGICC#ARFLAGS			= -o			   #ENDIF#
 ##################################################################
 
 ############# For FUJITSU FCC compiler, replace AR accordingly #######
@@ -116,6 +116,7 @@ TAU_DISABLE   = libTauDisable$(LSX)
 TAU_SHLIBX		= .so 		  
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared  	#ENDIF#
+#SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHLIB	= libTAU$(TAUOPTIONS)$(TAU_SHLIBX)
