@@ -201,7 +201,8 @@ The following  command-line options are available to configure:
    
    Specifies use of hardware performance counters for profiling under IRIX  
    using the SGI R10000 perfex counter access interface. The use of this option 
-   is deprecated in favor of the -pcl=<dir> option described above. 
+   is deprecated in favor of the -pcl=<dir> and -papi=<dir> options described 
+   above. 
    
 -SGITIMERS
    
