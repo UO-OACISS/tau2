@@ -424,23 +424,19 @@ void tau_trace_recvmsg_(int *type, int *source, int *length)
   Tau_trace_recvmsg(*type, *source, *length);
 }
 
-void tau_register_event_(void **ptr, char *event_name, int *flen)
+void tau_register_event_(void **ptr, char *event_name, int flen)
 {
 
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
-    for(int i=0; i<1024; i++)
-    {
-      if (!VALID_NAME_CHAR(event_name[i]))
-      { 
-        event_name[i] = '\0';
-        break;
-      }
-    }
+    char * ename = (char *) malloc((size_t)flen+1);
+    strncpy(ename, event_name, flen);
+    ename[flen] = '\0';
 #ifdef DEBUG_PROF
     printf("Tau_get_userevent() \n");
 #endif /* DEBUG_PROF */
-    *ptr = Tau_get_userevent(event_name);
+    *ptr = Tau_get_userevent(ename);
+    free(ename);
   }
   return;
 
@@ -1157,6 +1153,6 @@ void TAU_PHASE_STOP(void **profiler)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.39 $   $Date: 2005/01/18 23:58:20 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.39 2005/01/18 23:58:20 sameer Exp $ 
+ * $Revision: 1.40 $   $Date: 2005/02/21 19:57:42 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.40 2005/02/21 19:57:42 sameer Exp $ 
  ***************************************************************************/
