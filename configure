@@ -1275,6 +1275,11 @@ case $cxx_compiler in
       if [ "$machine" = "apple" ] 
       then
         fixmakeargs="$fixmakeargs IBMXLCAPPLE"
+        # xlc++ doesn't like include/Memory. Move this directory
+	if [ -d include/Memory ] 
+	then
+          mv include/Memory include/MemoryWrapper	
+   	fi
 	if [ $fortran_compiler = no ] 
         then
           fixmakeargs="$fixmakeargs IBMXLFAPPLE"
