@@ -2523,6 +2523,15 @@ case $machine in
 	    fixmakeargs="$fixmakeargs IA64PAPI"
 	fi
 	;;
+     x86_64)
+	echo "Found an AMD Opteron configuration definition"
+	fixmakeargs="arch=$machine $fixmakeargs"
+	
+	if [ $papi = yes ]
+ 	  then
+	    fixmakeargs="$fixmakeargs X86_64PAPI"
+	fi
+	;;
      ibm64)
 	echo Found a \"$machine\" configuration definition
         if [ `uname -s` = AIX ]

@@ -299,6 +299,7 @@ FWRAPPER	       = TauFMpi.o
 #IA64PAPI#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
 #IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -L/usr/pmapi/lib -lpmapi#ENDIF#
+#X86_64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR)/ -lpapi -lperfctr #ENDIF#
 #IBM64PAPI#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a -L/usr/lpp/pmtoolkit/lib  -L/usr/pmapi/lib -lpmapi #ENDIF#
 #IBM64PAPILINUX#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a #ENDIF#
 #SGI64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi64 #ENDIF#
