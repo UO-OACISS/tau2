@@ -93,15 +93,19 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 */
 #define TAU_MAPPING_PROFILE_STOP(tid) Profiler::CurrentProfiler[tid]->Stop(tid);
 #define TAU_MAPPING_PROFILE_EXIT(msg, tid)  Profiler::ProfileExit(msg, tid); 
+#define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  RtsLayer::setMyNode(node, tid); 
 #else
 /* Create null , except the main statement which should be executed as it is*/
 #define TAU_MAPPING(stmt, group) stmt
 #define TAU_MAPPING_OBJECT(FuncInfoVar) 
 #define TAU_MAPPING_LINK(FuncInfoVar, Group) 
 #define TAU_MAPPING_PROFILE(FuncInfoVar) 
-#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar)
-#define TAU_MAPPING_PROFILE_START(Timer) 
-#define TAU_MAPPING_PROFILE_STOP() 
+#define TAU_MAPPING_CREATE(name, type, key, groupname, tid) 
+#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar, tid)
+#define TAU_MAPPING_PROFILE_START(Timer, tid) 
+#define TAU_MAPPING_PROFILE_STOP(tid) 
+#define TAU_MAPPING_PROFILE_EXIT(msg, tid)  
+#define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  
 
 #endif /* PROFILING_ON or TRACING_ON  */
 #endif /* _TAU_MAPPING_H_ */

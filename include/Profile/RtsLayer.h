@@ -81,9 +81,9 @@ class RtsLayer
   	static int 	SetEventCounter(void);
   	static double 	GetEventCounter(void);
 
-	static double   getUSecD(void); 
+	static double   getUSecD(int tid); 
 
-	static int 	setMyNode(int NodeId);
+	static int 	setMyNode(int NodeId, int tid=RtsLayer::myThread());
 
 	static int 	setMyContext(int ContextId);
 
@@ -111,6 +111,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 1999/08/19 22:27:57 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.6 1999/08/19 22:27:57 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 1999/08/20 22:55:22 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.7 1999/08/20 22:55:22 sameer Exp $ 
  ***************************************************************************/
