@@ -39,19 +39,6 @@ public class ParaProfTrial extends Trial{
 	    this.setNumContextsPerNode(trial.getNumContextsPerNode());
 	    this.setNumThreadsPerContext(trial.getNumThreadsPerContext());
 	    this.setUserData(trial.getUserData());
-	    int numOfMetrics = trial.getMetricCount();
-	    metrics = new Vector();
-	    if(numOfMetrics==0){
-		Metric metric = this.addMetric();
-		    metric.setName("Default Metric");
-	    }
-	    else{
-		for(int i=0;i<numOfMetrics;i++){
-		    String name = trial.getMetric(i);
-		    Metric metric = this.addMetric();
-		    metric.setName(name);
-		}
-	    }
 	}
 	this.type = type;
     }
