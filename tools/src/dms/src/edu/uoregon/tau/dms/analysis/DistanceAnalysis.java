@@ -14,12 +14,13 @@ import java.util.ListIterator;
  * and Calder, in their paper "Automatically Characterizing Large Scale
  * Program Behavior", 2002.  In that paper, they describe the algorithm for
  * calculating distance metrics between phases of a serial executable.  In
- * this implementation, the phases are replaced by threads or events.
+ * this implementation, the phases are replaced by either threads or events.
  * Instead of comparing blocks of code to find phases of execution, the user
  * can compare either threads or events.  See the referenced paper for more
- * details.
+ * details.  The two extensions of this class are EventDistance and
+ * ThreadDistance.
  *
- * <P>CVS $Id: DistanceAnalysis.java,v 1.3 2004/07/29 23:17:09 khuck Exp $</P>
+ * <P>CVS $Id: DistanceAnalysis.java,v 1.4 2004/08/10 22:26:26 khuck Exp $</P>
  * @author	Kevin Huck
  * @version	0.1
  * @since	0.1
@@ -58,6 +59,8 @@ abstract public class DistanceAnalysis {
 		results = createTheMatrix(threadCount, eventCount);
 
 		// get the event names from the database
+		// not really necessary, but the user may want this data.
+		// perhaps we get it if/when they request it?
 		buf = new StringBuffer();
 		buf.append("select name from interval_event where trial = ? order by id");
 		try {
@@ -74,16 +77,6 @@ abstract public class DistanceAnalysis {
 			e.printStackTrace();
 			return;
 		}
-
-		// build the query to get total amounts
-		buf = new StringBuffer();
-		buf.append("select l.node, l.context, l.thread, sum(l.exclusive) ");
-		buf.append("from interval_location_profile l ");
-		buf.append("inner join interval_event e ");
-		buf.append("on l.interval_event = e.id ");
-		buf.append("where e.trial = ? and l.metric = ? ");
-		buf.append("group by l.node, l.context, l.thread ");
-		buf.append("order by l.node, l.context, l.thread ");
 
 		// get the totals
 		getTotals();

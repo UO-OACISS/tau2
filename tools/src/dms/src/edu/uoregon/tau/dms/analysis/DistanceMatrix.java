@@ -97,10 +97,10 @@ public class DistanceMatrix {
 		return buf.toString();
 	}
 
-	/* We need to convert the NxN distance matrix to a MxM image.
-	 each element in the matrix will become a M/NxM/N pixel block.
+	/* We need to convert the NxN distance matrix to a black and
+	 white NxN image.  Each element in the matrix will become a pixel.
 	 The image data has to be in a single dimension array, so output
-	 it that way.
+	 it that way.  Need to do a color implementation, too.
 	*/
 
 	public int[] toImage(boolean scaledRange, boolean triangle) {
