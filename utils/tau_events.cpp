@@ -48,7 +48,11 @@ using namespace std;
 
 # define FILENAME_SIZE 	1024
 # define MAX_OPEN_FILES  16*1024
+#ifdef TAU_HP_GNU
+# define LINEMAX	2*1024
+#else
 # define LINEMAX	64*1024
+#endif /* TAU_HP_GNU */
 FILE * edfFiles[MAX_OPEN_FILES]; /* array of descriptors */
 
 int  dynamictrace = FALSE;

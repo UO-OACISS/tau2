@@ -155,7 +155,11 @@ static struct p_coll_descr {
   *p_coll_tbl  = 0;    /* -- summary collection profile data table -- */
 
 #define MAX_COUNTERS  1024  	/* -- HPC++ object profiling */
+#ifdef TAU_HP_GNU
+#define SIZE_OF_LINE  2*1024   /* Big line to accomodate long function names */
+#else
 #define SIZE_OF_LINE  64*1024   /* Big line to accomodate long function names */
+#endif /* TAU_HP_GNU */
 #define SIZE_OF_FILENAME 1024   /* Include full path. */
 
 static struct p_aggr_descr {
@@ -3099,7 +3103,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 2001/08/24 16:45:56 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.26 2001/08/24 16:45:56 sameer Exp $                                                   
+ * $Revision: 1.27 $   $Date: 2002/01/09 02:05:25 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.27 2002/01/09 02:05:25 sameer Exp $                                                   
  ***************************************************************************/
 
