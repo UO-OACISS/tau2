@@ -660,59 +660,6 @@ int Profiler::StoreData(int tid)
 	return 1;
 }
 
-//////////////////////////////////////////////////////////////////////
-//int Profiler::selectFunctions(int tid, char **nameArray, int selectedNumber){
-//#ifdef PROFILING_ON 
-//  vector<FunctionInfo*>::iterator it;
-
-//  RtsLayer::LockDB();
-
-//  numFunc = TheFunctionDB().size();
-
-//  nameArray = new char**[numFunc];
-//  idArray   = new int*[numFunc];
-
-//  int tmpCounter = 0;
-
-//  for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++){
-//    nameArray[tmpCounter] = it->GetName();
-//    idArray[tmpCounter] = it->Get
-  
-void Profiler::getFunctionList(int &numOfFunc, char**&nameArray, int tid){
-  vector<FunctionInfo*>::iterator it;
-
-  //Don't want to pass back pointers to internal tau data.
-  //So, copy the strings into new ones, and return those.
-
-  int numFunc = TheFunctionDB().size();
-  numOfFunc = numFunc;
-
-  cout << "In tau: Num of Func: " << numFunc << endl;
-
-  nameArray = new char*[numFunc];
-
-
-  const char *tmpChar = NULL;
-  size_t strLength = 0;
-  int counter = 0;
-  for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++){
-    tmpChar = (*it)->GetName();
-    cout << "In tau: Trying to copy: " << tmpChar << endl;
-    strLength = strlen(tmpChar);
-    nameArray[counter] = new char[strLength + 5];
-    strcpy(nameArray[counter], tmpChar);
-    counter++;
-  }
-
-  cout << "In tau: The names in the nameArray are: " << endl;
-  
-  for(int i=0;i<numOfFunc;i++){
-    cout << nameArray[i] << endl;
-  }
-}
-
-
-
 int Profiler::DumpData(int tid)
 {
   	TAU_PROFILE("TAU_DUMP_DB()", " ", TAU_IO);
@@ -1525,8 +1472,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.62 $   $Date: 2002/03/15 23:35:12 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.62 2002/03/15 23:35:12 bertie Exp $ 
+ * $Revision: 1.63 $   $Date: 2002/03/16 00:26:19 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.63 2002/03/16 00:26:19 bertie Exp $ 
  ***************************************************************************/
 
 	
