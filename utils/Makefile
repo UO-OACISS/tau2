@@ -150,7 +150,7 @@ tau_events.o: 	tau_events.cpp
 		$(CXX) $(CFLAGS)  -c tau_events.cpp
 
 tau_instrumentor: tau_instrumentor.o tau_selective.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a 
-		$(PDT_CXX_COMP) $(CFLAGS) tau_instrumentor.o tau_selective.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) tau_instrumentor.o tau_selective.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
 
 tau_instrumentor.o: tau_instrumentor.cpp 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_instrumentor.cpp

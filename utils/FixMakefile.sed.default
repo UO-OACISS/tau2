@@ -25,3 +25,4 @@ s@^CONFIG_CC=\(.*\)@CONFIG_CC=gcc@g
 s@^CONFIG_CXX=\(.*\)@CONFIG_CXX=g++@g
 s@^PCXX_OPT=\(.*\)@PCXX_OPT=-g@g
 s@^USER_OPT=\(.*\)@USER_OPT=-g@g
+s@^PDT_CXX=\(.*\)@PDT_CXX=@g
