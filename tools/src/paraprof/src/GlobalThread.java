@@ -84,6 +84,10 @@ public class GlobalThread
     void addUserThreadDataElement(GlobalThreadDataElement inGTDE){
 	userThreadDataList.addElement(inGTDE);
     }
+
+    void addUserThreadDataElement(GlobalThreadDataElement inGTDE, int inPosition){
+	userThreadDataList.setElementAt(inGTDE, inPosition);
+    }
   
     Vector getThreadDataList(){
 	return threadDataList;

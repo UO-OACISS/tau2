@@ -414,7 +414,6 @@ public class Trial extends Thread{
 	  
 		//Allow other threads in the system a chance.
 		if((bSDCounter % 10000) == 0){
-		    System.out.println(inputString);
 		    Thread.yield();
 		}
 	  
@@ -765,7 +764,7 @@ public class Trial extends Thread{
 				s1 = br.readLine();
 				s2 = br.readLine();
 				UserEventData ued = getData(s1,s2, userEventsPresent);
-				
+
 				//Initialize the user list for this thread.
 				if(j == 0){
 				    //Note that this works correctly because we process the user events in a different manner.
@@ -815,6 +814,8 @@ public class Trial extends Thread{
 				    tmpGTDEUE.setUserEventMinValue(ued.min);
 				    tmpGTDEUE.setUserEventMaxValue(ued.max);
 				    tmpGTDEUE.setUserEventMeanValue(ued.mean);
+
+				    tmpGT.addUserThreadDataElement(tmpGTDEUE, ued.id);
 				}
 			    }
 			    //Now set the userEvents flag.
