@@ -293,7 +293,12 @@ int package_selector(void){
  * NOTE		: This function is called by TauMuseQuery	
  *********************/
 int TauMuseInit(char *handler_name, int filter_argc,char *args[]){
+#ifdef AF_UNIX_MODE
+	struct sockaddr unix_addr;
+	char current_directory[50];
+#else
         struct sockaddr_in host_addr;
+#endif //AF_UNIX_MODE
         char send_buffer[BUFFERSIZE];
         char recv_buffer[BUFFERSIZE];
         char cmdstr[MAX_ARGLEN];
@@ -308,7 +313,43 @@ int TauMuseInit(char *handler_name, int filter_argc,char *args[]){
         // ===================================
         // Establish socket and connection
         // ===================================
-        // host information
+
+#ifdef AF_UNIX_MODE
+	// USING AF_UNIX 
+	/* fill in the socket structure with host information */
+	unix_addr.sa_family = AF_UNIX;
+	strcpy(unix_addr.sa_data,"magnetd");
+
+	// GO find the lock file, which is also the socket descriptor 
+	getcwd(current_directory,50);
+	if (chdir("/var/lock") < 0) {
+	printf("unable to change to lockfile directory: %s", strerror(errno));
+	return(1);
+	}
+
+	/* grab an Internet domain socket */
+	if ((sockfd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+	printf("unable to create socket: %s", strerror(errno));
+	return(1);
+	}
+	/* Assign sockfd to the global variable TheMuseSockId() */
+	TheMuseSockId() = sockfd; 
+
+#ifdef DEBUG_PROF
+	/* connect to PORT on HOST */
+	printf("%s: %d\n", unix_addr.sa_data, unix_addr.sa_family);
+	printf("Connecting to magnetd using AF_UNIX...\n");
+#endif //DEBUG_PROF
+
+	if (connect(sockfd, &unix_addr,  /* Choose right socket type */
+						sizeof(unix_addr)) == -1) {
+	printf("unable to connect with AF_UNIX socket: %s", strerror(errno));
+	return(1);
+	}
+	chdir(current_directory);
+#else 
+        // USING AF_INET	
+	// host information
         memset(&host_addr,0,sizeof(host_addr));
         host_addr.sin_family = AF_INET;
         host_addr.sin_addr.s_addr = inet_addr(HOST_IP);
@@ -336,6 +377,9 @@ int TauMuseInit(char *handler_name, int filter_argc,char *args[]){
                                 strerror(errno));
                 return(1);
         }
+#endif //AF_UNIX_MODE
+
+
         // verify connection
         if(recv(sockfd, recv_buffer, BUFFERSIZE,0) == -1){
                 perror("recv");
@@ -490,9 +534,9 @@ double TauMuseQuery(void){
 	static int handlerID = package_selector(); 
 	int sockfd = TheMuseSockId(); /* read from the global */
 
-//#ifdef DEBUG_PROF
+#ifdef DEBUG_PROF
 	printf("DEBUG:TauMuseQuery : pid=%d\n",getpid());
-//#endif //DEBUG_PROF
+#endif //DEBUG_PROF
 	
         // ====================================
         // command "query_handler <handlerID>"

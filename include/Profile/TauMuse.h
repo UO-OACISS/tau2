@@ -8,7 +8,7 @@
 #define MAX_REPLY_LENGTH 	1024 
 #define MAXNUMOFCPU		2 
 #define MAX_FILTER_ARGS		5	
-
+#define AF_UNIX_MODE
 /***************************************************************************************
 * This is for handlers stuff
 * *************************************************************************************/

@@ -81,7 +81,12 @@ USAGE:
 		addfilter <handlerID> process_filter pid=<pid> event=259 //MAGNET_TASK_CTX_OUT	
  
 NOTE: 
-
+	Some configuration should be modified according to machine.
+	- MAXNUMOFCPU 		: default to 2. 
+	(This can run with Uni-processor and Dual-processor machine.)
+	- AF_UNIX_MODE		: is defined by default.
+	(This will configure muse to run in AF_INET or AF_UNIX mode. However, AF_INET is not
+	recommend since it will significantly impact the performance of profiling.)
  
 BUGS:
 
