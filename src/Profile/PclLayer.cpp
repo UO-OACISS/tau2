@@ -86,7 +86,7 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
       if(PCLinit(&descr) != PCL_SUCCESS)
 	{
 	  cout << "unable to allocate PCL handle" << endl;
-	  return;
+	  return -1;
 	}
 
       //Initializing the static thread list.
