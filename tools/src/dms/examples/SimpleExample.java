@@ -25,16 +25,12 @@ public class SimpleExample {
 		session.setExperiment(1);
 
 		// Get the list of trials
-		Vector trials;
-		Vector myTrials = new Vector();
+		ListIterator trials;
 		trials = session.getTrialList();
 		Trial trial = null;
 
-        for(Enumeration en = trials.elements(); en.hasMoreElements() ;)
-		{
-			trial = (Trial) en.nextElement();
-			// System.out.println ("Trial ID = " + trial.getID() + ", Experiment ID = " + trial.getExperimentID() + ", appid = " + trial.getApplicationID());
-
+		while (trials.hasNext()) {
+			trial = (Trial)trials.next();
 			if (trial.getMetric().compareTo("time") == 0 ){
 				session.setTrial(trial);
 				break;

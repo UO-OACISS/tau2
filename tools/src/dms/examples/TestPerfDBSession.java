@@ -13,37 +13,44 @@ public class TestPerfDBSession {
     /*** Beginning of main program. ***/
 
     public static void main(java.lang.String[] args) {
+
 		// Create a PerfDBSession object
 		DataSession session = new PerfDBSession(args[0]);
 		session.open();
 		System.out.println ("API loaded...");
 
 		// Get the list of applications
-		Vector applications;
+		ListIterator applications;
 		applications = session.getAppList();
 		Application app = null;
 
-        for(Enumeration en = applications.elements(); en.hasMoreElements() ;)
+		// loop through all the applications, and print out some info
+        while(applications.hasNext())
 		{
-			app = (Application) en.nextElement();
+			app = (Application) applications.next();
 			System.out.println ("Application ID = " + app.getID() + ", name = " + app.getName() + ", version = " + app.getVersion() + ", description = " + app.getDescription());
-
-			// select an application
-			session.setApplication(app);
-			// select an application, another way
-			session.setApplication(app.getID());
-			// select an application, yet another way
-			session.setApplication(app.getName());
 		}
 
+		/* the following code shows how to select applications -
+		 * use one of the following methods.  You don't have to 
+		 * do all of them, just one.
+		 */
+
+		// select an application
+		session.setApplication(app);
+		// select an application, another way
+		session.setApplication(app.getID());
+		// select an application, yet another way
+		session.setApplication(app.getName());
+
 		// Get the list of experiments
-		Vector experiments;
+		ListIterator experiments;
 		experiments = session.getExpList();
 		Experiment exp = null;
 
-        for(Enumeration en = experiments.elements(); en.hasMoreElements() ;)
+        while(experiments.hasNext())
 		{
-			exp = (Experiment) en.nextElement();
+			exp = (Experiment) experiments.next();
 			System.out.println ("Experiment ID = " + exp.getID() + ", appid = " + exp.getApplicationID());
 
 			// select an experiment
@@ -65,13 +72,13 @@ public class TestPerfDBSession {
 		System.out.println ("NumThreads = " + numThreads);
 
 		// Get the list of trials
-		Vector trials;
+		ListIterator trials;
 		trials = session.getTrialList();
 		Trial trial = null;
 
-        for(Enumeration en = trials.elements(); en.hasMoreElements() ;)
+        while(trials.hasNext())
 		{
-			trial = (Trial) en.nextElement();
+			trial = (Trial) trials.next();
 			System.out.println ("Trial ID = " + trial.getID() + ", Experiment ID = " + trial.getExperimentID() + ", appid = " + trial.getApplicationID());
 
 			// select a trial
@@ -79,6 +86,7 @@ public class TestPerfDBSession {
 			// select a trial, another way
 			session.setTrial(trial.getID());
 		}
+		// session.setTrial(trials);
 
 		// Get the number of nodes
 		numNodes = session.getNumberOfNodes();
@@ -93,13 +101,13 @@ public class TestPerfDBSession {
 		System.out.println ("NumThreads = " + numThreads);
 
 		// Get the list of functions
-		Vector functions;
+		ListIterator functions;
 		functions = session.getFunctions();
 		Function function = null;
 
-        for(Enumeration en = functions.elements(); en.hasMoreElements() ;)
+		while (functions.hasNext())
 		{
-			function = (Function) en.nextElement();
+			function = (Function) functions.next();
 			// System.out.println ("Function Index ID = " + function.getIndexID() + ", Function ID = " + function.getFunctionID());
 			System.out.println ("Function Name = " + function.getName());
 			// System.out.println ("Trial ID = " + function.getTrialID() + ", Experiment ID = " + function.getExperimentID() + ", appid = " + function.getApplicationID());
@@ -111,8 +119,7 @@ public class TestPerfDBSession {
 			// select a function, another way
 			session.setFunction(function.getIndexID());
 		}
-
-		session.setFunction(functions);
+		// session.setFunction(functions);
 
 		Vector nodes = new Vector();
 		Integer node = new Integer(0);

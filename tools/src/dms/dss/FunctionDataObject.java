@@ -1,6 +1,10 @@
 package dms.dss;
 
 public class FunctionDataObject {
+	private int functionID;
+	private int nodeID;
+	private int contextID;
+	private int threadID;
 	private double inclusivePercentage;
 	private double inclusive;
 	private double exclusivePercentage;
@@ -8,6 +12,22 @@ public class FunctionDataObject {
 	private int numCalls;
 	private int numSubroutines;
 	private double inclusivePerCall;
+
+	public void setFunctionID (int functionID) {
+		this.functionID = functionID;
+	}
+
+	public void setNodeID (int functionID) {
+		this.functionID = functionID;
+	}
+
+	public void setContextID (int functionID) {
+		this.functionID = functionID;
+	}
+
+	public void setThreadID (int functionID) {
+		this.functionID = functionID;
+	}
 
 	public void setInclusivePercentage (double inclusivePercentage) {
 		this.inclusivePercentage = inclusivePercentage;
@@ -35,6 +55,22 @@ public class FunctionDataObject {
 
 	public void setInclusivePerCall (double inclusivePerCall) {
 		this.inclusivePerCall = inclusivePerCall;
+	}
+
+	public int getFunctionID () {
+		return this.functionID;
+	}
+
+	public int getNodeID () {
+		return this.nodeID;
+	}
+
+	public int getContextID () {
+		return this.contextID;
+	}
+
+	public int getThreadID () {
+		return this.threadID;
 	}
 
 	public double getInclusivePercentage () {
