@@ -353,6 +353,157 @@ public class DBConfigure extends JFrame implements ActionListener
 		System.exit(0);
 	    }
 	}
+	else if(EventSrc instanceof JButton){
+	    if(arg.equals("PerfDB Home")){
+		JFileChooser tmpFileChooser = new JFileChooser();
+		tmpFileChooser.setDialogTitle("PerfDB Home");
+
+		//Set the directory to the current directory.
+		tmpFileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		tmpFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		int resultValue = tmpFileChooser.showOpenDialog(this);
+
+		if(resultValue == JFileChooser.APPROVE_OPTION){
+		    //Try and get the file.
+		    File file = tmpFileChooser.getSelectedFile();
+		    
+		    try{
+			String tmpString = file.getCanonicalPath();
+			perfDBHome.setText(tmpString);
+		    }
+		    catch(IOException exp){
+			System.out.println("An error occurred whilst getting the directory name!");
+			System.out.println("Please reprot this bug to:tau-bugs.cs.uoregon.edu");
+		    }
+		}
+	    }
+	    else if(arg.equals("JDBC Jar File")){
+		JFileChooser tmpFileChooser = new JFileChooser();
+		tmpFileChooser.setDialogTitle("JDBC Jar File");
+		tmpFileChooser.setApproveButtonText("Select");
+		
+		//Set the directory.
+		if((perfDBHome.getText().trim()).equals(unsetString))
+		    tmpFileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		else
+		    tmpFileChooser.setCurrentDirectory(new File(perfDBHome.getText().trim()));
+
+		tmpFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		int resultValue = tmpFileChooser.showOpenDialog(this);
+
+		if(resultValue == JFileChooser.APPROVE_OPTION){
+		    //Try and get the file.
+		    File file = tmpFileChooser.getSelectedFile();
+		    
+		    try{
+			String tmpString = file.getCanonicalPath();
+			jDBCJarfile.setText(tmpString);
+		    }
+		    catch(IOException exp){
+			System.out.println("An error occurred whilst getting the jar file!");
+			System.out.println("Please reprot this bug to:tau-bugs.cs.uoregon.edu");
+		    }
+		}
+	    }
+	    else if(arg.equals("Schema File")){
+		JFileChooser tmpFileChooser = new JFileChooser();
+		tmpFileChooser.setDialogTitle("Schema File");
+		tmpFileChooser.setApproveButtonText("Select");
+		
+		//Set the directory.
+		if((perfDBHome.getText().trim()).equals(unsetString))
+		    tmpFileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		else
+		    tmpFileChooser.setCurrentDirectory(new File(perfDBHome.getText().trim()));
+
+		tmpFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		int resultValue = tmpFileChooser.showOpenDialog(this);
+
+		if(resultValue == JFileChooser.APPROVE_OPTION){
+		    //Try and get the file.
+		    File file = tmpFileChooser.getSelectedFile();
+		    
+		    try{
+			String tmpString = file.getCanonicalPath();
+			dBSchemaFile.setText(tmpString);
+		    }
+		    catch(IOException exp){
+			System.out.println("An error occurred whilst getting the directory name!");
+			System.out.println("Please reprot this bug to:tau-bugs.cs.uoregon.edu");
+		    }
+		}
+	    }
+	    else if(arg.equals("XML Parser")){
+		JFileChooser tmpFileChooser = new JFileChooser();
+		tmpFileChooser.setDialogTitle("XML Parser");
+		tmpFileChooser.setApproveButtonText("Select");
+
+		//Set the directory.
+		if((perfDBHome.getText().trim()).equals(unsetString))
+		    tmpFileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		else
+		    tmpFileChooser.setCurrentDirectory(new File(perfDBHome.getText().trim()));
+
+		tmpFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		int resultValue = tmpFileChooser.showOpenDialog(this);
+
+		if(resultValue == JFileChooser.APPROVE_OPTION){
+		    //Try and get the file.
+		    File file = tmpFileChooser.getSelectedFile();
+		    
+		    try{
+			String tmpString = file.getCanonicalPath();
+			xMLPaser.setText(tmpString);
+		    }
+		    catch(IOException exp){
+			System.out.println("An error occurred whilst getting the directory name!");
+			System.out.println("Please reprot this bug to:tau-bugs.cs.uoregon.edu");
+		    }
+		}
+	    }
+	    else if(arg.equals("Config File")){
+		JFileChooser tmpFileChooser = new JFileChooser();
+		tmpFileChooser.setDialogTitle("Config File");
+
+		//Set the directory.
+		if((perfDBHome.getText().trim()).equals(unsetString))
+		    tmpFileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		else
+		    tmpFileChooser.setCurrentDirectory(new File(perfDBHome.getText().trim()));
+
+		tmpFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		int resultValue = tmpFileChooser.showSaveDialog(this);
+
+		if(resultValue == JFileChooser.APPROVE_OPTION){
+		    //Try and get the file.
+		    File file = tmpFileChooser.getSelectedFile();
+		    
+		    try{
+			String tmpString = file.getCanonicalPath();
+			configFileName.setText(tmpString);
+		    }
+		    catch(IOException exp){
+			System.out.println("An error occurred whilst getting the directory name!");
+			System.out.println("Please reprot this bug to:tau-bugs.cs.uoregon.edu");
+		    }
+		}
+	    }
+	    else if(arg.equals("Save")){
+		System.out.println("Writing the following values to file: " + configFileName.getText().trim());
+		System.out.println("perfDBHome: " + perfDBHome.getText().trim());
+		System.out.println("jDBCJarfile: " + jDBCJarfile.getText().trim());
+		System.out.println("jDBCDriver: " + jDBCDriver.getText().trim());
+		System.out.println("jDBCType: " + jDBCType.getText().trim());
+		System.out.println("dBHostname: " + dBHostname.getText().trim());
+		System.out.println("dBPortNum: " + dBPortNum.getText().trim());
+		System.out.println("dBName: " + dBName.getText().trim());
+		System.out.println("dBUsername: " + dBUsername.getText().trim());
+		System.out.println("dBPassword: " + dBPassword.getText().trim());
+		System.out.println("dBSchemaFile: " + dBSchemaFile.getText().trim());
+		System.out.println("dBSchemaFile: " + dBSchemaFile.getText().trim());
+		System.out.println("xMLPaser: " + xMLPaser.getText().trim());
+	    }
+	}
     }
 
     //Adds the components.
