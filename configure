@@ -159,6 +159,7 @@ profilecallstack=no
 trace=no
 debugprof=no
 sgitimers=no
+craytimers=no
 linuxtimers=no
 cputime=no
 papiwallclock=no
@@ -552,6 +553,11 @@ do
     shift
     ;;
 
+  -CRAYTIMERS)
+    craytimers=yes
+    shift
+    ;;
+
   -LINUXTIMERS)
     linuxtimers=yes
     shift
@@ -628,6 +634,7 @@ do
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
+    echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
     echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
     echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
     echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
@@ -990,6 +997,12 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
       fixmakeargs="$fixmakeargs SGITIMERS"
       tauoptions="${tauoptions}-sgitimers"
   fi
+fi
+
+if [ $craytimers = yes ]
+then
+  fixmakeargs="$fixmakeargs CRAYTIMERS"
+  tauoptions="${tauoptions}-craytimers"
 fi
 
 if [ $cputime = yes ]
@@ -2668,6 +2681,7 @@ fi
     sedout="./utils/FixMakefile.sed"
 echo "Applying script to all Makefiles, please wait, this may take a while..."
 for i in `find . -name Makefile -print `
+#for i in $tauroot/include/Makefile $tauroot/src/Profile/Makefile $tauroot/utils/Makefile $tauroot/Makefile
   do 
     $echo ".${nnl}"
     sed -f $sedout < ${i} > ${i}~~0

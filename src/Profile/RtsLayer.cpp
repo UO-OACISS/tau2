@@ -43,6 +43,11 @@
 #endif /* HITACHI */
 #include "Profile/Profiler.h"
 
+#ifdef CRAY_TIMERS
+#include <intrinsics.h>
+#include <sys/param.h>
+#endif // CRAY_TIMERS
+
 #ifdef TAU_XLC
 #define strcasecmp strcmp
 #define strncasecmp strncmp 
@@ -521,6 +526,10 @@ double RtsLayer::getUSecD (int tid) {
   return (tp.tv_sec * 1e6 + (tp.tv_nsec * 1e-3)) ;
 
 #else  // SGI_TIMERS
+#ifdef CRAY_TIMERS
+  long long tick = _rtc();
+  return (double) tick/HZ;
+#endif // CRAY_TIMERS
 #ifdef TAU_LINUX_TIMERS
   return (double) getLinuxHighResolutionTscCounter()/TauGetMHz();
 #else /* TAU_LINUX_TIMERS */
@@ -1020,6 +1029,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.43 $   $Date: 2002/07/26 20:10:14 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.43 2002/07/26 20:10:14 sameer Exp $ 
+ * $Revision: 1.44 $   $Date: 2003/08/28 23:08:55 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.44 2003/08/28 23:08:55 sameer Exp $ 
  ***************************************************************************/
