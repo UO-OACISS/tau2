@@ -39,6 +39,7 @@
 
 int expectError = NO_ERROR;
 int debugPrint = 0;
+int binaryRewrite = 0; /* by default, it is turned off */
 
 template class BPatch_Vector<BPatch_variableExpr*>;
 void checkCost(BPatch_snippet snippet);
@@ -283,6 +284,7 @@ int main(int argc, char **argv){
   int errflag=0;                                 //determine if error has occured.  default 0
   bool loadlib=false;                            //do we have a library loaded? default false
   char mutname[MUTNAMELEN];                      //variable to hold mutator name (ie tau_run)
+  char outfile[MUTNAMELEN];                      // variable to hold output file
   char fname[FUNCNAMELEN], libname[FUNCNAMELEN]; //function name and library name variables
   BPatch_thread *appThread;                      //application thread
   BPatch_function *mpiinit;                      
@@ -314,8 +316,13 @@ int main(int argc, char **argv){
 	argv += 2;
       }//if
       else if (strncasecmp (argv[1], "-v", 2) == 0) { 
-       debugPrint = 1; /* Verbose option set */
-       argv++;
+        debugPrint = 1; /* Verbose option set */
+        argv++;
+      }
+      else if (strncasecmp (argv[1], "-o", 2) == 0) {
+        binaryRewrite = 1; /* binary rewrite is true */
+        strcpy(outfile, argv[2]);
+        argv += 2;
       }
       else{ //oops! we got an unrecognized argument!
 	errflag=1;
@@ -331,9 +338,10 @@ int main(int argc, char **argv){
 
   //has an error occured in the command line arguments?
   if(errflag){
-    fprintf (stderr, "usage: %s [-Xrun<Taulibrary> ] [-v] [-f <inst_req> ] <application> [args]\n", argv[0]);
+    fprintf (stderr, "usage: %s [-Xrun<Taulibrary> ] [-v] [-o outfile] [-f <inst_req> ] <application> [args]\n", argv[0]);
     fprintf (stderr, "%s instruments and executes <application> to generate performance data\n", argv[0]);
-    fprintf (stderr, "-v is an optional verbose option\n");
+    fprintf (stderr, "-v is an optional verbose option\n"); 
+    fprintf (stderr, "-o <outfile> is for binary rewriting\n");
     fprintf (stderr, "e.g., \n");
     fprintf (stderr, "%%%s -XrunTAU -f sel.dat a.out 100 \n", argv[0]);
     fprintf (stderr, "Loads libTAU.so from $LD_LIBRARY_PATH, loads selective instrumentation requests from file sel.dat and executes a.out \n"); 
@@ -355,6 +363,11 @@ int main(int argc, char **argv){
     printf("tau_run> createProcess failed\n");
     exit(1);
   }//if
+
+  if (binaryRewrite)
+  { // enable dumping 
+    appThread->enableDumpPatchedImage();
+  }
 
   //get image
   BPatch_image *appImage = appThread->getImage();
@@ -507,6 +520,25 @@ int main(int argc, char **argv){
    delete mpistubargs;
   }
 
+  /* check to see if we have to rewrite the binary image */ 
+  if (binaryRewrite)
+  {
+    char * directory = appThread->dumpPatchedImage(outfile);
+    /* see if it was rewritten properly */ 
+    if (directory) 
+    {
+      printf("The instrumented executable image is stored in %s directory\n",
+        directory);
+    }
+    else
+    {
+      fprintf(stderr, "Error: Binary rewriting did not work: No directory name returned\n");
+    }
+    delete bpatch;
+    return 0;
+  }
+   
+
   dprintf("Executing...\n");
   appThread->continueExecution();
   
@@ -516,7 +548,7 @@ int main(int argc, char **argv){
   }//while
 
   if (appThread->isTerminated()){
-    dprintf("End of application\n");
+    dprintf ("End of application\n");
   }//if
 
   //cleanup
