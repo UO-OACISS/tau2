@@ -376,6 +376,16 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			    trial.setExperimentID(array[1]);
 			    perfDBSession.saveParaProfTrial(trial, metric.getID());
 			    perfDBSession.terminate();
+
+			    //Now need to make sure this metric's trial is reloaded when
+			    //clicked upon.
+			    for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
+				ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+				if((trial.getID()==array[2])&&(trial.getExperimentID()==array[1])
+				   &&(trial.getApplicationID()==array[0])){
+				    loadedTrials.remove(loadedTrial);
+				}
+			    }
 			}
 		    }
 		}
