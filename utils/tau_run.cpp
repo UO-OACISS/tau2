@@ -224,7 +224,13 @@ int moduleConstraint(char *fname){ // fname is the name of module/file
     // constraints 
     if ((strcmp(fname, "DEFAULT_MODULE") == 0) ||
        ((fname[len-2] == '.') && (fname[len-1] == 'c')) || 
+       ((fname[len-2] == '.') && (fname[len-1] == 'C')) || 
        ((fname[len-3] == '.') && (fname[len-2] == 'c') && (fname[len-1] == 'c')) || 
+       ((fname[len-4] == '.') && (fname[len-3] == 'c') && (fname[len-2] == 'p') && (fname[len-1] == 'p')) || 
+       ((fname[len-4] == '.') && (fname[len-3] == 'f') && (fname[len-2] == '9') && (fname[len-1] == '0')) || 
+       ((fname[len-4] == '.') && (fname[len-3] == 'F') && (fname[len-2] == '9') && (fname[len-1] == '0')) || 
+       ((fname[len-2] == '.') && (fname[len-1] == 'F')) || 
+       ((fname[len-2] == '.') && (fname[len-1] == 'f')) || 
        (strcmp(fname, "LIBRARY_MODULE") == 0)){
       /* It is ok to instrument this module. Constraint doesn't exist. */
       return false;
