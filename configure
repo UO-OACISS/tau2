@@ -1760,7 +1760,7 @@ case $machine in
 
      ia64)
 	echo "Found an IA-64 configuration definition"
-	fixmakeargs="$fixmakeargs arch=$machine"
+	fixmakeargs="arch=$machine $fixmakeargs"
 	
 	if [ $papi = yes ]
  	  then
