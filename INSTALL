@@ -405,6 +405,18 @@ The following  command-line options are available to configure:
       % klargest 
       % pprof
 
+   d. tau_reduce is a utility that can determine which routines should not
+      be instrumented. Instrumentation in frequently called light-weight routines
+      may introduce undue perturbation and distort the performance data. tau_reduce
+      examines the profile output and a set of rules for de-instrumentation and 
+      produces a selective instrumentation file that can be fed to tau_instrumentor
+      or tau_run and specifies which routines should not be instrumented. To see an 
+      example of this utility, see examples/reduce (examples/README file has a description).
+      Also, utils/TAU_REDUCE.README file contains information about tau_reduce and the
+      format for specifying the rules for removing instrumentation. 
+      % cd examples/reduce
+      % make 
+
    To illustrate the use of TAU Fortran 90 instrumentation API, we have 
    included the NAS Parallel Benchmarks 2.3 LU and SP suites in the 
    examples/NPB2.3 directory [Ref http://www.nas.nasa.gov/NAS/NPB/ ].
