@@ -15,7 +15,7 @@ using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
 #include <sys/time.h>
-
+#include <stdio.h>
 
 //Initialize static members.
 char MultipleCounterLayer::environment[25][10] = {
@@ -173,7 +173,7 @@ char * MultipleCounterLayer::getCounterNameAt(int position)
 bool MultipleCounterLayer::gettimeofdayMCLInit(int functionPosition)
 {
   //This function uses the Unix gettimeofday function.
-  //Checks for GETTIMEOFDAY
+  //Checks for GET_TIME_OF_DAY
 
   for(int i=0; i<MAX_TAU_COUNTERS; i++)
     {
@@ -406,8 +406,41 @@ bool MultipleCounterLayer::pclMCLInit(int functionPosition){
 #endif//TAU_PCL
 }
 
-bool MultipleCounterLayer::linuxTimerMCLInit(int functionPosition){return false;}
+bool MultipleCounterLayer::linuxTimerMCLInit(int functionPosition){
+#ifdef  TAU_LINUX_TIMERS
+//This function uses the linux timer interface.
+  //Checks for LINUX_TIMERS
 
+  for(int i=0; i<MAX_TAU_COUNTERS; i++)
+    {
+      if(MultipleCounterLayer::names[i] != NULL){
+	if(strcmp(MultipleCounterLayer::names[i], "LINUX_TIMERS") == 0){
+	
+	  cout << "linuxTimerMCL is active." << endl;
+
+	  //Set the counter position.
+	  linuxTimerMCL_CP[0] = i;
+
+	  //Indicate that this function is being used.
+	  MultipleCounterLayer::counterUsed[i] = true;
+
+	  //Update the functionArray.
+	  cout << "Inserting linuxTimerMCL in position: " << functionPosition << endl;
+	  MultipleCounterLayer::functionArray[functionPosition] = linuxTimerMCL;
+	  linuxTimerMCL_FP = functionPosition;
+	  //Now just return with beginCountersPosition incremented.
+	  return true;
+	}
+      }
+    }
+
+  //If we are here, then this function is not active.
+  cout << "linuxTimerMCL is not active." << endl;
+  return false;
+#else //TAU_LINUX_TIMERS
+return false;
+#endif//TAU_LINUX_TIMERS
+}
 void MultipleCounterLayer::gettimeofdayMCL(int tid, double values[]){
 
   //cout << endl;
@@ -568,7 +601,51 @@ void MultipleCounterLayer::pclMCL(int tid, double values[]){
   }
 #endif//TAU_PCL
 }
-void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]){}
+
+#ifdef TAU_LINUX_TIMERS
+
+///////////////////////////////////////////////////////////////////////////
+inline double TauGetMHzRatingsMCL(void)
+{
+  FILE *f;
+  double rating;
+  char *cmd = "cat /proc/cpuinfo | egrep -i '^cpu MHz' | head -1 | sed 's/^.*: //'";
+  char buf[BUFSIZ];
+  if ((f = popen(cmd,"r"))!=NULL)
+  while (fgets(buf, BUFSIZ, f) != NULL)
+  {
+    rating = atof(buf);
+  }
+  pclose(f);
+#ifdef DEBUG_PROF
+  printf("Rating = %g Mhz\n", rating);
+#endif /* DEBUG_PROF */
+  return rating;
+}
+
+  
+///////////////////////////////////////////////////////////////////////////
+inline double TauGetMHzMCL(void)
+{
+  static double ratings = TauGetMHzRatingsMCL();
+  return ratings;
+}
+///////////////////////////////////////////////////////////////////////////
+inline unsigned long long getLinuxHighResolutionTscCounterMCL(void)
+{
+   unsigned long high, low;
+   __asm__ __volatile__(".byte 0x0f,0x31" : "=a" (low), "=d" (high));
+   return ((unsigned long long) high << 32) + low;
+}
+
+#endif //TAU_LINUX_TIMERS
+
+void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]){
+#ifdef TAU_LINUX_TIMERS
+  values[linuxTimerMCL_CP[0]] = 
+    (double) getLinuxHighResolutionTscCounterMCL()/TauGetMHzMCL();
+#endif //TAU_LINUX_TIMERS
+}
 
 /////////////////////////////////////////////////
 //
