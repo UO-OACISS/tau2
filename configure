@@ -124,6 +124,7 @@ profile=no
 profilecounters=no
 profilestats=no
 profilecalls=no
+profilecallstack=no
 trace=no
 debugprof=no
 sgitimers=no
@@ -303,6 +304,11 @@ do
     shift
     ;;
 
+  -PROFILECALLSTACK)
+    profilecallstack=yes
+    shift
+    ;;
+
   -TRACE)
     trace=yes
     shift
@@ -321,7 +327,7 @@ do
   -INTELTFLOP)
     inteltflop=yes
     shift
-    ;;
+    ;; 
 
   -*)
     echo "ERROR: Command line switch \`$arg' not recognized" 1>&2
@@ -621,6 +627,11 @@ if [ $profilestats = yes ]
     fixmakeargs="$fixmakeargs PROFILESTATS"
 fi
 
+if [ $profilecallstack = yes ]
+  then
+      fixmakeargs="$fixmakeargs CALLSTACK"
+fi
+
 if [ $trace = yes ]
   then
     fixmakeargs="$fixmakeargs TRACE"
@@ -646,6 +657,7 @@ if [ $inteltflop = yes ]
       fixmakeargs="$fixmakeargs INTELTFLOP"
 fi 
     
+
 
 ######################################################################
 # Set default C++ compiler in all Makefiles
