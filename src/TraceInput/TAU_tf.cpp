@@ -331,6 +331,12 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
     } /* entry exit events *//* add message passing events here */
     else 
     {
+      if ((eventDescr.Param != NULL) && (strcmp(eventDescr.Param,"TriggerValue\n")==0))
+      { /* User defined event */
+	 if (*callbacks.EventTrigger)
+	   (*callbacks.EventTrigger)(callbacks.UserData, ts, nid, tid, 
+				     traceBuffer[i].ev, traceBuffer[i].par);
+      }
       if (eventDescr.Tag == TAU_MESSAGE_SEND_EVENT) 
       {
         /* send message */
@@ -525,17 +531,29 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 	  groupid = tFile->GroupIdMap->size()+1;
 	  (*(tFile->GroupIdMap))[eventDescr->Group] = groupid;
 	  /* invoke group callback */
-	  if (*cb.DefStateGroup)
-	    (*cb.DefStateGroup)(cb.UserData, groupid, eventDescr->Group); 
+	  /* check Param to see if its a user defined event */
+	  if (strcmp(eventDescr->Param, "TriggerValue") != 0)
+	  { /* it is not a user defined event */
+	    if (*cb.DefStateGroup)
+	      (*cb.DefStateGroup)(cb.UserData, groupid, eventDescr->Group); 
+	  }
 	}
 	else
 	{ /* retrieve the stored group id token */
 	  groupid = (*git).second;
 	}
         /* invoke callback for registering a new state */
-	if (*cb.DefState)
-	  (*cb.DefState)(cb.UserData, localEventId, eventDescr->EventName, 
+	if (strcmp(eventDescr->Param, "TriggerValue\n") == 0)
+        { /* it is a user defined event */
+          if (*cb.DefUserEvent)
+	    (*cb.DefUserEvent)(cb.UserData, localEventId, eventDescr->EventName);
+	}
+	else
+        { /* it is not a user defined event */
+	  if (*cb.DefState)
+	    (*cb.DefState)(cb.UserData, localEventId, eventDescr->EventName, 
 		      groupid);
+	}
 	
       }
       /* else, do nothing, examine the next record */
@@ -559,6 +577,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2003/12/05 23:50:40 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.2 2003/12/05 23:50:40 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 2004/07/26 23:59:52 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.3 2004/07/26 23:59:52 sameer Exp $ 
  ***************************************************************************/
