@@ -53,6 +53,7 @@ public class LoadTrial {
 		try {
 	    	trialId = getLoad().parse(xmlFile, trialId, problemFile, bulkLoad);
 		} catch (Throwable ex) {
+			ex.printStackTrace();
 	    	System.out.println("Error: " + ex.getMessage());
 		}
 
