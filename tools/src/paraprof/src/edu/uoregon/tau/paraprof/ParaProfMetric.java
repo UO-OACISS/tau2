@@ -15,12 +15,12 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
     public ParaProfMetric() {
     }
 
-    public void setTrial(ParaProfTrial trial) {
-        this.trial = trial;
+    public void setPpTrial(ParaProfTrial trial) {
+        this.ppTrial = trial;
     }
 
-    public ParaProfTrial getTrial() {
-        return trial;
+    public ParaProfTrial getParaProfTrial() {
+        return ppTrial;
     }
 
     public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode) {
@@ -39,14 +39,6 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
         return treePath;
     }
 
-    public void setDBMetric(boolean dBMetric) {
-        this.dBMetric = dBMetric;
-    }
-
-    public boolean dBMetric() {
-        return dBMetric;
-    }
-
     public void setDerivedMetric(boolean derivedMetric) {
         this.derivedMetric = derivedMetric;
     }
@@ -56,20 +48,20 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
     }
 
     public int getApplicationID() {
-        return trial.getApplicationID();
+        return ppTrial.getApplicationID();
     }
 
     public int getExperimentID() {
-        return trial.getExperimentID();
+        return ppTrial.getExperimentID();
     }
 
     public int getTrialID() {
-        return trial.getID();
+        return ppTrial.getID();
     }
 
     public String getIDString() {
-        if (trial != null)
-            return trial.getIDString() + ":" + this.getID() + " - " + this.getName();
+        if (ppTrial != null)
+            return ppTrial.getIDString() + ":" + this.getID() + " - " + this.getName();
         else
             return ":" + this.getID() + " - " + this.getName();
     }
@@ -97,9 +89,8 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
     //End - Interface code.
     //####################################
 
-    private ParaProfTrial trial = null;
+    private ParaProfTrial ppTrial = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
-    private boolean dBMetric = false;
     private boolean derivedMetric = false;
 }

@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.12 2005/03/10 01:21:54 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.13 2005/03/10 18:14:37 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -682,10 +682,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             dbExp = uploadExperiment(null, ppTrial.getExperiment(), false, false);
         }
 
-        ParaProfTrial dbTrial = new ParaProfTrial(ppTrial);
+        ParaProfTrial dbTrial = new ParaProfTrial(ppTrial.getTrial());
         dbTrial.setExperimentID(dbExp.getID());
         dbTrial.setApplicationID(dbExp.getApplicationID());
-        dbTrial.setDataSource(ppTrial.getDataSource());
+        dbTrial.getTrial().setDataSource(ppTrial.getDataSource());
 
         dbTrial.setUpload(true); // This trial is not set to a db trial until after it has finished loading.
 
@@ -743,8 +743,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             TreePath path = event.getPath();
             if (path == null)
                 return;
-            if (UtilFncs.debug)
-                System.out.println("In treeWillCollapse - path:" + path.toString());
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
             DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
             Object userObject = selectedNode.getUserObject();
@@ -786,8 +784,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             TreePath path = event.getPath();
             if (path == null)
                 return;
-            if (UtilFncs.debug)
-                System.out.println("In treeWillExpand - path:" + path.toString());
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
             DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
             Object userObject = selectedNode.getUserObject();
@@ -950,26 +946,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                             databaseAPI.setTrial(ppTrial.getID());
 
                             DBDataSource dbDataSource = new DBDataSource(databaseAPI);
-                            //dBSource.setDebug(UtilFncs.debug);
-
-                            //                        int numNodes=0;
-                            //                        int numContextsPerNode=0;
-                            //                        int numThreadsPerContext=0;
-                            //                        if (ppTrial.getField("node_count") != null) {
-                            //                            numNodes = Integer.parseInt(ppTrial.getField("node_count"));
-                            //                        }
-                            //                        if (ppTrial.getField("contexts_per_node") != null) {
-                            //                            numContextsPerNode = Integer.parseInt(ppTrial.getField("contexts_per_node"));
-                            //                        }
-                            //                        if (ppTrial.getField("threads_per_context") != null) {
-                            //                            numThreadsPerContext = Integer.parseInt(ppTrial.getField("threads_per_context"));
-                            //                        }
-                            //
-                            //                        DatabaseAPI.setTotalItems(numNodes*numContextsPerNode*numThreadsPerContext);
-                            //                        
-                            //                        
-                            //                        LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dbDataSource, ppTrial);
-                            //                        lpw.show();
 
                             DataSourceThreadControl dataSourceThreadControl = new DataSourceThreadControl();
                             dataSourceThreadControl.addObserver(ppTrial);
@@ -1037,7 +1013,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             DatabaseAPI databaseAPI = this.getDatabaseAPI();
             if (databaseAPI != null) {
                 try {
-                    databaseAPI.saveParaProfTrial(metric.getTrial(), metric.getID());
+                    databaseAPI.saveParaProfTrial(metric.getParaProfTrial().getTrial(), metric.getID());
                 } catch (DatabaseException e) {
                     ParaProfUtils.handleException(e);
                 }
@@ -1242,7 +1218,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         } else {
             ppTrial.setPaths(System.getProperty("user.dir"));
         }
-        ppTrial.setName(ppTrial.getPathReverse());
+        ppTrial.getTrial().setName(ppTrial.getPathReverse());
         ppTrial.setLoading(true);
         if (experiment.dBExperiment()) {
             loadedDBTrials.add(ppTrial);
@@ -1265,7 +1241,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     private void showMetric(ParaProfMetric metric) {
         try {
-            ParaProfTrial ppTrial = metric.getTrial();
+            ParaProfTrial ppTrial = metric.getParaProfTrial();
             if (ppTrial.getDefaultMetricID() != metric.getID()) {
                 ppTrial.setDefaultMetricID(metric.getID());
                 ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
@@ -1479,7 +1455,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                             ppExp.reallocMetaData();
                             for (Iterator it3 = ppExp.getTrialList(); it3.hasNext();) {
                                 ParaProfTrial ppTrial = (ParaProfTrial) it3.next();
-                                ppTrial.reallocMetaData();
+                                ppTrial.getTrial().reallocMetaData();
                             }
                         }
                     }

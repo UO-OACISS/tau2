@@ -18,26 +18,88 @@ import java.util.*;
 import javax.swing.tree.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTreeNodeUserObject {
+public class ParaProfTrial implements ParaProfObserver, ParaProfTreeNodeUserObject {
+    
+    private Function highlightedFunction = null;
+    private Group highlightedGroup = null;
+    private UserEvent highlightedUserEvent = null;
 
+    
+    private DatabaseAPI dbAPI;
+    private ParaProfExperiment experiment = null;
+    private DefaultMutableTreeNode defaultMutableTreeNode = null;
+    private TreePath treePath = null;
+    private boolean dBTrial = false;
+    private boolean upload = false;
+    private boolean loading = false;
+
+    private SystemEvents systemEvents = new SystemEvents();
+    private StaticMainWindow sMW = null;
+    private ColorChooser clrChooser = ParaProf.colorChooser;
+    private PreferencesWindow preferencesWindow = ParaProf.preferencesWindow;
+
+    private String path = null;
+    private String pathReverse = null;
+    private int defaultMetricID = 0;
+    private Vector observers = new Vector();
+    
+    private Trial trial;
+    
+    
     public ParaProfTrial() {
-        super();
-        this.debug = UtilFncs.debug;
-
-        this.setID(-1);
-        this.setExperimentID(-1);
-        this.setApplicationID(-1);
-        this.setName("");
-        // 	 this.setNodeCount(-1);
-        // 	 this.setNumContextsPerNode(-1);
-        // 	 this.setNumThreadsPerContext(-1);
+        trial = new Trial();
+        trial.setID(-1);
+        trial.setExperimentID(-1);
+        trial.setApplicationID(-1);
+        trial.setName("");
     }
 
     public ParaProfTrial(Trial trial) {
-        super(trial);
-        this.debug = UtilFncs.debug;
+        this.trial = new Trial(trial);
     }
 
+    
+    public Trial getTrial() {
+        return trial;
+    }
+    
+    public int getApplicationID() {
+        return trial.getApplicationID();
+    }
+
+    public int getExperimentID() {
+        return trial.getExperimentID();
+    }
+
+    public int getID() {
+        return trial.getID();
+    }
+    
+    public void setApplicationID(int id) {
+        trial.setApplicationID(id);
+    }
+
+    public void setExperimentID(int id) {
+        trial.setExperimentID(id);
+    }
+
+    public void setID(int id) {
+        trial.setID(id);
+    }
+
+
+    public String getName() {
+        return trial.getName();
+    }
+    
+    public DataSource getDataSource() {
+        return trial.getDataSource();
+    }
+
+    
+    
+    
+    
     public void setExperiment(ParaProfExperiment experiment) {
         this.experiment = experiment;
     }
@@ -70,14 +132,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         return dBTrial;
     }
 
-    public void setDefaultTrial(boolean defaultTrial) {
-        this.defaultTrial = defaultTrial;
-    }
-
-    public boolean defaultTrial() {
-        return defaultTrial;
-    }
-
+ 
+    
     public void setUpload(boolean upload) {
         this.upload = upload;
     }
@@ -87,7 +143,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     }
 
     public void setLoading(boolean loading) {
-        //System.out.println ("setting loading to " + loading);
         this.loading = loading;
     }
 
@@ -97,9 +152,9 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 
     public String getIDString() {
         if (experiment != null)
-            return (experiment.getIDString()) + ":" + (super.getID());
+            return (experiment.getIDString()) + ":" + (trial.getID());
         else
-            return ":" + (super.getID());
+            return ":" + (trial.getID());
     }
 
     public ColorChooser getColorChooser() {
@@ -118,8 +173,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
             else
                 return path;
         } else
-            return "Application " + this.getApplicationID() + ", Experiment " + this.getExperimentID()
-                    + ", Trial " + this.getID() + ".";
+            return "Application " + trial.getApplicationID() + ", Experiment " + trial.getExperimentID()
+                    + ", Trial " + trial.getID() + ".";
     }
 
     //Sets both the path and the path reverse.
@@ -137,10 +192,13 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     }
 
     public String toString() {
+        if (trial == null) {
+            System.out.println ("poopie");
+        }
         if (this.loading()) {
-            return super.getName() + " (Loading...)";
+            return trial.getName() + " (Loading...)";
         } else {
-            return super.getName();
+            return trial.getName();
         }
     }
 
@@ -159,7 +217,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 
     public void showMainWindow() {
         if (sMW == null) {
-            sMW = new StaticMainWindow(this, UtilFncs.debug);
+            sMW = new StaticMainWindow(this);
             ParaProf.incrementNumWindows();
             sMW.setVisible(true);
             this.getSystemEvents().addObserver(sMW);
@@ -179,8 +237,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 
     //####################################
     //End - Functions that control the opening
-    //and closing of the static main window for
-    //this trial.
+    //and closing of the static main window for this trial.
     //####################################
 
     public SystemEvents getSystemEvents() {
@@ -191,11 +248,11 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //Interface for ParaProfMetrics.
     //####################################
     public void setDefaultMetricID(int selectedMetricID) {
-        this.selectedMetricID = selectedMetricID;
+        this.defaultMetricID = selectedMetricID;
     }
 
     public int getDefaultMetricID() {
-        return selectedMetricID;
+        return defaultMetricID;
     }
 
     public boolean isTimeMetric() {
@@ -218,7 +275,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 
     //Override this function.
     public Vector getMetrics() {
-        return dataSource.getMetrics();
+        return trial.getDataSource().getMetrics();
     }
 
     public DssIterator getMetricList() {
@@ -226,20 +283,20 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     }
 
     public int getNumberOfMetrics() {
-        return dataSource.getNumberOfMetrics();
+        return trial.getDataSource().getNumberOfMetrics();
     }
 
     public ParaProfMetric getMetric(int metricID) {
-        return (ParaProfMetric) dataSource.getMetric(metricID);
+        return (ParaProfMetric) trial.getDataSource().getMetric(metricID);
     }
 
     public String getMetricName(int metricID) {
-        return dataSource.getMetricName(metricID);
+        return trial.getDataSource().getMetricName(metricID);
     }
 
     public ParaProfMetric addMetric() {
         ParaProfMetric metric = new ParaProfMetric();
-        dataSource.addMetric(metric);
+        trial.getDataSource().addMetric(metric);
         return metric;
     }
 
@@ -256,24 +313,24 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 //    }
 
     public boolean groupNamesPresent() {
-        return dataSource.getGroupNamesPresent();
+        return trial.getDataSource().getGroupNamesPresent();
     }
 
     public boolean userEventsPresent() {
-        return dataSource.getUserEventsPresent();
+        return trial.getDataSource().getUserEventsPresent();
     }
 
     public boolean callPathDataPresent() {
-        return dataSource.getCallPathDataPresent();
+        return trial.getDataSource().getCallPathDataPresent();
     }
 
     //Overrides the parent getMaxNCTNumbers.
     public int[] getMaxNCTNumbers() {
-        return dataSource.getMaxNCTNumbers();
+        return trial.getDataSource().getMaxNCTNumbers();
     }
 
     public void setMeanData(int metricID) {
-        dataSource.setMeanData(metricID, metricID);
+        trial.getDataSource().setMeanData(metricID, metricID);
     }
 
     
@@ -325,6 +382,34 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //end - Pass-though methods to the data session for this instance.
     //####################################
 
+    
+    public void finishLoad(DataSource dataSource) {
+
+        // Now set the trial's dataSource object to be this one.
+        //setDataSource(trial.getDataSource());
+        trial.setDataSource(dataSource);
+
+        // The dataSource has accumulated edu.uoregon.tau.dms.dss.Metrics.
+        // Inside ParaProf, these need to be ParaProfMetrics.
+        
+        int numberOfMetrics = trial.getDataSource().getNumberOfMetrics();
+        Vector ppMetrics = new Vector();
+        for (int i = 0; i < numberOfMetrics; i++) {
+            ParaProfMetric ppMetric = new ParaProfMetric();
+            ppMetric.setName(trial.getDataSource().getMetricName(i));
+            ppMetric.setID(i);
+            ppMetric.setPpTrial(this);
+            ppMetrics.add(ppMetric);
+        }
+
+        // Now set the dataSource's metrics.
+        trial.getDataSource().setMetrics(ppMetrics);
+
+        
+        // set the colors
+        clrChooser.setColors(this, -1);
+    }
+    
     //######
     //ParaProfObserver interface.
     //######
@@ -335,32 +420,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         }
         DataSource dataSource = (DataSource) obj;
 
-        //Data session has finished loading. Call its terminate method to
-        //ensure proper cleanup.
-        //dataSession.terminate();
-
-        // The dataSource has accumulated edu.uoregon.tau.dms.dss.Metrics.
-        // Inside ParaProf, these need to be paraprof.Metrics.
-        
-        int numberOfMetrics = dataSource.getNumberOfMetrics();
-        Vector ppMetrics = new Vector();
-        for (int i = 0; i < numberOfMetrics; i++) {
-            ParaProfMetric ppMetric = new ParaProfMetric();
-            ppMetric.setName(dataSource.getMetricName(i));
-            ppMetric.setID(i);
-            ppMetric.setTrial(this);
-            ppMetrics.add(ppMetric);
-        }
-
-        //Now set the dataSource's metrics.
-        dataSource.setMetrics(ppMetrics);
-
-        //Now set the trial's dataSource object to be this one.
-        this.setDataSource(dataSource);
-
-        // set the colors
-        clrChooser.setColors(this, -1);
-
+        finishLoad(dataSource);
 
         //upload to database if necessary
 
@@ -370,7 +430,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
             dbAPI = ParaProf.paraProfManager.getDatabaseAPI();
             if (dbAPI != null) {
                 // this call will block until the entire thing is uploaded (could be a while)
-                this.setID(dbAPI.uploadTrial(this, -1));
+                trial.setID(dbAPI.uploadTrial(trial));
                 dbAPI.terminate();
             }
 
@@ -401,17 +461,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 //        return uploading;
 //    }
 
-
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-    public boolean debug() {
-        return debug;
-    }
-
-    
-    
+   
     
     
     public void setHighlightedFunction(Function func) {
@@ -469,31 +519,4 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
             highlightedUserEvent = userEvent;
         this.getSystemEvents().updateRegisteredObjects("colorEvent");
     }
-
-    
-    
-    private Function highlightedFunction = null;
-    private Group highlightedGroup = null;
-    private UserEvent highlightedUserEvent = null;
-
-    
-    private DatabaseAPI dbAPI;
-    private boolean defaultTrial = false;
-    private ParaProfExperiment experiment = null;
-    private DefaultMutableTreeNode defaultMutableTreeNode = null;
-    private TreePath treePath = null;
-    private boolean dBTrial = false;
-    private boolean upload = false;
-    private boolean loading = false;
-
-    private SystemEvents systemEvents = new SystemEvents();
-    private StaticMainWindow sMW = null;
-    private ColorChooser clrChooser = ParaProf.colorChooser;
-    private PreferencesWindow preferencesWindow = ParaProf.preferencesWindow;
-
-    private String path = null;
-    private String pathReverse = null;
-    private int selectedMetricID = 0;
-    private Vector observers = new Vector();
-    private boolean debug = false;
 }

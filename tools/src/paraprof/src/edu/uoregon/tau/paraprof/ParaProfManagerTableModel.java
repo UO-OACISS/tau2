@@ -4,9 +4,9 @@
  * It allows the user to change the meta data associated with a trial.
  *  
  * 
- * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.6 2005/01/20 00:19:54 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.7 2005/03/10 18:14:37 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  * @see		ParaProfManagerWindow
   */
 
@@ -53,7 +53,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
         case 1:
             return experiment.getNumFields() + 3; // +2 for name, id, and applicationID
         case 2:
-            return trial.getNumFields() + 4;
+            return trial.getTrial().getNumFields() + 4;
         case 3:
             return 5;
         default:
@@ -129,20 +129,20 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                     case (3):
                         return "Trial ID";
                     default:
-                        return trial.getFieldName(r - 4);
+                        return trial.getTrial().getFieldName(r - 4);
                     }
                 } else {
                     switch (r) {
                     case (0):
                         return trial.getName();
                     case (1):
-                        return new Integer(trial.getApplicationID());
+                        return new Integer(trial.getTrial().getApplicationID());
                     case (2):
-                        return new Integer(trial.getExperimentID());
+                        return new Integer(trial.getTrial().getExperimentID());
                     case (3):
-                        return new Integer(trial.getID());
+                        return new Integer(trial.getTrial().getID());
                     default:
-                        return trial.getField(r - 4);
+                        return trial.getTrial().getField(r - 4);
                     }
                 }
             case 3: // metric metadata
@@ -211,7 +211,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                 if (r >= 1 && r <= 3) // id, experiment, application
                     return false;
 
-                return DBConnector.isWritableType(trial.getFieldType(r - 4));
+                return DBConnector.isWritableType(trial.getTrial().getFieldType(r - 4));
 
             case 3: // Metric
                 return false;
@@ -266,11 +266,11 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                     case 2:
                         switch (r) {
                         case (0):
-                            trial.setName(tmpString);
+                            trial.getTrial().setName(tmpString);
                             this.updateDB(trial);
                             break;
                         default:
-                            trial.setField(r - 4, tmpString);
+                            trial.getTrial().setField(r - 4, tmpString);
                             this.updateDB(trial);
                         }
                         defaultTreeModel.nodeChanged(trial.getDMTN());
@@ -311,7 +311,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                 if (trial.dBTrial()) {
                     DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
                     if (databaseAPI != null) {
-                        databaseAPI.saveTrial(trial);
+                        databaseAPI.saveTrial(trial.getTrial());
                         databaseAPI.terminate();
                     }
                 }

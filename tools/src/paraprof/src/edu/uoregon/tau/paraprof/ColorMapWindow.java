@@ -50,7 +50,7 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
             //            			  		"" +
             //            			  		"
 
-            String name = ppTrial.getApplicationID() + ":" + ppTrial.getExperimentID() + ":" + ppTrial.getID()
+            String name = ppTrial.getTrial().getApplicationID() + ":" + ppTrial.getTrial().getExperimentID() + ":" + ppTrial.getTrial().getID()
                     + " - " + ppTrial.getName();
 
             JMenuItem jMenuItem = new JMenuItem(name);

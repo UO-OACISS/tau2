@@ -155,7 +155,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         setJMenuBar(mainMenu);
     }
 
-    public StaticMainWindow(ParaProfTrial ppTrial, boolean debug) {
+    public StaticMainWindow(ParaProfTrial ppTrial) {
         //This window needs to maintain a reference to its trial.
         this.ppTrial = ppTrial;
 

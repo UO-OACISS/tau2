@@ -12,11 +12,11 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.30 2005/03/08 17:32:01 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.31 2005/03/10 18:14:37 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.30 $
+ * @version $Revision: 1.31 $
  */
 public class ParaProf implements ActionListener {
 
@@ -74,7 +74,6 @@ public class ParaProf implements ActionListener {
                 + "                                   gprof, psrun, hpm\n"
                 + "  -h, --help                       Display this help message\n"
                 + "  -p                               Use `pprof` to compute derived data\n"
-                + "  -d, --debug                      Turn debug statements on\n"
                 + "  -i, --fixnames                   Use the fixnames option for gprof\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"

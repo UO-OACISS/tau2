@@ -77,10 +77,10 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
         return (ParaProfTrial) trials.elementAt(trialID);
     }
 
-    public void addTrial(ParaProfTrial trial) {
-        trial.setExperiment(this);
-        trial.setID((trials.size()));
-        trials.add(trial);
+    public void addTrial(ParaProfTrial ppTrial) {
+        ppTrial.setExperiment(this);
+        ppTrial.getTrial().setID((trials.size()));
+        trials.add(ppTrial);
     }
 
     public void removeTrial(ParaProfTrial trial) {

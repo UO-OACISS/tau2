@@ -121,12 +121,8 @@ public class ParaProfImageOutput {
 
                 System.out.println("Done saving image.");
             } else {
-                if (UtilFncs.debug)
-                    System.out.println("Aborted saving image ... not a recognized type!");
             }
         } else {
-            if (UtilFncs.debug)
-                System.out.println("Did not get a file name to save image to.");
             return;
         }
     }

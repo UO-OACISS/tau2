@@ -31,10 +31,10 @@ public class DerivedMetrics {
                 constant = true;
             }
 
-            trialOpA = operand1.getTrial();
+            trialOpA = operand1.getParaProfTrial();
             opA = operand1.getID();
             if (!constant) {
-                trialOpB = ((ParaProfMetric) operand2).getTrial();
+                trialOpB = ((ParaProfMetric) operand2).getParaProfTrial();
                 opB = ((ParaProfMetric) operand2).getID();
             }
 
@@ -76,7 +76,7 @@ public class DerivedMetrics {
                         + newMetricName + ((ParaProfMetric) trialOpA.getMetrics().elementAt(opB)).getName();
 
             ParaProfMetric newMetric = trialOpA.addMetric();
-            newMetric.setTrial(trialOpA);
+            newMetric.setPpTrial(trialOpA);
             newMetric.setName(newMetricName);
             newMetric.setDerivedMetric(true);
             int metric = newMetric.getID();

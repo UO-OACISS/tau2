@@ -128,7 +128,6 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
         jButton.addActionListener(this);
         addCompItem(jButton, gbc, 0, 3, 1, 1);
 
-        //Create and start the a timer, and then add paraprof to it.
         jTimer = new javax.swing.Timer(200, this);
         jTimer.start();
 
@@ -147,7 +146,8 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
-            if (EventSrc instanceof javax.swing.Timer) {
+            if (EventSrc instanceof javax.swing.Timer) { 
+                // the timer has ticked, get progress and post
 
                 if (dbUpload) {
                     // we are on the db upload phase

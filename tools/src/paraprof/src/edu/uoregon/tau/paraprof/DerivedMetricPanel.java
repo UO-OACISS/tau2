@@ -105,9 +105,9 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
             metric = DerivedMetrics.applyOperation(paraProfManager.getOperand1(),
                     paraProfManager.getOperand2(), (String) operation.getSelectedItem());
         if (metric != null) {
-            if (metric.getTrial().dBTrial())
+            if (metric.getParaProfTrial().dBTrial())
                 paraProfManager.uploadMetric(metric);
-            paraProfManager.populateTrialMetrics(metric.getTrial());
+            paraProfManager.populateTrialMetrics(metric.getParaProfTrial());
         }
     }
 
