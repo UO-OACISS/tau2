@@ -170,6 +170,7 @@ multiplecounters=no
 profilestats=no
 profilememory=no
 callpath=no
+depth=no
 phase=no
 profilecalls=no
 profilecallstack=no
@@ -700,6 +701,12 @@ do
     shift
     ;;
 
+  -PROFILEDEPTH)
+    profile=yes
+    depth=yes
+    shift
+    ;;
+
   -PROFILESTATS)
     profile=yes
     profilestats=yes
@@ -850,6 +857,7 @@ do
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
+    echo "-PROFILEDEPTH ......... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
@@ -1202,6 +1210,12 @@ if [ $callpath = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILECALLPATH"
     tauoptions="${tauoptions}-callpath"
+fi
+
+if [ $depth = yes ]
+  then
+    fixmakeargs="$fixmakeargs PROFILEDEPTH"
+    tauoptions="${tauoptions}-depth"
 fi
 
 if [ $phase = yes ]
