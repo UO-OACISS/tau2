@@ -16,7 +16,7 @@ import java.io.IOException;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.11 2005/01/31 23:10:25 amorris Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.12 2005/02/28 23:50:43 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -211,6 +211,17 @@ public class Experiment implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
+
+	/**
+	 * Returns the column names for the Experiment table
+	 *
+	 * @param	db	the database connection
+	 * @return	String[] an array of String objects
+	 */
+	public static String[] getFieldNames(DB db) throws DatabaseException {
+		getMetaData(db);
+		return fieldNames;
+	}
 
     public static Vector getExperimentList(DB db, String whereClause) throws DatabaseException {
         try {

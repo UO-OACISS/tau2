@@ -21,7 +21,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.17 2005/01/20 00:19:24 amorris Exp $
+ * CVS $Id: Trial.java,v 1.18 2005/02/28 23:50:43 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -361,7 +361,18 @@ public class Trial implements Serializable {
         return;
     }
 
-    public static void getMetaData(DB db) {
+ 	/**
+	 * Returns the column names for the Trial table
+	 *
+	 * @param	db	the database connection
+	 * @return	String[] an array of String objects
+	 */
+	public static String[] getFieldNames(DB db) {
+		getMetaData(db);
+		return fieldNames;
+	}
+
+   public static void getMetaData(DB db) {
         // see if we've already have them
         if (Trial.fieldNames != null)
             return;
