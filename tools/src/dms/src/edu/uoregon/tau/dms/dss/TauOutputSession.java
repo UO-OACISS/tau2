@@ -26,7 +26,6 @@ import java.util.*;
 
 public class TauOutputSession extends ParaProfDataSession{
 
-
     //####################################
     //Public Section.
     //####################################
@@ -254,6 +253,7 @@ public class TauOutputSession extends ParaProfDataSession{
 				}
 				return;
 			    }
+
 			    this.getFunctionDataLine(inputString);
 			    String groupNames = this.getGroupNames(inputString);
 			    //Calculate usec/call
@@ -501,6 +501,7 @@ public class TauOutputSession extends ParaProfDataSession{
 		});
 	}
         catch(Exception e){
+	    //e.printStackTrace();
 	    UtilFncs.systemError(e, null, "SSD01");
 	}
     }
@@ -540,7 +541,16 @@ public class TauOutputSession extends ParaProfDataSession{
 		tmpString = inString.substring(tmpInt+7);
 		return tmpString;
 	    }
-      	    //We are not reading data from a multiple counter run.
+
+
+	    tmpInt = inString.indexOf("hw_counters");
+	    if(tmpInt > 0){
+		//We are reading data from a hardware counter run.
+		return "Hardware Counter";
+	    }
+	   
+
+      	    //We are not reading data from a multiple counter run or hardware counter run.
 	    return tmpString; 
       	}
 	catch(Exception e){
@@ -565,6 +575,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	    functionDataLine.i2 = Integer.parseInt(st2.nextToken()); //ProfileCalls
 	}
 	catch(Exception e){
+	    //e.printStackTrace();
 	    UtilFncs.systemError(e, null, "SSD08");
 	}
     }
