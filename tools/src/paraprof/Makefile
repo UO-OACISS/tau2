@@ -9,7 +9,7 @@
 default: ParaProf
 
 ParaProf:
-	cd src; make
+	cd src/edu/uoregon/tau/paraprof/; make
 
 clean:
 	cd src; make clean
