@@ -58,7 +58,6 @@ unsigned long long pcxx_GetUSecLong(int tid)
 }
 
 /* -- write event to buffer only [without overflow check] ---- */
-/*
 static void TraceEventOnly(long int ev,long long par, int tid)
 {
   PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
@@ -69,7 +68,6 @@ static void TraceEventOnly(long int ev,long long par, int tid)
   pcxx_ev_ptr->tid  = tid;
   TauCurrentEvent[tid] ++;
 }
-*/
 
 /* -- write event buffer to file ----------------------------- */
 void TraceEvFlush(int tid)
@@ -217,6 +215,16 @@ void pcxx_EvInit(char *name)
   TraceEvInit(RtsLayer::myThread());
 } 
 
+/* -- Reset the trace  --------------------------------------- */
+void TraceUnInitialize(int tid)
+{
+/* -- to set the trace as uninitialized and clear the current buffers (for forked
+      child process, trying to clear its parent records) -- */
+   TraceInitialized[tid] = 0;
+   TauCurrentEvent[tid] = 0;
+   TraceEventOnly(PCXX_EV_INIT, pcxx_ev_class, tid);
+}
+
 /* -- write event to buffer ---------------------------------- */
 void TraceEvent(long int ev, long long par, int tid)
 {
@@ -271,6 +279,24 @@ void TraceEvClose(int tid)
 void pcxx_EvClose(void)
 {
   TraceEvClose(RtsLayer::myThread());
+}
+
+//////////////////////////////////////////////////////////////////////
+// TraceCallStack is a recursive function that looks at the current
+// Profiler and requests that all the previous profilers be traced prior
+// to tracing the current profiler
+//////////////////////////////////////////////////////////////////////
+void TraceCallStack(int tid, Profiler *current)
+{
+  if (current == 0)
+    return;
+  else
+  {
+     // Trace all the previous records before tracing self
+     TraceCallStack(tid, current->ParentProfiler);
+     TraceEvent(current->ThisFunction->GetFunctionId(), 1, tid);
+     DEBUGPROFMSG("TRACE CORRECTED: "<<current->ThisFunction->GetName()<<endl;);
+  }
 }
 
 
