@@ -174,7 +174,8 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
   {
     pdbRoutine::locvec retlocations = (*rit)->returnLocations();
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() &&
-         ((*rit)->kind() != pdbItem::RO_EXT))
+         ((*rit)->kind() != pdbItem::RO_EXT) && ((*rit)->bodyBegin().line() != 0) 
+	 && ((*rit)->bodyEnd().line() != 0))
     {
         itemvec.push_back(new itemRef(*rit, BODY_BEGIN,
                 (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
@@ -303,13 +304,34 @@ const int INBUF_SIZE = 2048;
 /* -------------------------------------------------------------------------- */
 bool isVoidRoutine(itemRef * i)
 {
+  string return_string;
+  const pdbType *t = ((pdbRoutine *)(i->item))->signature()->returnType();
+  if ( const pdbGroup* gr = t->isGroup() )
+    return_string = gr->name();
+  else
+    return_string = t->name();
+  /* old code 
   string return_string = ((pdbRoutine *)(i->item))->signature()->returnType()->name() ;
+  */ 
   if (return_string.compare("void") == 0)
 	return true; 
   else
 	return false;
 }
 	
+/* -------------------------------------------------------------------------- */
+/* -- Returns true is return type is a reference else returns false --------- */
+/* -------------------------------------------------------------------------- */
+bool isReturnTypeReference(itemRef * i)
+{
+  const pdbType *t = ((pdbRoutine *)(i->item))->signature()->returnType();
+  if (t->kind() == pdbItem::TY_REF) 
+    return true;
+  else
+    return false;
+}
+  
+
 /* -------------------------------------------------------------------------- */
 /* -- Prints TAU_PROFILE_INIT ----------------------------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -562,9 +584,12 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
 /* -------------------------------------------------------------------------- */
 /* -- Writes the return expression to the instrumented file  ---------------- */
 /* -------------------------------------------------------------------------- */
-void processReturnExpression(ostream& ostr, string& ret_expression)
+void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it)
 {
-  ostr <<"{ tau_ret_val = " << ret_expression << "; TAU_PROFILE_STOP(tautimer); return tau_ret_val; }"<<endl;
+  if (isReturnTypeReference(it))
+    ostr <<"{ TAU_PROFILE_STOP(tautimer); return "<< ret_expression <<"; }" <<endl;
+  else 
+    ostr <<"{ tau_ret_val = " << ret_expression << "; TAU_PROFILE_STOP(tautimer); return tau_ret_val; }"<<endl;
 }
 
 
@@ -666,7 +691,8 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
      		  return_string = t->name();
 		}
 
-		if (isVoidRoutine(*it))
+		/* If return type is a reference, treat it as a void */
+	        if (isVoidRoutine(*it) || isReturnTypeReference(*it))
 		{
 #ifdef DEBUG 
 		  cout <<"Void return value "<<endl;
@@ -743,7 +769,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
 #ifdef DEBUG 
 		    cout <<"ret_expression = "<<ret_expression<<endl;
 #endif /* DEBUG */
-		    processReturnExpression(ostr, ret_expression); 
+		    processReturnExpression(ostr, ret_expression, *it); 
 		    /* instrumentation code here */
 		  }
 		}
@@ -1263,8 +1289,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.34 $   $Date: 2002/01/30 21:13:46 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.34 2002/01/30 21:13:46 sameer Exp $
+ * $Revision: 1.35 $   $Date: 2002/01/31 23:56:29 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.35 2002/01/31 23:56:29 sameer Exp $
  ***************************************************************************/
 
 
