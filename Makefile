@@ -87,7 +87,7 @@ tests:
          else echo System previously configured as a `utils/ConfigQuery -arch` ; fi
 	@echo "*********** RECURSIVELY MAKING SUBDIRECTORIES ***********"
 	@for i in ${EXAMPLES}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
-             $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" ); done
+             $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" ) || exit $?; done
 	@echo "***************** DONE ************************"
 
 install:
@@ -98,7 +98,7 @@ install:
          else echo System previously configured as a `utils/ConfigQuery -arch` ; fi
 	@echo "*********** RECURSIVELY MAKING SUBDIRECTORIES ***********"
 	@for i in ${SUBDIR}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
-             $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" HOSTTYPE=$(HOSTTYPE) install); done
+             $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" HOSTTYPE=$(HOSTTYPE) install) || exit $?; done
 	@echo "***************** DONE ************************"
 
 clean:
