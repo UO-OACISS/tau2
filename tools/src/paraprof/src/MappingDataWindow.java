@@ -128,8 +128,9 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    //######
 	    panel = new MappingDataWindowPanel(trial, mappingID, this);
 	    sp = new JScrollPane(panel);
-	    label = new JLabel("COUNTER NAME: " + (trial.getCounterName()) + UtilFncs.getUnitsString(units, trial.isTimeMetric()) + "  FUNCTION NAME: " + mappingName);
-            sp.setColumnHeaderView(label);
+	    //label = new JLabel("COUNTER NAME: " + (trial.getCounterName()) + UtilFncs.getUnitsString(units, trial.isTimeMetric()) + "  FUNCTION NAME: " + mappingName);
+            //sp.setColumnHeaderView(label);
+	    this.setHeader();
 	    //######
 	    //End - Panel and ScrollPane definition.
 	    //######
@@ -251,18 +252,22 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		else if(arg.equals("Microseconds")){
 		    units = 0;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Milliseconds")){
 		    units = 1;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Seconds")){
 		    units = 2;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("hr:min:sec")){
 		    units = 3;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Display Sliders")){
@@ -428,6 +433,17 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
   
     public int units(){
 	return units;}
+
+    public void setHeader(){
+	JTextArea jTextArea = new JTextArea();
+	jTextArea.setLineWrap(true);
+	jTextArea.setWrapStyleWord(true);
+	//Set the text.
+	jTextArea.append("Metric Name: " + (trial.getCounterName())+"\n");
+	jTextArea.append("Name: " + mappingName+"\n");
+	jTextArea.append("Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric())+"\n");
+	sp.setColumnHeaderView(jTextArea);
+    }
   
     public int getSliderValue(){
 	int tmpInt = -1;

@@ -175,16 +175,6 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    //As an example, change the marked sections below, and observe the effects
 	    //when scrolling down ~20 pixels, and the gradually scrolling back up.
 
-	    //Draw mean information.
-	    yCoord = yCoord + (barSpacing); //Comment this
-	    if((yCoord >= yBeg) && (yCoord <= yEnd)){
-		//yCoord = yCoord + (barSpacing);//Uncomment this.
-		drawBar(g2D, fmFont, value, maxValue, "mean", barXCoord, yCoord, barHeight, groupMember, instruction);
-	    }
-	    //else{//Uncomment this.
-	    //yCoord = yCoord + (barSpacing);//Uncomment this.
-	    //}//Uncomment this.
-	    
 	    //######
 	    //Draw thread information for this mapping.
 	    //######

@@ -88,7 +88,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	    UtilFncs.fileMenuItems(fileMenu, this);
       
 	    //Options menu.
-	    JMenu optionsMenu = new JMenu("Options");
+	    optionsMenu = new JMenu("Options");
 	    optionsMenu.addMenuListener(this);
 	    UtilFncs.usereventOptionMenuItems(optionsMenu,this);
  
@@ -128,6 +128,9 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	    panel = new UserEventWindowPanel(trial, mappingID, this);
 	    //The scroll panes into which the list shall be placed.
 	    sp = new JScrollPane(panel);
+	    sp = new JScrollPane(panel);
+	    label = new JLabel("COUNTER NAME: " + (trial.getCounterName()) +  "  EVENT NAME: " + mappingName);
+            sp.setColumnHeaderView(label);
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######

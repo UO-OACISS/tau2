@@ -90,17 +90,17 @@ public class UtilFncs{
     public static String getUnitsString(int type, boolean time){
 	
 	if(!time)
-	    return " (counts)";
+	    return "counts";
 
 	switch(type){
 	case 0:
-	    return " (microseconds)";
+	    return "microseconds";
 	case 1:
-	    return " (milliseconds)";
+	    return "milliseconds";
 	case 2:
-	    return " (seconds)";
+	    return "seconds";
 	case 3:
-	    return " (hour:minute:seconds)";
+	    return "hour:minute:seconds";
 	default:
 	    ParaProf.systemError(null, null, "Unexpected string type - UF02 value: " + type);
 	}
