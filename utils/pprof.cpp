@@ -345,10 +345,10 @@ bool IsDynamicProfiling(char *filename)
     return true;
   }
   else  { 
-    if (strcmp(version,"templated_functions_hw_counters") == 0) {
+    if ((strcmp(version,"templated_functions_hw_counters") == 0) || (strstr(version,"MULTI") != NULL)) {
       hwcounters  = true; // Counters - do not use time string formatting   
       return true; // It is dynamic profiling 	
-    } 
+    }
     else // Neither  - static profiling 
       return false;
   }
@@ -3141,8 +3141,8 @@ int main (int argc, char *argv[])
   exit (0);
 }
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.28 $   $Date: 2002/01/16 02:16:19 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.28 2002/01/16 02:16:19 sameer Exp $                                                   
+ * $RCSfile: pprof.cpp,v $   $Author: bertie $
+ * $Revision: 1.29 $   $Date: 2002/03/11 09:59:08 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.29 2002/03/11 09:59:08 bertie Exp $                                                   
  ***************************************************************************/
 
