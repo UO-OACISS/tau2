@@ -1,4 +1,8 @@
+#ifdef TAU_DOT_H_LESS_HEADERS 
+#include <iostream> 
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 #include <pthread.h>
 #include <sys/time.h>
 #include <stdio.h>
