@@ -1016,9 +1016,3 @@ public class TauPprofOutputSession extends DataSession{
     //####################################
 }
 
-class UnexpectedStateException extends Exception{
-    public UnexpectedStateException(){}
-    public UnexpectedStateException(String err){
-	super("UnexpectedStateException - message: " + err);
-    }
-}
