@@ -10,9 +10,11 @@
 #define _PAPI_LAYER_H_
 
 #ifdef TAU_PAPI
+extern "C" {
 #include "papiStdEventDefs.h"
 #include "papi.h"
 #include "papi_internal.h"
+}
 
 
   struct ThreadValue{
