@@ -361,6 +361,43 @@ double getUserTimeInSec(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+inline double TauGetMHzRatings(void)
+{
+  FILE *f;
+  double rating;
+  char *cmd = "cat /proc/cpuinfo | egrep -i '^cpu MHz' | head -1 | sed 's/^.*: //'";
+  char buf[BUFSIZ];
+  if ((f = popen(cmd,"r"))!=NULL)
+  while (fgets(buf, BUFSIZ, f) != NULL)
+  {
+    rating = atof(buf);
+  }
+  fclose(f);
+#ifdef DEBUG_PROF
+  printf("Rating = %g Mhz\n", rating);
+#endif /* DEBUG_PROF */
+  return rating;
+}
+
+  
+#ifdef TAU_LINUX_TIMERS
+///////////////////////////////////////////////////////////////////////////
+inline double TauGetMHz(void)
+{
+  static double ratings = TauGetMHzRatings();
+  return ratings;
+}
+///////////////////////////////////////////////////////////////////////////
+inline unsigned long long getLinuxHighResolutionTscCounter(void)
+{
+   unsigned long high, low;
+   __asm__ __volatile__(".byte 0x0f,0x31" : "=a" (low), "=d" (high));
+   return ((unsigned long long) high << 32) + low;
+}
+
+#endif /* TAU_LINUX_TIMERS */
+
+///////////////////////////////////////////////////////////////////////////
 double TauWindowsUsecD(void)
 {
 #ifdef TAU_WINDOWS
@@ -471,6 +508,9 @@ double RtsLayer::getUSecD (int tid) {
   return (tp.tv_sec * 1e6 + (tp.tv_nsec * 1e-3)) ;
 
 #else  // SGI_TIMERS
+#ifdef TAU_LINUX_TIMERS
+  return (double) getLinuxHighResolutionTscCounter()/TauGetMHz();
+#else /* TAU_LINUX_TIMERS */
 #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS)) 
 #if (defined(TAU_WINDOWS))
   return TauWindowsUsecD();
@@ -482,6 +522,7 @@ double RtsLayer::getUSecD (int tid) {
 #else  // TULIP_TIMERS by default.  
   return pcxx_GetUSecD();
 #endif  //POOMA_TFLOP
+#endif /* TAU_LINUX_TIMERS */
 #endif 	//SGI_TIMERS
 
 #endif  // SGI_HW_COUNTERS
@@ -965,6 +1006,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.33 $   $Date: 2002/01/16 01:07:27 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.33 2002/01/16 01:07:27 sameer Exp $ 
+ * $Revision: 1.34 $   $Date: 2002/01/24 23:30:19 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.34 2002/01/24 23:30:19 sameer Exp $ 
  ***************************************************************************/
