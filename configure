@@ -1072,12 +1072,12 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs IBM_FORTRAN"
       fi
       threadtest=`echo $cxx_compiler | sed -e 's/_r//'`
-      if [ "y$threadtest" = "y$cxxcompiler" ]
+      if [ "y$threadtest" = "y$cxx_compiler" ]
       then
-	echo "Not using the threaded version of IBM compiler"
+	echo "Not using the thread-safe version of the IBM compiler"
       else
 	ibmxlc_r=yes
-	echo "Using threaded version of the IBM compiler"
+	echo "Using thread-safe version of the IBM compiler"
       fi
       ;;
 
@@ -1373,7 +1373,7 @@ then
 	mpilib=/usr/lpp/ppe.poe/lib
         if [ $ibmxlc_r = yes ] 
         then
-          additional_mpilibs='-L/usr/lpp/ppe.poe/lib/threads -L/usr/lpp/ppe.poe/lib/ip -L/usr/lpp/ssp/css/lib -lvtd_r -llapi_r'
+          additional_mpilibs='-L/usr/lpp/ppe.poe/lib/threads -L/usr/lpp/ssp/css/lib -llapi_r'
         fi
 	;;
   linux) 
@@ -1512,6 +1512,16 @@ then
     #echo "mpiflibargs= $mpiflibargs"
     fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
     
+    # Check to see if the MPI library contains a _r 
+    mpithreadtest=`echo $mpilibrary | sed -e 's/_r//'`
+    if [ "y$mpithreadtest" = "y$mpilibrary" ] 
+    then
+      echo "NOTE: MPI library does not have a threaded _r suffix "
+    else
+      echo "NOTE: MPI library has a threaded _r suffix "
+      fixmakeargs="$fixmakeargs MPI_R_SUFFIX"
+    fi # mpi _r check
+
   fi # If -d mpilib
 fi # if mpilib is specified
 

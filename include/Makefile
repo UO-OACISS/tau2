@@ -287,6 +287,10 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #EPILOGOMPI#TAU_MPI_WRAPPER_LIB= #ENDIF#
 
 ##############################################
+# MPI _r suffix check (as in libmpi_r)
+#MPI_R_SUFFIX#TAU_MPI_R_SUFFIX=_r    #ENDIF#
+
+##############################################
 # Flags to build a shared object: TAU_SHFLAGS
 #GNU#AR_SHFLAGS                 = -shared       #ENDIF#
 #PGI#AR_SHFLAGS                 = -shared       #ENDIF#
@@ -366,8 +370,8 @@ TAU_MPI_FLIBS	= $(TAU_MPI_FLIB)
 #############################################
 ## IBM SPECIFIC CHANGES TO TAU_MPI_LIBS
 #SP1#TAU_LDFLAGS  = -binitfini:poe_remote_main #ENDIF#
-#SP1#TAU_MPI_LIBS    = $(TAU_MPI_LIB)  -L$(TAU_MPILIB_DIR)/ip  -lvtd #ENDIF#
-#SP1#TAU_MPI_FLIBS   = $(TAU_MPI_FLIB) -L$(TAU_MPILIB_DIR)/ip  -lvtd #ENDIF#
+#SP1#TAU_MPI_LIBS    = $(TAU_MPI_LIB)  -L$(TAU_MPILIB_DIR)/ip  -lvtd$(TAU_MPI_R_SUFFIX) #ENDIF#
+#SP1#TAU_MPI_FLIBS   = $(TAU_MPI_FLIB) -L$(TAU_MPILIB_DIR)/ip  -lvtd$(TAU_MPI_R_SUFFIX) #ENDIF#
 
 #SP1#TAUMPILIBS      = $(TAU_MPI_LIBS) 	#ENDIF#
 #SP1#TAUMPIFLIBS     = $(TAU_MPI_FLIBS)	#ENDIF#
