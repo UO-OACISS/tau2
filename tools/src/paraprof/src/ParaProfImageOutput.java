@@ -31,36 +31,56 @@ public class ParaProfImageOutput{
 	
 	try{
 	    
-	    Dimension d = ref.getImageSize();
+	    //Ask the user for a filename and location.
+	    JFileChooser tmpFileChooser = new JFileChooser();
+	    tmpFileChooser.setDialogTitle("Save Image File");
+	    //Set the directory.
+	    tmpFileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
 
-       	    BufferedImage bi = new BufferedImage((int)d.getWidth(), (int)d.getHeight(), BufferedImage.TYPE_INT_RGB);
-	    Graphics2D g2D = bi.createGraphics();
-	    
-	    //Paint the background white.
-	    g2D.setColor(Color.white);
-	    g2D.fillRect(0, 0, (int)d.getWidth(), (int)d.getHeight());
+	    tmpFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+	    int resultValue = tmpFileChooser.showSaveDialog((Component)ref);
+	    System.out.println("Saving image ...");
+	    if(resultValue == JFileChooser.APPROVE_OPTION){
+		//Try and get the file.
+		File f = tmpFileChooser.getSelectedFile();
+		String tmpString = f.getCanonicalPath();    
+		
+		Dimension d = ref.getImageSize();
+		BufferedImage bi = new BufferedImage((int)d.getWidth(), (int)d.getHeight(), BufferedImage.TYPE_INT_RGB);
+		Graphics2D g2D = bi.createGraphics();
+		
+		//Paint the background white.
+		g2D.setColor(Color.white);
+		g2D.fillRect(0, 0, (int)d.getWidth(), (int)d.getHeight());
+		
+		//Reset the drawing color to black.  The renderIt methods expect it.
+		g2D.setColor(Color.black);
+		
+		//Draw to this graphics object.
+		ref.renderIt(g2D, "image");
 
-	    //Reset the drawing color to black.  The renderIt methods expect it.
-	    g2D.setColor(Color.black);
+		//Now write the image to file.
+		String format = "JPG";
+		ImageWriter writer = null;
+		Iterator iter = ImageIO.getImageWritersByFormatName(format);
+		if(iter.hasNext()){
+		    writer = (ImageWriter) iter.next();
+		}
+		ImageOutputStream imageOut = ImageIO.createImageOutputStream(f);
+		writer.setOutput(imageOut);
+		IIOImage iioImage = new IIOImage(bi,null,null);
+		writer.write(bi);
 
-	    //Draw to this graphics object.
-	    ref.renderIt(g2D, "image");
-
-	    //Now write the image to file.
-	    String format = "JPG";
-	    ImageWriter writer = null;
-	    Iterator iter = ImageIO.getImageWritersByFormatName(format);
-	    if(iter.hasNext()){
-		writer = (ImageWriter) iter.next();
+		System.out.println("Done saving image.");
 	    }
-	    File f = new File("test.JPG");
-	    ImageOutputStream imageOut = ImageIO.createImageOutputStream(f);
-	    writer.setOutput(imageOut);
-	    IIOImage iioImage = new IIOImage(bi,null,null);
-	    writer.write(bi);
+	    else{
+		if(ParaProf.debugIsOn)
+		    System.out.println("Did not get a file name to save image to.");
+		return;
+	    }
 	}
 	catch(Exception e){
-	    System.out.println(e.toString());
-	    }
+	    ParaProf.systemError(null, null, "PPII02");
+	}
     }
 }

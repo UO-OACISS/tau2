@@ -27,12 +27,8 @@ import java.io.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
-//import javax.swing.Timer;
 
 public class Trial extends Thread{
-  
-    long timer = 0;
-    
     //Constructor.
     public Trial(Experiment inParentExp){
 	parentExperiment = inParentExp;
@@ -866,9 +862,7 @@ public class Trial extends Thread{
       
 	    time = (System.currentTimeMillis()) - time;
 	    System.out.println("Done processing data file, please wait ......");
-	    System.out.println("Time to process in milliseconds was: " + time);
-	    System.out.println("Timer is: " + timer);
-          
+	    System.out.println("Time to process file (in milliseconds): " + time);
 	    //Ok, now show the static main window.
 	    this.showMainWindow();
 	}

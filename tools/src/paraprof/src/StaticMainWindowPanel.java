@@ -682,9 +682,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    if(instruction.equals("display"))
 		display = true;
 	    
-	    System.out.println("Entering renderIt");
-	    
-
 	    //Set the numberOfColors variable.
 	    numberOfColors = trial.getColorChooser().getNumberOfColors();
 	    
@@ -748,19 +745,18 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //needs to be.  We might have to call a revalidate to increase
 	    //its size.
 	    int yHeightNeeded = ((3*barSpacing) + ((trial.getTotalNumberOfThreads())*barSpacing));
+	    int xWidthNeeded = barXStart + defaultBarLength;
 
 	    boolean sizeChange = false;   
 	    //Resize the panel if needed.
-	    //if(tmpXWidthCalc > ){
-	    //xPanelSize = tmpXWidthCalc + 1;
-	    //sizeChange = true;
-	    //}
-		
-	    if(yHeightNeeded > yPanelSize){
-		yPanelSize = yHeightNeeded + 1;
+	    if(xWidthNeeded > xPanelSize){
+		xPanelSize = xWidthNeeded+10;
 		sizeChange = true;
 	    }
-	
+	    if(yHeightNeeded > yPanelSize){
+		yPanelSize = yHeightNeeded+10;
+		sizeChange = true;
+	    }
 	    //Only need to call revalidate when we are actually
 	    //drawing to the display. And of course if we need a
 	    //bigger panel.
@@ -791,10 +787,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	    //End - Draw the counter name if required.
 	    //**********
-
-
-
-		
+	
+	    //**********
+	    //Set clipping.
 	    //Only do clipping when this is a display call.
 	    if(display){
 		Rectangle clipRect = g.getClipBounds();
@@ -808,13 +803,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		yBeg = 0;
 		yEnd = yPanelSize;
 	    }
+	    //End - Set clipping
+	    //**********
 	    
-
-
-	    yCoord = yCoord + (barSpacing);
-
 	    //**********
 	    //Drawing the mean bar.
+	    yCoord = yCoord + (barSpacing);
 	    String meanString = "Mean";
 	    int tmpMeanStringWidth = fmFont.stringWidth(meanString);
 	    g.drawString(meanString, (barXStart - tmpMeanStringWidth - 5), yCoord);
@@ -881,7 +875,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    }
 				
 			    //Set the draw coords.
-			    sMWMeanDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+			    if(display)
+				sMWMeanDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
 				
 			    //Update barXCoord.
 			    barXCoord = (barXCoord + xLength);
@@ -904,7 +899,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 				
 			    //Set the draw coords.
-			    sMWMeanDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+			    if(display)
+				sMWMeanDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
 				
 			    //Update barXCoord.
 			    barXCoord = (barXCoord + xLength);
@@ -913,13 +909,15 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			
 		    //Still want to set the draw coords for this mapping, were it to be none zero.
 		    //This aids in mouse click and tool tip events.
-		    sMWMeanDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+		    if(display)
+			sMWMeanDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 			
 		}
 		else{
 		    //Still want to set the draw coords for this mapping, were it to be none zero.
 		    //This aids in mouse click and tool tip events.
-		    sMWMeanDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+		    if(display)
+			sMWMeanDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 		}
 		    
 		    
@@ -1060,7 +1058,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						}
 						    
 						//Set the draw coords.
-						sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+						if(display)
+						    sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
 						    
 						//Update barXCoord.
 						barXCoord = (barXCoord + xLength);
@@ -1083,7 +1082,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 						    
 						//Set the draw coords.
-						sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+						if(display)
+						    sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
 						    
 						//Update barXCoord.
 						barXCoord = (barXCoord + xLength);
@@ -1093,13 +1093,15 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					    
 					//Still want to set the draw coords for this mapping, were it to be none zero.
 					//This aids in mouse click and tool tip events.
-					sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+					if(display)
+					    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 					    
 				    }
 				    else{
 					//Still want to set the draw coords for this mapping, were it to be none zero.
 					//This aids in mouse click and tool tip events.
-					sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+					if(display)
+					    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 				    }
 					
 					
@@ -1159,7 +1161,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						}
 						    
 						//Set the draw coords.
-						sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+						if(display)
+						    sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
 						    
 						//Update barXCoord.
 						barXCoord = (barXCoord + xLength);
@@ -1182,7 +1185,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 						    
 						//Set the draw coords.
-						sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+						if(display)
+						    sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
 						    
 						//Update barXCoord.
 						barXCoord = (barXCoord + xLength);
@@ -1192,13 +1196,15 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					    
 					//Still want to set the draw coords for this mapping, were it to be none zero.
 					//This aids in mouse click and tool tip events.
-					sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+					if(display)
+					    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 					    
 				    }
 				    else{
 					//Still want to set the draw coords for this mapping, were it to be none zero.
 					//This aids in mouse click and tool tip events.
-					sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+					if(display)
+					    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 				    }
 					
 					
@@ -1225,7 +1231,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    
 			//We are about to move on to drawing the next thread.  Thus, record the
 			//max y draw value for this thread.
-			sMWThread.setYDrawCoord(yCoord);
+			if(display)
+			    sMWThread.setYDrawCoord(yCoord);
 			    
 			//Update the thread counter.
 			threadCounter++;
@@ -1233,7 +1240,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    }
 		    //We are about to move on to drawing the next context.  Thus, record the
 		    //max y draw value for this context.
-		    sMWContext.setYDrawCoord(yCoord);
+		    if(display)
+			sMWContext.setYDrawCoord(yCoord);
 			
 		    //Update the context counter.
 		    contextCounter++;
@@ -1241,7 +1249,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    
 		//We are about to move on to drawing the next server.  Thus, record the
 		//max y draw value for this server.
-		sMWServer.setYDrawCoord(yCoord);
+		if(display)
+		    sMWServer.setYDrawCoord(yCoord);
 		    
 		//Update the server counter.
 		serverCounter++;

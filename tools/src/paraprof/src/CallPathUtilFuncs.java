@@ -11,6 +11,8 @@ package paraprof;
 public class CallPathUtilFuncs{
     public CallPathUtilFuncs(){}
 
-    public static 
+    public static boolean isAvailable(){
+	return false;
+    }
 
 }

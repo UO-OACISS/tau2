@@ -302,7 +302,8 @@ public class ParaProfManager extends JFrame implements ActionListener
     //Want to automatically expand the experiments and trials place holders.
     //This just makes it easier for the user.
     TreePath path = event.getPath();
-    System.out.println(path);
+    if(ParaProf.debugIsOn)
+	System.out.println(path);
     if(path == null)
       return;
     DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
@@ -314,7 +315,6 @@ public class ParaProfManager extends JFrame implements ActionListener
         
       }
     }
-    
   }
   
   private void treeCollapsedEventHandler(TreeExpansionEvent event){
