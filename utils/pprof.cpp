@@ -789,6 +789,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
 
   p_func_list = (struct p_func_descr *) malloc(numfunc * sizeof(struct p_func_descr));
 
+  max_thread_cumusec = 0.0; /* initialize */
   /* fill up the p_func_list */
   for(it=funcDB.begin(), i = 0; it != funcDB.end(); it++, i++) {
     p_func_list[i].numcalls 	= (*it).second.numcalls;
@@ -2886,7 +2887,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 1998/05/28 18:42:35 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.8 1998/05/28 18:42:35 sameer Exp $                                                   
+ * $Revision: 1.9 $   $Date: 1998/07/10 20:16:01 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.9 1998/07/10 20:16:01 sameer Exp $                                                   
  ***************************************************************************/
 
