@@ -44,6 +44,7 @@ using namespace std;
 #ifdef TRACING_ON
 #define PCXX_EVENT_SRC
 #include "Profile/pcxx_events.h"
+void TraceCallStack(int tid, Profiler *current);
 #endif // TRACING_ON
 
 
@@ -112,8 +113,10 @@ void RtsLayer::RegisterThread()
 //////////////////////////////////////////////////////////////////////
 void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 {
+#ifdef PROFILING_ON
   vector<FunctionInfo*>::iterator it;
   Profiler *current;
+#endif // PROFILING_ON
 
   TAU_PROFILE_SET_NODE(nodeid);
   // First, set the new id 
@@ -218,8 +221,8 @@ void RtsLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2000/10/12 19:07:00 $
- * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.12 2000/10/12 19:07:00 sameer Exp $
+ * $Revision: 1.13 $   $Date: 2000/10/12 19:33:09 $
+ * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.13 2000/10/12 19:33:09 sameer Exp $
  ***************************************************************************/
 
 
