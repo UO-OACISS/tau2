@@ -4,6 +4,9 @@ import edu.uoregon.tau.dms.database.*;
 import java.sql.*;
 import java.util.Vector;
 import java.io.Serializable;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.IOException;
 
 /**
  * Holds all the data for an experiment in the database.  
@@ -13,7 +16,7 @@ import java.io.Serializable;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.7 2004/10/29 22:43:10 amorris Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.8 2004/11/02 21:22:01 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -374,6 +377,23 @@ public class Experiment implements Serializable {
 	    e.printStackTrace();
 	}
     }
+
+	private void readObject (ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
+		// always perform the default de-serialization first
+		aInputStream.defaultReadObject();
+		if (fieldNames == null)
+    		fieldNames = (String[])aInputStream.readObject();
+		if (fieldTypes == null)
+    		fieldTypes = (int[])aInputStream.readObject();
+	}
+
+	private void writeObject (ObjectOutputStream aOutputStream) throws IOException {
+		// always perform the default serialization first
+		aOutputStream.defaultWriteObject();
+    	aOutputStream.writeObject(fieldNames);
+    	aOutputStream.writeObject(fieldTypes);
+	}
+
 }
 
 

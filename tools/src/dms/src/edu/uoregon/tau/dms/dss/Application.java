@@ -6,6 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Vector;
 import java.io.Serializable;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.IOException;
 
 
 import java.sql.*;
@@ -17,7 +20,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has one or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.7 2004/10/29 22:43:10 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.8 2004/11/02 21:22:01 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since 0.1
@@ -29,9 +32,9 @@ public class Application implements Serializable {
     private int applicationID;
     private String name;
 
-    private String fields[];
-    private static String fieldNames[];
-    private static int fieldTypes[];
+    public String fields[];
+    public static String fieldNames[];
+    public static int fieldTypes[];
     
 
     // numFields, the number of optional fields found in the DB
@@ -104,6 +107,8 @@ public class Application implements Serializable {
 	this.name = app.getName();
 	this.applicationID = app.getID();
 
+	this.fieldNames = app.fieldNames;
+	this.fieldTypes = app.fieldTypes;
 	this.fields = app.fields;
     }
 
@@ -367,5 +372,22 @@ public class Application implements Serializable {
 	    e.printStackTrace();
 	}
     }
+
+	private void readObject (ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
+		// always perform the default de-serialization first
+		aInputStream.defaultReadObject();
+		if (fieldNames == null)
+    		fieldNames = (String[])aInputStream.readObject();
+		if (fieldTypes == null)
+    		fieldTypes = (int[])aInputStream.readObject();
+	}
+
+	private void writeObject (ObjectOutputStream aOutputStream) throws IOException {
+		// always perform the default serialization first
+		aOutputStream.defaultWriteObject();
+    	aOutputStream.writeObject(fieldNames);
+    	aOutputStream.writeObject(fieldTypes);
+	}
+
 }
 
