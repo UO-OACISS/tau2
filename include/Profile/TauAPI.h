@@ -69,10 +69,10 @@ extern "C" void Tau_stop_timer(void * function_info);
 #define TAU_PROFILE_TIMER_SET_GROUP(t, id) t##fi.SetProfileGroup(id); 
 
 #define TAU_GLOBAL_TIMER(timer, name, type, group) static FunctionInfo timer##fi(name, type, group, #group);
-#define TAU_GLOBAL_TIMER_START(timer) FunctionInfo *timer##fptr = &timer##fi; \
+#define TAU_GLOBAL_TIMER_START(timer) {FunctionInfo *timer##fptr = &timer##fi; \
         int tau_tid = RtsLayer::myThread(); \
         Profiler *timer = new Profiler(timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
-        timer->Start(tau_tid);
+        timer->Start(tau_tid); }
 
 #define TAU_GLOBAL_TIMER_STOP()  {int tau_threadid = RtsLayer::myThread(); \
                 Profiler::CurrentProfiler[tau_threadid]->Stop(tau_threadid);}
@@ -209,6 +209,6 @@ extern "C" void Tau_stop_timer(void * function_info);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2003/05/08 17:48:06 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.24 2003/05/08 17:48:06 sameer Exp $ 
+ * $Revision: 1.25 $   $Date: 2003/06/20 23:49:04 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.25 2003/06/20 23:49:04 sameer Exp $ 
  ***************************************************************************/
