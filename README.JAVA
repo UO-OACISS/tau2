@@ -26,12 +26,13 @@ For both profiling and tracing
 % setenv LD_LIBRARY_PATH $LD_LIBRARY_PATH:<taudir>/<tauarch>/lib
 % cd examples/java/pi
 % java -XrunTAU Pi 200000
-On Solaris, you may need to disable the JIT compiler (it works on Linux) while
-using TAU. 
+On Solaris, you may need to disable the JIT compiler while using TAU. 
 % java -XrunTAU -Djava.compiler=  Pi 200000
 If you're using JAVA HotSpot JVM, you may need the -classic flag too.
 % java -classic -XrunTAU -Djava.compiler= Pi 200000
 (java -version shows the version of JVM).
+
+TAU has been tested with the JIT compiler on Linux and it works properly.
 
 4) Displaying profiles/traces
 For Profiling:
