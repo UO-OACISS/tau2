@@ -11,6 +11,9 @@ import java.io.InputStreamReader;
 import java.sql.*;
 import jargs.gnu.CmdLineParser;
 
+
+import java.util.Properties;
+
 public class Configure {
     private DB db = null;
     private static String Usage = "Usage: configure [{-h,--help}] [{-g,--configfile} filename] [{-t,--tauroot} path]";
@@ -40,10 +43,10 @@ public class Configure {
     private String configFileName;
 
     public Configure(String tauroot, String arch) {
-		super();
-		this.tau_root = tauroot;
-		this.arch = arch;
-		this.perfdmf_home = tauroot + "/tools/src/dms";
+	super();
+	this.tau_root = tauroot;
+	this.arch = arch;
+	this.perfdmf_home = tauroot + "/tools/src/dms";
     }
 
     public void errorPrint(String msg) {
@@ -113,19 +116,53 @@ public class Configure {
     public void promptForData() {
 	BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 	String tmpString;
-				
+
+
+	/*
+	if (configFileFound) {
+	    // if the configuration file already exists, give the user the option to just 
+	    // stick with their current options (they may be using it to test connectivity
+	    System.out.println("TAU root directory: " + tau_root);
+	    System.out.println("
+
+	}
+	*/
+	
 	System.out.println("\nYou will now be prompted for new values, if desired.  " +
 			   "The current or default\nvalues for each prompt are shown " +
 			   "in parenthesis.\nTo accept the current/default value, " +
 			   "just press Enter/Return.\n");
 	try {
-	    // Prompt for XML parsing jar file
 	    System.out.print("Please enter the TAU root directory.\n(" + tau_root + "):");
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) { 
-			tau_root = tmpString;
-			perfdmf_home = tau_root + "/tools/src/dms";
-		}
+		tau_root = tmpString;
+		perfdmf_home = tau_root + "/tools/src/dms";
+	    }
+
+
+	    String old_jdbc_db_type = jdbc_db_type;
+	    // Prompt for database type
+	    System.out.print("Please enter the database vendor (postgresql or mysql).\n(" + jdbc_db_type + "):");
+	    tmpString = reader.readLine();
+	    if (tmpString.length() > 0) jdbc_db_type = tmpString;
+
+
+	    if (jdbc_db_type.compareTo("postgresql") == 0 && old_jdbc_db_type.compareTo("postgresql") != 0) {
+		// if the user has chosen postgresql and the config file is not already set for it
+		jdbc_db_jarfile = "postgresql.jar";
+		jdbc_db_driver = "org.postgresql.Driver";
+		db_schemafile = "dbschema.txt";
+		db_portnum = "5432";
+	    } else if (jdbc_db_type.compareTo("mysql") == 0 && old_jdbc_db_type.compareTo("mysql") != 0) {
+		// if the user has chosen mysql and the config file is not already set for it
+		jdbc_db_jarfile = "mysql.jar";
+		jdbc_db_driver = "org.gjt.mm.mysql.Driver";
+		db_schemafile = "dbschema.mysql.txt";
+		db_portnum = "3306";
+	    }
+
+
 						
 	    // Prompt for JDBC jar file
 	    if (configFileFound)
@@ -143,10 +180,6 @@ public class Configure {
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) jdbc_db_driver = tmpString;
 						
-	    // Prompt for database type
-	    System.out.print("Please enter the database vendor.\n(" + jdbc_db_type + "):");
-	    tmpString = reader.readLine();
-	    if (tmpString.length() > 0) jdbc_db_type = tmpString;
 						
 	    // Prompt for database hostname
 	    System.out.print("Please enter the hostname for the database server.\n(" + db_hostname + "):");
@@ -168,22 +201,22 @@ public class Configure {
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) db_username = tmpString;
 
-/*
-	    boolean passwordMatch = false;
-	    while (!passwordMatch) {
-		// Prompt for database password
-		System.out.println("NOTE: Passwords will be stored in an encrypted format.");
-		PasswordField passwordField = new PasswordField();
-		tmpString = passwordField.getPassword("Please enter the database password (default not shown):");
-		if (tmpString.length() > 0) db_password = tmpString;
-		String tmpString2 = passwordField.getPassword("Please enter the database password again to confirm:");
-		if (tmpString.compareTo(tmpString2) == 0) {
-		    db_password = tmpString;
-		    passwordMatch = true;
-		}
-		else System.out.println ("Password confirmation failed.  Please try again.");
-	    }
-*/
+	    /*
+	      boolean passwordMatch = false;
+	      while (!passwordMatch) {
+	      // Prompt for database password
+	      System.out.println("NOTE: Passwords will be stored in an encrypted format.");
+	      PasswordField passwordField = new PasswordField();
+	      tmpString = passwordField.getPassword("Please enter the database password (default not shown):");
+	      if (tmpString.length() > 0) db_password = tmpString;
+	      String tmpString2 = passwordField.getPassword("Please enter the database password again to confirm:");
+	      if (tmpString.compareTo(tmpString2) == 0) {
+	      db_password = tmpString;
+	      passwordMatch = true;
+	      }
+	      else System.out.println ("Password confirmation failed.  Please try again.");
+	      }
+	    */
 						
 	    // Prompt for database schema file
 	    if (configFileFound)
@@ -194,6 +227,7 @@ public class Configure {
 	    if (tmpString.length() > 0) db_schemafile = tmpString;
 	    else if (!configFileFound)
 		db_schemafile = perfdmf_home + "/data/" + db_schemafile;
+
 						
 	    // Prompt for XML Parser jar file
 	    if (configFileFound)
@@ -218,8 +252,8 @@ public class Configure {
      **/
 
     public void testDBConnection() {
-		// perfdmf.ConnectionManager.connect();
-		// perfdmf.ConnectionManager.dbclose();
+	// perfdmf.ConnectionManager.connect();
+	// perfdmf.ConnectionManager.dbclose();
     }
 
     /** testDB method
@@ -283,17 +317,17 @@ public class Configure {
 	    configWriter.write("db_username:" + db_username + "\n");
 	    configWriter.newLine();
 
-/*
-	    configWriter.write("# Database password\n");
-	    configWriter.write("db_password:" + db_password + "\n");
-	    configWriter.newLine();
-*/
+	    /*
+	      configWriter.write("# Database password\n");
+	      configWriter.write("db_password:" + db_password + "\n");
+	      configWriter.newLine();
+	    */
 
-	    configWriter.write("# Database Schema file - note: the path is absolulte\n");
+	    configWriter.write("# Database Schema file - note: the path is absolute\n");
 	    configWriter.write("db_schemafile:" + db_schemafile + "\n");
 	    configWriter.newLine();
 						
-	    configWriter.write("# Database XML parser jar file - note: the path is absolulte\n");
+	    configWriter.write("# Database XML parser jar file - note: the path is absolute\n");
 	    configWriter.write("xml_sax_parser:" + xml_parser + "\n");
 	    configWriter.newLine();
 						
@@ -304,10 +338,13 @@ public class Configure {
     }
     
     //Standard access methods for some of the fields.
-    public void setPerfDMFHome(String inString){
-	perfdmf_home = inString;}
-    public String getPerfDMFHome(){
-	return perfdmf_home;}
+    public void setPerfDMFHome(String inString) {
+	perfdmf_home = inString;
+    }
+    
+    public String getPerfDMFHome() {
+	return perfdmf_home;
+    }
         
     public void setJDBCJarfile(String inString){
 	jdbc_db_jarfile = inString;}
@@ -364,34 +401,34 @@ public class Configure {
     public String getConfigFileName(){
 	return configFileName;}
 
-/* Test that the database exists, and if it doesn't, create it! */
-	public void createDB() {
-	    ConnectionManager connector = null;
-		DB db = null;
-		try {
+    /* Test that the database exists, and if it doesn't, create it! */
+    public void createDB() {
+	ConnectionManager connector = null;
+	DB db = null;
+	try {
             connector = new ConnectionManager(configFileName);
             connector.connect();
             db = connector.getDB();
         } catch ( Exception e ) {
-			System.out.println("\nPlease make sure that your DBMS is configured correctly, and");
-			System.out.println("the database " + db_dbname + " has been created.");
-			System.exit(0);
+	    System.out.println("\nPlease make sure that your DBMS is configured correctly, and");
+	    System.out.println("the database " + db_dbname + " has been created.");
+	    System.exit(0);
         }
-		try {
-			String query = new String ("select * from application;");
-			ResultSet resultSet = db.executeQuery(query);
-			resultSet.close();
-			connector.dbclose();
+	try {
+	    String query = new String ("select * from application;");
+	    ResultSet resultSet = db.executeQuery(query);
+	    resultSet.close();
+	    connector.dbclose();
         } catch ( Exception e ) {
-		// build the database
-			System.out.println(configFileName);
-			connector.genParentSchema(db_schemafile);
-			connector.dbclose();
-			System.out.println("Congratulations!  PerfDMF is configured and the database has been built.");
-			System.out.println("You may begin loading applications.");
+	    // build the database
+	    System.out.println(configFileName);
+	    connector.genParentSchema(db_schemafile);
+	    connector.dbclose();
+	    System.out.println("Congratulations! PerfDMF is configured and the database has been built.");
+	    System.out.println("You may begin loading applications.");
         }
-		System.out.println("Configuration complete.");
-	}
+	System.out.println("Configuration complete.");
+    }
 
     /*** Beginning of main program. ***/
 
@@ -403,12 +440,12 @@ public class Configure {
 	CmdLineParser.Option archOpt = parser.addStringOption('a', "arch");
 	CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
 	try {
-		parser.parse(args);
+	    parser.parse(args);
 	}
 	catch ( CmdLineParser.OptionException e ) {
-		System.err.println(e.getMessage());
-		System.err.println(Usage);
-		System.exit(-1);
+	    System.err.println(e.getMessage());
+	    System.err.println(Usage);
+	    System.exit(-1);
 	}
 
 	String configFile = (String)parser.getOptionValue(configfileOpt);
@@ -417,8 +454,8 @@ public class Configure {
 	Boolean help = (Boolean)parser.getOptionValue(helpOpt);
 
 	if (help != null && help.booleanValue()) {
-		System.err.println(Usage);
-		System.exit(-1);
+	    System.err.println(Usage);
+	    System.exit(-1);
 	}
 
 	if (configFile == null) configFile = new String("");
@@ -434,16 +471,39 @@ public class Configure {
 	config.promptForData();
 				
 	// Test the database connection
-	config.testDBConnection();
+	//config.testDBConnection();
 				
 	// Test the database name/login/password, etc.
-	config.testDBTransaction();
-				
+	//config.testDBTransaction();
+	
 	// Write the configuration file to ${PerfDMF_Home}/bin/perfdmf.cfg
 	config.writeConfigFile();
 
 	// check to see if the database is there...
-	config.createDB();
+	//config.createDB();
+
+	/*
+	String classpath = System.getProperty("java.class.path");
+
+	//System.out.println ("executing '" + "java -cp " + classpath + ":" + config.getJDBCJarfile() + " edu.uoregon.tau.dms.loader.Configure");
+	
+	String execString = new String("java -cp " + classpath + ":" + config.getJDBCJarfile() + " edu.uoregon.tau.dms.loader.Configure -a " + arch + " -g " + configFile + " -t" + tauroot);
+
+	try {
+	    System.out.println ("Executing " + execString);
+	    Process tester = Runtime.getRuntime().exec(execString);
+	    tester.waitFor();
+
+	    int exitValue = tester.exitValue();
+	    System.out.println ("exit value was: " + exitValue);
+	}
+
+	catch (Exception e) {
+	    System.out.println ("Error executing database test, tried to execute: " + execString);
+	    e.printStackTrace();
+	}
+	*/
     }
+
 }
 
