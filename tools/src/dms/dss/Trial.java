@@ -13,7 +13,7 @@ import java.util.*;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.9 2003/10/17 18:46:54 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.10 2003/10/17 23:03:28 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -30,12 +30,12 @@ public class Trial {
 	private int applicationID;
 	private String name;
 	private String time;
-	private int problemSize;
 	private int nodeCount;
 	private int contextsPerNode;
 	private int threadsPerContext;
 	private Vector metric;
 	private String userData;
+	private String problemDefinition;
 
 /**
  * Gets the unique identifier of the current trial object.
@@ -83,12 +83,12 @@ public class Trial {
 	}
 
 /**
- * Gets the problem size for this trial.
+ * Gets the problem description for this trial.
  *
- * @return	problem size for this trial.
+ * @return	problem description for this trial.
  */
-	public int getProblemSize () {
-		return this.problemSize;
+	public String getProblemDefinition () {
+		return this.problemDefinition;
 	}
 
 /**
@@ -116,15 +116,6 @@ public class Trial {
  */
 	public int getNumThreadsPerContext () {
 		return this.threadsPerContext;
-	}
-
-/**
- * Gets the name of the current trial object.
- *
- * @return	the name of the trial
- */
-	public String getName() {
-		return name;
 	}
 
 /**
@@ -210,14 +201,14 @@ public class Trial {
 	}
 
 /**
- * Sets the problem size for this trial.
+ * Sets the problem description for this trial.
  * <i> NOTE: This method is used by the DataSession object to initialize
  * the object.  Not currently intended for use by any other code.</i>
  *
- * @param	problemSize problem size for this trial
+ * @param	problemDefinition problem description for this trial
  */
-	public void setProblemSize (int problemSize) {
-		this.problemSize = problemSize;
+	public void setProblemDefinition (String problemDefinition) {
+		this.problemDefinition = problemDefinition;
 	}
 
 /**
@@ -262,17 +253,6 @@ public class Trial {
  */
 	public void setUserData(String userData) {
 		this.userData = userData;
-	}
-
-/**
- * Sets the name of the current trial object.
- * <i>Note: This method is used by the DataSession object to initialize
- * the object.  Not currently intended for use by any other code.</i>
- *
- * @param	name the trial name
- */
-	public void setName(String name) {
-		this.name = name;
 	}
 
 /**

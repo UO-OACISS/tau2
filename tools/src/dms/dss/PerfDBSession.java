@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.27 2003/10/17 18:46:54 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.28 2003/10/17 23:03:28 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -223,7 +223,7 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		buf.append("select distinct t.id, t.experiment, e.application, ");
-		buf.append("t.time, t.problem_size, t.node_count, ");
+		buf.append("t.time, t.problem_definition, t.node_count, ");
 		buf.append("t.contexts_per_node, t.threads_per_context, ");
 		buf.append("t.name, t.userdata ");
 		buf.append("from trial t inner join experiment e ");
@@ -240,7 +240,7 @@ public class PerfDBSession extends DataSession {
 				trial.setExperimentID(resultSet.getInt(2));
 				trial.setApplicationID(resultSet.getInt(3));
 				trial.setTime(resultSet.getString(4));
-				trial.setProblemSize(resultSet.getInt(5));
+				trial.setProblemDefinition(resultSet.getString(5));
 				trial.setNodeCount(resultSet.getInt(6));
 				trial.setNumContextsPerNode(resultSet.getInt(7));
 				trial.setNumThreadsPerContext(resultSet.getInt(8));
