@@ -57,6 +57,7 @@ LSX = .a
 #GNU#PROFILEOPT10              = -DNO_RTTI             #ENDIF#
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
+#TRACE#EVENTS_O		       = pcxx_events.o	       #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 
