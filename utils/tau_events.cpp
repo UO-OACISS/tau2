@@ -64,7 +64,6 @@ int  dynamictrace = FALSE;
 extern char *mergededffile; /* name of merged edf file */
 extern char **edfnames; /* names of edf files, if specified by the user */
 extern int edfspecified; /* whether edf files are specified by the user */
-extern int get_nodeid(int edf_file_index); /* returns nid */ 
 
 #ifndef TAU_NEC
 extern "C" {
@@ -120,6 +119,23 @@ struct EventDescr {
     ~EventDescr() { }
 };
 
+struct trcdescr
+{
+  int     fd;              /* -- input file descriptor                     -- */
+  char   *name;            /* -- corresponding file name                   -- */
+  int     nid;             /* -- corresponding PTX PID                     -- */
+  int     overflows;       /* -- clock overflows in that trace             -- */
+  int     contlen;         /* -- length of continuation event buffer       -- */
+  long    numrec;          /* -- number of event records already processed -- */
+  unsigned long lasttime;  /* -- timestamp of previous event record        -- */
+  unsigned long offset;    /* -- offset of timestamp                       -- */
+
+  PCXX_EV  *buffer;    /* -- input buffer                              -- */
+  PCXX_EV  *erec;      /* -- current event record                      -- */
+  PCXX_EV  *next;      /* -- next available event record in buffer     -- */
+  PCXX_EV  *last;      /* -- last event record in buffer               -- */
+} ;
+extern struct trcdescr *trcdes;
 map<const char*, EventDescr *, ltstr> eventNameMap;
 /* eventNameMap stores name to global event id mapping */
 
@@ -129,6 +145,12 @@ map<long, int, less<long> > nodeEventTable[MAX_OPEN_FILES];
 /* nodeEventTable stores nodeid, localevent ->globaleventid mapping */
 /* e.g., nodeEventTable[0] gives event map for node 0, emap[60000] 
 gives global id say 105 of event 60000 */
+
+
+int get_nodeid(int edf_file_index)
+{
+  return trcdes[edf_file_index].nid; /* return the node id associated with it*/
+}
 
 int open_edf_file(char *prefix, int nodeid, int prefix_is_filename)
 {

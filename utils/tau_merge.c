@@ -83,7 +83,7 @@ extern "C" {
 #endif /* TAU_XLC || TAU_NEC */
 
 
-static struct trcdescr
+struct trcdescr
 {
   int     fd;              /* -- input file descriptor                     -- */
   char   *name;            /* -- corresponding file name                   -- */
@@ -288,10 +288,6 @@ int cannot_get_enough_fd(int need)
 #endif /* TAU_WINDOWS */
 }
 
-int get_nodeid(int edf_file_index)
-{
-  return trcdes[edf_file_index].nid; /* return the node id associated with it*/
-}
 
 /* -------------------------------------------------------------------------- */
 /* -- PCXX_MERGE MAIN PROGRAM ----------------------------------------------- */
