@@ -1,3 +1,31 @@
+/****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.acl.lanl.gov/tau		           **
+*****************************************************************************
+**    Copyright 1997  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+****************************************************************************/
+/***************************************************************************
+**	File 		: TauFAPI.cpp					  **
+**	Description 	: TAU Profiling Package wrapper for F77/F90	  **
+**	Author		: Sameer Shende					  **
+**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
+**	Flags		: Compile with				          **
+**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
+**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
+**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
+**			  -DPROFILE_CALLS  for trace of each invocation   **
+**                        -DSGI_TIMERS  for SGI fast nanosecs timer       **
+**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
+**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
+**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
+**			  -DPOOMA_KAI for KCC compiler 			  **
+**			  -DDEBUG_PROF  for internal debugging messages   **
+**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+***************************************************************************/
+
 /* Fortran Wrapper layer for TAU Portable Profiling */
 #include <stdio.h>
 #include "Profile/ProfileGroups.h"
@@ -151,3 +179,9 @@ void TAU_PROFILE_SET_CONTEXT(int *context)
   tau_profile_set_context_(context);
 }
 } /* extern "C" */
+
+/***************************************************************************
+ * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.4 $   $Date: 1999/04/22 23:14:39 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.4 1999/04/22 23:14:39 sameer Exp $ 
+ ***************************************************************************/
