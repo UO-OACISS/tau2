@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.5 2004/06/09 20:56:43 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.6 2004/08/18 19:54:36 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -41,9 +41,9 @@ public abstract class DataSession {
 /**
  * Initialize the DataSession object.
  *
- * @param	obj	an implementation-specific object required to initialize the DataSession
+ * @param	initializeObject	an implementation-specific object required to initialize the DataSession
  */
-	abstract public void initialize(Object obj) ;  // formerly "open"
+	abstract public void initialize(Object initializeObject) ;  // formerly "open"
 
 /**
  * Terminate the DataSession object.
