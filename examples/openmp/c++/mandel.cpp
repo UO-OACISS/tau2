@@ -13,7 +13,6 @@
 //   using std::exit;
 #include <stdlib.h>
 #include <Profile/Profiler.h>
-#include <Profile/OpenMPLayer.h>
 #include <iostream.h>
 
 
