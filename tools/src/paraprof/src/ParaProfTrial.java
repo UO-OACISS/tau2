@@ -32,9 +32,11 @@ public class ParaProfTrial extends Trial{
 	switch(type){
 	case 0:
 	    dataSession = new TauPprofOutputSession();
+	    dataSession.setDebug(ParaProf.debugIsOn);
 	    break;
 	case 1:
 	    dataSession = new TauOutputSession();
+	    dataSession.setDebug(ParaProf.debugIsOn);
 	    break;
 	case 2:
 	    break;

@@ -66,8 +66,6 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    
 	    //A loop counter.
 	    int bSDCounter = 0;
-	    
-	    int numberOfUserEvents = 0;
 
 	    Vector v = null;
 	    File[] files = null;
@@ -387,55 +385,48 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 			//Just ignore the string if this is not the first check.
 			//Assuming is that user events do not change for each counter value.
 			if(this.firstMetric()){
-			    if(!(userEventsPresent())){
-				//Get the number of user events.
-				numberOfUserEvents = getNumberOfUserEvents(inputString);
-				this.setNumberOfUserEvents(numberOfUserEvents);
-			    } 
-			
 			    //The first line will be the user event heading ... skip it.
 			    br.readLine();
 			    //Now that we know how many user events to expect, we can grab that number of lines.
-			    for(int j=0; j<numberOfUserEvents; j++){
+			    //Note that inputString is still set the the line before the heading which is what we want.
+			    int numberOfLines = getNumberOfUserEvents(inputString);
+			    for(int j=numberOfLines; j<numberOfLines; j++){
+				//Initialize the user list for this thread.
+				if(j == 0)
+				    (this.getNCT().getThread(nodeID,contextID,threadID)).initializeUsereventList(this.getNumberOfUserEvents());
+				
 				s1 = br.readLine();
 				s2 = br.readLine();
 				getUserEventData(s1);
 				System.out.println("noc:"+usereventDataLine.i0+"min:"+usereventDataLine.d1+"max:"+usereventDataLine.d0+"mean:"+usereventDataLine.d2);
-			    
-				//Initialize the user list for this thread.
-				if(j == 0){
-				    //Note that this works correctly because we process the user events in a different manner.
-				    //ALL the user events for each THREAD NODE are processed in the above for-loop.  Therefore,
-				    //the below for-loop is only run once on each THREAD NODE.
 				
-				    if(this.firstMetric()){
-					(this.getNCT().getThread(nodeID,contextID,threadID)).initializeUsereventList(numberOfUserEvents);
-				    }
-				}
-
-				int userEventID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2);
 				if(usereventDataLine.i0 != 0){
-				    //Update the max values if required.
-				    //Grab the correct global mapping element.
-				    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(userEventID, 2);
+				    mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2);
+				    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
+				    globalMappingElement.incrementCounter();
+				    globalThreadDataElement = thread.getUserevent(mappingID);
+
+				    if(globalThreadDataElement == null){
+					globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 2), true);
+					thread.addUserevent(globalThreadDataElement, mappingID);
+				    }
+
+				    globalThreadDataElement.setUserEventNumberValue(usereventDataLine.i0);
+				    globalThreadDataElement.setUserEventMinValue(usereventDataLine.d1);
+				    globalThreadDataElement.setUserEventMaxValue(usereventDataLine.d0);
+				    globalThreadDataElement.setUserEventMeanValue(usereventDataLine.d2);
+
 				    if((globalMappingElement.getMaxUserEventNumberValue()) < usereventDataLine.i0)
 					globalMappingElement.setMaxUserEventNumberValue(usereventDataLine.i0);
-				    if((globalMappingElement.getMaxUserEventMinValue()) < usereventDataLine.d1)
-					globalMappingElement.setMaxUserEventMinValue(usereventDataLine.d1);
 				    if((globalMappingElement.getMaxUserEventMaxValue()) < usereventDataLine.d0)
 					globalMappingElement.setMaxUserEventMaxValue(usereventDataLine.d0);
+				    if((globalMappingElement.getMaxUserEventMinValue()) < usereventDataLine.d1)
+					globalMappingElement.setMaxUserEventMinValue(usereventDataLine.d1);
 				    if((globalMappingElement.getMaxUserEventMeanValue()) < usereventDataLine.d2)
 					globalMappingElement.setMaxUserEventMeanValue(usereventDataLine.d2);
-				
-				    GlobalThreadDataElement tmpGTDEUE = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(userEventID, 2), true);
-				    tmpGTDEUE.setUserEventNumberValue(usereventDataLine.i0);
-				    tmpGTDEUE.setUserEventMinValue(usereventDataLine.d1);
-				    tmpGTDEUE.setUserEventMaxValue(usereventDataLine.d0);
-				    tmpGTDEUE.setUserEventMeanValue(usereventDataLine.d2);
-				    (this.getNCT().getThread(nodeID,contextID,threadID)).addUserevent(tmpGTDEUE, userEventID);
 				}
 			    }
-			    //Now set the userEvents flag.
+			    //Now set the userevents flag.
 			    setUserEventsPresent(true);
 			}
 			break;

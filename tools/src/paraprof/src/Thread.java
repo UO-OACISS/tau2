@@ -95,13 +95,40 @@ public class Thread implements Comparable{
 	    if((functions.elementAt(id))==null)
 		functions.setElementAt(ref, id);
 	}
+	if(this.debug()){
+	    System.out.println("######");
+	    System.out.println("Thread.addFuntion(...)");
+	    System.out.println("id:"+id);
+	    System.out.println("functions.size():"+functions.size());
+	    System.out.println("######");
+	}
     }
     
     public void addUserevent(GlobalThreadDataElement ref){
 	userevents.addElement(ref);}
 
-    public void addUserevent(GlobalThreadDataElement ref, int pos){
-	userevents.setElementAt(ref, pos);}
+    public void addUserevent(GlobalThreadDataElement ref, int id){
+	//There are two paths here.
+	//1) This id has not been seen in the system before.
+	//   In this case, add to the end of functions.
+	//2) The id has been seen in the system before.
+	//   In this case, check to see if its location is
+	//   not set to null in functions, and if it is not
+	//   set the location to point to ref.
+	if(id >= (userevents.size()))
+	    userevents.add(ref);
+	else{
+	    if((userevents.elementAt(id))==null)
+		userevents.setElementAt(ref, id);
+	}
+	if(this.debug()){
+	    System.out.println("######");
+	    System.out.println("Thread.addUserevent(...)");
+	    System.out.println("id:"+id);
+	    System.out.println("userevents.size():"+functions.size());
+	    System.out.println("######");
+	}
+    }
   
     public GlobalThreadDataElement getFunction(int id){
 	GlobalThreadDataElement globalThreadDataElement = null;
@@ -128,7 +155,7 @@ public class Thread implements Comparable{
 		globalThreadDataElement = (GlobalThreadDataElement) userevents.elementAt(id);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "T2");
+	    ParaProf.systemError(e, null, "T3");
 	}
 	return globalThreadDataElement;
     }

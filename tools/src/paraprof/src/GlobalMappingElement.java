@@ -42,9 +42,13 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	return globalID;}
   
     public void addGroup(int id){
+	//Don't add group if already a member.
+	if(this.isGroupMember(id))
+	    return;
+	
 	if(groups==null)
 	    groups = new int[5];
-	else if(groups.length<numberOfGroups){
+	else if(groups.length<=numberOfGroups){
 	    int currentLength = groups.length;
 	    int[] newArray = new int[currentLength+5];
 	    for(int i=0;i<currentLength;i++){

@@ -64,10 +64,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	    
 	    int mappingID = -1;
 	    
-	    //A loop counter.
-	    int bSDCounter = 0;
-	    
-	    int numberOfUserEvents = 0;
+	    int numberOfLines = 0;
 
 	    Vector v = null;
 	    File[] files = null;
@@ -142,7 +139,7 @@ public class TauOutputSession extends ParaProfDataSession{
 		    thread = context.getThread(threadID);
 		    if(thread==null){
 			thread = context.addThread(threadID);
-			thread.initializeFunctionList(this.getNumberOfMappings());
+			thread.setDebug(this.debug());
 		    }
 		    if(this.debug())
 			System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
@@ -192,7 +189,16 @@ public class TauOutputSession extends ParaProfDataSession{
 		    //End - Second Line
 		    //####################################
 
-		    for(int j=Integer.parseInt(tokenString);j>0;j--){
+		    //Process the appropriate number of function lines.
+		    if(this.debug()){
+			System.out.println("######");
+			System.out.println("processing functions");
+		    }
+		    numberOfLines = Integer.parseInt(tokenString);
+		    for(int j=0;j<numberOfLines;j++){
+			if(j==0&&(this.firstMetric()))
+			    thread.initializeFunctionList(this.getNumberOfMappings());
+
 			inputString = br.readLine();
 			if(inputString==null){
 			    System.out.println("Error processing file: " + files[i].getName());
@@ -260,6 +266,32 @@ public class TauOutputSession extends ParaProfDataSession{
 				globalMappingElement.setMaxUserSecPerCall(metric, usecCall);
 			    if(thread.getMaxUserSecPerCall(metric) < usecCall)
 				thread.setMaxUserSecPerCall(metric, usecCall);
+			    
+			    if(this.firstMetric()){ 
+				if(groupNames != null){
+				    StringTokenizer st = new StringTokenizer(groupNames, " |");
+				    while (st.hasMoreTokens()){
+					String group = st.nextToken();
+					if(group != null){
+					    //The potential new group is added here.  If the group is already present, the the addGlobalMapping
+					    //function will just return the already existing group id.  See the GlobalMapping class for more details.
+					    int groupID = this.getGlobalMapping().addGlobalMapping(group, 1);
+					    if((groupID != -1) && (this.debug())){
+						System.out.println("######");
+						System.out.println("Adding " + group + " group with id: " + groupID + " to mapping: " + functionDataLine.s0);
+						System.out.println("######");
+					    }
+					    globalMappingElement.addGroup(groupID);
+					}    
+				    }    
+				}
+			    }
+
+			}
+			
+			if(this.debug()){
+			    System.out.println("######");
+			    System.out.println("processing profile calls for function: " + functionDataLine.s0);
 			}
 			//Process the appropriate number of profile call lines.
 			for(int k=0;k<functionDataLine.i2;k++){
@@ -272,12 +304,20 @@ public class TauOutputSession extends ParaProfDataSession{
 			    globalThreadDataElement.addCall(Double.parseDouble(genericTokenizer.nextToken()),
 							    Double.parseDouble(genericTokenizer.nextToken()));
 			}
-			    
+			if(this.debug()){
+			    System.out.println("######");
+			    System.out.println("done processing profile calls for function: " + functionDataLine.s0);
+			}
 		    }
-		    if(this.debug())
+		    if(this.debug()){
 			System.out.println("done processing functions");
+			System.out.println("######");
+		    }
 		    
-
+		    if(this.debug()){
+			System.out.println("######");
+			System.out.println("processing aggregates");
+		    }
 		    //Process the appropriate number of aggregate lines.
 		    inputString = br.readLine();
 		    //A valid profile.*.*.* will always contain this line.
@@ -290,48 +330,89 @@ public class TauOutputSession extends ParaProfDataSession{
 		    //It's first token will be the number of aggregates.
 		    tokenString = genericTokenizer.nextToken();
 		    
-		    for(int j=Integer.parseInt(tokenString);j>0;j--){
+		    numberOfLines = Integer.parseInt(tokenString);
+		    for(int j=0;j<numberOfLines;j++){
 			this.setAggregatesPresent(true);
 			inputString = br.readLine();
 			if(this.debug())
 			    System.out.println("Aggregates line: " + inputString);
 		    }
-		    if(this.debug())
+		    if(this.debug()){
 			System.out.println("done processing aggregates");
-
-
-		    //Process the appropriate number of userevent lines.
-		    br.readLine();
-		    if(inputString==null){
-			if(this.debug())
-			    System.out.println("No userevent data in this file.");
-			return;
+			System.out.println("######");
 		    }
-		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-		    //It's first token will be the number of userevents
-		    tokenString = genericTokenizer.nextToken();
-		    
+
 		    if(this.firstMetric()){
-			for(int j=Integer.parseInt(tokenString);j>0;j--){
-			    inputString = br.readLine();
-			    if(inputString==null){
-				System.out.println("Error processing file: " + files[i].getName());
-				System.out.println("Unexpected end of file!");
-				return;
-			    }
-			    this.getUserEventData(inputString);
-			    if(this.debug()){
-				System.out.println("userevent line: " + inputString);
-				System.out.println("eventname:"+usereventDataLine.s0);
-				System.out.println("numevents:"+usereventDataLine.i0);
-				System.out.println("max:"+usereventDataLine.d0);
-				System.out.println("min:"+usereventDataLine.d1);
-				System.out.println("mean:"+usereventDataLine.d2);
-				System.out.println("sumsqr:"+usereventDataLine.d3);
+			//Process the appropriate number of userevent lines.
+			if(this.debug()){
+			    System.out.println("######");
+			    System.out.println("processing userevents");
+			}
+			inputString = br.readLine();
+			if(inputString==null){
+			    if(this.debug())
+				System.out.println("No userevent data in this file.");
+			}
+			else{
+			    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+			    //It's first token will be the number of userevents
+			    tokenString = genericTokenizer.nextToken();
+			    numberOfLines = Integer.parseInt(tokenString);
+			    //Skip the heading.
+			    br.readLine();
+			    for(int j=0;j<numberOfLines;j++){
+				if(j==0){
+				    thread.initializeUsereventList(this.getNumberOfUserEvents());
+				    setUserEventsPresent(true);
+				}
+				
+				inputString = br.readLine();
+				if(inputString==null){
+				    System.out.println("Error processing file: " + files[i].getName());
+				    System.out.println("Unexpected end of file!");
+				    return;
+				}
+				this.getUserEventData(inputString);
+				if(this.debug()){
+				    System.out.println("userevent line: " + inputString);
+				    System.out.println("eventname:"+usereventDataLine.s0);
+				    System.out.println("numevents:"+usereventDataLine.i0);
+				    System.out.println("max:"+usereventDataLine.d0);
+				    System.out.println("min:"+usereventDataLine.d1);
+				    System.out.println("mean:"+usereventDataLine.d2);
+				    System.out.println("sumsqr:"+usereventDataLine.d3);
+				}
+				if(usereventDataLine.i0 !=0){
+				    mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2);
+				    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
+				    globalMappingElement.incrementCounter();
+				    globalThreadDataElement = thread.getUserevent(mappingID);
+				    
+				    if(globalThreadDataElement == null){
+					globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 2), true);
+					thread.addUserevent(globalThreadDataElement, mappingID);
+				    }
+				    
+				    globalThreadDataElement.setUserEventNumberValue(usereventDataLine.i0);
+				    globalThreadDataElement.setUserEventMaxValue(usereventDataLine.d0);
+				    globalThreadDataElement.setUserEventMinValue(usereventDataLine.d1);
+				    globalThreadDataElement.setUserEventMeanValue(usereventDataLine.d2);
+				    
+				    if((globalMappingElement.getMaxUserEventNumberValue()) < usereventDataLine.i0)
+					globalMappingElement.setMaxUserEventNumberValue(usereventDataLine.i0);
+				    if((globalMappingElement.getMaxUserEventMaxValue()) < usereventDataLine.d0)
+					globalMappingElement.setMaxUserEventMaxValue(usereventDataLine.d0);
+				    if((globalMappingElement.getMaxUserEventMinValue()) < usereventDataLine.d1)
+					globalMappingElement.setMaxUserEventMinValue(usereventDataLine.d1);
+				    if((globalMappingElement.getMaxUserEventMeanValue()) < usereventDataLine.d2)
+					globalMappingElement.setMaxUserEventMeanValue(usereventDataLine.d2);
+				}
 			    }
 			}
-			if(this.debug())
+			if(this.debug()){
 			    System.out.println("done processing userevents");
+			    System.out.println("######");
+			}
 		    }
 		    
 		    //The thread object takes care of computing maximums and totals for a given metric, as
