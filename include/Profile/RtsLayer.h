@@ -93,6 +93,7 @@ class RtsLayer
 	static void TraceSendMsg(int type, int destination, int length);
 	static void TraceRecvMsg(int type, int source, int length);
 
+	static std::string RtsLayer::GetRTTI(const char *name); 
 	inline
 	static const char * CheckNotNull(const char * str) {
   	  if (str == 0) return "  ";
@@ -137,7 +138,7 @@ class RtsLayer
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
- * $RCSfile: RtsLayer.h,v $   $Author: bertie $
- * $Revision: 1.16 $   $Date: 2002/03/10 23:53:36 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.16 2002/03/10 23:53:36 bertie Exp $ 
+ * $RCSfile: RtsLayer.h,v $   $Author: sameer $
+ * $Revision: 1.17 $   $Date: 2003/12/11 20:13:08 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.17 2003/12/11 20:13:08 sameer Exp $ 
  ***************************************************************************/
