@@ -97,6 +97,11 @@ fi
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     papisubdir=*)
+        papisubdir=`echo $1 | sed -e 's/^papisubdir=//'`
+	echo "s,^PAPISUBDIR=.*$,PAPISUBDIR=$papisubdir,g" >> $sedout
+	;;
+
      oparidir=*)
         oparidir=`echo $1 | sed -e 's/^oparidir=//'`
 	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
