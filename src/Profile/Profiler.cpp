@@ -178,7 +178,7 @@ Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup,
       
 
       if(!StartStopUsed_) { // Profiler ctor/dtor interface used
-	Start(); 
+	Start(tid); 
       }
 }
 
@@ -714,8 +714,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.38 $   $Date: 2000/04/18 22:21:38 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.38 2000/04/18 22:21:38 sameer Exp $ 
+ * $Revision: 1.39 $   $Date: 2000/05/18 17:32:38 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.39 2000/05/18 17:32:38 sameer Exp $ 
  ***************************************************************************/
 
 	
