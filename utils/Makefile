@@ -17,7 +17,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAU_PREFIX_INSTALL_DIR=/home/ftg1/sameer/tau2
+TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
 #######################################################################
  
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
@@ -58,7 +58,6 @@ CWARNING	= $(WARNINGSOPT)
 # Compiler specific flags
 #KAI#COMPSPECIFIC = -DKAI#ENDIF#
 #DEC_ALPHA#COMPSPECIFIC = -DDEC_ALPHA#ENDIF#
-#SGIGNU#COMPSPECIFIC = -DGNU             #ENDIF#
 
 
 SAGE1DIR=

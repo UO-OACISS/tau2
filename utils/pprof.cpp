@@ -50,9 +50,7 @@ using namespace std;
 # include <string.h>
 # include <fcntl.h>
 # include <limits.h>
-# ifndef GNU
 # include <math.h>
-# endif /* GNU  fmod defined here*/
 
 #ifdef DEC_ALPHA 
 # include <float.h>
@@ -2929,7 +2927,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 1999/06/23 19:37:02 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.15 1999/06/23 19:37:02 sameer Exp $                                                   
+ * $Revision: 1.16 $   $Date: 1999/06/30 01:52:34 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.16 1999/06/30 01:52:34 sameer Exp $                                                   
  ***************************************************************************/
 
