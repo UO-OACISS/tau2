@@ -156,6 +156,7 @@ public class PerfDBSession extends DataSession {
 	    	ex.printStackTrace();
 	    	return null;
 		}
+		this.application = app;
 		return app;
 	}
 
@@ -168,7 +169,7 @@ public class PerfDBSession extends DataSession {
 		if (version != null) {
 			buf.append(" and version = " + version);
 		}
-		// System.out.println(buf.toString());
+		System.out.println(buf.toString());
 
 		// get the results
 		try {
@@ -185,6 +186,7 @@ public class PerfDBSession extends DataSession {
 	    	ex.printStackTrace();
 	    	return null;
 		}
+		this.application = app;
 		return app;
 	}
 
@@ -216,6 +218,7 @@ public class PerfDBSession extends DataSession {
 	    	return null;
 		}
 		
+		this.experiment = exp;
 		return exp;
 	}
 
@@ -261,6 +264,7 @@ public class PerfDBSession extends DataSession {
 	    	return null;
 		}
 		
+		this.trials.addElement(trial);
 		return trial;
 	}
 
@@ -596,6 +600,7 @@ public class PerfDBSession extends DataSession {
 				else
 					buf.append(") ");
 			}
+			gotWhile = true;
 		}
 		if (nodes != null) {
 			if (gotWhile)
@@ -611,6 +616,7 @@ public class PerfDBSession extends DataSession {
 				else
 					buf.append(") ");
 			}
+			gotWhile = true;
 		}
 		if (contexts != null) {
 			if (gotWhile)
@@ -626,6 +632,7 @@ public class PerfDBSession extends DataSession {
 				else
 					buf.append(") ");
 			}
+			gotWhile = true;
 		}
 		if (threads != null) {
 			if (gotWhile)
@@ -641,9 +648,10 @@ public class PerfDBSession extends DataSession {
 				else
 					buf.append(") ");
 			}
+			gotWhile = true;
 		}
 		buf.append(" order by t.trialid, l.nodeid, l.contextid, l.threadid, l.funindexid");
-		// System.out.println(buf.toString());
+		System.out.println(buf.toString());
 
 		// get the results
 		try {
