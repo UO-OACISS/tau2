@@ -423,7 +423,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			else{
 			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
 			    ParaProf.applicationManager.removeApplication(application);
-			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
 			    treeModel.removeNodeFromParent(application.getDMTN());
 			    System.out.println("Application deleted!");
 			}
@@ -435,8 +434,24 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
 			    perfDMFSession.deleteExperiment(experiment.getID());
 			    perfDMFSession.terminate();
+			    //Remove any loaded trials associated with this application.
+			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
+			    for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
+				ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+				if(loadedTrial.getApplicationID()==experiment.getApplicationID()&&
+				   loadedTrial.getExperimentID()==experiment.getID())
+				    loadedTrials.remove(loadedTrial);
+			    }
+			    treeModel.removeNodeFromParent(experiment.getDMTN());
 			    System.out.println("Experiment deleted!");
 			}
+			else{
+			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
+			    experiment.getApplication().removeExperiment(experiment);
+			    treeModel.removeNodeFromParent(experiment.getDMTN());
+			    System.out.println("Experiment deleted!");
+			}
+			
 		    }
 		    else if(clickedOnObject instanceof ParaProfTrial){
 			ParaProfTrial trial = (ParaProfTrial) clickedOnObject;
@@ -445,6 +460,22 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
 			    perfDMFSession.deleteTrial(trial.getID());
 			    perfDMFSession.terminate();
+			    //Remove any loaded trials associated with this application.
+			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
+			    for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
+				ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+				if(loadedTrial.getApplicationID()==trial.getApplicationID()&&
+				   loadedTrial.getExperimentID()==trial.getID()&&
+				   loadedTrial.getID()==trial.getID())
+				    loadedTrials.remove(loadedTrial);
+			    }
+			    treeModel.removeNodeFromParent(trial.getDMTN());
+			    System.out.println("Trial deleted!");
+			}
+			else{
+			    System.out.println("Removing trial from this ParaProf session ...");
+			    trial.getExperiment().removeTrial(trial);
+			    treeModel.removeNodeFromParent(trial.getDMTN());
 			    System.out.println("Trial deleted!");
 			}
 		    }
