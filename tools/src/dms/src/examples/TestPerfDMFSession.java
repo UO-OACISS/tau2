@@ -1,23 +1,19 @@
-package examples;
-
-import java.io.*;
 import java.util.*;
-import java.net.*;
-import java.sql.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
-public class TestPerfDBSession {
+public class TestPerfDMFSession {
 
-    public TestPerfDBSession() {
+    public TestPerfDMFSession() {
 		super();
     }
 
     /*** Beginning of main program. ***/
 
     public static void main(java.lang.String[] args) {
+		try {
 
-		// Create a PerfDBSession object
-		DataSession session = new PerfDBSession();
+		// Create a PerfDMFSession object
+		DataSession session = new PerfDMFSession();
 		session.initialize(args[0]);
 		System.out.println ("API loaded...");
 
@@ -85,36 +81,36 @@ public class TestPerfDBSession {
 
 		// Get the list of functions
 		ListIterator functions;
-		functions = session.getFunctions();
-		Function function = null;
+		functions = session.getIntervalEvents();
+		IntervalEvent function = null;
 
 		while (functions.hasNext())
 		{
-			function = (Function) functions.next();
-			System.out.println ("Function Name = " + function.getName());
+			function = (IntervalEvent) functions.next();
+			System.out.println ("IntervalEvent Name = " + function.getName());
 		}
 
 		// select a function
-		session.setFunction(function);
+		session.setIntervalEvent(function);
 		// select a function, another way
-		session.setFunction(function.getID());
+		session.setIntervalEvent(function.getID());
 
 		// Get the list of user events
 		ListIterator userEvents;
-		userEvents = session.getUserEvents();
-		UserEvent userEvent = null;
+		userEvents = session.getAtomicEvents();
+		AtomicEvent userEvent = null;
 
 		while (userEvents.hasNext())
 		{
-			userEvent = (UserEvent) userEvents.next();
-			System.out.println ("UserEvent Name = " + userEvent.getName());
+			userEvent = (AtomicEvent) userEvents.next();
+			System.out.println ("AtomicEvent Name = " + userEvent.getName());
 		}
 
 		// select a userEvent
-		session.setUserEvent(userEvent);
+		session.setAtomicEvent(userEvent);
 		// select a userEvent, another way
 		if (userEvent != null)
-			session.setUserEvent(userEvent.getUserEventID());
+			session.setAtomicEvent(userEvent.getAtomicEventID());
 
 		Vector nodes = new Vector();
 		Integer node = new Integer(0);
@@ -126,14 +122,17 @@ public class TestPerfDBSession {
 		session.setThread(0);
 
 		// Get the data
-		session.getFunctionData();
+		session.getIntervalEventData();
 
 		// Get the data
-		session.getUserEventData();
+		session.getAtomicEventData();
 
 		// disconnect and exit.
 		session.terminate();
 		System.out.println ("Exiting.");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return;
     }
 }
