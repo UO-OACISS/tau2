@@ -229,7 +229,6 @@ void TAU_PROFILE_STOP(void **profiler)
 
 void TAU_PROFILE_EXIT(char *msg)
 {
-  printf("TAU_PROFILE_EXIT");
   tau_profile_exit_(msg);
 }
 
@@ -301,6 +300,6 @@ void TAU_REPORT_THREAD_STATISTICS(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 1999/06/20 17:34:41 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.7 1999/06/20 17:34:41 sameer Exp $ 
+ * $Revision: 1.8 $   $Date: 1999/08/03 20:19:57 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.8 1999/08/03 20:19:57 sameer Exp $ 
  ***************************************************************************/
