@@ -37,6 +37,9 @@
 
 # define F_EXISTS    0
 
+# define SEND_EVENT -7
+# define RECV_EVENT -8
+
 /* The following three decl apply to -vampir (multi-node, multi-threaded) */
 # define TAU_MAX_NODES 32*1024 /* max nodes, within nodes are threads */
 static int offset[TAU_MAX_NODES] = {  0 }; /* offset to calculate cpuid */
@@ -59,6 +62,16 @@ static struct trcdescr
   PCXX_EV  *last;     /* -- last event record in buffer               -- */
 } intrc;
 
+struct trcrecv
+{
+  int      fd;        /* -- input file descriptor                     -- */
+  PCXX_EV  *buffer;   /* -- input buffer                              -- */
+  PCXX_EV  *erec;     /* -- current event record                      -- */
+  PCXX_EV  *prev;     /* -- prev available event record in buffer     -- */
+  PCXX_EV  *first;    /* -- first event record in buffer              -- */
+};
+
+PCXX_EV *tmpbuffer; /* for threaded program */
 static enum format_t { alog, SDDF, pv, dump } outFormat = pv;
 static enum pvmode_t { user, pvclass, all } pvMode = user;
 static int pvCompact = FALSE;
@@ -372,7 +385,7 @@ static char *Today (void)
 /* -------------------------------------------------------------------------- */
 /* -- input buffer handling                                                -- */
 /* -------------------------------------------------------------------------- */
-# define INMAX    BUFSIZ   /* records */
+# define INMAX    BUFSIZ /* records */
 
 static PCXX_EV *get_next_rec (struct trcdescr *tdes)
 {
@@ -406,6 +419,54 @@ static PCXX_EV *get_next_rec (struct trcdescr *tdes)
   return (tdes->erec = tdes->next++);
 }
 
+static PCXX_EV *get_prev_rec (struct trcrecv *tdes)
+{
+ /* Before calling this the first time set first properly. */
+long no;
+off_t last_position;
+
+  last_position = lseek(tdes->fd, 0, SEEK_CUR);
+  
+/* We reuse last and next to actually mean first and prev respectively */
+/* i.e., before calling this the first time set tdes->last = tdes->buffer */
+  /* if prev < first, go fetch more records */
+/* to debug: print each record */
+  if (( last_position == 0) || (tdes->prev < tdes->first))
+  {
+    /* move the pointer 2*INMAX*sizeof(PCXX_EV) earlier */
+    last_position -= 2*INMAX*sizeof(PCXX_EV);
+#ifdef DEBUG
+    printf("last_position = %d\n", last_position);
+#endif /* DEBUG */
+    if (last_position < 0) return NULL; 
+    lseek(tdes->fd, last_position, SEEK_SET);
+    /* -- input buffer empty: read new records from file -------------------- */
+    if ( (no = read (tdes->fd, tdes->buffer, INMAX * sizeof(PCXX_EV)))
+         != (INMAX * sizeof(PCXX_EV)) )
+    {
+      if ( no == 0 )
+      {
+        /* -- no more event record: ----------------------------------------- */
+        close (tdes->fd);
+        tdes->fd = -1;
+        return ((PCXX_EV *) NULL);
+      }
+      else if ( (no % sizeof(PCXX_EV)) != 0 )
+      {
+        /* -- read error: --------------------------------------------------- */
+        fprintf (stderr, "read error in get_prev_rec\n");
+        exit (1);
+      }
+    }
+
+    /* -- we got some event records ----------------------------------------- */
+    tdes->prev =  tdes->buffer + (no / sizeof(PCXX_EV)) - 1;
+    tdes->first = tdes->buffer ;
+  }
+  return (tdes->erec = tdes->prev--);
+
+}
+
 int GetNodeId(PCXX_EV *rec)
 {
   if (threads)
@@ -419,7 +480,166 @@ int GetNodeId(PCXX_EV *rec)
   else
     return rec->nid;
 }
+ 
+int GetMatchingRecv(struct trcdescr trcdes, int msgtag, 
+    int myid, int otherid, int msglen, int *other_tid, int *other_nodeid) 
+/* parameters: trcdes:    input trace file descriptor.  
+	       msgtag:     message tag that we're searching for
+	       msglen: 	   message length that we're searching for
+	       myid:       id encoded in the parameter. Not +1. 
+	       otherid:    rank of the other process
+	       other_tid:  thread id of the matching ipc call	
+	       other_nodeid: node id of the matching ipc call
+*/
+{ 
+  off_t last_position;
+  PCXX_EV *curr_rec;
+  EVDESCR *curr_ev;
+  int curr_tag, curr_len, curr_nid;
 
+  trcdes.buffer    = tmpbuffer; 
+#ifdef DEBUG
+  printf("GetMatchingRecv: SEND, tag=%d, len=%d, myid=%d, otherid=%d\n",
+	msgtag, msglen, myid, otherid);
+#endif /* DEBUG */
+  
+
+  /* get the current position from the trace file descriptor */
+  last_position = lseek(trcdes.fd, 0, SEEK_CUR); 
+  if (last_position < 0) {
+    perror("lseek ERROR: GetMatchingRecv() routine that matches sends/receives");
+    exit(1);
+  }
+
+#ifdef DEBUG
+  printf("last_position = %d\n", last_position);
+#endif /* DEBUG */
+  /* now get the records one by one */
+  /* We've made a copy of intrc in the trcdes descriptor. So, even if this
+     changes the state of intrc remains the same. We need to do an lseek 
+     with the original position, of course. */
+  while (( curr_rec = get_next_rec(&trcdes)) != NULL)
+  { 
+    /* Get the event type for this record */
+    curr_ev = GetEventStruct (curr_rec->ev);
+
+   /* Find the matching send and receive */
+   /* is the current record of the complementary IPC type? */
+   if (curr_ev->tag == RECV_EVENT)
+   { 
+     /* possible match */ 
+     curr_tag = (curr_rec->par>>16) & 0x000000FF;
+     curr_len = curr_rec->par & 0x0000FFFF; 
+     curr_nid = curr_rec->nid; 
+#ifdef DEBUG
+     printf("Possible match... tag=%d, len=%d, nid=%d\n", curr_tag, curr_len, curr_nid);
+#endif /* DEBUG */
+     if ((curr_tag == msgtag) && (curr_len == msglen) && (curr_nid == otherid ))
+     { 
+       *other_tid = curr_rec->tid;
+       *other_nodeid = curr_rec->nid;
+#ifdef DEBUG
+       printf("PERFECT MATCH! other tid = %d, nid = %d\n",
+	 *other_tid, *other_nodeid);
+#endif /* DEBUG */
+       /* Reset trace file */
+       lseek(trcdes.fd, last_position, SEEK_SET); 
+       return 1;
+     }
+     /* This only applies to Send! */
+   }
+  }
+  /* EOF : didn't find the matching send. Reset and leave */
+#ifdef DEBUG
+  printf("Didn't find matching ipc...\n");
+#endif /* DEBUG */
+  lseek(trcdes.fd, last_position, SEEK_SET); 
+  return 0;
+   
+}
+
+int GetMatchingSend(struct trcdescr trcdes, int msgtag,
+    int myid, int otherid, int msglen, int *other_tid, int *other_nodeid)
+/* parameters: trcdes:    input trace file descriptor.
+               msgtag:     message tag that we're searching for
+               msglen:     message length that we're searching for
+               myid:       id encoded in the parameter. Not +1.
+               otherid:    rank of the other process
+               other_tid:  thread id of the matching ipc call
+               other_nodeid: node id of the matching ipc call
+*/
+{
+  off_t last_position;
+  PCXX_EV *curr_rec;
+  EVDESCR *curr_ev;
+  int curr_tag, curr_len, curr_nid;
+  struct trcrecv rcvdes;
+
+  rcvdes.buffer    = tmpbuffer;
+  rcvdes.erec	   = trcdes.erec;
+  rcvdes.fd 	   = trcdes.fd;
+  rcvdes.first 	   = trcdes.buffer;
+  rcvdes.prev	   = trcdes.erec - 1; 
+  /* initialize the first and prev pointers */
+#ifdef DEBUG
+  printf("GetMatchingSend: RECV, tag=%d, len=%d, myid=%d, otherid=%d\n",
+        msgtag, msglen, myid, otherid);
+#endif /* DEBUG */
+
+
+  /* get the current position from the trace file descriptor */
+  last_position = lseek(rcvdes.fd, 0, SEEK_CUR);
+  if (last_position < 0) {
+    perror("lseek ERROR: GetMatchingSend() routine that matches sends/receives");
+    exit(1);
+  }
+
+#ifdef DEBUG
+  printf("last_position = %d\n", last_position);
+#endif /* DEBUG */
+  /* now get the records one by one */
+  /* We've made a copy of intrc in the trcdes descriptor. So, even if this
+     changes the state of intrc remains the same. We need to do an lseek
+     with the original position, of course. */
+  while (( curr_rec = get_prev_rec(&rcvdes)) != NULL)
+  {
+    /* Get the event type for this record */
+    curr_ev = GetEventStruct (curr_rec->ev);
+
+   /* Find the matching send and receive */
+   /* is the current record of the complementary IPC type? */
+   if (curr_ev->tag == SEND_EVENT)
+   {
+     /* possible match */
+     curr_tag = (curr_rec->par>>16) & 0x000000FF;
+     curr_len = curr_rec->par & 0x0000FFFF;
+     curr_nid = curr_rec->nid;
+#ifdef DEBUG
+     printf("Possible match... tag=%d, len=%d, nid=%d\n", curr_tag, curr_len, curr_nid); 
+#endif /* DEBUG */ 
+
+     if ((curr_tag == msgtag) && (curr_len == msglen) && (curr_nid == otherid ))
+     {
+       *other_tid = curr_rec->tid;
+       *other_nodeid = curr_rec->nid;
+#ifdef DEBUG
+       printf("PERFECT MATCH! other tid = %d, nid = %d\n",
+         *other_tid, *other_nodeid);
+#endif /* DEBUG */
+       /* Reset trace file */
+       lseek(rcvdes.fd, last_position, SEEK_SET);
+       return 1;
+     }
+     /* This only applies to Send! */
+   }
+  }
+  /* EOF : didn't find the matching send. Reset and leave */
+#ifdef DEBUG
+  printf("Didn't find matching ipc...\n");
+#endif /* DEBUG */
+  lseek(trcdes.fd, last_position, SEEK_SET);
+  return 0;
+}
 /* -------------------------------------------------------------------------- */
 /* -- PCXX_CONVERT MAIN PROGRAM --------------------------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -435,6 +655,7 @@ int main (int argc, char *argv[])
   int num;
   int tag;
   int myid, otherid, msglen, msgtag;
+  int other_tid, other_nodeid; /* for threaded programs */
   int hasParam;
   int fileIdx;
   int numproc = 0;
@@ -554,6 +775,9 @@ int main (int argc, char *argv[])
     intrc.next      = (PCXX_EV *) NULL;
     intrc.last      = (PCXX_EV *) NULL;
     intrc.overflows = 0;
+
+    if(threads)
+      tmpbuffer = (PCXX_EV *) malloc (INMAX * sizeof(PCXX_EV));
 
     /* -- read first event record ------------------------------------------- */
     if ( (erec = get_next_rec (&intrc)) == NULL )
@@ -965,7 +1189,7 @@ int main (int argc, char *argv[])
       ev = GetEventStruct (erec->ev);
       if (( ev->tag != 0 ) || (dynamictrace)) /* dynamic trace doesn't use tag*/
       {
-        if ( (ev->tag == -7) && pvComm )
+        if ( (ev->tag == SEND_EVENT) && pvComm )
         {
           /* send message */ 
 	  /* In dynamic trace the format for par is 
@@ -981,23 +1205,43 @@ int main (int argc, char *argv[])
 	  msglen  	= erec->par & 0x0000FFFF; 
 
 	  if (threads)
-	  { /* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
+	  { 
+	    if (GetMatchingRecv(intrc, msgtag, GetNodeId(erec), 
+		otherid -1 , msglen, &other_tid, &other_nodeid)) 
+	    { /* call was successful, we've the other_tid and other_nodeid */
+	      otherid = offset[other_nodeid] + other_tid + 1; 
+#ifdef DEBUG 
+	      printf("Calculated otherid = %d\n", otherid);
+#endif /* DEBUG */
+	
+	    } 
+	    else 
+	    { /* call was unsuccessful, we couldn't locate a matching ipc call */
+  	      printf("Matching IPC call not found. Assumption in place...\n");
+
+/* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
 	       node. True for MPI+JAVA. In future, do a matching algo. */
 	     otherid	= offset[otherid-1] + erec->tid + 1; 
 	     /* THIS ABOVE IS TRUE ONLY WHEN SAME THREADS COMMUNICATE !! */
 #ifdef DEBUG
-	     printf("ASSUMPTION: SAME THREADIDS ON DIFF NODES COMMUNICATE!!\n");
-	     printf("SEND: OTHER %d, myid %d len %d tag %d: PAR: %lx\n", 	
+	      printf("ASSUMPTION: SAME THREADIDS ON DIFF NODES COMMUNICATE!!\n");
+	      printf("SEND: OTHER %d, myid %d len %d tag %d: PAR: %lx\n", 	
 	       otherid, myid, msglen, msgtag, erec->par);
 #endif /* DEBUG */
+	    }
   	  }
 
+#ifdef DEBUG
+          printf ("\n\n%llu SENDMSG %d FROM %d TO %d LEN %d\n\n\n", 
+		  erec->ti - intrc.firsttime,
+		  msgtag, myid , otherid , msglen);
+#endif /* DEBUG */
 	
           fprintf (outfp, "%llu SENDMSG %d FROM %d TO %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
 		  msgtag, myid , otherid , msglen);
         }
-        else if ( (ev->tag == -8) && pvComm )
+        else if ( (ev->tag == RECV_EVENT ) && pvComm )
         {
           /* receive message */
 	  /* In dynamic trace the format for par is 
@@ -1013,7 +1257,20 @@ int main (int argc, char *argv[])
 	  msglen	= erec->par & 0x0000FFFF;
 
 	  if (threads)
-	  { /* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
+          {
+	    if (GetMatchingSend(intrc, msgtag, GetNodeId(erec), 
+		otherid - 1 , msglen, &other_tid, &other_nodeid)) 
+	    { /* call was successful, we've the other_tid and other_nodeid */
+	      otherid = offset[other_nodeid] + other_tid + 1; 
+#ifdef DEBUG
+	      printf("Calculated senderid = %d\n", otherid);
+#endif /* DEBUG */
+	
+	    } 
+	    else 
+	    { /* call was unsuccessful, we couldn't locate a matching ipc call */
+  	      printf("Matching IPC call not found. Assumption in place...\n");
+	     /* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
 	       node. True for MPI+JAVA. In future, do a matching algo. */
 	     otherid	= offset[otherid-1] + erec->tid + 1; 
 	     /* THIS ABOVE IS TRUE ONLY WHEN SAME THREADS COMMUNICATE !! */
@@ -1022,7 +1279,14 @@ int main (int argc, char *argv[])
 	     printf("RECV: OTHER %d, myid %d len %d tag %d: PAR: %lx\n", 	
 	       otherid, myid, msglen, msgtag, erec->par);
 #endif /* DEBUG */
+	    }
   	  }
+
+#ifdef DEBUG 
+          printf ("%llu RECVMSG %d BY %d FROM %d LEN %d\n", 
+		  erec->ti - intrc.firsttime,
+                  msgtag, myid , otherid , msglen);			
+#endif /* DEBUG */
 
           fprintf (outfp, "%llu RECVMSG %d BY %d FROM %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
