@@ -290,7 +290,7 @@ bool wildcardCompare(char *wild, char *string, char kleenestar)
     
    } /* string is not null */
   
-   while (*wild == kleenestar) {
+   while ((*wild == kleenestar) || (*wild == ' ')) {
      wild++;
    }
    /* is there anything left in wild? */
@@ -367,6 +367,6 @@ bool processFileForInstrumentation(const string& file_name)
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2004/05/13 18:46:32 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.6 2004/05/13 18:46:32 sameer Exp $
+ * $Revision: 1.7 $   $Date: 2004/05/31 15:49:51 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.7 2004/05/31 15:49:51 sameer Exp $
  ***************************************************************************/
