@@ -29,6 +29,7 @@
 /* Fortran Wrapper layer for TAU Portable Profiling */
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 #include "Profile/ProfileGroups.h"
 
 /* 
@@ -524,6 +525,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2000/10/12 19:07:55 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.13 2000/10/12 19:07:55 sameer Exp $ 
+ * $Revision: 1.14 $   $Date: 2001/01/11 19:33:48 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.14 2001/01/11 19:33:48 sameer Exp $ 
  ***************************************************************************/
