@@ -817,6 +817,7 @@ case $machine in
              c_compiler=xlc
            else
              cxx_compiler=g++
+             tauoptions=-gnu
          fi
      fi
 
@@ -1547,7 +1548,7 @@ fi # if mpilib is specified
 ######################################################################
 # Set default CC compiler in all Makefiles
 
-if [ "$mpi"="yes" -a "$ibmxlc_r" = "no" -a "$ibmxlc"="yes" -a "$machine" = "ibm64" ]
+if [ "$mpi" = "yes" -a "$ibmxlc_r" = "no" -a "$ibmxlc" = "yes" -a "$machine" = "ibm64" ]
 then
   echo "WARNING: PLEASE use xlC_r instead of xlC with MPI in 64 bit mode!! Reconfigure."
   echo "----------------------------------------------------------------"
@@ -1725,6 +1726,10 @@ fi
 if [ $cxx_compiler = g++ -o $cxx_compiler = egcs ]   
   then
     fixmakeargs="$fixmakeargs GNU"
+    if [ $machine = ibm64 -o $machine = rs6000 ]
+    then
+      tauoptions=-gnu
+    fi
 fi
 ######################################################################
 # TEST FOR ALL MACHINE TYPES
