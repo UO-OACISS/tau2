@@ -14,40 +14,40 @@ import net.java.games.jogl.GLDrawable;
 import net.java.games.jogl.util.GLUT;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 
+/**
+ * Draws 3d bars
+ * 
+ * @author amorris
+ */
 public class BarPlot implements Plot {
 
-    //    private Vector vertices;
-    //private Vec normals[][];
-    //    private Vector colors;
 
-    private float[][] heightValues, colorValues;
+    private final GLUT glut = new GLUT();
 
-    private GLUT glut = new GLUT();
-    private Vector boxes;
-
-    private int nrows;
-    private int ncols;
+    // settings that the user can tweak
     private float xSize, ySize, zSize;
-    private boolean dirty = true;
-
     private float barSize = 0.9f; // 0..1
-
     private ColorScale colorScale;
     private Axes axes;
-    private VisRenderer visRenderer;
-
-    protected int displayList;
-
     private int selectedRow = -1;
     private int selectedCol = -1;
+
+    // implementation details
+    private int nrows;
+    private int ncols;
+    private float[][] heightValues, colorValues;
+    private boolean dirty = true;
+    private int displayList;
+
 
     public BarPlot() {
 
     }
 
     public void initialize(Axes axes, float xSize, float ySize, float zSize, float heightValues[][],
-            float colorValues[][], ColorScale colorScale, VisRenderer visRenderer) {
-        this.visRenderer = visRenderer;
+            float colorValues[][], ColorScale colorScale) {
+
+        setColorScale(colorScale);
         this.nrows = heightValues.length;
         this.ncols = heightValues[0].length;
         this.heightValues = heightValues;
@@ -60,10 +60,7 @@ public class BarPlot implements Plot {
         this.axes = axes;
         axes.setSize(xSize, ySize, zSize);
 
-        this.colorScale = colorScale;
-
         processValues();
-        //        generateBoxes();
     }
 
     public String getName() {
@@ -92,10 +89,11 @@ public class BarPlot implements Plot {
     }
 
     /**
-     * @param barSize The barSize to set.
+     * @param barSize The barSize to set.  Value should be between 0 and 1 (1 being full bar size)
      */
     public void setBarSize(float barSize) {
         this.barSize = barSize;
+        this.dirty = true;
     }
 
     private void processValues() {
@@ -120,40 +118,7 @@ public class BarPlot implements Plot {
         }
     }
 
-    //    private void generateBoxes() {
-    //       
-    //       
-    //
-    //        
-    //        float xIncrement = xSize / (ncols+1);
-    //        float yIncrement = ySize / (nrows+1);
-    //        
-    //        boxes = new Vector();
-    //        for (int y = 0; y < nrows; y++) {
-    //            for (int x = 0; x < ncols; x++) {
-    //                
-    //                float xPosition = x * xIncrement;
-    //                float yPosition = y * yIncrement;
-    //                
-    ////                System.out.println("3f = " + xPosition+xIncrement*barSize);
-    //                Color color = colorScale.getColor(colorValues[y][x]);
-    //                
-    //                Box box = new Box(new Vec(xPosition,yPosition,0), new Vec(xPosition+xIncrement*barSize,yPosition+yIncrement*barSize,heightValues[y][x]), color);
-    //                boxes.add(box);
-    //            }
-    //        }
-    //    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void clean() {
-        dirty = false;
-    }
-
     public void setSize(float xSize, float ySize, float zSize) {
-
         this.xSize = xSize;
         this.ySize = ySize;
         this.zSize = zSize;
@@ -167,37 +132,19 @@ public class BarPlot implements Plot {
         float xIncrement = xSize / (ncols + 1);
         float yIncrement = ySize / (nrows + 1);
 
-        boxes = new Vector();
         for (int y = 0; y < nrows; y++) {
-            //        for (int y = 0; y < 50; y++) {
             for (int x = 0; x < ncols; x++) {
 
                 float xPosition = x * xIncrement;
                 float yPosition = y * yIncrement;
 
-                //                System.out.println("3f = " + xPosition+xIncrement*barSize);
                 Color color = colorScale.getColor(colorValues[y][x]);
 
                 gl.glColor3f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f);
 
-                //       gl.glBegin(GL.GL_POINTS);
-                //       gl.glVertex3f(min.x(),max.y(),max.z());
-                //       gl.glEnd();
-
-                //                gl.glBegin(GL.GL_QUADS);
-
-                //                gl.glColor3f(1.0f, 0.0f, 0.0f);
-
                 Vec min = new Vec(xPosition, yPosition, 0);
                 Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize,
                         heightValues[y][x]);
-
-                //                // front
-                //                gl.glNormal3f(0,0,1);
-                //                gl.glVertex3f(xPosition, yPosition, heightValues[y][x]);
-                //                gl.glVertex3f(xPosition + xIncrement, yPosition, heightValues[y][x]);
-                //                gl.glVertex3f(xPosition + xIncrement, yPosition + yIncrement, heightValues[y][x]);
-                //                gl.glVertex3f(xPosition, yPosition + yIncrement, heightValues[y][x]);
 
                 // front
                 gl.glNormal3f(0, 0, 1);
@@ -206,14 +153,15 @@ public class BarPlot implements Plot {
                 gl.glVertex3f(max.x(), max.y(), max.z());
                 gl.glVertex3f(min.x(), max.y(), max.z());
 
+                // no need to draw the bottom
                 //              // back
-                //              gl.glNormal3f(0,0,-1);
-                //              gl.glVertex3f(min.x(),min.y(),min.z());
+                //gl.glNormal3f(0,0,-1);
+                //gl.glVertex3f(min.x(),min.y(),min.z());
                 //gl.glVertex3f(min.x(),max.y(),min.z());
                 //gl.glVertex3f(max.x(),max.y(),min.z());
                 //gl.glVertex3f(max.x(),min.y(),min.z());
 
-                //              // left
+                // left
                 gl.glNormal3f(-1, 0, 0);
                 gl.glVertex3f(min.x(), min.y(), min.z());
                 gl.glVertex3f(min.x(), min.y(), max.z());
@@ -258,21 +206,12 @@ public class BarPlot implements Plot {
             return;
 
         if (dirty || displayList == 0) {
-            System.out.println("BarPlot: creating new display lists");
             displayList = gl.glGenLists(1);
             gl.glNewList(displayList, GL.GL_COMPILE_AND_EXECUTE);
 
             gl.glEnable(GL.GL_LIGHTING);
-            //gl.glDisable(GL.GL_LIGHTING);
-            //gl.glEnable(GL.GL_COLOR_MATERIAL);
-            //gl.glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-
-            //gl.glFrontFace(GL.GL_CCW);
-            //gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL);
-
+            gl.glFrontFace(GL.GL_CCW);
             gl.glEnable(GL.GL_CULL_FACE);
-            //generateBoxes();
-
             gl.glShadeModel(GL.GL_FLAT);
 
             float xIncrement = xSize / (ncols + 1);
@@ -285,13 +224,6 @@ public class BarPlot implements Plot {
             gl.glBegin(GL.GL_QUADS);
             optRender(gl);
 
-            //        for (Iterator it=boxes.iterator(); it.hasNext();) {
-            //            Box box = (Box) it.next();
-            //            
-            //            box.render(glDrawable);
-            //        }
-            //
-            //        
             gl.glEnd();
             gl.glPopMatrix();
 
@@ -316,8 +248,6 @@ public class BarPlot implements Plot {
         float xIncrement = xSize / (ncols + 1);
         float yIncrement = ySize / (nrows + 1);
 
-        //gl.glDisable(GL.GL_DEPTH_TEST);
-
         gl.glDisable(GL.GL_LIGHTING);
         //        
         gl.glEnable(GL.GL_LINE_SMOOTH);
@@ -328,35 +258,16 @@ public class BarPlot implements Plot {
         gl.glLineWidth(4.0f);
 
         gl.glDepthFunc(GL.GL_LEQUAL);
-        
+
         gl.glDisable(GL.GL_CULL_FACE);
-        //gl.glTranslatef(xIncrement - (xIncrement * barSize / 2), yIncrement - (yIncrement * barSize / 2), 0.05f);
         float height = heightValues[selectedRow][selectedCol];
 
-//                gl.glBegin(GL.GL_LINES);
-////        
-////                gl.glColor4f(0, 1, 0, 0.75f);
-////                gl.glVertex3f(selectedCol * xIncrement, 0, height);
-////                gl.glVertex3f(selectedCol * xIncrement, ySize, height);
-////        
-////                gl.glColor4f(0, 1, 0, 0.75f);
-////                gl.glVertex3f(0, selectedRow * yIncrement, height);
-////                gl.glVertex3f(xSize, selectedRow * yIncrement, height);
-//        
-//                gl.glColor4f(1, 1, 0, 0.75f);
-//                gl.glVertex3f(selectedCol * xIncrement, selectedRow * yIncrement, 0);
-//                gl.glVertex3f(selectedCol * xIncrement, selectedRow * yIncrement, zSize);
-//        
-//                gl.glEnd();
-
-        gl.glTranslatef(0,0, 0.055f);
+        gl.glTranslatef(0, 0, 0.055f);
 
         gl.glBegin(GL.GL_QUADS);
 
-      
-
-        float x = (selectedCol+1) * xIncrement - xIncrement*barSize/2;
-        float y = (selectedRow+1) * yIncrement - yIncrement*barSize/2;
+        float x = (selectedCol + 1) * xIncrement - xIncrement * barSize / 2;
+        float y = (selectedRow + 1) * yIncrement - yIncrement * barSize / 2;
 
         gl.glColor4f(0, 1, 0, 0.75f);
         gl.glVertex3f(x, 0, height);
@@ -365,42 +276,27 @@ public class BarPlot implements Plot {
         gl.glVertex3f(x, ySize, height);
         gl.glEnd();
 
-        gl.glTranslatef(0,0, 0.005f);
+        gl.glTranslatef(0, 0, 0.005f);
         gl.glBegin(GL.GL_QUADS);
 
         gl.glColor4f(1, 1, 0, 0.75f);
         gl.glVertex3f(0, y, height);
-        gl.glVertex3f(0, y + yIncrement*barSize, height);
-        gl.glVertex3f(xSize, y + yIncrement*barSize, height);
+        gl.glVertex3f(0, y + yIncrement * barSize, height);
+        gl.glVertex3f(xSize, y + yIncrement * barSize, height);
         gl.glVertex3f(xSize, y, height);
 
         gl.glEnd();
 
-        //        
-        //        
-        gl.glEnable(GL.GL_DEPTH_TEST);
-        //
         gl.glDisable(GL.GL_LINE_SMOOTH);
         gl.glDisable(GL.GL_BLEND);
-        //
         gl.glLineWidth(1.0f);
         gl.glPopMatrix();
 
     }
 
-    public float getWidth() {
-        return xSize;
-    }
+   
 
-    public float getDepth() {
-        return ySize;
-    }
-
-    public float getHeight() {
-        return zSize;
-    }
-
-    public JPanel getControlPanel() {
+    public JPanel getControlPanel(final VisRenderer visRenderer) {
 
         JPanel sizePanel = new JPanel();
         sizePanel.setBorder(BorderFactory.createLoweredBevelBorder());
@@ -451,7 +347,7 @@ public class BarPlot implements Plot {
         gbc.gridheight = h;
         jPanel.add(c, gbc);
     }
-    
+
     /* (non-Javadoc)
      * @see java.util.Observer#update(java.util.Observable, java.lang.Object)
      */
@@ -461,6 +357,18 @@ public class BarPlot implements Plot {
         }
     }
 
+    public float getWidth() {
+        return xSize;
+    }
+
+    public float getDepth() {
+        return ySize;
+    }
+
+    public float getHeight() {
+        return zSize;
+    }
+    
     public Axes getAxes() {
         return axes;
     }
@@ -476,7 +384,6 @@ public class BarPlot implements Plot {
     public void setSelectedRow(int selectedRow) {
         this.selectedRow = selectedRow;
         axes.setSelectedRow(selectedRow);
-     //   this.dirty = true;
     }
 
     public int getSelectedCol() {
@@ -486,7 +393,22 @@ public class BarPlot implements Plot {
     public void setSelectedCol(int selectedCol) {
         this.selectedCol = selectedCol;
         axes.setSelectedCol(selectedCol);
-//        this.dirty = true;
+    }
+
+    public ColorScale getColorScale() {
+        return colorScale;
+    }
+
+    public void setColorScale(ColorScale colorScale) {
+        // remove ourselves from the previous (if any) colorScale's observer list
+        if (this.colorScale != null) {
+            this.colorScale.deleteObserver(this);
+        }
+        this.colorScale = colorScale;
+        // add ourselves to the new colorScale
+        if (colorScale != null) {
+            colorScale.addObserver(this);
+        }
     }
 
 }

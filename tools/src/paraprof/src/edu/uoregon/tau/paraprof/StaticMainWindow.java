@@ -254,8 +254,13 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                 } else if (arg.equals("Show ParaProf Manager")) {
                     (new ParaProfManagerWindow()).show();
                 } else if (arg.equals("Show 3D Window")) {
+
+                    //Gears.main(null);
+                    //(new Gears()).show();
+                    
                     try {
                         (new ThreeDeeWindow(ppTrial)).show();
+                        //(new ThreeDeeWindow()).show();
                     } catch (UnsatisfiedLinkError e) {
                         JOptionPane.showMessageDialog(this, "Unable to load jogl library.  Possible reasons:\nlibjogl.so is not in your LD_LIBRARY_PATH.\nJogl is not built for this platform.\nOpenGL is not installed\n\nJogl is available at jogl.dev.java.net");
                     } catch (UnsupportedClassVersionError e) {

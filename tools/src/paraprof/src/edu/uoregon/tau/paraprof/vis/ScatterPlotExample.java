@@ -23,12 +23,12 @@ public class ScatterPlotExample {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create some values
-        float values[][] = new float[25][4];
-        for (int i = 0; i < 25; i++) {
-            values[i][0] = 1000+i * i;  // value for the x axis
-            values[i][1] = i;      // value for the y axis
-            values[i][2] = i * i;  // value for the z axis
-            values[i][3] = i;      // value for the color axis
+        float values[][] = new float[100][4];
+        for (int i = 0; i < 100; i++) {
+            values[i][0] = i*(float)Math.sin(i);  // value for the x axis
+            values[i][1] = i*(float)Math.cos(i);  // value for the y axis
+            values[i][2] = i * i;                 // value for the z axis
+            values[i][3] = i;                     // value for the color axis
         }
 
         // Create the JOGL canvas
@@ -39,13 +39,14 @@ public class ScatterPlotExample {
         VisRenderer visRenderer = new VisRenderer();
         canvas.addGLEventListener(visRenderer);
 
-        ColorScale colorScale = new ColorScale(visRenderer);
+        ColorScale colorScale = new ColorScale();
 
-
-        ScatterPlot scatterPlot = PlotFactory.createScatterPlot("x axis", "y axis", "z axis", "color axis", values, true, colorScale, visRenderer);
+        // Create the scatterPlot
+        ScatterPlot scatterPlot = PlotFactory.createScatterPlot("x axis", "y axis", "z axis", "color axis", values, true, colorScale);
         
-        
+        // Set the size
         scatterPlot.setSize(10, 10, 10);
+
         // point at the center of the scatterPlot
         visRenderer.setAim(new Vec(5,5,5));
         
@@ -57,9 +58,9 @@ public class ScatterPlotExample {
         // Create the control panel, if desired
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-        tabbedPane.addTab("ScatterPlot", scatterPlot.getControlPanel());
-        tabbedPane.addTab("Axes", scatterPlot.getAxes().getControlPanel());
-        tabbedPane.addTab("ColorScale", colorScale.getControlPanel());
+        tabbedPane.addTab("ScatterPlot", scatterPlot.getControlPanel(visRenderer));
+        tabbedPane.addTab("Axes", scatterPlot.getAxes().getControlPanel(visRenderer));
+        tabbedPane.addTab("ColorScale", colorScale.getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
         tabbedPane.setMinimumSize(new Dimension(300, 160));
 

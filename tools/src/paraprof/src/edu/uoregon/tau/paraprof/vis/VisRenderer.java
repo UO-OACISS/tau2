@@ -54,7 +54,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     private Vec eye; // The location of the eye
     private Vec aim = new Vec(0, 0, 0); // Where the eye is focused at
-    private Vec vup; // The canonical V-up
+    private Vec vup; // The canonical V-up vector
 
     final static private float rad = (float) (3.14 / 180);
     final static private float lateralSense = 1 * rad;
@@ -73,7 +73,6 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     private BufferedImage screenShot;
     
-    //    private float perspective = 4.0f;
 
     private float fovy = 45.0f;
 
@@ -275,151 +274,36 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         this.width = width;
         this.height = height;
         gl.glMatrixMode(GL.GL_PROJECTION);
-
         gl.glLoadIdentity();
-        //gl.glFrustum(-1.0f, 1.0f, -ratio, ratio, 1.0f, 500.0f);
-
-        //        perspective = 1.0f;
-        //        
-        //        if (width > height) {
-        //            float ratio = (float) width / (float) height;
-        //            //gl.glFrustum(-ratio*p, ratio*p, -p, p, 1.0f, 500.0f);
-        //            gl.glFrustum(-ratio, ratio, -1.0f, 1.0f, perspective, 500.0f);
-        //            //gl.glOrtho(-ratio, ratio, -1.0f, 1.0f, 1.0f, 500.0f);
-        //        } else {
-        //            float ratio = (float) height / (float) width;
-        //            //gl.glFrustum(-p, p, -ratio*p, ratio*p, 1.0f, 500.0f);
-        //            gl.glFrustum(-1.0f, 1.0f, -ratio, ratio, perspective, 500.0f);
-        //            //gl.glOrtho(-1.0f, 1.0f, -ratio, ratio, 1.0f, 500.0f);
-        //        }
-
         glu.gluPerspective(45, (float) width / (float) height, 1.0f, 500.0f);
-
         gl.glMatrixMode(GL.GL_MODELVIEW);
         gl.glLoadIdentity();
     }
 
-    //    public void regenerateLists() {
-    //
-    //        
-    //        gldrawable.setRenderingThread(Thread.currentThread());
-    //        
-    //        for (int i = 0; i < shapes.size(); i++) {
-    //            Shape shape = (Shape) shapes.get(i);
-    //            Integer displayList = (Integer) displayLists.get(shape);
-    //
-    //            //if (shape.isDirty() || displayList == null || true) {
-    //            if (shape.isDirty() || displayList == null) {
-    //
-    //                if (displayList == null) {
-    //                    displayList = new Integer(gl.glGenLists(1));
-    //                    displayLists.put(shape, displayList);
-    //                }
-    //
-    //                //System.out.println ("creating new display list");
-    //                gl.glNewList(displayList.intValue(), GL.GL_COMPILE);
-    //                shape.render(gl);
-    //                shape.clean();
-    //                gl.glEndList();
-    //            }
-    //        }
-    //
-    //        gldrawable.setRenderingThread(null);
-    //
-    //    }
 
     public void display(GLDrawable drawable) {
 
         reshape(drawable, 0, 0, this.getWidth(), this.getHeight());
 
-        //System.out.println("display called");
         gl = new DebugGL(drawable.getGL());
-        //rotate(2,0);
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 
-        gl.glFrontFace(GL.GL_CCW);
-        gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL);
-        gl.glDisable(GL.GL_CULL_FACE);
-
-        //float green[] = { 0.0f, 0.8f, 0.2f, 1.0f };
-        //gl.glMaterialfv(GL.GL_FRONT, GL.GL_AMBIENT_AND_DIFFUSE, green);
-
         gl.glPushMatrix();
-
         gl.glTranslated(0, 0, -viewDistance);
 
         setLighting();
 
         glu.gluLookAt(aim.x(), aim.y(), aim.z(), eye.x(), eye.y(), eye.z(), vup.x(), vup.y(), vup.z());
 
-        gl.glEnable(GL.GL_LINE_SMOOTH);
-        gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
-
-        //                gl.glDisable(GL.GL_LIGHTING);
-        //                gl.glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
-        //        
-        //                gl.glBegin(GL.GL_QUADS);
-        //                gl.glNormal3f(0,0,1);
-        //                gl.glVertex3f(-1, -1, 0);
-        //                gl.glVertex3f(1, -1, 0);
-        //                gl.glVertex3f(1, 1, 0);
-        //                gl.glVertex3f(-1, 1, 0);
-        //                
-        //                gl.glNormal3f(1,0,0);
-        //                gl.glVertex3f(0, -1, -1);
-        //                gl.glVertex3f(0, 1, -1);
-        //                gl.glVertex3f(0, 1, 1);
-        //                gl.glVertex3f(0, -1, 1);
-        //                gl.glEnd();
-
-        //gl.glRotatef(view_rotx, 1.0f, 0.0f, 0.0f);
-        //gl.glRotatef(view_roty, 0.0f, 1.0f, 0.0f);
-        //gl.glRotatef(view_rotz, 0.0f, 0.0f, 1.0f);
-
-        //        for (int i = 0; i < shapes.size(); i++) {
-        //            Shape shape = (Shape) shapes.get(i);
-        //            Integer displayList = (Integer) displayLists.get(shape);
-        //
-        //            //if (shape.isDirty() || displayList == null || true) {
-        //            if (true || shape.isDirty() || displayList == null) {
-        //
-        //                if (displayList == null) {
-        //                    displayList = new Integer(gl.glGenLists(1));
-        //                    displayLists.put(shape, displayList);
-        //                }
-        //
-        //                
-        //                gl.glDeleteLists(displayList.intValue(), 1);
-        //
-        //                //System.out.println ("creating new display list");
-        //                //gl.glNewList(displayList.intValue(), GL.GL_COMPILE_AND_EXECUTE);
-        //                //gl.glNewList(displayList.intValue(), GL.GL_COMPILE);
-        //                shape.render(drawable.getGL());
-        //                shape.clean();
-        //                //System.out.println ("about to call glEndList()");
-        //                System.out.flush();
-        //                Thread.yield();
-        //                //gl.glEndList();
-        //                //System.out.println ("DONE creating new display list");
-        //                System.out.flush();
-        //                Thread.yield();
-        // 
-        //            } else {
-        //                gl.glCallList(displayList.intValue());
-        //            }
-        //        }
-
         for (int i = 0; i < shapes.size(); i++) {
             Shape shape = (Shape) shapes.get(i);
             shape.render(drawable);
         }
 
-        //new ColorScale().render(gl);
+//        int err = gl.glGetError();
+//        if (err != GL.GL_NO_ERROR)
+//            System.out.println("err = " + glu.gluErrorString(err));
 
-        int err = gl.glGetError();
-
-        if (err != GL.GL_NO_ERROR)
-            System.out.println("err = " + glu.gluErrorString(err));
         gl.glPopMatrix();
         framesRendered++;
 

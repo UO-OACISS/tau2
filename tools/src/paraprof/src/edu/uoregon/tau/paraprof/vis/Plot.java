@@ -10,10 +10,6 @@ public interface Plot extends Shape, Observer {
 
     
     public void setSize(float xSize, float ySize, float zSize);    
-//    public float getWidth();
-//    public float getDepth();
-//    public float getHeight();
-   
     
     
     public float getWidth();
@@ -21,7 +17,7 @@ public interface Plot extends Shape, Observer {
     public float getHeight();
     
     
-    public JPanel getControlPanel();
+    public JPanel getControlPanel(VisRenderer visRenderer);
 
     public Axes getAxes();
     

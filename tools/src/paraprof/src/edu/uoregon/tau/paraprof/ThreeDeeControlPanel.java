@@ -239,9 +239,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane = new JTabbedPane();
 
         Plot plot = window.getPlot();
-        tabbedPane.addTab(plot.getName(), plot.getControlPanel());
-        tabbedPane.addTab("Axes", plot.getAxes().getControlPanel());
-        tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel());
+        tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
+        tabbedPane.addTab("Axes", plot.getAxes().getControlPanel(visRenderer));
+        tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
         tabbedPane.setMinimumSize(new Dimension(300, 160));
         tabbedPane.setSelectedIndex(selectedTab);
@@ -322,9 +322,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane = new JTabbedPane();
         Plot plot = window.getPlot();
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-        tabbedPane.addTab(plot.getName(), plot.getControlPanel());
-        tabbedPane.addTab("Axes", plot.getAxes().getControlPanel());
-        tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel());
+        tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
+        tabbedPane.addTab("Axes", plot.getAxes().getControlPanel(visRenderer));
+        tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
         tabbedPane.setMinimumSize(new Dimension(290, 160));
         tabbedPane.setSelectedIndex(selectedTab);

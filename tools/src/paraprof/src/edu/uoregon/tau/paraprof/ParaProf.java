@@ -11,11 +11,11 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.33 2005/04/04 22:26:00 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.34 2005/04/05 22:38:10 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.33 $
+ * @version $Revision: 1.34 $
  */
 public class ParaProf implements ActionListener {
 
@@ -173,6 +173,7 @@ public class ParaProf implements ActionListener {
                 }
 
                 ParaProf.colorMap.setMap(preferences.getAssignedColors());
+                ParaProf.preferences.setDatabasePassword(null);
 
                 //Try and find perfdmf.cfg.
                 File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");

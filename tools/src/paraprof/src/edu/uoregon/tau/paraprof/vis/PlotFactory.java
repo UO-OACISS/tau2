@@ -16,11 +16,11 @@ import java.util.Vector;
 public class PlotFactory {
 
     public static ScatterPlot createScatterPlot(String xLabel, String yLabel, String zLabel, String colorLabel, float values[][],
-            boolean normalized, ColorScale colorScale, VisRenderer visRenderer) {
+            boolean normalized, ColorScale colorScale) {
 
-        ScatterPlot scatterPlot = new ScatterPlot(visRenderer);
+        ScatterPlot scatterPlot = new ScatterPlot();
         scatterPlot.setNormalized(normalized);
-        Axes axes = new Axes(visRenderer);
+        Axes axes = new Axes();
 
         // find the minimum and maximum values for for each axis 
         float[] minScatterValues = new float[4];
@@ -49,7 +49,7 @@ public class PlotFactory {
 
             axisStrings[i] = new Vector();
             
-            if (scatterPlot.isNormalized()) {
+            if (scatterPlot.getNormalized()) {
                 axisStrings[i].add(Float.toString(minScatterValues[i]));
                 axisStrings[i].add(Double.toString(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .25));
                 axisStrings[i].add(Double.toString(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .50));

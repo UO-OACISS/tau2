@@ -51,7 +51,6 @@ public class Axes implements Shape {
     private int selectedRow = -1;
     private int selectedCol = -1;
 
-    private VisRenderer visRenderer;
 
     /**
      * Type safe enum for axes orientation
@@ -77,19 +76,15 @@ public class Axes implements Shape {
 
     /**
      * Constructor for the Axes
-     * @param visRenderer - the visRenderer associated with these axes
-     *                      This is only necessary for the control panel
-     *                      
      */
-    public Axes(VisRenderer visRenderer) {
-        this.visRenderer = visRenderer;
+    public Axes() {
     }
 
     /**
      * Returns whether or not the axes are enabled (shown)
      * @return enabled
      */
-    public boolean isEnabled() {
+    public boolean getEnabled() {
         return enabled;
     }
 
@@ -138,10 +133,15 @@ public class Axes implements Shape {
      * Sets whether or not the data points land on the intersection of two lines of the axes or inbetween
      * @param offset - whether or not the axes are offset
      */
-    public void setOnEdge(boolean offset) {
-        this.onEdge = offset;
+    public void setOnEdge(boolean onEdge) {
+        this.onEdge = onEdge;
+        this.dirty = true;
     }
 
+    public boolean getOnEdge() {
+        return this.onEdge;
+    }
+    
     
     /**
      * Sets the size of the axes.  Note that this is usually called by the plot.
@@ -193,7 +193,7 @@ public class Axes implements Shape {
      * 
      * @return JPanel - the control panel for this component
      */
-    public JPanel getControlPanel() {
+    public JPanel getControlPanel(final VisRenderer visRenderer) {
         JPanel axesPanel = new JPanel();
 
         axesPanel.setBorder(BorderFactory.createLoweredBevelBorder());
@@ -693,7 +693,7 @@ public class Axes implements Shape {
     /**
      * @return Returns the autoSkip.
      */
-    public boolean isAutoSkip() {
+    public boolean getAutoSkip() {
         return autoSkip;
     }
 

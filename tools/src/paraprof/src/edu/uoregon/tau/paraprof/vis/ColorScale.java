@@ -48,9 +48,6 @@ public class ColorScale extends Observable implements Shape {
 
     }
 
-    //    private static final double colorsR[] = { 0, 0, 0, 1, 1, 1 };
-    //    private static final double colorsG[] = { 0, 1, 1, 1, 0.5, 0 };
-    //    private static final double colorsB[] = { 1, 1, 0, 0, 0, 0 };
     private int font = GLUT.STROKE_MONO_ROMAN;
 
     private GLUT glut = new GLUT();
@@ -60,13 +57,11 @@ public class ColorScale extends Observable implements Shape {
     private ColorSet colorSet = ColorSet.RAINBOW;
 
     private String lowString, highString, label;
-    private VisRenderer visRenderer;
 
     private double fontScale = 0.10;
     private int displayList;
 
-    public ColorScale(VisRenderer visRenderer) {
-        this.visRenderer = visRenderer;
+    public ColorScale() {
     }
 
     public void setStrings(String low, String high, String label) {
@@ -116,7 +111,7 @@ public class ColorScale extends Observable implements Shape {
         return new Color((float) r, (float) g, (float) b);
     }
 
-    public JPanel getControlPanel() {
+    public JPanel getControlPanel(final VisRenderer visRenderer) {
         JPanel controlPanel = new JPanel();
 
         controlPanel.setLayout(new GridBagLayout());
@@ -191,9 +186,6 @@ public class ColorScale extends Observable implements Shape {
             String line = st.nextToken();
             float width = glut.glutStrokeLength(font, line);
 
-            //            gl.glTranslatef(-width/2,0,0);
-            //            gl.glColor3f(1, 1, 1);
-
             double fontScale = 0.10;
 
             thisX -= (width * fontScale / 2);
@@ -242,8 +234,8 @@ public class ColorScale extends Observable implements Shape {
         if (enabled == false)
             return;
 
-        int width = visRenderer.getWidth();
-        int height = visRenderer.getHeight();
+        int width = (int) glDrawable.getSize().getWidth();
+        int height = (int) glDrawable.getSize().getHeight();
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPushMatrix();
         gl.glLoadIdentity();
@@ -256,6 +248,9 @@ public class ColorScale extends Observable implements Shape {
 
         gl.glDisable(GL.GL_LIGHTING);
         gl.glDisable(GL.GL_DEPTH_TEST);
+        gl.glDisable(GL.GL_LINE_SMOOTH);
+        gl.glDisable(GL.GL_BLEND);
+        gl.glLineWidth(1.0f);
 
         int pixelHeight = Math.min(300, height - 60);
         int pixelWidth = 25;
@@ -288,7 +283,6 @@ public class ColorScale extends Observable implements Shape {
         gl.glEnd();
 
         gl.glColor3f(1.0f, 1.0f, 1.0f);
-        gl.glLineWidth(1.0f);
 
         drawText(gl, pixelWidth / 2, pixelHeight + 10, highString);
         drawText(gl, pixelWidth / 2, -15.0, lowString);

@@ -44,8 +44,6 @@ public class TriangleMeshPlot implements Plot {
     protected Axes axes;
     protected GL gl;
 
-    private VisRenderer visRenderer;
-
     private int selectedRow = -1;
     private int selectedCol = -1;
 
@@ -54,12 +52,12 @@ public class TriangleMeshPlot implements Plot {
     }
 
     public void initialize(Axes axes, float xSize, float ySize, float zSize, float heightValues[][],
-            float colorValues[][], ColorScale colorScale, VisRenderer visRenderer) {
+            float colorValues[][], ColorScale colorScale) {
         this.nrows = heightValues.length;
         this.ncols = heightValues[0].length;
         this.heightValues = heightValues;
         this.colorValues = colorValues;
-        this.colorScale = colorScale;
+        setColorScale(colorScale);
 
         this.xSize = xSize;
         this.ySize = ySize;
@@ -70,8 +68,6 @@ public class TriangleMeshPlot implements Plot {
         processValues();
 
         generateNormals();
-
-        this.visRenderer = visRenderer;
     }
 
     public void setValues(float xSize, float ySize, float zSize, float heightValues[][], float colorValues[][]) {
@@ -118,7 +114,7 @@ public class TriangleMeshPlot implements Plot {
         return zSize;
     }
 
-    public JPanel getControlPanel() {
+    public JPanel getControlPanel(final VisRenderer visRenderer) {
 
         JPanel sizePanel = new JPanel();
         sizePanel.setBorder(BorderFactory.createLoweredBevelBorder());
@@ -253,12 +249,60 @@ public class TriangleMeshPlot implements Plot {
 
     public void render(GLDrawable glDrawable) {
 
-        axes.render(glDrawable);
 
         GL gl = glDrawable.getGL();
-        renderDL(gl);
+        
+        if (nrows == 1 || ncols == 1) {
+            if (axes.getOnEdge() == false) {
+                axes.setOnEdge(true);
+            }
+            axes.render(glDrawable);
+            renderLine(gl);
+
+        } else {
+            axes.render(glDrawable);
+            renderDL(gl);
+        }
+        renderSelection(gl);
     }
 
+    // either nrows == 0 or ncols == 0
+    private void renderLine(GL gl) {
+        
+        gl.glDisable(GL.GL_LIGHTING);
+        gl.glEnable(GL.GL_LINE_SMOOTH);
+        gl.glShadeModel(GL.GL_SMOOTH);
+        
+        if (nrows == 1) {
+            float xIncrement = xSize / (ncols - 1);
+            
+            gl.glBegin(GL.GL_LINE_STRIP);
+            for (int x = 0; x < nrows; x++) {
+
+                float c1 = colorValues[0][x];
+                Color color1 = colorScale.getColor(c1);
+                gl.glColor3f(color1.getRed() / 255.0f, color1.getGreen() / 255.0f, color1.getBlue() / 255.0f);
+                gl.glVertex3f(x*xIncrement, ySize/2.0f, heightValues[0][x]);
+            }
+            gl.glEnd();
+            
+            
+        } else {
+            float yIncrement = ySize / (nrows - 1);
+            
+            gl.glBegin(GL.GL_LINE_STRIP);
+            for (int y = 0; y < nrows; y++) {
+
+                float c1 = colorValues[y][0];
+                Color color1 = colorScale.getColor(c1);
+                gl.glColor3f(color1.getRed() / 255.0f, color1.getGreen() / 255.0f, color1.getBlue() / 255.0f);
+                gl.glVertex3f(xSize/2.0f, y*yIncrement, heightValues[y][0]);
+            }
+            gl.glEnd();
+        }
+        
+    }
+    
     private void renderDL(GL gl) {
 
         if (gl == null)
@@ -267,7 +311,6 @@ public class TriangleMeshPlot implements Plot {
         this.gl = gl;
 
         if (dirty || displayList == 0) {
-            System.out.println("creating new display lists");
             displayList = gl.glGenLists(1);
             gl.glNewList(displayList, GL.GL_COMPILE);
 
@@ -336,7 +379,7 @@ public class TriangleMeshPlot implements Plot {
 
         gl.glCallList(displayList);
 
-        renderSelection(gl);
+       
     }
 
     private void renderSelection(GL gl) {
@@ -344,33 +387,48 @@ public class TriangleMeshPlot implements Plot {
         if (selectedRow < 0 || selectedCol < 0)
             return;
 
-        float xIncrement = xSize / (ncols - 1);
-        float yIncrement = ySize / (nrows - 1);
+        float xIncrement=xSize/2.0f, yIncrement=ySize/2.0f;
+        
+        if (ncols != 1) {
+            xIncrement = xSize / (ncols - 1);
+        }
+
+        if (nrows != 1) {
+            yIncrement = ySize / (nrows - 1);
+        }
 
         gl.glDisable(GL.GL_DEPTH_TEST);
-        //        
         gl.glEnable(GL.GL_LINE_SMOOTH);
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
         gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
         gl.glEnable(GL.GL_BLEND);
-        //
         gl.glLineWidth(4.0f);
 
-        float height = heightValues[selectedRow][selectedCol];
+        
+        float targetX = selectedCol * xIncrement;
+        float targetY = selectedRow * yIncrement;
+        float targetZ = heightValues[selectedRow][selectedCol];
 
+        if (nrows == 1) {
+            targetY+=yIncrement;
+        }
+        
+        if (ncols == 1) {
+            targetX+=xIncrement;
+        }
         gl.glBegin(GL.GL_LINES);
 
         gl.glColor4f(0, 1, 0, 0.75f);
-        gl.glVertex3f(selectedCol * xIncrement, 0, height);
-        gl.glVertex3f(selectedCol * xIncrement, ySize, height);
+        gl.glVertex3f(targetX, 0, targetZ);
+        gl.glVertex3f(targetX, ySize, targetZ);
 
         gl.glColor4f(0, 1, 0, 0.75f);
-        gl.glVertex3f(0, selectedRow * yIncrement, height);
-        gl.glVertex3f(xSize, selectedRow * yIncrement, height);
+        gl.glVertex3f(0, targetY, targetZ);
+        gl.glVertex3f(xSize, targetY, targetZ);
 
         gl.glColor4f(1, 1, 0, 0.75f);
-        gl.glVertex3f(selectedCol * xIncrement, selectedRow * yIncrement, 0);
-        gl.glVertex3f(selectedCol * xIncrement, selectedRow * yIncrement, zSize);
+        gl.glVertex3f(targetX, targetY, 0);
+        gl.glVertex3f(targetX, targetY, zSize);
 
         gl.glEnd();
 
@@ -395,8 +453,8 @@ public class TriangleMeshPlot implements Plot {
         //        
         gl.glEnable(GL.GL_DEPTH_TEST);
         //
-        gl.glDisable(GL.GL_LINE_SMOOTH);
-        gl.glDisable(GL.GL_BLEND);
+        //gl.glDisable(GL.GL_LINE_SMOOTH);
+        //gl.glDisable(GL.GL_BLEND);
         //
         gl.glLineWidth(1.0f);
 
@@ -568,7 +626,6 @@ public class TriangleMeshPlot implements Plot {
     public void setSelectedRow(int selectedRow) {
         this.selectedRow = selectedRow;
         axes.setSelectedRow(selectedRow);
-        //this.dirty = true;
     }
 
     public int getSelectedCol() {
@@ -578,6 +635,23 @@ public class TriangleMeshPlot implements Plot {
     public void setSelectedCol(int selectedCol) {
         this.selectedCol = selectedCol;
         axes.setSelectedCol(selectedCol);
-        //this.dirty = true;
     }
+    
+    
+    public ColorScale getColorScale() {
+        return colorScale;
+    }
+
+    public void setColorScale(ColorScale colorScale) {
+        // remove ourselves from the previous (if any) colorScale's observer list
+        if (this.colorScale != null) {
+            this.colorScale.deleteObserver(this);
+        }
+        this.colorScale = colorScale;
+        // add ourselves to the new colorScale
+        if (colorScale != null) {
+            colorScale.addObserver(this);
+        }
+    }
+    
 }

@@ -2,9 +2,6 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.awt.print.PageFormat;
@@ -22,14 +19,15 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
 import edu.uoregon.tau.paraprof.vis.*;
 
-public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListener, KeyListener, Observer, Printable {
+public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListener, KeyListener, Observer,
+        Printable {
 
     GLCanvas canvas;
     VisRenderer visRenderer = new VisRenderer();
 
     private Plot plot;
     private Axes axes;
-    private ColorScale colorScale = new ColorScale(visRenderer);
+    private ColorScale colorScale = new ColorScale();
 
     private ParaProfTrial ppTrial;
 
@@ -71,6 +69,61 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
     float minScatterValues[];
     float maxScatterValues[];
 
+    public ThreeDeeWindow() {
+        this.setTitle("ParaProf Visualizer");
+
+        //Add some window listener code
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                thisWindowClosing(evt);
+            }
+        });
+
+        setupMenus();
+        this.show();
+
+//
+//        EventQueue.invokeLater(new Runnable() {
+//
+//            public void run() {
+
+                GLCapabilities glCapabilities = new GLCapabilities();
+
+                //glCapabilities.setHardwareAccelerated(true);
+
+                //canvas = GLDrawableFactory.getFactory().createGLJPanel(new GLCapabilities());
+                //canvas = GLDrawableFactory.getFactory().createGLCanvas(new GLCapabilities());
+
+                canvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
+
+                //        canvas.setRenderingThread(java.lang.Thread.currentThread());
+                //canvas.setNoAutoRedrawMode(true);
+
+                // Use debug pipeline
+                //    canvas.setGL(new DebugGL(canvas.getGL()));
+                // System.err.println("CANVAS GL IS: " + canvas.getGL().getClass().getName());
+                //System.err.println("CANVAS GLU IS: " + canvas.getGLU().getClass().getName());
+
+                canvas.addGLEventListener(new Gears.GearRenderer());
+                ThreeDeeWindow.this.getContentPane().add(canvas);
+                ThreeDeeWindow.this.setSize(300, 300);
+                ThreeDeeWindow.this.validate();
+//            }
+//        });
+
+
+                
+        //        final Animator animator = new Animator(canvas);
+        //        this.addWindowListener(new WindowAdapter() {
+        //            public void windowClosing(WindowEvent e) {
+        //              //animator.stop();
+        //              System.exit(0);
+        //            }
+        //          });
+        //canvas.display();
+        //animator.start();
+    }
+
     public ThreeDeeWindow(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
 
@@ -87,14 +140,26 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
         setupMenus();
 
+        ThreeDeeWindow.this.validate();
+
+        // IA64 workaround
+        String os = System.getProperty("os.name").toLowerCase();
+        String cpu = System.getProperty("os.arch").toLowerCase();
+        if (os.startsWith("linux") && cpu.equals("ia64")) {
+            this.show();
+        }
+
         GLCapabilities glCapabilities = new GLCapabilities();
 
-        glCapabilities.setHardwareAccelerated(true);
+        //glCapabilities.setHardwareAccelerated(true);
 
         //canvas = GLDrawableFactory.getFactory().createGLJPanel(new GLCapabilities());
         //canvas = GLDrawableFactory.getFactory().createGLCanvas(new GLCapabilities());
 
         canvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
+        //final Animator animator = new Animator(canvas);
+
+        canvas.setSize(200, 200);
 
         //        gl = canvas.getGL();
         // Use debug pipeline
@@ -110,9 +175,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         visRenderer.addShape(colorScale);
         canvas.addGLEventListener(visRenderer);
 
+        //canvas.addGLEventListener(new Gears.GearRenderer());
+
         canvas.addKeyListener(this);
-        
-        
+
         JPanel panel = new JPanel() {
             public Dimension getMinimumSize() {
                 return new Dimension(10, 10);
@@ -122,13 +188,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         panel.addKeyListener(this);
         panel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        //gbc.insets = new Insets(5,/ 5, 0, 0);
-        //        
-        //        
-        //        
-        //        canvas.setSize(200,200);
-        ////        this.getContentPane().add(canvas);
-        //
+
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.weightx = 1.0;
@@ -138,18 +198,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
         panel.add(canvas, gbc);
-        panel.setPreferredSize(new Dimension(0, 0));
-        //        //crapPanel.add(canvas);
-        //
-        //        gbc.gridx = 0;
-        //        gbc.gridy = 1;
-        //
-        //        crapPanel.add(new JButton("crap"), gbc);
+        panel.setPreferredSize(new Dimension(5, 5));
 
         controlPanel = new ThreeDeeControlPanel(this, settings, ppTrial, visRenderer);
-
         jSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, controlPanel);
-
         jSplitPane.setContinuousLayout(true);
         jSplitPane.setResizeWeight(1.0);
         jSplitPane.setOneTouchExpandable(true);
@@ -158,39 +210,23 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
         this.setSize(1000, 600);
 
-        //Grab the screen size.
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        Dimension screenDimension = tk.getScreenSize();
-        int screenHeight = screenDimension.height;
-        int screenWidth = screenDimension.width;
+        //        //Grab the screen size.
+        //        Toolkit tk = Toolkit.getDefaultToolkit();
+        //        Dimension screenDimension = tk.getScreenSize();
+        //        int screenHeight = screenDimension.height;
+        //        int screenWidth = screenDimension.width;
+        
 
-        int xPosition = (screenWidth - 1200) / 2;
-        //Set the window to come up in the center of the screen.
-        int yPosition = (screenHeight - 800) / 2;
-
-        //        setLocation(1800, 200);
-
-        //        java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
-
-        //setLocation(ge.getCenterPoint());
-
-        //setLocation(xPosition, yPosition);
-
+        // IA64 workaround
+        if (os.startsWith("linux") && cpu.equals("ia64")) {
+            this.validate();
+        }
         this.show();
-
-        //        animator = new Animator(canvas);
-        //        this.addWindowListener(new WindowAdapter() {
-        //             public void windowClosing(WindowEvent e) {
-        //                 animator.stop();
-        //             }
-        //         });
-        //        animator.start();
-        //        
 
         //jSplitPane.setDividerLocation(0.8);
 
-        jTimer = new javax.swing.Timer(1000, this);
-        jTimer.start();
+        //        jTimer = new javax.swing.Timer(1000, this);
+        //      jTimer.start();
 
         ParaProf.incrementNumWindows();
 
@@ -240,7 +276,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         }
 
         if (scatterPlotAxes == null) {
-            scatterPlotAxes = new Axes(visRenderer);
+            scatterPlotAxes = new Axes();
         }
 
         setAxisStrings();
@@ -248,7 +284,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         axes = scatterPlotAxes;
 
         if (scatterPlot == null) {
-            scatterPlot = new ScatterPlot(visRenderer);
+            scatterPlot = new ScatterPlot();
         }
 
         scatterPlot.setSize(15, 15, 15);
@@ -305,7 +341,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
             if (!ppTrial.displayFunction(function)) {
                 continue;
             }
-                
+
             if (addFunctionNames) {
                 functionNames.add(function.getName());
                 functions.add(function);
@@ -366,7 +402,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         }
 
         if (fullDataPlotAxes == null) {
-            fullDataPlotAxes = new Axes(visRenderer);
+            fullDataPlotAxes = new Axes();
             fullDataPlotAxes.setHighlightColor(ppTrial.getColorChooser().getHighlightColor());
         }
 
@@ -382,9 +418,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
                 triangleMeshPlot = new TriangleMeshPlot();
                 visRenderer.setAim(new Vec(settings.getPlotWidth() / 2, settings.getPlotDepth() / 2, 0));
                 triangleMeshPlot.initialize(axes, settings.getPlotWidth(), settings.getPlotDepth(),
-                        settings.getPlotHeight(), heightValues, colorValues, colorScale, visRenderer);
+                        settings.getPlotHeight(), heightValues, colorValues, colorScale);
                 plot = triangleMeshPlot;
-                colorScale.addObserver(plot);
             } else {
                 triangleMeshPlot.setValues(settings.getPlotWidth(), settings.getPlotDepth(),
                         settings.getPlotHeight(), heightValues, colorValues);
@@ -397,9 +432,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
                 barPlot = new BarPlot();
                 barPlot.initialize(axes, settings.getPlotWidth(), settings.getPlotDepth(),
-                        settings.getPlotHeight(), heightValues, colorValues, colorScale, visRenderer);
+                        settings.getPlotHeight(), heightValues, colorValues, colorScale);
                 plot = barPlot;
-                colorScale.addObserver(plot);
             } else {
                 barPlot.setValues(settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(),
                         heightValues, colorValues);
@@ -700,8 +734,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
             System.out.println("colorEvent!!!");
             //handleColorEvent();
 
-            fullDataPlotAxes.setHighlightColor(ppTrial.getColorChooser().getHighlightColor());
-            visRenderer.redraw();
+            if (fullDataPlotAxes != null) {
+                fullDataPlotAxes.setHighlightColor(ppTrial.getColorChooser().getHighlightColor());
+                visRenderer.redraw();
+            }
             //
             //            for (Iterator funcIter = ppTrial.getDataSource().getFunctions(); funcIter.hasNext();) {
             //                Function function = (Function) funcIter.next();
@@ -713,19 +749,20 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
         } else if (tmpString.equals("dataEvent")) {
             System.out.println("dataEvent!!!");
-            
+
             functionNames = null;
-            
-            if (settings.getVisType() == VisType.BAR_PLOT || settings.getVisType() == VisType.TRIANGLE_MESH_PLOT) {
+
+            if (settings.getVisType() == VisType.BAR_PLOT
+                    || settings.getVisType() == VisType.TRIANGLE_MESH_PLOT) {
                 settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
                 settings.setRegularAim(visRenderer.getAim());
                 settings.setRegularEye(visRenderer.getEye());
             } else if (settings.getVisType() == VisType.SCATTER_PLOT) {
-//                settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
+                //                settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
                 settings.setScatterAim(visRenderer.getAim());
                 settings.setScatterEye(visRenderer.getEye());
             }
-           
+
             generate3dModel(false, settings);
             visRenderer.redraw();
             //recreateGraph();
@@ -741,11 +778,17 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         setVisible(false);
         ppTrial.getSystemEvents().deleteObserver(this);
         ParaProf.decrementNumWindows();
-        plot.cleanUp();
-        visRenderer.cleanUp();
+
+        if (plot != null) {
+            plot.cleanUp();
+        }
+
+        if (visRenderer != null) {
+            visRenderer.cleanUp();
+        }
         //animator.stop();
-        jTimer.stop();
-        jTimer = null;
+        //jTimer.stop();
+        //jTimer = null;
         visRenderer = null;
         plot = null;
 
@@ -1090,7 +1133,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
      */
     public void keyPressed(KeyEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     /* (non-Javadoc)
@@ -1098,7 +1141,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
      */
     public void keyReleased(KeyEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     /* (non-Javadoc)

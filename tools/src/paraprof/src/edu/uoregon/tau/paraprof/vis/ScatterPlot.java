@@ -30,9 +30,6 @@ public class ScatterPlot implements Plot {
     private float[][] values;
     private ColorScale colorScale;
     private Axes axes;
-    private VisRenderer visRenderer;
-
-
 
     // rendering details
     private int displayList;
@@ -45,8 +42,7 @@ public class ScatterPlot implements Plot {
     private int selectedCol = 5;
 
     
-    public ScatterPlot(VisRenderer visRenderer) {
-        this.visRenderer = visRenderer;
+    public ScatterPlot() {
     }
 
     public void setSize(float xSize, float ySize, float zSize) {
@@ -106,9 +102,11 @@ public class ScatterPlot implements Plot {
         }
         this.colorScale = colorScale;
         // add ourselves to the new colorScale
-        colorScale.addObserver(this);
+        if (colorScale != null) {
+            colorScale.addObserver(this);
+        }
     }
-
+    
     public float getWidth() {
         return xSize;
     }
@@ -129,7 +127,7 @@ public class ScatterPlot implements Plot {
 
     }
 
-    public JPanel getControlPanel() {
+    public JPanel getControlPanel(final VisRenderer visRenderer) {
         JPanel panel = new JPanel();
 
         panel.setLayout(new GridBagLayout());
@@ -252,7 +250,10 @@ public class ScatterPlot implements Plot {
             gl.glEnd();
         } else {
             gl.glEnable(GL.GL_LIGHTING);
+            gl.glEnable(GL.GL_DEPTH_TEST);
+            gl.glFrontFace(GL.GL_CCW);
             GLUquadric qobj = glu.gluNewQuadric();
+            gl.glEnable(GL.GL_CULL_FACE);
             glu.gluQuadricDrawStyle(qobj, GLU.GLU_FILL);
             glu.gluQuadricOrientation(qobj, GLU.GLU_OUTSIDE);
             glu.gluQuadricNormals(qobj, GLU.GLU_SMOOTH);
@@ -293,13 +294,13 @@ public class ScatterPlot implements Plot {
         this.selectedCol = selectedCol;
     }
 
-    public boolean isEnabled() {
+    public boolean getEnabled() {
         return enabled;
     }
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-    public boolean isNormalized() {
+    public boolean getNormalized() {
         return normalized;
     }
     public void setNormalized(boolean normalized) {
