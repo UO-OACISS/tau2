@@ -227,7 +227,7 @@ $(INSTALLDEST)/libTauShmem$(TAU_OPTIONS)$(LSX): libTauShmem$(TAU_OPTIONS)$(LSX)
 $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
 		@if [ -d $(TAU_JAVA_INSTALLDIR) ] ; then true; \
-                   else mkdir $(TAU_JAVA_INSTALLDIR) ;fi
+                   else mkdir -p $(TAU_JAVA_INSTALLDIR) ;fi
 		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
 
 $(INSTALLDEST)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
