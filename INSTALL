@@ -104,8 +104,6 @@ Usage: configure [OPTIONS]
 
    -tulipthread=<dir> -smarts should be used to specify the smarts directory
    and enable the smarts interface. This is required for Pooma users.
-   One also must specify the smarts machine specific directory for includes 
-   as illustrated in the example below.
 
    Example:
    On SGI Origin 2000, 
