@@ -143,7 +143,7 @@ use_hpnx=no
 tauarch=unknown
 tauprefix=unknown
 tauoptions=
-ductape_root_dir="."
+pdt_root_dir="."
 
 # debug:
 # echo $arguments
@@ -836,20 +836,20 @@ echo "" >> ./build/Config.info
 ######################################################################
 ## STATIC ANALYSIS: Ductape/Program Database Toolkit/IL Analyser
 ## If cxxparse exists, modify it to contain the correct path
-ductape_root_dir=${tauroot}/ductape
-if [ -d $ductape_root_dir ]
+pdt_root_dir=${tauroot}/pdt
+if [ -d $pdt_root_dir ]
   then
-  if [ ! -d $ductape_root_dir/$machine ] 
+  if [ ! -d $pdt_root_dir/$machine ] 
     then
-      mkdir $ductape_root_dir/$machine
-      mkdir $ductape_root_dir/$machine/bin
-      mkdir $ductape_root_dir/$machine/lib
+      mkdir $pdt_root_dir/$machine
+      mkdir $pdt_root_dir/$machine/bin
+      mkdir $pdt_root_dir/$machine/lib
   fi
-  /bin/rm -f $ductape_root_dir/$machine/bin/cxxparse
+  /bin/rm -f $pdt_root_dir/$machine/bin/cxxparse
   cat utils/cxxparse | 
-  sed -e 's,@DUCTAPEROOT@,'$ductape_root_dir/',' -e 's,@CXXINCLUDES@,'"$stdinc"',' -e 's,@ARCH@,'$machine/',' > $ductape_root_dir/$machine/bin/cxxparse
-  chmod +x $ductape_root_dir/$machine/bin/cxxparse
-  echo "Installed cxxparse in the DUCTAPE directory $ductape_root_dir"
+  sed -e 's,@DUCTAPEROOT@,'$pdt_root_dir/',' -e 's,@CXXINCLUDES@,'"$stdinc"',' -e 's,@ARCH@,'$machine/',' > $pdt_root_dir/$machine/bin/cxxparse
+  chmod +x $pdt_root_dir/$machine/bin/cxxparse
+  echo "Installed cxxparse in the DUCTAPE directory $pdt_root_dir"
 fi
     
 
