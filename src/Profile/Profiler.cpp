@@ -131,7 +131,10 @@ void Profiler::Start(void)
 	// Initialization is over, now record the time it started
 	StartTime =  RtsLayer::getUSecD() ;
 #endif // PROFILING_ON
-  	ParentProfiler = CurrentProfiler[tid] ;
+  	
+	ParentProfiler = CurrentProfiler[tid] ;
+	  
+
 
 	DEBUGPROFMSG("nct "<< RtsLayer::myNode() << "," 
 	  << RtsLayer::myContext() << ","  << tid 
@@ -140,6 +143,14 @@ void Profiler::Start(void)
 	  << endl; );
 
 	CurrentProfiler[tid] = this;
+        if (ParentProfiler != 0) {
+          DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
+            << RtsLayer::myContext() << ","  << RtsLayer::myThread()
+	    << " Inside "<< ThisFunction->GetName()<< " Setting ParentProfiler "
+	    << ParentProfiler->ThisFunction->GetName()<<endl
+	    << " ParentProfiler = "<<ParentProfiler << " CurrProf = "
+	    << CurrentProfiler[tid] << " = this = "<<this<<endl;);
+        }
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall = 0;
@@ -159,6 +170,7 @@ Profiler::Profiler( FunctionInfo * function, unsigned int ProfileGroup, bool Sta
       DEBUGPROFMSG("Profiler::Profiler: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       
+
       if(!StartStopUsed_) { // Profiler ctor/dtor interface used
 	Start(); 
       }
@@ -262,14 +274,23 @@ void Profiler::Stop(void)
 	ThisFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
 #endif // PROFILE_STATS
 
-	if (ParentProfiler != 0) {
+	if (ParentProfiler != (Profiler *) NULL) {
 
 	  DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
             << RtsLayer::myContext() << "," << tid  
 	    << " Profiler::Stop(): ParentProfiler Function Name : " 
 	    << ParentProfiler->ThisFunction->GetName() << endl;);
+	  DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
+            << RtsLayer::myContext() << "," << tid
+	    << " Exiting from "<<ThisFunction->GetName() << " Returning to "
+	    << ParentProfiler->ThisFunction->GetName() << endl;);
 
-	  ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
+	  if (ParentProfiler->ThisFunction != (FunctionInfo *) NULL)
+	    ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
+          else {
+	    cout <<"ParentProfiler's Function info is NULL" <<endl;
+	  }
+
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	  ParentProfiler->ExcludeTimeThisCall(TotalTime);
 #endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
@@ -279,20 +300,37 @@ void Profiler::Stop(void)
 #endif //PROFILING_ON
 	// First check if timers are overlapping.
 	if (CurrentProfiler[tid] != this) {
-	  cout <<"ERROR: Timers Overlap. Illegal operation Profiler::Stop " 
-	  << ThisFunction->GetName() << " " << ThisFunction->GetType() <<endl;
+	  DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
+              << RtsLayer::myContext() << "," << tid
+	      << " ERROR: Timers Overlap. Illegal operation Profiler::Stop " 
+	      << ThisFunction->GetName() << " " 
+	      << ThisFunction->GetType() <<endl;);
+	  if (CurrentProfiler[tid] != (Profiler *) NULL) {
+	    if (CurrentProfiler[tid]->ThisFunction != (FunctionInfo *)NULL) {
+	      cout << "Overlapping function = "
+                 << CurrentProfiler[tid]->ThisFunction->GetName () << " " 
+		 << CurrentProfiler[tid]->ThisFunction->GetType() <<endl;
+	    } else {
+	      cout <<"CurrentProfiler is not Null but its FunctionInfo is"<<endl;
+	    }
+	  }
 	}
 	// While exiting, reset value of CurrentProfiler to reflect the parent
 	CurrentProfiler[tid] = ParentProfiler;
+ 	DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
+            << RtsLayer::myContext() << "," << tid
+	    << " Stop: " << ThisFunction->GetName() 
+	    << " CurrProf = "<<CurrentProfiler[tid] << " this = "
+	    << this<<endl;);
 
-        if (ParentProfiler == 0) {
+        if (ParentProfiler == (Profiler *) NULL) {
   	  if (TheSafeToDumpData()) {
             if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
             // Not a destructor of a static object - its a function like main
               DEBUGPROFMSG("nct " << RtsLayer::myNode() << "," 
-  	      << RtsLayer::myContext() << "," << tid 
-              << " Profiler::Stop() : Reached top level function - dumping data"
-              << endl;);
+  	      << RtsLayer::myContext() << "," << tid  << " "
+              << "Profiler::Stop() : Reached top level function: dumping data"
+              << ThisFunction->GetName() <<endl;);
   
               StoreData(tid);
             }
@@ -365,6 +403,8 @@ int Profiler::StoreData(int tid)
 	long listSize, numCalls;
 	list<pair<double,double> >::iterator iter;
 #endif // PROFILE_CALLS
+
+	DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
 
 
 #ifdef TRACING_ON
@@ -664,8 +704,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 1999/03/17 23:49:09 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.19 1999/03/17 23:49:09 sameer Exp $ 
+ * $Revision: 1.20 $   $Date: 1999/04/27 22:19:12 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.20 1999/04/27 22:19:12 sameer Exp $ 
  ***************************************************************************/
 
 	

@@ -35,22 +35,13 @@
 FunctionInfo *& TheTauMapFI();
 #define TAU_MAPPING(stmt)   \
   { \
-    static FunctionInfo TauFIG(#stmt, " " , TAU_USER, "TAU_USER"); \
-    Profiler *TauProfG = new Profiler (&TauFIG, TAU_USER, true); \
-    TheTauMapFI() = &TauFIG; \
-    int tid = RtsLayer::myThread(); \
-    if (tid == 0) \
-      cout <<"Thr "<< tid <<" Stmt: "<<#stmt <<" CurrProf " \
-       << Profiler::CurrentProfiler[tid]\
-       <<" StmtProfiler "<<TauProfG<<endl; \
-    TauProfG->Start(); \
+    static FunctionInfo TauMapFI(#stmt, " " , TAU_USER, "TAU_USER"); \
+    static Profiler *TauMapProf = new Profiler(&TauMapFI, TAU_USER, true); \
+    TheTauMapFI() = &TauMapFI; \
+    TauMapProf->Start(); \
     stmt; \
     cout <<#stmt <<endl; \
-    TauProfG->Stop(); \
-    if (tid == 0) \
-    cout <<"Thr "<< tid <<" Stmt: "<<#stmt <<" CurrProf " \
-       << Profiler::CurrentProfiler[tid]\
-       <<" StmtProfiler "<<TauProfG<<endl; \
+    TauMapProf->Stop(); \
   } 
 
 #else

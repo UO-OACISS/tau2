@@ -46,7 +46,7 @@
 // This global variable is used to keep the function information for
 // mapping. It is passed to the Profiler.
 //////////////////////////////////////////////////////////////////////
-FunctionInfo *& TheTauMapFI()
+FunctionInfo *& TheTauMapFI(void)
 { 
   static FunctionInfo *TauMapFI = (FunctionInfo *) NULL;
 
