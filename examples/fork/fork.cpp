@@ -5,10 +5,10 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
-#include "Profile/Profiler.h"     // for TAU
+#include <Profile/Profiler.h>     // for TAU
 
-#include<stdio.h>
-#include<unistd.h>
+#include <stdio.h>
+#include <unistd.h>
 
 int someA(void);
 int someB(void);
@@ -82,7 +82,7 @@ int someD()
 
 /***************************************************************************
  * $RCSfile: fork.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2000/11/02 01:20:46 $
- * VERSION: $Id: fork.cpp,v 1.3 2000/11/02 01:20:46 sameer Exp $
+ * $Revision: 1.4 $   $Date: 2000/11/02 01:22:02 $
+ * VERSION: $Id: fork.cpp,v 1.4 2000/11/02 01:22:02 sameer Exp $
  ***************************************************************************/
 
