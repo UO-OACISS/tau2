@@ -84,6 +84,14 @@ int& RtsLayer::TheNode(void)
 }
 
 /////////////////////////////////////////////////////////////////////////
+int& RtsLayer::TheContext(void)
+{
+  static int Context = 0;
+ 
+  return Context;
+}
+
+/////////////////////////////////////////////////////////////////////////
 
 unsigned int RtsLayer::enableProfileGroup(unsigned int ProfileGroup) {
   TheProfileMask() |= ProfileGroup; // Add it to the mask
@@ -114,6 +122,12 @@ int RtsLayer::setMyNode(int NodeId) {
   pcxx_EvInit(tracefilename);
 #endif // TRACING_ON
   return TheNode();
+}
+
+/////////////////////////////////////////////////////////////////////////
+int RtsLayer::setMyContext(int ContextId) {
+  TheContext() = ContextId;
+  return TheContext();
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -262,6 +276,10 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
 	case 'c' :
 	case 'C' : 
 	  RtsLayer::enableProfileGroup(TAU_COMMUNICATION);
+	  break;
+ 	case 'h' :
+	case 'H' :
+	  RtsLayer::enableProfileGroup(TAU_HPCXX);
 	  break;
         case 'i' :
 	case 'I' : // DiskIO, Other IO 
@@ -561,6 +579,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/04/26 07:29:26 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.2 1998/04/26 07:29:26 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 1998/07/10 20:13:05 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.3 1998/07/10 20:13:05 sameer Exp $ 
  ***************************************************************************/

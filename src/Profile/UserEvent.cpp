@@ -297,14 +297,14 @@ vector::size_type numevents;
     {
       DEBUGPROFMSG("Thr "<< RtsLayer::myThread()<< " TauUserEvent "<< 
         (*it)->GetEventName() << "\n Min " << (*it)->GetMin() << "\n Max " <<
-        (*it)->GetMax() << "\n Mean " << (*it)->GetMean() << "\n Std Dev " <<
-        (*it)->GetStdDev() << "\n NumEvents " << (*it)->GetNumEvents()<< endl;);
+        (*it)->GetMax() << "\n Mean " << (*it)->GetMean() << "\n Sum Sqr " <<
+        (*it)->GetSumSqr() << "\n NumEvents " << (*it)->GetNumEvents()<< endl;);
       
     }
 }
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 1998/05/14 22:09:57 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.3 1998/05/14 22:09:57 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 1998/07/10 20:13:06 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.4 1998/07/10 20:13:06 sameer Exp $ 
  ***************************************************************************/

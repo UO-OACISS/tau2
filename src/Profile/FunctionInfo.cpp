@@ -74,6 +74,17 @@ vector<FunctionInfo*>& TheFunctionDB(int threadid)
 }
 
 //////////////////////////////////////////////////////////////////////
+// It is not safe to call Profiler::StoreData() after 
+// FunctionInfo::~FunctionInfo has been called as names are null
+//////////////////////////////////////////////////////////////////////
+int& TheSafeToDumpData()
+{ 
+  static int SafeToDumpData=1;
+
+  return SafeToDumpData;
+}
+
+//////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class FunctionInfo
 //////////////////////////////////////////////////////////////////////
 
@@ -86,17 +97,19 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 #ifdef TRACING_ON
 	GroupName = RtsLayer::PrimaryGroup(ProfileGroupName);
 #endif //TRACING_ON
-        NumCalls = 0;
-        NumSubrs = 0;
-  	ExclTime = 0;
-  	InclTime = 0;
+   int tid = RtsLayer::myThread();
+
+        NumCalls[tid] = 0;
+        NumSubrs[tid] = 0;
+  	ExclTime[tid] = 0;
+  	InclTime[tid] = 0;
 
 // Since FunctionInfo constructor is called once for each function (static)
 // we know that it couldn't be already on the call stack.
-	SetAlreadyOnStack(false);
+	SetAlreadyOnStack(false, tid);
 
 #ifdef PROFILE_STATS
-	SumExclSqr = 0;
+	SumExclSqr[tid] = 0;
 #endif //PROFILE_STATS
 
 #ifdef PROFILE_CALLS
@@ -105,13 +118,23 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 	// Make this a ptr to a list so that ~FunctionInfo doesn't destroy it.
 	
         MyProfileGroup_ = ProfileGroup ;
+	// While accessing the global function database, lock it to ensure
+	// an atomic operation in the push_back and size() operations. 
+	// Important in the presence of concurrent threads.
+	RtsLayer::LockDB();
 	TheFunctionDB().push_back(this);
 #ifdef TRACING_ON
+	// FOR Tracing, we should make the two a single operation 
+	// when threads are supported for traces. There needs to be 
+	// a lock in RtsLayer that can be locked while the push_back
+	// and size operations are done (this should be atomic). 
 	// Function Id is the index into the DB vector
 	FunctionId = TheFunctionDB().size();
 #endif //TRACING_ON
+	RtsLayer::UnLockDB();
 		
-        DEBUGPROFMSG("Thr "<< RtsLayer::myNode() 
+        DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<"," 
+	  << RtsLayer::myContext() << ", " << tid 
           << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName() 
 	  << " Type : " << GetType() << endl;);
 
@@ -172,6 +195,7 @@ FunctionInfo::FunctionInfo(string& name, string& type,
 }
 
 //////////////////////////////////////////////////////////////////////
+#ifdef OLDDD
 
 FunctionInfo::FunctionInfo(const FunctionInfo& X) 
 : Name(X.Name),
@@ -200,6 +224,7 @@ FunctionInfo& FunctionInfo::operator= (const FunctionInfo& X)
 	return (*this);
 }
 
+#endif //OLDDD
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::~FunctionInfo()
@@ -209,6 +234,7 @@ FunctionInfo::~FunctionInfo()
 // name, and type.
 //	delete [] Name;
 //	delete [] Type;
+  TheSafeToDumpData() = 0;
 }
 
 #ifdef PROFILE_CALLS
@@ -225,6 +251,6 @@ int FunctionInfo::AppendExclInclTimeThisCall(double ex, double in)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/04/26 07:29:21 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.2 1998/04/26 07:29:21 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 1998/07/10 20:13:02 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.3 1998/07/10 20:13:02 sameer Exp $ 
  ***************************************************************************/

@@ -30,7 +30,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/research/parallel/sameer/gar/research/tau2
+TAUROOT=/users/sameer/rs/tau2
 #######################################################################
  
 #MIPSR8K##ABI 	     = -64		   #ENDIF#
@@ -58,15 +58,17 @@ LSX = .a
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
 #PGI#PROFILEOPT12	       = 		       #ENDIF#
 #CRAYCC#PROFILEOPT13	       = -h instantiation=used #ENDIF#
-#SGICC#PROFILEOPT14	       = -ptused 	       #ENDIF#
+#SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
 #TRACE#EVENTS_O		       = pcxx_events.o	       #ENDIF#
+#PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o	       #ENDIF#
+#PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS 	       #ENDIF#
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
 	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
-	      $(PROFILEOPT13) $(PROFILEOPT14) $(TRACEOPT)
+	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(TRACEOPT)
 ##############################################
 #KAI#AR			= $(CONFIG_CXX)     #ENDIF#
 #KAI#ARFLAGS			= -o		    #ENDIF#
@@ -93,7 +95,7 @@ LDFLAGS	      = $(PCXX_OPT)
 MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
-		RtsLayer.o $(EVENTS_O)
+		RtsLayer.o $(EVENTS_O) $(THR_O) 
 
 PRINT	      = pr
 
@@ -105,6 +107,11 @@ ARFLAGS	      = rcv
 ############# For KAI KCC compiler, replace AR accordingly #######
 #KAI#AR			= $(CONFIG_CXX) 		   #ENDIF#
 #KAI#ARFLAGS			= -o				   #ENDIF#
+##################################################################
+
+############# For KAI KCC compiler, replace AR accordingly #######
+#SGICC#AR			= $(CONFIG_CXX) -ar 		   #ENDIF#
+#SGICC#ARFLAGS			= -o				   #ENDIF#
 ##################################################################
 
 RM 	      = /bin/rm -f
@@ -140,10 +147,13 @@ FunctionInfo.o 	: FunctionInfo.cpp $(HDRS)
 	$(CXX) $(CFLAGS) -c FunctionInfo.cpp
 
 RtsLayer.o 	: RtsLayer.cpp $(HDRS)
-	$(CXX) $(CFLAGS) -w -c RtsLayer.cpp
+	$(CXX) $(CFLAGS) -c RtsLayer.cpp
 
 pcxx_events.o   : pcxx_events.cpp $(HDRS)
 	$(CXX) $(CFLAGS) -c pcxx_events.cpp
+
+PthreadLayer.o   : PthreadLayer.cpp $(HDRS)
+	$(CXX) $(CFLAGS) -c PthreadLayer.cpp
 
 clean : 
 		$(RM) $(OBJS) $(TARGET) $(EXTRAOBJS)

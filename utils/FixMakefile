@@ -82,7 +82,7 @@ fi
 	echo "s,^AWEDIR=.*$,AWEDIR=$awedir,g" >> $sedout
 	;;
 
-     Ptdir=*)
+     ptdir=*)
         ptdir=`echo $1 | sed -e 's/^ptdir=//'`
 	echo "s,^PTDIR=.*$,PTDIR=$ptdir,g" >> $sedout
 	;;
@@ -327,6 +327,7 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PTHREAD_AVAILABLE)
+	echo "NOTE: Using pthreads as the thread package. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LWP_AVAILABLE)

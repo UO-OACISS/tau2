@@ -97,8 +97,10 @@ template FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,Functio
 
 void Profiler::Start(void)
 { 
+  int tid;
      
       if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
+  	tid = RtsLayer::myThread();
 	
 #ifdef TRACING_ON
 	pcxx_Event(ThisFunction->GetFunctionId(), 1); // 1 is for entry
@@ -106,18 +108,18 @@ void Profiler::Start(void)
 
 #ifdef PROFILING_ON
 	// First, increment the number of calls
-	ThisFunction->IncrNumCalls();
+	ThisFunction->IncrNumCalls(tid);
         // now increment parent's NumSubrs()
-        if (ParentProfiler != 0)
-          ParentProfiler->ThisFunction->IncrNumSubrs();	
+	if (ParentProfiler != 0)
+          ParentProfiler->ThisFunction->IncrNumSubrs(tid);	
 
 	// Next, if this function is not already on the call stack, put it
-	if (ThisFunction->GetAlreadyOnStack() == false)   { 
+	if (ThisFunction->GetAlreadyOnStack(tid) == false)   { 
 	  AddInclFlag = true; 
 	  // We need to add Inclusive time when it gets over as 
 	  // it is not already on callstack.
 
-	  ThisFunction->SetAlreadyOnStack(true); // it is on callstack now
+	  ThisFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
 	}
 	else { // the function is already on callstack, no need to add
 	       // inclusive time
@@ -127,14 +129,15 @@ void Profiler::Start(void)
 	// Initialization is over, now record the time it started
 	StartTime =  RtsLayer::getUSecD() ;
 #endif // PROFILING_ON
-  	ParentProfiler = CurrentProfiler[RtsLayer::myThread()] ;
+  	ParentProfiler = CurrentProfiler[tid] ;
 
-	DEBUGPROFMSG("Thr " << RtsLayer::myNode() <<
-	  " Profiler::Start (FunctionInfo * f)  : Name : " << 
-	  ThisFunction->GetName() <<" Type : " << ThisFunction->GetType() 
+	DEBUGPROFMSG("nct  "<< RtsLayer::myNode() << "," 
+	  << RtsLayer::myContext() << ","  << tid 
+	  << " Profiler::Start (tid)  : Name : " 
+	  << ThisFunction->GetName() <<" Type : " << ThisFunction->GetType() 
 	  << endl; );
 
-	CurrentProfiler[RtsLayer::myThread()] = this;
+	CurrentProfiler[tid] = this;
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall = 0;
@@ -146,6 +149,7 @@ void Profiler::Start(void)
 
 Profiler::Profiler( FunctionInfo * function, unsigned int ProfileGroup, bool StartStop)
 {
+
       StartStopUsed_ = StartStop; // will need it later in ~Profiler
       MyProfileGroup_ = ProfileGroup ;
       ThisFunction = function ; 
@@ -197,10 +201,12 @@ Profiler& Profiler::operator= (const Profiler& X)
 
 //////////////////////////////////////////////////////////////////////
 
-void Profiler::Stop()
+void Profiler::Stop(void)
 {
+  int tid; 
       if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
 
+ 	tid = RtsLayer::myThread();
 #ifdef TRACING_ON
 	pcxx_Event(ThisFunction->GetFunctionId(), -1); // -1 is for exit 
 #endif //TRACING_ON
@@ -208,21 +214,23 @@ void Profiler::Stop()
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
 	double TotalTime = RtsLayer::getUSecD() - StartTime;
 
-        DEBUGPROFMSG("Thr "<< RtsLayer::myNode() 
+        DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
+  	  << RtsLayer::myContext() << "," << tid 
 	  << " Profiler::Stop() : Name : "<< ThisFunction->GetName() 
 	  << " Start : " <<StartTime <<" TotalTime : " << TotalTime<< endl;);
 
 	if (AddInclFlag == true) { // The first time it came on call stack
-	  ThisFunction->SetAlreadyOnStack(false); // while exiting
+	  ThisFunction->SetAlreadyOnStack(false, tid); // while exiting
 
 	  // And its ok to add both excl and incl times
-	  ThisFunction->AddInclTime(TotalTime);
-	  DEBUGPROFMSG("Thr "<< RtsLayer::myNode()
+	  ThisFunction->AddInclTime(TotalTime, tid);
+	  DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
+	    << RtsLayer::myContext() << "," << tid
 	    << " AddInclFlag true in Stop Name: "<< ThisFunction->GetName()
 	    << " Type: " << ThisFunction->GetType() << endl; );
 	} 
 	// If its already on call stack, don't change AlreadyOnStack
-	ThisFunction->AddExclTime(TotalTime);
+	ThisFunction->AddExclTime(TotalTime, tid);
 	// In either case we need to add time to the exclusive time.
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS)|| defined(PROFILE_CALLSTACK) )
@@ -247,21 +255,36 @@ void Profiler::Stop()
 	    << " Profiler::Stop(): ParentProfiler Function Name : " 
 	    << ParentProfiler->ThisFunction->GetName() << endl;);
 
-	  ParentProfiler->ThisFunction->ExcludeTime(TotalTime);
+	  ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
-	  ParentProfiler->ExcludeTimeThisCall(TotalTime);
+	  ParentProfiler->ExcludeTimeThisCall(TotalTime, tid);
 #endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
 
 	}
 	
 #endif //PROFILING_ON
 	// First check if timers are overlapping.
-	if (CurrentProfiler[RtsLayer::myThread()] != this) {
+	if (CurrentProfiler[tid] != this) {
 	  cout <<"ERROR: Timers Overlap. Illegal operation Profiler::Stop " 
 	  << ThisFunction->GetName() << " " << ThisFunction->GetType() <<endl;
 	}
 	// While exiting, reset value of CurrentProfiler to reflect the parent
-	CurrentProfiler[RtsLayer::myThread()] = ParentProfiler;
+	CurrentProfiler[tid] = ParentProfiler;
+
+        if (ParentProfiler == 0) {
+  	  if (TheSafeToDumpData()) {
+            if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
+            // Not a destructor of a static object - its a function like main
+              DEBUGPROFMSG("nct " << RtsLayer::myNode() << "," 
+  	      << RtsLayer::myContext() << "," << tid 
+              << " Profiler::Stop() : Reached top level function - dumping data"
+              << endl;);
+  
+              StoreData(tid);
+            }
+        // dump data here. Dump it only at the exit of top level profiler.
+	  }
+        }
 
       } // if TheProfileMask() 
 }
@@ -276,19 +299,6 @@ Profiler::~Profiler() {
 	// If the Profiler object is going out of scope without Stop being
 	// called, call it now!
 
-      if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
-	if (ParentProfiler == 0) {
-	  if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
-	  // Not a destructor of a static object - its a function like main 
-	    DEBUGPROFMSG("Thr " << RtsLayer::myNode() 
-	      << " ~Profiler() : Reached top level function - dumping data" 
-	      << endl;);
-
-	    StoreData();
-	  }
-	// dump data here. Dump it only in the dtor of top level profiler. 
-	}
-      }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -296,10 +306,11 @@ Profiler::~Profiler() {
 void Profiler::ProfileExit(const char *message)
 {
   Profiler *current;
+  int tid = RtsLayer::myThread();
 
-  current = CurrentProfiler[RtsLayer::myThread()];
+  current = CurrentProfiler[tid];
 
-  DEBUGPROFMSG("Thr "<< RtsLayer::myNode() << " RtsLayer::ProfileExit called :"
+  DEBUGPROFMSG("nct "<< RtsLayer::myNode() << " RtsLayer::ProfileExit called :"
     << message << endl;);
 
   while (current != 0) {
@@ -315,18 +326,18 @@ void Profiler::ProfileExit(const char *message)
            << " ProfileExit() : Reached top level function - dumping data"
            << endl;);
 
-          current->StoreData();
+          current->StoreData(tid);
       }
     }
 
-    current = CurrentProfiler[RtsLayer::myThread()]; // Stop should set it
+    current = CurrentProfiler[tid]; // Stop should set it
   }
 
 }
 
 //////////////////////////////////////////////////////////////////////
 
-int Profiler::StoreData()
+int Profiler::StoreData(int tid)
 {
 #ifdef PROFILING_ON 
   	vector<FunctionInfo*>::iterator it;
@@ -401,21 +412,21 @@ int Profiler::StoreData()
   
   	    DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping " 
   	      << (*it)->GetName()<< " "  << (*it)->GetType() << " Calls : " 
-              << (*it)->GetCalls() << " Subrs : "<< (*it)->GetSubrs() 
-  	      << " Excl : " << (*it)->GetExclTime() << " Incl : " 
-  	      << (*it)->GetInclTime() << endl;);
+              << (*it)->GetCalls(tid) << " Subrs : "<< (*it)->GetSubrs(tid) 
+  	      << " Excl : " << (*it)->GetExclTime(tid) << " Incl : " 
+  	      << (*it)->GetInclTime(tid) << endl;);
   	
   	    fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
-  	      (*it)->GetType(), (*it)->GetCalls(), (*it)->GetSubrs(), 
-  	      (*it)->GetExclTime(), (*it)->GetInclTime());
+  	      (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid), 
+  	      (*it)->GetExclTime(tid), (*it)->GetInclTime(tid));
   
 #ifdef PROFILE_STATS 
-  	    fprintf(fp,"%.16G ", (*it)->GetSumExclSqr());
+  	    fprintf(fp,"%.16G ", (*it)->GetSumExclSqr(tid));
 #endif //PROFILE_STATS
   
 #ifdef PROFILE_CALLS
   	    listSize = (long) (*it)->ExclInclCallList->size(); 
-  	    numCalls = (*it)->GetCalls();
+  	    numCalls = (*it)->GetCalls(tid);
   	    // Sanity check
   	    if (listSize != numCalls) 
   	    {
@@ -511,6 +522,7 @@ void Profiler::CallStackTrace()
   static int ncalls = 0;         // number of times CallStackTrace()
                                  //   has been called
  
+  int 	    tid = RtsLayer::myThread();
   // get wallclock time
   now = RtsLayer::getUSecD();  
 
@@ -531,16 +543,16 @@ void Profiler::CallStackTrace()
 	  RtsLayer::myContext(), RtsLayer::myThread());
   
   // traverse stack and set all FunctionInfo's *_cs fields to zero
-  curr = CurrentProfiler[RtsLayer::myThread()];
+  curr = CurrentProfiler[tid];
   while (curr != 0)
   {
-    curr->ThisFunction->ExclTime_cs = curr->ThisFunction->GetExclTime();
+    curr->ThisFunction->ExclTime_cs = curr->ThisFunction->GetExclTime(tid);
     curr = curr->ParentProfiler;
   }  
 
   prevTotalTime = 0;
   // calculate time info
-  curr = CurrentProfiler[RtsLayer::myThread()];
+  curr = CurrentProfiler[tid];
   while (curr != 0 )
   {
     totalTime = now - curr->StartTime;
@@ -600,7 +612,7 @@ void Profiler::CallStackTrace()
   {
     fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G %.16G %.16G\n",
             curr->ThisFunction->GetName(),  curr->ThisFunction->GetType(),
-            curr->ThisFunction->GetCalls(), curr->ThisFunction->GetSubrs(),
+            curr->ThisFunction->GetCalls(tid),curr->ThisFunction->GetSubrs(tid),
             curr->InclTime_cs, curr->ExclTime_cs,
             curr->ThisFunction->InclTime_cs, curr->ThisFunction->ExclTime_cs);
 
@@ -618,8 +630,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 1998/05/14 22:09:54 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.11 1998/05/14 22:09:54 sameer Exp $ 
+ * $Revision: 1.12 $   $Date: 1998/07/10 20:13:04 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.12 1998/07/10 20:13:04 sameer Exp $ 
  ***************************************************************************/
 
 	
