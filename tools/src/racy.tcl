@@ -1072,7 +1072,7 @@ proc redrawText {node name} {
 
       if { $t == $pr_sel_tag } {
 	  if { $column == 8} {
-	      $win tag add seltag $n.0 $n.72
+	      $win tag add seltag $n.0 $n.78
 	  } else { 
 	      $win tag add seltag $n.0 $n.67
 	  }
@@ -1082,7 +1082,7 @@ proc redrawText {node name} {
     #$win tag add t$n $n.67 "$n.67 lineend"
     if { $newver == 1 } {
 	if { $column == 8} {
-	    $win tag add t$n $n.72 "$n.72 lineend"
+	    $win tag add t$n $n.78 "$n.78 lineend"
 	} else {
 	    $win tag add t$n $n.67 "$n.67 lineend"
 	}
