@@ -63,9 +63,10 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h \
 		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h         \
 		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h  \
-		$(INCDIR)/OpenMPLayer.h  $(INCDIR)/TauJAPI.h
+		$(INCDIR)/OpenMPLayer.h  $(INCDIR)/TauJAPI.h	      \
+		$(INCDIR)/SprocLayer.h
 
-LDFLAGS	      = $(PCXX_OPT)
+LDFLAGS	      = $(PCXX_OPT) 
 
 MAKEFILE      = Makefile
 
@@ -220,6 +221,9 @@ Tracer.o   	: Tracer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 PthreadLayer.o   : PthreadLayer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+SprocLayer.o   : SprocLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
