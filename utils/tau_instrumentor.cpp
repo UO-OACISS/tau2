@@ -649,7 +649,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C++ program ----------------------------- */
 /* -------------------------------------------------------------------------- */
-int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string& header_file) 
+bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string& header_file) 
 { 
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
@@ -927,7 +927,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
   // written everything. quit and debug!
   ostr.close();
 
-
+  return true;
 } /* End of instrumentCFile */ 
 
 
@@ -945,7 +945,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
 /* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
-int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name) 
+bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name) 
 { 
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
@@ -984,7 +984,6 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
     cout <<"S: "<< (*lit)->item->fullName() << " line "<< (*lit)->line << " col " << (*lit)->col << endl;
 #endif
     bool instrumented = false;
-    bool isProgram = false;
 
     while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
     {
@@ -1073,7 +1072,6 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 		  WRITE_TAB(ostr,(*it)->col);
 		  ostr <<"call TAU_PROFILE_INIT()"<<endl;
-		  isProgram = true;
 		  /* put spaces on the next line */
      		  for (int space = 0; space < (*it)->col-1 ; space++) 
 		    WRITE_SPACE(ostr, inbuf[space]) 
@@ -1250,6 +1248,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   }
   // written everything. quit and debug!
   ostr.close();
+  return true; /* end of instrumentFFile */
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1309,7 +1308,6 @@ int main(int argc, char **argv)
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
-  char *gr_name;
   setGroupName(p, group_name);
   bool outFileNameSpecified = false;
   int i; 
@@ -1503,8 +1501,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.59 $   $Date: 2004/05/31 15:48:59 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.59 2004/05/31 15:48:59 sameer Exp $
+ * $Revision: 1.60 $   $Date: 2004/05/31 16:03:50 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.60 2004/05/31 16:03:50 sameer Exp $
  ***************************************************************************/
 
 
