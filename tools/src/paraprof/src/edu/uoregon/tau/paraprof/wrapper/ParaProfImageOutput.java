@@ -7,7 +7,7 @@
   Description: Handles the output of the various panels to image files.
 */
 
-package paraprof;
+package edu.uoregon.tau.paraprof;
 
 import java.util.*;
 import java.awt.*;
@@ -15,6 +15,7 @@ import java.awt.image.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProfImageOutput{
 

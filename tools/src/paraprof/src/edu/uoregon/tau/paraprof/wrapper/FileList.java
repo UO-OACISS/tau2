@@ -6,12 +6,13 @@
    Description:  Some useful functions for the system.
 */
 
-package paraprof;
+package edu.uoregon.tau.paraprof;
 
 import java.util.*;
 import java.awt.*;
 import javax.swing.*;
 import java.io.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class FileList{
 
