@@ -33,9 +33,10 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/users/sameer/tau2
+EXTRADIR=
+TAUROOT=/home/ftg1/sameer/tau2
 TULIPDIR=/users/sameer/s
-TAU_PREFIX_INSTALL_DIR=/home/users/sameer/tau2
+TAU_PREFIX_INSTALL_DIR=/home/ftg1/sameer/tau2
 TAU_OPTIONS=
 #######################################################################
  
@@ -82,6 +83,7 @@ LSX = .a
 #SMARTS#PROFILEOPT18  = -DSMARTS   #ENDIF#
 #KAI#PROFILEOPT19  	       = -DKAI   #ENDIF#
 #PGI#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
+#FUJITSU#PROFILEOPT19  	       = -DFUJITSU -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
 #KAINOEX#PROFILEOPT20  	       = --no_exceptions   #ENDIF#
 #SGICCNOEX#PROFILEOPT20  	       = -LANG:exceptions=off  #ENDIF#
 #SP1#PROFILEOPT21	       = -D_POSIX_SOURCE -D_XOPEN_SOURCE -DTAU_AIX #ENDIF#
@@ -93,9 +95,10 @@ LSX = .a
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
 #SGIMP#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
 #CRAYKAI#TAU_FORTRANLIBS	       =        #ENDIF#
-#PGI#TAU_FORTRANLIBS	       = $(PGI)/linux86/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902        #ENDIF#
+#PGI#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902        #ENDIF#
 #PGI1.7#LEXTRA = -lstd -lstrm#ENDIF#
 #PGI1.7#TAUHELPER = $(TAUROOT)/src/Profile/TauPGIHelper.cpp #ENDIF#
+#FUJITSU#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/fj90rt0.o -L$(EXTRADIR)/lib -lfj9i6 -lfj9f6 -lfj9e6        #ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
