@@ -28,6 +28,10 @@ using namespace std;
 #include <sys/param.h>
 #endif // CRAY_TIMERS
 
+#ifdef TAU_MPI
+extern "C" TauUserEvent sendevent;
+#endif /* TAU_MPI */
+
 //Initialize static members.
 char MultipleCounterLayer::environment[25][10] = {
   {"COUNTER1"},{"COUNTER2"},{"COUNTER3"},{"COUNTER4"},{"COUNTER5"},
