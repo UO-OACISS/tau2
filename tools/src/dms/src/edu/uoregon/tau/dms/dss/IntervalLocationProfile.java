@@ -4,7 +4,6 @@ import edu.uoregon.tau.dms.database.DB;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Date;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Enumeration;
@@ -26,7 +25,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.7 2004/10/29 22:43:10 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.8 2004/12/21 00:33:32 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -596,7 +595,7 @@ public class IntervalLocationProfile extends Object {
 	}
     }
 
-    static public void saveIntervalEventData(DB db, Hashtable newFunHash, Enumeration enum, Hashtable newMetHash, int saveMetricIndex) {
+    static public void saveIntervalEventData(DB db, Hashtable newFunHash, Enumeration en, Hashtable newMetHash, int saveMetricIndex) {
 	System.out.print("Saving the intervalEvent data: ");
 	try {
 	    PreparedStatement statement = null;
@@ -609,8 +608,8 @@ public class IntervalLocationProfile extends Object {
 	    int count = 0;
 	    int i = 0;
 	    Integer newMetricID = null;
-	    while (enum.hasMoreElements()) {
-		fdo = (IntervalLocationProfile)enum.nextElement();
+	    while (en.hasMoreElements()) {
+		fdo = (IntervalLocationProfile)en.nextElement();
 		Integer newIntervalEventID = (Integer)newFunHash.get(new Integer(fdo.getIntervalEventID()));
 		// get the interval_event details
 		i = 0;

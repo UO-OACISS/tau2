@@ -3,13 +3,12 @@ package edu.uoregon.tau.dms.dss;
 import edu.uoregon.tau.dms.database.DB;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.io.Serializable;
 
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.7 2004/10/29 20:21:29 amorris Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.8 2004/12/21 00:33:32 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1

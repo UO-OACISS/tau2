@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
 /**
  * Holds all the data for an interval_event in the database.
  * This object is returned by the DataSession class and all of its subtypes.
@@ -23,7 +24,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: IntervalEvent.java,v 1.5 2004/10/29 20:21:29 amorris Exp $</P>
+ * <P>CVS $Id: IntervalEvent.java,v 1.6 2004/12/21 00:33:32 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -41,10 +42,10 @@ public class IntervalEvent {
     private int trialID;
     private IntervalLocationProfile meanSummary = null;
     private IntervalLocationProfile totalSummary = null;
-    private DataSession dataSession = null;
+    private DatabaseAPI dataSession = null;
 
-    public IntervalEvent (DataSession dataSession) {
-	this.dataSession = dataSession;
+    public IntervalEvent(DatabaseAPI dataSession) {
+        this.dataSession = dataSession;
     }
 
     /**
@@ -52,8 +53,8 @@ public class IntervalEvent {
      *
      * @return	the unique identifier of the intervalEvent
      */
-    public int getID () {
-	return this.intervalEventID;
+    public int getID() {
+        return this.intervalEventID;
     }
 
     /**
@@ -61,8 +62,8 @@ public class IntervalEvent {
      *
      * @return	the name of the intervalEvent
      */
-    public String getName () {
-	return this.name;
+    public String getName() {
+        return this.name;
     }
 
     /**
@@ -70,8 +71,8 @@ public class IntervalEvent {
      *
      * @return	the TAU group the intervalEvent is in.
      */
-    public String getGroup () {
-	return this.group;
+    public String getGroup() {
+        return this.group;
     }
 
     /**
@@ -79,8 +80,8 @@ public class IntervalEvent {
      *
      * @return	the trial ID for the intervalEvent.
      */
-    public int getTrialID () {
-	return this.trialID;
+    public int getTrialID() {
+        return this.trialID;
     }
 
     /**
@@ -100,10 +101,10 @@ public class IntervalEvent {
      * @see		DataSession#getIntervalEvents
      * @see		DataSession#setMetric(Metric)
      */
-    public IntervalLocationProfile getMeanSummary () {
-	if (this.meanSummary == null)
-	    dataSession.getIntervalEventDetail(this);
-	return (this.meanSummary);
+    public IntervalLocationProfile getMeanSummary() {
+        if (this.meanSummary == null)
+            dataSession.getIntervalEventDetail(this);
+        return (this.meanSummary);
     }
 
     /**
@@ -122,10 +123,10 @@ public class IntervalEvent {
      * @see		IntervalLocationProfile
      * @see		DataSession#getIntervalEvents
      */
-    public IntervalLocationProfile getTotalSummary () {
-	if (this.totalSummary == null)
-	    dataSession.getIntervalEventDetail(this);
-	return (this.totalSummary);
+    public IntervalLocationProfile getTotalSummary() {
+        if (this.totalSummary == null)
+            dataSession.getIntervalEventDetail(this);
+        return (this.totalSummary);
     }
 
     /**
@@ -135,8 +136,8 @@ public class IntervalEvent {
      *
      * @param	id unique ID associated with this intervalEvent
      */
-    public void setID (int id) {
-	this.intervalEventID = id;
+    public void setID(int id) {
+        this.intervalEventID = id;
     }
 
     /**
@@ -146,8 +147,8 @@ public class IntervalEvent {
      *
      * @param	name the name of the intervalEvent
      */
-    public void setName (String name) {
-	this.name = name;
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -157,8 +158,8 @@ public class IntervalEvent {
      *
      * @param	group the TAU group the intervalEvent is in.
      */
-    public void setGroup (String group) {
-	this.group = group;
+    public void setGroup(String group) {
+        this.group = group;
     }
 
     /**
@@ -168,8 +169,8 @@ public class IntervalEvent {
      *
      * @param	id the trial ID for the intervalEvent.
      */
-    public void setTrialID (int id) {
-	this.trialID = id;
+    public void setTrialID(int id) {
+        this.trialID = id;
     }
 
     /**
@@ -179,8 +180,8 @@ public class IntervalEvent {
      *
      * @param	meanSummary the mean summary object for the intervalEvent.
      */
-    public void setMeanSummary (IntervalLocationProfile meanSummary) {
-	this.meanSummary = meanSummary;
+    public void setMeanSummary(IntervalLocationProfile meanSummary) {
+        this.meanSummary = meanSummary;
     }
 
     /**
@@ -190,102 +191,104 @@ public class IntervalEvent {
      *
      * @param	totalSummary the total summary object for the intervalEvent.
      */
-    public void setTotalSummary (IntervalLocationProfile totalSummary) {
-	this.totalSummary = totalSummary;
+    public void setTotalSummary(IntervalLocationProfile totalSummary) {
+        this.totalSummary = totalSummary;
     }
 
     // returns a Vector of IntervalEvents
-    public static Vector getIntervalEvents(DataSession dataSession, DB db, String whereClause) {
-	Vector events = new Vector();
-	// create a string to hit the database
-	StringBuffer buf = new StringBuffer();
-	buf.append("select id, name, group_name, trial ");
-	buf.append("from " + db.getSchemaPrefix() + "interval_event ");
-	buf.append(whereClause);
+    public static Vector getIntervalEvents(DatabaseAPI dataSession, DB db, String whereClause) {
+        Vector events = new Vector();
+        // create a string to hit the database
+        StringBuffer buf = new StringBuffer();
+        buf.append("select id, name, group_name, trial ");
+        buf.append("from " + db.getSchemaPrefix() + "interval_event ");
+        buf.append(whereClause);
 
+        if (db.getDBType().compareTo("oracle") == 0) {
+            buf.append(" order by dbms_lob.substr(name) asc");
+        } else {
+            buf.append(" order by name asc ");
+        }
 
-	if (db.getDBType().compareTo("oracle") == 0) {
-	    buf.append(" order by dbms_lob.substr(name) asc");
-	} else {
-	    buf.append(" order by name asc ");
-	}
+        // System.out.println(buf.toString());
 
-	// System.out.println(buf.toString());
+        // get the results
+        try {
+            ResultSet resultSet = db.executeQuery(buf.toString());
+            IntervalEvent tmpIntervalEvent = null;
+            while (resultSet.next() != false) {
+                IntervalEvent event = new IntervalEvent(dataSession);
+                event.setID(resultSet.getInt(1));
+                event.setName(resultSet.getString(2));
+                event.setGroup(resultSet.getString(3));
+                event.setTrialID(resultSet.getInt(4));
+                events.addElement(event);
+            }
+            resultSet.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
 
-	// get the results
-	try {
-	    ResultSet resultSet = db.executeQuery(buf.toString());	
-	    IntervalEvent tmpIntervalEvent = null;
-	    while (resultSet.next() != false) {
-		IntervalEvent event = new IntervalEvent(dataSession);
-		event.setID(resultSet.getInt(1));
-		event.setName(resultSet.getString(2));
-		event.setGroup(resultSet.getString(3));
-		event.setTrialID(resultSet.getInt(4));
-		events.addElement(event);
-	    }
-	    resultSet.close(); 
-	}catch (Exception ex) {
-	    ex.printStackTrace();
-	    return null;
-	}
-		
-	return events;
+        return events;
     }
 
     public int saveIntervalEvent(DB db, int newTrialID, Hashtable newMetHash, int saveMetricIndex) {
-	int newIntervalEventID = 0;
-	try {
-	    PreparedStatement statement = null;
-	    if (saveMetricIndex < 0) {
-		//		statement = db.prepareStatement("INSERT INTO interval_event (trial, name, group_name) VALUES (?, ?, ?)");
-		statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "interval_event (trial, name, group_name) VALUES (?, ?, ?)");
-		statement.setInt(1, newTrialID);
-		statement.setString(2, name);
-		statement.setString(3, group);
-		statement.executeUpdate();
-		statement.close();
+        int newIntervalEventID = 0;
+        try {
+            PreparedStatement statement = null;
+            if (saveMetricIndex < 0) {
+                //		statement = db.prepareStatement("INSERT INTO interval_event (trial, name, group_name) VALUES (?, ?, ?)");
+                statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                        + "interval_event (trial, name, group_name) VALUES (?, ?, ?)");
+                statement.setInt(1, newTrialID);
+                statement.setString(2, name);
+                statement.setString(3, group);
+                statement.executeUpdate();
+                statement.close();
 
-		String tmpStr = new String();
-		if (db.getDBType().compareTo("mysql") == 0)
-		    tmpStr = "select LAST_INSERT_ID();";
-		else if (db.getDBType().compareTo("db2") == 0)
-		    tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
-		else if (db.getDBType().compareTo("oracle") == 0) 
-		    tmpStr = "select " + db.getSchemaPrefix() + "interval_event_id_seq.currval FROM dual";
-		else
-		    tmpStr = "select currval('interval_event_id_seq');";
-		newIntervalEventID = Integer.parseInt(db.getDataItem(tmpStr));
-	    } else {
+                String tmpStr = new String();
+                if (db.getDBType().compareTo("mysql") == 0)
+                    tmpStr = "select LAST_INSERT_ID();";
+                else if (db.getDBType().compareTo("db2") == 0)
+                    tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
+                else if (db.getDBType().compareTo("oracle") == 0)
+                    tmpStr = "select " + db.getSchemaPrefix()
+                            + "interval_event_id_seq.currval FROM dual";
+                else
+                    tmpStr = "select currval('interval_event_id_seq');";
+                newIntervalEventID = Integer.parseInt(db.getDataItem(tmpStr));
+            } else {
 
-		if (db.getDBType().compareTo("oracle") == 0) 
-		    statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix() + "interval_event where dbms_lob.instr(name, ?) > 0");
-		else
-		    statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix() + "interval_event where name = ?");
+                if (db.getDBType().compareTo("oracle") == 0)
+                    statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
+                            + "interval_event where dbms_lob.instr(name, ?) > 0");
+                else
+                    statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
+                            + "interval_event where name = ?");
 
-		statement.setString(1, name);
-		ResultSet resultSet = statement.executeQuery();
-		while (resultSet.next() != false) {
-		    newIntervalEventID = resultSet.getInt(1);
-		}
-		resultSet.close();
-		statement.close();
-	    }
-	} catch (SQLException e) {
-	    System.out.println("An error occurred while saving the interval_event.");
-	    e.printStackTrace();
-	}
+                statement.setString(1, name);
+                ResultSet resultSet = statement.executeQuery();
+                while (resultSet.next() != false) {
+                    newIntervalEventID = resultSet.getInt(1);
+                }
+                resultSet.close();
+                statement.close();
+            }
+        } catch (SQLException e) {
+            System.out.println("An error occurred while saving the interval_event.");
+            e.printStackTrace();
+        }
 
-	// save the intervalEvent mean summaries
-	if (meanSummary != null) {
-	    meanSummary.saveMeanSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
-	}
+        // save the intervalEvent mean summaries
+        if (meanSummary != null) {
+            meanSummary.saveMeanSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
+        }
 
-	// save the intervalEvent total summaries
-	if (totalSummary != null) {
-	    totalSummary.saveTotalSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
-	}
-	return newIntervalEventID;
+        // save the intervalEvent total summaries
+        if (totalSummary != null) {
+            totalSummary.saveTotalSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
+        }
+        return newIntervalEventID;
     }
 }
-

@@ -3,7 +3,7 @@
 
    Title:      ParaProf
    Author:     Robert Bell
-   Description:  Some useful functions for the system.
+   Description:  Some useful functionProfiles for the system.
 */
 
 package edu.uoregon.tau.dms.dss;
@@ -13,9 +13,54 @@ import java.awt.*;
 import javax.swing.*;
 import java.io.*;
 
+
+class FileFilter implements FilenameFilter {
+    public FileFilter(String regex) {
+	this.regex = regex;
+    }
+    public boolean accept(File okplace, String patternmatch ) {
+	if (patternmatch.matches(regex)) {
+	    return true;
+	} 
+	return false;
+    }
+    private String regex;
+}
+
+
 public class FileList{
 
     public FileList(){}
+
+
+    public Vector helperFindProfiles (String path) {
+
+	String prefix = "\\Aprofile\\..*\\..*\\..*\\z";
+	Vector v = new Vector();
+	
+	File file = new File(path);
+	if (file.isDirectory() == false) {
+	    return v;
+	}
+	FilenameFilter prefixFilter = new FileFilter(prefix);
+	File files[] = file.listFiles(prefixFilter);
+	
+	if (files.length == 0) {
+	    // we didn't find any profile files here, now look for MULTI_ directories
+	    FilenameFilter multiFilter = new FileFilter("MULTI__.*");
+	    File multiDirs[] = file.listFiles(multiFilter);
+	    
+	    for (int i=0; i<multiDirs.length; i++) {
+		File finalFiles[] = multiDirs[i].listFiles(prefixFilter);
+		v.add(finalFiles);
+	    }
+	} else {
+	    v.add(files);
+	    return v;
+	}
+	return v;
+    }
+
   
     //The component argument is passed to the showOpenDialog method.  It is ok if it is null.
     //The functionality that should be expected is as follows: Multiple files in a single directory
