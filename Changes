@@ -20,6 +20,7 @@ Version 2.6 changes (from 2.5):
    Performance Counters on Cray, Intel, Alpha, UltraSparcs, MIPS, and 
    IBM Power platforms
 6. TAU MPI wrapper library introduced for profiling MPI routines. 
+7. Added NAS Parallel Benchmark 2.3 LU & SP suites as Fortran90/MPI examples.
 
 Version 2.5 changes (from 2.4):
 1. Automatic instrumentation support using DUCTAPE.
