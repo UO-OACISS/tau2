@@ -1889,6 +1889,7 @@ EOF
 cat << EOF > mpistatus.C
 
   #include <mpi.h>
+  #include <memory.h>
   int foo(MPI_Fint *status)
   {
     MPI_Status s;
