@@ -37,11 +37,20 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////
 // Wrappers for corresponding C++ functions follow
 
+/* Note: Our old scheme relied on getting a profiler object. This doesn't 
+   work well with threads, all threads start/stop the same profiler & 
+   profiler is supposed to be for each invocation (thread) as it has a single
+   scalar for storing StartTime. So, we changed this so that each 
+   tau_get_profiler returns a functionInfo object which can then have 
+   independent profilers associated with it. Each start/stop timer call creates 
+   and destroys a profiler object now. Since the Fortran layer is built atop 
+   the C layer, it remains unchanged. However, we should probably change the 
+   name of this method to tau_get_functioninfo or something. */
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void * tau_get_profiler(char *fname, char *type, TauGroup_t group)
 {
   FunctionInfo *f;
-  Profiler *p;
+  //Profiler *p;
 
   DEBUGPROFMSG("Inside get_profiler group = " << group<<endl;);
 
@@ -50,24 +59,34 @@ extern "C" void * tau_get_profiler(char *fname, char *type, TauGroup_t group)
     f = new FunctionInfo(fname, type, group, "MPI", true);
   else 
     f = new FunctionInfo(fname, type, group, fname, true);
-  p = new Profiler(f, group, true);
+//  p = new Profiler(f, group, true);
 
-  return (void *) p;
+  return (void *) f;
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void tau_start_timer(void *profiler)
+extern "C" void tau_start_timer(void * function_info)
 {
-  Profiler *p = (Profiler *) profiler;
+  FunctionInfo *f = (FunctionInfo *) function_info; 
+  Profiler *p = new Profiler(f, f->GetProfileGroup(), true);
+/*
+#pragma omp critical
+  printf("START tid = %d, profiler= %x\n", RtsLayer::myThread(), p);
+*/
 
   p->Start();
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void tau_stop_timer(void *profiler)
+extern "C" void tau_stop_timer(void * f)
 {
-  Profiler *p = (Profiler *) profiler;
+  Profiler *p = Profiler::CurrentProfiler[RtsLayer::myThread()];
+/*
+#pragma omp critical
+  printf("STOP tid = %d, profiler= %x\n", RtsLayer::myThread(), p);
+*/
   p->Stop();
+  delete p;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -182,7 +201,7 @@ extern "C" void tau_event_disable_stddev(void *ue)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 2000/04/05 23:22:31 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.8 2000/04/05 23:22:31 sameer Exp $
+ * $Revision: 1.9 $   $Date: 2000/07/22 21:05:16 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.9 2000/07/22 21:05:16 sameer Exp $
  ***************************************************************************/
 
