@@ -111,7 +111,8 @@ public class TestPerfDBSession {
 		// select a userEvent
 		session.setUserEvent(userEvent);
 		// select a userEvent, another way
-		session.setUserEvent(userEvent.getUserEventID());
+		if (userEvent != null)
+			session.setUserEvent(userEvent.getUserEventID());
 
 		Vector nodes = new Vector();
 		Integer node = new Integer(0);
