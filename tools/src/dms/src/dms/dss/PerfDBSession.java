@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.21 2004/04/09 22:12:56 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.22 2004/04/16 01:10:31 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -802,6 +802,22 @@ public class PerfDBSession extends DataSession {
 	    	System.out.println("An error occurred while vacuuming the database.");
 	    	e.printStackTrace();
 		}
+	}
+
+	public int saveApplication() {
+		int appid = 0;
+		if (application != null) {
+			appid = application.saveApplication(db);
+		}
+		return appid;
+	}
+
+	public int saveExperiment() {
+		int expid = 0;
+		if (experiment != null) {
+			expid = experiment.saveExperiment(db);
+		}
+		return expid;
 	}
 };
 

@@ -23,7 +23,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: Function.java,v 1.8 2004/04/09 19:42:49 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.9 2004/04/16 01:10:31 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -203,6 +203,7 @@ public class Function {
 		buf.append("from function ");
 		buf.append(whereClause);
 		// System.out.println(buf.toString());
+		buf.append(" order by name asc ");
 
 		// get the results
 		try {

@@ -14,7 +14,7 @@ import java.util.Vector;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.2 2004/04/07 17:36:57 khuck Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.3 2004/04/16 01:10:31 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -620,6 +620,7 @@ public class Experiment {
 		buf.append("compiler_userdata, userdata from experiment ");
 		buf.append(whereClause);
 		// System.out.println(buf.toString());
+		buf.append(" order by name asc ");
 
 		// get the results
 		try {
@@ -664,8 +665,9 @@ public class Experiment {
 		return experiments;
 	}
 
-	public void saveExeriment(DB db) {
+	public int saveExperiment(DB db) {
 		boolean itExists = exists(db);
+		int newExperimentID = 0;
 		try {
 			PreparedStatement statement = null;
 			if (itExists) {
@@ -709,13 +711,15 @@ public class Experiment {
 			if (db.getDBType().compareTo("db2") == 0)
 				tmpStr = "select IDENTITY_VAL_LOCAL() FROM experiment";
 			else
-				tmpStr = "select currval('experiment_id_seq;);";
-			experimentID = Integer.parseInt(db.getDataItem(tmpStr));
+				tmpStr = "select currval('experiment_id_seq');";
+			// experimentID = Integer.parseInt(db.getDataItem(tmpStr));
+			newExperimentID = Integer.parseInt(db.getDataItem(tmpStr));
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the experiment.");
 			e.printStackTrace();
 			System.exit(0);
 		}
+		return newExperimentID;
 	}
 
 	private boolean exists(DB db) {
