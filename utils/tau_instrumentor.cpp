@@ -376,7 +376,10 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
 	      for (int space = 0; space < (*it)->col ; space++) ostr << " " ; 
 #endif 
 	      // leave some leading spaces for formatting...
+	
+	      ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
 	      ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
+	      ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
 	    }
 	    else 
 	    {
