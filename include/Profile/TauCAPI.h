@@ -99,6 +99,9 @@
 #define TAU_DISABLE_GROUP(group)		tau_disable_group(group);
 #define TAU_ENABLE_GROUP_NAME(group)            tau_enable_group_name(group) 
 #define TAU_DISABLE_GROUP_NAME(group)           tau_disable_group_name(group)
+#define TAU_ENABLE_ALL_GROUPS()            	tau_enable_all_groups() 
+#define TAU_DISABLE_ALL_GROUPS()            	tau_disable_all_groups() 
+#define TAU_DISABLE_GROUP_NAME(group)           tau_disable_group_name(group)
 #define TAU_GET_PROFILE_GROUP(group)            tau_get_profile_group(group)
 
 
@@ -190,7 +193,7 @@ extern TauGroup_t tau_get_profile_group(char *group);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2002/01/15 04:17:50 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.14 2002/01/15 04:17:50 sameer Exp $
+ * $Revision: 1.15 $   $Date: 2002/01/15 21:30:12 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.15 2002/01/15 21:30:12 sameer Exp $
  ***************************************************************************/
 

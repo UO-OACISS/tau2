@@ -97,6 +97,8 @@
 #define TAU_DISABLE_GROUP(group)		RtsLayer::disableProfileGroup(group)
 #define TAU_ENABLE_GROUP_NAME(group)		RtsLayer::enableProfileGroupName(group)
 #define TAU_DISABLE_GROUP_NAME(group)		RtsLayer::disableProfileGroupName(group)
+#define TAU_ENABLE_ALL_GROUPS()			RtsLayer::enableAllGroups()
+#define TAU_DISABLE_ALL_GROUPS()		RtsLayer::disableAllGroups()
 #define TAU_GET_PROFILE_GROUP(group)		RtsLayer::getProfileGroup(group)
 
 #ifdef NO_RTTI
@@ -143,6 +145,8 @@
 #define TAU_DISABLE_GROUP(group)
 #define TAU_ENABLE_GROUP_NAME(group)
 #define TAU_DISABLE_GROUP_NAME(group)
+#define TAU_ENABLE_ALL_GROUPS()			
+#define TAU_DISABLE_ALL_GROUPS()	
 
 #define CT(obj)
 
@@ -169,6 +173,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2002/01/15 04:17:51 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.15 2002/01/15 04:17:51 sameer Exp $ 
+ * $Revision: 1.16 $   $Date: 2002/01/15 21:30:12 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.16 2002/01/15 21:30:12 sameer Exp $ 
  ***************************************************************************/
