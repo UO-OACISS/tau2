@@ -1,2 +1,2 @@
-Class-Path: ../../dms/dms.jar
+Class-Path: ../../perfdb/jars/perfdb.jar ../../perfdb/jars/postgresql.jar ../../perfdb/jars/xerces.jar ../../perfdb/jars/jargs.jar ../../dms/dms.jar
 Main-Class: paraprof/ParaProf
