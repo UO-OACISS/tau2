@@ -150,6 +150,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    JMenuItem jMenuItem = new JMenuItem("Add Application");
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
+
+	    jMenuItem = new JMenuItem("Add Experiment");
+	    jMenuItem.addActionListener(this);
+	    popup1.add(jMenuItem);
+
+	    jMenuItem = new JMenuItem("Add Trial");
+	    jMenuItem.addActionListener(this);
+	    popup1.add(jMenuItem);
 	    //######
 	    //End - Add items to the first popup menu.
 	    //######
@@ -162,6 +170,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    popup2.add(updateApplicationMetaDataMenuItem);
 
 	    jMenuItem = new JMenuItem("Add Experiment");
+	    jMenuItem.addActionListener(this);
+	    popup2.add(jMenuItem);
+
+	    jMenuItem = new JMenuItem("Add Trial");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 	    //######
@@ -410,7 +422,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
 			application.setDMTN(applicationNode);
 			application.setName("New Application");
-			System.out.println("About to add an application!");
 			treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
 		    }
 		    else if(clickedOnObject == dbApps){
@@ -425,15 +436,96 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		}
 		else if(arg.equals("Add Experiment")){
 		    if(clickedOnObject == standard){
+			//First add the application.
+			ParaProfApplication application  = ParaProf.applicationManager.addApplication();
+			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+			application.setDMTN(applicationNode);
+			application.setName("New Application");
+			treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
+			//Now add the experiment.
+			ParaProfExperiment experiment = application.addExperiment();
+			DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+			experiment.setName("New Experiment");
+			treeModel.insertNodeInto(experimentNode, application.getDMTN(), application.getDMTN().getChildCount());
 		    }
 		    else if(clickedOnObject == dbApps){
-			/*ParaProfExperiment experiment  = new ParaProfExperiment();
-			experiment.setName("New Experiment");
+			/*ParaProfApplication application  = new ParaProfApplication();
+			application.setName("New Application");
 			PerfDMFSession perfDMFSession = new PerfDMFSession(); 
 			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			perfDMFSession.setExperiment(application);
+			perfDMFSession.setApplication(application);
 			perfDMFSession.saveApplication();
 			perfDMFSession.terminate();*/
+		    }
+		    if(clickedOnObject instanceof ParaProfApplication){
+			ParaProfApplication application = (ParaProfApplication) clickedOnObject;
+			if(application.dBApplication()){
+			    /*ParaProfExperiment experiment  = new ParaProfExperiment();
+			      DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+			      experiment.setDMTN(experimentNode);
+			      experiment.setName("New Experiment");
+			      PerfDMFSession perfDMFSession = new PerfDMFSession(); 
+			      perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			      perfDMFSession.setExperiment(application);
+			      perfDMFSession.saveApplication();
+			      perfDMFSession.terminate();*/
+			}
+			else{
+			    ParaProfExperiment experiment = application.addExperiment();
+			    DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+			    experiment.setDMTN(experimentNode);
+			    experiment.setName("New Experiment");
+			    System.out.println("About to add an experiment!");
+			    treeModel.insertNodeInto(experimentNode, application.getDMTN(), application.getDMTN().getChildCount());
+			}
+		    }
+		}
+		else if(arg.equals("Add Trial")){
+		    if(clickedOnObject == standard){
+			//First add the application.
+			ParaProfApplication application  = ParaProf.applicationManager.addApplication();
+			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+			application.setDMTN(applicationNode);
+			application.setName("New Application");
+			treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
+			//Now add the experiment.
+			ParaProfExperiment experiment = application.addExperiment();
+			DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+			experiment.setName("New Experiment");
+			//Now show the load trial window.
+			(new LoadTrialPanel(this, experiment, false)).show();
+		    }
+		    else if(clickedOnObject == dbApps){
+			/*ParaProfApplication application  = new ParaProfApplication();
+			application.setName("New Application");
+			PerfDMFSession perfDMFSession = new PerfDMFSession(); 
+			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			perfDMFSession.setApplication(application);
+			perfDMFSession.saveApplication();
+			perfDMFSession.terminate();*/
+		    }
+		    else if(clickedOnObject instanceof ParaProfApplication){
+			ParaProfApplication application = (ParaProfApplication) clickedOnObject;
+			
+			if(application.dBApplication()){
+			    //(new LoadTrialPanel(this, experiment, true)).show();
+			}
+			else{
+			    ParaProfExperiment experiment = application.addExperiment();
+			    DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+			    experiment.setDMTN(experimentNode);
+			    experiment.setName("New Experiment");
+			    treeModel.insertNodeInto(experimentNode, application.getDMTN(), (application.getDMTN()).getChildCount());
+			    (new LoadTrialPanel(this, experiment, false)).show();
+			}
+		    }
+		    else if(clickedOnObject instanceof ParaProfExperiment){
+			ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
+			if(experiment.dBExperiment()){
+			    //(new LoadTrialPanel(this, experiment, true)).show();
+			}
+			else
+			    (new LoadTrialPanel(this, experiment, false)).show();
 		    }
 		}
 		else if(arg.equals("Update Meta Data in DB")){
@@ -756,8 +848,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    trial.setDBTrial(true);
 		    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
 		    trial.setDMTN(trialNode);
-		    trial.setTreePath(new TreePath(trialNode.getPath()));
 		    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
+		    trial.setTreePath(new TreePath(trialNode.getPath()));
+		    //treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 		}
 		perfDMFSession.terminate();
 		System.out.println("Done loading trial list.");
@@ -772,8 +865,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    ParaProfTrial trial = (ParaProfTrial)l.next();
 		    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
 		    trial.setDMTN(trialNode);
-		    trial.setTreePath(new TreePath(trialNode.getPath()));
 		    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
+		    trial.setTreePath(new TreePath(trialNode.getPath()));
+		    //System.out.println("path: " + (new TreePath(trialNode.getPath())));
+		    //treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 		}
 		System.out.println("Done loading trial list.");
 	    }
@@ -1036,77 +1131,58 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     public void addExperiment(){
     }
 
-    //Adds a trial to the given experiment. If the given experiment is null it tries to determine if
-    //an experiment is clicked on in the display, and uses that.
-    //If prompt is set to true, the user is prompted for a trial name, otherwise, a default name is created.
-    //Returns the added trial or null if no trial was added.
-    private void addTrial(){
+    public void addTrial(ParaProfExperiment experiment, File location, String filePrefix, int type){
     	try{
 	    ParaProfTrial trial = null;
-	    String trialName = null;
-	    boolean dataAdded = false;
-	    ParaProfExperiment experiment;
-	    String string1 = null;
-	    String string2 = null;
-	    String string3 = null;
-
-	    //Get the selected trial placeholder, and then its parent experiment node.
-	    TreePath path = tree.getSelectionPath();
-	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-	    DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
-	    Object userObject = parentNode.getUserObject();
-	    experiment = (ParaProfExperiment) userObject;
-      
-	    //Get the name of the new trial.
-	    trialName = JOptionPane.showInputDialog(this, "Enter trial name, then make your selection.");
-	    if((trialName == null) || "".equals(trialName)){
-		JOptionPane.showMessageDialog(this, "You must enter a name!", "Error!"
-					      ,JOptionPane.ERROR_MESSAGE);
-		System.out.println("Error adding trial ... aborted.");
-		return;
-	    }
-
-	    if(experiment.isTrialPresent(trialName)){
-		System.out.println("Trial with name: " + trialName + "exists. Not adding!");
-		return;
-	    }
-
-	    int type = -1;
-	    String s = (String) "";
-	    if(s.equals("Pprof -d File"))
-		type = 0;
-	    else if(s.equals("Tau Output"))
-		type = 1;
-	    else if(s.equals("Dynaprof"))
-		type = 2;
-	    else if(s.equals("other-2"))
-		type = 3;
-
-	    System.out.println("trial type: " + type);
-
-	    //Create the trial.
-	    trial = new ParaProfTrial(null, type);
-	    trial.setName(trialName);
-	    
 	    FileList fl = new FileList();
-	    Vector v = fl.getFileList(null, this, type,null,UtilFncs.debug);
+	    Vector v = null;
+	    if(type!=-1){
+		switch(type){
+		case 0:
+		    if(filePrefix==null)
+			v = fl.getFileList(location, null, type, "pprof", UtilFncs.debug);
+		    else
+			v = fl.getFileList(location, null, type, filePrefix, UtilFncs.debug);
+		    break;
+		case 1:
+		    if(filePrefix==null)
+			v = fl.getFileList(location, null, type, "profile", UtilFncs.debug);
+		    else
+			v = fl.getFileList(location, null, type, filePrefix, UtilFncs.debug);
+		    break;
+		case 2:
+		    v = fl.getFileList(location, null, type, filePrefix, UtilFncs.debug);
+		    break;
+		case 5:
+		    if(filePrefix==null)
+			v = fl.getFileList(location, null, type, "gprof", UtilFncs.debug);
+		    else
+			v = fl.getFileList(location, null, type, filePrefix, UtilFncs.debug);
+		    break;
+		default:
+		    v = new Vector();
+		    System.out.println("Unrecognized file type.");
+		    break;
+		}
+		if(v.size()>0){
+		    trial = new ParaProfTrial(null, type);
+		    experiment.addTrial(trial);
+		    trial.setName("New Trial");
+		    trial.setPaths(fl.getPath());
+		    trial.setLoading(true);
+		    trial.initialize(v);
 
-	    trial.initialize(v);
-	    
-	    experiment.addTrial(trial);
-	    
-	    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
-	    trial.setDMTN(trialNode);
-	    
-	    //Update the tree.
-	    for(Enumeration e2 = (trial.getMetrics()).elements(); e2.hasMoreElements() ;){
-		Metric metric = (Metric) e2.nextElement();
-		DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
-		metric.setDMTN(metricNode);
-		metricNode.setAllowsChildren(false);
-		trialNode.add(metricNode);
+		    if((experiment.getDMTN()) != null){ //This checks whether the experiment node is visible.
+			DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
+			trial.setDMTN(trialNode);
+			treeModel.insertNodeInto(trialNode, experiment.getDMTN(), experiment.getDMTN().getChildCount());
+			trial.setTreePath(new TreePath(trialNode.getPath()));
+		    }
+		}
+		else{
+		    System.out.println("No profile files found in the selected directory.");
+		}
 	    }
-	    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 	}
 	catch(Exception e){
 	    System.out.println("Error adding trial ... aborted.");
