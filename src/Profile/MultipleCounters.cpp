@@ -470,6 +470,17 @@ bool MultipleCounterLayer::papiMCLInit(int functionPosition){
   for(int i=0; i<MAX_TAU_COUNTERS; i++){
       if(MultipleCounterLayer::names[i] != NULL){
 	if (strstr(MultipleCounterLayer::names[i],"PAPI") != NULL) {
+	  //Reset the name if this is a native event.
+	  if (strstr(MultipleCounterLayer::names[i],"NATIVE") != NULL) {
+	    //Shift the string down.
+	    int counter = 0;
+	    while(names[i][12+counter]!='\0'){
+	      MultipleCounterLayer::names[i][counter]=MultipleCounterLayer::names[i][12+counter];
+	      counter++;
+	    }
+	    MultipleCounterLayer::names[i][counter]='\0';
+	    cout << "Adjusted counter name is: " << names[i] << endl;
+	  }
 	  PapiLayer::multiCounterPapiInit();
 	  int tmpCode = PapiLayer::map_eventnames(MultipleCounterLayer::names[i]);
 	  if(tmpCode != -1){
