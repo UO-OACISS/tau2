@@ -123,4 +123,7 @@ multicounters   - Illustrates the use of multiple measurement options configured
                   setting the env. variables COUNTERS<1-25> for specifying 
                   measurements. Requires configuring TAU with -MULTIPLECOUNTERS.
 
+selectiveAccess - Illustrates the use of TAU API for runtime access of TAU
+	  	  performance data. A program can get information about routines
+		  executing in its context.
 
