@@ -181,6 +181,11 @@ echo " " > wishver
     echo "Configuring with ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt"
     ./configure $fortrancompiler $ccompiler $useropts $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt <wishver
     make clean install
+    if [ "x$commopt" = "x" ]
+    then
+      echo "Configuring with ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -nocomm"
+      ./configure $fortrancompiler $ccompiler $useropts $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -nocomm <wishver
+    fi
   
 # Add TRACE
     echo "Configuring with ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE"
