@@ -40,6 +40,9 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 
 		    // increment the node counter - there's a file for each node.
 		    nodeID++;
+
+		    // clear the event names
+		    eventNames = new Hashtable();
 	  
 		    //####################################
 		    //First Line
@@ -61,18 +64,37 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 			}
 		    }
 
+		    boolean first = true; // we are currently defining the boundaries between
+		                          // instrumented sections to be the line "Instrumented section:"
+		                          // so we copy inclusive -> exclusive at this time, but we don't
+		                          // want to do it the first time.
+		    boolean exclusiveSet = false;
 		    // find the callsite data
 		    while(inputString != null){
 			if (inputString.length() == 0) {
 			    // do nothing
 			} else if (inputString.trim().startsWith("Instrumented section:")) {
+
+			    if (!first && !exclusiveSet) {
+				// there was no exclusive time for this instrumented section, this means
+				// that the exclusive time = inclusive time (it did not call any 
+				// instrumented functions.
+				// copy inclusive over to exclusive
+				globalThreadDataElement.setExclusiveValue(timeMetric, globalThreadDataElement.getInclusiveValue(timeMetric));
+				if (globalThreadDataElement.getExclusiveValue(timeMetric) > globalMappingElement.getMaxExclusiveValue(timeMetric)) {
+				    globalMappingElement.setMaxExclusiveValue(timeMetric, globalThreadDataElement.getExclusiveValue(timeMetric));
+				}
+			    }
+			    first = false;
+			    exclusiveSet = false;
 			    processHeaderLine1(inputString);
 			} else if (inputString.trim().startsWith("file:")) {
 			    processHeaderLine2(inputString);
 			} else if (inputString.trim().startsWith("Count:")) {
 			    processHeaderLine3(inputString);
 			} else if (inputString.trim().startsWith("Wall Clock Time:")) {
-			    processHardwareCounter(inputString);
+			    //processHardwareCounter(inputString);
+			    processTime(inputString, true);
 			} else if (inputString.trim().startsWith("Average duration:")) {
 				// because I can't figure out how to get the metrics allocated
 				// correctly, just toss this value out.  I don't have this metric
@@ -91,13 +113,29 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 				// correctly, just toss this value out.  I don't have this metric
 				// for every measurement, so the metric indexing gets all hosed up.
 			    // processHardwareCounter(inputString);
-			    processHeaderLine4(inputString, 3);
+			    //processHeaderLine4(inputString, 3);
+			    processTime(inputString, false);
+			    exclusiveSet = true;
 			} else if (inputString.trim().startsWith("Total time in user mode:")) {
 			    processHardwareCounter(inputString);
 			} else {
 			    processHardwareCounter(inputString);
 			} 
 			inputString = br.readLine();
+		    }
+
+		  
+		    // we also have to do this here to get the last instrumented section
+		    if (!first && !exclusiveSet) {
+			// there was no exclusive time for this instrumented section, this means
+			// that the exclusive time = inclusive time (it did not call any 
+			// instrumented functions.
+			// copy inclusive over to exclusive
+			globalThreadDataElement.setExclusiveValue(timeMetric, globalThreadDataElement.getInclusiveValue(timeMetric));
+			if (globalThreadDataElement.getExclusiveValue(timeMetric) > globalMappingElement.getMaxExclusiveValue(timeMetric)) {
+			    globalMappingElement.setMaxExclusiveValue(timeMetric, globalThreadDataElement.getExclusiveValue(timeMetric));
+			    
+			}
 		    }
 
 		    //Close the file.
@@ -396,6 +434,112 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 	}
     }
 
+    // Exclusive Duration lines occurr when the instrumented section has a child
+    // instrumented section.
+
+    // inclusive = false means we are processing an 'exclusive' line
+    private void processTime(String string, boolean inclusive) {
+	if (!initialized) {
+	    if (header2.s0 == null)
+		header2.s0 = new String("Entire Program");
+	    if (header3.i0 == 0)
+		header3.i0 = 1;
+	    initializeThread();
+	} else {
+	    // thread.incrementStorage();
+	    globalMappingElement.incrementStorage();
+	    globalThreadDataElement.incrementStorage();
+	}
+	try {
+	    StringTokenizer st1 = new StringTokenizer(string, ":");
+	    String metricName = st1.nextToken().trim(); // hardware counter name
+
+	    metricName = "Time";
+
+	    String tmpStr = st1.nextToken().trim();
+	    int metricCount = 0, newMetricCount = 0;
+	    // need to clean stuff out of the value, like % and M and whatnot
+	    st1 = new StringTokenizer(tmpStr, " ");
+	    double dEventValue = 0.0;
+	    int iEventValue = 0;
+	    tmpStr = st1.nextToken().trim();
+	    
+	    try {
+		dEventValue = Double.parseDouble(tmpStr); // callsite index
+	    } catch (NumberFormatException e) {
+		dEventValue = 0;
+	    }
+
+
+	    //if (st1.hasMoreTokens())
+	    //metricName += " (" + st1.nextToken() + ")";
+	    // System.out.println(metricName + " = " + dEventValue);
+
+	    metricCount = this.getNumberOfMetrics();
+	    //Set the metric name.
+	    Metric newMetric = this.addMetric(metricName);
+	    metric = newMetric.getID();
+	    timeMetric = metric;
+	    newMetricCount = this.getNumberOfMetrics();
+
+	    // System.out.println("" + metricCount + ", " + newMetricCount + ", " + (metric+1));
+	    while (metricCount < newMetricCount) {
+		//Need to call increaseVectorStorage() on all objects that require it.
+		this.getGlobalMapping().increaseVectorStorage();
+		metricCount++;
+	    }
+	    while (thread.getNumberOfMetrics() < newMetricCount) {
+		thread.incrementStorage();
+	    }
+	    while (globalMappingElement.getStorageSize() < newMetricCount) {
+		globalMappingElement.incrementStorage();
+	    }
+	    while (globalThreadDataElement.getStorageSize() < newMetricCount) {
+		globalThreadDataElement.incrementStorage();
+	    }
+
+	    dEventValue = dEventValue * 1000 * 1000;
+
+	    if (inclusive) {
+		globalThreadDataElement.setInclusiveValue(metric, dEventValue);
+		//globalThreadDataElement.setExclusiveValue(metric, dEventValue);
+	    } else {
+		globalThreadDataElement.setExclusiveValue(metric, dEventValue);
+	    }
+
+	    double tmpValue = dEventValue / ((double)(header3.i0));
+	    globalThreadDataElement.setUserSecPerCall(metric, tmpValue);
+
+	    if (inclusive) {
+		if ((globalMappingElement.getMaxInclusiveValue(metric)) < dEventValue) {
+		    globalMappingElement.setMaxInclusiveValue(metric, dEventValue);
+		}
+	    } else {
+		if ((globalMappingElement.getMaxExclusiveValue(metric)) < dEventValue) {
+		    globalMappingElement.setMaxExclusiveValue(metric, dEventValue);
+		}
+	    }
+
+	    if (globalMappingElement.getMaxUserSecPerCall(metric) < (dEventValue / header3.i0))
+		globalMappingElement.setMaxUserSecPerCall(metric, (dEventValue / header3.i0));
+	    
+	    globalThreadDataElement.setExclusivePercentValue(metric, 0);
+	    globalThreadDataElement.setInclusivePercentValue(metric, 0);
+	    globalThreadDataElement.setNumberOfCalls(header3.i0);
+	    globalThreadDataElement.setNumberOfSubRoutines(0);
+	    globalMappingElement.setMaxExclusivePercentValue(metric, 0.0);
+	    globalMappingElement.setMaxInclusivePercentValue(metric, 0.0);
+	    if(globalMappingElement.getMaxNumberOfCalls() < header3.i0)
+		globalMappingElement.setMaxNumberOfCalls(header3.i0);
+	    globalMappingElement.setMaxNumberOfSubRoutines(0);
+
+	} catch(Exception e) {
+	    System.out.println("An error occurred while parsing the wall clock time!");
+	    e.printStackTrace();
+	}
+    }
+
+
     private String getMetricName(String inString){
 	try{
 	    String tmpString = null;
@@ -431,6 +575,7 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
+    private int timeMetric = -1;
     private String inputString = null;
     private String s1 = null;
     private String s2 = null;
