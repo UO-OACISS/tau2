@@ -35,10 +35,14 @@
 class TauUserEvent {
     
   public: 
-    TAU_EVENT_DATATYPE MinValue, MaxValue, SumValue, SumSqrValue; 
-    TAU_EVENT_DATATYPE LastValueRecorded, UserFunctionValue;
+    STORAGE(TAU_EVENT_DATATYPE, MinValue);
+    STORAGE(TAU_EVENT_DATATYPE, MaxValue);
+    STORAGE(TAU_EVENT_DATATYPE, SumValue);
+    STORAGE(TAU_EVENT_DATATYPE, SumSqrValue); 
+    STORAGE(TAU_EVENT_DATATYPE, LastValueRecorded);
+    STORAGE(TAU_EVENT_DATATYPE, UserFunctionValue);
+    STORAGE(long, NumEvents);
     bool DisableMin, DisableMax, DisableMean, DisableStdDev;
-    long NumEvents;
     string EventName;
 
     void AddEventToDB();
@@ -46,13 +50,13 @@ class TauUserEvent {
     TauUserEvent(const char * EName);
     TauUserEvent(TauUserEvent& );
     TauUserEvent& operator= (const TauUserEvent& );
-    void TriggerEvent(TAU_EVENT_DATATYPE data);
+    void TriggerEvent(TAU_EVENT_DATATYPE data, int tid = RtsLayer::myThread());
     ~TauUserEvent();
-    TAU_EVENT_DATATYPE GetMin(void);
-    TAU_EVENT_DATATYPE GetMax(void);
-    TAU_EVENT_DATATYPE GetMean(void);
-    double  GetSumSqr(void);
-    long    GetNumEvents(void);
+    TAU_EVENT_DATATYPE GetMin(int tid = RtsLayer::myThread());
+    TAU_EVENT_DATATYPE GetMax(int tid = RtsLayer::myThread());
+    TAU_EVENT_DATATYPE GetMean(int tid = RtsLayer::myThread());
+    double  GetSumSqr(int tid = RtsLayer::myThread());
+    long    GetNumEvents(int tid = RtsLayer::myThread());
     const char *  GetEventName (void) const;
     bool GetDisableMin(void);
     bool GetDisableMax(void);
@@ -91,6 +95,6 @@ vector<TauUserEvent*>& TheEventDB(int threadid = RtsLayer::myThread());
 
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/05/14 22:07:59 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.2 1998/05/14 22:07:59 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 1998/09/22 01:05:30 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.3 1998/09/22 01:05:30 sameer Exp $ 
  ***************************************************************************/
