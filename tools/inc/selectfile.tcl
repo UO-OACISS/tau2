@@ -55,7 +55,6 @@ proc fileselect {w dir file pattern title showdot {pmcod 0} {host "" } } {
     } else {
 	set fileselect(host) $host
     }
- 
 
     # local functions
     # ---------------
@@ -282,7 +281,7 @@ proc fileselect {w dir file pattern title showdot {pmcod 0} {host "" } } {
 	set temp [FileIO_dir_exists $fileselect(host) $dir]
 	if [string match $temp "FILEIO_ERROR"] {
 	    bell
-	    if [DEBUG] 
+	    if [DEBUG] {}
 	    return
 	} else {
 	    if !$temp {
@@ -415,7 +414,6 @@ proc fileselect {w dir file pattern title showdot {pmcod 0} {host "" } } {
 
 
     proc FS_EntryChecker {w} {
-	
 	global fileselect
 
 	set isFile [FileIO_file_exists $fileselect(host) $fileselect(selection)]
@@ -429,7 +427,6 @@ proc fileselect {w dir file pattern title showdot {pmcod 0} {host "" } } {
     }
     
     proc ButtonChecker {w} {
-	
 	global fileselect
 
 	if {[string match [$w.buttons.create cget -state] "disabled"] } {
@@ -699,7 +696,7 @@ proc getFile {str {pattern *} {pmcod 0} {host ""} {file ""} {curdir ""} } {
     # then a "New Project" button will be created.
     # SAS, 6/7/96
     
-    global fileselect 
+    global fileselect
 
     if $pmcod {
 	global PM_Globals
@@ -720,7 +717,6 @@ proc getFile {str {pattern *} {pmcod 0} {host ""} {file ""} {curdir ""} } {
 	}
     }
     if [string match $file ""] {
-	
 	fileselect .fsel $fileselect(path) "" \
 	    $pattern $str 0 $pmcod $fileselect(host)
     } else {
@@ -747,7 +743,7 @@ proc cmd_create_pmf {w} {
     # stored externally. Ought to allow for better paramter passing.
     
     global fileselect
-    
+
     if {![string match "*.pmf" $fileselect(selection)]} {
 	set fileselect(selection) "$fileselect(selection).pmf"
     }
