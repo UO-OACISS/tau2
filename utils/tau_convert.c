@@ -25,8 +25,6 @@
   #include <unistd.h>
   #include <sys/time.h>
   #define O_BINARY 0
-  typedef long long x_int64;
-  typedef unsigned long long x_uint64;
 #endif
 
 # include <string.h>
