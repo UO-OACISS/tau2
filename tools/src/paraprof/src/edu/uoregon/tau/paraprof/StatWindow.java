@@ -54,8 +54,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    //Now set the title.
 	    if(windowType==0)
 		this.setTitle("Mean Data Window Total: " + trial.getTrialIdentifier(true));
-	    else
+	    else{
+		if(windowType==2)
+		    valueType=12;
 		this.setTitle("Total " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getTrialIdentifier(true));
+	    }
 	    
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {
@@ -152,28 +155,29 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    
 	    //Units submenu.
 	    unitsSubMenu = new JMenu("Select Units");
-	    group = new ButtonGroup();
-	    
-	    button = new JRadioButtonMenuItem("hr:min:sec", false);
-	    button.addActionListener(this);
-	    group.add(button);
-	    unitsSubMenu.add(button);
-	    
-	    button = new JRadioButtonMenuItem("Seconds", false);
-	    button.addActionListener(this);
-	    group.add(button);
-	    unitsSubMenu.add(button);
-	    
-	    button = new JRadioButtonMenuItem("Milliseconds", false);
-	    button.addActionListener(this);
-	    group.add(button);
-	    unitsSubMenu.add(button);
-	    
-	    button = new JRadioButtonMenuItem("Microseconds", true);
-	    button.addActionListener(this);
-	    group.add(button);
-	    unitsSubMenu.add(button);
-	    
+	    if(windowType!=2){
+		group = new ButtonGroup();
+		
+		button = new JRadioButtonMenuItem("hr:min:sec", false);
+		button.addActionListener(this);
+		group.add(button);
+		unitsSubMenu.add(button);
+		
+		button = new JRadioButtonMenuItem("Seconds", false);
+		button.addActionListener(this);
+		group.add(button);
+		unitsSubMenu.add(button);
+		
+		button = new JRadioButtonMenuItem("Milliseconds", false);
+		button.addActionListener(this);
+		group.add(button);
+		unitsSubMenu.add(button);
+		
+		button = new JRadioButtonMenuItem("Microseconds", true);
+		button.addActionListener(this);
+		group.add(button);
+		unitsSubMenu.add(button);
+	    }
 	    optionsMenu.add(unitsSubMenu);
 	    //End - Units submenu.
 
@@ -181,31 +185,53 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    subMenu = new JMenu("Select Value Type");
 	    group = new ButtonGroup();
 	    
-	    button = new JRadioButtonMenuItem("Exclusive", true);
-	    button.addActionListener(this);
-	    group.add(button);
-	    subMenu.add(button);
+	    if(windowType==2){
+		button = new JRadioButtonMenuItem("Number of Userevents", true);
+		button.addActionListener(this);
+		group.add(button);
+		subMenu.add(button);
+		
+		button = new JRadioButtonMenuItem("Min. Value", false);
+		button.addActionListener(this);
+		group.add(button);
+		subMenu.add(button);
+		
+		button = new JRadioButtonMenuItem("Max. Value", false);
+		button.addActionListener(this);
+		group.add(button);
+		subMenu.add(button);
+		
+		button = new JRadioButtonMenuItem("Mean Value", false);
+		button.addActionListener(this);
+		group.add(button);
+		subMenu.add(button);
+	    }
+	    else{
+		button = new JRadioButtonMenuItem("Exclusive", true);
+		button.addActionListener(this);
+		group.add(button);
+		subMenu.add(button);
 	    
-	    button = new JRadioButtonMenuItem("Inclusive", false);
-	    button.addActionListener(this);
-	    group.add(button);
-	    subMenu.add(button);
+		button = new JRadioButtonMenuItem("Inclusive", false);
+		button.addActionListener(this);
+		group.add(button);
+		subMenu.add(button);
 	    
-	    button = new JRadioButtonMenuItem("Number of Calls", false);
-	    button.addActionListener(this);
-	    group.add(button);
-	    subMenu.add(button);
+		button = new JRadioButtonMenuItem("Number of Calls", false);
+		button.addActionListener(this);
+		group.add(button);
+		subMenu.add(button);
 	    
-	    button = new JRadioButtonMenuItem("Number of Subroutines", false);
-	    button.addActionListener(this);
-	    group.add(button);
-	    subMenu.add(button);
+		button = new JRadioButtonMenuItem("Number of Subroutines", false);
+		button.addActionListener(this);
+		group.add(button);
+		subMenu.add(button);
 	    
-	    button = new JRadioButtonMenuItem("Per Call Value", false);
-	    button.addActionListener(this);
-	    group.add(button);
+		button = new JRadioButtonMenuItem("Per Call Value", false);
+		button.addActionListener(this);
+		group.add(button);
+	    }
 	    subMenu.add(button);
-	    
 	    optionsMenu.add(subMenu);
 	    //End - Set the value type options.
 	    
@@ -399,6 +425,30 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		    sortLocalData();
 		    panel.repaint();
 		}
+		else if(arg.equals("Number of Userevents")){
+		    valueType = 12;
+		    this.setHeader();
+		    sortLocalData();
+		    panel.repaint();
+		}
+		else if(arg.equals("Min. Value")){
+		    valueType = 14;
+		    this.setHeader();
+		    sortLocalData();
+		    panel.repaint();
+		}
+		else if(arg.equals("Max. Value")){
+		    valueType = 16;
+		    this.setHeader();
+		    sortLocalData();
+		    panel.repaint();
+		}
+		else if(arg.equals("Mean Value")){
+		    valueType = 18;
+		    this.setHeader();
+		    sortLocalData();
+		    panel.repaint();
+		}
 		else if(arg.equals("Microseconds")){
 		    units = 0;
 		    this.setHeader();
@@ -463,7 +513,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     //######
     public void menuSelected(MenuEvent evt){
 	try{
-	    if(trial.isTimeMetric())
+	    if(trial.isTimeMetric()&&windowType!=2)
 		unitsSubMenu.setEnabled(true);
 	    else
 		unitsSubMenu.setEnabled(false);
@@ -642,7 +692,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     }
 
     public String getHeaderString(){
-	return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
+	if(windowType==2)
+	    return "Sorted By: "+UtilFncs.getValueTypeString(valueType)+"\n";
+	else
+	    return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
 	    "Sorted By: "+UtilFncs.getValueTypeString(valueType)+"\n"+
 	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric())+"\n";
     }
