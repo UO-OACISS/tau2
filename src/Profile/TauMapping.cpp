@@ -46,10 +46,11 @@
 // This global variable is used to keep the function information for
 // mapping. It is passed to the Profiler.
 //////////////////////////////////////////////////////////////////////
-FunctionInfo *& TheTauMapFI(void)
+FunctionInfo *& TheTauMapFI(unsigned int Pgroup )
 { 
-  static FunctionInfo *TauMapFI = (FunctionInfo *) NULL;
+  //static FunctionInfo *TauMapFI = (FunctionInfo *) NULL;
+  static map<unsigned int, FunctionInfo *> TauMapGroups;
 
-  return TauMapFI;
+  return TauMapGroups[Pgroup];
 }
 // EOF
