@@ -49,7 +49,7 @@ if [ ! -r ${JDBC_JAR} ]; then
     exit
 fi
 
-java \
+java -Xmx500m \
 -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
 edu.uoregon.tau.dms.loader.LoadTrial \
 -g ${CONFIG_FILE} "$@"

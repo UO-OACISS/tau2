@@ -54,4 +54,4 @@ fi
 java \
 -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
 edu.uoregon.tau.dms.loader.CreateApplication \
--g ${CONFIG_FILE} $@
+-g ${CONFIG_FILE} "$@"
