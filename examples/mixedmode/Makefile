@@ -11,7 +11,7 @@ TAUROOTDIR	= ../..
 
 include $(TAUROOTDIR)/include/Makefile
 
-# USE_TAU = 1
+USE_TAU = 1
 # Comment above line to disable TAU 
 
 
