@@ -82,15 +82,16 @@ $(INSTALLDEST)/$(LIBTARGET): $(LIBTARGET)
 
 $(LIBTARGET):	$(OBJS)
 	$(AR) $(ARFLAGS) $(LIBTARGET) $(OBJS)
+	$(TAU_RANLIB) $(LIBTARGET)
 
 %.o : %.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 clean: 	
 	$(RM) $(OBJS) $(LIBTARGET) 
 ##############################################
 #/***************************************************************************
 # * $RCSfile: Makefile,v $   $Author: sameer $
-# * $Revision: 1.1 $   $Date: 2003/11/13 00:09:26 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.1 2003/11/13 00:09:26 sameer Exp $ 
+# * $Revision: 1.2 $   $Date: 2003/11/16 00:21:37 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.2 2003/11/16 00:21:37 sameer Exp $ 
 # ***************************************************************************/
