@@ -7802,6 +7802,8 @@ int mpi_file_write_shared__( MPI_File fh, void * buf, int count, MPI_Datatype da
 /******************************************************/
 
 
+#ifdef TAU_MPIDATAREP
+
 /******************************************************
 ***      MPI_Register_datarep wrapper function 
 ******************************************************/
@@ -7866,6 +7868,8 @@ int mpi_register_datarep__( char * datarep, MPI_Datarep_conversion_function * re
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
+
+#endif /* TAU_MPIDATAREP */
 
 /******************************************************/
 /******************************************************/
