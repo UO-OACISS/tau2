@@ -28,7 +28,7 @@ TOOLS_SRC=$(TAUROOT)/tools/src
 CC=javac
 CC-OLD=javac
 
-new: ../bin/ParaProf.jar
+new: $(TOOLS_SRC)/paraprof/bin/ParaProf.jar
 
 old: ../bin/ParaProf-Old.jar
 
