@@ -6,7 +6,7 @@ and indication of status (ie, completed, outstanding, abandoned).
 
 ------
 # Date: 27th Feburary 2004
-# Status: (outstanding)
+# Status: (completed - 2nd March 2004 Robert Bell)
 # Reporter: Sameer Shende (University of Oregon)
 when I clicked on the last event in the event ledger and selected
 "show event details".
@@ -27,3 +27,25 @@ time column.  Should start it at the name column.
 Trying to click on show userevent stat option causes
 ParaProf to crash.
 ------
+
+------
+# Date: 2nd March 2004
+# Status: (completed - 3nd March 2004 Robert Bell)
+# Reporter: Robert Bell (University of Oregon)
+Stat window not responding to save image requests.
+------
+
+------
+# Date: 3nd March 2004
+# Status: (completed - 3nd March 2004 Robert Bell)
+# Reporter: Robert Bell (University of Oregon)
+Crash whilst trying to save png format.
+------
+
+------
+# Date: 3nd March 2004
+# Status: (completed - 3nd March 2004 Robert Bell)
+# Reporter: Robert Bell (University of Oregon)
+Stat window not responding to mouse clicks when displaying userevent data.
+------
+
