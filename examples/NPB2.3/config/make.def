@@ -32,7 +32,7 @@ include $(TAUDIR)/include/Makefile
 #---------------------------------------------------------------------------
 # This is the fortran compiler used for MPI programs
 #---------------------------------------------------------------------------
-MPIF77 = f90 $(ABI)
+MPIF77 = $(TAU_F90) 
 # This links MPI fortran programs; usually the same as ${MPIF77}
 FLINK	= $(TAU_CXX)
 

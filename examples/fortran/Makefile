@@ -32,7 +32,7 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -f
 
-F77		= f90 $(ABI)
+F90		= $(TAU_F90) 
 
 TARGET	      	= hello
 
@@ -48,7 +48,7 @@ $(TARGET):	$(TARGET).o
 	$(CXX) $(LDFLAGS) $(TARGET).o -o $@ $(LIBS)
 
 $(TARGET).o : $(TARGET).f
-	$(F77) $(FFLAGS) -c $(TARGET).f
+	$(F90) $(FFLAGS) -c $(TARGET).f
 
 clean: 	
 	$(RM) $(TARGET).o $(TARGET)
