@@ -1125,6 +1125,30 @@ if [ $machine = apple ]
   fi
 fi
 
+if [ $machine = ppc64 ]
+then
+  if [ $cxx_compiler = g++ ]
+  then
+    if [ $fortran_compiler = no ] 
+    then
+      extradir=`which xlf90 | sed s/xlf90/../`
+      fixmakeargs="$fixmakeargs IBM_FORTRAN"
+    fi
+  fi
+fi
+
+if [ $machine = ibm64 ]
+then
+  if [ $cxx_compiler = g++ ]
+  then
+    if [ $fortran_compiler = no ] 
+    then
+      extradir=`which xlf90 | sed s/xlf90/../`
+      fixmakeargs="$fixmakeargs IBM64_FORTRAN"
+    fi
+  fi
+fi
+
 if [ $machine = t3e -a $cxx_compiler = KCC ]
   then
     fixmakeargs="$fixmakeargs CRAYKAI"
@@ -1202,6 +1226,7 @@ case $cxx_compiler in
       ibmxlc=yes
       if [ $fortran_compiler = no ] 
       then
+        extradir=`which xlf90 | sed s/xlf90/../`
 	if [ "$machine" = "ibm64" ]
         then
           fixmakeargs="$fixmakeargs IBM64_FORTRAN"
