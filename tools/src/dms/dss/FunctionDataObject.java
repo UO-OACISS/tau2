@@ -17,7 +17,7 @@ package dms.dss;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.14 2003/08/27 17:07:38 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.15 2004/03/01 03:46:19 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -29,7 +29,7 @@ package dms.dss;
  * @see		DataSession#setMetric
  * @see		Function
  */
-public class FunctionDataObject {
+public class FunctionDataObject extends Object {
 	private int node;
 	private int context;
 	private int thread;

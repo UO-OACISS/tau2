@@ -14,11 +14,15 @@ import dms.dss.*;
  * AFTER decrementing index. Thus, alternating calls to next and previous
  * return the same element. As required by the ListIterator specification.
  *
- * <P>CVS $Id: DataSessionIterator.java,v 1.7 2004/01/30 21:21:41 khuck Exp $</P>
+ * <P>CVS $Id: DataSessionIterator.java,v 1.8 2004/03/01 03:46:19 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
 public class DataSessionIterator implements ListIterator{
+
+	public DataSessionIterator () {
+		structureType = CUSTOM;
+	}
 
 /**
  * Standard Constructor for the DataSessionIterator class.
@@ -180,9 +184,10 @@ public class DataSessionIterator implements ListIterator{
 
 		private Vector listData = null;
 		private Object[] arrayData = null;
-		private int size = 0;
-		private int index = 0;
+		protected int size = 0;
+		protected int index = 0;
 		private int structureType;
 		private static int ARRAY = 0;
 		private static int VECTOR = 1;
+		private static int CUSTOM = 2;
 }

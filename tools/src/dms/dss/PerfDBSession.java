@@ -12,7 +12,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.33 2004/02/13 21:33:16 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.34 2004/03/01 03:46:19 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -698,8 +698,15 @@ public class PerfDBSession extends DataSession {
 		buf.append(" order by trial, function, metric, node, context, thread ");
 		// System.out.println(buf.toString());
 
-		// Vector functionData = new Vector();
-		FunctionDataObject[] functionData = null;
+		int[] node = null;
+		int[] context = null;
+		int[] thread = null;
+		int[] function = null;
+		int[] numCalls = null;
+		int[] numSubroutines = null;
+		double[] data = null;
+		FunctionDataIterator fdi = null;
+		int size = 0;
 		// get the results
 		try {
             Date start = new Date();
@@ -708,44 +715,48 @@ public class PerfDBSession extends DataSession {
             long interval = end.getTime() - start.getTime();
             System.out.print(interval);
 			resultSet.last();
-			int size = resultSet.getRow();
-			resultSet.first();
-			functionData = new FunctionDataObject[(size/metricCount)];
+			size = resultSet.getRow();
+			resultSet.beforeFirst();
+			node = new int[(size/metricCount)];
+			context = new int[(size/metricCount)];
+			thread = new int[(size/metricCount)];
+			function = new int[(size/metricCount)];
+			numCalls = new int[(size/metricCount)];
+			numSubroutines = new int[(size/metricCount)];
+			data = new double[(size * 5)];
 			int index = 0;
 	    	while (resultSet.next() != false) {
 				int metricIndex = 0;
-				FunctionDataObject funDO = new FunctionDataObject(metricCount);
-				funDO.setFunctionIndexID(resultSet.getInt(2));
-				funDO.setNode(resultSet.getInt(4));
-				funDO.setContext(resultSet.getInt(5));
-				funDO.setThread(resultSet.getInt(6));
-				funDO.setNumCalls((int)(resultSet.getDouble(11)));
-				funDO.setNumSubroutines((int)(resultSet.getDouble(12)));
+				function[index] = resultSet.getInt(2);
+				node[index] = resultSet.getInt(4);
+				context[index] = resultSet.getInt(5);
+				thread[index] = resultSet.getInt(6);
+				numCalls[index] = (int)(resultSet.getDouble(11));
+				numSubroutines[index] = (int)(resultSet.getDouble(12));
 
-				funDO.setInclusivePercentage(metricIndex, resultSet.getDouble(7));
-				funDO.setInclusive(metricIndex, resultSet.getDouble(8));
-				funDO.setExclusivePercentage(metricIndex, resultSet.getDouble(9));
-				funDO.setExclusive(metricIndex, resultSet.getDouble(10));
-				funDO.setInclusivePerCall(metricIndex, resultSet.getDouble(13));
+				int current = index * metricCount * 5;
+				data[current++] = resultSet.getDouble(7);
+				data[current++] = resultSet.getDouble(8);
+				data[current++] = resultSet.getDouble(9);
+				data[current++] = resultSet.getDouble(10);
+				data[current++] = resultSet.getDouble(13);
 				for (int i = 1 ; i < metricCount ; i++) {
 	    			if (resultSet.next() == false) { break; }
-					metricIndex++;
-					funDO.setInclusivePercentage(metricIndex, resultSet.getDouble(7));
-					funDO.setInclusive(metricIndex, resultSet.getDouble(8));
-					funDO.setExclusivePercentage(metricIndex, resultSet.getDouble(9));
-					funDO.setExclusive(metricIndex, resultSet.getDouble(10));
-					funDO.setInclusivePerCall(metricIndex, resultSet.getDouble(13));
+					data[current++] = resultSet.getDouble(7);
+					data[current++] = resultSet.getDouble(8);
+					data[current++] = resultSet.getDouble(9);
+					data[current++] = resultSet.getDouble(10);
+					data[current++] = resultSet.getDouble(13);
 				}
-				// functionData.addElement(funDO);
-				functionData[index] = funDO;
 				index++;
 	    	}
 			resultSet.close(); 
+			fdi = new FunctionDataIterator(size/metricCount, metricCount, node, context, thread, function, numCalls, numSubroutines, data);
 		}catch (Exception ex) {
 	    	ex.printStackTrace();
 	    	return null;
 		}
-		return new DataSessionIterator(functionData);
+		return (fdi);
 	}
 	
 	public ListIterator getUserEventData() {

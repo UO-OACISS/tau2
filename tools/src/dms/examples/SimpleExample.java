@@ -39,10 +39,10 @@ public class SimpleExample {
 			break;
 		}
 
-		session.setNode(0);
-		session.setContext(0);
-		session.setThread(0);
-		session.setMetric("time");
+		//session.setNode(0);
+		//session.setContext(0);
+		//session.setThread(0);
+		//session.setMetric("time");
 		session.setFunction(37);
 		Function nullFun = null;
 		session.setFunction(nullFun);
@@ -64,6 +64,7 @@ public class SimpleExample {
 		while (myIterator.hasNext()) {
 			functionDataObject = (FunctionDataObject)(myIterator.next());
 			functionIndexID = functionDataObject.getFunctionIndexID();
+			System.out.println("function ID:" + functionIndexID);
 			function = session.getFunction(functionIndexID);
 			name = function.getName();
 			group = function.getGroup();
