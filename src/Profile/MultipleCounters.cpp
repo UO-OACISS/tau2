@@ -23,6 +23,11 @@ using namespace std;
 #include <unistd.h>
 #endif // CPU_TIME
 
+#ifdef CRAY_TIMERS
+#include <intrinsics.h>
+#include <sys/param.h>
+#endif // CRAY_TIMERS
+
 //Initialize static members.
 char MultipleCounterLayer::environment[25][10] = {
   {"COUNTER1"},{"COUNTER2"},{"COUNTER3"},{"COUNTER4"},{"COUNTER5"},
@@ -37,6 +42,12 @@ int MultipleCounterLayer::gettimeofdayMCL_FP;
 int MultipleCounterLayer::linuxTimerMCL_CP[1];
 int MultipleCounterLayer::linuxTimerMCL_FP;
 #endif //TAU_LINUX_TIMERS
+
+#ifdef CRAY_TIMERS
+int MultipleCounterLayer::crayTimersMCL_CP[1];
+int MultipleCounerLayer::crayTimersMCL_FP;
+#endif // CRAY_TIMERS
+
 
 #ifdef SGI_TIMERS
 int MultipleCounterLayer::sgiTimersMCL_CP[1];
@@ -75,6 +86,7 @@ firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   linuxTimerMCLInit,
 						   sgiTimersMCLInit,
 						   cpuTimeMCLInit,
+						   crayTimersMCLInit,
 						   papiMCLInit,
 						   papiWallClockMCLInit,
 						   papiVirtualMCLInit,
@@ -131,6 +143,12 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     MultipleCounterLayer::cpuTimeMCL_CP[0] = -1;
     MultipleCounterLayer::cpuTimeMCL_FP = -1;
 #endif // CPU_TIME
+
+#ifdef CRAY_TIMERS
+    MultipleCounterLayer::crayTimersMCL_CP[0] = -1;
+    MultipleCounterLayer::crayTimerrsMCL_FP = -1;
+#endif // CRAY_TIMERS
+
 
 #ifdef TAU_PAPI
     MultipleCounterLayer::papiWallClockMCL_CP[0] = -1;
@@ -368,6 +386,42 @@ bool MultipleCounterLayer::sgiTimersMCLInit(int functionPosition){
 #else //SGI_TIMERS
   return false;
 #endif//SGI_TIMERS
+}
+
+bool MultipleCounterLayer::crayTimersMCLInit(int functionPosition){
+#ifdef CRAY_TIMERS
+
+  //This function uses Cray fast nanosecs timer.
+  //Checks for CRAY_TIMERS
+
+  for(int i=0; i<MAX_TAU_COUNTERS; i++){
+    if(MultipleCounterLayer::names[i] != NULL){
+      if(strcmp(MultipleCounterLayer::names[i], "CRAY_TIMERS") == 0){
+	
+	//cout << "crayTimersMCL is active." << endl;
+	
+	//Set the counter position.
+	crayTimersMCL_CP[0] = i;
+	
+	//Indicate that this function is being used.
+	MultipleCounterLayer::counterUsed[i] = true;
+	
+	//Update the functionArray.
+	//cout << "Inserting crayTimersMCL in position: " << functionPosition << endl;
+	MultipleCounterLayer::functionArray[functionPosition] = crayTimersMCL;
+	crayTimersMCL_FP = functionPosition;
+	//Now just return with beginCountersPosition incremented.
+	return true;
+      }
+    }
+  }
+  
+  //If we are here, then this function is not active.
+  //cout << "crayTimersMCL is not active." << endl;
+  return false;
+#else //CRAY_TIMERS
+  return false;
+#endif//CRAY_TIMERS
 }
 
 bool MultipleCounterLayer::cpuTimeMCLInit(int functionPosition){
@@ -644,6 +698,13 @@ void MultipleCounterLayer::sgiTimersMCL(int tid, double values[]){
   clock_gettime(CLOCK_SGI_CYCLE,&tp);
   values[sgiTimersMCL_CP[0]] = (tp.tv_sec * 1e6 + (tp.tv_nsec * 1e-3)) ;
 #endif//SGI_TIMERS
+}
+
+void MultipleCounterLayer::crayTimersMCL(int tid, double values[]){
+#ifdef  CRAY_TIMERS
+  long long tick = _rtc();
+  values[crayTimersMCL_CP[0]] = (double) tick/HZ; 
+#endif // CRAY_TIMERS
 }
 
 void MultipleCounterLayer::cpuTimeMCL(int tid, double values[]){
