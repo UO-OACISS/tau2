@@ -99,7 +99,7 @@ void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
   }
 
 #ifdef DEBUG_PROF 
-  printf("get_profiler returns %x\n", *ptr);
+  printf("get_profiler returns %lx\n", *ptr);
 #endif /* DEBUG_PROF */
 
   return;
@@ -157,7 +157,7 @@ void tau_profile_timer_(void **ptr, char *infname, int slen)
   
 
 #ifdef DEBUG_PROF
-  printf("Inside tau_profile_timer_ fname=%s\n", fname);
+  printf("Inside tau_profile_timer_ fname=%s\n", infname);
 #endif /* DEBUG_PROF */
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
@@ -171,7 +171,7 @@ void tau_profile_timer_(void **ptr, char *infname, int slen)
   }
 
 #ifdef DEBUG_PROF 
-  printf("get_profiler returns %x\n", *ptr);
+  printf("get_profiler returns %lx\n", *ptr);
 #endif /* DEBUG_PROF */
 
   return;
@@ -181,7 +181,7 @@ void tau_profile_timer_(void **ptr, char *infname, int slen)
 void tau_profile_start_(void **profiler)
 { 
 #ifdef DEBUG_PROF
-  printf("start_timer gets %x\n", *profiler);
+  printf("start_timer gets %lx\n", *profiler);
 #endif /* DEBUG_PROF */
 
   Tau_start_timer(*profiler);
@@ -511,7 +511,7 @@ void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
   }
 
 #ifdef DEBUG_PROF 
-  printf("get_profiler returns %x\n", *ptr);
+  printf("get_profiler returns %lx\n", *ptr);
 #endif /* DEBUG_PROF */
 
   return;
@@ -1050,6 +1050,6 @@ void tau_set_interrupt_interval__(int* value)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.33 $   $Date: 2004/10/15 17:13:11 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.33 2004/10/15 17:13:11 sameer Exp $ 
+ * $Revision: 1.34 $   $Date: 2004/10/20 17:31:39 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.34 2004/10/20 17:31:39 sameer Exp $ 
  ***************************************************************************/
