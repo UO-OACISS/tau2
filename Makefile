@@ -61,9 +61,12 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 # AnsiC Support
 #ANSIC#ANSIC=lang_support/ansic#ENDIF#
 
+# Trace Reader Library
+#TRACE#TRACEINPUT=src/TraceInput#ENDIF#
+
 
 # Subdirectories to make resursively
-SUBDIR  = $(BASIC) $(PCXX) $(HPCXX) $(ANSIC)
+SUBDIR  = $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(TRACEINPUT)
 
 all:
 	@echo "At the installation root, use \"make install\" "

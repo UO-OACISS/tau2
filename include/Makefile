@@ -331,7 +331,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #ENABLE32BIT#TAU_SGI_INIT  = /usr/lib/c++init.o   #ENDIF#
 
 #SGICC#TAU_CXXLIBS      	= $(TAU_SGI_INIT) -lC #ENDIF#
-#APPLECXX#AR_SHFLAGS 		= -lstd -lC #ENDIF#
+#APPLECXX#TAU_CXXLIBS 		= -lstd -lC #ENDIF#
 #SOL2#TAU_CXXLIBS               = -lCstd -lCrun #ENDIF#
 #USE_IBMXLC#TAU_CXXLIBS         = -lC            #ENDIF#
 #USE_DECCXX#TAU_CXXLIBS         = -lcxxstd -lcxx #ENDIF#
@@ -465,6 +465,10 @@ TAU_MPI_INCLUDE	= $(TAU_MPI_INC)
 TAU_MPI_LIBS	= $(TAU_MPI_LIB)
 
 TAU_MPI_FLIBS	= $(TAU_MPI_FLIB)
+
+## TAU TRACE INPUT LIBRARY (can build a trace converter using TAU TIL)
+TAU_TRACE_INPUT_LIB = -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTAU_traceinput$(TAU_OPTIONS)
+
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
 ## IBM SPECIFIC CHANGES TO TAU_MPI_LIBS

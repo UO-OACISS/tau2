@@ -2973,6 +2973,10 @@ then
   fi
 fi
 
+if [ $trace = yes ]
+then
+  exampleslist="$exampleslist traceinput/c++/Makefile traceinput/c/Makefile"
+fi
 
 if [ $callpath = yes ]
 then
