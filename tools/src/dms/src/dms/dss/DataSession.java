@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.7 2004/04/02 00:56:04 bertie Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.8 2004/04/05 20:35:53 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -288,6 +288,30 @@ public abstract class DataSession {
 	}
 
 /**
+ * Adds a metric to this data sessions metrics.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
+ *
+ *@param	String name of metric.
+ *
+ * @return	Metric the newly added metric.
+ */
+    public int addMetric(Metric metric) {
+	if (this.metrics == null) {
+	    if (this.trial != null) {
+		this.metrics = this.trial.getMetrics();
+	    }
+	}
+	
+	//Try getting the matric.
+	if(this.metrics!=null){
+	    metric.setID(this.getNumberOfMetrics());
+	    metrics.add(metric);
+	    return metric.getID();
+	}
+	else
+	    return -1;
+    }
+
+/**
  * Get a Vector of metric values for this DataSession.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
  *
  * @return	Vector of metric values
@@ -301,8 +325,33 @@ public abstract class DataSession {
 		return this.metrics;
 	}
 
+
+/**
+ * Get the metric with the given id..  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
+ *
+ * @param	int metric id.
+ *
+ * @return	Metric with given id.
+ */
+    public Metric getMetric(int metricID) {
+	if (this.metrics == null) {
+	    if (this.trial != null) {
+		this.metrics = this.trial.getMetrics();
+	    }
+	}
+	
+	//Try getting the matric.
+	if((this.metrics!=null) && (metricID<this.metrics.size()))
+	    return (Metric) this.metrics.elementAt(metricID);
+	else
+	    return null;
+    }
+
+
 /**
  * Get the metric name corresponding to the given id.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
+ *
+ * @param	int metric id.
  *
  * @return	The metric name as a String.
  */
@@ -319,6 +368,31 @@ public abstract class DataSession {
 		else
 		    return null;
 	}
+
+/**
+ * Get the metric id corresponding to the given string.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
+ *
+ *@param	String the metric name.
+ *
+ * @return	The metric name as a String.
+ */
+    public int getMetricID(String string){
+	if (this.metrics == null) {
+	    if (this.trial != null) {
+		this.metrics = this.trial.getMetrics();
+	    }
+	}
+	
+	//Try getting the matric id.
+	if(this.metrics!=null){
+	    for(Enumeration e = metrics.elements(); e.hasMoreElements() ;){
+		Metric metric = (Metric) e.nextElement();
+		if((metric.getName()).equals(string))
+		    return metric.getID();
+	    }
+	}
+	return -1;
+    }
 
 /**
  * Get the number of metrics.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
