@@ -1,0 +1,78 @@
+	TAU Instrumentation Language (TauIL) Users Manual
+---------------------------------------------------------------------
+
+- Overview
+- API and Tools
+- Analytical Instrumentation
+
+OVERVIEW
+
+TauIL is an API and toolkit that provides mechanisms for performing
+selective source code instrumentation based on program
+analysis. Currently TauIL only supports analysis of data collected
+from program profiling. However, the design of TauIL provides the
+ability for it to support static analysis and runtime analysis in
+future releases. 
+
+API AND TOOLS
+
+TauIL consists of the core API and the tau_analyze command line
+tool. The TauIL library provides an interface for embedding TauIL
+functionality within other applications. Examples of Such
+functionality includes parsing of rule files, on the fly generation of
+abstract rule syntaxes, generation of selective instrumentation
+lists, or generation of rule files from abstract syntax trees. This
+functionality could be used in applications to provide a GUI to the
+tau_analyze tool or to provide a tool that allows a user to visually
+construct analytical rules and then generate the subsequent rule file.
+
+The tau_analyze tool generates a selective instrumentation list based
+on a user defined instrumentation scenario. The instrumentation
+scenario defines the circumstances under which a program event is
+instrumented and what kind of program data should be used to perform
+the analysis against.
+
+ANALYTICAL INSTRUMENTATION
+
+Analytical instrumentation automates the process by which a user
+program is instrumented using the TAU hooks. Often analytical
+instrumentation is used to refine an existing instrumentation by
+identifingy instrumentation regions that may be perturbing collected
+profile data. TauIL currently only supports analysis of profile
+data. The following tool chain is used to perform analytical
+instrumentations:
+
+cxxparse		- generation of pdb files for
+			  auto-instrumentation (provide in the Program
+			  Database Toolkit (PDT)).  
+tau_instrumentor	- performs auto-instrumentation.
+tau_analyze		- generates selective instrumentation list for use by
+			  tau_instrumentor.
+
+The following will outline the steps to perform an analysis and
+instrumentation (see the tau2/examples/analyze directory for a predefined
+example and a general idea of how to configure your makefile to ust TauIL).
+
+Step 1.) Generate pdb files using cxxparse
+
+     cxxparse klargest.cpp
+
+Step 2.) Instrument code with tau_instrumentor
+
+     tau_instrumentor klargest.pdb klargest.cpp -o klargest.inst.cpp
+
+Step 3.) Compile and run instrumented code to collect profile data
+
+     ./klargest 1000000 2324
+
+Step 4.) Analyze profile data with respect to an instrumentation
+scenario using tau_analyze (see TauIL/docs/FORMAT for a discussion of the
+instrumentation language specification and examples of rule files).
+
+     tau_analyze rules.til -DSELECT=select.out
+
+Step 5.) Instrument code with tau_instrumentor and generate selective
+instrumentation list.
+
+     tau_instrumentor klargest.pdb klargest.cpp -o klargest.inst.cpp \
+		      -f select.out
