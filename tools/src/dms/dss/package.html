@@ -3,7 +3,7 @@
 <head>
 <!--
 
-  $Id: package.html,v 1.2 2003/08/27 17:07:40 khuck Exp $
+  $Id: package.html,v 1.3 2003/10/23 16:48:39 khuck Exp $
 
 -->
 </head>
@@ -16,6 +16,10 @@ The DMS package provides access to the TAU data in three forms:
 PerfDB database, pprof.dat files, and streaming TAU data.  The user
 is expected to create an instance of a DataSession object, and refer
 to all data through the public methods of the DataSession object.
+</p>
+<p>
+Currently, only support for PerfDB is available.  Support for pprof.dat
+files and streaming TAU data will be available in a future release.
 </p>
 <p>
 The DataSession object can return one of several data objects, including
@@ -39,6 +43,8 @@ For overviews, tutorials, examples, guides, and tool documentation, please see:
 <ul>
   <li><a href="../../../examples/TestPerfDBSession.java">TestPerfDBSession.java</a>
   <li><a href="../../../examples/SimpleExample.java">SimpleExample.java</a>
+  <li><a href="../../../../perfdb/doc/README">README file for PerfDB</a>
+  <li><a href="../../../../../../README">README file for TAU</a>
 </ul>
 
 <!-- Put @see and @since tags down here. -->
