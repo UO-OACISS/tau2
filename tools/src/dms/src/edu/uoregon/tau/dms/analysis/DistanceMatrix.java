@@ -10,6 +10,7 @@ public class DistanceMatrix {
 	public double[] total = null;
 	public int matrixSize = 0;
 	public int dimensionCount = 0;
+	private double maxDistance = 0.0;
 
 	public DistanceMatrix (int matrixSize, int dimensionCount) {
 		this.dataMatrix = new double[matrixSize][dimensionCount];
@@ -57,6 +58,8 @@ public class DistanceMatrix {
 				}
 				distanceMatrix[i][j] = runningTotal;
 				distanceMatrix[j][i] = runningTotal;
+				if (maxDistance < runningTotal) 
+					maxDistance = runningTotal;
 			}
 		}
 	}
@@ -92,4 +95,46 @@ public class DistanceMatrix {
 		return buf.toString();
 	}
 
+	/* We need to convert the NxN distance matrix to a MxM image.
+	 each element in the matrix will become a M/NxM/N pixel block.
+	 The image data has to be in a single dimension array, so output
+	 it that way.
+	*/
+
+	public int[] toImage(boolean scaledRange, boolean triangle) {
+		int[] data = new int[matrixSize*matrixSize];
+		// these variables are for the color code
+        int red, green, blue;
+        int opaque = 255;
+		int value;
+		// the range of the matrix values are from 0.0 to 2.0.
+		// that needs to be converted to 0 to 256.  Therefore,
+		// multiply the matrix value by 128.0 and convert to 
+		// an integer.
+		double factor = scaledRange ? 255.0 / maxDistance : 127.5;
+		int i, j, k, l;
+		int idx = 0;
+
+		if (triangle) {
+        	for (i = 0 ; i < matrixSize; i++ ) {
+            	for (j = i ; j < matrixSize; j++ ) {
+					idx = i * matrixSize + j;
+					red = green = blue = (int)(distanceMatrix[i][j] * factor);
+        			value = (opaque << 24 ) | (red << 16 ) | (green << 8 ) | blue;
+					data[idx] = value;
+            	}
+        	}
+        } else {
+        	for (i = 0 ; i < matrixSize; i++ ) {
+            	for (j = 0 ; j < matrixSize; j++ ) {
+					red = green = blue = (int)(distanceMatrix[i][j] * factor);
+        			value = (opaque << 24 ) | (red << 16 ) | (green << 8 ) | blue;
+					data[idx++] = value;
+            	}
+        	}
+        }
+
+		System.out.println("Image range: 0.0 to " + maxDistance);
+		return data;
+	}
 }

@@ -19,7 +19,7 @@ import java.util.ListIterator;
  * can compare either threads or events.  See the referenced paper for more
  * details.
  *
- * <P>CVS $Id: DistanceAnalysis.java,v 1.2 2004/07/27 23:18:49 khuck Exp $</P>
+ * <P>CVS $Id: DistanceAnalysis.java,v 1.3 2004/07/29 23:17:09 khuck Exp $</P>
  * @author	Kevin Huck
  * @version	0.1
  * @since	0.1
@@ -164,6 +164,21 @@ abstract public class DistanceAnalysis {
  *
  * @return	a String with the distances from the distance matrix.
  */
-	public String toString() { return results == null ? new String("") : results.toString(); }
+	public String toString() { 
+		return results == null ? new String("") : results.toString(); 
+	}
+
+/**
+ * This method dumps the data in the distance matrix to an image.
+ * This is a method used to check the output from the distance calculation.
+ *
+ * @return	an array of image data.
+ */
+	public int[] toImage(boolean scaledRange, boolean triangle) { 
+		if (results == null)
+			return new int[0];
+		else
+			return results.toImage(scaledRange, triangle); 
+	}
 }
 
