@@ -24,51 +24,12 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-########### Automatically modified by the configure script ############
-CONFIG_ARCH=default
-CONFIG_CC=gcc
-CONFIG_CXX=g++
-PCXX_OPT=-g
-USER_OPT=-g
 TAUROOT=/users/sameer/rs/tau2
-#######################################################################
- 
-#MIPSR8K##ABI 	     = -64		   #ENDIF#
-#MIPSR8K#ISA          = -mips4		   #ENDIF#
-############# Standard Defines ##############
-CC = $(CONFIG_CC) $(ABI) $(ISA)
-CXX = $(CONFIG_CXX) $(ABI) $(ISA)
-DEFINES = 
-INSTALL = /bin/cp
-SHELL = /bin/sh
-LSX = .a
-#############################################
+include $(TAUROOT)/include/Makefile
+#This includes all profile options in $(PROFILEOPTS).
 
-############# Profiling Options #############
-#PROFILE#PROFILEOPT1           = -DPROFILING_ON        #ENDIF#
-#SGITIMERS#PROFILEOPT2         = -DSGI_TIMERS          #ENDIF#
-#SGICOUNTERS#PROFILEOPT3       = -DSGI_HW_COUNTERS     #ENDIF#
-#PROFILECALLS#PROFILEOPT4      = -DPROFILE_CALLS       #ENDIF#
-#PROFILESTATS#PROFILEOPT5      = -DPROFILE_STATS       #ENDIF#
-#DEBUGPROF#PROFILEOPT6         = -DDEBUG_PROF          #ENDIF#
-#KAI#PROFILEOPT7               = -DTAU_STDCXXLIB       #ENDIF#
-#INTELTFLOP#PROFILEOPT8        = -DPOOMA_TFLOP         #ENDIF#
-#SOL2#PROFILEOPT9              = -DNO_RTTI             #ENDIF#
-#GNU#PROFILEOPT10              = -DNO_RTTI             #ENDIF#
-#CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
-#PGI#PROFILEOPT12	       = 		       #ENDIF#
-#CRAYCC#PROFILEOPT13	       = -h instantiation=used #ENDIF#
-#SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
-#TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
-#TRACE#EVENTS_O		       = pcxx_events.o	       #ENDIF#
-#PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o	       #ENDIF#
-#PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS 	       #ENDIF#
-#SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 
-PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
-              $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
-	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
-	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(TRACEOPT)
+
 ##############################################
 #KAI#AR			= $(CONFIG_CXX)     #ENDIF#
 #KAI#ARFLAGS			= -o		    #ENDIF#
@@ -84,22 +45,27 @@ CEXTRA =
 
 TAUINC	      = -I$(TAUROOT)/include  
 
-CFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC)
+CXXFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC)
 
-HDRS	      = $(TAUROOT)/include/Profile/Profiler.h \
-	 	$(TAUROOT)/include/Profile/TulipTimers.h \
-		$(TAUROOT)/include/Profile/bstring.h
+INCDIR	      = $(TAUROOT)/include/Profile
+
+HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h  \
+		$(INCDIR)/TauAPI.h 	 $(INCDIR)/ProfileHeaders.h \
+		$(INCDIR)/PthreadLayer.h $(INCDIR)/RtsLayer.h       \
+		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h      \
+		$(INCDIR)/TauCAPI.h 	 $(INCDIR)/TulipTimers.h    \
+	        $(INCDIR)/bstring.h
 
 LDFLAGS	      = $(PCXX_OPT)
 
 MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
-		RtsLayer.o RtsThread.o $(EVENTS_O) $(THR_O) 
+		RtsLayer.o RtsThread.o TauCAPI.o $(EVENTS_O) $(THR_O) 
 
 PRINT	      = pr
 
-SRCS	      = Profiler.cpp TulipTimers.cpp UserEvent.cpp FunctionInfo.cpp 
+SRCS	      = Profiler.cpp TulipTimers.cpp UserEvent.cpp FunctionInfo.cpp TauCAPI.cpp
 
 AR	      = ar
 
@@ -109,7 +75,7 @@ ARFLAGS	      = rcv
 #KAI#ARFLAGS			= -o				   #ENDIF#
 ##################################################################
 
-############# For KAI KCC compiler, replace AR accordingly #######
+############# For SGI CC compiler, replace AR accordingly #######
 #SGICC#AR			= $(CONFIG_CXX) -ar 		   #ENDIF#
 #SGICC#ARFLAGS			= -o				   #ENDIF#
 ##################################################################
@@ -128,36 +94,37 @@ $(INSTALLDEST)/$(TARGET): $(TARGET)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
+		$(INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.inc
 
 install:	$(INSTALLDEST)/$(TARGET) 
 
-program:        $(PROGRAM)
-
 
 Profiler.o 	: Profiler.cpp $(HDRS)
-	$(CXX) $(CFLAGS) -c Profiler.cpp  
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TulipTimers.o 	: TulipTimers.cpp $(HDRS)
-	$(CXX) $(CFLAGS) -c TulipTimers.cpp
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 UserEvent.o 	: UserEvent.cpp $(HDRS)
-	$(CXX) $(CFLAGS) -c UserEvent.cpp
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 FunctionInfo.o 	: FunctionInfo.cpp $(HDRS)
-	$(CXX) $(CFLAGS) -c FunctionInfo.cpp
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 RtsLayer.o 	: RtsLayer.cpp $(HDRS)
-	$(CXX) $(CFLAGS) -c RtsLayer.cpp
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 RtsThread.o 	: RtsThread.cpp $(HDRS)
-	$(CXX) $(CFLAGS) -c RtsThread.cpp
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 pcxx_events.o   : pcxx_events.cpp $(HDRS)
-	$(CXX) $(CFLAGS) -c pcxx_events.cpp
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 PthreadLayer.o   : PthreadLayer.cpp $(HDRS)
-	$(CXX) $(CFLAGS) -c PthreadLayer.cpp
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauCAPI.o   : TauCAPI.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 clean : 
 		$(RM) $(OBJS) $(TARGET) $(EXTRAOBJS)
 
