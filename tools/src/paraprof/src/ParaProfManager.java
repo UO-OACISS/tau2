@@ -236,12 +236,12 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    public void mousePressed(MouseEvent evt) {
 			int selRow = tree.getRowForLocation(evt.getX(), evt.getY());
 			TreePath path = tree.getPathForLocation(evt.getX(), evt.getY());
-			if(selRow != -1) {
+			if(path!=null) {
 			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
 				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 				DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
 				Object userObject = selectedNode.getUserObject();
-				if(selRow == 1){
+				if((selectedNode==standard)||(selectedNode==dbApps)){
 				   clickedOnObject = selectedNode;
 				    popup1.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
@@ -414,10 +414,13 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
 		    }
 		    else if(clickedOnObject == dbApps){
-			ParaProfApplication application  = new Application();
+			ParaProfApplication application  = new ParaProfApplication();
 			application.setName("New Application");
-			System.out.println("About to add an application to the database!");
-			
+			PerfDBSession perfDBSession = new PerfDBSession(); 
+			perfDBSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			perfDBSession.setApplication(application);
+			perfDBSession.saveApplication();
+			perfDBSession.terminate();
 		    }
 		}
 		else if(arg.equals("Add Experiment")){
