@@ -17,7 +17,7 @@ import java.util.Vector;
  * A user event has particular information, including the name of the user event, 
  * the TAU group, and the application, experiment and trial IDs.
  *
- * <P>CVS $Id: UserEvent.java,v 1.1 2004/03/27 01:02:57 khuck Exp $</P>
+ * <P>CVS $Id: UserEvent.java,v 1.2 2004/03/30 17:56:31 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -189,11 +189,12 @@ public class UserEvent {
 		return userEvents;
 	}
 
-	public void saveUserEvent(DB db) {
+	public int saveUserEvent(DB db, int newTrialID) {
+		int newUserEventID = 0;
 		try {
 			PreparedStatement statement = null;
-			statement = db.prepareStatement("INSERT INTO interval_total_summary (function, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-			statement.setInt(1, trialID);
+			statement = db.prepareStatement("INSERT INTO user_event (trial, name, group_name) VALUES (?, ?, ?)");
+			statement.setInt(1, newTrialID);
 			statement.setString(2, name);
 			statement.setString(3, group);
 			statement.executeUpdate();
@@ -201,13 +202,14 @@ public class UserEvent {
 			if (db.getDBType().compareTo("mysql") == 0)
 				tmpStr = "select LAST_INSERT_ID();";
 			else
-				tmpStr = "select currval('user_event_id_seq;);";
-			userEventID = Integer.parseInt(db.getDataItem(tmpStr));
+				tmpStr = "select currval('user_event_id_seq');";
+			newUserEventID = Integer.parseInt(db.getDataItem(tmpStr));
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the trial.");
 			e.printStackTrace();
 			System.exit(0);
 		}
+		return newUserEventID;
 	}
 
 }

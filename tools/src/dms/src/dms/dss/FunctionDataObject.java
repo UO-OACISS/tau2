@@ -24,7 +24,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.1 2004/03/27 01:02:56 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.2 2004/03/30 17:56:31 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -422,7 +422,7 @@ public class FunctionDataObject extends Object {
 		}
 	}
 
-	public static DataSessionIterator getFunctionData (DB db, int metricCount, String whereClause) {
+	public static Vector getFunctionData (DB db, int metricCount, String whereClause) {
 		StringBuffer buf = new StringBuffer();
 		buf.append("select function, metric, node, context, thread, ");
 		buf.append("inclusive_percentage, ");
@@ -433,65 +433,42 @@ public class FunctionDataObject extends Object {
 		buf.append(" order by function, metric, node, context, thread ");
 		// System.out.println(buf.toString());
 
-		int[] node = null;
-		int[] context = null;
-		int[] thread = null;
-		int[] function = null;
-		int[] numCalls = null;
-		int[] numSubroutines = null;
-		double[] data = null;
-		FunctionDataIterator fdi = null;
 		int size = 0;
+		Vector functionData = new Vector();
 		// get the results
 		try {
-            Date start = new Date();
             ResultSet resultSet = db.executeQuery(buf.toString());
-            Date end = new Date();
-            long interval = end.getTime() - start.getTime();
-            // System.out.print(interval);
-			resultSet.last();
-			size = resultSet.getRow();
-			resultSet.beforeFirst();
-			node = new int[(size/metricCount)];
-			context = new int[(size/metricCount)];
-			thread = new int[(size/metricCount)];
-			function = new int[(size/metricCount)];
-			numCalls = new int[(size/metricCount)];
-			numSubroutines = new int[(size/metricCount)];
-			data = new double[(size * 5)];
-			int index = 0;
 	    	while (resultSet.next() != false) {
 				int metricIndex = 0;
-				function[index] = resultSet.getInt(1);
-				node[index] = resultSet.getInt(3);
-				context[index] = resultSet.getInt(4);
-				thread[index] = resultSet.getInt(5);
-				numCalls[index] = (int)(resultSet.getDouble(10));
-				numSubroutines[index] = (int)(resultSet.getDouble(11));
-
-				int current = index * metricCount * 5;
-				data[current++] = resultSet.getDouble(6);
-				data[current++] = resultSet.getDouble(7);
-				data[current++] = resultSet.getDouble(8);
-				data[current++] = resultSet.getDouble(9);
-				data[current++] = resultSet.getDouble(12);
+				FunctionDataObject funDO = new FunctionDataObject();
+                funDO.setFunctionIndexID(resultSet.getInt(1));
+                funDO.setNode(resultSet.getInt(3));
+                funDO.setContext(resultSet.getInt(4));
+                funDO.setThread(resultSet.getInt(5));
+                funDO.setInclusivePercentage(metricIndex, resultSet.getDouble(6));
+				funDO.setInclusive(metricIndex, resultSet.getDouble(7));
+				funDO.setExclusivePercentage(metricIndex, resultSet.getDouble(8));
+                funDO.setExclusive(metricIndex, resultSet.getDouble(9));
+                funDO.setNumCalls((int)(resultSet.getDouble(10)));
+                funDO.setNumSubroutines((int)(resultSet.getDouble(11)));
+                funDO.setInclusivePerCall(metricIndex, resultSet.getDouble(12));
 				for (int i = 1 ; i < metricCount ; i++) {
 	    			if (resultSet.next() == false) { break; }
-					data[current++] = resultSet.getDouble(6);
-					data[current++] = resultSet.getDouble(7);
-					data[current++] = resultSet.getDouble(8);
-					data[current++] = resultSet.getDouble(9);
-					data[current++] = resultSet.getDouble(12);
+					metricIndex++;
+                	funDO.setInclusivePercentage(metricIndex, resultSet.getDouble(6));
+					funDO.setInclusive(metricIndex, resultSet.getDouble(7));
+					funDO.setExclusivePercentage(metricIndex, resultSet.getDouble(8));
+                	funDO.setExclusive(metricIndex, resultSet.getDouble(9));
+                	funDO.setInclusivePerCall(metricIndex, resultSet.getDouble(12));
 				}
-				index++;
+				functionData.addElement(funDO);
 	    	}
 			resultSet.close(); 
-			fdi = new FunctionDataIterator(size/metricCount, metricCount, node, context, thread, function, numCalls, numSubroutines, data);
 		}catch (Exception ex) {
 	    	ex.printStackTrace();
 	    	return null;
 		}
-		return (fdi);
+		return (functionData);
 	}
 
 	public void saveMeanSummary(DB db, int functionIndexID, Vector metrics) {
@@ -517,7 +494,7 @@ public class FunctionDataObject extends Object {
 				i++;
 			}
 		} catch (SQLException e) {
-			System.out.println("An error occurred while saving the trial.");
+			System.out.println("An error occurred while saving the function mean data.");
 			e.printStackTrace();
 			System.exit(0);
 		}
@@ -546,7 +523,7 @@ public class FunctionDataObject extends Object {
 				i++;
 			}
 		} catch (SQLException e) {
-			System.out.println("An error occurred while saving the trial.");
+			System.out.println("An error occurred while saving the function total data.");
 			e.printStackTrace();
 			System.exit(0);
 		}
@@ -561,7 +538,7 @@ public class FunctionDataObject extends Object {
 			while (enum.hasMoreElements()) {
 				metric = (Metric)enum.nextElement();
 				PreparedStatement statement = null;
-				statement = db.prepareStatement("INSERT INTO interval_location_summary (function, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				statement = db.prepareStatement("INSERT INTO interval_location_profile (function, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 				statement.setInt(1, functionIndexID);
 				statement.setInt(2, node);
 				statement.setInt(3, context);
@@ -578,7 +555,7 @@ public class FunctionDataObject extends Object {
 				i++;
 			}
 		} catch (SQLException e) {
-			System.out.println("An error occurred while saving the trial.");
+			System.out.println("An error occurred while saving the function data.");
 			e.printStackTrace();
 			System.exit(0);
 		}

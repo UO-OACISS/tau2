@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.1 2004/03/27 01:02:57 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.2 2004/03/30 17:56:31 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -203,15 +203,15 @@ public class PerfDBSession extends DataSession {
 		} else if (application != null) {
 			whereClause = " where e.application = " + application.getID();
 		}
-		Vector events = UserEvent.getUserEvents(db, whereClause);
+		userEvents = UserEvent.getUserEvents(db, whereClause);
 		if (userEventHash == null)
 			userEventHash = new Hashtable();
 		UserEvent ue;
-        for(Enumeration en = events.elements(); en.hasMoreElements() ;) {
+        for(Enumeration en = userEvents.elements(); en.hasMoreElements() ;) {
 			ue = (UserEvent) en.nextElement();
 			userEventHash.put(new Integer(ue.getUserEventID()), ue);
 		}
-		return new DataSessionIterator(events);
+		return new DataSessionIterator(userEvents);
 	}
 
 	// sets the current function
@@ -317,7 +317,8 @@ public class PerfDBSession extends DataSession {
 					buf.append(") ");
 			}
 		}
-		return FunctionDataObject.getFunctionData(db, metricCount, buf.toString());
+		functionData = FunctionDataObject.getFunctionData(db, metricCount, buf.toString());
+		return new DataSessionIterator(functionData);
 	}
 	
 	public ListIterator getUserEventData() {
@@ -382,7 +383,8 @@ public class PerfDBSession extends DataSession {
 			}
 		}
 
-		return new DataSessionIterator(UserEventDataObject.getUserEventData(db, buf.toString()));
+		userEventData = UserEventDataObject.getUserEventData(db, buf.toString());
+		return new DataSessionIterator(userEventData);
 	}
 	
 	public Function getFunction(int id) {
@@ -426,10 +428,11 @@ public class PerfDBSession extends DataSession {
 	}
 	
 	// override the saveTrial method
-	public void saveTrial () {
+	public int saveTrial () {
 		int newTrialID = trial.saveTrial(db);
 		saveFunctions(newTrialID);
-		return;
+		saveUserEvents(newTrialID);
+		return newTrialID;
 	}
 
 	// save the functions
@@ -442,12 +445,42 @@ public class PerfDBSession extends DataSession {
 			int newFunctionID = function.saveFunction(db, newTrialID, metrics);
 			newFunHash.put (new Integer(function.getIndexID()), new Integer(newFunctionID));
 		}
-		saveFunctionData(newFunHash);
+		saveFunctionData(newFunHash, metrics);
 	}
 
 	// save the function data
-	private void saveFunctionData(Hashtable newFunHash) {
+	private void saveFunctionData(Hashtable newFunHash, Vector metrics) {
+		Enumeration enum = functionData.elements();
+		FunctionDataObject fdo;
+		while (enum.hasMoreElements()) {
+			fdo = (FunctionDataObject)enum.nextElement();
+			Integer newFunctionID = (Integer)newFunHash.get(new Integer(fdo.getFunctionIndexID()));
+			fdo.saveFunctionData(db, newFunctionID.intValue(), metrics);
+		}
 	}
 
+	// save the functions
+	private void saveUserEvents(int newTrialID) {
+		Hashtable newUEHash = new Hashtable();
+		Enumeration enum = userEvents.elements();
+		UserEvent userEvent;
+		while (enum.hasMoreElements()) {
+			userEvent = (UserEvent)enum.nextElement();
+			int newUserEventID = userEvent.saveUserEvent(db, newTrialID);
+			newUEHash.put (new Integer(userEvent.getUserEventID()), new Integer(newUserEventID));
+		}
+		saveUserEventData(newUEHash);
+	}
+
+	// save the function data
+	private void saveUserEventData(Hashtable newUEHash) {
+		Enumeration enum = userEventData.elements();
+		UserEventDataObject uedo;
+		while (enum.hasMoreElements()) {
+			uedo = (UserEventDataObject)enum.nextElement();
+			Integer newUserEventID = (Integer)newUEHash.get(new Integer(uedo.getUserEventID()));
+			uedo.saveUserEventData(db, newUserEventID.intValue());
+		}
+	}
 };
 

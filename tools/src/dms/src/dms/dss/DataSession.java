@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.1 2004/03/27 01:02:54 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.2 2004/03/30 17:56:31 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -451,8 +451,9 @@ public abstract class DataSession {
  *
  */
 
-	public void saveTrial() {
+	public int saveTrial() {
 		System.out.println("Nothing saved.  Please override the DataSession::saveTrial() method.");
+		return 0;
 	}
 
 };

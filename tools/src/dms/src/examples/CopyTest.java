@@ -65,6 +65,7 @@ public class CopyTest {
 
 		// get the user events
 		System.out.println("Getting userEvent data...");
+		myIterator = session.getUserEvents();
 		myIterator = session.getUserEventData();
 		System.out.println(" ...done.");
 

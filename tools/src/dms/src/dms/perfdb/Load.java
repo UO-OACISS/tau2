@@ -46,10 +46,6 @@ public class Load {
 		return new LoadHandler(getDB(), trialId, problemFile); 
     }
 
-    public LoadHandler2 newHandler2(String trialId, String problemFile) {
-		return new LoadHandler2(getDB(), trialId, problemFile); 
-    }
-
     public AppLoadHandler newAppHandler() {
 		return new AppLoadHandler(getDB());
     }
@@ -61,7 +57,7 @@ public class Load {
     /*** Parse an XML file related to a trial using a SAX parser
 	 Note: the parser in <parserClass> MUST be included in the Java CLASSPATH. ***/
 
-    public String parse(String xmlFile, String trialid, String problemFile, boolean bulkLoad) {
+    public String parse(String xmlFile, String trialid, String problemFile) {
 	
 	try {
 	    
@@ -70,23 +66,14 @@ public class Load {
 	    XMLReader xmlreader = XMLReaderFactory.createXMLReader(parserClass);
 	    
 	    DefaultHandler handler;
-		if (bulkLoad)
-	    	handler = this.newHandler(trialid, problemDefinition);
-		else
-	    	handler = this.newHandler2(trialid, problemDefinition);
+	   	handler = this.newHandler(trialid, problemDefinition);
 	    xmlreader.setContentHandler(handler);
 	    xmlreader.setErrorHandler(handler);
 	    try {
-			if (bulkLoad)
-				((LoadHandler) handler).setDocumentName(xmlFile);
-			else
-				((LoadHandler2) handler).setDocumentName(xmlFile);
+			((LoadHandler) handler).setDocumentName(xmlFile);
 			File file = new File(xmlFile);
 			xmlreader.parse(new InputSource(new FileInputStream(file)));
-			if (bulkLoad)
-				return ((LoadHandler) handler).getTrialId();
-			else
-				return ((LoadHandler2) handler).getTrialId();
+			return ((LoadHandler) handler).getTrialId();
 	    } catch (SAXException saxe) {
 			saxe.printStackTrace();
 	    } catch (IOException ioe) {

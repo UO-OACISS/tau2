@@ -18,7 +18,7 @@ import java.util.Vector;
  * the node, context and thread that identify the location, and the data collected for this
  * location, such as sample count, maximum value, minimum value, mean value and standard deviation.  
  *
- * <P>CVS $Id: UserEventDataObject.java,v 1.1 2004/03/27 01:02:58 khuck Exp $</P>
+ * <P>CVS $Id: UserEventDataObject.java,v 1.2 2004/03/30 17:56:31 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -283,7 +283,7 @@ public class UserEventDataObject {
 		return userEventData;
 	}
 
-	public void saveTotalSummary(DB db, int userEventID) {
+	public void saveUserEventData(DB db, int userEventID) {
 		try {
 			PreparedStatement statement = null;
 			statement = db.prepareStatement("INSERT INTO atomic_location_profile (user_event, node, context, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");

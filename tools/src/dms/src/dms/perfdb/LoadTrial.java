@@ -39,7 +39,7 @@ public class LoadTrial {
 
     /*** Store a xml document for a trial ***/
 
-    public String storeDocument(String xmlFile, String trialId, String problemFile, boolean bulkLoad) {
+    public String storeDocument(String xmlFile, String trialId, String problemFile) {
 		if (trialId.compareTo("0") != 0) {
 			String trialIdOut = getLoad().lookupTrial("trial", trialId);
 			if (trialIdOut==null){
@@ -49,7 +49,7 @@ public class LoadTrial {
 		}
 
 		try {
-	    	trialId = getLoad().parse(xmlFile, trialId, problemFile, bulkLoad);
+	    	trialId = getLoad().parse(xmlFile, trialId, problemFile);
 		} catch (Throwable ex) {
 			ex.printStackTrace();
 	    	System.out.println("Error: " + ex.getMessage());
@@ -73,7 +73,6 @@ public class LoadTrial {
         CmdLineParser.Option xmlfileOpt = parser.addStringOption('x', "xmlfile");
         CmdLineParser.Option trialidOpt = parser.addStringOption('t', "trialid");
         CmdLineParser.Option problemfileOpt = parser.addStringOption('p', "problemfile");
-        CmdLineParser.Option bulkOpt = parser.addBooleanOption('b', "bulk");
 
         try {
             parser.parse(args);
@@ -89,7 +88,6 @@ public class LoadTrial {
         String xmlFile = (String)parser.getOptionValue(xmlfileOpt);
         String trialID = (String)parser.getOptionValue(trialidOpt);
         String problemFile = (String)parser.getOptionValue(problemfileOpt);
-        Boolean bulk = (Boolean)parser.getOptionValue(bulkOpt);
 
     	if (help != null && help.booleanValue()) {
 	    	System.err.println(TRIAL_USAGE);
@@ -123,7 +121,7 @@ public class LoadTrial {
 		int exitval = 0;
 	
     	/***** Load a trial into PerfDB *********/
-		String trialid = loadTrial.storeDocument(xmlFile, trialID, problemFile, (bulk != null && bulk.booleanValue()));
+		String trialid = loadTrial.storeDocument(xmlFile, trialID, problemFile);
 		if (trialid != null)
 			exitval = Integer.parseInt(trialid);
 
