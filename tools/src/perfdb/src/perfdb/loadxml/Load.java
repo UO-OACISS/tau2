@@ -88,7 +88,7 @@ public class Load {
 			if (bulkLoad)
 				return ((LoadHandler) handler).getTrialId();
 			else
-				return ((LoadHandler) handler).getTrialId();
+				return ((LoadHandler2) handler).getTrialId();
 	    } catch (SAXException saxe) {
 			saxe.printStackTrace();
 	    } catch (IOException ioe) {
