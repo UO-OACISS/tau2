@@ -797,7 +797,7 @@ int main (int argc, char *argv[]){
 #ifdef TAU_WINDOWS
   /* -- parse command line arguments ---------------------------------------- */  
   errflag = FALSE;
-  for( int j = 1; j < argc; j++){  
+  for(j = 1; j < argc; j++){  
     char *argchar = argv[j];
     switch(argchar[0]){
     case '-':{
@@ -811,7 +811,7 @@ int main (int argc, char *argv[]){
 	  //if the first character is a '-', maybe they forgot the file name
 	  if(argv[j+1][0]=='-'){
 	    cout<<"It is likely that you have forgotten to give the filename after the -d option!"<<endl;
-	    dumpfilename=arv[j+1];
+	    dumpfilename=argv[j+1];
 	    j=j+1;
 	  }//if
 	  else{
@@ -830,7 +830,7 @@ int main (int argc, char *argv[]){
 	  //if the first character is a '-', maybe they forgot the file name
 	  if(argv[j+1][0]=='-'){
 	    cout<<"It is likely that you have forgotten to give the filename after the -f option!"<<endl;
-	    rulefilename=arv[j+1];
+	    rulefilename=argv[j+1];
 	    j=j+1;
 	  }//if
 	  else{
@@ -838,7 +838,7 @@ int main (int argc, char *argv[]){
 	    j=j+1;
 	  }//else
 	}//else
-	appy_default_rules=false;
+	apply_default_rules=false;
 	break;
       case 'p': /* -- *P*rint function data -- */
 	p++;
@@ -852,7 +852,7 @@ int main (int argc, char *argv[]){
 	  //if the first character is a '-', maybe they forgot the file name
 	  if(argv[j+1][0]=='-'){
 	    cout<<"It is likely that you have forgotten to give the filename after the -o option!"<<endl;
-	    outputfilename=arv[j+1];
+	    outputfilename=argv[j+1];
 	    j=j+1;
 	  }//if
 	  else{
@@ -971,8 +971,8 @@ int main (int argc, char *argv[]){
 }//main
 
 /***************************************************************************
- * $RCSfile: tau_reduce.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2002/12/20 20:09:42 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.11 2002/12/20 20:09:42 sameer Exp $
+ * $RCSfile: tau_reduce.cpp,v $   $Author: amorris $
+ * $Revision: 1.12 $   $Date: 2004/09/01 19:01:36 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.12 2004/09/01 19:01:36 amorris Exp $
  ***************************************************************************/
 

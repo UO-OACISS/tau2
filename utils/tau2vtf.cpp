@@ -346,6 +346,8 @@ int ResetEOFTrace(void)
   { /* Explicilty mark end of trace to be not over */ 
     (*it).second = 0;
   }
+
+  return 0;
 }
 
 /***************************************************************************
@@ -604,9 +606,9 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau2vtf.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2004/08/19 21:29:53 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.5 2004/08/19 21:29:53 sameer Exp $
+ * $RCSfile: tau2vtf.cpp,v $   $Author: amorris $
+ * $Revision: 1.6 $   $Date: 2004/09/01 19:01:35 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.6 2004/09/01 19:01:35 amorris Exp $
  ***************************************************************************/
 
 

@@ -18,7 +18,6 @@
 # include <stdlib.h>
 # include <sys/types.h>
 # include <fcntl.h>
-# include <unistd.h>
 
 #ifdef TAU_NEC
 extern "C" {
@@ -27,7 +26,13 @@ int getdtablesize(void);
 #endif /* TAU_NEC */
 
 #ifndef NeXT
-# include <unistd.h>
+  #ifdef TAU_WINDOWS
+    #include <windows.h>	
+    #include <io.h>
+    #include "getopt.h"
+  #else
+    #include <unistd.h>
+  #endif
 #endif
 
 #ifdef FUJITSU
@@ -152,7 +157,11 @@ static PCXX_EV *get_next_rec(struct trcdescr *tdes)
 #ifdef DEBUG
 		printf("WAITING... no = %d, node filename = %s \n", no, tdes->name);
 #endif /* DEBUG */
-		sleep(1);
+		#ifdef TAU_WINDOWS
+		 Sleep(1);
+		#else
+  	 	 sleep(1);
+		#endif
 	      }
 	      /* got the trace data! */
 #ifdef DEBUG
@@ -239,11 +248,18 @@ static void output(int fd, char *data, size_t l)
 /* -- FILE DESCRIPTOR HANDLING ---------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-#include <sys/time.h>
-#include <sys/resource.h>
+#ifndef TAU_WINDOWS
+  #include <sys/time.h>
+  #include <sys/resource.h>
+#endif
+
+
 
 int cannot_get_enough_fd(int need)
 {
+#ifdef TAU_WINDOWS
+  return false; // no getdtablesize() in windows
+#else	
 # if defined(__hpux) || defined(sun)
   /* -- system supports get/setrlimit (RLIMIT_NOFILE) -- */
   struct rlimit rlp;
@@ -268,6 +284,7 @@ int cannot_get_enough_fd(int need)
       return ( max < need );
 #   endif
 # endif
+#endif /* TAU_WINDOWS */
 }
 
 /* -------------------------------------------------------------------------- */

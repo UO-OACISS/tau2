@@ -16,9 +16,18 @@
 # include <stdlib.h>
 # include <sys/types.h>
 # include <fcntl.h>
-# include <unistd.h>
 
-#include <sys/time.h>
+#ifdef TAU_WINDOWS
+  #include <io.h>
+  typedef __int64 x_int64;
+  typedef unsigned __int64 x_uint64;
+#else
+  #include <unistd.h>
+  #include <sys/time.h>
+  #define O_BINARY 0
+  typedef long long x_int64;
+  typedef unsigned long long x_uint64;
+#endif
 
 # include <string.h>
 
@@ -55,8 +64,8 @@ static struct trcdescr
   int     numevent;        /* -- number of event types                     -- */
   int     numproc;         /* -- number of processors                      -- */
   long    numrec;          /* -- number of event records already processed -- */
-  unsigned long long  firsttime; /* -- timestamp of first event record           -- */
-  unsigned long long  lasttime;  /* -- timestamp of previous event record        -- */
+  x_uint64  firsttime; /* -- timestamp of first event record           -- */
+  x_uint64  lasttime;  /* -- timestamp of previous event record        -- */
 
   PCXX_EV  *buffer;   /* -- input buffer                              -- */
   PCXX_EV  *erec;     /* -- current event record                      -- */
@@ -669,7 +678,7 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
   return 0;
 }
 
-long long GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
+x_int64 GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
     int myid, int otherid, int msglen, int *other_tid, int *other_nodeid)
 /* parameters: trcdes:    input trace file descriptor.
 	       msgtag:     message tag that we're searching for
@@ -680,7 +689,7 @@ long long GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
 	       other_nodeid: node id of the matching ipc call
 */
 {
-  long long phRecv = 0;
+  x_int64 phRecv = 0;
   off_t last_position;
   PCXX_EV *curr_rec;
   EVDESCR *curr_ev;
@@ -904,7 +913,7 @@ int main (int argc, char *argv[])
   /* ------------------------------------------------------------------------ */
   /* -- open input trace                                                   -- */
   /* ------------------------------------------------------------------------ */
-  if ( (intrc.fd = open (inFile, O_RDONLY)) < 0 )
+  if ( (intrc.fd = open (inFile, O_RDONLY | O_BINARY)) < 0 )
   {
     perror (inFile);
     exit (1);
@@ -967,7 +976,7 @@ int main (int argc, char *argv[])
       if ( getchar() == 'n' ) exit (1);
     }
 
-    if ( (outfp = fopen (outFile, "w")) == NULL )
+    if ( (outfp = fopen (outFile, "wb")) == NULL )
     {
       perror (outFile);
       exit (1);
@@ -981,7 +990,7 @@ int main (int argc, char *argv[])
   /* ------------------------------------------------------------------------ */
 
   /* -- read event descriptor file and write event descriptor part header --- */
-  if ( (inev = fopen (edfFile, "r")) == NULL )
+  if ( (inev = fopen (edfFile, "rb")) == NULL )
   {
     perror (edfFile);
     exit (1);
@@ -1221,10 +1230,13 @@ int main (int argc, char *argv[])
   }
   else if ( outFormat == paraver ){
       char date[50];
+      
+#ifndef TAU_WINDOWS      
       struct timeval tp;
       struct timezone tzp;
       time_t clock;
       struct tm *ptm;
+#endif      
       int i;
       int j;
       int size;
@@ -1235,11 +1247,14 @@ int main (int argc, char *argv[])
       /* The code from libseqparaver.c is used here */
       /* Get the date in the form dd/mm/yy */
 
+#ifdef TAU_WINDOWS
+      sprintf (date, "Unsupported in Win32");
+#else
       gettimeofday (&tp, &tzp);
       clock = tp.tv_sec;
       ptm = localtime (&clock);
       strftime (date, 50, "%d/%m/%y at %H:%M", ptm);
-
+#endif
       /*Allocate space for the taskList portion of the header
 	/if using threads, then numCpus = totalnodes.  Otherwise
 	/use intrc.numproc.*/
@@ -1312,7 +1327,7 @@ int main (int argc, char *argv[])
 	  if ( getchar() == 'n' ) exit (1);
 	}
 
-	if ( (pcffp = fopen (pcfFile, "w")) == NULL ){
+	if ( (pcffp = fopen (pcfFile, "wb")) == NULL ){
 	  perror (pcfFile);
 	  exit (1);
 	}
@@ -1401,7 +1416,7 @@ int main (int argc, char *argv[])
   /* ------------------------------------------------------------------------ */
   /* -- re-open input trace                                                -- */
   /* ------------------------------------------------------------------------ */
-  if ( (intrc.fd = open (inFile, O_RDONLY)) < 0 )
+  if ( (intrc.fd = open (inFile, O_RDONLY | O_BINARY)) < 0 )
   {
     perror (inFile);
     exit (1);
@@ -1512,7 +1527,7 @@ int main (int argc, char *argv[])
     }
 
     else if( outFormat == paraver ){
-      long long phRecv = 0;
+      x_int64 phRecv = 0;
       ev = GetEventStruct (erec->ev);
       if ((ev->tag != 0) || (dynamictrace))
 	{

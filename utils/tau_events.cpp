@@ -13,7 +13,11 @@
 # include <stdlib.h>
 # include <sys/types.h>
 # include <fcntl.h>
-# include <unistd.h>
+#ifdef TAU_WINDOWS
+  #include <io.h>
+#else
+  #include <unistd.h>
+#endif
 
 # include <string.h>
 
