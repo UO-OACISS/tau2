@@ -425,14 +425,8 @@ int main(int argc, char **argv){
   }//loadlib == true
  
   BPatch_function *inFunc;
-#define TAU_TEST 1 
-#ifdef TAU_TEST
-  BPatch_function *enterstub = tauFindFunction(appImage, "TauRoutineEntryTest");
-  BPatch_function *exitstub = tauFindFunction(appImage, "TauRoutineExitTest");
-#else /* TAU_TEST */
   BPatch_function *enterstub = tauFindFunction(appImage, "TauRoutineEntry");
   BPatch_function *exitstub = tauFindFunction(appImage, "TauRoutineExit");
-#endif /* TAU_TEST */
   BPatch_function *terminationstub = tauFindFunction(appImage, "TauProgramTermination");
   BPatch_Vector<BPatch_snippet *> initArgs;
   
