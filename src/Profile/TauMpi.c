@@ -304,11 +304,14 @@ MPI_Datatype recvtype;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Allgather()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Allgather( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm );
+  MPI_Type_size( recvtype, &typesize );
+  TAU_REDUCE_DATA(typesize*recvcount);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -326,11 +329,15 @@ MPI_Datatype recvtype;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Allgatherv()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Allgatherv( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm );
+  MPI_Type_size( recvtype, &typesize );
+  TAU_REDUCE_DATA(typesize*(*recvcounts));
+  
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -346,11 +353,14 @@ MPI_Op op;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Allreduce()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Allreduce( sendbuf, recvbuf, count, datatype, op, comm );
+  MPI_Type_size( datatype, &typesize );
+  TAU_REDUCE_DATA(typesize*count);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -367,11 +377,14 @@ MPI_Datatype recvtype;
 MPI_Comm comm;
 {
   int  returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoall()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Alltoall( sendbuf, sendcount, sendtype, recvbuf, recvcnt, recvtype, comm );
+  MPI_Type_size( sendtype, &typesize );
+  TAU_ALLTOALL_DATA(typesize*sendcount);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -390,11 +403,14 @@ MPI_Datatype recvtype;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoallv()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Alltoallv( sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm );
+  MPI_Type_size( sendtype, &typesize );
+  TAU_ALLTOALL_DATA(typesize*(*sendcnts));
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -424,11 +440,14 @@ int root;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Bcast()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Bcast( buffer, count, datatype, root, comm );
+  MPI_Type_size( datatype, &typesize );
+  TAU_BCAST_DATA(typesize*count);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -446,11 +465,14 @@ int root;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Gather()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Gather( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm );
+  MPI_Type_size( recvtype, &typesize );
+  TAU_REDUCE_DATA(typesize*recvcount);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -469,11 +491,14 @@ int root;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Gatherv()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Gatherv( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm );
+  MPI_Type_size( recvtype, &typesize );
+  TAU_REDUCE_DATA(typesize*(*recvcnts));
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -521,11 +546,14 @@ MPI_Op op;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Reduce_scatter()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Reduce_scatter( sendbuf, recvbuf, recvcnts, datatype, op, comm );
+  MPI_Type_size( datatype, &typesize );
+  TAU_REDUCE_DATA(typesize*(*recvcnts));
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -542,11 +570,14 @@ int root;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Reduce()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Reduce( sendbuf, recvbuf, count, datatype, op, root, comm );
+  MPI_Type_size( datatype, &typesize );
+  TAU_REDUCE_DATA(typesize*count);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -562,11 +593,14 @@ MPI_Op op;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Scan()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Scan( sendbuf, recvbuf, count, datatype, op, comm );
+  MPI_Type_size( datatype, &typesize );
+  TAU_REDUCE_DATA(typesize*count);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -584,11 +618,14 @@ int root;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Scatter()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Scatter( sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm );
+  MPI_Type_size( sendtype, &typesize );
+  TAU_REDUCE_DATA(typesize*sendcnt);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -607,11 +644,14 @@ int root;
 MPI_Comm comm;
 {
   int   returnVal;
+  int   typesize;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Scatterv()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Scatterv( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm );
+  MPI_Type_size( sendtype, &typesize );
+  TAU_REDUCE_DATA(typesize*(*sendcnts));
 
   TAU_PROFILE_STOP(tautimer); 
 
