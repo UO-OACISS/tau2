@@ -44,6 +44,6 @@ old: ../bin/ParaProf-Old.jar
 	mv ./classes/ParaProf-Old.jar $(TOOLS_SRC)/paraprof/bin
 
 clean:
-	rm -f classes/edu/uoregon/tau/paraprof/*
-	rm -f ../bin/ParaProf.jar
-	rm -f ../bin/ParaProf-Old.jar
+	rm -f classes/edu/uoregon/tau/paraprof/*.class
+	rm -f $(TOOLS_SRC)/paraprof/bin/ParaProf.jar
+	rm -f $(TOOLS_SRC)/paraprof/bin/ParaProf-Old.jar
