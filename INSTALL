@@ -12,8 +12,7 @@ Installation Procedure:
 In this directory invoke
 % ./configure
 % make install
-This will install the TAU Portable Profiling Package.                 
-
+This will install the TAU Portable Profiling and Tracing Package.                 
 TAU System Requirements :
 -------------------------
 I) The Profiling Library needs a recent C++ compiler. Recommended :
@@ -77,13 +76,15 @@ two.  While it is running, it prints some messages that tell what it is doing.
    % ./configure -cc=<C Compiler> -c++=<C++ Compiler> 
      -useropt='<list of commandline parameters>'  
      -gnu   
-     -PROFILECOUNTERS
-     -PROFILECALLS
-     -PROFILESTATS
      -sgi
      -ibm
      -dec
      -INTELTFLOP
+     -PROFILECOUNTERS
+     -PROFILECALLS
+     -PROFILESTATS
+     -TRACE
+     -SGITIMERS
 
 Note: By default if 
    % ./configure 
@@ -96,12 +97,23 @@ Note: By default if
    counts for each function invocation but there is an additional runtime
    overhead for doing this.
 
+   -TRACE option generates detailed traces for each node of the parallel 
+   application. These traces can be merged and converted to other trace
+   formats such as Vampir (www.pallas.de) or SDDF or ALOG or could be viewed
+   in the ascii format (dump of the trace). tau_merge and tau_convert tools
+   can be used for this. Tracing could be used with or without Profiling. 
+
+   SGITIMERS uses fast nanosecond resolution timers on R10000 based SGI 
+   machines and is recommended for profiling. For tracing this option should
+   only be used when compiling in -64 bit mode. 
+
    Example:
    On SGI Origin 2000, 
    % ./configure -c++=KCC 
    or
    % ./configure -c++=CC -useropt='-64 -I/local/apps/STL/'
-
+   or
+   % ./configure -TRACE -PROFILE 
   Configure changes Makefiles in all subdirectories. It replaces system 
   dependent options and profiling options. The compilation flags associated
   with the above profiling options are :
@@ -112,7 +124,8 @@ Note: By default if
   PROFILECOUNTERS 		-DSGI_HW_COUNTERS
   PROFILESTATS 			-DPROFILE_STATS
   PROFILECALLS			-DPROFILE_CALLS
-  For SGI			-DSGI_TIMERS
+  SGITIMERS			-DSGI_TIMERS
+  TRACE				-DTRACING_ON
   ----------------------------------------------------------------
 
   These flags are also changed in the examples/ directory. It is 
@@ -126,6 +139,8 @@ Note: By default if
 2. Compilation.
 
    Type `make install' to compile the package.
+   Type `make tests' to compile the example programs that are included with
+   this distribution.
 
    Make installs the libraries  in $(TAUROOT)/lib/$(TAU_ARCH) subdirectory
    and installs utilities such as pprof and racy in 
@@ -149,7 +164,7 @@ Note: By default if
    invoked are profiled.
    
    % cd examples/instrument
-   % ./t1
+   % ./simple
    % pprof
    % racy
 
