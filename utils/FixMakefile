@@ -113,6 +113,22 @@ fi
         ;;
 
 ###############################################################
+# Set the TAU_PREFIX_INSTALL_DIR variable
+###############################################################
+     tauprefix=*)
+        tauprefix=`echo $1 | sed -e 's/^tauprefix=//' `
+        echo "s@^TAU_PREFIX_INSTALL_DIR=\(.*\)@TAU_PREFIX_INSTALL_DIR=$tauprefix@g" >> $sedout
+        ;;
+
+###############################################################
+# Set the TAU_PREFIX_INSTALL_DIR variable
+###############################################################
+     tauoptions=*)
+        tauoptions=`echo $1 | sed -e 's/^tauoptions=//' `
+        echo "s@^TAU_OPTIONS=\(.*\)@TAU_OPTIONS=$tauoptions@g" >> $sedout
+        ;;
+
+###############################################################
 # Set the default compilers
 ###############################################################
      c_compiler=*)
@@ -222,6 +238,18 @@ fi
 	echo NOTE: Using SGI CC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     ENABLE32BIT)
+	echo NOTE: Using -32 flag for the C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ENABLEN32BIT)
+	echo NOTE: Using -n32 flag for the C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ENABLE64BIT)
+	echo NOTE: Using -64 flag for the C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      SGIGNU)
 	echo NOTE: Using GNU C++ compiler on SGI
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -423,6 +451,14 @@ fi
 	;;
      GNU)
 	echo "NOTE: g++ doesn't support RTTI yet, using -DNO_RTTI"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     KAINOEX)
+	echo "NOTE: Using KAI with no exceptions for compiling"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SGICCNOEX)
+	echo "NOTE: Using SGI CC with no exceptions for compiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      *)
