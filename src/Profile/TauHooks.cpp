@@ -110,6 +110,10 @@ void TauInitCode(char *arg, int isMPI)
   if (!isMPI)
     TAU_MAPPING_PROFILE_SET_NODE(0, tid);
   dprintf("Node = %d\n", RtsLayer::myNode());
+
+#if (defined (__linux__) && defined(TAU_DYNINST41BUGFIX))
+  Tau_create_top_level_timer_if_necessary();  
+#endif /* DyninstAPI 4.1 bug appears only under Linux */
   TAU_MONITOR_EXIT(0);
 }
 
@@ -243,6 +247,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 2004/06/17 00:30:17 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.19 2004/06/17 00:30:17 sameer Exp $ 
+ * $Revision: 1.20 $   $Date: 2004/06/17 21:40:30 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.20 2004/06/17 21:40:30 sameer Exp $ 
  ***************************************************************************/
