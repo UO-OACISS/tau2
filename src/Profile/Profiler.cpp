@@ -169,6 +169,9 @@ void Profiler::Start(int tid)
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
       DEBUGPROFMSG("Profiler::Start Entering " << ThisFunction->GetName()<<endl;);
 	
+#ifdef TAU_COMPENSATE
+	SetNumChildren(0); /* for instrumentation perturbation compensation */
+#endif /* TAU_COMPENSATE */
 	// Initialization is over, now record the time it started
 #ifndef TAU_MULTIPLE_COUNTERS 
 	StartTime =  RtsLayer::getUSecD(tid) ;
@@ -340,10 +343,30 @@ void Profiler::Stop(int tid)
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
         DEBUGPROFMSG("Profiler::Stop for routine = " << ThisFunction->GetName()<<endl;);
 
+#ifdef TAU_COMPENSATE 
+	DEBUGPROFMSG("Profiler::Stop - "<<ThisFunction->GetName()<<" NumChildren = "
+        <<GetNumChildren()<<endl;);
+#endif /* TAU_COMPENSATE */
+
+#ifdef TAU_COMPENSATE
+	double tover = TauGetTimerOverhead(TauFullTimerOverhead);
+	double tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+#endif /* TAU_COMPENSATE */
+
 #ifndef TAU_MULTIPLE_COUNTERS
 	double CurrentTime = RtsLayer::getUSecD(tid);
 	double TotalTime = CurrentTime - StartTime;
 	TimeStamp = (unsigned long long) CurrentTime; 
+
+
+#ifdef TAU_COMPENSATE 
+	/* To compensate for timing overhead, shrink the totaltime! */
+	TotalTime = TotalTime - tnull - GetNumChildren() * tover; 
+	if (TotalTime < 0 ) {
+	  TotalTime = 0;
+	  DEBUGPROFMSG("TotalTime negative in "<<ThisFunction->GetName()<<endl;);
+        }
+#endif /* TAU_COMPENSATE */
 #else //TAU_MULTIPLE_COUNTERS
 	double CurrentTime[MAX_TAU_COUNTERS];
 	for(int j=0;j<MAX_TAU_COUNTERS;j++){
@@ -407,6 +430,13 @@ void Profiler::Stop(int tid)
 	ThisFunction->AddExclTime(TotalTime, tid);
 	// In either case we need to add time to the exclusive time.
 
+#ifdef TAU_COMPENSATE
+	if (ThisFunction->GetExclTime(tid) < 0) 
+	{
+ 	  ThisFunction->SetExclTime(tid, 0.0);
+	}
+#endif /* TAU_COMPENSATE */
+
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS)|| defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall += TotalTime;
 	DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
@@ -445,6 +475,11 @@ void Profiler::Stop(int tid)
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	  ParentProfiler->ExcludeTimeThisCall(TotalTime);
 #endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
+
+#ifdef TAU_COMPENSATE
+	ParentProfiler->AddNumChildren(GetNumChildren()+1);
+        /* Add 1 and my children to my parents total number of children */
+#endif /* TAU_COMPENSATE */
 
 	}
 	
@@ -2534,11 +2569,41 @@ void Profiler::CallStackTrace(int tid)
 /*-----------------------------------------------------------------*/
 #endif //PROFILE_CALLSTACK
 
+#ifdef TAU_COMPENSATE
+//////////////////////////////////////////////////////////////////////
+//  Profiler::GetNumChildren()
+//  Description: Returns the total number of child timers (including 
+//  children of children) executed under the given profiler. 
+//////////////////////////////////////////////////////////////////////
+long Profiler::GetNumChildren(void)
+{
+  return NumChildren;
+}
+
+//////////////////////////////////////////////////////////////////////
+//  Profiler::SetNumChildren(value)
+//  Description: Sets the total number of child timers.
+//////////////////////////////////////////////////////////////////////
+void Profiler::SetNumChildren(long value)
+{
+  NumChildren = value;
+}
+
+//////////////////////////////////////////////////////////////////////
+//  Profiler::AddNumChildren(value)
+//  Description: increments by value the number of child timers.
+//////////////////////////////////////////////////////////////////////
+void Profiler::AddNumChildren(long value)
+{
+  NumChildren += value;
+}
+#endif /* TAU_COMPENSATE */
+
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.87 $   $Date: 2003/11/15 02:59:41 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.87 2003/11/15 02:59:41 sameer Exp $ 
+ * $Revision: 1.88 $   $Date: 2004/01/09 01:14:11 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.88 2004/01/09 01:14:11 sameer Exp $ 
  ***************************************************************************/
 
 	

@@ -136,6 +136,7 @@ sproc=no
 noex=no
 setnode0=no
 tulipthread=no
+compensate=no
 smarts=no
 pcl=no
 papi=no
@@ -319,6 +320,11 @@ do
  
   -pthread)
       pthread=yes
+    shift
+    ;;
+
+  -COMPENSATE)
+     compensate=yes
     shift
     ;;
 
@@ -2274,6 +2280,13 @@ if [ $pthread = yes ]
     echo "$machine: PTDIR = $ptdir" >> ./build/Config.info
     tauoptions="${tauoptions}-pthread"
 fi
+
+if [ $compensate = yes ]
+  then 
+    fixmakeargs="$fixmakeargs COMPENSATE"
+    tauoptions="${tauoptions}-compensate"
+fi
+   
 
 if [ $muse = yes ]
   then

@@ -198,6 +198,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
 #TRACE#EVENTS_O                = Tracer.o              #ENDIF#
 #MUSE#MUSE_O                  = TauMuse.o TauMuseFilters.o TauMuseHandlers.o #ENDIF#
+#COMPENSATE#COMPENSATE_O      = TauCompensate.o #ENDIF#
 #PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o        #ENDIF#
 #TAU_SPROC#THR_O       	       = SprocLayer.o        #ENDIF#
 #JAVA#THR_O       	       = JavaThreadLayer.o     #ENDIF#
@@ -250,6 +251,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #NOCOMM#PROFILEOPT38  = -DTAU_NOCOMM #ENDIF#
 #MUSE#PROFILEOPT39  = -DTAU_MUSE #ENDIF#
 #SETNODE0#PROFILEOPT40  = -DTAU_SETNODE0 #ENDIF#
+#COMPENSATE#PROFILEOPT41  = -DTAU_COMPENSATE #ENDIF#
 
 
 #FOR F90 MPI on SGI
@@ -434,7 +436,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT29) $(PROFILEOPT30) $(PROFILEOPT31) $(PROFILEOPT32) \
 	      $(PROFILEOPT33) $(PROFILEOPT34) $(PROFILEOPT35) $(PROFILEOPT36) \
               $(PROFILEOPT37) $(PROFILEOPT38) $(PROFILEOPT39) $(PROFILEOPT40) \
-              $(TRACEOPT)
+              $(PROFILEOPT41) $(TRACEOPT)
 
 ##############################################
 

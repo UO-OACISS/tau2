@@ -77,6 +77,8 @@
 
 #include <Profile/TauMuse.h>
 
+#include <Profile/TauCompensate.h>
+
 //////////////////////////////////////////////////////////////////////
 //
 // class Profiler
@@ -154,6 +156,14 @@ public:
 	FunctionInfo * CallPathFunction;
 	bool 	       AddInclCallPathFlag; 
 #endif // TAU_CALLPATH
+#ifdef TAU_COMPENSATE
+	/* Compensate for instrumentation overhead based on total number of 
+	child calls executed under the given timer */
+	long NumChildren;
+	void SetNumChildren(long n);
+	long GetNumChildren(void);
+	void AddNumChildren(long value);
+#endif /* TAU_COMPENSATE */
 	Profiler * ParentProfiler; 
 
 
@@ -185,6 +195,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.47 $   $Date: 2003/10/10 00:42:08 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.47 2003/10/10 00:42:08 sameer Exp $ 
+ * $Revision: 1.48 $   $Date: 2004/01/09 01:14:07 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.48 2004/01/09 01:14:07 sameer Exp $ 
  ***************************************************************************/
