@@ -149,6 +149,8 @@ extern void Tau_trace_recvmsg(int type, int source, int length);
 extern TauGroup_t Tau_enable_group_name(char *group);
 extern TauGroup_t Tau_disable_group_name(char *group);
 extern TauGroup_t Tau_get_profile_group(char *group);
+extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group, char *group_name);
+
 
 
 
@@ -220,7 +222,7 @@ extern TauGroup_t Tau_get_profile_group(char *group);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 2002/07/11 00:04:19 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.19 2002/07/11 00:04:19 sameer Exp $
+ * $Revision: 1.20 $   $Date: 2002/07/29 22:44:38 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.20 2002/07/29 22:44:38 sameer Exp $
  ***************************************************************************/
 
