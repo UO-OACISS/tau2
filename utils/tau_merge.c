@@ -62,6 +62,7 @@ int getdtablesize(void);
 # define OUTMAX   BUFSIZ   /* chars   */
 
 int dynamic = TRUE ; /* by default events.<node>.edf files exist */
+int dontblock = FALSE; /* by default, block waiting for records, online merge*/
 #if !(defined(TAU_XLC) || defined (TAU_NEC))
 extern "C" {
 #endif /* TAU_XLC || TAU_NEC */
@@ -128,7 +129,7 @@ static PCXX_EV *get_next_rec(struct trcdescr *tdes)
 #ifdef DEBUG
 	    printf("Last_event_name = %s\n", last_event_name);
 #endif /* DEBUG */
-            if (strcmp(last_event_name, "\"WALL_CLOCK\"")==0)
+            if ((strcmp(last_event_name, "\"WALL_CLOCK\"")==0)|| (dontblock==TRUE))
 	    { /* It is the end. Close the trace file */
 #ifdef DEBUG
 	      printf("last_event_name = %s\n", last_event_name);
@@ -294,11 +295,12 @@ int main(int argc, char *argv[])
   numtrc     = 0;
   numrec     = 0;
   errflag    = FALSE;
+  dontblock  = FALSE; /* by default, block */
   adjust     = FALSE;
   reassembly = TRUE;
   first_time = 0L;
 
-  while ( (i = getopt (argc, argv, "ar")) != EOF )
+  while ( (i = getopt (argc, argv, "arn")) != EOF )
   {
     switch ( i )
     {
@@ -313,6 +315,9 @@ int main(int argc, char *argv[])
       default : /* -- ERROR -- */
                 errflag = TRUE;
                 break;
+      case 'n': /* -- do not block for records at end of trace -- */
+		dontblock = TRUE; 
+		break;
     }
   }
 
@@ -401,10 +406,14 @@ int main(int argc, char *argv[])
   if ( (numtrc < 1) || errflag )
   {
     fprintf (stderr,
-             "usage: %s [-a] [-r] inputtraces* (outputtrace|-)\n", argv[0]);
+             "usage: %s [-a] [-r] [-n] inputtraces* (outputtrace|-)\n", argv[0]);
     fprintf(stderr,
     "Note: %s assumes edf files are named events.<nodeid>.edf and \n", argv[0]);
     fprintf(stderr,"      generates a merged edf file tau.edf\n");
+    fprintf(stderr,"-a : adjust first time to zero\n");
+    fprintf(stderr,"-r : do not reassemble long events\n");
+    fprintf(stderr,"-n : do not block waiting for new events. Offline merge\n");
+
 
     exit (1);
   }
