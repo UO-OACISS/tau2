@@ -76,7 +76,6 @@ public class DerivedMetrics {
                 newMetricName = ((ParaProfMetric) trialOpA.getMetrics().elementAt(opA)).getName()
                         + newMetricName + ((ParaProfMetric) trialOpA.getMetrics().elementAt(opB)).getName();
 
-            //System.out.println("Metric name is: " + newMetricName);
 
             ParaProfMetric newMetric = trialOpA.addMetric();
             newMetric.setTrial(trialOpA);
@@ -96,7 +95,6 @@ public class DerivedMetrics {
             edu.uoregon.tau.dms.dss.Thread totalThread;
             
             totalThread = trialOpA.getDataSource().getTotalData();
-            
             totalThread.incrementStorage();
             
             
@@ -179,8 +177,13 @@ public class DerivedMetrics {
                     }
                 }
             }
+
             //Done with this metric, compute the mean values.
             trialOpA.setMeanData(metric);
+
+            
+            trialOpA.getDataSource().getMeanData().setThreadData(metric);
+
             return newMetric;
         } catch (Exception e) {
             if (e instanceof NumberFormatException) {

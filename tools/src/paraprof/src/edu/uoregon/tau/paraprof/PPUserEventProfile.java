@@ -219,7 +219,6 @@ public class PPUserEventProfile implements Comparable {
     }
 
     public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd) {
-        //	System.out.println ("xBeg = " + xBeg + ", xEnd = " + xEnd);
         this.xBeg = xBeg;
         this.xEnd = xEnd;
         this.yBeg = yBeg;

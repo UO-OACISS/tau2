@@ -14,9 +14,9 @@ import edu.uoregon.tau.dms.dss.*;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.8 2005/01/10 20:12:26 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.9 2005/01/12 18:56:51 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
@@ -131,7 +131,6 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         double maxValue = window.getMaxValue();
         
         
-        //System.out.println ("maxValue = " + maxValue);
         
         // too bad these next few lines are bullshit 
         // (you can't determine the max width by looking at the max value)  1.0E99 > 43.34534, but is thinner

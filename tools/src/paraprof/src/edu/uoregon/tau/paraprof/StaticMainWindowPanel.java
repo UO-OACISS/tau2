@@ -448,7 +448,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
         double valueSum = 0;
         int lengthDrawn = 0;
 
-        //	System.out.println ("---------------");
 
         while (l.hasNext()) {
 
@@ -626,9 +625,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
         double valueSum = 0;
         int lengthDrawn = 0;
 
-        //	System.out.println ("---------------");
-
-        //while (l.hasNext()) {
 
         PPFunctionProfile ppFunctionProfile;
 
@@ -764,8 +760,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
         //misc. function color.
 
         double diff = sum - valueSum;
-        //System.out.println ("sum = " + sum + ", valuesum = " + valueSum + ",
-        // diff = " + diff);
 
         if (diff > 0) {
             //int thisLength = (int)
@@ -793,8 +787,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
         // 	g2D.drawRect(barXCoord, (yCoord - barHeight), 200, barHeight);
 
         return barXCoord;
-        // 	System.out.println ("barXCoord = " + barXCoord + ", sumLength = " +
-        // sumLength);
     }
 
     public void actionPerformed(ActionEvent evt) {
