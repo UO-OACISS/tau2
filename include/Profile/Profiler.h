@@ -134,7 +134,7 @@ public:
         void AddInclTime(double t);
 	void AddExclTime(double t);
 	void IncrNumCalls(void);
-
+        void IncrNumSubrs(void);
 	bool GetAlreadyOnStack(void);
 	void SetAlreadyOnStack(bool value);  
 
@@ -151,6 +151,16 @@ public:
 	int AppendExclInclTimeThisCall(double ex, double in); 
 	// to ExclInclCallList
 #endif // PROFILE_CALLS
+
+
+
+
+  // Mike K.'s call stack edits--------------------------------------
+  //#ifdef PROFILE_CALLSTACK 
+  double InclTime_cs;
+  double ExclTime_cs;
+  //#endif  // PROFILE_CALLSTACK
+  //------------------------------------------------------------------
 
 private:
 
@@ -195,7 +205,6 @@ private:
 inline void 
 FunctionInfo::ExcludeTime(double t)
 { // called by a function to decrease its parent functions time
-	++NumSubrs;
 	ExclTime -= t; // exclude from it the time spent in child function
 }
 	
@@ -217,6 +226,14 @@ FunctionInfo::IncrNumCalls(void)
 {
 	NumCalls++; // Increment number of calls
 } 
+
+// #ifdef PROFILE_CALLSTACK   -mrk callstack
+inline void
+FunctionInfo::IncrNumSubrs(void)
+{
+  NumSubrs++;  // increment # of subroutines
+}
+// #endif  // PROFILE_CALLSTACK
 
 inline void
 FunctionInfo::SetAlreadyOnStack(bool value)
@@ -267,6 +284,15 @@ public:
 	double StartTime;
 	FunctionInfo * ThisFunction;
 	Profiler * ParentProfiler; 
+
+
+
+  // Mike K.'s call stack edits---------------------------------------------
+  //#ifdef PROFILE_CALLSTACK
+  double InclTime_cs;
+  double ExclTime_cs;
+  void CallStackTrace();
+  //#endif // PROFILE_CALLSTACK 
 
 private:
 	unsigned int MyProfileGroup_;
@@ -392,7 +418,7 @@ class RtsLayer
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1997/11/28 22:11:08 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.4 1997/11/28 22:11:08 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: mikek $
+ * $Revision: 1.5 $   $Date: 1997/12/05 20:47:43 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.5 1997/12/05 20:47:43 mikek Exp $ 
  ***************************************************************************/
