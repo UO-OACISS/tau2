@@ -1344,7 +1344,45 @@ int Profiler::DumpData(int tid){
   return 1;
 }
 
-void Profiler::PurgeData(int tid){}
+void Profiler::PurgeData(int tid){
+  
+  vector<FunctionInfo*>::iterator it;
+  vector<TauUserEvent*>::iterator eit;
+  Profiler *curr;
+  
+  DEBUGPROFMSG("Profiler::PurgeData( tid = "<<tid <<" ) "<<endl;);
+  RtsLayer::LockDB();
+  
+  // Reset The Function Database (save callstack entries)
+  for(it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    // May be able to recycle fns which never get called again??
+    (*it)->SetCalls(tid,0);
+    (*it)->SetSubrs(tid,0);
+    (*it)->SetExclTimeZero(tid);
+    (*it)->SetInclTimeZero(tid);
+  }
+  // Now Re-register callstack entries
+  curr = CurrentProfiler[tid];
+  curr->ThisFunction->IncrNumCalls(tid);
+  curr = curr->ParentProfiler;
+  while(curr != 0) {
+    curr->ThisFunction->IncrNumCalls(tid);
+    curr->ThisFunction->IncrNumSubrs(tid);
+    curr = curr->ParentProfiler;
+  }
+  
+  // Reset the Event Database
+  for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
+    (*eit)->LastValueRecorded[tid] = 0;
+    (*eit)->NumEvents[tid] = 0L;
+    (*eit)->MinValue[tid] = 9999999;
+    (*eit)->MaxValue[tid] = -9999999;
+    (*eit)->SumSqrValue[tid] = 0;
+    (*eit)->SumValue[tid] = 0;
+  }
+  
+  RtsLayer::UnLockDB();
+}
 #endif//TAU_MULTIPLE_COUNTERS
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
@@ -1487,8 +1525,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.61 $   $Date: 2002/03/15 23:18:58 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.61 2002/03/15 23:18:58 bertie Exp $ 
+ * $Revision: 1.62 $   $Date: 2002/03/15 23:35:12 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.62 2002/03/15 23:35:12 bertie Exp $ 
  ***************************************************************************/
 
 	
