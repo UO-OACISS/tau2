@@ -170,7 +170,7 @@ void TauRoutineEntryTest(int id )
   TAU_MONITOR_ENTER(tid);
   id --; 
   dprintf("<tid %d> TAU Entry <id %d>\n", tid, id);
-  dprintf("At entry, Size = %d\n", TheTauDynFI().size());
+  // dprintf("At entry, Size = %d\n", TheTauDynFI().size());
   vector<FunctionInfo *> vfi = TheTauDynFI();
   FunctionInfo *fi = 0;
   for (vector<FunctionInfo *>::iterator it = vfi.begin(); it != vfi.end(); it++)
@@ -244,6 +244,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 2003/07/17 23:52:41 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.17 2003/07/17 23:52:41 sameer Exp $ 
+ * $Revision: 1.18 $   $Date: 2003/08/25 22:33:09 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.18 2003/08/25 22:33:09 sameer Exp $ 
  ***************************************************************************/
