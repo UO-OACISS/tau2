@@ -71,77 +71,120 @@ The following  command-line options are available to configure:
 
 -prefix=<directory>
    
-   Specifies the destination directory where the header, library and binary files are copied. By default, these are copied to subdirectories <arch>/bin and <arch>/lib in the TAU root directory. 
+   Specifies the destination directory where the header, library and binary 
+   files are copied. By default, these are copied to subdirectories <arch>/bin 
+   and <arch>/lib in the TAU root directory. 
    
 -arch=<architecture>
    
-   Specifies the architecture. If the user does not specify this option, configure deter mines the architecture. For SGI, the user can specify either of sgi32, sgin32 or sgi64 for 32, n32 or 64 bit compilation modes respectively. The files are installed in the <architecture>/bin and <architecture>/lib directories.
+   Specifies the architecture. If the user does not specify this option, 
+   configure determines the architecture. For SGI, the user can specify either 
+   of sgi32, sgin32 or sgi64 for 32, n32 or 64 bit compilation modes 
+   respectively. The files are installed in the <architecture>/bin and 
+   <architecture>/lib directories.
    
 -c++=<C++ compiler>
    
-   Specifies the name of the C++ compiler. Supported  C++ compilers include  KCC (from KAI), CC,  g++ (from GNU), FCC (from Fujitsu) and pgCC (from PGI). 
+   Specifies the name of the C++ compiler. Supported  C++ compilers include  
+   KCC (from KAI), CC,  g++ (from GNU), FCC (from Fujitsu) and pgCC (from PGI). 
    
 -cc=<C Compiler>
    
-   Specifies the name of the C compiler. Supported C compilers include cc, gcc (from GNU), pgcc (from PGI), fcc (from Fujitsu) and KCC (from KAI).
+   Specifies the name of the C compiler. Supported C compilers include cc, 
+   gcc (from GNU), pgcc (from PGI), fcc (from Fujitsu) and KCC (from KAI).
    
 -pthread
    
-   Specifies pthread as the thread package to be used. In the default mode, no thread package is used. 
+   Specifies pthread as the thread package to be used. In the default mode, no 
+   thread package is used. 
    
 -tulipthread=<directory>
    
-   Specifies Tulip threads (HPC++) as the threads package to be used as well as  the location of the root directory where the package is installed. [ Ref: http:// www.acl.lanl.gov/tulip ]
+   Specifies Tulip threads (HPC++) as the threads package to be used as well 
+   as the location of the root directory where the package is installed. 
+   [ Ref: http://www.acl.lanl.gov/tulip ]
    
 -tulipthread=<directory> -smarts
    
    Specifies  SMARTS (Shared Memory Asynchronous Runtime System) as the 
-   threads package to be used. <directory> gives the location of the SMARTS root 
-   directory. [ Ref: http://www.acl.lanl.gov/smarts ]
+   threads package to be used. <directory> gives the location of the SMARTS 
+   root directory. [ Ref: http://www.acl.lanl.gov/smarts ]
    
 -pdt=<directory>
    
-   Specifies the location of the installed PDT (Program Database Toolkit) root directory. PDT is used to build tau_instrumentor, a C++ instrumentation program that automatically inserts TAU annotations in the source code.  [ Ref: http://www.acl.lanl.gov/pdtoolkit ]
+   Specifies the location of the installed PDT (Program Database Toolkit) root 
+   directory. PDT is used to build tau_instrumentor, a C++ instrumentation 
+   program that automatically inserts TAU annotations in the source code.  
+   [ Ref: http://www.acl.lanl.gov/pdtoolkit ]
    
 -pcl=<directory>
   
-   Specifies the location of the installed PCL (Performance Counter Library) root directory. PCL provides a common interface to access hardware performance counters on modern microprocessors. The library supports Sun UltraSparc I/II, PowerPC 604e under AIX, MIPS R10000/12000 under IRIX, Compaq Alpha 21164 under Tru64Unix and Cray Unicos (T3E) and the Intel Pentium family of microprocessors under Linux. This option specifies the use of hardware performance counters for profiling (instead of time).  See Section [PCL] for details regarding its usage. [ Ref : http://www.fz-juelich.de/zam/PT/ReDec/SoftTools/PCL/PCL.html ]
+   Specifies the location of the installed PCL (Performance Counter Library) 
+   root directory. PCL provides a common interface to access hardware 
+   performance counters on modern microprocessors. The library supports 
+   Sun UltraSparc I/II, PowerPC 604e under AIX, MIPS R10000/12000 under IRIX, 
+   Compaq Alpha 21164 under Tru64Unix and Cray Unicos (T3E) and the 
+   Intel Pentium family of microprocessors under Linux. This option specifies 
+   the use of hardware performance counters for profiling (instead of time).  
+   [ Ref : http://www.fz-juelich.de/zam/PCL ]
    
 -mpiinc=<dir>
    
-   Specifies the directory  where mpi header files reside (such as mpi.h and mpif.h). This option also generates the TAU MPI wrapper library that instruments MPI rou tines using the MPI Profiling Interface. See the examples/NPB2.3/config/make.def file for its usage with Fortran and MPI programs and examples/pi/Makefile for a C++ example that uses MPI. 
+   Specifies the directory  where mpi header files reside (such as mpi.h and 
+   mpif.h). This option also generates the TAU MPI wrapper library that 
+   instruments MPI routines using the MPI Profiling Interface. See the 
+   examples/NPB2.3/config/make.def file for its usage with Fortran and MPI 
+   programs and examples/pi/Makefile for a C++ example that uses MPI. 
    
 -mpilib=<dir>
    
-   Specifies the directory where mpi library files reside. This option should be used in conjunction with the -mpiinc=<dir> option to generate the TAU MPI wrapper library. 
+   Specifies the directory where mpi library files reside. This option should 
+   be used in conjunction with the -mpiinc=<dir> option to generate the TAU 
+   MPI wrapper library. 
    
 -PROFILE 
 
-   This is the default option; it specifies summary profile files to be generated at the end of execution. Profiling generates aggregate statistics (such as the total time spent in routines and statements), and can be used in conjunction with the profile browser racy to analyse the performance. Wallclock time is used for profiling  program entities. 
+   This is the default option; it specifies summary profile files to be 
+   generated at the end of execution. Profiling generates aggregate statistics 
+   (such as the total time spent in routines and statements), and can be used 
+   in conjunction with the profile browser racy to analyse the performance. 
+   Wallclock time is used for profiling  program entities. 
    
 -PROFILESTATS
    
-   Specifies the calculation of additional statistics, such as the standard deviation of the exclusive time/counts spent in each profiled block. This option is an extension of -PROFILE, the default profiling option.
+   Specifies the calculation of additional statistics, such as the standard 
+   deviation of the exclusive time/counts spent in each profiled block. This 
+   option is an extension of -PROFILE, the default profiling option.
    
 -PROFILECOUNTERS
    
-   Specifies use of hardware performance counters for profiling under IRIX  using the SGI R10000 perfex counter access interface. The use of this option is deprecated in favor of the -pcl=<dir> option described above. 
+   Specifies use of hardware performance counters for profiling under IRIX  
+   using the SGI R10000 perfex counter access interface. The use of this option 
+   is deprecated in favor of the -pcl=<dir> option described above. 
    
 -SGITIMERS
    
-   Specifies use of the free running nano-second resolution on-chip timer on the R10000. This timer has a lower overhead than the default timer on SGI, and is recommended for SGIs. 
+   Specifies use of the free running nano-second resolution on-chip timer on 
+   the MIPS R10000. This timer has a lower overhead than the default timer on 
+   SGI, and is recommended for SGIs. 
    
 -TRACE
    
-   Generates event-trace logs, rather than summary profiles. Traces show when and where an event occurred, in terms of the location in the source code and the process that executed it. Traces can be merged and converted using tau_merge and tau_convert utilities respectively, and  visualized using Vampir, a commercial trace visualization tool. [ Ref http://www.pallas.de ]
+   Generates event-trace logs, rather than summary profiles. Traces show when 
+   and where an event occurred, in terms of the location in the source code and
+   the process that executed it. Traces can be merged and converted using 
+   tau_merge and tau_convert utilities respectively, and  visualized using 
+   Vampir, a commercial trace visualization tool. [ Ref http://www.pallas.de ]
    
 -noex
    
-   Specifies that no exceptions be used while compiling the library. This is relevant for C++. 
+   Specifies that no exceptions be used while compiling the library. This is 
+   relevant for C++. 
    
 -useropt=<options-list>
    
-   Specifies additional user options such as -g or -I.  For multiple options, the options list should be enclosed in a single quote.
+   Specifies additional user options such as -g or -I.  For multiple options, 
+   the options list should be enclosed in a single quote.
    
 -help
    
@@ -183,11 +226,11 @@ The following  command-line options are available to configure:
    instrumentor - tau_instrumentor,  based on the Program Database Toolkit, or 
    manually using the instrumentation API (Application Programmers Interface). 
    The API is explained in detail in the documentation available at
-   http://www.acl.lanl.gov/tau and can be seen in the examples directory.
-   This process involves identifying functions and associating each function
-   with one or more TAU profile groups. This enables selectively profiling 
-   groups of functions. By default all instrumented functions that are 
-   invoked are profiled.
+   http://www.acl.lanl.gov/tau download page and can be seen in the examples 
+   directory. This process involves identifying functions and associating each 
+   function with one or more TAU profile groups. This enables selectively 
+   profiling groups of functions. By default all instrumented functions that 
+   are invoked are profiled.
    
    % cd examples/instrument
    % ./simple
