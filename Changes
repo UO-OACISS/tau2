@@ -33,6 +33,7 @@ Version 2.11 changes (from 2.9):
 21. Added support for g++ 2.96/3.x for tau_merge/tau_convert [ST].
 22. Fixed a problem with the MPI wrapper library for Intel IA-64 compilers [NCSA].
 23. Added support for tracking message sizes using user defined events [Rutgers].
+24. Added support for low overhead, high resolution timers under IA-64 Linux [NCSA].
 
 
 Version 2.10 changes (from 2.9):
