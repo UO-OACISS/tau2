@@ -62,6 +62,9 @@ public class FunctionProfile implements Comparable {
     }
 
     public void setNumCalls(double inDouble) {
+        if (inDouble == 0) {
+            System.out.println ("fuck");
+        }
         numCalls = inDouble;
     }
 

@@ -25,7 +25,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.10 2004/12/22 00:15:36 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.11 2004/12/22 01:03:38 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -43,8 +43,8 @@ public class IntervalLocationProfile extends Object {
     private int thread;
     private int eventID;
     private double[] doubleList;
-    private int numCalls;
-    private int numSubroutines;
+    private double numCalls;
+    private double numSubroutines;
     private static int fieldCount = 5;
 
     /**
@@ -204,7 +204,7 @@ public class IntervalLocationProfile extends Object {
      *
      * @return	the number of calls.
      */
-    public int getNumCalls() {
+    public double getNumCalls() {
         return this.numCalls;
     }
 
@@ -213,7 +213,7 @@ public class IntervalLocationProfile extends Object {
      *
      * @return	the number of subroutines.
      */
-    public int getNumSubroutines() {
+    public double getNumSubroutines() {
         return this.numSubroutines;
     }
 
@@ -358,7 +358,7 @@ public class IntervalLocationProfile extends Object {
      *
      * @param	numCalls the number of times the interval_event was called
      */
-    public void setNumCalls(int numCalls) {
+    public void setNumCalls(double numCalls) {
         this.numCalls = numCalls;
     }
 
@@ -369,7 +369,7 @@ public class IntervalLocationProfile extends Object {
      *
      * @param	numSubroutines the number of subroutines the interval_event has at this location.
      */
-    public void setNumSubroutines(int numSubroutines) {
+    public void setNumSubroutines(double numSubroutines) {
         this.numSubroutines = numSubroutines;
     }
 
@@ -417,16 +417,16 @@ public class IntervalLocationProfile extends Object {
                 eMS.setInclusive(metricIndex, resultSet.getDouble(3));
                 eMS.setExclusivePercentage(metricIndex, resultSet.getDouble(4));
                 eMS.setExclusive(metricIndex, resultSet.getDouble(5));
-                eMS.setNumCalls((int) (resultSet.getDouble(6)));
-                eMS.setNumSubroutines((int) (resultSet.getDouble(7)));
+                eMS.setNumCalls(resultSet.getDouble(6));
+                eMS.setNumSubroutines(resultSet.getDouble(7));
                 eMS.setInclusivePerCall(metricIndex, resultSet.getDouble(8));
                 // get the total summary data
                 eTS.setInclusivePercentage(metricIndex, resultSet.getDouble(10));
                 eTS.setInclusive(metricIndex, resultSet.getDouble(11));
                 eTS.setExclusivePercentage(metricIndex, resultSet.getDouble(12));
                 eTS.setExclusive(metricIndex, resultSet.getDouble(13));
-                eTS.setNumCalls((int) (resultSet.getDouble(14)));
-                eTS.setNumSubroutines((int) (resultSet.getDouble(15)));
+                eTS.setNumCalls(resultSet.getDouble(14));
+                eTS.setNumSubroutines(resultSet.getDouble(15));
                 eTS.setInclusivePerCall(metricIndex, resultSet.getDouble(16));
                 metricIndex++;
             }
@@ -472,8 +472,8 @@ public class IntervalLocationProfile extends Object {
                 intervalLocationProfile.setInclusive(metricIndex, resultSet.getDouble(7));
                 intervalLocationProfile.setExclusivePercentage(metricIndex, resultSet.getDouble(8));
                 intervalLocationProfile.setExclusive(metricIndex, resultSet.getDouble(9));
-                intervalLocationProfile.setNumCalls((int) (resultSet.getDouble(10)));
-                intervalLocationProfile.setNumSubroutines((int) (resultSet.getDouble(11)));
+                intervalLocationProfile.setNumCalls(resultSet.getDouble(10));
+                intervalLocationProfile.setNumSubroutines(resultSet.getDouble(11));
                 intervalLocationProfile.setInclusivePerCall(metricIndex, resultSet.getDouble(12));
                 for (int i = 1; i < metricCount; i++) {
                     if (resultSet.next() == false) {

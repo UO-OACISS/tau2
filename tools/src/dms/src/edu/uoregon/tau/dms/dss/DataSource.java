@@ -34,11 +34,11 @@ public abstract class DataSource {
     private TrialData trialData = null;
     private NCT nct = null;
     protected Thread meanData = null;
-    
+
     public Thread getMeanData() {
         return meanData;
     }
-    
+
     protected Vector metrics = null;
     private int[] maxNCT = null;
 
@@ -290,7 +290,6 @@ public abstract class DataSource {
             return null;
     }
 
-
     /**
      * Get the number of metrics. The DataSession object will maintain a
      * reference to the Vector of metric values. To clear this reference, call
@@ -316,12 +315,9 @@ public abstract class DataSource {
         for (Enumeration e = this.getNCT().getThreads().elements(); e.hasMoreElements();) {
             ((Thread) e.nextElement()).setThreadDataAllMetrics();
         }
-        this.setMeanData(0,this.getNumberOfMetrics()-1);
+        this.setMeanData(0, this.getNumberOfMetrics() - 1);
         this.meanData.setThreadDataAllMetrics();
     }
-
-
-
 
     public void setMeanData(int startMetric, int endMetric) {
 
@@ -369,7 +365,7 @@ public abstract class DataSource {
         double subrSum = 0;
 
         double topLevelInclSum[] = new double[numMetrics];
-        
+
         for (int i = 0; i < numMetrics; i++) {
             maxInclSum[i] = 0;
         }
@@ -378,10 +374,10 @@ public abstract class DataSource {
         Iterator l = trialData.getFunctions();
 
         if (meanData == null) {
-            meanData = new Thread(-1,-1,-1,numMetrics);
+            meanData = new Thread(-1, -1, -1, numMetrics);
             meanData.initializeFunctionList(this.getTrialData().getNumFunctions());
         }
-        
+
         for (int i = 0; i < numMetrics; i++) {
             for (Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements();) {
                 Node node = (Node) e1.nextElement();
@@ -389,24 +385,24 @@ public abstract class DataSource {
                     Context context = (Context) e2.nextElement();
                     for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
                         edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
-                        topLevelInclSum[i] += thread.getMaxInclusive(i); 
+                        topLevelInclSum[i] += thread.getMaxInclusive(i);
                     }
                 }
             }
         }
-        
+
         while (l.hasNext()) { // for each function
             Function function = (Function) l.next();
 
             // get/create the FunctionProfile for mean
             FunctionProfile meanProfile = meanData.getFunctionProfile(function);
             if (meanProfile == null) {
-                meanProfile = new FunctionProfile(function,numMetrics);
+                meanProfile = new FunctionProfile(function, numMetrics);
                 meanData.addFunctionProfile(meanProfile, function.getID());
             }
-            
+
             function.setMeanProfile(meanProfile);
-            
+
             callSum = 0;
             subrSum = 0;
             for (int i = 0; i < numMetrics; i++) {
@@ -445,35 +441,33 @@ public abstract class DataSource {
                 }
             }
 
-            // set the totals for all but percentages - need to do those later...
-            function.setTotalNumCalls(callSum);
-            function.setTotalNumSubr(subrSum);
+            // we don't want to set the calls and subroutines if we're just computing mean data for a derived metric!
+            if (startMetric == 0) {
+                // set the totals for all but percentages - need to do those later...
+                function.setTotalNumCalls(callSum);
+                function.setTotalNumSubr(subrSum);
 
-            
-            // mean is just the total / numThreads
-            meanProfile.setNumCalls((double) callSum / numThreads);
-            meanProfile.setNumSubr((double) subrSum / numThreads);
-            
-            
-            
+                // mean is just the total / numThreads
+                meanProfile.setNumCalls((double) callSum / numThreads);
+                meanProfile.setNumSubr((double) subrSum / numThreads);
+            }
+
             for (int i = startMetric; i <= endMetric; i++) {
                 function.setTotalExclusive(i, exclSum[i]);
                 function.setTotalInclusive(i, inclSum[i]);
-                function.setTotalInclusivePerCall(i, inclSum[i] / callSum);
+                function.setTotalInclusivePerCall(i, inclSum[i] / function.getTotalNumCalls());
 
                 // mean data computed as above in comments
 
                 meanProfile.setExclusive(i, exclSum[i] / numThreads);
                 meanProfile.setInclusive(i, inclSum[i] / numThreads);
-                meanProfile.setInclusivePerCall(i, inclSum[i] / callSum);
+                meanProfile.setInclusivePerCall(i, inclSum[i] / numThreads / meanProfile.getNumCalls());
 
-                
                 if (inclSum[i] > maxInclSum[i]) {
                     maxInclSum[i] = inclSum[i];
                 }
             }
 
-        
         }
 
         // now compute percentages since we now have max(all incls for total)
@@ -485,10 +479,10 @@ public abstract class DataSource {
 
             for (int i = startMetric; i <= endMetric; i++) {
                 if (maxInclSum[i] != 0) {
-//                    function.setTotalInclusivePercent(i, function.getTotalInclusive(i)
-//                            / maxInclSum[i] * 100);
-//                    function.setTotalExclusivePercent(i, function.getTotalExclusive(i)
-//                            / maxInclSum[i] * 100);
+                    //                    function.setTotalInclusivePercent(i, function.getTotalInclusive(i)
+                    //                            / maxInclSum[i] * 100);
+                    //                    function.setTotalExclusivePercent(i, function.getTotalExclusive(i)
+                    //                            / maxInclSum[i] * 100);
                     function.setTotalInclusivePercent(i, function.getTotalInclusive(i)
                             / topLevelInclSum[i] * 100);
                     function.setTotalExclusivePercent(i, function.getTotalExclusive(i)

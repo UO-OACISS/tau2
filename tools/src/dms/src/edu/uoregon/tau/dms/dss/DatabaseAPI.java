@@ -8,7 +8,7 @@ import java.sql.*;
  * This is the top level class for the Database implementation of the API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.6 2004/12/22 00:15:36 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.7 2004/12/22 01:03:37 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -751,15 +751,15 @@ public class DatabaseAPI {
                 IntervalLocationProfile funTS = new IntervalLocationProfile(metricCount);
                 IntervalLocationProfile funMS = new IntervalLocationProfile(metricCount);
                 for (int i = 0; i < metricCount; i++) {
-                    funTS.setNumCalls((int) f.getTotalNumCalls());
-                    funTS.setNumSubroutines((int) f.getTotalNumSubr());
+                    funTS.setNumCalls(f.getTotalNumCalls());
+                    funTS.setNumSubroutines(f.getTotalNumSubr());
                     funTS.setInclusivePercentage(i, f.getTotalInclusivePercent(i));
                     funTS.setInclusive(i, f.getTotalInclusive(i));
                     funTS.setExclusivePercentage(i, f.getTotalExclusivePercent(i));
                     funTS.setExclusive(i, f.getTotalExclusive(i));
                     funTS.setInclusivePerCall(i, f.getTotalInclusivePerCall(i));
-                    funMS.setNumCalls((int) f.getMeanNumCalls());
-                    funMS.setNumSubroutines((int) f.getMeanNumSubr());
+                    funMS.setNumCalls(f.getMeanNumCalls());
+                    funMS.setNumSubroutines(f.getMeanNumSubr());
                     funMS.setInclusivePercentage(i, f.getMeanInclusivePercent(i));
                     funMS.setInclusive(i, f.getMeanInclusive(i));
                     funMS.setExclusivePercentage(i, f.getMeanExclusivePercent(i));
@@ -824,8 +824,8 @@ public class DatabaseAPI {
                             fdo.setContext(thread.getContextID());
                             fdo.setThread(thread.getThreadID());
                             fdo.setIntervalEventID(fp.getFunction().getID());
-                            fdo.setNumCalls((int) fp.getNumCalls());
-                            fdo.setNumSubroutines((int) fp.getNumSubr());
+                            fdo.setNumCalls(fp.getNumCalls());
+                            fdo.setNumSubroutines(fp.getNumSubr());
                             // fdo.setInclusivePerCall(fp.getUserSecPerCall());
                             for (int i = 0; i < metricCount; i++) {
                                 fdo.setInclusive(i, fp.getInclusive(i));

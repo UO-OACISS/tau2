@@ -69,9 +69,9 @@ public class DBDataSource extends DataSource {
             meanData.initializeFunctionList(this.getTrialData().getNumFunctions());
             
             while (l.hasNext()) {
-                IntervalEvent f = (IntervalEvent) l.next();
+                IntervalEvent ie = (IntervalEvent) l.next();
                 
-                function = this.getTrialData().addFunction(f.getName(), numberOfMetrics);
+                function = this.getTrialData().addFunction(ie.getName(), numberOfMetrics);
 
                 FunctionProfile meanProfile = new FunctionProfile(function, numberOfMetrics);
                 function.setMeanProfile(meanProfile);
@@ -82,53 +82,53 @@ public class DBDataSource extends DataSource {
                 // in the function.
                 //localMap.add(new FunIndexFunIDPair(f.getIndexID(), id));
 
-                IntervalLocationProfile fdo = f.getMeanSummary();
+                IntervalLocationProfile ilp = ie.getMeanSummary();
 
-                if (f.getGroup() != null) {
-                    Group group = this.getTrialData().addGroup(f.getGroup());
+                if (ie.getGroup() != null) {
+                    Group group = this.getTrialData().addGroup(ie.getGroup());
                     function.addGroup(group);
                     function.setGroupsSet(true);
                     this.setGroupNamesPresent(true);
                 }
 
                 for (int i = 0; i < numberOfMetrics; i++) {
-                    meanProfile.setExclusive(i, fdo.getExclusive(i));
+                    meanProfile.setExclusive(i, ilp.getExclusive(i));
                     meanProfile.setExclusivePercent(i,
-                            fdo.getExclusivePercentage(i));
-                    meanProfile.setInclusive(i, fdo.getInclusive(i));
+                            ilp.getExclusivePercentage(i));
+                    meanProfile.setInclusive(i, ilp.getInclusive(i));
                     meanProfile.setInclusivePercent(i,
-                            fdo.getInclusivePercentage(i));
-                    meanProfile.setInclusivePerCall(i, fdo.getInclusivePerCall(i));
-                    meanProfile.setNumCalls(fdo.getNumCalls());
-                    meanProfile.setNumSubr(fdo.getNumSubroutines());
+                            ilp.getInclusivePercentage(i));
+                    meanProfile.setInclusivePerCall(i, ilp.getInclusivePerCall(i));
+                    meanProfile.setNumCalls(ilp.getNumCalls());
+                    meanProfile.setNumSubr(ilp.getNumSubroutines());
 
-                    if ((this.getTrialData().getMaxMeanExclusiveValue(i)) < fdo.getExclusive(i)) {
-                        this.getTrialData().setMaxMeanExclusiveValue(i, fdo.getExclusive(i));
+                    if ((this.getTrialData().getMaxMeanExclusiveValue(i)) < ilp.getExclusive(i)) {
+                        this.getTrialData().setMaxMeanExclusiveValue(i, ilp.getExclusive(i));
                     }
-                    if ((this.getTrialData().getMaxMeanExclusivePercentValue(i)) < fdo.getExclusivePercentage(i)) {
+                    if ((this.getTrialData().getMaxMeanExclusivePercentValue(i)) < ilp.getExclusivePercentage(i)) {
                         this.getTrialData().setMaxMeanExclusivePercentValue(i,
-                                fdo.getExclusivePercentage(i));
+                                ilp.getExclusivePercentage(i));
                     }
-                    if ((this.getTrialData().getMaxMeanInclusiveValue(i)) < fdo.getInclusive(i)) {
-                        this.getTrialData().setMaxMeanInclusiveValue(i, fdo.getInclusive(i));
+                    if ((this.getTrialData().getMaxMeanInclusiveValue(i)) < ilp.getInclusive(i)) {
+                        this.getTrialData().setMaxMeanInclusiveValue(i, ilp.getInclusive(i));
                     }
-                    if ((this.getTrialData().getMaxMeanInclusivePercentValue(i)) < fdo.getInclusivePercentage(i)) {
+                    if ((this.getTrialData().getMaxMeanInclusivePercentValue(i)) < ilp.getInclusivePercentage(i)) {
                         this.getTrialData().setMaxMeanInclusivePercentValue(i,
-                                fdo.getInclusivePercentage(i));
+                                ilp.getInclusivePercentage(i));
                     }
 
-                    if ((this.getTrialData().getMaxMeanInclusivePerCall(i)) < fdo.getInclusivePerCall(i)) {
+                    if ((this.getTrialData().getMaxMeanInclusivePerCall(i)) < ilp.getInclusivePerCall(i)) {
                         this.getTrialData().setMaxMeanInclusivePerCall(i,
-                                fdo.getInclusivePerCall(i));
+                                ilp.getInclusivePerCall(i));
                     }
 
-                    if ((this.getTrialData().getMaxMeanNumberOfCalls()) < fdo.getNumCalls()) {
-                        this.getTrialData().setMaxMeanNumberOfCalls(fdo.getNumCalls());
+                    if ((this.getTrialData().getMaxMeanNumberOfCalls()) < ilp.getNumCalls()) {
+                        this.getTrialData().setMaxMeanNumberOfCalls(ilp.getNumCalls());
                     }
 
-                    if ((this.getTrialData().getMaxMeanNumberOfSubRoutines()) < fdo.getNumSubroutines()) {
+                    if ((this.getTrialData().getMaxMeanNumberOfSubRoutines()) < ilp.getNumSubroutines()) {
                         this.getTrialData().setMaxMeanNumberOfSubRoutines(
-                                fdo.getNumSubroutines());
+                                ilp.getNumSubroutines());
                     }
                 }
 
@@ -137,17 +137,17 @@ public class DBDataSource extends DataSource {
 
                 function.setMeanValuesSet(true);
 
-                fdo = f.getTotalSummary();
+                ilp = ie.getTotalSummary();
                 for (int i = 0; i < numberOfMetrics; i++) {
-                    function.setTotalExclusive(i, fdo.getExclusive(i));
+                    function.setTotalExclusive(i, ilp.getExclusive(i));
                     function.setTotalExclusivePercent(i,
-                            fdo.getExclusivePercentage(i));
-                    function.setTotalInclusive(i, fdo.getInclusive(i));
+                            ilp.getExclusivePercentage(i));
+                    function.setTotalInclusive(i, ilp.getInclusive(i));
                     function.setTotalInclusivePercent(i,
-                            fdo.getInclusivePercentage(i));
-                    function.setTotalInclusivePerCall(i, fdo.getInclusivePerCall(i));
-                    function.setTotalNumCalls(fdo.getNumCalls());
-                    function.setTotalNumSubr(fdo.getNumSubroutines());
+                            ilp.getInclusivePercentage(i));
+                    function.setTotalInclusivePerCall(i, ilp.getInclusivePerCall(i));
+                    function.setTotalNumCalls(ilp.getNumCalls());
+                    function.setTotalNumSubr(ilp.getNumSubroutines());
 
                 }
             }
