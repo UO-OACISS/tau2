@@ -141,7 +141,7 @@ The following  command-line options are available to configure:
 -fortran=<Fortran Compiler>
    
    Specifies the name of the Fortran90 compiler. Valid options are:
-   gnu, sgi, ibm, ibm64, hp, cray, pgi, absoft, fujitsu, sun, compaq, and kai.
+   gnu, sgi, ibm, ibm64, hp, cray, pgi, absoft, fujitsu, sun, compaq, and intel.
 
 -pthread
    
@@ -171,7 +171,8 @@ The following  command-line options are available to configure:
    [ Ref: http://www.fz-juelich.de/zam/kojak/opari/ ]
    Note: There are two versions of Opari: standalone - (opari-pomp-1.1.tar.gz) and
    the newer KOJAK - kojak-<ver>.tar.gz opari/ directory. Please upgrade to the 
-   KOJAK version (especially if you're using IBM xlf90).
+   KOJAK version (especially if you're using IBM xlf90) and specify 
+   -opari=<kojak-dir>/opari while configuring TAU.
    
 -opari_region 
    Report performance data for only OpenMP regions and not constructs. 
@@ -226,7 +227,8 @@ The following  command-line options are available to configure:
 -dyninst=<directory>
    Specifies the location of the DynInst (dynamic instrumentation) package. 
    See README.DYNINST for instructions on using TAU with DynInstAPI for 
-   binary runtime instrumentation (instead of manual instrumentation). 
+   binary runtime instrumentation (instead of manual instrumentation) or
+   prior to execution by rewriting it. 
    [ Ref: http://www.cs.umd.edu/projects/dyninstAPI/ ]
 
 -mpiinc=<dir>
@@ -698,58 +700,3 @@ III) Software Requirements :
      % setenv OMP_NUM_THREADS 2
      % poe stommel -procs 2 -rmpool 2 
      % pprof
-   
-9. Using TAU with POOMA
-   Set the environment variable TAUDIR to point to the directory where TAU is
-   installed. Follow the following procedure.
-
-    FOR POOMA/SMARTS Users:
-    -----------------------
-    1. Configure PDT
-    ****************
-    % cd /usr/local/packages/pdtoolkit-1.0
-    [FOR SGI]
-    % configure -KCC -arch=IRIX64
-    [FOR LINUX PCs]
-    % configure -KCC
-    
-    2. Configure TAU
-    ****************
-    % cd /usr/local/packages/tau-2.7
-    [FOR SGI]
-    % ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS -pdt=/usr/local/packages/pdtoolkit-1.0
-    [FOR LINUX PCs]
-    % ./configure -arch=linux -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -pdt=/usr/local/packages/pdtoolkit-1.0
-    % make install
-    
-    3. Configure SMARTS
-    *******************
-    % cd /usr/local/packages/smarts-1.0
-    [FOR SGI]
-    % configure --with-arch=iris4d --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.7 --enable-64bit --enable-profile
-    [FOR LINUX PCs]
-    % configure --with-arch=i386-linux --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.7 --enable-profile
-    % make
-    % make install
-    
-    4. Configure Pooma II 
-    *********************
-    % setenv TAUDIR     /usr/local/packages/tau-2.7
-    % setenv PDTDIR	    /usr/local/packages/pdtoolkit-1.0
-    % setenv SMARTSDIR  /usr/local/packages/smarts-1.0
-    [FOR SGI]
-    % ./configure --arch SGI64KCC --suite PP --parallel --profile --opt --ex
-    [FOR LINUX PCs]
-    % ./configure --arch LINUXKCC --suite PP --parallel --profile --opt --ex
-    % setenv POOMASUITE PP
-    % make
-    % cd examples/Solvers/SimpleJacobi
-    % make
-    % cd $POOMASUITE
-    % SimpleJacobi --pooma-threads <n>
-    % pprof
-    % paraprof 
-       
-    
-    
-    
