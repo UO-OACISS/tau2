@@ -1,6 +1,6 @@
 cc34567 Cubes program
       PROGRAM SUM_OF_CUBES 
-       integer profiler(2)
+       integer profiler(2) / 0, 0 /
 	save profiler
       INTEGER :: H, T, U 
         call TAU_PROFILE_INIT()

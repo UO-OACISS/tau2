@@ -21,7 +21,7 @@ CC		= $(TAU_CC)
 
 FFLAGS        	= $(TAU_INCLUDE) $(TAU_F90_FIXED)
 
-LIBS            = $(TAU_LIBS) $(LEXTRA1) $(TAU_FORTRANLIBS)
+LIBS            = $(TAU_LIBS) $(TAU_CXXLIBS)
 
 LDFLAGS	      	= $(USER_OPT) 
 
@@ -44,7 +44,7 @@ all:		$(TARGET)
 install: 	$(TARGET)
 
 $(TARGET):	$(TARGET).o  
-	$(TAU_LINKER) $(LDFLAGS) $(TARGET).o  -o $@ $(LIBS)
+	$(F90) $(LDFLAGS) $(TARGET).o  -o $@ $(LIBS)
 
 $(TARGET).o : $(TARGET).f
 	$(F90) $(FFLAGS) -c $(TARGET).f
