@@ -159,6 +159,7 @@ use_sage2=no
 use_pstl=no
 use_hpnx=no
 tauarch=unknown
+pdtcompdir=unknown
 tauprefix=unknown
 tautoplevel=
 tauoptions=
@@ -572,6 +573,11 @@ do
 
   -arch=*)
     tauarch=`echo $arg | sed -e 's/-arch=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -pdtcompdir=*)
+    pdtcompdir=`echo $arg | sed -e 's/-pdtcompdir=//' -e 's/ /_/g'`
     shift
     ;;
 
@@ -1783,6 +1789,11 @@ fi
 if [ $pdt = yes ]
 then
   fixmakeargs="$fixmakeargs PDT pdtdir=$pdtdir"
+  if [ $pdtcompdir != unknown ]
+  then
+    fixmakeargs="$fixmakeargs PDTARCH pdtcompdir=$pdtcompdir"
+  fi
+
   if [ $pdt_cxx_compiler != default ]
   then
     fixmakeargs="$fixmakeargs PDTCXX pdtcxx=$pdt_cxx_compiler"

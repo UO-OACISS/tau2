@@ -63,7 +63,7 @@ WARNINGSOPT	= -w
 #PGI#CEXTRA = -DPGI -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 #FUJITSU#CEXTRA = -DFUJITSU -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 CWARNING	= $(WARNINGSOPT)
-#PDT#PDTOPTS 	= -L$(PDTDIR)/$(CONFIG_ARCH)/lib -lpdb #ENDIF#
+#PDT#PDTOPTS 	= -L$(PDTDIR)/$(PDTARCHDIR)/lib -lpdb #ENDIF#
 #PDT#INSTR 		= tau_instrumentor #ENDIF#
 #DYNINST#TAURUN 	= tau_run #ENDIF#
 #DYNINST#DYNINC 	= -I$(DYNINSTDIR)/core/dyninstAPI/h #ENDIF#
@@ -141,7 +141,7 @@ tau_merge.o: 	tau_merge.c
 tau_events.o: 	tau_events.cpp
 		$(CXX) $(CFLAGS)  -c tau_events.cpp
 
-tau_instrumentor: tau_instrumentor.o tau_selective.o $(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a 
+tau_instrumentor: tau_instrumentor.o tau_selective.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a 
 		$(PDT_CXX_COMP) $(CFLAGS) tau_instrumentor.o tau_selective.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
 
 tau_instrumentor.o: tau_instrumentor.cpp 
@@ -156,10 +156,10 @@ tau_run: 	tau_run.o tau_selective.o
 tau_run.o: 	tau_run.cpp
 		$(CXX) $(CFLAGS) $(DYNINC) -c tau_run.cpp
 
-$(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a:
+$(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a:
 		@echo 
 		@echo "******************************************************"
-		@echo "PDT Configuration Error. $(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a not found."
+		@echo "PDT Configuration Error. $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a not found."
 	        @echo "Please configure PDT again and then install TAU."
 		@echo 
 		@echo "******************************************************"

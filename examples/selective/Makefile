@@ -19,15 +19,15 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-CPARSE          = $(PDTDIR)/$(CONFIG_ARCH)/bin/cparse
+CPARSE          = $(PDTDIR)/$(PDTARCHDIR)/bin/cparse
 
-F90PARSE        = $(PDTDIR)/$(CONFIG_ARCH)/bin/f90parse
+F90PARSE        = $(PDTDIR)/$(PDTARCHDIR)/bin/f90parse
 
 TAUINSTR        = $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
 CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)
 
-FFLAGS          = -W132
+#FFLAGS          = -W132
 
 LIBS            = $(TAU_LIBS) $(TAU_FORTRANLIBS) 
 

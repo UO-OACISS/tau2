@@ -117,6 +117,11 @@ fi
 	echo "s,^PDTDIR=.*$,PDTDIR=$pdtdir,g" >> $sedout
 	;;
 
+     pdtcompdir=*)
+        pdtcompdir=`echo $1 | sed -e 's/^pdtcompdir=//'`
+	echo "s,^PDTCOMPDIR=.*$,PDTCOMPDIR=$pdtcompdir,g" >> $sedout
+	;;
+
      pdtcxx=*)
         pdtcxx=`echo $1 | sed -e 's/^pdtcxx=//'`
 	echo "s,^PDT_CXX=.*$,PDT_CXX=$pdtcxx,g" >> $sedout
@@ -351,6 +356,10 @@ fi
 	;;
      PDTCXX)
 	echo NOTE: Using a different compiler for tau_instrumentor
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PDTARCH)
+	echo NOTE: Using a different architecture/compiler dir for PDT 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      ENABLE32BIT)

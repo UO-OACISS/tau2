@@ -19,7 +19,7 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-PDTCPARSE        = $(PDTDIR)/$(CONFIG_ARCH)/bin/cparse
+PDTCPARSE        = $(PDTDIR)/$(PDTARCHDIR)/bin/cparse
 
 TAUINSTR        = $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
