@@ -102,6 +102,14 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 // Since FunctionInfo constructor is called once for each function (static)
 // we know that it couldn't be already on the call stack.
 	SetAlreadyOnStack(false, tid);
+    	for (int i=0; i < TAU_MAX_THREADS; i++)
+   	{
+     	  NumCalls[i] = 0;
+     	  NumSubrs[i] = 0;
+     	  ExclTime[i] = 0;
+     	  InclTime[i] = 0;
+	  AlreadyOnStack[i] = false;
+ 	}
 
 #ifdef PROFILE_STATS
 	SumExclSqr[tid] = 0;
@@ -218,6 +226,6 @@ int FunctionInfo::AppendExclInclTimeThisCall(double ex, double in)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 1998/09/17 15:26:00 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.7 1998/09/17 15:26:00 sameer Exp $ 
+ * $Revision: 1.8 $   $Date: 1998/09/22 01:08:11 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.8 1998/09/22 01:08:11 sameer Exp $ 
  ***************************************************************************/
