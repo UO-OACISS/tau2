@@ -270,6 +270,11 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 				    popup5.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 			    }
+			    else{
+				if(evt.getClickCount()==2)
+				    metric(path,true);
+			    }
+			    
 			}
 		    }
 		};
@@ -635,7 +640,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    jSplitInnerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof Metric)
-	    this.metric(path);
+	    this.metric(path,false);
     }
     //######
     //End - TreeSelectionListener
@@ -690,7 +695,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	TreePath path = event.getPath();
 	if(path == null)
 	    return;
-	//if(UtilFncs.debug)
+	if(UtilFncs.debug)
 	    System.out.println("In treeWillExpand - path:" + path.toString());
 	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
@@ -853,8 +858,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    trial.setDMTN(trialNode);
 		    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 		    trial.setTreePath(new TreePath(trialNode.getPath()));
-		    //System.out.println("path: " + (new TreePath(trialNode.getPath())));
-		    //treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 		}
 		System.out.println("Done loading trial list.");
 	    }
@@ -927,7 +930,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     //####################################
     //Tree selection helpers.
     //####################################
-    private void metric(TreePath path){
+
+    //Improve this function so that db trials can be passed through.
+    private void metric(TreePath path, boolean show){
 	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
 	Object userObject = selectedNode.getUserObject();
@@ -940,7 +945,8 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    pPMLPanel.setArg2Field(pPMLPanel.getArg1Field());
 	    pPMLPanel.setArg1Field(metric.getApplicationID()+":"+metric.getExperimentID()+":"+metric.getTrialID()+":"+metric.getID());
 	}
-	this.showMetric(trial, metric);
+	if(show)
+	    this.showMetric(trial, metric);
     }
 
     public void clearDefaultMutableTreeNodes(DefaultMutableTreeNode defaultMutableTreeNode){
@@ -1189,20 +1195,21 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		}
 		if(v.size()>0){
 		    trial = new ParaProfTrial(null, type);
-		    experiment.addTrial(trial);
+		    if(experiment.dBExperiment()){
+			trial.setUpload(true); //This trial is not set to a db trial until after it has finished loading.
+		    }
+		    else
+			experiment.addTrial(trial);
 		    trial.setExperiment(experiment);
 		    trial.setApplicationID(experiment.getApplicationID());
 		    trial.setExperimentID(experiment.getID());
-		    trial.setDBTrial(experiment.dBExperiment());
-		    if(trial.dBTrial())
-		       trial.setUpload(true);
 		    trial.setPaths(fl.getPath());
 		    trial.setName(trial.getPathReverse());
 		    trial.setLoading(true);
 		    trial.initialize(v);
 
 		    
-		    if(trial.dBTrial())
+		    if(experiment.dBExperiment()) //Check need to occur on the experiment as trial not yet a recognized db trial.
 			this.expandTrial(2,trial.getApplicationID(),trial.getExperimentID(),trial.getID(),
 					 application,experiment,trial);
 		    else
@@ -1242,7 +1249,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			       trial.getID() + " to the database. Please wait ...");
 	    PerfDMFSession perfDMFSession = this.getDBSession();
 	    if(perfDMFSession!=null){
-		perfDMFSession.saveParaProfTrial(trial, -1);
+		trial.setID(perfDMFSession.saveParaProfTrial(trial, -1));
 		perfDMFSession.terminate();
 	    }
 	    trial.setUpload(false);
@@ -1251,6 +1258,8 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			       trial.getID());
 	    //Add to the list of loaded trials.
 	    loadedTrials.add(trial);
+	    //Now safe to set this to be a dbTrial.
+	    trial.setDBTrial(true);
 	}
 
 	if(trial.dBTrial())
@@ -1360,22 +1369,16 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	return null;
     }
 
-    public DefaultMutableTreeNode expandTrial(int type, int applicationID, int experimentID, int trialID,
+    public void expandTrial(int type, int applicationID, int experimentID, int trialID,
 					      ParaProfApplication application, ParaProfExperiment experiment, ParaProfTrial trial){
 	DefaultMutableTreeNode trialNode = this.expandExperiment(type,applicationID,experimentID,trialID,
 								 application,experiment,trial);
+	//Expand the trial.
 	if(trialNode!=null){
-	    //Try and find the required trial node.
-	    for(int i=trialNode.getChildCount(); i>0; i--){
-		DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) trialNode.getChildAt(i-1);
-		if(trialID==((ParaProfTrial)defaultMutableTreeNode.getUserObject()).getID()){
-		    tree.expandPath(new TreePath(defaultMutableTreeNode.getPath()));
-		    return defaultMutableTreeNode;
-		}
-	    }
-	    return null;
+	    if(tree.isExpanded(new TreePath(trialNode.getPath())))
+		tree.collapsePath(new TreePath(trialNode.getPath()));
+	    tree.expandPath(new TreePath(trialNode.getPath()));
 	}
-	return null;
     }
 
     public PerfDMFSession getDBSession(){
