@@ -121,8 +121,13 @@ private:
 	// Statistics about calling this function.
 	STORAGE(long, NumCalls);
 	STORAGE(long, NumSubrs);
+#ifndef TAU_MULTIPLE_COUNTERS
+	STORAGE(double, ExclTime);
+	STORAGE(double, InclTime);
+#else //TAU_MULTIPLE_COUNTERS
 	MULTSTORAGE(double, ExclTime);
 	MULTSTORAGE(double, InclTime);
+#endif//TAU_MULTIPLE_COUNTERS
 	STORAGE(bool, AlreadyOnStack);
 #ifdef PROFILE_STATS
 	STORAGE(double, SumExclSqr);
@@ -266,6 +271,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: bertie $
- * $Revision: 1.19 $   $Date: 2002/03/10 23:51:31 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.19 2002/03/10 23:51:31 bertie Exp $ 
+ * $Revision: 1.20 $   $Date: 2002/03/11 00:24:25 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.20 2002/03/11 00:24:25 bertie Exp $ 
  ***************************************************************************/
