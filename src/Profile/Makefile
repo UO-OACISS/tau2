@@ -72,7 +72,7 @@ AR	      = ar
 ARFLAGS	      = rcv 
 ############# For KAI KCC compiler, replace AR accordingly #######
 #KAI#AR			= $(CONFIG_CXX) 		   #ENDIF#
-#KAI#ARFLAGS			= -o				   #ENDIF#
+#KAI#ARFLAGS			= --one_per -o		 	   #ENDIF#
 ##################################################################
 
 ############# For SGI CC compiler, replace AR accordingly #######
