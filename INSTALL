@@ -58,6 +58,7 @@ Usage: configure [OPTIONS]
 -pthread .................................. Use pthread thread package.
 -tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
 -smarts .................. Use SMARTS API for threads (use with above).
+-openmp	........................................... Use OpenMP threads.
 -pcl=<dir> ..... Specify location of PCL (Performance Counter Library).
 -papi=<dir> ............... Specify location of PAPI (Performance API).
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
@@ -197,10 +198,8 @@ The following  command-line options are available to configure:
 
 -CPUTIME
    Uses usertime + system time instead of wallclock time. It gives the CPU
-   time spent in the routines. If -pthread is used along with this, then the
-   value depends on whether the OS spawns threads as user or kernel level 
-   threads. On Linux, it'll show the correct time per thread, but on SGI it
-   will not as pthreads are not visible to the kernel. 
+   time spent in the routines.  This currently works only on LINUX systems 
+   for multi-threaded programs and on all systems for single-threaded programs. 
    
 -TRACE
    
@@ -227,16 +226,30 @@ The following  command-line options are available to configure:
    Examples:
 
    % ./configure -c++=KCC 
+   Use TAU with KCC
  
    % ./configure -c++=CC -useropt='-g -I/local/apps/STL/'
+   Use TAU with SGI CC and add the above user defined options to the 
+   commandline.
 
    % ./configure -TRACE -PROFILE 
+   Enable both profiling and tracing.
 
    % ./configure -c++=KCC -SGITIMERS -tulipthread=/home/smarts/build/smarts-1.0
      -smarts -arch=sgin32 -prefix=/usr/local/packages/tau
+   Use TAU with KCC and fast nanosecond timers on SGI and use SMARTS with -n32
+   options and install the files in /usr/local/packages/tau
 
    % ./configure -c++=KCC -cc=cc -arch=sgi64 -mpiinc=/local/apps/mpich/include
      -mpilib=/local/apps/mpich/lib/IRIX64/ch_p4 -SGITIMERS -pdt=/local/apps/pdt
+   Use TAU with KCC, and cc on 64 bit SGI systems and use MPI wrapper libraries
+   with SGI's low cost timers and use PDT for automated source code 
+   instrumentation.
+
+   % ./configure -c++=guidec++ -cc=guidec -papi=/usr/local/packages/papi -openmp
+     -mpiinc=/usr/packages/mpich/include -mpilib=/usr/packages/mpich/lib
+   Use OpenMP+MPI using KAI's Guide compiler suite and use PAPI for accessing
+   hardware performance counters for measurements.
 
 2. Compilation.
 
@@ -313,24 +326,28 @@ The following  command-line options are available to configure:
    -------------------------
 I) The Profiling Library needs a recent C++ compiler. Our recommended list:
 	a) Kuck and Associates' (http://www.kai.com) KCC compiler
-	b) SGI (http://www.sgi.com) MipsPro 7.2+ CC compiler 
-	c) PGI (http://www.pgroup.com) 3.0 pgCC compiler for Linux
-	d) GNU (http://www.gnu.org) gcc-2.95 g++ compiler
+	b) KAI's KAP/Pro (http://www.kai.com) OpenMP guidec++ compiler
+	c) SGI (http://www.sgi.com) MipsPro 7.2+ CC compiler 
+	d) PGI (http://www.pgroup.com) 3.0 pgCC compiler for Linux
+	e) GNU (http://www.gnu.org) gcc-2.95 g++ compiler
+	f) IBM (http://www.ibm.com) xlC C++ compiler for IBM SP
 
 II) Platforms :
    TAU has been tested on 
-	a) SGI IRIX 6.5 systems (Origin 2000) with KCC, CC, g++.
+	a) SGI IRIX 6.5 systems (Origin 2000) with KCC, CC, g++, guidec++.
 	b) LINUX x86 PC clusters with 
 		i) 	KAI KCC compiler, 
 		ii) 	GNU g++/egcs compiler,
 		iii)	PGI pgCC, pgcc, pgf90 compiler suite,
-	        iv) 	Fujitsu C++/f90 compiler suite.
-	c) Sun Solaris2 with g++. 
+	        iv) 	Fujitsu C++/f90 compiler suite,
+		v)      KAI KAP/Pro compiler suite.
+	c) Sun Solaris2 with g++, KCC. 
 	d) HP PA-RISC systems running HP-UX with g++. 
 	e) Cray T3E with Cray C++ compiler, and KAI KCC.
 	f) Compaq Tru64 Alpha with g++.
         g) Compaq Alpha Linux clusters with g++.
 	i) Microsoft Windows. Tested with MS Visual C++ v5.1.  
+	j) IBM SP AIX (RS6000) systems with KCC, and xlC compilers.
 	   
 
    TAU may work with minor modifications on other platforms.
