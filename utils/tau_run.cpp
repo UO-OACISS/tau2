@@ -246,7 +246,11 @@ int main(int argc, char **argv)
     fprintf(stderr, "%s> Loading %s ...\n", argv[0], libname);
     argv++;
   }
-
+  else
+  { /* No -Xrun<> was specified. Load libTAU.so anyway */
+    loadlib=true;
+    sprintf(libname, "libTAU.so"); 
+  }
 
   // Register a callback function that prints any error messages
   bpatch->registerErrorCallback(errorFunc1);
@@ -291,7 +295,9 @@ int main(int argc, char **argv)
     }
     else
     {
-      dprintf("%s not loaded properly\n", libname);
+      printf("ERROR:%s not loaded properly. \n", libname);
+      printf("Please make sure that its path is in your LD_LIBRARY_PATH environment variable.\n");
+      exit(1);
     }
   } // loadlib == true
 
