@@ -2513,18 +2513,51 @@ then
 fi
 
 
+x=`java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+
+oldjdk=no
+
+if [ `echo $x | sed -e s/1.1\.*// | wc -c` -eq 1 ]
+then
+  echo "jdk version 1.1 found"
+  oldjdk=yes
+else
+  if [ `echo $x | sed -e s/1.2\.*// | wc -c` -eq 1 ]
+  then
+    echo "jdk version 1.2 found"
+    oldjdk=yes
+  else
+    if [ `echo $x | sed -e s/1.3\.*// | wc -c` -eq 1 ]
+    then
+      echo "jdk version 1.3 found"
+      oldjdk=yes
+    else
+      echo "jdk version 1.4 or better found"
+      oldjdk=no;
+    fi
+  fi
+fi
+
+if [ $oldjdk = yes ]
+then
+  paraprofjar=ParaProf-Old.jar
+else
+  paraprofjar=ParaProf.jar
+fi
+
+
 if [ $tauprefix = unknown ]
 then
   cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
   sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-	> ${tauroot}/${architecture}/bin/paraprof
+	-e 's,@OLDJDK@,'$oldjdk',' > ${tauroot}/${architecture}/bin/paraprof
   chmod a+rx ${tauroot}/${architecture}/bin/paraprof
   if [ ! -f ${tauroot}/${architecture}/bin/jracy ]
   then 
     cd ${tauroot}/${architecture}/bin/; ln -s paraprof jracy; cd ${tauroot}; 
   fi
   echo "TAU: installed paraprof in ${tauroot}/${architecture}/bin"
-  cp ${tauroot}/tools/src/paraprof/bin/ParaProf.jar ${tauroot}/${architecture}/bin
+  cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauroot}/${architecture}/bin
   echo "TAU: installed ParaProf.jar in ${tauroot}/${architecture}/bin"
 else
   if [ ! -d ${tauprefix} ]
@@ -2555,14 +2588,14 @@ else
 
   cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
   sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-	> ${tauprefix}/${architecture}/bin/paraprof
+	-e 's,@OLDJDK@,'$oldjdk',' > ${tauprefix}/${architecture}/bin/paraprof
   chmod a+rx ${tauprefix}/${architecture}/bin/paraprof
   if [ ! -f ${tauprefix}/${architecture}/bin/jracy ]
   then 
     cd ${tauprefix}/${architecture}/bin/; ln -s paraprof jracy; cd ${tauroot}; 
   fi
   echo "TAU: installed paraprof in ${tauprefix}/${architecture}/bin"
-  cp ${tauroot}/tools/src/paraprof/bin/ParaProf.jar ${tauprefix}/${architecture}/bin
+  cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauprefix}/${architecture}/bin
   echo "TAU: installed ParaProf.jar in ${tauprefix}/${architecture}/bin"
 fi
 

@@ -1,6 +1,7 @@
 #!/bin/@SHELL@
 TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
+OLDJDK=@OLDJDK@
 
 # If paraprof is invoked with the -p option, read and/or generate pprof.dat
 if [ "x$1" = "x-p" ]
@@ -64,4 +65,9 @@ if [ -f ~/.ParaProf/ParaProfPreferences.dat ] ; then
 fi
 
 # Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 500m (500MB).
+if [ "$OLDJDK" = "yes" ]
+then
+java -Xmx500m -cp ${TAUROOT}/${MACHINE}/bin/ParaProf-Old.jar:${TAUROOT}/tools/src/dms/dms.jar:${TAUROOT}/tools/src/perfdb/jars/perfdb.jar:${TAUROOT}/tools/src/perfdb/jars/xerces.jar:${TAUROOT}/tools/src/perfdb/jars/postgresql.jar:${TAUROOT}/tools/src/perfdb/jars/jargs.jar paraprof/ParaProf ${PPROFOPT}
+else
 java -Xmx500m -cp ${TAUROOT}/${MACHINE}/bin/ParaProf.jar:${TAUROOT}/tools/src/dms/dms.jar:${TAUROOT}/tools/src/perfdb/jars/perfdb.jar:${TAUROOT}/tools/src/perfdb/jars/xerces.jar:${TAUROOT}/tools/src/perfdb/jars/postgresql.jar:${TAUROOT}/tools/src/perfdb/jars/jargs.jar paraprof/ParaProf ${PPROFOPT}
+fi
