@@ -190,6 +190,7 @@ TauGroup_t RtsLayer::enableProfileGroupName(char * ProfileGroup) {
 TauGroup_t RtsLayer::generateProfileGroup(void) {
   static TauGroup_t key =  0x00000001;
   key = key << 1;
+  if (key == 0x0) key = 0x1; // cycle
   return key;
 }
 
@@ -1019,6 +1020,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.42 $   $Date: 2002/05/08 07:09:08 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.42 2002/05/08 07:09:08 sameer Exp $ 
+ * $Revision: 1.43 $   $Date: 2002/07/26 20:10:14 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.43 2002/07/26 20:10:14 sameer Exp $ 
  ***************************************************************************/
