@@ -1667,7 +1667,8 @@ static void ReadEventTable (char file[])
 static int ProcessFile (int no, int ctx, int thr, int longname, int max, char prefix[], int ignore)
 {
   int i, j, e, n, r, s, d, l, eid;
-  int ret, active_counters=0;
+  int active_counters=0;
+  int ret;
   long count;
   int numf;
   int numc;
@@ -1804,7 +1805,8 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
 	    ((ret = fscanf(in, "%d", &d)) < 0) ||
 	    ((ret = fscanf(in, "%d", &s)) < 0) )
 */
-        if ((ret = fscanf(in, "%d %d %d %d ", &e, &n, &d, &s)) < 0)
+	ret = fscanf(in, "%d %d %d %d ", &e, &n, &d, &s);
+        if (ret < 0)
         {
 	  perror("fscanf error:");
 	  exit(1);
@@ -2447,19 +2449,19 @@ int main (int argc, char *argv[])
 	{
 	  if(hwcounters) {
 	    printf ("default.dep\n%d templated_functions_hw_counters -stddev\n", numfunc);
-	    printf ("\%%time       counts total counts    #call   #subrs count/call     stddev name\n");
+	    printf ("%%time       counts total counts    #call   #subrs count/call     stddev name\n");
 	  } else{
 	    printf ("default.dep\n%d templated_functions -stddev\n", numfunc);
-	    printf ("\%%time         msec   total msec    #call   #subrs  usec/call     stddev name\n");
+	    printf ("%%time         msec   total msec    #call   #subrs  usec/call     stddev name\n");
 	  }
 	} else //not profilestats
 	  { 
 	    if(hwcounters) {
 	      printf ("default.dep\n%d templated_functions_hw_counters\n", numfunc);
-	      printf ("\%%time       counts total counts    #call   #subrs count/call ame\n");
+	      printf ("%%time       counts total counts    #call   #subrs count/call ame\n");
 	    } else {
 	      printf ("default.dep\n%d templated_functions\n", numfunc);
-	      printf ("\%%time         msec   total msec    #call   #subrs  usec/call name\n");
+	      printf ("%%time         msec   total msec    #call   #subrs  usec/call name\n");
 	    }
 	  }//end if profilestats
 
@@ -2494,7 +2496,7 @@ int main (int argc, char *argv[])
       exit (0); /* exit after printing list */
     } else if ( dump ) {
          printf ("%s\n%d functions\n", depfile, numfunc);
-	 printf ("\%%time         msec   total msec    #call   #subrs  usec/call name\n");
+	 printf ("%%time         msec   total msec    #call   #subrs  usec/call name\n");
     }
   }
 
@@ -2545,8 +2547,8 @@ int main (int argc, char *argv[])
   exit (0);
 }
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: ariyal $
- * $Revision: 1.2 $   $Date: 1998/03/04 00:25:57 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.2 1998/03/04 00:25:57 ariyal Exp $                                                   
+ * $RCSfile: pprof.cpp,v $   $Author: sameer $
+ * $Revision: 1.3 $   $Date: 1998/03/20 21:25:24 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.3 1998/03/20 21:25:24 sameer Exp $                                                   
  ***************************************************************************/
 
