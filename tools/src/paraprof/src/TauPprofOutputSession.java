@@ -18,8 +18,11 @@ import java.io.*;
 import java.util.*;
 import dms.dss.*;
 
-public class TauPprofOutputSession extends DataSession{
+public class TauPprofOutputSession extends ParaProfDataSession{
 
+    public TauPprofOutputSession(){
+	super();
+    }
 
     /**
      * Terminate the DataSession object.
@@ -280,7 +283,7 @@ public class TauPprofOutputSession extends DataSession{
 		//It's first token will be the number of mappings present.  Get it.
 		tokenString = genericTokenizer.nextToken();
       
-		if(firstRead){
+		if(this.firstMetric()){
 		    //Set the number of mappings.
 		    this.setNumberOfMappings(Integer.parseInt(tokenString));
 		}
@@ -307,21 +310,21 @@ public class TauPprofOutputSession extends DataSession{
 		this.increaseVectorStorage();
 
 		//Only need to call addDefaultToVectors() if not the first run.
-		if(!firstRead){
+		if(!(this.firstMetric())){
 		    if(ParaProf.debugIsOn)
 			System.out.println("Increasing the storage for the new counter.");
 		
-		    for(Enumeration e1 = (globalMapping.getMapping(0)).elements(); e1.hasMoreElements() ;){
+		    for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
 			GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
 			tmpGME.incrementStorage();
 		    }
 	  
-		    for(Enumeration e2 = (globalMapping.getMapping(2)).elements(); e2.hasMoreElements() ;){
+		    for(Enumeration e2 = (this.getGlobalMapping().getMapping(2)).elements(); e2.hasMoreElements() ;){
 			GlobalMappingElement tmpGME = (GlobalMappingElement) e2.nextElement();
 			tmpGME.incrementStorage();
 		    }
 	  
-		    for(Enumeration e3 = nct.getNodes().elements(); e3.hasMoreElements() ;){
+		    for(Enumeration e3 = this.getNCT().getNodes().elements(); e3.hasMoreElements() ;){
 			node = (Node) e3.nextElement();
 			for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
 			    context = (Context) e4.nextElement();
@@ -408,13 +411,13 @@ public class TauPprofOutputSession extends DataSession{
 		    //Common things to grab
 		    if((lineType!=6) && (lineType!=-1)){
 			this.getFunctionDataLine1(inputString);
-			mappingID = globalMapping.addGlobalMapping(functionDataLine1.s0, 0);
-			globalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
+			mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine1.s0, 0);
+			globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 		    }
 
 		    switch(lineType){
 		    case 0:
-			if(firstRead){ 
+			if(this.firstMetric()){ 
 			    //Grab the group names.
 			    groupNamesString = getGroupNames(inputString);
 			    if(groupNamesString != null){
@@ -424,20 +427,20 @@ public class TauPprofOutputSession extends DataSession{
 				    if(tmpString != null){
 					//The potential new group is added here.  If the group is already present, the the addGlobalMapping
 					//function will just return the already existing group id.  See the GlobalMapping class for more details.
-					int tmpInt = globalMapping.addGlobalMapping(tmpString, 1);
+					int tmpInt = this.getGlobalMapping().addGlobalMapping(tmpString, 1);
 					//The group is either already present, or has just been added in the above line.  Now, using the addGroup
 					//function, update this mapping to be a member of this group.
-					globalMapping.addGroup(mappingID, tmpInt, 0);
+					this.getGlobalMapping().addGroup(mappingID, tmpInt, 0);
 					if((tmpInt != -1) && (ParaProf.debugIsOn))
 					    System.out.println("Adding " + tmpString + " group with id: " + tmpInt + " to mapping: " + functionDataLine1.s0);
 				    }    
 				}    
 			    }
 			}
-			globalMapping.setTotalExclusiveValueAt(metric, functionDataLine1.d0, mappingID, 0);
+			this.getGlobalMapping().setTotalExclusiveValueAt(metric, functionDataLine1.d0, mappingID, 0);
 			break;
 		    case 1:
-			globalMapping.setTotalInclusiveValueAt(metric, functionDataLine1.d0, mappingID, 0);
+			this.getGlobalMapping().setTotalInclusiveValueAt(metric, functionDataLine1.d0, mappingID, 0);
 			break;
 		    case 2:
 			//Now set the values correctly.
@@ -493,9 +496,9 @@ public class TauPprofOutputSession extends DataSession{
 			contextID = array[1];
 			threadID = array[2];
 
-			node = nct.getNode(nodeID);
+			node = this.getNCT().getNode(nodeID);
 			if(node==null)
-			    node = nct.addNode(nodeID);
+			    node = this.getNCT().addNode(nodeID);
 			context = node.getContext(contextID);
 			if(context==null)
 			    context = node.addContext(contextID);
@@ -511,7 +514,7 @@ public class TauPprofOutputSession extends DataSession{
 			globalThreadDataElement = (GlobalThreadDataElement) vector.elementAt(mappingID);
 				
 			if(globalThreadDataElement == null){
-			    globalThreadDataElement = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 0), false);
+			    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
 			    thread.addFunction(globalThreadDataElement, mappingID);
 			}
 			globalThreadDataElement.setMappingExists();
@@ -530,7 +533,7 @@ public class TauPprofOutputSession extends DataSession{
 			if((globalMappingElement.getMaxInclusivePercentValue(metric)) < functionDataLine1.d1)
 			    globalMappingElement.setMaxInclusivePercentValue(metric, functionDataLine1.d1);
 		    
-			thread = nct.getThread(nodeID,contextID,threadID);
+			thread = this.getNCT().getThread(nodeID,contextID,threadID);
 			globalThreadDataElement = thread.getFunction(mappingID);
 		    
 			globalThreadDataElement.setInclusiveValue(metric, functionDataLine1.d0);
@@ -568,7 +571,7 @@ public class TauPprofOutputSession extends DataSession{
 		    case 6:
 			//Just ignore the string if this is not the first check.
 			//Assuming is that user events do not change for each counter value.
-			if(firstRead){
+			if(this.firstMetric()){
 			    if(!(userEventsPresent())){
 				//Get the number of user events.
 				numberOfUserEvents = getNumberOfUserEvents(inputString);
@@ -590,16 +593,16 @@ public class TauPprofOutputSession extends DataSession{
 				    //ALL the user events for each THREAD NODE are processed in the above for-loop.  Therefore,
 				    //the below for-loop is only run once on each THREAD NODE.
 				
-				    if(firstRead){
-					(nct.getThread(nodeID,contextID,threadID)).initializeUsereventList(numberOfUserEvents);
+				    if(this.firstMetric()){
+					(this.getNCT().getThread(nodeID,contextID,threadID)).initializeUsereventList(numberOfUserEvents);
 				    }
 				}
 
-				int userEventID = globalMapping.addGlobalMapping(usereventDataLine.s0, 2);
+				int userEventID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2);
 				if(usereventDataLine.i0 != 0){
 				    //Update the max values if required.
 				    //Grab the correct global mapping element.
-				    globalMappingElement = globalMapping.getGlobalMappingElement(userEventID, 2);
+				    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(userEventID, 2);
 				    if((globalMappingElement.getMaxUserEventNumberValue()) < usereventDataLine.i0)
 					globalMappingElement.setMaxUserEventNumberValue(usereventDataLine.i0);
 				    if((globalMappingElement.getMaxUserEventMinValue()) < usereventDataLine.d1)
@@ -609,12 +612,12 @@ public class TauPprofOutputSession extends DataSession{
 				    if((globalMappingElement.getMaxUserEventMeanValue()) < usereventDataLine.d2)
 					globalMappingElement.setMaxUserEventMeanValue(usereventDataLine.d2);
 				
-				    GlobalThreadDataElement tmpGTDEUE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(userEventID, 2), true);
+				    GlobalThreadDataElement tmpGTDEUE = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(userEventID, 2), true);
 				    tmpGTDEUE.setUserEventNumberValue(usereventDataLine.i0);
 				    tmpGTDEUE.setUserEventMinValue(usereventDataLine.d1);
 				    tmpGTDEUE.setUserEventMaxValue(usereventDataLine.d0);
 				    tmpGTDEUE.setUserEventMeanValue(usereventDataLine.d2);
-				    (nct.getThread(nodeID,contextID,threadID)).addUserevent(tmpGTDEUE, userEventID);
+				    (this.getNCT().getThread(nodeID,contextID,threadID)).addUserevent(tmpGTDEUE, userEventID);
 				}
 			    }
 			    //Now set the userEvents flag.
@@ -636,7 +639,7 @@ public class TauPprofOutputSession extends DataSession{
 		br.close();
 	    
 		if(ParaProf.debugIsOn){
-		    System.out.println("The total number of threads is: " + nct.getTotalNumberOfThreads());
+		    System.out.println("The total number of threads is: " + this.getNCT().getTotalNumberOfThreads());
 		    System.out.println("The number of mappings is: " + this.getNumberOfMappings());
 		    System.out.println("The number of user events is: " + this.getNumberOfUserEvents());
 		}
@@ -652,7 +655,7 @@ public class TauPprofOutputSession extends DataSession{
 		System.out.println("Done - Processing callpath data!");
 
 		//Set firstRead to false.
-		firstRead = false;
+		this.setFirstMetric(false);
 	    
 		time = (System.currentTimeMillis()) - time;
 		System.out.println("Done processing data file, please wait ......");
@@ -663,71 +666,6 @@ public class TauPprofOutputSession extends DataSession{
 	    ParaProf.systemError(e, null, "SSD01");
 	}
     }
-    
-    public NCT getNCT(){
-	return nct;}
-
-    public Vector getMetrics(){
-	return metrics;}
-
-    public GlobalMapping getGlobalMapping(){
-	return globalMapping;}
-
-    public Vector getMaxMeanExclusiveList(){
-	return maxMeanExclusiveValueList;}
-
-    public Vector getMaxMeanInclusiveList(){
-	return maxMeanInclusiveValueList;}
-
-    public Vector getMaxMeanInclusivePercentList(){
-	return maxMeanInclusivePercentValueList;}
-
-    public Vector getMaxMeanExclusivePercentList(){
-	return maxMeanExclusivePercentValueList;}
-  
-    public Vector getMaxMeanUserSecPerCallList(){
-	return maxMeanUserSecPerCallList;}
-
-    public double getMaxMeanExclusiveValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanExclusiveValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanInclusiveValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanInclusiveValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanInclusivePercentValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanInclusivePercentValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanExclusivePercentValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanExclusivePercentValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanNumberOfCalls(){
-	return maxMeanNumberOfCalls;}
-  
-    public double getMaxMeanNumberOfSubRoutines(){
-	return maxMeanNumberOfSubRoutines;}
-  
-    public double getMaxMeanUserSecPerCall(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanUserSecPerCallList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public int getNumberOfMappings(){
-	return numberOfMappings;}
-
-    public int getNumberOfUserEvents(){
-	return numberOfUserEvents;}
-    
-    public boolean groupNamesPresent(){
-	return groupNamesPresent;}
-
-    public boolean userEventsPresent(){
-	return userEventsPresent;}
-  
-    public boolean callPathDataPresent(){
-	return callPathDataPresent;}
     
     //####################################
     //Private Section.
@@ -854,16 +792,16 @@ public class TauPprofOutputSession extends DataSession{
 	    String str = getMappingNameTokenizer.nextToken();
         
 	    //Just do the group check once.
-	    if(!groupNamesCheck){
+	    if(!(groupCheck())){
 		//If present, "GROUP=" will be in this token.
 		int tmpInt = str.indexOf("GROUP=");
 		if(tmpInt > 0){
-		    groupNamesPresent = true;
+		    this.setGroupNamesPresent(true);
 		}
-		groupNamesCheck = true;
+		this.setGroupCheck(true);
 	    }
 	    
-	    if(groupNamesPresent){
+	    if(groupNamesPresent()){
 		 str = getMappingNameTokenizer.nextToken();
 		    return str;
 	    }
@@ -920,61 +858,6 @@ public class TauPprofOutputSession extends DataSession{
     //End - Pprof.dat string processing methods.
     //######
 
-    private void increaseVectorStorage(){
-	maxMeanInclusiveValueList.add(new Double(0));
-	maxMeanExclusiveValueList.add(new Double(0));
-	maxMeanInclusivePercentValueList.add(new Double(0));
-	maxMeanExclusivePercentValueList.add(new Double(0));
-	maxMeanUserSecPerCallList.add(new Double(0));
-    }
-
-    private Metric addMetric(){
-	Metric newMetric = new Metric();
-	newMetric.setID((metrics.size()));
-	metrics.add(newMetric);
-	return newMetric;
-    }
-
-    private void setMaxMeanInclusiveValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanInclusiveValueList.add(dataValueLocation, tmpDouble);}
-  
-    private void setMaxMeanExclusiveValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanExclusiveValueList.add(dataValueLocation, tmpDouble);}
-  
-    private void setMaxMeanInclusivePercentValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanInclusivePercentValueList.add(dataValueLocation, tmpDouble);}
-  
-    private void setMaxMeanExclusivePercentValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanExclusivePercentValueList.add(dataValueLocation, tmpDouble);}
-
-    private void setMaxMeanNumberOfCalls(double inDouble){
-	maxMeanNumberOfCalls = inDouble;}
-  
-    private void setMaxMeanNumberOfSubRoutines(double inDouble){
-	maxMeanNumberOfSubRoutines = inDouble;}
-
-    private void setMaxMeanUserSecPerCall(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanUserSecPerCallList.add(dataValueLocation, tmpDouble);}
-  
-    private void setNumberOfMappings(int numberOfMappings){
-	this.numberOfMappings = numberOfMappings;}
-
-    private void setNumberOfUserEvents(int numberOfUserEvents){
-	this.numberOfUserEvents = numberOfUserEvents;}
-
-    private void setGroupNamesPresent(boolean groupNamesPresent){
-	this.groupNamesPresent = groupNamesPresent;}
-  
-    private void setUserEventsPresent(boolean userEventsPresent){
-	this.userEventsPresent = userEventsPresent;}
-
-    private void setCallPathDataPresent(boolean callPathDataPresent){
-	this.callPathDataPresent = callPathDataPresent;}
     //####################################
     //End - Private Section.
     //####################################
@@ -982,32 +865,9 @@ public class TauPprofOutputSession extends DataSession{
     //####################################
     //Instance data.
     //####################################
-    private boolean firstRead = true;
-    private boolean groupNamesCheck = false;
     private LineData functionDataLine1 = new LineData();
     private LineData functionDataLine2 = new LineData();
     private LineData  usereventDataLine = new LineData();
-    
-    private int numberOfMappings = 0;
-    private int numberOfUserEvents = 0;
-    private int totalNumberOfContexts = -1;
-    private int totalNumberOfThreads = -1;
-    private boolean groupNamesPresent = false;
-    private boolean userEventsPresent = false;
-    private boolean callPathDataPresent = false;
-
-    private GlobalMapping globalMapping = new GlobalMapping();
-    private NCT nct = new NCT();
-    private Vector metrics = new Vector();
-
-    private Vector maxMeanInclusiveValueList = new Vector();
-    private Vector maxMeanExclusiveValueList = new Vector();
-    private Vector maxMeanInclusivePercentValueList = new Vector();
-    private Vector maxMeanExclusivePercentValueList = new Vector();
-    private double maxMeanNumberOfCalls = 0;
-    private double maxMeanNumberOfSubRoutines = 0;
-    private Vector maxMeanUserSecPerCallList = new Vector();
-    
     //####################################
     //End - Instance data.
     //####################################

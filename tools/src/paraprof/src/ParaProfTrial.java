@@ -335,7 +335,8 @@ public class ParaProfTrial extends Trial{
     //####################################
     //Instance data.
     //####################################
-    TauOutputSession 
+    int type = -1;
+    //TauOutputSession 
     TauPprofOutputSession dataSession = null;
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;

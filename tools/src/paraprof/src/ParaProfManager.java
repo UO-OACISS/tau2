@@ -742,10 +742,6 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		return;
 	    }
 
-	    //Create the trial.
-	    trial = new ParaProfTrial();
-	    trial.setName(trialName);
-	    
 	    int type = -1;
 	    String s = (String) trialType.getSelectedItem();
 	    if(s.equals("Pprof -d File"))
@@ -756,6 +752,10 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		type = 2;
 	    else if(s.equals("other-2"))
 		type = 3;
+
+	    //Create the trial.
+	    trial = new ParaProfTrial(type);
+	    trial.setName(trialName);
 	    
 	    FileList fl = new FileList();
 	    Vector v = fl.getFileList(null, this, type,ParaProf.debugIsOn);
