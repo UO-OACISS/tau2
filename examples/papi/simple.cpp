@@ -3,7 +3,7 @@ application. We show how the time/counts for a simple matrix multiplication
 algorithm dramatically reduce when we employ a strip mining optimization. */
 #include <Profile/Profiler.h>
 
-#define SIZE 512
+#define SIZE 128
 #define CACHE 64
 
 double A[SIZE][SIZE], B[SIZE][SIZE], C[SIZE][SIZE];
