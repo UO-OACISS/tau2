@@ -63,9 +63,9 @@ public class SimpleExample {
 			name = function.getName();
 			group = function.getGroup();
 			trial = function.getTrialID();
-			node = functionDataObject.getNodeID();
-			context = functionDataObject.getContextID();
-			thread = functionDataObject.getThreadID();
+			node = functionDataObject.getNode();
+			context = functionDataObject.getContext();
+			thread = functionDataObject.getThread();
 			inclusivePercentage = functionDataObject.getInclusivePercentage();
 			System.out.println (trial + ", " + node + ", " + context + ", " + thread + ", " + name + ", " + group + " = " + inclusivePercentage);
 
