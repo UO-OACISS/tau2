@@ -117,6 +117,7 @@ pthread=no
 noex=no
 tulipthread=no
 smarts=no
+pcl=no
 task=no
 lwp=no
 tcltk=yes
@@ -243,6 +244,12 @@ do
   -tulipthread=*)
       tulipthread=yes
       tulipdir=`echo $arg | sed -e 's/-tulipthread=//'`
+    shift
+    ;;
+
+  -pcl=*)
+      pcl=yes
+      pcldir=`echo $arg | sed -e 's/-pcl=//'`
     shift
     ;;
 
@@ -373,6 +380,7 @@ do
     echo "-pthread .................................. Use pthread thread package."
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
+    echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
@@ -1147,6 +1155,20 @@ if [ $pthread = yes ]
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
     echo "$machine: PTDIR = $ptdir" >> ./build/Config.info
     tauoptions="${tauoptions}-pthread"
+fi
+
+if [ $pcl = yes ]
+  then
+    fixmakeargs="$fixmakeargs PCL pcldir=$pcldir"
+    tauoptions="${tauoptions}-pcl"
+fi
+
+if [ $pcl = yes ]
+  then
+    if [ $pthread = yes ]
+    then 
+      fixmakeargs="$fixmakeargs PCLPTHREAD"
+    fi
 fi
 
 if [ $tulipthread = yes ]
