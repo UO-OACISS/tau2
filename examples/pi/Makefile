@@ -20,7 +20,7 @@ USER_OPT=-g
 TAUROOT=/research/parallel/sameer/gar/research/tau2
 #######################################################################
  
-#MIPSR8K#ABI 	     = -64		  #ENDIF#
+#MIPSR8K##ABI 	     = -64		  #ENDIF#
 #MIPSR8K#ISA          = -mips4             #ENDIF#
 
 ############# Standard Defines ##############
