@@ -68,6 +68,36 @@ void tau_profile_set_context_(int *context)
 void tau_register_thread_(void)
 {
 }
+/* For IBM compiler */
+
+void tau_profile_timer(void **ptr, char *fname, int *flen, char *type, int *tlen, unsigned int *group)
+{
+}
+
+
+void tau_profile_start(void **profiler)
+{ 
+}
+
+void tau_profile_stop(void **profiler)
+{
+}
+
+void tau_profile_exit(char *msg)
+{
+}
+
+void tau_profile_init(int *argc, char **argv)
+{
+}
+
+void tau_profile_set_node(int *node)
+{
+} 
+
+void tau_profile_set_context(int *context)
+{
+}
 
 /* Cray F90 specific extensions */
 #ifdef CRAYKAI
@@ -261,11 +291,43 @@ void tau_event_disable_stddev(void *ue)
 } 
 ///////////////////////////////////////////////////////////////////////////
 
+void tau_profile_timer__(void **ptr, char *fname, int *flen, char *type, int *tlen, unsigned int *group)
+{
+}
+
+
+void tau_profile_start__(void **profiler)
+{ 
+}
+
+void tau_profile_stop__(void **profiler)
+{
+}
+
+void tau_profile_exit__(char *msg)
+{
+}
+
+void tau_profile_init__(int *argc, char **argv)
+{
+}
+
+void tau_profile_set_node__(int *node)
+{
+} 
+
+void tau_profile_set_context__(int *context)
+{
+}
+
+void tau_register_thread__(void)
+{
+}
 
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauDisable.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1999/06/20 17:34:40 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.2 1999/06/20 17:34:40 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 2003/11/16 00:13:11 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.3 2003/11/16 00:13:11 sameer Exp $ 
  ***************************************************************************/
