@@ -1095,12 +1095,17 @@ int RtsLayer::DumpEDF(int tid)
  	for (uit = TheEventDB().begin(); 
 	  uit != TheEventDB().end(); uit++)
 	{
+	  int monoinc = 0; 
+	  if ((*uit)->GetMonotonicallyIncreasing())
+	  { /* if it is true */
+	    monoinc = 1;
+	  }
   	  DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping EDF Id : " 
 	    << (*uit)->GetEventId() << " " 
-	    << " 0 " << (*uit)->GetEventName() << " " 
+	    << monoinc<<" " << (*uit)->GetEventName() << " " 
 	    << " TriggerValue" << endl;); 
 	
-	  fprintf(fp, "%ld TAUEVENT 0 \"%s\" TriggerValue\n", (*uit)->GetEventId(), (*uit)->GetEventName());
+	  fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (*uit)->GetEventId(), monoinc, (*uit)->GetEventName());
 	}
 	// Now add the nine extra events 
 	fprintf(fp,"%ld TRACER 0 \"EV_INIT\" none\n", (long) PCXX_EV_INIT); 
@@ -1145,6 +1150,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.57 $   $Date: 2004/07/26 23:58:36 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.57 2004/07/26 23:58:36 sameer Exp $ 
+ * $Revision: 1.58 $   $Date: 2004/08/13 00:46:17 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.58 2004/08/13 00:46:17 sameer Exp $ 
  ***************************************************************************/
