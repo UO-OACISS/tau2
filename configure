@@ -1605,6 +1605,12 @@ if ( xrdb -query ) 1>/dev/null 2>&1
 #    exit
 fi
 
+echo "TAU: installing TAU's jracy profile browser" 
+cat ${tauroot}/tools/src/jRacy/jracy.skel | 
+  sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@ARCH@,'$machine',' \
+	> ${tauroot}/${machine}/bin/jracy
+chmod a+rx ${tauroot}/${machine}/bin/jracy
+echo "TAU: installed jracy ..."
 
 # -- determine Tcl/Tk version
 cat << EOF > /tmp/tau$$
@@ -1704,6 +1710,8 @@ else
 echo " "
 echo "TAU: installing tools in ${tauprefix}/${machine}/bin"
 #Make installation directories
+
+
 if [ ! -d ${tauprefix} ]
   then
     echo "making directory $tauprefix "
