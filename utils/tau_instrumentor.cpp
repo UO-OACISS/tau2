@@ -17,15 +17,29 @@
 #endif
 #include "pdbAll.h"
 
+/* For C instrumentation */
+enum itemKind_t { ROUTINE, BODY_BEGIN, FIRST_EXECSTMT, BODY_END, RETURN, EXIT};
 
 struct itemRef {
   itemRef(const pdbItem *i, bool isT) : item(i), isTarget(isT) {
     line = i->location().line();
     col  = i->location().col();
+    kind = ROUTINE; /* for C++, only routines are listed */ 
+  }
+  itemRef(const pdbItem *i, itemKind_t k, int l, int c) : 
+	line (l), col(c), item(i), kind(k) {
+#ifdef DEBUG
+    cout <<"Added: "<<i->name() <<" line " << l << " col "<< c <<" kind " 
+	 << k <<endl;
+#endif /* DEBUG */
+    isTarget = true; 
   }
   itemRef(const pdbItem *i, bool isT, int l, int c)
-         : item(i), isTarget(isT), line(l), col(c) {}
+         : item(i), isTarget(isT), line(l), col(c) {
+    kind = ROUTINE; 
+  }
   const pdbItem *item;
+  itemKind_t kind; /* For C instrumentation */ 
   bool     isTarget;
   int      line;
   int      col;
@@ -40,7 +54,7 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
  
 static const char *toName(pdbItem::templ_t v) ;
 static const char *toName(pdbItem::rspec_t v) ;
-void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
+void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
   PDB::croutinevec routines = pdb.getCRoutineVec();
   for (PDB::croutinevec::const_iterator rit=routines.begin();
@@ -108,6 +122,73 @@ void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
   }
   sort(itemvec.begin(), itemvec.end(), locCmp);
 }
+
+/* Create a vector of items that need action: such as BODY_BEGIN, RETURN etc.*/
+void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
+  PDB::croutinevec routines = pdb.getCRoutineVec();
+  for (PDB::croutinevec::const_iterator rit=routines.begin();
+       rit!=routines.end(); ++rit)
+  {
+    pdbRoutine::locvec retlocations = (*rit)->returnLocations();
+    if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() &&
+         ((*rit)->kind() != pdbItem::RO_EXT))
+    {
+        itemvec.push_back(new itemRef(*rit, BODY_BEGIN,
+                (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
+#ifdef DEBUG
+        cout <<" Location begin: "<< (*rit)->location().line() << " col "
+             << (*rit)->location().col() <<endl;
+        cout <<" Location head Begin: "<< (*rit)->headBegin().line() << " col "             << (*rit)->headBegin().col() <<endl;
+        cout <<" Location head End: "<< (*rit)->headEnd().line() << " col "
+             << (*rit)->headEnd().col() <<endl;
+        cout <<" Location body Begin: "<< (*rit)->bodyBegin().line() << " col "             << (*rit)->bodyBegin().col() <<endl;
+        cout <<" Location body End: "<< (*rit)->bodyEnd().line() << " col "
+             << (*rit)->bodyEnd().col() <<endl;
+#endif /* DEBUG */
+        for(pdbRoutine::locvec::iterator rlit = retlocations.begin();
+           rlit != retlocations.end(); rlit++)
+        {
+#ifdef DEBUG 
+          cout <<" Return Locations : "<< (*rlit)->line() << " col "
+             << (*rlit)->col() <<endl;
+#endif /* DEBUG */
+          itemvec.push_back(new itemRef(*rit, RETURN,
+                (*rlit)->line(), (*rlit)->col()));
+        }
+        itemvec.push_back(new itemRef(*rit, BODY_END,
+                (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col()));
+#ifdef DEBUG 
+        cout <<" Return type: " << (*rit)->signature()->returnType()->name()<<endl;
+        cout <<" Routine name: "<<(*rit)->name() <<" Signature: " <<
+                (*rit)->signature()->name() <<endl;
+#endif /* DEBUG */
+
+	/* See if the current routine calls exit() */
+	pdbRoutine::callvec c = (*rit)->callees(); 
+	for (pdbRoutine::callvec::iterator cit = c.begin(); cit !=c.end(); cit++)
+	{ 
+	   const pdbRoutine *rr = (*cit)->call(); 
+#ifdef DEBUG 
+	   cout <<"Callee " << rr->name() << " location line " << (*cit)->line() << " col " << (*cit)->col() <<endl; 
+#endif /* DEBUG */
+	   if (strcmp(rr->name().c_str(), "exit")== 0)
+	   {
+	     /* routine calls exit */
+	     itemvec.push_back(new itemRef(*rit, EXIT, (*cit)->line(), 
+		(*cit)->col()));
+	   } 
+	   if (strcmp(rr->name().c_str(), "abort") == 0)
+	   { /* routine calls abort */
+	     itemvec.push_back(new itemRef(*rit, EXIT, (*cit)->line(), 
+		(*cit)->col()));
+	   }
+	}
+    }
+  }
+  sort(itemvec.begin(), itemvec.end(), locCmp);
+}
+
+
 
 
 static char toUpper(const char ch) { return (ch - 'a' + 'A'); }
@@ -280,6 +361,17 @@ void printItem(ostream& ostr, const pdbItem *i) {
 
 const int INBUF_SIZE = 2048;
 
+/* returns true is string is void else returns false */
+bool isVoidRoutine(itemRef * i)
+{
+  string return_string = ((pdbRoutine *)(i->item))->signature()->returnType()->name() ;
+  if (return_string.compare("void") == 0)
+	return true; 
+  else
+	return false;
+}
+	
+
 /* to instrument the file */
 int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile) 
 {
@@ -304,7 +396,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile)
 
   // initialize reference vector
   vector<itemRef *> itemvec;
-  getReferences(itemvec, pdb, f);
+  getCXXReferences(itemvec, pdb, f);
 
   // put in code to insert <Profile/Profiler.h> 
   ostr<< "#include <Profile/Profiler.h>"<<endl;
@@ -427,10 +519,253 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile)
   return 0;
 }
 
+/* BodyBegin for a routine that does returns some value */
+void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
+{
+
+#ifdef DEBUG
+  cout <<"Return type :" << return_type<<endl;
+#endif /* DEBUG */
+  ostr <<"{\n\t"<<return_type<< " tau_ret_val; "<<endl;
+  ostr <<"\tTAU_PROFILE_TIMER(tautimer, \""<<
+    ((pdbRoutine *)(i->item))->name() << "\", \"" <<
+    ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
+
+  if (strstr(i->item->fullName().c_str(), "main("))
+  { /* it is main() */
+     ostr << "TAU_DEFAULT);" <<endl; // give an additional line
+#ifdef SPACES
+     for (int space = 0; space < (*it)->col ; space++) ostr << " " ;
+#endif
+     // leave some leading spaces for formatting...
+
+     ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
+     ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
+     ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+  }
+  else
+  {
+    ostr <<"TAU_USER);" <<endl; // give an additional line
+  }
+
+  ostr <<"\tTAU_PROFILE_START(tautimer); "<<endl;
+	
+}
+void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
+{
+  ostr <<"{ \n\tTAU_PROFILE_TIMER(tautimer, \""<<
+    ((pdbRoutine *)(i->item))->name() << "\", \"" <<
+    ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
+
+  if (strstr(i->item->fullName().c_str(), "main("))
+  { /* it is main() */
+     ostr << "TAU_DEFAULT);" <<endl; // give an additional line
+#ifdef SPACES
+     for (int space = 0; space < (*it)->col ; space++) ostr << " " ;
+#endif
+     // leave some leading spaces for formatting...
+
+     ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
+     ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
+     ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+  }
+  else
+  {
+    ostr <<"TAU_USER);" <<endl; // give an additional line
+  }
+
+  ostr <<"\tTAU_PROFILE_START(tautimer);"<<endl;
+}
+
+void processReturnExpression(ostream& ostr, string& ret_expression)
+{
+  ostr <<"{ tau_ret_val = " << ret_expression << "; TAU_PROFILE_STOP(tautimer); return tau_ret_val; }"<<endl;
+}
+
+
+
+
 int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile) 
 { /* To be implemented */
+  string file(f->name());
+  static char inbuf[INBUF_SIZE]; // to read the line
+  // open outfile for instrumented version of source file
+  ofstream ostr(outfile.c_str());
+  if (!ostr) {
+    cerr << "Error: Cannot open '" << outfile << "'" << endl;
+    return false;
+  }
+  // open source file
+  ifstream istr(file.c_str());
+  if (!istr) {
+    cerr << "Error: Cannot open '" << file << "'" << endl;
+    return false;
+  }
+#ifdef DEBUG
+  cout << "Processing " << file << " in instrumentCFile..." << endl;
+#endif
+
+
+  // initialize reference vector
+  vector<itemRef *> itemvec;
+  getCReferences(itemvec, pdb, f);
+
+  // Begin Instrumentation
+  // put in code to insert <Profile/Profiler.h>
+  ostr<< "#include <Profile/Profiler.h>"<<endl;
+
+  int inputLineNo = 0;
+  int lastInstrumentedLineNo = 0;
+  for(vector<itemRef *>::iterator it = itemvec.begin(); it != itemvec.end();
+        ++it)
+  {
+    // Read one line each till we reach the desired line no.
+#ifdef DEBUG
+    cout <<"S: "<< (*it)->item->fullName() << " line "<< (*it)->line << " col " << (*it)->col << endl;
+#endif
+    bool instrumented = false;
+    if (lastInstrumentedLineNo >= (*it)->line )
+    {
+      // Hey! This line has already been instrumented. Go to the next
+      // entry in the func
+#ifdef DEBUG
+      cout <<"Entry already instrumented or brace not found - reached next routine! line = "<<(*it)->line <<endl;
+#endif
+      continue; // takes you to the next iteration in the for loop
+    }
+
+    while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
+    {
+      inputLineNo ++;
+      if (inputLineNo < (*it)->line)
+      {
+        // write the input line in the output stream
+        ostr << inbuf <<endl;
+      }
+      else
+      {
+        // we're at the desired line no. search for an open brace
+        int inbufLength = strlen(inbuf);
+#ifdef DEBUG 
+	cout <<"Line " <<(*it)->line <<" Col " <<(*it)->col <<endl;
+#endif /* DEBUG */
+        for(int i=0; i< ((*it)->col)-1; i++)
+	{ 
+	  ostr << inbuf[i];
+	}
+	/* set instrumented = true after inserting instrumentation */
+	string return_string; 
+	int write_from, write_upto;
+	int k;
+	write_from = ((*it)->col)-1; 
+	switch ((*it)->kind) {
+	  case BODY_BEGIN: 
+#ifdef DEBUG 
+		cout <<"Body Begin" <<endl;
+#endif /* DEBUG */
+		return_string = ((pdbRoutine *)((*it)->item))->signature()->returnType()->name() ;
+		if (isVoidRoutine(*it))
+		{
+#ifdef DEBUG 
+		  cout <<"Void return value "<<endl;
+#endif /* DEBUG */
+		  processVoidRoutine(ostr, return_string, *it);
+		}
+		else
+		{
+		  processNonVoidRoutine(ostr, return_string, *it);
+		}
+		instrumented = true;
+	 	break;
+	  case RETURN: 
+#ifdef DEBUG 
+		cout <<"Return "<<endl;
+#endif /* DEBUG */
+		if (isVoidRoutine(*it))
+		{	
+#ifdef DEBUG 
+		  cout <<" Return for a void routine" <<endl;
+#endif /* DEBUG */
+		  /* instrumentation code here */
+		  ostr << "{ TAU_PROFILE_STOP(tautimer); return; }" <<endl;
+		  for (k=((*it)->col)-1; inbuf[k] !=';'; k++)
+		   ;
+		  write_from = k+1;
+		}
+		else
+		{
+		  string ret_expression; 
+#ifdef DEBUG 
+		  cout <<"Return for a non void routine "<<endl;
+#endif /* DEBUG */
+		  for (k = (*it)->col+5; inbuf[k] != ';' ; k++)
+		    ret_expression.push_back(inbuf[k]);
+		
+#ifdef DEBUG 
+		  cout <<"ret_expression = "<<ret_expression<<endl;
+#endif /* DEBUG */
+		  processReturnExpression(ostr, ret_expression); 
+		  /* instrumentation code here */
+		  write_from = k+1; 
+		}
+
+		instrumented = true;
+		break;
+	  case BODY_END: 
+#ifdef DEBUG 
+		cout <<"Body End "<<endl;
+#endif /* DEBUG */
+		ostr<<"\n}\n\tTAU_PROFILE_STOP(tautimer);\n"<<endl; 
+		instrumented = true;
+		break;
+	  case EXIT:
+#ifdef DEBUG 
+		cout <<"Exit" <<endl;
+#endif /* DEBUG */
+		ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
+		for (k = (*it)->col-1; inbuf[k] != ';' ; k++)
+		  ostr<<inbuf[k]; 
+		ostr <<"; }";
+		instrumented = true;
+		write_from = k+1;
+		break; 
+	  default:
+		cout <<"Unknown option in instrumentCFile:"<<(*it)->kind<<endl;
+		instrumented = true;
+		break;
+	}
+	if (it+1 != itemvec.end())
+ 	{
+	  write_upto = (*(it+1))->line == (*it)->line ? (*(it+1))->col : inbufLength; 
+	}
+	else
+	  write_upto = inbufLength; 
+
+	for (int j=write_from; j < write_upto; j++)
+	{
+#ifdef DEBUG 
+   	  cout <<"Writing: "<<inbuf[j]<<endl;
+#endif /* DEBUG */
+	  ostr <<inbuf[j];
+	}
+	ostr <<endl;
+	
+      } /* line no. */
+    } /* while */
+  } /* for all items */
+  // For loop is over now flush out the remaining lines to the output file
+  while (istr.getline(inbuf, INBUF_SIZE) )
+  {
+    ostr << inbuf <<endl;
+  }
+  // written everything. quit and debug!
+  ostr.close();
+
 
 }
+
+
+
 
 int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile) 
 { /* To be implemented */
@@ -477,10 +812,12 @@ int main(int argc, char **argv)
   {
      if ((*it)->name() == string(filename)) 
      {
+       PDB::lang_t l = p.language();
+
 #ifdef DEBUG
        cout <<" *** FILE *** "<< (*it)->name()<<endl;
+       cout <<"Language "<<l <<endl;
 #endif
-       PDB::lang_t l = p.language();
        if (l == PDB::LA_CXX)
          instrumentCXXFile(p, *it, outFileName);
        if (l == PDB::LA_C)
