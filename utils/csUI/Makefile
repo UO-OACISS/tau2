@@ -1,31 +1,72 @@
-cc =  cc
-CPP = CC
-LIBS = -L/local/apps/xforms/FORMS -lforms -lX11 -lm
-INCLUDE = -I/local/apps/xforms/FORMS -I/research/parallel/mikek/tau2/include
-FLAVOR = -n32 -g
+#****************************************************************************
+#*			TAU Portable Profiling Package			   **
+#*			http://www.acl.lanl.gov/tau		           **
+#****************************************************************************
+#*    Copyright 1997  						   	   **
+#*    Department of Computer and Information Science, University of Oregon **
+#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#****************************************************************************
+#****************************************************************************
+#**      File            : Makefile                                        **
+#**      Description     : TAU Callstack Tracing Package. The UG Senior    **
+#**			   year project of Mike Kaufman. The csUI tool is  **
+#**			   written with XForms which needs to be installed **
+#**			   http://bragg.phys.uwm.edu/xforms	           **
+#**      Author          : Mike Kaufman	                                   **
+#**      Contact         : {mikek,sameer}@cs.uoregon.edu       		   **
+#**      Flags           : Compile with -DDEBUG for debugging info         **
+#**      Documentation   : See http://www.acl.lanl.gov/tau	           **
+#****************************************************************************
+
+########### Automatically modified by the configure script ############
+CONFIG_ARCH=sgi8k
+CONFIG_CC=cc
+CONFIG_CXX=CC
+PCXX_OPT=-g
+USER_OPT=-g
+TAUROOT=/research/parallel/sameer/gar/research/tau2
+XFORMSROOT=/local/apps/xforms/FORMS
+#######################################################################
+ 
+#ABI 	     = -64		   #ENDIF##MIPSR8K#
+ISA          = -mips4		   #ENDIF##MIPSR8K#
+############# Standard Defines ##############
+CC = $(CONFIG_CC) $(ABI) $(ISA)
+CXX = $(CONFIG_CXX) $(ABI) $(ISA)
+DEFINES = 
+INSTALL = /bin/cp
+SHELL = /bin/sh
+LSX = .a
+#############################################
+
+INSTALLDEST	= $(TAUROOT)/bin/$(CONFIG_ARCH)
+
+LIBS = -L$(XFORMSROOT) -lforms -lX11 -lm
+INCLUDE = -I$(XFORMSROOT) -I$(TAUROOT)/include
 OBJS = csUI.o csUI_cb.o 
 TARGET     = csUI
 OPTIONS = -O -w
-#DEFINES = -DTAU_STDCXXLIB -DDEBUG
-DEFINES = -DDEBUG
 ############################################
 
-all: csUI
+all: $(TARGET)
 
-csUI:	$(OBJS)
-	$(CPP) $(FLAVOR) $(OPTIONS) -o $(TARGET) $(OBJS) $(LIBS) $(DEFINES)
+install: $(INSTALLDEST)/$(TARGET)
+
+$(TARGET):	$(OBJS)
+	$(CXX) $(OPTIONS) -o $(TARGET) $(OBJS) $(LIBS) $(DEFINES)
 
 .C.o:
-	@echo -n "Building $<...."
-	@$(CPP) $(FLAVOR) $(INCLUDE) $(OPTIONS)  -c $< -o $@ $(DEFINES)
-	@echo "...Built"
+	$(CXX) $(INCLUDE) $(OPTIONS)  -c $< -o $@ $(DEFINES)
 
 
 #############################################
 
 clean:
-	@rm -f *.o
-	@echo "Everything has been cleaned master."
+	rm -f $(OBJS) $(TARGET)
+	
+$(INSTALLDEST)/$(TARGET): $(TARGET)
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(INSTALL) $? $(INSTALLDEST)
 
-god:
-	@echo "You're already here my lord."
