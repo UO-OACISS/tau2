@@ -8,9 +8,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.6 2005/01/12 01:34:50 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.7 2005/01/12 18:56:19 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  * @see		TrialData
  * @see		NCT
  */
@@ -434,6 +434,8 @@ public abstract class DataSource {
                 if (topLevelInclSum[i] != 0) {
                     totalProfile.setInclusivePercent(i, totalProfile.getInclusive(i) / topLevelInclSum[i] * 100);
                     totalProfile.setExclusivePercent(i, totalProfile.getExclusive(i) / topLevelInclSum[i] * 100);
+                    meanProfile.setInclusivePercent(i, totalProfile.getInclusivePercent(i));
+                    meanProfile.setExclusivePercent(i, totalProfile.getExclusivePercent(i));
                 }
             }
         }

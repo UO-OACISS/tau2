@@ -34,7 +34,6 @@ public class HPMToolkitDataSource extends DataSource {
         for (Enumeration e = v.elements(); e.hasMoreElements();) {
             File files[] = (File[]) e.nextElement();
             for (int i = 0; i < files.length; i++) {
-                //System.out.println("Processing data file, please wait ......");
                 long time = System.currentTimeMillis();
 
                 FileInputStream fileIn = new FileInputStream(files[i]);

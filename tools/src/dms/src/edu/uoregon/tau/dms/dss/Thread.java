@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.12 2005/01/12 01:34:50 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.13 2005/01/12 18:56:20 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -207,6 +207,8 @@ public class Thread implements Comparable {
         return doubleList[actualLocation];
     }
 
+    
+    // compute max values and percentages for threads (not mean/total)
     private void setThreadValues(int startMetric, int endMetric) {
         for (int metric = startMetric; metric <= endMetric; metric++) {
             double maxInclusive = 0.0;
@@ -246,10 +248,7 @@ public class Thread implements Comparable {
                     // the total exclusive value unless checks are made to ensure that we do not include call path objects).
 
                     Function function = fp.getFunction();
-                    if (this.getNodeID() == -1) { // mean
-                        fp.setExclusivePercent(metric, function.getTotalExclusivePercent(metric));
-                        fp.setInclusivePercent(metric, function.getTotalInclusivePercent(metric));
-                    } else {
+                    if (this.getNodeID() > -1) { // don't do this for mean/total
                         double inclusiveMax = this.getMaxInclusive(metric);
 
                         if (inclusiveMax != 0) {
