@@ -189,6 +189,7 @@ use_hpnx=no
 tauarch=unknown
 pdtcompdir=unknown
 tauprefix=unknown
+execprefix=unknown
 taugcclibdir=unknown
 tautoplevel=
 tauoptions=
@@ -782,6 +783,7 @@ do
     echo "  	            kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]"
     echo "-useropt='<parameters>' ............... list of commandline parameters."
     echo "-prefix=<dir> ................ Specify a target installation directory."
+    echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-pthread .................................. Use pthread thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
@@ -852,6 +854,12 @@ do
     tauprefix=`echo $arg | sed -e 's/-prefix=//' -e 's/ /_/g'`
     echo "tauprefix =  $tauprefix "
     fixmakeargs="$fixmakeargs tauprefix=$tauprefix"
+    shift
+    ;;
+
+  -exec-prefix=*)
+    execprefix=`echo $arg | sed -e 's/-exec-prefix=//' -e 's/ /_/g'`
+    fixmakeargs="$fixmakeargs execprefix=$execprefix"
     shift
     ;;
 
@@ -2792,7 +2800,12 @@ then
   architecture=
   fixmakeargs="$fixmakeargs arch= "
 else
-  architecture=$machine
+  if [ $execprefix = unknown ]
+  then
+    architecture=$machine
+  else
+    architecture=$execprefix
+  fi
 fi
 
 # write out .h file to define this architecture __easily__
@@ -3930,9 +3943,9 @@ echo
 echo "Configuration complete!"
 if [ $tauprefix != unknown ]
   then 
-    echo "   Please add " $tauprefix/$machine/bin " to your path"
+    echo "   Please add " $tauprefix/$architecture/bin " to your path"
   else
-    echo "   Please add " $tauroot/$machine/bin " to your path"
+    echo "   Please add " $tauroot/$architecture/bin " to your path"
 fi
 echo '   Type "make install" to begin compilation'
 

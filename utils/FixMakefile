@@ -201,6 +201,13 @@ fi
         tauprefix=`echo $1 | sed -e 's/^tauprefix=//' `
         echo "s@^TAU_PREFIX_INSTALL_DIR=\(.*\)@TAU_PREFIX_INSTALL_DIR=$tauprefix@g" >> $sedout
         ;;
+###############################################################
+# Set the CONFIG_ARCH variable using execprefix
+###############################################################
+     execprefix=*)
+        execprefix=`echo $1 | sed -e 's/^execprefix=//' `
+        echo "s@^CONFIG_ARCH=\(.*\)@CONFIG_ARCH=$execprefix@g" >> $sedout
+        ;;
 
 ###############################################################
 # Set the TAU_PREFIX_INSTALL_DIR variable
