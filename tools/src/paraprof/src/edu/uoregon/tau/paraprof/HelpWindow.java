@@ -15,7 +15,6 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.text.*;
 import javax.swing.border.*;
-import javax.swing.event.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class HelpWindow extends JFrame implements ActionListener, Observer{
@@ -134,7 +133,7 @@ public class HelpWindow extends JFrame implements ActionListener, Observer{
     helpJTextArea.append("\n");
   }
   
-  //Observer functions.
+  //Observer functionProfiles.
   public void update(Observable o, Object arg)
   {
     String tmpString = (String) arg;

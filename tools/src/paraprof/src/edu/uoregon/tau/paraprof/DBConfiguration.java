@@ -8,13 +8,9 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
-import java.lang.*;
-import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.event.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class DBConfiguration extends JFrame implements ActionListener{ 

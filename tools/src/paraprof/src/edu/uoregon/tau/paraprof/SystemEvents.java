@@ -9,7 +9,6 @@
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
-import java.lang.*;
 
 public class SystemEvents extends Observable
 {

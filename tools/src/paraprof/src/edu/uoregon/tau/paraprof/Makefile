@@ -3,21 +3,23 @@
 
 #Makefile creates the ParaProf jar file.
 ##########################
-CONFIG_ARCH=@TAUARCH@
-TAUROOT=@TAUROOT@
+CONFIG_ARCH=i386_linux
+TAUROOT=/home/amorris/tau2
 
-BASE_SOURCES=ApplicationManager.java PPMLPanel.java ParaProfTreeCellRenderer.java StaticMainWindowData.java \
-             BinWindow.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
-             BinWindowPanel.java ParaProfApplication.java SystemEvents.java \
+BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java ParaProfTreeCellRenderer.java \
+             HistogramWindow.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
+             HistogramWindowPanel.java ParaProfApplication.java SystemEvents.java \
              CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java PrefSpacingPanel.java \
-             CallPathTextWindowPanel.java Preferences.java MappingDataWindow.java \
-             ColorChooser.java MappingDataWindowPanel.java ParaProfExperiment.java ThreadDataWindow.java \
-             ColorPair.java MappingLedgerWindow.java ParaProfImageInterface.java ParaProfImageOptionsPanel.java ParaProfImageFormatFileFilter.java \
-             SMWThread.java ThreadDataWindowPanel.java MappingLedgerWindowPanel.java SMWThreadDataElement.java \
-             UserEventWindow.java DBConfiguration.java Metric.java SavedPreferences.java UserEventWindowPanel.java \
-             ParaProfManager.java StatWindow.java LoadTrialPanel.java \
+             CallPathTextWindowPanel.java Preferences.java FunctionDataWindow.java \
+             ColorChooser.java FunctionDataWindowPanel.java ParaProfExperiment.java ThreadDataWindow.java \
+             ColorPair.java LedgerWindow.java ParaProfImageInterface.java ParaProfImageOptionsPanel.java \
+             ParaProfImageFormatFileFilter.java LedgerDataElement.java DataSorter.java CallGraphWindow.java \
+             PPThread.java ThreadDataWindowPanel.java LedgerWindowPanel.java PPFunctionProfile.java \
+             UserEventWindow.java DBConfiguration.java ParaProfMetric.java SavedPreferences.java \
+	     UserEventWindowPanel.java PPUserEventProfile.java LoadTrialProgressWindow.java ColorBar.java \
+             ParaProfManager.java StatWindow.java LoadTrialPanel.java DataSourceThreadControl.java \
              ParaProfManagerTableModel.java StatWindowPanel.java ParaProfLisp.java ParaProfLispPrimitives.java \
-             PPML.java StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java DisplayProperties.java
+             StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java DisplayProperties.java
 
 NEW_SOURCES=$(BASE_SOURCES) ParaProfImageOutput.java
 
@@ -34,7 +36,7 @@ old: ../bin/ParaProf-Old.jar
 
 $(TOOLS_SRC)/paraprof/bin/ParaProf.jar: $(NEW_SOURCES)
 	rm -f ./paraprof/*.class
-	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar $(NEW_SOURCES)
+	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar $(NEW_SOURCES)
 	cp ./resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	cd classes; jar -cvf ParaProf.jar edu
 	mv ./classes/ParaProf.jar $(TOOLS_SRC)/paraprof/bin

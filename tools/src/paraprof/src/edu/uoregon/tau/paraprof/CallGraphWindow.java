@@ -1,0 +1,2148 @@
+package edu.uoregon.tau.paraprof;
+
+import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+
+import javax.swing.*;
+import javax.swing.event.*;
+import edu.uoregon.tau.dms.dss.*;
+
+import org.jgraph.JGraph;
+import org.jgraph.graph.*;
+
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JScrollPane;
+import javax.swing.BorderFactory;
+import javax.swing.JSlider;
+
+import java.util.Hashtable;
+import java.awt.FontMetrics;
+import java.awt.GridBagLayout;
+import java.awt.Rectangle;
+import java.awt.Color;
+import java.util.Map;
+
+import javax.swing.border.BevelBorder;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.Point2D;
+import java.awt.print.*;
+
+public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
+        KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
+
+    private static final int MARGIN = 20;
+    private static final int HORIZONTAL_SPACING = 10;
+    private static final int VERTICAL_SPACING = 120;
+
+    //    private static final int HEIGHT = 25;
+
+    class ThisGraphSelectionModel extends DefaultGraphSelectionModel {
+
+        ThisGraphSelectionModel(JGraph graph) {
+            super(graph);
+        }
+
+        /**
+         * Returns the cells that are currently selectable.
+         * The array is ordered so that the top-most cell
+         * appears first.<br>
+         */
+        public Object[] getSelectables() {
+            //            return null;
+            if (isChildrenSelectable()) {
+                ArrayList result = new ArrayList();
+                // Roots Are Always Selectable
+                Stack s = new Stack();
+                GraphModel model = graph.getModel();
+                for (int i = 0; i < model.getRootCount(); i++)
+                    s.add(model.getRootAt(i));
+                while (!s.isEmpty()) {
+                    Object cell = s.pop();
+                    if (!model.isPort(cell) && !model.isEdge(cell))
+                        result.add(cell);
+                    if (isChildrenSelectable(cell)) {
+                        for (int i = 0; i < model.getChildCount(cell); i++)
+                            s.add(model.getChild(cell, i));
+                    }
+                }
+                return result.toArray();
+            }
+            return graph.getRoots();
+        }
+
+    }
+
+    class GraphCell extends DefaultGraphCell {
+
+        public GraphCell(Vertex v) {
+            super(v.function.getName());
+            this.vertex = v;
+            this.function = v.function;
+        }
+
+        public String getToolTipString() {
+            return (String) this.getUserObject();
+        }
+
+        private Function function;
+        private Vertex vertex;
+
+        public Function getFunction() {
+            return function;
+        }
+
+        public Vertex getVertex() {
+            return vertex;
+        }
+
+    }
+
+    class Graph extends JGraph {
+
+        public String getToolTipText(MouseEvent event) {
+            Object cell = getFirstCellForLocation(event.getX(), event.getY());
+
+            if (cell instanceof GraphCell) {
+                return ((GraphCell) cell).getToolTipString();
+            }
+
+            return null;
+        }
+
+        public Graph(GraphModel gm) {
+            super(gm);
+            this.setSelectionModel(new ThisGraphSelectionModel(this));
+        }
+
+    }
+
+    class BackEdge {
+        BackEdge(Vertex a, Vertex b) {
+            this.a = a;
+            this.b = b;
+        }
+
+        public Vertex a, b;
+    }
+
+    class Vertex implements Comparable {
+        Vertex(FunctionProfile fp, int width) {
+            if (fp != null) {
+                this.function = fp.getFunction();
+                this.functionProfile = fp;
+            }
+
+            this.width = width;
+            this.height = boxHeight;
+
+            if (function != null && width < 5)
+                this.width = 5;
+
+            //            if (function != null) {
+            //          //width = (int)((double)200 * (function.getMeanExclusiveValue(0) / maxmean));
+            //                width = 120;
+            //
+            //                if (width < 5) {
+            //                    width = 5;
+            //                }
+            //                height = HEIGHT;
+            //            } else {
+            //                width = 1;
+            //                height = 5;
+            //            }
+            // System.out.println ("new vertex: " + function.getName());
+        }
+
+        public int compareTo(Object compare) {
+            if (this.baryCenter < ((Vertex) compare).baryCenter)
+                return -1;
+            if (this.baryCenter > ((Vertex) compare).baryCenter)
+                return 1;
+            return 0;
+        }
+
+        public Vector children = new Vector();
+        public Vector parents = new Vector();
+        public Function function;
+        public FunctionProfile functionProfile;
+        public boolean visited;
+
+        public int getPriority(boolean down) {
+            if (down)
+                return downPriority;
+            else
+                return upPriority;
+        }
+
+        public int downPriority;
+        public int upPriority;
+
+        // ACK!  Rename these!!
+        public int level = -1;
+        public int levelIndex;
+        public double baryCenter;
+
+        public double gridBaryCenter;
+
+        public GraphCell graphCell;
+        public int position = -1;
+        public int width;
+        public int height;
+        public float color;
+        
+        public boolean pathHighlight = false;
+
+        public Vector pathEdges = new Vector();
+
+    }
+
+    public CallGraphWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
+            DataSorter dataSorter) {
+        try {
+            this.trial = trial;
+            this.nodeID = nodeID;
+            this.contextID = contextID;
+            this.threadID = threadID;
+
+            this.dataSorter = dataSorter;
+
+            if (nodeID == -1)
+                this.meanWindow = true;
+
+            if (meanWindow) {
+                thread = trial.getDataSource().getMeanData();
+            } else {
+                thread = trial.getNCT().getThread(nodeID, contextID, threadID);
+            }
+
+            CallPathUtilFuncs.buildThreadRelations(trial.getTrialData(), thread);
+
+            functionProfileList = thread.getFunctionList();
+
+            JMenuItem jMenuItem = null;
+            jMenuItem = new JMenuItem("Show Function Details");
+            jMenuItem.addActionListener(this);
+            popup.add(jMenuItem);
+
+            //setLocation(new java.awt.Point(0, 0));
+            //setSize(new java.awt.Dimension(800, 800));
+
+            //Now set the title.
+            if (meanWindow)
+                this.setTitle("Full Call Graph (all threads) - " + trial.getTrialIdentifier(true));
+            else
+                this.setTitle("Call Graph " + "n,c,t, " + nodeID + "," + contextID + "," + threadID
+                        + " - " + trial.getTrialIdentifier(true));
+
+            //Add some window listener code
+            addWindowListener(new java.awt.event.WindowAdapter() {
+                public void windowClosing(java.awt.event.WindowEvent evt) {
+                    thisWindowClosing(evt);
+                }
+            });
+
+            //Set the help window text if required.
+            if (ParaProf.helpWindow.isVisible()) {
+                this.help(false);
+            }
+
+            setupMenus();
+
+            boxWidthSlider.setPaintTicks(true);
+            boxWidthSlider.setMajorTickSpacing(50);
+            boxWidthSlider.setMinorTickSpacing(10);
+            boxWidthSlider.setPaintLabels(true);
+            boxWidthSlider.setSnapToTicks(false);
+            boxWidthSlider.addChangeListener(this);
+            boxWidthSlider.addKeyListener(this);
+
+            GridBagLayout gbl = new GridBagLayout();
+            this.getContentPane().setLayout(gbl);
+
+            //          //Obtain the font and its metrics.
+            font = new Font(trial.getPreferences().getParaProfFont(),
+                    trial.getPreferences().getFontStyle(), trial.getPreferences().getBarHeight());
+            //
+            FontMetrics fm = getFontMetrics(font);
+
+            
+            ColorBar cb = new ColorBar();
+
+            GridBagConstraints gbc = new GridBagConstraints();
+            
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.NORTH;
+            gbc.weightx = 1.0;
+            gbc.weighty = 0.0;
+            addCompItem(cb, gbc, 0, 0, 2, 1);
+            //addCompItem(new JButton("bob"), gbc, 0, 0, 2, 1);
+
+            
+            boxHeight = fm.getHeight() + 5;
+
+            createGraph();
+
+            Dimension prefSize = jGraphPane.getPreferredSize();
+
+            prefSize.width += 25;
+            prefSize.height += 75;
+
+            if (prefSize.width > 1000)
+                prefSize.width = 1000;
+
+            if (prefSize.height > 1000)
+                prefSize.height = 1000;
+
+            setSize(prefSize);
+
+            this.setVisible(true);
+
+            ParaProf.incrementNumWindows();
+        } catch (Exception e) {
+            UtilFncs.systemError(e, null, "CPTW02");
+        }
+    }
+
+    private void helperAddRadioMenuItem(String name, String command, boolean on, ButtonGroup group,
+            JMenu menu) {
+        JRadioButtonMenuItem item = new JRadioButtonMenuItem(name, on);
+        item.addActionListener(this);
+        item.setActionCommand(command);
+        group.add(item);
+        menu.add(item);
+    }
+
+    private void setupMenus() {
+
+        JMenuBar mainMenu = new JMenuBar();
+        JMenu subMenu = null;
+        JMenuItem menuItem = null;
+
+        //######
+        //File menu.
+        //######
+        JMenu fileMenu = new JMenu("File");
+
+        //Save menu.
+        subMenu = new JMenu("Save ...");
+
+        /*
+         * menuItem = new JMenuItem("ParaProf Preferences");
+         * menuItem.addActionListener(this); subMenu.add(menuItem);
+         */
+
+        menuItem = new JMenuItem("Save Image");
+        menuItem.addActionListener(this);
+        subMenu.add(menuItem);
+
+        fileMenu.add(subMenu);
+        //End - Save menu.
+
+        menuItem = new JMenuItem("Edit ParaProf Preferences!");
+        menuItem.addActionListener(this);
+        fileMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Print");
+        menuItem.addActionListener(this);
+        fileMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Close This Window");
+        menuItem.addActionListener(this);
+        fileMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Exit ParaProf!");
+        menuItem.addActionListener(this);
+        fileMenu.add(menuItem);
+
+        fileMenu.addMenuListener(this);
+        //######
+        //End - File menu.
+        //######
+
+        //######
+        //Options menu.
+        //######
+        optionsMenu = new JMenu("Options");
+
+        JCheckBoxMenuItem box = null;
+        ButtonGroup group = null;
+        JRadioButtonMenuItem button = null;
+
+        slidersCheckBox = new JCheckBoxMenuItem("Display Width Slider", false);
+        slidersCheckBox.addActionListener(this);
+        optionsMenu.add(slidersCheckBox);
+
+        // box width submenu
+        subMenu = new JMenu("Box width by...");
+        group = new ButtonGroup();
+        helperAddRadioMenuItem("Static", "Box Width Static", false, group, subMenu);
+        helperAddRadioMenuItem("Name Length", "Box Width Name Length", false, group, subMenu);
+        helperAddRadioMenuItem("Exclusive Value", "Box Width Exclusive", true, group, subMenu);
+        helperAddRadioMenuItem("Inclusive Value", "Box Width Inclusive", false, group, subMenu);
+        helperAddRadioMenuItem("Number of Calls", "Box Width NumCalls", false, group, subMenu);
+        helperAddRadioMenuItem("Number of Subroutines", "Box Width NumSubr", false, group, subMenu);
+        helperAddRadioMenuItem("Inclusive Per Call Value", "Box Width InclPerCall", false, group,
+                subMenu);
+        optionsMenu.add(subMenu);
+
+        // box color submenu
+        subMenu = new JMenu("Box color by...");
+        group = new ButtonGroup();
+        helperAddRadioMenuItem("Static", "Box Color Static", false, group, subMenu);
+        helperAddRadioMenuItem("Exclusive Value", "Box Color Exclusive", true, group, subMenu);
+        helperAddRadioMenuItem("Inclusive Value", "Box Color Inclusive", false, group, subMenu);
+        helperAddRadioMenuItem("Number of Calls", "Box Color NumCalls", false, group, subMenu);
+        helperAddRadioMenuItem("Number of Subroutines", "Box Color NumSubr", false, group, subMenu);
+        helperAddRadioMenuItem("Inclusive Per Call Value", "Box Color InclPerCall", false, group,
+                subMenu);
+        optionsMenu.add(subMenu);
+
+        //End - Set the value type options.
+
+        optionsMenu.addMenuListener(this);
+
+        windowsMenu = new JMenu("Windows");
+
+        menuItem = new JMenuItem("Show ParaProf Manager");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Show Function Ledger");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Show Group Ledger");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Show User Event Ledger");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Show Call Path Relations");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Close All Sub-Windows");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
+
+        windowsMenu.addMenuListener(this);
+        JMenu helpMenu = new JMenu("Help");
+
+        menuItem = new JMenuItem("Show Help Window");
+        menuItem.addActionListener(this);
+        helpMenu.add(menuItem);
+
+        menuItem = new JMenuItem("About ParaProf");
+        menuItem.addActionListener(this);
+        helpMenu.add(menuItem);
+
+        helpMenu.addMenuListener(this);
+
+        //Now, add all the menus to the main menu.
+        mainMenu.add(fileMenu);
+        mainMenu.add(optionsMenu);
+        mainMenu.add(windowsMenu);
+        mainMenu.add(helpMenu);
+
+        setJMenuBar(mainMenu);
+
+    }
+
+    private double getMaxValue(int option) {
+        double maxValue = 1;
+        if (option == WIDTH_EXCLUSIVE) {
+            maxValue = thread.getMaxExclusive(trial.getSelectedMetricID());
+        } else if (option == WIDTH_INCLUSIVE) {
+            maxValue = thread.getMaxInclusive(trial.getSelectedMetricID());
+        } else if (option == WIDTH_NUMCALLS) {
+            maxValue = thread.getMaxNumCalls();
+        } else if (option == WIDTH_NUMSUBR) {
+            maxValue = thread.getMaxNumSubr();
+        } else if (option == WIDTH_INCLPERCALL) {
+            maxValue = thread.getMaxInclusivePerCall(trial.getSelectedMetricID());
+        }
+        return maxValue;
+    }
+    
+    private double getValue(FunctionProfile fp, int option, double maxValue) {
+        double value = 1;
+        if (option == WIDTH_STATIC) {
+            value = 1;
+        } else if (option == WIDTH_EXCLUSIVE) {
+            value = fp.getExclusive(trial.getSelectedMetricID()) / maxValue;
+        } else if (option == WIDTH_INCLUSIVE) {
+            value = fp.getInclusive(trial.getSelectedMetricID()) / maxValue;
+        } else if (option == WIDTH_NUMCALLS) {
+            value = fp.getNumCalls() / maxValue;
+        } else if (option == WIDTH_NUMSUBR) {
+            value = fp.getNumSubr() / maxValue;
+        } else if (option == WIDTH_INCLPERCALL) {
+            value = fp.getInclusivePerCall(trial.getSelectedMetricID()) / maxValue;
+        }
+
+        return value;
+    }
+    
+    private void createGraph() {
+
+        vertexMap = new HashMap();
+
+        backEdges = new Vector();
+
+        double maxValue = getMaxValue(this.widthOption);
+        double maxColorValue = getMaxValue(this.colorOption);
+        
+        for (int i = 0; i < functionProfileList.size(); i++) {
+            //Function f = ((PPFunctionProfile) functionProfileList.elementAt(i)).getFunction();
+
+            FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(i);
+            if (fp == null)
+                continue;
+
+            if (!fp.isCallPathObject()) {
+
+                int width = 0;
+                if (this.widthOption == WIDTH_NAME) {
+                    FontMetrics fm = getFontMetrics(this.font);
+                    width = fm.stringWidth(fp.getName()) + 5;
+                } else {
+                    width = (int)(boxWidth * getValue(fp,this.widthOption, maxValue));
+                }
+                Vertex v = new Vertex(fp, width);
+
+                v.color = (float) getValue(fp,this.colorOption, maxColorValue);
+
+                vertexMap.put(fp, v);
+            }
+        }
+
+        Stack toVisit = new Stack();
+        Stack currentPath = new Stack();
+
+        for (int i = 0; i < functionProfileList.size(); i++) {
+            FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(i);
+            if (fp == null)
+                continue;
+
+            if (!fp.isCallPathObject()) {
+
+                Vertex root = (Vertex) vertexMap.get(fp);
+
+                if (!root.visited) {
+
+                    currentPath.add(fp);
+                    toVisit.add(null);
+                    for (Iterator it = fp.getChildProfiles(); it.hasNext();) {
+                        FunctionProfile childFunction = (FunctionProfile) it.next();
+                        toVisit.add(childFunction);
+
+                        //Vertex child = (Vertex) vertexMap.get(childFunction);
+
+                        //child.visited = true;
+                    }
+
+                    while (!toVisit.empty()) {
+                        FunctionProfile childFunction = (FunctionProfile) toVisit.pop();
+
+                        if (childFunction == null) { // this marks the end of a set of children, so pop the current path
+                            currentPath.pop();
+                            continue;
+                        }
+
+                        Vertex child = (Vertex) vertexMap.get(childFunction);
+                        FunctionProfile parentFunction = (FunctionProfile) currentPath.peek();
+
+                        Vertex parent = (Vertex) vertexMap.get(parentFunction);
+
+                        boolean back = false;
+                        for (Iterator it = currentPath.iterator(); it.hasNext();) {
+                            if ((FunctionProfile) it.next() == childFunction) {
+                                back = true;
+                                break;
+                            }
+                        }
+
+                        if (back) {
+                            backEdges.add(new BackEdge(parent, child));
+                        } else {
+
+                            boolean found = false;
+                            for (int j = 0; j < parent.children.size(); j++) {
+                                if (parent.children.get(j) == child)
+                                    found = true;
+                            }
+                            if (!found)
+                                parent.children.add(child);
+
+                            if (child == null) {
+                                System.out.println("bob");
+                            }
+
+                            found = false;
+                            for (int j = 0; j < child.parents.size(); j++) {
+                                if (child.parents.get(j) == parent)
+                                    found = true;
+                            }
+                            if (!found)
+                                child.parents.add(parent);
+
+                            if (child.visited == false) {
+
+                                child.visited = true;
+
+                                currentPath.add(childFunction);
+
+                                toVisit.add(null);
+                                for (Iterator it = childFunction.getChildProfiles(); it.hasNext();) {
+                                    FunctionProfile grandChildFunction = (FunctionProfile) it.next();
+
+                                    Vertex grandChild = (Vertex) vertexMap.get(grandChildFunction);
+                                    //  if (grandChild.visited == false)
+                                    toVisit.add(grandChildFunction);
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+
+        // now we should have a DAG, now find the roots
+
+        //        System.out.println("Finding Roots");
+        Vector roots = findRoots(vertexMap);
+
+        //      System.out.println("Assigning Levels");
+
+        for (int i = 0; i < functionProfileList.size(); i++) {
+            FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(i);
+            if (fp == null)
+                continue;
+
+            if (!fp.isCallPathObject()) {
+
+                Vertex vertex = (Vertex) vertexMap.get(fp);
+
+                if (vertex.level == -1) {
+                    assignLevel(vertex);
+                }
+            }
+
+        }
+
+        //        System.out.println("Inserting Dummies");
+
+        for (int i = 0; i < functionProfileList.size(); i++) {
+            FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(i);
+            if (fp == null)
+                continue;
+
+            if (!fp.isCallPathObject()) {
+
+                Vertex vertex = (Vertex) vertexMap.get(fp);
+
+                insertDummies(vertex);
+            }
+
+        }
+
+        // fill level vectors
+        for (int i = 0; i < functionProfileList.size(); i++) {
+            FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(i);
+            if (fp == null)
+                continue;
+
+            if (!fp.isCallPathObject()) {
+
+                Vertex vertex = (Vertex) vertexMap.get(fp);
+                vertex.visited = false;
+            }
+
+        }
+        levels = new Vector();
+
+        //      System.out.println("Filling Levels");
+
+        for (int i = 0; i < roots.size(); i++) {
+            Vertex root = (Vertex) roots.elementAt(i);
+            fillLevels(root, levels, 0);
+        }
+
+        for (int i = 0; i < levels.size(); i++) {
+            //System.out.println("level " + i);
+            Vector level = (Vector) levels.get(i);
+            for (int j = 0; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+                //                if (v.function != null) {
+                //                    System.out.println("c" + j + ": " + v.function.getName());
+                //                } else {
+                //                    System.out.println("c" + j + ": dummy");
+                //                }
+            }
+        }
+
+        //    System.out.println("Ordering Levels");
+
+        runSugiyama(levels);
+        assignPositions(levels);
+
+        //    System.out.println("Drawing Graph");
+
+        // Construct Model and Graph
+        model = new DefaultGraphModel();
+        graph = new Graph(model);
+        graph.addMouseListener(this);
+        graph.addKeyListener(this);
+
+        //graph.setAntiAliased(true);
+        ToolTipManager.sharedInstance().registerComponent(graph);
+
+        createCustomGraph(levels, backEdges);
+
+        jGraphPane = new JScrollPane(graph);
+
+        //        this.getContentPane().add(jGraphPane);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.SOUTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        addCompItem(jGraphPane, gbc, 0, 1, GridBagConstraints.REMAINDER, GridBagConstraints.REMAINDER);
+
+    }
+
+    //    void recreateGraph() {
+    //        this.getContentPane().remove(jGraphPane);
+    //        //        this.setVisible(false);
+    //        createGraph();
+    //        this.setVisible(true);
+    //
+    //    }
+
+    void recreateGraph() {
+
+        for (int i = 0; i < vertexVector.size(); i++) {
+            DefaultGraphCell dgc = (DefaultGraphCell) vertexVector.get(i);
+            dgc.removeAllChildren();
+        }
+
+        model.remove(cells);
+
+        reassignWidths(levels);
+
+        assignPositions(levels);
+
+        createCustomGraph(levels, backEdges);
+
+    }
+
+    void reassignWidths(Vector levels) {
+
+        double maxWidthValue = getMaxValue(this.widthOption);
+        double maxColorValue = getMaxValue(this.colorOption);
+        
+        for (int i = 0; i < levels.size(); i++) {
+            Vector level = (Vector) levels.get(i);
+
+            for (int j = 0; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+
+                if (v.function != null) {
+                    FunctionProfile fp = v.functionProfile;
+                    if (this.widthOption == WIDTH_NAME) {
+                        FontMetrics fm = getFontMetrics(this.font);
+                        v.width = fm.stringWidth(fp.getName()) + 5;
+                    } else {
+                        v.width = (int)(boxWidth * getValue(fp,this.widthOption, maxWidthValue));
+                    }
+                    
+                    v.color = (float) getValue(fp,this.colorOption, maxColorValue);
+                        
+                    if (v.width < 5)
+                        v.width = 5;
+                    
+                    v.height = boxHeight;
+                }
+            }
+        }
+    }
+
+    void createCustomGraph(Vector levels, Vector backEdges) {
+
+        // Create Nested Map (from Cells to Attributes)
+        Map attributes = new HashMap();
+
+        vertexVector = new Vector();
+        Vector cellVector = new Vector();
+
+        for (int i = 0; i < levels.size(); i++) {
+            Vector level = (Vector) levels.get(i);
+
+            for (int j = 0; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+
+                GraphCell dgc = null;
+
+                if (v.function != null) {
+                    //                    System.out.println("level " + i + ", column " + j + ": " + v.function.getName());
+                    dgc = createVertex(v, v.position - (v.width / 2),
+                            MARGIN + i * VERTICAL_SPACING, v.height, v.width, v.color, attributes);
+
+                    v.graphCell = dgc;
+                    cellVector.add(dgc);
+                    vertexVector.add(dgc);
+                } else {
+                    // dummy node, don't make a graph cell
+                }
+
+            }
+        }
+
+        int edgeIndex = cellVector.size();
+
+        ConnectionSet cs = new ConnectionSet();
+        Vector edgeVector = new Vector();
+
+        for (int i = 0; i < levels.size(); i++) {
+            Vector level = (Vector) levels.get(i);
+
+            for (int j = 0; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+
+                if (v.function != null) {
+                    GraphCell dgcParent = v.graphCell;
+
+                    for (Iterator it = v.children.iterator(); it.hasNext();) {
+                        Vertex child = (Vertex) it.next();
+
+                        if (child.function != null) {
+                            GraphCell dgcChild = child.graphCell;
+
+                            DefaultEdge e = createEdge(dgcParent, dgcChild, attributes, cs, null);
+                            cellVector.add(e);
+                            edgeVector.add(e);
+                        } else {
+
+                            ArrayList points = new ArrayList();
+                            int l = 1;
+
+                            points.add(new Point(3000, 3000));
+
+                            while (child.function == null) {
+                                points.add(new Point(child.position, MARGIN
+                                        + ((i + l) * VERTICAL_SPACING) + (boxHeight / 2)));
+                                // find the end of the dummy chain
+                                child = (Vertex) child.children.get(0); // there must be exactly one child
+                                l++;
+                            }
+
+                            points.add(new Point(3000, 3000));
+
+                            DefaultEdge e = createEdge(dgcParent, child.graphCell, attributes, cs,
+                                    points);
+                            cellVector.add(e);
+                            edgeVector.add(e);
+
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < backEdges.size(); i++) {
+            BackEdge be = (BackEdge) backEdges.get(i);
+
+            ArrayList points = new ArrayList();
+
+            // this point's position doesn't matter because of the connect call
+            points.add(new Point(3000, 3000));
+
+            points.add(new Point(be.a.position + be.a.width / 2 + 50, (be.a.level)
+                    * VERTICAL_SPACING + MARGIN + (boxHeight / 2)));
+
+            points.add(new Point(be.b.position + 25, (be.b.level) * VERTICAL_SPACING - 25 + MARGIN));
+
+            // this point's position doesn't matter because of the connect call
+            points.add(new Point(3000, 3000));
+
+            DefaultEdge edge = createEdge(be.a.graphCell, be.b.graphCell, attributes, cs, points);
+            cellVector.add(edge);
+            edgeVector.add(edge);
+
+        }
+
+        cells = cellVector.toArray();
+
+        model.insert(cells, attributes, cs, null, null);
+
+        int minY = 0;
+
+        for (int i = 0; i < edgeVector.size(); i++) {
+
+            CellView cv = graph.getGraphLayoutCache().getMapping(edgeVector.get(i), false);
+
+            Rectangle2D rc = cv.getBounds();
+            if (rc.getY() < minY) {
+                minY = (int) rc.getY();
+            }
+            //System.out.println ("x,y = " + rc.getX() + ", " + rc.getY());
+        }
+
+        if (minY != 0) {
+
+            minY -= 5;
+            Map attributeMap = new HashMap();
+
+            for (int i = 0; i < cellVector.size(); i++) {
+
+                DefaultGraphCell dgc = (DefaultGraphCell) cellVector.get(i);
+
+                //translate (dgc.getAttributes(),0,minY);
+
+                Map attrib = dgc.getAttributes();
+                translate(attrib, 0, -minY);
+
+                attributeMap.put(dgc, attrib);
+
+            }
+
+            graph.getGraphLayoutCache().edit(attributeMap, null, null, null);
+
+        }
+
+    }
+
+    public static void translate(Map map, double dx, double dy) {
+        // Translate Bounds 
+        if (GraphConstants.isMoveable(map)) {
+
+            Rectangle2D bounds = GraphConstants.getBounds(map);
+            if (bounds != null) {
+                int moveableAxis = GraphConstants.getMoveableAxis(map);
+                if (moveableAxis == GraphConstants.X_AXIS)
+                    dy = 0;
+                else if (moveableAxis == GraphConstants.Y_AXIS)
+                    dx = 0;
+                bounds.setFrame(Math.max(0, bounds.getX() + dx), Math.max(0, bounds.getY() + dy),
+                        bounds.getWidth(), bounds.getHeight());
+                GraphConstants.setBounds(map, bounds);
+            }
+            // Translate Points 
+            java.util.List points = GraphConstants.getPoints(map);
+            if (points != null) {
+                for (int i = 0; i < points.size(); i++) {
+                    Object obj = points.get(i);
+                    if (obj instanceof Point2D) {
+                        Point2D pt = (Point2D) obj;
+                        pt.setLocation(Math.max(0, pt.getX() + dx), Math.max(0, pt.getY() + dy));
+                    }
+                }
+                GraphConstants.setPoints(map, points);
+            }
+        }
+    }
+
+    void runPhaseOne(Vector levels) {
+        boolean moved = false;
+
+        int level = 0;
+
+        int numIterations = 100;
+
+        while (numIterations > 0) {
+            for (int i = 0; i < levels.size() - 1; i++) {
+                assignBaryCenters((Vector) levels.get(i), (Vector) levels.get(i + 1), true);
+                Collections.sort((Vector) levels.get(i));
+            }
+
+            for (int i = levels.size() - 1; i > 0; i--) {
+                assignBaryCenters((Vector) levels.get(i), (Vector) levels.get(i - 1), false);
+                Collections.sort((Vector) levels.get(i));
+            }
+
+            numIterations--;
+        }
+
+        //Vertex.BaryCenter = Vertex.BARYCENTER_DOWN;
+
+    }
+
+    void assignBaryCenters(Vector level, Vector level2, boolean down) {
+
+        for (int j = 0; j < level2.size(); j++) {
+            Vertex v = (Vertex) level2.get(j);
+            v.levelIndex = j;
+        }
+
+        for (int i = 0; i < level.size(); i++) {
+            Vertex v = (Vertex) level.get(i);
+            if (down) {
+                int sum = 0;
+                for (int j = 0; j < v.children.size(); j++) {
+                    sum += ((Vertex) v.children.get(j)).levelIndex;
+                }
+
+                // don't re-assign baryCenter if no children (keep old value, based on parents)
+                if (v.children.size() != 0) {
+                    v.baryCenter = sum / v.children.size();
+                }
+
+            } else {
+                int sum = 0;
+                for (int j = 0; j < v.parents.size(); j++) {
+                    sum += ((Vertex) v.parents.get(j)).levelIndex;
+                }
+
+                // don't re-assign baryCenter if no parents (keep old value, based on children)
+                if (v.parents.size() != 0) {
+                    v.baryCenter = sum / v.parents.size();
+                }
+
+            }
+        }
+
+    }
+
+    void assignGridBaryCenters(Vector level, boolean down, boolean finalPass) {
+
+        //        boolean combined = false;
+        //
+        //        if (!combined) {
+        for (int i = 0; i < level.size(); i++) {
+            Vertex v = (Vertex) level.get(i);
+
+            //if (finalPass && v.children.size() == 0)
+            //    down = false;
+
+            if (down) {
+                // don't re-assign baryCenter if no children (keep old value, based on parent)
+                if (v.children.size() == 0)
+                    continue;
+
+                float sum = 0;
+                for (int j = 0; j < v.children.size(); j++) {
+                    sum += ((Vertex) v.children.get(j)).position;
+                }
+
+                v.gridBaryCenter = sum / v.children.size();
+
+                //                    System.out.println("assigning barycenter of " + v.gridBaryCenter
+                //                          + ", to index " + i);
+            } else {
+                // don't re-assign baryCenter if no parents (keep old value, based on children)
+                if (v.parents.size() == 0)
+                    continue;
+
+                float sum = 0;
+                for (int j = 0; j < v.parents.size(); j++) {
+                    sum += ((Vertex) v.parents.get(j)).position;
+                }
+
+                v.gridBaryCenter = sum / v.parents.size();
+
+            }
+        }
+        //        } else {
+        //            for (int i = 0; i < level.size(); i++) {
+        //                Vertex v = (Vertex) level.get(i);
+        //
+        //                float sum = 0;
+        //                for (int j = 0; j < v.children.size(); j++) {
+        //                    sum += ((Vertex) v.children.get(j)).position;
+        //                }
+        //
+        //                for (int j = 0; j < v.parents.size(); j++) {
+        //                    sum += ((Vertex) v.parents.get(j)).position;
+        //                }
+        //
+        //                v.gridBaryCenter = sum / (v.parents.size() + v.children.size());
+        //
+        //            }
+        //        }
+    }
+
+    //    int countCrosses(Vector levels, int level, boolean down) {
+    //     
+    //        Vector top, bottom;
+    //        
+    //        if (down) {
+    //            top = (Vector)levels.get(level);
+    //            bottom = (Vector)levels.get(level+1);  
+    //        
+    //            
+    //        
+    //        
+    //        } else {
+    //            top = (Vector)levels.get(level-1);
+    //            bottom = (Vector)levels.get(level);
+    //        }
+    //        
+    //        
+    //    }
+
+    void runSugiyama(Vector levels) {
+
+        runPhaseOne(levels);
+
+        //runPhaseTwo(levels);
+
+    }
+
+    private void assignPositions(Vector levels) {
+
+        // assign initial positions
+        for (int i = 0; i < levels.size(); i++) {
+            Vector level = (Vector) levels.get(i);
+
+            int lastPosition = 0;
+            ((Vertex) level.get(0)).position = 0;
+            for (int j = 1; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+                v.position = lastPosition + HORIZONTAL_SPACING
+                        + (((Vertex) level.get(j - 1)).width + v.width) / 2;
+                lastPosition = v.position;
+
+                v.downPriority = v.children.size();
+                if (v.function == null) {
+                    //v.downPriority = Integer.MAX_VALUE;
+                    v.downPriority = 2;
+                }
+
+                v.upPriority = v.parents.size();
+                if (v.function == null) {
+                    //v.upPriority = Integer.MAX_VALUE;
+                    v.upPriority = 2;
+                }
+            }
+
+            // now center everything around zero
+            int middle;
+
+            if (level.size() % 2 == 0) {
+                int left = ((Vertex) level.get((level.size() - 2) / 2)).position;
+                int right = ((Vertex) level.get(level.size() / 2)).position;
+                middle = (left + right) / 2;
+            } else {
+                middle = ((Vertex) level.get((level.size() - 1) / 2)).position;
+            }
+
+            for (int j = 0; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+                v.position = v.position - middle;
+            }
+
+        }
+
+        for (int i = 1; i < levels.size(); i++) {
+            improvePositions(levels, i, false, false);
+        }
+
+        for (int i = levels.size() - 2; i >= 0; i--) {
+            improvePositions(levels, i, true, false);
+        }
+
+        for (int i = 1; i < levels.size(); i++) {
+            improvePositions(levels, i, false, false);
+        }
+
+        for (int i = levels.size() - 2; i >= 0; i--) {
+            improvePositions(levels, i, true, true);
+        }
+
+        for (int i = levels.size() - 2; i >= 0; i--) {
+            improvePositions(levels, i, true, false);
+        }
+
+        // move everything right (since some of our numbers are negative)
+
+        int minValue = 0;
+        for (int i = 0; i < levels.size(); i++) {
+            Vector level = (Vector) levels.get(i);
+
+            for (int j = 0; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+                if (v.position - (v.width / 2) < minValue) {
+                    minValue = v.position - (v.width / 2);
+                }
+            }
+        }
+
+        for (int i = 0; i < levels.size(); i++) {
+            Vector level = (Vector) levels.get(i);
+
+            for (int j = 0; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+                v.position += -minValue + MARGIN;
+            }
+        }
+
+    }
+
+    private int moveRight(Vector level, int index, int amount, boolean down, int priority) {
+
+        Vertex v = (Vertex) level.get(index);
+
+        int j = index + 1;
+
+        if (j >= level.size()) {
+            v.position = v.position + amount;
+            return amount;
+        }
+
+        Vertex u = (Vertex) level.get(j);
+
+        int myRightSide = v.position + (v.width / 2);
+        int neighborLeftSide = u.position - (u.width / 2);
+
+        if (myRightSide + amount + HORIZONTAL_SPACING < neighborLeftSide) {
+            v.position = v.position + amount;
+            return amount;
+        }
+
+        // not enough room between this box and the one to the right
+
+        if (u.getPriority(down) > priority) {
+            // we're lower priority, can't move him, place ourselves as far right as possible
+            int newPosition = u.position - ((v.width + u.width) / 2) - HORIZONTAL_SPACING;
+            int amountMoved = newPosition - v.position;
+            v.position = v.position + amountMoved;
+            return amountMoved;
+        }
+
+        int positionNeighborNeedsToBeAt = (v.position + amount) + ((u.width + v.width) / 2)
+                + HORIZONTAL_SPACING;
+
+        // we can move him, so ask to move '' and add whatever he can (he could be blocked by higher priority)
+        moveRight(level, j, positionNeighborNeedsToBeAt - u.position, down, priority);
+
+        int newPosition = u.position - ((v.width + u.width) / 2) - HORIZONTAL_SPACING;
+        int amountMoved = newPosition - v.position;
+        v.position = v.position + amountMoved;
+        return amountMoved;
+
+        //v.position = v.position + amountMoved;
+        //return amountMoved;
+    }
+
+    private int moveLeft(Vector level, int index, int amount, boolean down, int priority) {
+        //System.out.println("index " + index + ", asked to move " + amount + ", priority = "
+        //        + priority);
+        Vertex v = (Vertex) level.get(index);
+
+        int j = index - 1;
+
+        if (j < 0) {
+            v.position = v.position - amount;
+            // System.out.println("index " + index + ", moved " + amount + ", to position "
+            //         + v.position);
+            return amount;
+        }
+
+        Vertex u = (Vertex) level.get(j);
+
+        int myLeftSide = v.position - (v.width / 2);
+        int neighborRightSide = u.position + (u.width / 2);
+
+        if (myLeftSide - amount - HORIZONTAL_SPACING > neighborRightSide) {
+            v.position = v.position - amount;
+            //System.out.println("index " + index + ", moved " + amount + ", to position "
+            //       + v.position);
+            return amount;
+        }
+
+        if (u.getPriority(down) > priority) {
+            int newPosition = u.position + ((u.width + v.width) / 2) + HORIZONTAL_SPACING;
+            int amountMoved = v.position - newPosition;
+            v.position = v.position - amountMoved;
+            //System.out.println("index " + index + ", moved " + amountMoved + ", to position "
+            //        + v.position);
+            return amountMoved;
+        }
+
+        int positionNeighborNeedsToBeAt = (v.position - amount) - (v.width / 2)
+                - HORIZONTAL_SPACING - (u.width / 2);
+
+        // we can move him, so ask to move '' and add whatever he can (he could be blocked by higher priority)
+
+        moveLeft(level, j, u.position - positionNeighborNeedsToBeAt, down, priority);
+
+        int newPosition = u.position + ((u.width + v.width) / 2) + HORIZONTAL_SPACING;
+        int amountMoved = v.position - newPosition;
+        v.position = v.position - amountMoved;
+        //System.out.println("index " + index + ", moved " + amountMoved + ", to position "
+        //        + v.position);
+        return amountMoved;
+
+        //        v.position = v.position - amountMoved;
+        //        System.out.println ("index " + index + ", moved " + amountMoved + ", to position " + v.position);
+        //        return amountMoved;
+    }
+
+    private void improvePositions(Vector levels, int index, boolean down, boolean finalPass) {
+        Vector level = (Vector) levels.get(index);
+
+        assignGridBaryCenters(level, down, finalPass);
+
+        for (int i = 0; i < level.size(); i++) {
+            Vertex v = (Vertex) level.get(i);
+
+            int wantedPosition = (int) v.gridBaryCenter;
+            //System.out.println("--at position: " + v.position + ", want Position = "
+            //        + wantedPosition);
+
+            if (down && v.children.size() == 0) {
+                continue;
+            }
+
+            if (wantedPosition > v.position) {
+                int amountMoved = moveRight(level, i, wantedPosition - v.position, down,
+                        v.getPriority(down));
+                for (int j = i - 1; j >= 0 && finalPass; j--) {
+                    moveRight(level, j, amountMoved, down, v.getPriority(down));
+                }
+
+            } else {
+                int amountMoved = moveLeft(level, i, v.position - wantedPosition, down,
+                        v.getPriority(down));
+                for (int j = i + 1; j < level.size() && finalPass; j++) {
+                    moveLeft(level, j, amountMoved, down, v.getPriority(down));
+                }
+            }
+
+            //System.out.println("--got position = " + v.position + "\n");
+
+        }
+
+    }
+
+    private void fillLevels(Vertex v, Vector levels, int level) {
+
+        if (v.visited == true)
+            return;
+
+        v.visited = true;
+
+        if (levels.size() == level) {
+            levels.insertElementAt(new Vector(), level);
+        }
+
+        v.level = level;
+
+        Vector currentLevel = (Vector) levels.get(level);
+        currentLevel.add(v);
+
+        for (int i = 0; i < v.children.size(); i++) {
+            Vertex child = (Vertex) v.children.elementAt(i);
+            fillLevels(child, levels, level + 1);
+        }
+    }
+
+    private void insertDummies(Vertex v) {
+
+        for (int i = 0; i < v.children.size(); i++) {
+            Vertex child = (Vertex) v.children.elementAt(i);
+            if (child.level - v.level > 1) {
+
+                // break both edges
+                v.children.remove(i);
+                child.parents.remove(v);
+
+                // create dummy and connect to child
+                Vertex dummy = new Vertex(null, 1);
+                dummy.level = v.level + 1;
+                dummy.children.add(child);
+                child.parents.add(dummy);
+
+                // connect dummy to parrent
+                v.children.insertElementAt(dummy, i);
+                dummy.parents.add(v);
+                insertDummies(dummy);
+            }
+        }
+    }
+
+    private void assignLevel(Vertex v) {
+
+        int maxLevel = 0;
+        for (int i = 0; i < v.parents.size(); i++) {
+            Vertex parent = (Vertex) v.parents.elementAt(i);
+            if (parent.level == -1)
+                assignLevel(parent);
+            if (parent.level > maxLevel)
+                maxLevel = parent.level;
+        }
+        v.level = maxLevel + 1;
+    }
+
+    private Vector findRoots(Map vertexMap) {
+        Vector roots = new Vector();
+
+        for (Iterator it = vertexMap.values().iterator(); it.hasNext();) {
+            Vertex v = (Vertex) it.next();
+            v.visited = false;
+        }
+
+        for (Iterator it = vertexMap.values().iterator(); it.hasNext();) {
+            Vertex v = (Vertex) it.next();
+            for (int i = 0; i < v.children.size(); i++) {
+                Vertex child = (Vertex) v.children.get(i);
+                child.visited = true;
+            }
+        }
+
+        for (Iterator it = vertexMap.values().iterator(); it.hasNext();) {
+            Vertex v = (Vertex) it.next();
+            if (v.visited == false)
+                roots.add(v);
+        }
+        return roots;
+    }
+
+    
+  
+    
+    public GraphCell createVertex(Vertex v, int x, int y, int height, int width, float color, Map attributes) {
+        // Create Hello Vertex
+        GraphCell vertex = new GraphCell(v);
+
+        // Create Hello Vertex Attributes
+        Map attrib = new Hashtable();
+        attributes.put(vertex, attrib);
+
+        //        System.out.println("placing at x=" + x + ", y = " + y);
+
+        // Set bounds
+        //Rectangle helloBounds = new Rectangle(20, 20, 40, 20);
+        Rectangle bounds = new Rectangle(x, y, width, height);
+        GraphConstants.setBounds(attrib, bounds);
+
+        // Set black border
+        GraphConstants.setBorderColor(attrib, Color.black);
+
+        
+        // Set fill color
+        
+        if (this.colorOption == COLOR_STATIC) {
+            GraphConstants.setBackground(attrib, Color.orange);
+        } else {
+            GraphConstants.setBackground(attrib, ColorBar.getColor(color));
+        }
+        
+        GraphConstants.setOpaque(attrib, true);
+
+        GraphConstants.setFont(attrib, font);
+
+        // Set raised border
+        GraphConstants.setBorder(attrib, BorderFactory.createRaisedBevelBorder());
+
+        //GraphConstants.setBorder(helloAttrib, BorderFactory.createBevelBorder(BevelBorder.RAISED,Color.blue,Color.blue));
+        //GraphConstants.setBorder(helloAttrib, BorderFactory.createBevelBorder(BevelBorder.RAISED,Color.black,Color.black));
+        //GraphConstants.setBorder(helloAttrib, BorderFactory.createBevelBorder(BevelBorder.RAISED,Color.black,Color.black));
+
+        // Add a Port
+        DefaultPort hp = new DefaultPort();
+        vertex.add(hp);
+
+        return vertex;
+    }
+
+    public DefaultEdge createEdge(DefaultGraphCell v1, DefaultGraphCell v2, Map attributes,
+            ConnectionSet cs, ArrayList points) {
+
+        // Create Edge
+        DefaultEdge edge = new DefaultEdge();
+
+        // Create Edge Attributes
+        Map edgeAttrib = new Hashtable();
+        attributes.put(edge, edgeAttrib);
+
+        if (points != null) {
+            GraphConstants.setPoints(edgeAttrib, points);
+            GraphConstants.setLineStyle(edgeAttrib, GraphConstants.STYLE_SPLINE);
+
+        }
+        // Set Arrow
+        GraphConstants.setLineEnd(edgeAttrib, GraphConstants.ARROW_CLASSIC);
+        GraphConstants.setEndFill(edgeAttrib, true);
+
+        //        GraphConstants.setEditable(edgeAttrib, false);
+        //        GraphConstants.setMoveable(edgeAttrib, false);
+        GraphConstants.setDisconnectable(edgeAttrib, false);
+        //        GraphConstants.setConnectable(edgeAttrib, false);
+        //        GraphConstants.setResize(edgeAttrib, false);
+
+        //        GraphConstants.setLineColor(edgeAttrib, Color.blue);
+
+        if (v1 == v2) {
+            // add a new port so that it does go back to the same point
+            DefaultPort hp = new DefaultPort();
+            v1.add(hp);
+            cs.connect(edge, v1.getChildAt(0), v1.getChildAt(1));
+
+        } else {
+            cs.connect(edge, v1.getChildAt(0), v2.getChildAt(0));
+        }
+        return edge;
+    }
+
+    private void displaySliders(boolean displaySliders) {
+        Container contentPane = this.getContentPane();
+        GridBagConstraints gbc = new GridBagConstraints();
+        if (displaySliders) {
+            contentPane.remove(jGraphPane);
+
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.anchor = GridBagConstraints.EAST;
+            gbc.weightx = 0.10;
+            gbc.weighty = 0.01;
+            addCompItem(boxWidthLabel, gbc, 0, 1, 1, 1);
+
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.weightx = 0.70;
+            gbc.weighty = 0.01;
+            addCompItem(boxWidthSlider, gbc, 1, 1, 1, 1);
+
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.CENTER;
+            gbc.weightx = 1.0;
+            gbc.weighty = 0.99;
+            addCompItem(jGraphPane, gbc, 0, 2, 2, 1);
+        } else {
+            contentPane.remove(boxWidthLabel);
+            contentPane.remove(boxWidthSlider);
+            contentPane.remove(jGraphPane);
+
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.CENTER;
+            gbc.weightx = 1;
+            gbc.weighty = 1;
+            addCompItem(jGraphPane, gbc, 0, 1, 1, 1);
+        }
+
+        //Now call validate so that these component changes are displayed.
+        validate();
+    }
+
+    public void menuSelected(MenuEvent evt) {
+        try {
+
+            if (trial.groupNamesPresent())
+                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
+            else
+                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
+
+            if (trial.userEventsPresent())
+                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
+            else
+                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
+
+        } catch (Exception e) {
+            UtilFncs.systemError(e, null, "TDW04");
+        }
+    }
+
+    public void menuDeselected(MenuEvent evt) {
+    }
+
+    public void menuCanceled(MenuEvent evt) {
+    }
+
+    public Edge getEdge(FunctionProfile p, FunctionProfile c) {
+
+        Vertex parent = (Vertex) vertexMap.get(p);
+        Vertex child = (Vertex) vertexMap.get(c);
+
+        int portCount = child.graphCell.getChildCount();
+        for (int j = 0; j < portCount; j++) {
+            Port port = (Port) child.graphCell.getChildAt(j);
+
+            for (Iterator itrEdges = port.edges(); itrEdges.hasNext();) {
+                Edge edge = (Edge) itrEdges.next();
+
+                if (edge.getTarget() == port) {
+                    Port sourcePort = (Port) edge.getSource();
+                    Object sourceVertex = model.getParent(sourcePort);
+
+                    CellView sourceVertexView = graph.getGraphLayoutCache().getMapping(
+                            sourceVertex, false);
+
+                    GraphCell target = (GraphCell) sourceVertexView.getCell();
+                    if (target.getVertex() == parent) {
+                        return (Edge) edge;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private void handlePrefEvent() {
+
+        Map attributeMap = new Hashtable();
+
+        font = new Font(trial.getPreferences().getParaProfFont(),
+                trial.getPreferences().getFontStyle(), trial.getPreferences().getBarHeight());
+
+        this.setFont(font);
+        FontMetrics fm = getFontMetrics(font);
+
+        boxHeight = fm.getHeight() + 5;
+
+        recreateGraph();
+//        
+//        for (int i = 0; i < vertexVector.size(); i++) {
+//            GraphCell dgc = (GraphCell) vertexVector.get(i);
+//
+//            Map attrib = dgc.getAttributes();
+//
+//            GraphConstants.setFont(attrib, font);
+//
+//            Rectangle2D bounds = GraphConstants.getBounds(attrib);
+//
+//            //            rec.setH..height = trial.getPreferences().getBarHeight();
+//
+//            bounds.setFrame(bounds.getX(), bounds.getY(), bounds.getWidth(), boxHeight);
+//
+//            GraphConstants.setBounds(attrib, bounds);
+//            attributeMap.put(dgc, attrib);
+//        }
+//
+//        graph.getGraphLayoutCache().edit(attributeMap, null, null, null);
+    }
+
+    public void handleColorEvent() {
+
+        Map attributeMap = new Hashtable();
+
+        // color all edges black
+        // and reset pathHighlight to false
+        for (int i = 0; i < vertexVector.size(); i++) {
+            GraphCell dgc = (GraphCell) vertexVector.get(i);
+            Vertex v = dgc.getVertex();
+            v.pathHighlight = false;
+
+            int portCount = model.getChildCount(dgc);
+            for (int j = 0; j < portCount; j++) {
+                Object port = model.getChild(dgc, j);
+
+                for (Iterator itrEdges = model.edges(port); itrEdges.hasNext();) {
+                    Object edge = itrEdges.next();
+
+                    Map attrib = new HashMap();
+
+                    GraphConstants.setLineColor(attrib, Color.black);
+
+                    attributeMap.put(edge, attrib);
+
+                }
+            }
+        }
+
+        // run through each vertex and find the "highlighted" one
+        for (int i = 0; i < vertexVector.size(); i++) {
+            GraphCell dgc = (GraphCell) vertexVector.get(i);
+
+            if (dgc.function == trial.getColorChooser().getHighlightedFunction()) { // this is the one
+
+                // now iterate through each function and check for callpaths that contain it, highlight those edges and vertices
+                for (int j = 0; j < functionProfileList.size(); j++) {
+                    FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(j);
+                    if (fp == null)
+                        continue;
+                    Function f = fp.getFunction();
+
+                    if (f.isCallPathObject()) { // we only care about call path functionProfiles
+                        String s = f.getName();
+                        if (s.indexOf(dgc.getFunction().getName()) != -1) {
+
+                            int location = s.indexOf("=>");
+
+                            // now iterate through every edge in this callpath
+                            while (location != -1) {
+                                String parentString = s.substring(0, location - 1);
+
+                                int next = s.indexOf("=>", location + 1);
+
+                                if (next == -1) {
+                                    next = s.length() - 1;
+                                }
+
+                                String childString = s.substring(location + 3, next - 1);
+
+                                //System.out.println(parentString + "=>" + childString);
+
+                                FunctionProfile parentFunction = thread.getFunctionProfile(trial.getTrialData().getFunction(
+                                        parentString));
+                                FunctionProfile childFunction = thread.getFunctionProfile(trial.getTrialData().getFunction(
+                                        childString));
+
+                                Vertex v = (Vertex) vertexMap.get(parentFunction);
+                                v.pathHighlight = true;
+                                v = (Vertex) vertexMap.get(childFunction);
+                                v.pathHighlight = true;
+
+                                Edge e = getEdge(parentFunction, childFunction);
+
+                                Map attrib = new HashMap();
+
+                                GraphConstants.setLineColor(attrib, Color.blue);
+
+                                if (e == null) {
+                                    System.out.println("uh oh");
+                                } else {
+                                    attributeMap.put(e, attrib);
+                                }
+                                s = s.substring(location + 3);
+                                location = s.indexOf("=>");
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+
+        // now do the final coloring
+        for (int i = 0; i < vertexVector.size(); i++) {
+
+            GraphCell dgc = (GraphCell) vertexVector.get(i);
+            Map attrib = new HashMap();
+
+            if (dgc.function == trial.getColorChooser().getHighlightedFunction()) {
+                GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(
+                        BevelBorder.RAISED, trial.getColorChooser().getHighlightColor(),
+                        trial.getColorChooser().getHighlightColor()));
+            } else if (dgc.getVertex().pathHighlight) {
+                GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(
+                        BevelBorder.RAISED, Color.blue, Color.blue));
+
+            } else if (dgc.function.isGroupMember(trial.getColorChooser().getHighlightedGroup())) {
+                GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(
+                        BevelBorder.RAISED, trial.getColorChooser().getGroupHighlightColor(),
+                        trial.getColorChooser().getGroupHighlightColor()));
+            } else {
+                GraphConstants.setBorder(attrib, BorderFactory.createRaisedBevelBorder());
+            }
+
+            attributeMap.put(dgc, attrib);
+        }
+
+        graph.getGraphLayoutCache().edit(attributeMap, null, null, null);
+
+    }
+
+    public void update(Observable o, Object arg) {
+        String tmpString = (String) arg;
+
+        if (tmpString.equals("subWindowCloseEvent")) {
+            closeThisWindow();
+        } else if (tmpString.equals("prefEvent")) {
+            handlePrefEvent();
+        } else if (tmpString.equals("colorEvent")) {
+            handleColorEvent();
+        }
+
+    }
+
+    private void help(boolean display) {
+        //Show the ParaProf help window.
+        ParaProf.helpWindow.clearText();
+        if (display)
+            ParaProf.helpWindow.show();
+        ParaProf.helpWindow.writeText("Call Graph window.");
+        ParaProf.helpWindow.writeText("");
+    }
+
+    public DataSorter getDataSorter() {
+        return dataSorter;
+    }
+
+    public Dimension getViewportSize() {
+        return jGraphPane.getViewport().getExtentSize();
+    }
+
+    public Rectangle getViewRect() {
+        return jGraphPane.getViewport().getViewRect();
+    }
+
+    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+        try {
+            gbc.gridx = x;
+            gbc.gridy = y;
+            gbc.gridwidth = w;
+            gbc.gridheight = h;
+
+            getContentPane().add(c, gbc);
+        } catch (Exception e) {
+            UtilFncs.systemError(e, null, "CPTW05");
+        }
+    }
+
+    //Respond correctly when this window is closed.
+    void thisWindowClosing(java.awt.event.WindowEvent e) {
+        closeThisWindow();
+    }
+
+    void closeThisWindow() {
+        setVisible(false);
+        trial.getSystemEvents().deleteObserver(this);
+        ParaProf.decrementNumWindows();
+        dispose();
+    }
+
+    public void mouseClicked(MouseEvent evt) {
+        System.out.println("mouseClicked");
+        // Get Cell under Mousepointer
+        int x = evt.getX(), y = evt.getY();
+        Object cell = this.graph.getFirstCellForLocation(x, y);
+        // Print Cell Label
+        if (cell != null) {
+
+            while (cell instanceof Edge) {
+                cell = this.graph.getNextCellForLocation(cell, x, y);
+            }
+
+            if (cell instanceof GraphCell) {
+                GraphCell gc = (GraphCell) cell;
+
+                if (gc != null) {
+                    Function f = ((Function) gc.getFunction());
+
+                    if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                        clickedOnObject = f;
+                        popup.show(this, evt.getX(), evt.getY());
+                        return;
+
+                    } else {
+                        trial.getColorChooser().toggleHighlightedFunction(f);
+                    }
+                    //FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial, f,
+                    //        this.dataSorter, false);
+                    //trial.getSystemEvents().addObserver(functionDataWindow);
+                    //functionDataWindow.show();
+                }
+            } else {
+                System.out.println("Not a GraphCell");
+
+            }
+        } else {
+
+            System.out.println("Didn't click on anything");
+        }
+    }
+
+    public void stateChanged(ChangeEvent event) {
+
+        boxWidth = boxWidthSlider.getValue();
+        recreateGraph();
+
+    }
+
+    public void mousePressed(MouseEvent evt) {
+    }
+
+    public void mouseReleased(MouseEvent evt) {
+    }
+
+    public void mouseEntered(MouseEvent evt) {
+    }
+
+    public void mouseExited(MouseEvent evt) {
+    }
+
+    public void keyTyped(KeyEvent evt) {
+
+        if (evt.getKeyChar() == '+') {
+            scale = scale + 0.10;
+            if (scale > 5.0)
+                scale = 5.0;
+            graph.setScale(scale);
+        } else if (evt.getKeyChar() == '-') {
+            scale = scale - 0.10;
+            if (scale < 0.10)
+                scale = 0.10;
+            graph.setScale(scale);
+        }
+
+    }
+
+    public void keyPressed(KeyEvent evt) {
+
+    }
+
+    public void keyReleased(KeyEvent evt) {
+
+    }
+
+    //ParaProfImageInterface
+    public Dimension getImageSize(boolean fullScreen, boolean prependHeader) {
+        if (fullScreen)
+            return this.getPreferredSize();
+        else
+            return this.getSize();
+    }
+
+    public void renderIt(Graphics2D g2D, int instruction, boolean header) {
+        if (instruction == 2) { // "fullscreen"
+            graph.paintAll(g2D);
+        } else {
+            graph.paint(g2D);
+        }
+    }
+
+    public int print(Graphics g, PageFormat pageFormat, int page) {
+        double oldScale = graph.getScale();
+        try {
+            // turn off double buffering of graph so we don't get bitmap printed
+            graph.setDoubleBuffered(false);
+
+            double pageWidth = pageFormat.getImageableWidth();
+            double pageHeight = pageFormat.getImageableHeight();
+            int cols = (int) (graph.getWidth() / pageWidth) + 1;
+            int rows = (int) (graph.getHeight() / pageHeight) + 1;
+            double xScale = pageWidth / graph.getWidth();
+            double yScale = pageHeight / graph.getHeight();
+            double scale = Math.min(xScale, yScale);
+
+            double tx = 0.0;
+            double ty = 0.0;
+            if (xScale > scale) {
+                tx = 0.5 * (xScale - scale) * graph.getWidth();
+            } else {
+                ty = 0.5 * (yScale - scale) * graph.getHeight();
+            }
+            ((Graphics2D) g).translate((int) pageFormat.getImageableX(),
+                    (int) pageFormat.getImageableY());
+            ((Graphics2D) g).translate(tx, ty);
+            ((Graphics2D) g).scale(scale, scale);
+
+            if (page >= 1) {
+                return NO_SUCH_PAGE;
+            }
+
+            graph.paint(g);
+        } finally {
+            //  turn double buffering back on
+            graph.setDoubleBuffered(true);
+            graph.setScale(oldScale);
+        }
+        return PAGE_EXISTS;
+    }
+
+    //        public int print(Graphics g, PageFormat pF, int page) {
+    //            try {
+    //                //    IMPORTANT!!!!! turn off double buffering of graph so we don't get bitmap printed 
+    //                graph.setDoubleBuffered(false);
+    //    
+    //                int pw = (int) pF.getImageableWidth();
+    //                int ph = (int) pF.getImageableHeight();
+    //                int cols = (int) (graph.getWidth() / pw) + 1;
+    //                int rows = (int) (graph.getHeight() / ph) + 1;
+    //                int pageCount = cols * rows;
+    //                if (page >= pageCount) {
+    //                    return NO_SUCH_PAGE;
+    //                }
+    //                int col = page % cols;
+    //                int row = page % rows;
+    //                g.translate(-col * pw, -row * ph);
+    //                g.setClip(col * pw, row * ph, pw, ph);
+    //                graph.paint(g);
+    //                g.translate(col * pw, row * ph);
+    //            } finally {
+    //                //    turn double buffering back on 
+    //                graph.setDoubleBuffered(true);
+    //            }
+    //            return PAGE_EXISTS;
+    //        }
+
+    public void actionPerformed(ActionEvent evt) {
+        Object EventSrc = evt.getSource();
+
+        if (EventSrc instanceof JMenuItem) {
+
+            if (EventSrc instanceof JRadioButtonMenuItem) {
+                JRadioButtonMenuItem jrbmi = (JRadioButtonMenuItem) EventSrc;
+
+                System.out.println ("Action: " + jrbmi.getActionCommand());
+
+                if (jrbmi.getActionCommand().startsWith("Box Width")) {
+
+                    if (jrbmi.getActionCommand().equals("Box Width Static")) {
+                        this.widthOption = WIDTH_STATIC;
+                    } else if (jrbmi.getActionCommand().equals("Box Width Name Length")) {
+                        this.widthOption = WIDTH_NAME;
+                    } else if (jrbmi.getActionCommand().equals("Box Width Exclusive")) {
+                        this.widthOption = WIDTH_EXCLUSIVE;
+                    } else if (jrbmi.getActionCommand().equals("Box Width Inclusive")) {
+                        this.widthOption = WIDTH_INCLUSIVE;
+                    } else if (jrbmi.getActionCommand().equals("Box Width NumCalls")) {
+                        this.widthOption = WIDTH_NUMCALLS;
+                    } else if (jrbmi.getActionCommand().equals("Box Width NumSubr")) {
+                        this.widthOption = WIDTH_NUMSUBR;
+                    } else if (jrbmi.getActionCommand().equals("Box Width InclPerCall")) {
+                        this.widthOption = WIDTH_INCLPERCALL;
+                    }
+                    recreateGraph();
+                }
+
+            
+                if (jrbmi.getActionCommand().startsWith("Box Color")) {
+
+                    if (jrbmi.getActionCommand().equals("Box Color Static")) {
+                        this.colorOption = COLOR_STATIC;
+                    } else if (jrbmi.getActionCommand().equals("Box Color Exclusive")) {
+                        this.colorOption = COLOR_EXCLUSIVE;
+                    } else if (jrbmi.getActionCommand().equals("Box Color Inclusive")) {
+                        this.colorOption = COLOR_INCLUSIVE;
+                    } else if (jrbmi.getActionCommand().equals("Box Color NumCalls")) {
+                        this.colorOption = COLOR_NUMCALLS;
+                    } else if (jrbmi.getActionCommand().equals("Box Color NumSubr")) {
+                        this.colorOption = COLOR_NUMSUBR;
+                    } else if (jrbmi.getActionCommand().equals("Box Color InclPerCall")) {
+                        this.colorOption = COLOR_INCLPERCALL;
+                    }
+                    recreateGraph();
+                }
+}
+
+            String arg = evt.getActionCommand();
+
+            if (arg.equals("Show Function Details")) {
+                FunctionDataWindow tmpRef = new FunctionDataWindow(trial,
+                        (Function) clickedOnObject, trial.getStaticMainWindow().getDataSorter(),
+                        false);
+                trial.getSystemEvents().addObserver(tmpRef);
+                tmpRef.show();
+
+            } else if (arg.equals("Exit ParaProf!")) {
+                setVisible(false);
+                dispose();
+                ParaProf.exitParaProf(0);
+
+            } else if (arg.equals("Edit ParaProf Preferences!")) {
+                trial.getPreferences().showPreferencesWindow();
+            } else if (arg.equals("Close This Window")) {
+                closeThisWindow();
+            } else if (arg.equals("Show Function Ledger")) {
+                (new LedgerWindow(trial, 0, false)).show();
+            } else if (arg.equals("Show Group Ledger")) {
+                (new LedgerWindow(trial, 1, false)).show();
+            } else if (arg.equals("Show User Event Ledger")) {
+                (new LedgerWindow(trial, 2, false)).show();
+            } else if (arg.equals("Show Call Path Relations")) {
+                CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1,
+                        this.getDataSorter(), 2, false);
+                trial.getSystemEvents().addObserver(tmpRef);
+                tmpRef.show();
+            } else if (arg.equals("Close All Sub-Windows")) {
+                trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+
+            } else if (arg.equals("Print")) {
+                PrinterJob job = PrinterJob.getPrinterJob();
+                PageFormat defaultFormat = job.defaultPage();
+                PageFormat selectedFormat = job.pageDialog(defaultFormat);
+                job.setPrintable(this, selectedFormat);
+                if (job.getPrintService() != null) {
+                    if (job.printDialog()) {
+                        try {
+                            job.print();
+                        } catch (PrinterException e) {
+                        }
+                    }
+                }
+            } else if (arg.equals("Save Image")) {
+                ParaProfImageOutput imageOutput = new ParaProfImageOutput();
+                imageOutput.saveImage((ParaProfImageInterface) this);
+            } else if (arg.equals("Static Width")) {
+                this.widthOption = WIDTH_STATIC;
+                recreateGraph();
+            } else if (arg.equals("Width by Name Length")) {
+                this.widthOption = WIDTH_NAME;
+                recreateGraph();
+
+            } else if (arg.equals("Width by Exclusive Value")) {
+                this.widthOption = WIDTH_EXCLUSIVE;
+                recreateGraph();
+
+            } else if (arg.equals("Display Width Slider")) {
+                if (slidersCheckBox.isSelected())
+                    displaySliders(true);
+                else
+                    displaySliders(false);
+            }
+        }
+
+    }
+
+    //####################################
+    //Instance data.
+    //####################################
+    private ParaProfTrial trial = null;
+    private int nodeID = -1;
+    private int contextID = -1;
+    private int threadID = -1;
+    private DataSorter dataSorter = null;
+
+    private boolean meanWindow = false;
+
+    private JMenu optionsMenu = null;
+    private JMenu windowsMenu = null;
+
+    private JMenuItem groupLedger = null;
+    private JMenuItem usereventLedger = null;
+    private JMenuItem callPathRelations = null;
+    private JCheckBoxMenuItem slidersCheckBox = null;
+
+    private Graph graph = null;
+    private JScrollPane jGraphPane = null;
+
+    private static final int WIDTH_STATIC = 0;
+    private static final int WIDTH_NAME = 1;
+    private static final int WIDTH_EXCLUSIVE = 2;
+    private static final int WIDTH_INCLUSIVE = 3;
+    private static final int WIDTH_NUMCALLS = 4;
+    private static final int WIDTH_NUMSUBR = 5;
+    private static final int WIDTH_INCLPERCALL = 6;
+    private int widthOption = WIDTH_EXCLUSIVE;
+
+    
+    private static final int COLOR_STATIC = 0;
+    private static final int COLOR_EXCLUSIVE = 2;
+    private static final int COLOR_INCLUSIVE = 3;
+    private static final int COLOR_NUMCALLS = 4;
+    private static final int COLOR_NUMSUBR = 5;
+    private static final int COLOR_INCLPERCALL = 6;
+    private int colorOption = COLOR_EXCLUSIVE;
+
+    
+    Vector functionProfileList;
+
+    private edu.uoregon.tau.dms.dss.Thread thread;
+    private int boxWidth = 120;
+
+    private JLabel boxWidthLabel = new JLabel("Box width");
+    private JSlider boxWidthSlider = new JSlider(0, 500, boxWidth);
+
+    DefaultGraphModel model;
+    Vector vertexVector;
+    Object[] cells;
+    Vector levels;
+    Vector backEdges;
+    Map vertexMap;
+
+    Font font;
+    public static int boxHeight;
+    private JPopupMenu popup = new JPopupMenu();
+    Object clickedOnObject = null;
+    double scale = 1.0;
+
+}

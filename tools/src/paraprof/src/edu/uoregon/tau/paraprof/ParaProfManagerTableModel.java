@@ -3,7 +3,7 @@
 
    Title:      ParaProf
    Author:     Robert Bell
-   Description:  The container for the MappingDataWindowPanel.
+   Description:  The container for the FunctionDataWindowPanel.
 */
 
 /*
@@ -17,8 +17,6 @@ import edu.uoregon.tau.dms.database.*;
 import javax.swing.tree.*;
 import javax.swing.table.*;
 
-
-import java.sql.SQLException;
 
 public class ParaProfManagerTableModel extends AbstractTableModel {
 
@@ -39,7 +37,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
 	    type = 2;
 	}
 	else{
-	    this.metric = (Metric) obj;
+	    this.metric = (ParaProfMetric) obj;
 	    type = 3;
 	}
 
@@ -284,7 +282,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
 
 		/*
 		try {
-		    DatabaseAPI dbAPI = paraProfManager.getDatabaseAPI();
+		    DefunctDatabaseAPI dbAPI = paraProfManager.getDatabaseAPI();
 		    if (dbAPI != null) {
 			dbAPI.saveApplication(application);
 			dbAPI.disconnect();
@@ -296,10 +294,10 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
 		*/
 		
 		
-		PerfDMFSession perfDMFSession = paraProfManager.getDBSession();
-		if (perfDMFSession!=null) {
-		    perfDMFSession.saveApplication(application);
-		    perfDMFSession.terminate();
+		DatabaseAPI databaseAPI = paraProfManager.getDBSession();
+		if (databaseAPI!=null) {
+		    databaseAPI.saveApplication(application);
+		    databaseAPI.terminate();
 		}
 		
 	    }
@@ -307,20 +305,20 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
 	else if(obj instanceof ParaProfExperiment){
 	    ParaProfExperiment  experiment = (ParaProfExperiment) obj;
 	    if(experiment.dBExperiment()){
-		PerfDMFSession perfDMFSession = paraProfManager.getDBSession();
-		if(perfDMFSession!=null){
-		    perfDMFSession.saveExperiment(experiment);
-		    perfDMFSession.terminate();
+		DatabaseAPI databaseAPI = paraProfManager.getDBSession();
+		if(databaseAPI!=null){
+		    databaseAPI.saveExperiment(experiment);
+		    databaseAPI.terminate();
 		}
 	    }
 	}
 	else if(obj instanceof ParaProfTrial){
 	    ParaProfTrial  trial = (ParaProfTrial) obj;
 	    if(trial.dBTrial()){
-		PerfDMFSession perfDMFSession = paraProfManager.getDBSession();
-		if(perfDMFSession!=null){
-		    perfDMFSession.saveTrial(trial);
-		    perfDMFSession.terminate();
+		DatabaseAPI databaseAPI = paraProfManager.getDBSession();
+		if(databaseAPI!=null){
+		    databaseAPI.saveTrial(trial);
+		    databaseAPI.terminate();
 		}
 	    }
 	}
@@ -330,7 +328,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
     private ParaProfApplication application = null;
     private ParaProfExperiment experiment = null;
     private ParaProfTrial trial = null;
-    private Metric metric = null;
+    private ParaProfMetric metric = null;
     private ParaProfManager paraProfManager = null;
     private DefaultTreeModel defaultTreeModel = null;
     String[] columnNames = {

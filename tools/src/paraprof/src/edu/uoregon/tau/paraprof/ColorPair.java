@@ -8,7 +8,6 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
 import edu.uoregon.tau.dms.dss.*;
 

@@ -12,7 +12,6 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.io.*;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -39,7 +38,7 @@ public class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer{
 	//URL url = ParaProfTreeCellRenderer.class.getResource("red-ball.gif");
 	//this.setIcon(new ImageIcon(url));
 	//}
-	else if(userObject instanceof Metric){
+	else if(userObject instanceof ParaProfMetric){
 	    URL url = ParaProfTreeCellRenderer.class.getResource("green-ball.gif");
 	    this.setIcon(new ImageIcon(url));
 	}

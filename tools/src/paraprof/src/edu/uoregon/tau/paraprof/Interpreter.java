@@ -1,22 +1,16 @@
-/* 
-   Interpret.java
-   
-   Title:      ParaProf
-   Author:     Robert Bell
-   Description:
-   To do: A lot.  This class is still in the design phase.
-*/
+/*
+ * Interpret.java
+ * 
+ * Title: ParaProf Author: Robert Bell Description: To do: A lot. This class is
+ * still in the design phase.
+ */
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import java.io.*;
 import java.util.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class Interpreter implements Runnable{
+public class Interpreter implements Runnable {
 
     //####################################
     //Public Section.
@@ -25,93 +19,98 @@ public class Interpreter implements Runnable{
     //######
     //Contructors.
     //######
-    public Interpreter(){
-	super();
+    public Interpreter() {
+        super();
     }
 
-    public Interpreter(Vector expressions, boolean graphicsEnvironment){
-	super();
-	this.expressions = expressions;
+    public Interpreter(Vector expressions, boolean graphicsEnvironment) {
+        super();
+        this.expressions = expressions;
     }
+
     //######
     //End - Contructors.
     //######
 
-    public synchronized void evalExpression(String expression, boolean graphicsEnvironment){
-	InterpreterThread interpreterThread = new InterpreterThread(this, expression, threadCount);
-	java.lang.Thread thread = new java.lang.Thread(interpreterThread);
-	thread.setName(this.threadCount + " - " + expression);
-	this.threadCount++;
-	thread.start();
+    public synchronized void evalExpression(String expression, boolean graphicsEnvironment) {
+        InterpreterThread interpreterThread = new InterpreterThread(this, expression, threadCount);
+        java.lang.Thread thread = new java.lang.Thread(interpreterThread);
+        thread.setName(this.threadCount + " - " + expression);
+        this.threadCount++;
+        thread.start();
     }
 
-    public void evalExpressions(Vector expressions, boolean graphicsEnvironment){
-	this.expressions = expressions;
-	this.graphicsEnvironment = graphicsEnvironment;
-	for(Enumeration e = expressions.elements(); e.hasMoreElements() ;){
-	    if(UtilFncs.debug)
-		System.out.println("Thread(" + this.threadCount + "). --- Trying to get the lock .... ");
-	    
-	    /*
-	    if(EventQueue.isDispatchThread())
-		System.out.println("In method evalExpressions(...) - Is the event dispatch thread? yes");
-	    else
-		System.out.println("In method evalExpressions(...) - Is the event dispatch thread? no");
-	    */
-	    
-	    this.getLock();
-	    if(UtilFncs.debug)
-		System.out.println("Thread(" + this.threadCount  + "). --- Lock obtained!");
-	    String expression = (String) e.nextElement();
-	    InterpreterThread interpreterThread = new InterpreterThread(this, expression, threadCount);
-	    java.lang.Thread thread = new java.lang.Thread(interpreterThread);
-	    thread.setName(this.threadCount + " - " + expression);
-	    this.threadCount++;
-	    thread.start();
+    public void evalExpressions(Vector expressions, boolean graphicsEnvironment) {
+        this.expressions = expressions;
+        this.graphicsEnvironment = graphicsEnvironment;
+        for (Enumeration e = expressions.elements(); e.hasMoreElements();) {
+            if (UtilFncs.debug)
+                System.out.println("Thread(" + this.threadCount
+                        + "). --- Trying to get the lock .... ");
 
-	    //EventQueue.invokeLater(thread);
+            /*
+             * if(EventQueue.isDispatchThread()) System.out.println("In method
+             * evalExpressions(...) - Is the event dispatch thread? yes"); else
+             * System.out.println("In method evalExpressions(...) - Is the event
+             * dispatch thread? no");
+             */
 
-	}
+            this.getLock();
+            if (UtilFncs.debug)
+                System.out.println("Thread(" + this.threadCount + "). --- Lock obtained!");
+            String expression = (String) e.nextElement();
+            InterpreterThread interpreterThread = new InterpreterThread(this, expression,
+                    threadCount);
+            java.lang.Thread thread = new java.lang.Thread(interpreterThread);
+            thread.setName(this.threadCount + " - " + expression);
+            this.threadCount++;
+            thread.start();
+
+            //EventQueue.invokeLater(thread);
+
+        }
     }
 
-    public void run(){
-	this.evalExpressions(this.expressions, this.graphicsEnvironment);}
-
-    public synchronized void getLock(){
-	while(!this.lock()){
-	    try{
-		wait();
-	    }
-	    catch(Exception e){
-	    }
-	}
+    public void run() {
+        this.evalExpressions(this.expressions, this.graphicsEnvironment);
     }
 
-    public synchronized boolean lock(){
-	boolean lockObtained = false;
-	if(this.lock==null){
-	    this.lock = java.lang.Thread.currentThread();
-	    lockObtained = true;
-	}
-	return lockObtained;
+    public synchronized void getLock() {
+        while (!this.lock()) {
+            try {
+                wait();
+            } catch (Exception e) {
+            }
+        }
     }
 
-    public synchronized void unlock(){
-	try{
-	    if(UtilFncs.debug)
-		System.out.println("Setting the lock to null and calling notify!");
-	    this.lock = null;
-	    notify();
-	}
-	catch(Exception e){
-	}
+    public synchronized boolean lock() {
+        boolean lockObtained = false;
+        if (this.lock == null) {
+            this.lock = java.lang.Thread.currentThread();
+            lockObtained = true;
+        }
+        return lockObtained;
     }
 
-    public void setDebug(boolean debug){
-	this.debug = debug;}
-    
-    public boolean debug(){
-	return debug;}
+    public synchronized void unlock() {
+        try {
+            if (UtilFncs.debug)
+                System.out.println("Setting the lock to null and calling notify!");
+            this.lock = null;
+            notify();
+        } catch (Exception e) {
+        }
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
+    public boolean debug() {
+        return debug;
+    }
+
     //####################################
     //End - Public Section.
     //####################################
@@ -138,7 +137,7 @@ public class Interpreter implements Runnable{
     //####################################
 }
 
-class InterpreterThread implements Runnable{
+class InterpreterThread implements Runnable {
     //####################################
     //Public Section.
     //####################################
@@ -146,33 +145,38 @@ class InterpreterThread implements Runnable{
     //######
     //Contructors.
     //######
-    public InterpreterThread(){
-	super();
+    public InterpreterThread() {
+        super();
     }
 
-    public InterpreterThread(Interpreter interpreter, String expression, int id){
-	super();
-	this.interpreter = interpreter;
-	this.expression = expression;
-	this.id = id;
+    public InterpreterThread(Interpreter interpreter, String expression, int id) {
+        super();
+        this.interpreter = interpreter;
+        this.expression = expression;
+        this.id = id;
     }
+
     //######
     //End - Contructors.
     //######
 
-    public void run(){
-	ParaProf.paraProfLisp.eval(this.expression);
-	interpreter.unlock();
+    public void run() {
+        ParaProf.paraProfLisp.eval(this.expression);
+        interpreter.unlock();
     }
 
-    public void setDebug(boolean debug){
-	this.debug = debug;}
-    
-    public boolean debug(){
-	return debug;}
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
 
-    public String toString(){
-	return this.expression;}
+    public boolean debug() {
+        return debug;
+    }
+
+    public String toString() {
+        return this.expression;
+    }
+
     //####################################
     //End - Public Section.
     //####################################

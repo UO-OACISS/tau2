@@ -14,13 +14,9 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.io.*;
-import java.lang.*;
-import java.util.*;
 import org.jatha.Jatha;
 import org.jatha.dynatype.*;
 import org.jatha.compile.*;
-import org.jatha.machine.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProfLisp{
@@ -35,7 +31,7 @@ public class ParaProfLisp{
 	lisp.COMPILER.Register(lispPrimitive);}
 
     public void registerParaProfPrimitives(){
-	DataSessionIterator l = ParaProfLispPrimitives.getPrimitiveList(lisp, this.debug());
+	DssIterator l = ParaProfLispPrimitives.getPrimitiveList(lisp, this.debug());
 	while(l.hasNext()){
 	    this.register((LispPrimitive)l.next());}
     }

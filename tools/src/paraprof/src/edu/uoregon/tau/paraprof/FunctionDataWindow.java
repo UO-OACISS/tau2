@@ -1,7 +1,8 @@
 /*
- * StatWindow.java
+ * FunctionDataWindow.java
  * 
- * Title: ParaProf Author: Robert Bell Description:
+ * Title: ParaProf Author: Robert Bell Description: The container for the
+ * FunctionDataWindowPanel.
  */
 
 package edu.uoregon.tau.paraprof;
@@ -14,48 +15,52 @@ import javax.swing.event.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer {
+public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
+        ChangeListener {
 
-    public StatWindow() {
+    public FunctionDataWindow() {
         try {
             setLocation(new java.awt.Point(0, 0));
-            setSize(new java.awt.Dimension(800, 600));
+            setSize(new java.awt.Dimension(100, 100));
 
             //Set the title indicating that there was a problem.
-            this.setTitle("Wrong constructor used!");
+            this.setTitle("Wrong constructor used");
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SW01");
+            UtilFncs.systemError(e, null, "MDW01");
         }
     }
 
-    public StatWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
-            DataSorter dataSorter, boolean userEventWindow, boolean debug) {
+    public FunctionDataWindow(ParaProfTrial trial, Function function, DataSorter dataSorter,
+            boolean debug) {
         try {
             this.trial = trial;
             this.dataSorter = dataSorter;
-            this.nodeID = nodeID;
-            this.contextID = contextID;
-            this.threadID = threadID;
-            this.userEventWindow = userEventWindow;
             this.debug = debug;
+            this.function = function;
+            int windowWidth = 650;
+            int windowHeight = 550;
+            //Grab the screen size.
+            Toolkit tk = Toolkit.getDefaultToolkit();
+            Dimension screenDimension = tk.getScreenSize();
+            int screenHeight = screenDimension.height;
+            int screenWidth = screenDimension.width;
+            if (windowWidth > screenWidth)
+                windowWidth = screenWidth;
+            if (windowHeight > screenHeight)
+                windowHeight = screenHeight;
+            //Set the window to come up in the center of the screen.
+            int xPosition = (screenWidth - windowWidth) / 2;
+            int yPosition = (screenHeight - windowHeight) / 2;
+            setSize(new java.awt.Dimension(windowWidth, windowHeight));
+            setLocation(xPosition, yPosition);
 
-            setLocation(new java.awt.Point(0, 0));
-            setSize(new java.awt.Dimension(800, 600));
+            //Grab the appropriate global mapping element.
+            TrialData tmpGM = trial.getTrialData();
 
-            if (nodeID == -1 && userEventWindow) {
-                // There is no User Event data for mean
-                UtilFncs.systemError(new Exception(), null, "SW02");
-            }
+            mappingName = function.getName();
 
             //Now set the title.
-            if (nodeID == -1)
-                this.setTitle("Mean Data Statistics: " + trial.getTrialIdentifier(true));
-            else {
-                if (userEventWindow)
-                    valueType = 12;
-                this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                        + trial.getTrialIdentifier(true));
-            }
+            this.setTitle("Function Data Window: " + trial.getTrialIdentifier(true));
 
             //Add some window listener code
             addWindowListener(new java.awt.event.WindowAdapter() {
@@ -83,6 +88,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             //File menu.
             //######
             JMenu fileMenu = new JMenu("File");
+
 
             //Save menu.
             subMenu = new JMenu("Save ...");
@@ -129,39 +135,42 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             ButtonGroup group = null;
             JRadioButtonMenuItem button = null;
 
-            sortByName = new JCheckBoxMenuItem("Sort By Name", false);
-            sortByName.addActionListener(this);
-            optionsMenu.add(sortByName);
+            sortByNCT = new JCheckBoxMenuItem("Sort By N,C,T", true);
+            sortByNCT.addActionListener(this);
+            optionsMenu.add(sortByNCT);
 
-            descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
+            descendingOrder = new JCheckBoxMenuItem("Descending Order", false);
             descendingOrder.addActionListener(this);
             optionsMenu.add(descendingOrder);
 
+            showValuesAsPercent = new JCheckBoxMenuItem("Show Values as Percent", true);
+            showValuesAsPercent.addActionListener(this);
+            optionsMenu.add(showValuesAsPercent);
+
             //Units submenu.
             unitsSubMenu = new JMenu("Select Units");
-            if (!userEventWindow) {
-                group = new ButtonGroup();
+            group = new ButtonGroup();
 
-                button = new JRadioButtonMenuItem("hr:min:sec", false);
-                button.addActionListener(this);
-                group.add(button);
-                unitsSubMenu.add(button);
+            button = new JRadioButtonMenuItem("hr:min:sec", false);
+            button.addActionListener(this);
+            group.add(button);
+            unitsSubMenu.add(button);
 
-                button = new JRadioButtonMenuItem("Seconds", false);
-                button.addActionListener(this);
-                group.add(button);
-                unitsSubMenu.add(button);
+            button = new JRadioButtonMenuItem("Seconds", false);
+            button.addActionListener(this);
+            group.add(button);
+            unitsSubMenu.add(button);
 
-                button = new JRadioButtonMenuItem("Milliseconds", false);
-                button.addActionListener(this);
-                group.add(button);
-                unitsSubMenu.add(button);
+            button = new JRadioButtonMenuItem("Milliseconds", false);
+            button.addActionListener(this);
+            group.add(button);
+            unitsSubMenu.add(button);
 
-                button = new JRadioButtonMenuItem("Microseconds", true);
-                button.addActionListener(this);
-                group.add(button);
-                unitsSubMenu.add(button);
-            }
+            button = new JRadioButtonMenuItem("Microseconds", true);
+            button.addActionListener(this);
+            group.add(button);
+            unitsSubMenu.add(button);
+
             optionsMenu.add(unitsSubMenu);
             //End - Units submenu.
 
@@ -169,54 +178,37 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             subMenu = new JMenu("Select Value Type");
             group = new ButtonGroup();
 
-            if (userEventWindow) {
-                button = new JRadioButtonMenuItem("Number of Userevents", true);
-                button.addActionListener(this);
-                group.add(button);
-                subMenu.add(button);
-
-                button = new JRadioButtonMenuItem("Min. Value", false);
-                button.addActionListener(this);
-                group.add(button);
-                subMenu.add(button);
-
-                button = new JRadioButtonMenuItem("Max. Value", false);
-                button.addActionListener(this);
-                group.add(button);
-                subMenu.add(button);
-
-                button = new JRadioButtonMenuItem("Mean Value", false);
-                button.addActionListener(this);
-                group.add(button);
-                subMenu.add(button);
-            } else {
-                button = new JRadioButtonMenuItem("Exclusive", true);
-                button.addActionListener(this);
-                group.add(button);
-                subMenu.add(button);
-
-                button = new JRadioButtonMenuItem("Inclusive", false);
-                button.addActionListener(this);
-                group.add(button);
-                subMenu.add(button);
-
-                button = new JRadioButtonMenuItem("Number of Calls", false);
-                button.addActionListener(this);
-                group.add(button);
-                subMenu.add(button);
-
-                button = new JRadioButtonMenuItem("Number of Subroutines", false);
-                button.addActionListener(this);
-                group.add(button);
-                subMenu.add(button);
-
-                button = new JRadioButtonMenuItem("Per Call Value", false);
-                button.addActionListener(this);
-                group.add(button);
-            }
+            button = new JRadioButtonMenuItem("Exclusive", true);
+            button.addActionListener(this);
+            group.add(button);
             subMenu.add(button);
+
+            button = new JRadioButtonMenuItem("Inclusive", false);
+            button.addActionListener(this);
+            group.add(button);
+            subMenu.add(button);
+
+            button = new JRadioButtonMenuItem("Number of Calls", false);
+            button.addActionListener(this);
+            group.add(button);
+            subMenu.add(button);
+
+            button = new JRadioButtonMenuItem("Number of Subroutines", false);
+            button.addActionListener(this);
+            group.add(button);
+            subMenu.add(button);
+
+            button = new JRadioButtonMenuItem("Inclusive Per Call", false);
+            button.addActionListener(this);
+            group.add(button);
+            subMenu.add(button);
+
             optionsMenu.add(subMenu);
             //End - Set the value type options.
+
+            box = new JCheckBoxMenuItem("Display Sliders", false);
+            box.addActionListener(this);
+            optionsMenu.add(box);
 
             showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
             showPathTitleInReverse.addActionListener(this);
@@ -239,7 +231,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             menuItem = new JMenuItem("Show ParaProf Manager");
             menuItem.addActionListener(this);
             windowsMenu.add(menuItem);
-
+            
             menuItem = new JMenuItem("Show Function Ledger");
             menuItem.addActionListener(this);
             windowsMenu.add(menuItem);
@@ -253,6 +245,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             windowsMenu.add(menuItem);
 
             menuItem = new JMenuItem("Show Call Path Relations");
+            menuItem.addActionListener(this);
+            windowsMenu.add(menuItem);
+
+            menuItem = new JMenuItem("Show Histogram");
             menuItem.addActionListener(this);
             windowsMenu.add(menuItem);
 
@@ -298,35 +294,49 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             //Create and add the components.
             //####################################
             //Setting up the layout system for the main window.
-            Container contentPane = getContentPane();
-            GridBagLayout gbl = new GridBagLayout();
+            contentPane = getContentPane();
+            gbl = new GridBagLayout();
             contentPane.setLayout(gbl);
-            GridBagConstraints gbc = new GridBagConstraints();
+            gbc = new GridBagConstraints();
             gbc.insets = new Insets(5, 5, 5, 5);
 
             //######
             //Panel and ScrollPane definition.
             //######
-            panel = new StatWindowPanel(trial, nodeID, contextID, threadID, this, userEventWindow,
-                    this.debug());
+            panel = new FunctionDataWindowPanel(trial, function, this, this.debug());
             sp = new JScrollPane(panel);
             this.setHeader();
             //######
             //End - Panel and ScrollPane definition.
             //######
 
-            //Now add the components to the main screen.
+            //######
+            //Slider setup.
+            //Do the slider stuff, but don't add. By default, sliders are off.
+            //######
+            String sliderMultipleStrings[] = { "1.00", "0.75", "0.50", "0.25", "0.10" };
+            sliderMultiple = new JComboBox(sliderMultipleStrings);
+            sliderMultiple.addActionListener(this);
+
+            barLengthSlider.setPaintTicks(true);
+            barLengthSlider.setMajorTickSpacing(5);
+            barLengthSlider.setMinorTickSpacing(1);
+            barLengthSlider.setPaintLabels(true);
+            barLengthSlider.setSnapToTicks(true);
+            barLengthSlider.addChangeListener(this);
+            //######
+            //End - Slider setup.
+            //Do the slider stuff, but don't add. By default, sliders are off.
+            //######
+
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 1;
-            gbc.weighty = 1;
+            gbc.weightx = 100;
+            gbc.weighty = 100;
             addCompItem(sp, gbc, 0, 0, 1, 1);
-            //####################################
-            //End - Create and add the components.
-            //####################################
             ParaProf.incrementNumWindows();
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SW02");
+            UtilFncs.systemError(e, null, "MDW02");
         }
     }
 
@@ -362,11 +372,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                     setVisible(false);
                     dispose();
                     ParaProf.exitParaProf(0);
-                } else if (arg.equals("Sort By Name")) {
-                    if (sortByName.isSelected())
-                        name = true;
+                } else if (arg.equals("Sort By N,C,T")) {
+                    if (sortByNCT.isSelected())
+                        nct = true;
                     else
-                        name = false;
+                        nct = false;
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Descending Order")) {
@@ -374,6 +384,15 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                         order = 0;
                     else
                         order = 1;
+                    sortLocalData();
+                    panel.repaint();
+                } else if (arg.equals("Show Values as Percent")) {
+                    if (showValuesAsPercent.isSelected()) {
+                        percent = true;
+                        units = 0;
+                    } else
+                        percent = false;
+                    this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Exclusive")) {
@@ -388,36 +407,19 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                     panel.repaint();
                 } else if (arg.equals("Number of Calls")) {
                     valueType = 6;
+                    units = 0;
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Number of Subroutines")) {
                     valueType = 8;
+                    units = 0;
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
-                } else if (arg.equals("Per Call Value")) {
+                } else if (arg.equals("Incusive Per Call")) {
                     valueType = 10;
-                    this.setHeader();
-                    sortLocalData();
-                    panel.repaint();
-                } else if (arg.equals("Number of Userevents")) {
-                    valueType = 12;
-                    this.setHeader();
-                    sortLocalData();
-                    panel.repaint();
-                } else if (arg.equals("Min. Value")) {
-                    valueType = 14;
-                    this.setHeader();
-                    sortLocalData();
-                    panel.repaint();
-                } else if (arg.equals("Max. Value")) {
-                    valueType = 16;
-                    this.setHeader();
-                    sortLocalData();
-                    panel.repaint();
-                } else if (arg.equals("Mean Value")) {
-                    valueType = 18;
+                    units = 0;
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
@@ -437,15 +439,15 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                     units = 3;
                     this.setHeader();
                     panel.repaint();
-                } else if (arg.equals("Show Path Title in Reverse")) {
-                    if (nodeID == -1)
-                        this.setTitle("Mean Data Window Total: "
-                                + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+                } else if (arg.equals("Display Sliders")) {
+                    if (((JCheckBoxMenuItem) optionsMenu.getItem(5)).isSelected())
+                        displaySiders(true);
                     else
-                        this.setTitle("Total " + "n,c,t, " + nodeID + "," + contextID + ","
-                                + threadID + " - "
-                                + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
-                } else if (arg.equals("Show Meta Data in Panel"))
+                        displaySiders(false);
+                } else if (arg.equals("Show Path Title in Reverse"))
+                    this.setTitle("Function Data Window: "
+                            + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+                else if (arg.equals("Show Meta Data in Panel"))
                     this.setHeader();
                 else if (arg.equals("Show Function Ledger")) {
                     (new LedgerWindow(trial, 0, this.debug())).show();
@@ -458,6 +460,12 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                             this.getDataSorter(), 2, this.debug());
                     trial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
+                } else if (arg.equals("Show Histogram")) {
+
+                    HistogramWindow tmpRef = new HistogramWindow(trial, this.getDataSorter(), false,
+                            function, this.debug());
+                    trial.getSystemEvents().addObserver(tmpRef);
+                    tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
                     trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
                 } else if (arg.equals("About ParaProf")) {
@@ -465,6 +473,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                 } else if (arg.equals("Show Help Window")) {
                     this.help(true);
                 }
+            } else if (EventSrc == sliderMultiple) {
+                panel.changeInMultiples();
             }
         } catch (Exception e) {
             UtilFncs.systemError(e, null, "TDW03");
@@ -476,14 +486,34 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     //######
 
     //######
+    //ChangeListener.
+    //######
+    public void stateChanged(ChangeEvent event) {
+        panel.changeInMultiples();
+    }
+
+    //######
+    //End - ChangeListener.
+    //######
+
+    //######
     //MenuListener.
     //######
     public void menuSelected(MenuEvent evt) {
         try {
-            if (trial.isTimeMetric() && !userEventWindow)
-                unitsSubMenu.setEnabled(true);
-            else
+            if (valueType > 4) {
+                showValuesAsPercent.setEnabled(false);
                 unitsSubMenu.setEnabled(false);
+            } else if (percent) {
+                showValuesAsPercent.setEnabled(true);
+                unitsSubMenu.setEnabled(false);
+            } else if (trial.isTimeMetric()) {
+                showValuesAsPercent.setEnabled(true);
+                unitsSubMenu.setEnabled(true);
+            } else {
+                showValuesAsPercent.setEnabled(true);
+                unitsSubMenu.setEnabled(false);
+            }
 
             if (trial.groupNamesPresent())
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
@@ -519,11 +549,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             if (tmpString.equals("prefEvent")) {
                 this.setHeader();
                 panel.repaint();
-            }
-            if (tmpString.equals("colorEvent")) {
-                //Just need to call a repaint on the ThreadDataWindowPanel.
+            } else if (tmpString.equals("colorEvent")) {
                 panel.repaint();
             } else if (tmpString.equals("dataEvent")) {
+                sortLocalData();
                 if (!(trial.isTimeMetric()))
                     units = 0;
                 this.setHeader();
@@ -532,7 +561,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                 closeThisWindow();
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SW05");
+            UtilFncs.systemError(e, null, "MDW05");
         }
     }
 
@@ -549,51 +578,30 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         ParaProf.helpWindow.clearText();
         if (display)
             ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("This is the thread data window");
+        ParaProf.helpWindow.writeText("This is the function data window for:");
+        ParaProf.helpWindow.writeText(mappingName);
         ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("This window shows you the values for all mappings on this thread.");
+        ParaProf.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
         ParaProf.helpWindow.writeText("");
         ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
         ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Right click on any mapping within this window to bring up a popup");
+        ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
         ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-        ParaProf.helpWindow.writeText("for the mapping, or to show more details about the mapping.");
-        ParaProf.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
-    }
-
-    //Helper functionProfiles.
-    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        try {
-            gbc.gridx = x;
-            gbc.gridy = y;
-            gbc.gridwidth = w;
-            gbc.gridheight = h;
-
-            getContentPane().add(c, gbc);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SW06");
-        }
+        ParaProf.helpWindow.writeText("for this function.");
     }
 
     public DataSorter getDataSorter() {
         return dataSorter;
     }
 
-    //Updates this window's data copy.
-    private void sortLocalData() {
-        if (name) { // if sort by name
-            if (userEventWindow) {
-                list = dataSorter.getUserEventProfiles(nodeID, contextID, threadID, order);
-            } else {
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, order);
-            }
-        } else {
-
-            if (userEventWindow) {
-                list = dataSorter.getUserEventProfiles(nodeID, contextID, threadID, valueType + order);
-            } else {
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, valueType + order);
-            }
+    public void sortLocalData() {
+        try {
+            if (nct)
+                list = dataSorter.getFunctionData(function, 30 + order);
+            else
+                list = dataSorter.getFunctionData(function, valueType + order);
+        } catch (Exception e) {
+            UtilFncs.systemError(e, null, "MDW06");
         }
     }
 
@@ -603,6 +611,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     public int getValueType() {
         return valueType;
+    }
+
+    public boolean isPercent() {
+        return percent;
     }
 
     public int units() {
@@ -644,11 +656,14 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     }
 
     public String getHeaderString() {
-        if (userEventWindow)
-            return "Sorted By: " + UtilFncs.getValueTypeString(valueType) + "\n";
+        if ((valueType > 5) || percent)
+            return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n"
+                    + "Name: " + mappingName + "\n" + "Value Type: "
+                    + UtilFncs.getValueTypeString(valueType) + "\n";
         else
             return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n"
-                    + "Sorted By: " + UtilFncs.getValueTypeString(valueType) + "\n" + "Units: "
+                    + "Name: " + mappingName + "\n" + "Value Type: "
+                    + UtilFncs.getValueTypeString(valueType) + "\n" + "Units: "
                     + UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric())
                     + "\n";
     }
@@ -657,6 +672,91 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     //End - Panel header.
     //######
 
+    public int getSliderValue() {
+        int tmpInt = -1;
+        try {
+            tmpInt = barLengthSlider.getValue();
+        } catch (Exception e) {
+            UtilFncs.systemError(e, null, "MDW07");
+        }
+        return tmpInt;
+    }
+
+    public double getSliderMultiple() {
+        String tmpString = null;
+        try {
+            tmpString = (String) sliderMultiple.getSelectedItem();
+            return Double.parseDouble(tmpString);
+        } catch (Exception e) {
+            UtilFncs.systemError(e, null, "MDW08");
+        }
+        return 0;
+    }
+
+    private void displaySiders(boolean displaySliders) {
+        if (displaySliders) {
+            contentPane.remove(sp);
+
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.anchor = GridBagConstraints.EAST;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
+
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.weightx = 100;
+            gbc.weighty = 0;
+            addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
+
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.anchor = GridBagConstraints.EAST;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
+
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.weightx = 100;
+            gbc.weighty = 0;
+            addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
+
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.CENTER;
+            gbc.weightx = 100;
+            gbc.weighty = 100;
+            addCompItem(sp, gbc, 0, 1, 4, 1);
+        } else {
+            contentPane.remove(sliderMultipleLabel);
+            contentPane.remove(sliderMultiple);
+            contentPane.remove(barLengthLabel);
+            contentPane.remove(barLengthSlider);
+            contentPane.remove(sp);
+
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.CENTER;
+            gbc.weightx = 100;
+            gbc.weighty = 100;
+            addCompItem(sp, gbc, 0, 0, 1, 1);
+        }
+
+        //Now call validate so that these componant changes are displayed.
+        validate();
+    }
+
+    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+        try {
+            gbc.gridx = x;
+            gbc.gridy = y;
+            gbc.gridwidth = w;
+            gbc.gridheight = h;
+
+            getContentPane().add(c, gbc);
+        } catch (Exception e) {
+            UtilFncs.systemError(e, null, "MDW09");
+        }
+    }
+
     //Respond correctly when this window is closed.
     void thisWindowClosing(java.awt.event.WindowEvent e) {
         closeThisWindow();
@@ -664,19 +764,17 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     void closeThisWindow() {
         try {
-            if (UtilFncs.debug) {
+            if (this.debug()) {
                 System.out.println("------------------------");
-                System.out.println("A stat window for: \"" + "n,c,t, " + nodeID + "," + contextID
-                        + "," + threadID + "\" is closing");
-                System.out.println("Clearing resourses for this window.");
+                System.out.println("A mapping window for: \"" + mappingName + "\" is closing");
+                System.out.println("Clearing resourses for that window.");
             }
-
             setVisible(false);
             trial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
             dispose();
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SW07");
+            UtilFncs.systemError(e, null, "MDW10");
         }
     }
 
@@ -692,34 +790,48 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     //Instance data.
     //####################################
     private ParaProfTrial trial = null;
-    private DataSorter dataSorter;
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
-    private boolean userEventWindow;
+    private DataSorter dataSorter = null;
+    
+    private Function function = null;
+    private String mappingName = null;
 
     private JMenu optionsMenu = null;
     private JMenu windowsMenu = null;
     private JMenu unitsSubMenu = null;
 
     private JCheckBoxMenuItem sortByName = null;
+    private JCheckBoxMenuItem sortByNCT = null;
     private JCheckBoxMenuItem descendingOrder = null;
+    private JCheckBoxMenuItem showValuesAsPercent = null;
+    private JCheckBoxMenuItem displaySliders = null;
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
     private JMenuItem groupLedger = null;
     private JMenuItem usereventLedger = null;
     private JMenuItem callPathRelations = null;
 
-    private JScrollPane sp = null;
-    private StatWindowPanel panel = null;
+    private JLabel sliderMultipleLabel = new JLabel("Slider Multiple");
+    private JComboBox sliderMultiple;
+    private JLabel barLengthLabel = new JLabel("Bar Multiple");
+    private JSlider barLengthSlider = new JSlider(0, 40, 1);
 
-    Vector list = null;
+    private Container contentPane = null;
+    private GridBagLayout gbl = null;
+    private GridBagConstraints gbc = null;
 
-    private boolean name = false; //true: sort by name,false: sort by value.
-    private int order = 0; //0: descending order,1: ascending order.
+    FunctionDataWindowPanel panel = null;
+    JScrollPane sp = null;
+
+    private Vector list = null;
+
+    private boolean nct = true; //true: sort by node, context and thread,false:
+                                // don't.
+    private int order = 1; //0: descending order,1: ascending order.
+    private boolean percent = true; //true: show values as percent,false: show
+                                    // actual values.
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of
-    // calls,8-number of subroutines,10-per call
-    // value.
+                               // calls,8-number of subroutines,10-per call
+                               // value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
 
     private boolean debug = false; //Off by default.
