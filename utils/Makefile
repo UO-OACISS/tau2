@@ -96,22 +96,22 @@ pcxx2ar : pcxx2ar.c $(EVHEADER)
 		   pcxx2ar.c -o pcxx2ar
 
 tau_convert: 	tau_convert.c 
-		$(CXX) $(CFLAGS) -w tau_convert.c -o tau_convert -lm $(LEXTRA)
+		$(CXX) $(CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRA)
 
 tau_merge: 	tau_merge.o tau_events.o
-		$(CXX) $(CFLAGS) -w tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRA)
+		$(CXX) $(CFLAGS)  tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRA)
 
 tau_merge.o: 	tau_merge.c
-		$(CXX) $(CFLAGS) -w -c tau_merge.c
+		$(CXX) $(CFLAGS)  -c tau_merge.c
 
 tau_events.o: 	tau_events.cpp
-		$(CXX) $(CFLAGS) -w -c tau_events.cpp
+		$(CXX) $(CFLAGS)  -c tau_events.cpp
 
 ar2pcxx : ar2pcxx.c 
 		$(LINKER) ar2pcxx.c -o $@
 
 pprof:		pprof.cpp
-		$(CXX) $(CFLAGS) -w pprof.cpp -o pprof -lm $(LEXTRA)
+		$(CXX) $(CFLAGS)  pprof.cpp -o pprof -lm $(LEXTRA)
 
 clean:
 		/bin/rm -f $(OBJS) $(EXECUTABLES) *.dep lib*$(LSX)
