@@ -85,6 +85,7 @@ Usage: configure [OPTIONS]
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
+-PROFILECALLPATH ......................... Generate call path profiles.
 -PROFILESTATS .................. Enable standard deviation calculation.
 -MULTIPLECOUNTERS ............ Use multiple hardware counters and time.
 -SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
@@ -258,6 +259,13 @@ The following  command-line options are available to configure:
    in conjunction with the profile browser jracy to analyse the performance. 
    Wallclock time is used for profiling  program entities. 
    
+-PROFILECALLPATH 
+
+   This option generates call path profiles which shows the time spent in a 
+   routine when it is called by another routine in the calling path. "a => b"
+   stands for the time spent in routine "b" when it is invoked by routine "a".
+   This option is an extension of -PROFILE, the default profiling option. 
+
 -PROFILESTATS
    
    Specifies the calculation of additional statistics, such as the standard 

@@ -576,6 +576,7 @@ do
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
+    echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
