@@ -19,9 +19,9 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-FFLAGS        	= $(TAUINC) $(TAUDEFS)
+FFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS)
 
-LIBS 	      	= $(TAULIBS) -lfortran -lftn
+LIBS            = $(TAU_LIBS) -lfortran -lftn
 
 LDFLAGS	      	= $(USER_OPT) 
 

@@ -19,9 +19,9 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-CFLAGS = $(TAUINC) $(TAUDEFS)
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)
 
-LIBS 	      	= -lmpi $(TAULIBS)
+LIBS            = $(TAU_LIBS) -lmpi
 
 LDFLAGS	      	= $(USER_OPT)
 
