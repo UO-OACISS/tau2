@@ -3,7 +3,7 @@ package dms.dss;
 /**
  * Holds all the data for a function data object in the database.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.9 2003/08/01 21:38:22 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.10 2003/08/07 20:23:08 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -12,14 +12,50 @@ public class FunctionDataObject {
 	private int context;
 	private int thread;
 	private int functionID;
-	private double inclusivePercentage;
-	private double inclusive;
-	private double exclusivePercentage;
-	private double exclusive;
+	private String[] metric;
+	private double[] doubleList;
 	private int numCalls;
 	private int numSubroutines;
-	private double inclusivePerCall;
-	private String metric;
+
+	public FunctionDataObject() {
+		super();
+		metric = new String[1];
+		doubleList = new double[5];
+	}
+
+	public FunctionDataObject(int arraySize) {
+		super();
+		metric = new String[arraySize];
+		doubleList = new double[arraySize];
+	}
+
+	public void incrementStorage(){
+		int currentLength = doubleList.length;
+		double[] newArray = new double[currentLength+14];
+		for(int i=0;i<currentLength;i++){
+			newArray[i] = doubleList[i];
+		}
+		doubleList = newArray;
+	}
+
+    private void insertDouble(int dataValueLocation, int offset, double inDouble){
+		int actualLocation = (dataValueLocation*5)+offset;
+		try{
+			doubleList[actualLocation] = inDouble;
+		} catch(Exception e){
+			// do something
+		}
+	}
+
+    private double getDouble(int dataValueLocation, int offset){
+		int actualLocation = (dataValueLocation*5)+offset;
+		try{
+			return doubleList[actualLocation];
+		} catch(Exception e){
+			// do something
+		}
+		return -1;
+	}
 
 	public void setNode (int node) {
 		this.node = node;
@@ -37,20 +73,24 @@ public class FunctionDataObject {
 		this.functionID = functionID;
 	}
 
-	public void setInclusivePercentage (double inclusivePercentage) {
-		this.inclusivePercentage = inclusivePercentage;
+	public void setInclusivePercentage (int metricIndex, double inclusivePercentage) {
+		insertDouble(metricIndex, 0, inclusivePercentage);
 	}
 
-	public void setInclusive (double inclusive) {
-		this.inclusive = inclusive;
+	public void setInclusive (int metricIndex, double inclusive) {
+		insertDouble(metricIndex, 1, inclusive);
 	}
 
-	public void setExclusivePercentage (double exclusivePercentage) {
-		this.exclusivePercentage = exclusivePercentage;
+	public void setExclusivePercentage (int metricIndex, double exclusivePercentage) {
+		insertDouble(metricIndex, 2, exclusivePercentage);
 	}
 
-	public void setExclusive (double exclusive) {
-		this.exclusive = exclusive;
+	public void setExclusive (int metricIndex, double exclusive) {
+		insertDouble(metricIndex, 3, exclusive);
+	}
+
+	public void setInclusivePerCall (int metricIndex, double inclusivePerCall) {
+		insertDouble(metricIndex, 4, inclusivePerCall);
 	}
 
 	public void setNumCalls (int numCalls) {
@@ -61,12 +101,12 @@ public class FunctionDataObject {
 		this.numSubroutines = numSubroutines;
 	}
 
-	public void setInclusivePerCall (double inclusivePerCall) {
-		this.inclusivePerCall = inclusivePerCall;
-	}
-
-	public void setMetric (String metric) {
-		this.metric = metric;
+	public void setMetric (int metricIndex, String metric) {
+		try {
+			this.metric[metricIndex] = metric;
+		} catch (Exception e) {
+			// do something
+		}
 	}
 
 	public int getNode () {
@@ -85,20 +125,24 @@ public class FunctionDataObject {
 		return this.functionID;
 	}
 
-	public double getInclusivePercentage () {
-		return this.inclusivePercentage;
+	public double getInclusivePercentage (int metricIndex) {
+		return getDouble(metricIndex, 0);
 	}
 
-	public double getInclusive () {
-		return this.inclusive;
+	public double getInclusive (int metricIndex) {
+		return getDouble(metricIndex, 1);
 	}
 
-	public double getExclusivePercentage () {
-		return this.exclusivePercentage;
+	public double getExclusivePercentage (int metricIndex) {
+		return getDouble(metricIndex, 2);
 	}
 
-	public double getExclusive () {
-		return this.exclusive;
+	public double getExclusive (int metricIndex) {
+		return getDouble(metricIndex, 3);
+	}
+
+	public double getInclusivePerCall (int metricIndex) {
+		return getDouble(metricIndex, 4);
 	}
 
 	public int getNumCalls () {
@@ -109,12 +153,8 @@ public class FunctionDataObject {
 		return this.numSubroutines;
 	}
 
-	public double getInclusivePerCall () {
-		return this.inclusivePerCall;
-	}
-
-	public String getMetric () {
-		return this.metric;
+	public String getMetric (int metricIndex) {
+		return metric[metricIndex];
 	}
 }
 

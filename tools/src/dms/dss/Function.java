@@ -3,7 +3,7 @@ package dms.dss;
 /**
  * Holds all the data for a function in the database.
  *
- * <P>CVS $Id: Function.java,v 1.5 2003/08/01 21:38:22 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.6 2003/08/07 20:23:07 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -11,7 +11,6 @@ public class Function {
 	private int functionIndexID;
 	private int functionID;
 	private String name;
-	private String metric;
 	private String group;
 	private int trialID;
 	private int experimentID;
@@ -29,10 +28,6 @@ public class Function {
 
 	public void setName (String name) {
 		this.name = name;
-	}
-
-	public void setMetric (String metric) {
-		this.metric = metric;
 	}
 
 	public void setGroup (String group) {
@@ -73,10 +68,6 @@ public class Function {
 
 	public String getGroup () {
 		return this.group;
-	}
-
-	public String getMetric () {
-		return this.metric;
 	}
 
 	public int getTrialID () {

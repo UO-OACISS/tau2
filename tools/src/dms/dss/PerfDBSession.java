@@ -1,4 +1,4 @@
-package dms.dss;
+ package dms.dss;
 
 import perfdb.util.dbinterface.*;
 import perfdb.util.io.*;
@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.17 2003/08/01 21:38:22 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.18 2003/08/07 20:23:08 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -295,9 +295,11 @@ public class PerfDBSession extends DataSession {
 		StringBuffer buf = new StringBuffer();
 		buf.append("select distinct f.id, f.function_number, f.name, ");
 		buf.append("f.group_name, f.trial, t.experiment, e.application, ");
+		buf.append("m.name, ");
 		buf.append("ms.inclusive_percentage, ms.inclusive, ");
 		buf.append("ms.exclusive_percentage, ms.exclusive, ");
 		buf.append("ms.call, ms.subroutines, ms.inclusive_per_call, ");
+		buf.append("m2.name, ");
 		buf.append("ts.inclusive_percentage, ts.inclusive, ");
 		buf.append("ts.exclusive_percentage, ts.exclusive, ");
 		buf.append("ts.call, ts.subroutines, ts.inclusive_per_call ");
@@ -305,6 +307,8 @@ public class PerfDBSession extends DataSession {
 		buf.append("inner join experiment e on t.experiment = e.id ");
 		buf.append("inner join interval_mean_summary ms on f.id = ms.function ");
 		buf.append("inner join interval_total_summary ts on f.id = ts.function ");
+		buf.append("inner join metric m on ms.metric = m.id ");
+		buf.append("inner join metric m2 on ts.metric = m.id ");
 		buf.append(whereClause);
 		// System.out.println(buf.toString());
 
@@ -323,23 +327,25 @@ public class PerfDBSession extends DataSession {
 				fun.setApplicationID(resultSet.getInt(7));
 				// get the mean summary data
 				FunctionDataObject funMS = new FunctionDataObject();
-				funMS.setInclusivePercentage(resultSet.getDouble(8));
-				funMS.setInclusive(resultSet.getDouble(9));
-				funMS.setExclusivePercentage(resultSet.getDouble(10));
-				funMS.setExclusive(resultSet.getDouble(11));
-				funMS.setNumCalls((int)(resultSet.getDouble(12)));
-				funMS.setNumSubroutines((int)(resultSet.getDouble(13)));
-				funMS.setInclusivePerCall(resultSet.getDouble(14));
+				funMS.setMetric(0, resultSet.getString(8));
+				funMS.setInclusivePercentage(0, resultSet.getDouble(9));
+				funMS.setInclusive(0, resultSet.getDouble(10));
+				funMS.setExclusivePercentage(0, resultSet.getDouble(11));
+				funMS.setExclusive(0, resultSet.getDouble(12));
+				funMS.setNumCalls((int)(resultSet.getDouble(13)));
+				funMS.setNumSubroutines((int)(resultSet.getDouble(14)));
+				funMS.setInclusivePerCall(0, resultSet.getDouble(15));
 				fun.setMeanSummary(funMS);
 				// get the total summary data
 				FunctionDataObject funTS = new FunctionDataObject();
-				funTS.setInclusivePercentage(resultSet.getDouble(15));
-				funTS.setInclusive(resultSet.getDouble(16));
-				funTS.setExclusivePercentage(resultSet.getDouble(17));
-				funTS.setExclusive(resultSet.getDouble(18));
-				funTS.setNumCalls((int)(resultSet.getDouble(19)));
-				funTS.setNumSubroutines((int)(resultSet.getDouble(20)));
-				funTS.setInclusivePerCall(resultSet.getDouble(21));
+				funTS.setMetric(0, resultSet.getString(16));
+				funTS.setInclusivePercentage(0, resultSet.getDouble(17));
+				funTS.setInclusive(0, resultSet.getDouble(18));
+				funTS.setExclusivePercentage(0, resultSet.getDouble(19));
+				funTS.setExclusive(0, resultSet.getDouble(20));
+				funTS.setNumCalls((int)(resultSet.getDouble(21)));
+				funTS.setNumSubroutines((int)(resultSet.getDouble(22)));
+				funTS.setInclusivePerCall(0, resultSet.getDouble(23));
 				fun.setTotalSummary(funTS);
 				funs.addElement(fun);
 				tmpFunction = (Function)functionHash.get(new Integer(fun.getIndexID()));
@@ -457,11 +463,12 @@ public class PerfDBSession extends DataSession {
 		buf.append("select distinct p.inclusive_percentage, ");
 		buf.append("p.inclusive, p.exclusive_percentage, p.exclusive, ");
 		buf.append("p.call, p.subroutines, p.inclusive_per_call, ");
-		buf.append("f.trial, p.node, p.context, p.thread, p.function, f.metric ");
+		buf.append("f.trial, p.node, p.context, p.thread, p.function, m.name, p.metric ");
 		buf.append("from interval_location_profile p ");
 		buf.append("inner join function f on f.id = p.function ");
 		buf.append("inner join trial t on f.trial = t.id ");
 		buf.append("inner join experiment e on e.id = t.experiment ");
+		buf.append("inner join metric m on p.metric = m.id ");
 		boolean gotWhile = false;
 		if (application != null) {
 			buf.append(" where e.application = " + application.getID());
@@ -555,7 +562,7 @@ public class PerfDBSession extends DataSession {
 			}
 			gotWhile = true;
 		}
-		buf.append(" order by f.trial, p.node, p.context, p.thread, p.function");
+		buf.append(" order by f.trial, p.function, p.metric, p.node, p.context, p.thread ");
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -563,18 +570,18 @@ public class PerfDBSession extends DataSession {
 	    	ResultSet resultSet = db.executeQuery(buf.toString());	
 	    	while (resultSet.next() != false) {
 				FunctionDataObject funDO = new FunctionDataObject();
-				funDO.setInclusivePercentage(resultSet.getDouble(1));
-				funDO.setInclusive(resultSet.getDouble(2));
-				funDO.setExclusivePercentage(resultSet.getDouble(3));
-				funDO.setExclusive(resultSet.getDouble(4));
+				funDO.setInclusivePercentage(0, resultSet.getDouble(1));
+				funDO.setInclusive(0, resultSet.getDouble(2));
+				funDO.setExclusivePercentage(0, resultSet.getDouble(3));
+				funDO.setExclusive(0, resultSet.getDouble(4));
 				funDO.setNumCalls((int)(resultSet.getDouble(5)));
 				funDO.setNumSubroutines((int)(resultSet.getDouble(6)));
-				funDO.setInclusivePerCall(resultSet.getDouble(7));
+				funDO.setInclusivePerCall(0, resultSet.getDouble(7));
 				funDO.setNode(resultSet.getInt(9));
 				funDO.setContext(resultSet.getInt(10));
 				funDO.setThread(resultSet.getInt(11));
 				funDO.setFunctionIndexID(resultSet.getInt(12));
-				funDO.setMetric(resultSet.getString(13));
+				funDO.setMetric(0, resultSet.getString(13));
 				functionData.addElement(funDO);
 	    	}
 			resultSet.close(); 
