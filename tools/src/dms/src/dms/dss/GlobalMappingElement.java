@@ -556,14 +556,14 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     private void insertDouble(int location, int offset, double d){
 	try{
-	    doubleList[(location*15)+offset] = d;}
+	    doubleList[(location*14)+offset] = d;}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GME01");}
     }
   
     private double getDouble(int location, int offset){
 	try{
-	    return doubleList[(location*15)+offset];}
+	    return doubleList[(location*14)+offset];}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GME02");}
 	return -1;
