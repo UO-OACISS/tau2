@@ -4,8 +4,8 @@
 *****************************************************************************
 **    Copyright 1997-99                                                    **
 **    Department of Computer and Information Science, University of Oregon **
-**    Research Center Juelich, ZAM Germany                                 **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+**    Research Center Juelich, ZAM Germany                                 **
 *****************************************************************************
 
 To use TAU with JAVA, you'll need Java 2 (jdk1.2).
