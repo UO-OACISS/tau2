@@ -700,6 +700,11 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     //####################################
     //End - Interface code.
     //####################################
+
+    public void resetDrawObecjts(){
+	drawObjects.clear();
+	drawObjects = null;
+    }
     
     private void setCalculatePanelSize(boolean calculatePanelSize){
 	this.calculatePanelSize = calculatePanelSize;}

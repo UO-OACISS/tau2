@@ -369,6 +369,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    else
 			name = false;
 		    sortLocalData();
+		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Descending Order")){
@@ -377,31 +378,37 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    else
 			order = 1;
 		    sortLocalData();
+		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Exclusive")){
 		    valueType = 2;
 		    sortLocalData();
+		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Inclusive")){
 		    valueType = 4;
 		    sortLocalData();
+		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Calls")){
 		    valueType = 6;
 		    sortLocalData();
+		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
 		    valueType = 8;
 		    sortLocalData();
+		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
 		    valueType = 10;
 		    sortLocalData();
+		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Microseconds")){
