@@ -24,7 +24,7 @@ extern "C" {
 #endif /* TAU_PAPI */
 
 
-#define SIZE_OF_INIT_ARRAY 6 //!!Change this if functions are added to the system!!
+#define SIZE_OF_INIT_ARRAY 7 //!!Change this if functions are added to the system!!
 
 
 //Some useful typedefs
@@ -52,6 +52,9 @@ class MultipleCounterLayer
   static bool linuxTimerMCLInit(int functionPosition);
   static void linuxTimerMCL(int tid, double values[]);
 
+  static bool sgiTimersMCLInit(int functionPosition);
+  static void sgiTimersMCL(int tid, double values[]);
+
   static bool papiMCLInit(int functionPosition);
   static void papiMCL(int tid, double values[]);
 
@@ -72,6 +75,16 @@ class MultipleCounterLayer
 
   static int gettimeofdayMCL_CP[1];
   static int gettimeofdayMCL_FP;
+
+#ifdef TAU_LINUX_TIMERS  
+  static int linuxTimerMCL_CP[1];
+  static int linuxTimerMCL_FP;
+#endif //TAU_LINUX_TIMERS
+
+#ifdef SGI_TIMERS
+  static int sgiTimersMCL_CP[1];
+  static int sgiTimersMCL_FP;
+#endif // SGI_TIMERS
   
 #ifdef TAU_PAPI
   static int papiMCL_CP[MAX_TAU_COUNTERS];
@@ -98,9 +111,6 @@ class MultipleCounterLayer
   static PCL_CNT_TYPE CounterList[MAX_TAU_COUNTERS];
   static PCL_FP_CNT_TYPE FpCounterList[MAX_TAU_COUNTERS];
 #endif//TAU_PCL
-
-  static int linuxTimerMCL_CP[1];
-  static int linuxTimerMCL_FP;
 
   static firstListType initArray[SIZE_OF_INIT_ARRAY];
   static secondListType functionArray[MAX_TAU_COUNTERS];
