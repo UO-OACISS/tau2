@@ -111,11 +111,11 @@ public class GprofOutputSession extends ParaProfDataSession{
 			int idx = inputString.indexOf("granularity: ");
 			if(idx==0 || idx==1){
 			    if(!callPathSection){
-				System.out.println("###### Call path section ######");
+				// System.out.println("###### Call path section ######");
 				callPathSection = true;
 			    }
 			    else{
-				System.out.println("###### Summary section ######");
+				// System.out.println("###### Summary section ######");
 				callPathSection = false;
 			    }
 			}
@@ -195,15 +195,15 @@ public class GprofOutputSession extends ParaProfDataSession{
 					// check for cycle line
 					if (inputString.indexOf("<cycle") >= 0) {
 						if(parent)
-				    		parents.add(getCycleLineData(inputString));
+				    		parents.add(getParentChildLineData(inputString));
 						else
-				    		children.add(getCycleLineData(inputString));
+				    		children.add(getParentChildLineData(inputString));
 					} else {
 						if(parent)
-				    		parents.add(getCycleLineData(inputString));
+				    		parents.add(getParentChildLineData(inputString));
 				    		//parents.add(getParentLineData(inputString));
 						else
-				    		children.add(getCycleLineData(inputString));
+				    		children.add(getParentChildLineData(inputString));
 				    		//children.add(getChildLineData(inputString));
 					}
 			    }
