@@ -79,6 +79,18 @@ $(TARGET).inst.cpp : $(TARGET).pdb $(TARGET).cpp $(TAUINSTR)
 $(TARGET).pdb : $(PDTPARSE) $(TARGET).cpp 
 	$(PDTPARSE) $(TARGET).cpp $(CFLAGS) 
 
+# When implicit rules are used in Makefiles, we can change the original rule
+#.C.o:
+#        $(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ ;
+#  to 
+#.C.o:
+#       $(PDTPARSE) $< $(CXXFLAGS) $(CPPFLAGS) 
+#       $(TAUINSTR) $*.pdb $< -o $*.inst.C ; 
+#	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $*.inst.C -o $@ ; 
+#       rm -f $*.pdb ;      
+# The same procedure is applicable to C and F90 source files as well.
+
+
 clean: 
 	$(RM) $(TARGET).o $(TARGET).inst.cpp $(TARGET) $(TARGET).pdb
 ##############################################
