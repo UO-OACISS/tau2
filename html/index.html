@@ -30,7 +30,7 @@ environment for parallel C++ applications.
 <PRE>
 <code>
 [FOR SGI]
-% cd /usr/local/packages/pdtoolkit-1.0
+% cd /usr/local/packages/pdtoolkit-1.1
 % ./configure -arch=IRIX64 -KCC
 [FOR LINUX PCs]
 % ./configure -KCC
@@ -38,22 +38,22 @@ environment for parallel C++ applications.
 <LI> <H3>Step Two: Configure <A HREF="http://www.acl.lanl.gov/tau">TAU</A> </H3>
 <PRE>
 <code>
-% cd /usr/local/packages/tau-2.6
+% cd /usr/local/packages/tau-2.7
 [FOR SGI]
-% ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS -pdt=/usr/local/packages/pdtoolkit-1.0
+% ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0.1 -smarts -SGITIMERS -pdt=/usr/local/packages/pdtoolkit-1.1 
 [FOR LINUX PCs]
-% ./configure -arch=linux -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -pdt=/usr/local/packages/pdtoolkit-1.0
+% ./configure -arch=linux -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0.1 -smarts -pdt=/usr/local/packages/pdtoolkit-1.1 
 % make install
 </PRE>
 </code>
 <LI> <H3>Step Three: Configure <A HREF="http://www.acl.lanl.gov/smarts">SMARTS</A></H3>
 <PRE>
 <code>
-% cd /usr/local/packages/smarts-1.0
+% cd /usr/local/packages/smarts-1.0.1
 [FOR SGI]
-% configure --with-arch=iris4d --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.6 --enable-64bit --enable-profile 
+% configure --with-arch=iris4d --prefix /usr/local/packages/smarts-1.0.1 --with-taudir=/usr/local/packages/tau-2.7 --enable-64bit --enable-profile 
 [FOR LINUX PCs]
-% configure --with-arch=i386-linux --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.6 --enable-profile 
+% configure --with-arch=i386-linux --prefix /usr/local/packages/smarts-1.0.1 --with-taudir=/usr/local/packages/tau-2.7 --enable-profile 
 % make
 % make install
 </code>
@@ -61,15 +61,21 @@ environment for parallel C++ applications.
 <LI> <H3>Step Four: Configure <A HREF="http://www.acl.lanl.gov/pooma">Pooma II</A></H3>
 <PRE>
 <code>
-% setenv TAUDIR     /usr/local/packages/tau-2.6
-% setenv PDTDIR     /usr/local/packages/pdtoolkit-1.0
-% setenv SMARTSDIR  /usr/local/packages/smarts-1.0
+% setenv TAUDIR     /usr/local/packages/tau-2.7
+% setenv PDTDIR     /usr/local/packages/pdtoolkit-1.1
+% setenv SMARTSDIR  /usr/local/packages/smarts-1.0.1
 [FOR SGI]
-% ./configure --arch SGI64KCC --suite PP --parallel --profile --opt
+% ./configure --arch SGI64KCC --suite PP --parallel --profile --opt -ex
 [FOR LINUX PCs]
-% ./configure --arch LINUXKCC --suite PP --parallel --profile --opt
-% setenv SUITE PP
+% ./configure --arch LINUXKCC --suite PP --parallel --profile --opt -ex
+% setenv POOMASUITE PP
 % make
+% cd examples/Solvers/SimpleJacobi
+% make
+% cd $POOMASUITE
+% ./SimpleJacobi
+% pprof
+% racy
 </code>
 </PRE>
 
