@@ -241,7 +241,11 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 				DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
 				Object userObject = selectedNode.getUserObject();
-				if(userObject instanceof ParaProfApplication){
+				if(selRow == 1){
+				   clickedOnObject = selectedNode;
+				    popup1.show(ParaProfManager.this, evt.getX(), evt.getY());
+				}
+				else if(userObject instanceof ParaProfApplication){
 				    if(((ParaProfApplication)userObject).dBApplication())
 					updateApplicationMetaDataMenuItem.setEnabled(true);
 				    else
@@ -401,8 +405,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
 		}
 		else if(arg.equals("Add Application")){
-		    if(clickedOnObject ){
-			ParaProfTrial paraProfTrial = (ParaProfTrial) clickedOnObject;
+		    if(clickedOnObject == standard){
+			ParaProfApplication application  = ParaProf.applicationManager.addApplication();
+			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+			application.setDMTN(applicationNode);
+			application.setName("New Application");
+			System.out.println("About to add an application!");
+			treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
+		    }
 		}
 		else if(arg.equals("Update Meta Data in DB")){
 		    //A few things to check here.
