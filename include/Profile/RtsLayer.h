@@ -139,11 +139,15 @@ class RtsLayer
 	
 	static void UnLockDB(void);
 
+	static void LockEnv(void);
+	
+	static void UnLockEnv(void);
+
 }; 
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 2004/08/21 21:58:16 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.20 2004/08/21 21:58:16 sameer Exp $ 
+ * $Revision: 1.21 $   $Date: 2005/01/05 01:57:47 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.21 2005/01/05 01:57:47 sameer Exp $ 
  ***************************************************************************/

@@ -48,15 +48,19 @@ class SprocLayer
 	static int RegisterThread(void); // called before any profiling code
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex
+        static int InitializeEnvMutexData(void);     // init tauEnv mutex
 	static int GetThreadId(void); 	 // gets 0..N-1 thread id
 	static int LockDB(void);	 // locks the tauDBMutex
 	static int UnLockDB(void);	 // unlocks the tauDBMutex
+	static int LockEnv(void);	 // locks the tauEnvMutex
+	static int UnLockEnv(void);	 // unlocks the tauEnvMutex
 
   private:
         static usptr_t * tauArena; // Shared memory arena /dev/zero on SGI
 	static int 	 tauThreadCount;     // counter
 	static usema_t * tauThreadCountMutex;  // to protect tauThreadCount
 	static usema_t * tauDBMutex;  // to protect TheFunctionDB
+	static usema_t * tauEnvMutex;  // second mutex
 	
 };
 #endif // TAU_SPROC 
@@ -67,8 +71,8 @@ class SprocLayer
 
 /***************************************************************************
  * $RCSfile: SprocLayer.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2001/06/20 20:50:28 $
- * POOMA_VERSION_ID: $Id: SprocLayer.h,v 1.1 2001/06/20 20:50:28 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2005/01/05 01:57:47 $
+ * POOMA_VERSION_ID: $Id: SprocLayer.h,v 1.2 2005/01/05 01:57:47 sameer Exp $
  ***************************************************************************/
 
 

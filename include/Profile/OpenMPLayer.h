@@ -53,13 +53,17 @@ class OpenMPLayer
 	static int RegisterThread(void); // called before any profiling code
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex
+        static int InitializeEnvMutexData(void);     // init tauEnv mutex
 	static int GetThreadId(void); 	 // gets 0..N-1 thread id
 	static int TotalThreads(void);   // gets number of threads
 	static int LockDB(void);	 // locks the tauDBMutex
 	static int UnLockDB(void);	 // unlocks the tauDBMutex
+	static int LockEnv(void);	 // locks the tauEnvMutex
+	static int UnLockEnv(void);	 // unlocks the tauEnvMutex
 
   private:
 	static omp_lock_t tauDBmutex;  // to protect TheFunctionDB
+	static omp_lock_t tauEnvmutex;  // second lock
 	
 };
 #endif // TAU_OPENMP
@@ -70,8 +74,8 @@ class OpenMPLayer
 
 /***************************************************************************
  * $RCSfile: OpenMPLayer.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2002/05/08 11:10:55 $
- * POOMA_VERSION_ID: $Id: OpenMPLayer.h,v 1.3 2002/05/08 11:10:55 sameer Exp $
+ * $Revision: 1.4 $   $Date: 2005/01/05 01:57:46 $
+ * POOMA_VERSION_ID: $Id: OpenMPLayer.h,v 1.4 2005/01/05 01:57:46 sameer Exp $
  ***************************************************************************/
 
 

@@ -48,16 +48,19 @@ class PthreadLayer
 	static int RegisterThread(void); // called before any profiling code
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex
+        static int InitializeEnvMutexData(void);     // init tauEnv mutex
 	static int GetThreadId(void); 	 // gets 0..N-1 thread id
 	static int LockDB(void);	 // locks the tauDBMutex
 	static int UnLockDB(void);	 // unlocks the tauDBMutex
-
+	static int LockEnv(void);	 // locks the tauEnvMutex
+	static int UnLockEnv(void);	 // unlocks the tauEnvMutex
   private:
 	static pthread_key_t 	   tauPthreadId; // tid 
 	static pthread_mutex_t     tauThreadcountMutex; // to protect counter
 	static pthread_mutexattr_t tauThreadcountAttr; // count attribute 
 	static int 		   tauThreadCount;     // counter
 	static pthread_mutex_t	   tauDBMutex;  // to protect TheFunctionDB
+	static pthread_mutex_t	   tauEnvMutex;  // to protect TheFunctionDB
 	static pthread_mutexattr_t tauDBAttr;   // DB mutex attribute
 	
 };
@@ -69,8 +72,8 @@ class PthreadLayer
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/07/16 17:21:00 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.2 1998/07/16 17:21:00 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2005/01/05 01:57:47 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.3 2005/01/05 01:57:47 sameer Exp $
  ***************************************************************************/
 
 

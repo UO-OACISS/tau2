@@ -48,10 +48,13 @@ class  JavaThreadLayer
 	static int * RegisterThread(JNIEnv * env_id); 
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex
+        static int InitializeEnvMutexData(void);     // init tauEnv mutex
 	static int GetThreadId(void); 	 	 // gets 0..N-1 thread id
 	static int GetThreadId(JNIEnv *env_id);	 // gets 0..N-1 thread id
 	static int LockDB(void);	 // locks the tauDBMutex
 	static int UnLockDB(void);	 // unlocks the tauDBMutex
+	static int LockEnv(void);	 // locks the tauEnvMutex
+	static int UnLockEnv(void);	 // unlocks the tauEnvMutex
 	static int TotalThreads(void); 	 // returns the thread count
 
 	static JVMPI_Interface 	    *tau_jvmpi_interface;
@@ -60,6 +63,7 @@ class  JavaThreadLayer
         static int		    tauThreadCount;  // Number of threads
 	static JVMPI_RawMonitor     tauNumThreadsLock; // to protect counter
 	static JVMPI_RawMonitor     tauDBMutex; // to protect counter
+	static JVMPI_RawMonitor     tauEnvMutex; // second mutex
 };
 #endif // JAVA 
 
@@ -69,8 +73,8 @@ class  JavaThreadLayer
 
 /***************************************************************************
  * $RCSfile: JavaThreadLayer.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2000/03/19 00:28:41 $
- * POOMA_VERSION_ID: $Id: JavaThreadLayer.h,v 1.1 2000/03/19 00:28:41 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2005/01/05 01:57:46 $
+ * POOMA_VERSION_ID: $Id: JavaThreadLayer.h,v 1.2 2005/01/05 01:57:46 sameer Exp $
  ***************************************************************************/
 
 

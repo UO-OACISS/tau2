@@ -54,15 +54,20 @@ class TulipThreadLayer
 	static int RegisterThread(void); // called before any profiling code
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex
+        static int InitializeEnvMutexData(void);     // init tauEnv mutex
 	static int GetThreadId(void); 	 // gets 0..N-1 thread id
 	static int LockDB(void);	 // locks the tauDBMutex
 	static int UnLockDB(void);	 // unlocks the tauDBMutex
+	static int LockEnv(void);	 // locks the tauEnvMutex
+	static int UnLockEnv(void);	 // unlocks the tauEnvMutex
 
   private:
 #ifdef SMARTS
 	static Mutex	   	tauDBMutex;  // to protect TheFunctionDB
+	static Mutex	   	tauEnvMutex;  // second mutex
 #else // SMARTS
 	static Tulip_Mutex	   tauDBMutex;  // to protect TheFunctionDB
+	static Tulip_Mutex	   tauEnvMutex;  // second mutex
 #endif // SMARTS
 	
 };
@@ -74,8 +79,8 @@ class TulipThreadLayer
 
 /***************************************************************************
  * $RCSfile: TulipThreadLayer.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 1998/09/17 15:22:08 $
- * POOMA_VERSION_ID: $Id: TulipThreadLayer.h,v 1.3 1998/09/17 15:22:08 sameer Exp $
+ * $Revision: 1.4 $   $Date: 2005/01/05 01:57:47 $
+ * POOMA_VERSION_ID: $Id: TulipThreadLayer.h,v 1.4 2005/01/05 01:57:47 sameer Exp $
  ***************************************************************************/
 
 
