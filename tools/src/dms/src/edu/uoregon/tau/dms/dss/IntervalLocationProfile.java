@@ -25,7 +25,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.15 2005/01/12 01:34:50 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.16 2005/01/20 00:19:24 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -458,7 +458,6 @@ public class IntervalLocationProfile extends Object {
         // get the results
         ResultSet resultSet = db.executeQuery(buf.toString());
         while (resultSet.next() != false) {
-            DatabaseAPI.itemsDone++;
 
             int metricIndex = 0;
             IntervalLocationProfile intervalLocationProfile = new IntervalLocationProfile();
@@ -558,48 +557,5 @@ public class IntervalLocationProfile extends Object {
         }
     }
 
-    static public void saveIntervalEventData(DB db, Hashtable newFunHash, Enumeration en, Hashtable newMetHash,
-            int saveMetricIndex) throws SQLException {
-        PreparedStatement statement = null;
-        if (db.getDBType().compareTo("oracle") == 0) {
-            statement = db.prepareStatement("INSERT INTO "
-                    + db.getSchemaPrefix()
-                    + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        } else {
-            statement = db.prepareStatement("INSERT INTO "
-                    + db.getSchemaPrefix()
-                    + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        }
-        IntervalLocationProfile fdo;
-        int i = 0;
-        Integer newMetricID = null;
-        while (en.hasMoreElements()) {
-            fdo = (IntervalLocationProfile) en.nextElement();
-            Integer newIntervalEventID = (Integer) newFunHash.get(new Integer(fdo.getIntervalEventID()));
-            // get the interval_event details
-            i = 0;
-            newMetricID = (Integer) newMetHash.get(new Integer(i));
-            while (newMetricID != null) {
-                if (saveMetricIndex < 0 || i == saveMetricIndex) {
-                    statement.setInt(1, newIntervalEventID.intValue());
-                    statement.setInt(2, fdo.getNode());
-                    statement.setInt(3, fdo.getContext());
-                    statement.setInt(4, fdo.getThread());
-                    statement.setInt(5, newMetricID.intValue());
-                    statement.setDouble(6, fdo.getInclusivePercentage(i));
-                    statement.setDouble(7, fdo.getInclusive(i));
-                    statement.setDouble(8, fdo.getExclusivePercentage(i));
-                    statement.setDouble(9, fdo.getExclusive(i));
-                    statement.setDouble(10, fdo.getNumCalls());
-                    statement.setDouble(11, fdo.getNumSubroutines());
-                    statement.setDouble(12, fdo.getInclusivePerCall(i));
-                    statement.executeUpdate();
-                }
-                newMetricID = (Integer) newMetHash.get(new Integer(++i));
-            }
-
-            DatabaseAPI.itemsDone++;
-        }
-        statement.close();
-    }
+   
 }

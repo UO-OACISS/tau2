@@ -24,7 +24,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: IntervalEvent.java,v 1.10 2004/12/29 00:00:44 amorris Exp $</P>
+ * <P>CVS $Id: IntervalEvent.java,v 1.11 2005/01/20 00:19:24 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -215,7 +215,6 @@ public class IntervalEvent {
         // get the results
         try {
             ResultSet resultSet = db.executeQuery(buf.toString());
-            DatabaseAPI.itemsDone++;
 
             IntervalEvent tmpIntervalEvent = null;
             while (resultSet.next() != false) {
@@ -278,12 +277,12 @@ public class IntervalEvent {
             statement.close();
         }
 
-        // save the intervalEvent mean summaries
+        // save the intervalEvent mean summary
         if (meanSummary != null) {
             meanSummary.saveMeanSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
         }
 
-        // save the intervalEvent total summaries
+        // save the intervalEvent total summary
         if (totalSummary != null) {
             totalSummary.saveTotalSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
         }

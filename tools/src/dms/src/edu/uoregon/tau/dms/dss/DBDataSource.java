@@ -23,7 +23,8 @@ public class DBDataSource extends DataSource {
     int itemsDone = 0;
 
     public int getProgress() {
-        return DatabaseAPI.getProgress();
+        return 0;
+        //return DatabaseAPI.getProgress();
     }
 
     public void cancelLoad() {

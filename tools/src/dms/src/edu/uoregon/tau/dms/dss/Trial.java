@@ -21,7 +21,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.16 2005/01/11 01:39:45 amorris Exp $
+ * CVS $Id: Trial.java,v 1.17 2005/01/20 00:19:24 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -483,7 +483,7 @@ public class Trial implements Serializable {
                 this.fields = new String[Trial.fieldNames.length];
             }
 
-            if (this.getDataSource() != null) { 
+            if (this.getDataSource() != null) {
                 // If the user is simply manipulating apps/exps/trials in the treeview
                 // there may not be a dataSource for this trial (it isn't loaded)
                 this.setField("node_count", Integer.toString(1 + this.getDataSource().getMaxNCTNumbers()[0]));
@@ -554,27 +554,90 @@ public class Trial implements Serializable {
         return newTrialID;
     }
 
-    public static void deleteTrial(DB db, int trialID) {
-        try {
+    private static void deleteAtomicLocationProfilesMySQL(DB db, int trialID) throws SQLException {
+        Vector atomicEvents = new Vector();
+        // create a string to hit the database
+        StringBuffer buf = new StringBuffer();
+        buf.append("select id ");
+        buf.append("from " + db.getSchemaPrefix() + "atomic_event where trial = ");
+        buf.append(trialID);
+
+        // System.out.println(buf.toString());
+
+        StringBuffer deleteString = new StringBuffer();
+        deleteString.append("DELETE FROM atomic_location_profile WHERE atomic_event IN (-1");
+
+        ResultSet resultSet = db.executeQuery(buf.toString());
+        while (resultSet.next() != false) {
+            deleteString.append(", " + resultSet.getInt(1));
+        }
+        resultSet.close();
+
+        //System.out.println("stmt = " + deleteString.toString() + ")");
+        PreparedStatement statement = db.prepareStatement(deleteString.toString() + ")");
+        statement.execute();
+        statement.close();
+    }
+
+    private static void deleteIntervalLocationProfilesMySQL(DB db, int trialID) throws SQLException {
+        Vector atomicEvents = new Vector();
+        // create a string to hit the database
+        StringBuffer buf = new StringBuffer();
+        buf.append("select id ");
+        buf.append("from " + db.getSchemaPrefix() + "interval_event where trial = ");
+        buf.append(trialID);
+
+        // System.out.println(buf.toString());
+
+        StringBuffer deleteString = new StringBuffer();
+        deleteString.append(" (-1");
+
+        ResultSet resultSet = db.executeQuery(buf.toString());
+        while (resultSet.next() != false) {
+            deleteString.append(", " + resultSet.getInt(1));
+        }
+        resultSet.close();
+
+        PreparedStatement statement = db.prepareStatement("DELETE FROM interval_location_profile WHERE interval_event IN"
+                + deleteString.toString() + ")");
+        statement.execute();
+        statement.close();
+
+        statement = db.prepareStatement("DELETE FROM interval_mean_summary WHERE interval_event IN"
+                + deleteString.toString() + ")");
+        statement.execute();
+        statement.close();
+
+        statement = db.prepareStatement("DELETE FROM interval_total_summary WHERE interval_event IN"
+                + deleteString.toString() + ")");
+        statement.execute();
+        statement.close();
+
+    }
+
+    public static void deleteTrial(DB db, int trialID) throws SQLException {
             // save this trial
             PreparedStatement statement = null;
 
             // delete from the atomic_location_profile table
             if (db.getDBType().compareTo("mysql") == 0) {
-                statement = db.prepareStatement(" DELETE atomic_location_profile.* FROM "
-                        + db.getSchemaPrefix()
-                        + "atomic_location_profile LEFT JOIN "
-                        + db.getSchemaPrefix()
-                        + "atomic_event ON atomic_location_profile.atomic_event = atomic_event.id WHERE atomic_event.trial = ?");
+
+                Trial.deleteAtomicLocationProfilesMySQL(db, trialID);
+
+                //                statement = db.prepareStatement(" DELETE atomic_location_profile.* FROM "
+                //                        + db.getSchemaPrefix()
+                //                        + "atomic_location_profile LEFT JOIN "
+                //                        + db.getSchemaPrefix()
+                //                        + "atomic_event ON atomic_location_profile.atomic_event = atomic_event.id WHERE atomic_event.trial = ?");
             } else {
                 // Postgresql, oracle, and DB2?
                 statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
                         + "atomic_location_profile WHERE atomic_event in (SELECT id FROM "
                         + db.getSchemaPrefix() + "atomic_event WHERE trial = ?)");
+                statement.setInt(1, trialID);
+                statement.execute();
+                statement.close();
             }
-            statement.setInt(1, trialID);
-            statement.execute();
-            statement.close();
 
             // delete the from the atomic_events table
             statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
@@ -585,46 +648,48 @@ public class Trial implements Serializable {
 
             // delete from the interval_location_profile table
             if (db.getDBType().compareTo("mysql") == 0) {
-                statement = db.prepareStatement(" DELETE interval_location_profile.* FROM "
-                        + db.getSchemaPrefix()
-                        + "interval_location_profile LEFT JOIN "
-                        + db.getSchemaPrefix()
-                        + "interval_event ON interval_location_profile.interval_event = interval_event.id WHERE interval_event.trial = ?");
+
+                Trial.deleteIntervalLocationProfilesMySQL(db, trialID);
+
+                //                statement = db.prepareStatement(" DELETE interval_location_profile.* FROM "
+                //                        + db.getSchemaPrefix()
+                //                        + "interval_location_profile LEFT JOIN "
+                //                        + db.getSchemaPrefix()
+                //                        + "interval_event ON interval_location_profile.interval_event = interval_event.id WHERE interval_event.trial = ?");
             } else {
                 // Postgresql and DB2?
                 statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
                         + "interval_location_profile WHERE interval_event IN (SELECT id FROM "
                         + db.getSchemaPrefix() + "interval_event WHERE trial = ?)");
+                statement.setInt(1, trialID);
+                statement.execute();
+                statement.close();
             }
-            statement.setInt(1, trialID);
-            statement.execute();
-            statement.close();
 
             // delete from the interval_mean_summary table
             if (db.getDBType().compareTo("mysql") == 0) {
-                statement = db.prepareStatement(" DELETE interval_mean_summary.* FROM interval_mean_summary LEFT JOIN interval_event ON interval_mean_summary.interval_event = interval_event.id WHERE interval_event.trial = ?");
+                //statement = db.prepareStatement(" DELETE interval_mean_summary.* FROM interval_mean_summary LEFT JOIN interval_event ON interval_mean_summary.interval_event = interval_event.id WHERE interval_event.trial = ?");
             } else {
                 // Postgresql and DB2?
                 statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
                         + "interval_mean_summary WHERE interval_event IN (SELECT id FROM "
                         + db.getSchemaPrefix() + "interval_event WHERE trial = ?)");
+                statement.setInt(1, trialID);
+                statement.execute();
+                statement.close();
             }
-            statement.setInt(1, trialID);
-            statement.execute();
-            statement.close();
 
             if (db.getDBType().compareTo("mysql") == 0) {
-                statement = db.prepareStatement(" DELETE interval_total_summary.* FROM interval_total_summary LEFT JOIN interval_event ON interval_total_summary.interval_event = interval_event.id WHERE interval_event.trial = ?");
+                //statement = db.prepareStatement(" DELETE interval_total_summary.* FROM interval_total_summary LEFT JOIN interval_event ON interval_total_summary.interval_event = interval_event.id WHERE interval_event.trial = ?");
             } else {
                 // Postgresql and DB2?
                 statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
                         + "interval_total_summary WHERE interval_event IN (SELECT id FROM "
                         + db.getSchemaPrefix() + "interval_event WHERE trial = ?)");
+                statement.setInt(1, trialID);
+                statement.execute();
+                statement.close();
             }
-
-            statement.setInt(1, trialID);
-            statement.execute();
-            statement.close();
 
             statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
                     + "interval_event WHERE trial = ?");
@@ -641,11 +706,6 @@ public class Trial implements Serializable {
             statement.setInt(1, trialID);
             statement.execute();
             statement.close();
-
-        } catch (SQLException e) {
-            System.out.println("An error occurred while deleting the trial.");
-            e.printStackTrace();
-        }
     }
 
     private boolean exists(DB db) {

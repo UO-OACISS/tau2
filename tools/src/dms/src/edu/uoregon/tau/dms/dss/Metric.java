@@ -8,7 +8,7 @@ import java.io.Serializable;
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.11 2005/01/06 23:17:28 amorris Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.12 2005/01/20 00:19:24 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -91,26 +91,4 @@ public class Metric implements Serializable {
         this.name = name;
     }
 
-    public int saveMetric(DB db, int newTrialID) throws SQLException {
-        int newMetricID = 0;
-        PreparedStatement stmt1 = null;
-        stmt1 = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-                + "metric (name, trial) VALUES (?, ?)");
-        stmt1.setString(1, getName());
-        stmt1.setInt(2, newTrialID);
-        stmt1.executeUpdate();
-        stmt1.close();
-
-        String tmpStr = new String();
-        if (db.getDBType().compareTo("mysql") == 0)
-            tmpStr = "select LAST_INSERT_ID();";
-        else if (db.getDBType().compareTo("db2") == 0)
-            tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
-        else if (db.getDBType().compareTo("oracle") == 0)
-            tmpStr = "select " + db.getSchemaPrefix() + "metric_id_seq.currval FROM dual";
-        else
-            tmpStr = "select currval('metric_id_seq');";
-        newMetricID = Integer.parseInt(db.getDataItem(tmpStr));
-        return newMetricID;
-    }
 }

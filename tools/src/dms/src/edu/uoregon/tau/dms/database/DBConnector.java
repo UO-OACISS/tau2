@@ -76,6 +76,7 @@ public class DBConnector implements DB {
     }
 
     public void setAutoCommit(boolean auto) throws SQLException {
+        //System.out.println ("setting AutoCommit to " + auto);
         conn.setAutoCommit(auto);
     }
 

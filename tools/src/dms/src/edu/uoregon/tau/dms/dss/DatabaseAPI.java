@@ -1,6 +1,7 @@
 package edu.uoregon.tau.dms.dss;
 
 import edu.uoregon.tau.dms.database.*;
+
 import java.util.*;
 import java.sql.*;
 
@@ -8,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.14 2005/01/19 02:30:02 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.15 2005/01/20 00:19:24 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  */
 public class DatabaseAPI {
 
@@ -28,6 +29,20 @@ public class DatabaseAPI {
     protected Vector atomicEvents = null;
     protected Vector atomicEventData = null;
 
+    // from datasession
+    private DB db = null;
+    private ConnectionManager connector;
+    private Hashtable intervalEventHash = null;
+    private Hashtable atomicEventHash = null;
+    private String configFileName = null;
+
+    private boolean cancelUpload = false;
+    
+    
+    public void cancelUpload() {
+        this.cancelUpload = true;
+    }
+    
     public String getMetricName(int metricID) {
         if (this.metrics == null) {
             if (this.trial != null) {
@@ -49,14 +64,6 @@ public class DatabaseAPI {
     public void setExperiment(Experiment experiment) {
         this.experiment = experiment;
     }
-
-    // from datasession
-
-    private DB db = null;
-    private ConnectionManager connector;
-    private Hashtable intervalEventHash = null;
-    private Hashtable atomicEventHash = null;
-    private String configFileName = null;
 
     public DatabaseAPI() {
         super();
@@ -106,12 +113,12 @@ public class DatabaseAPI {
 
     // returns Vector of Experiment objects
     public ListIterator getExperimentList() throws DatabaseException {
-       
+
         String whereClause = "";
         if (application != null)
             whereClause = "WHERE application = " + application.getID();
         return new DssIterator(Experiment.getExperimentList(db, whereClause));
-       
+
     }
 
     // returns Vector of Trial objects
@@ -216,8 +223,6 @@ public class DatabaseAPI {
         }
 
         intervalEvents = IntervalEvent.getIntervalEvents(this, db, whereClause);
-
-        DatabaseAPI.totalItems *= intervalEvents.size();
 
         if (intervalEventHash == null)
             intervalEventHash = new Hashtable();
@@ -513,7 +518,7 @@ public class DatabaseAPI {
 
     public int saveExperiment(Experiment exp) throws DatabaseException {
         try {
-        return exp.saveExperiment(db);
+            return exp.saveExperiment(db);
         } catch (SQLException e) {
             throw new DatabaseException("Error saving experiment", e);
         }
@@ -531,28 +536,45 @@ public class DatabaseAPI {
         return newTrialID;
     }
 
-    // save the metrics
-    private Hashtable saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) throws SQLException {
-        // System.out.print("Saving the metrics: ");
-        Hashtable newMetHash = new Hashtable();
-        Enumeration en = trial.getDataSource().getMetrics().elements();
-        Metric metric;
-        int i = 0;
-        while (en.hasMoreElements()) {
-            metric = (Metric) en.nextElement();
-            int newMetricID = 0;
-            if (saveMetricIndex < 0 || saveMetricIndex == i) {
-                newMetricID = metric.saveMetric(db, newTrialID);
-                //    System.out.print("\rSaving the metrics: " + (i + 1) + " records saved...");
-            }
-            newMetHash.put(new Integer(i), new Integer(newMetricID));
-            i++;
-        }
-        //  System.out.print("\n");
-        return newMetHash;
+    private int saveMetric(int trialID, Metric metric) throws SQLException {
+        int newMetricID = 0;
+        PreparedStatement stmt1 = null;
+        stmt1 = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                + "metric (name, trial) VALUES (?, ?)");
+        stmt1.setString(1, metric.getName());
+        stmt1.setInt(2, trialID);
+        stmt1.executeUpdate();
+        stmt1.close();
+
+        String tmpStr = new String();
+        if (db.getDBType().compareTo("mysql") == 0)
+            tmpStr = "select LAST_INSERT_ID();";
+        else if (db.getDBType().compareTo("db2") == 0)
+            tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
+        else if (db.getDBType().compareTo("oracle") == 0)
+            tmpStr = "select " + db.getSchemaPrefix() + "metric_id_seq.currval FROM dual";
+        else
+            tmpStr = "select currval('metric_id_seq');";
+        newMetricID = Integer.parseInt(db.getDataItem(tmpStr));
+        return newMetricID;
     }
 
-    // save the intervalEvents
+    private Hashtable saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) throws SQLException {
+        Hashtable metricHash = new Hashtable();
+        Enumeration en = trial.getDataSource().getMetrics().elements();
+        int i = 0;
+        while (en.hasMoreElements()) {
+            Metric metric = (Metric) en.nextElement();
+            int newMetricID = 0;
+            if (saveMetricIndex < 0 || saveMetricIndex == i) {
+                newMetricID = saveMetric(newTrialID, metric);
+            }
+            metricHash.put(new Integer(i), new Integer(newMetricID));
+            i++;
+        }
+        return metricHash;
+    }
+
     private Hashtable saveIntervalEvents(int newTrialID, Hashtable newMetHash, int saveMetricIndex)
             throws SQLException {
         //      System.out.print("Saving the intervalEvents: ");
@@ -566,14 +588,13 @@ public class DatabaseAPI {
                     saveMetricIndex);
             newFunHash.put(new Integer(intervalEvent.getID()), new Integer(newIntervalEventID));
             //System.out.print("\rSaving the intervalEvents: " + ++count + " records saved...");
-            DatabaseAPI.itemsDone++;
+            //DatabaseAPI.itemsDone++;
 
         }
         //     System.out.print("\n");
         return newFunHash;
     }
 
-    // save the intervalEvents
     private Hashtable saveAtomicEvents(int newTrialID) {
         //        System.out.print("Saving the user events:");
         Hashtable newUEHash = new Hashtable();
@@ -585,14 +606,13 @@ public class DatabaseAPI {
             int newAtomicEventID = atomicEvent.saveAtomicEvent(db, newTrialID);
             newUEHash.put(new Integer(atomicEvent.getID()), new Integer(newAtomicEventID));
             //System.out.print("\rSaving the user events: " + ++count + " records saved...");
-            DatabaseAPI.itemsDone++;
+            //DatabaseAPI.itemsDone++;
 
         }
         //    System.out.print("\n");
         return newUEHash;
     }
 
-    // save the intervalEvent data
     private void saveAtomicEventData(Hashtable newUEHash) {
         //    System.out.print("Saving the user event data:");
         Enumeration en = atomicEventData.elements();
@@ -652,17 +672,13 @@ public class DatabaseAPI {
     }
 
     // this stuff is a total hack to get some functionality that the new database API will have
-    static int totalItems;
-    static int itemsDone;
+    private int totalItems;
+    private int itemsDone;
 
-    public static int getProgress() {
+    public int getProgress() {
         if (totalItems != 0)
             return (int) ((float) itemsDone / (float) totalItems * 100);
         return 0;
-    }
-
-    public static void setTotalItems(int items) {
-        totalItems = items;
     }
 
     /**
@@ -677,13 +693,10 @@ public class DatabaseAPI {
         long start = System.currentTimeMillis();
 
         DataSource dataSource = trial.getDataSource();
-        
+
         //Build an array of group names. This speeds lookup of group names.
-        Iterator groupIterator = dataSource.getGroups();
-
         List groupList = new ArrayList();
-
-        for (; groupIterator.hasNext();) {
+        for (Iterator groupIterator = dataSource.getGroups(); groupIterator.hasNext();) {
             Group g = (Group) groupIterator.next();
             groupList.add(g.getName());
         }
@@ -696,7 +709,6 @@ public class DatabaseAPI {
         // get the metric count
         metrics = trial.getDataSource().getMetrics();
         int metricCount = metrics.size();
-        //  System.out.println("Found " + metricCount + " metrics...");
 
         // create the Vectors to store the data
         intervalEvents = new Vector();
@@ -706,9 +718,8 @@ public class DatabaseAPI {
 
         int fcount = 0;
         int ucount = 0;
-        // create the intervalEvents
-        //    System.out.print("Creating the intervalEvents:");
 
+        // create the intervalEvents
         for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
             Function f = (Function) it.next();
             if (f != null) {
@@ -735,61 +746,39 @@ public class DatabaseAPI {
                 // put the intervalEvent in the vector
                 intervalEvents.add(intervalEvent);
 
-                // get the total data
-                //     System.out.print("\rCreating the intervalEvents: " + ++fcount
-                //              + " intervalEvents found...");
-                IntervalLocationProfile funTS = new IntervalLocationProfile(metricCount);
-                IntervalLocationProfile funMS = new IntervalLocationProfile(metricCount);
+                IntervalLocationProfile ilpTotal = new IntervalLocationProfile(metricCount);
+                IntervalLocationProfile ilpMean = new IntervalLocationProfile(metricCount);
                 for (int i = 0; i < metricCount; i++) {
-                    funTS.setNumCalls(f.getTotalNumCalls());
-                    funTS.setNumSubroutines(f.getTotalNumSubr());
-                    funTS.setInclusivePercentage(i, f.getTotalInclusivePercent(i));
-                    funTS.setInclusive(i, f.getTotalInclusive(i));
-                    funTS.setExclusivePercentage(i, f.getTotalExclusivePercent(i));
-                    funTS.setExclusive(i, f.getTotalExclusive(i));
-                    funTS.setInclusivePerCall(i, f.getTotalInclusivePerCall(i));
-                    funMS.setNumCalls(f.getMeanNumCalls());
-                    funMS.setNumSubroutines(f.getMeanNumSubr());
-                    funMS.setInclusivePercentage(i, f.getMeanInclusivePercent(i));
-                    funMS.setInclusive(i, f.getMeanInclusive(i));
-                    funMS.setExclusivePercentage(i, f.getMeanExclusivePercent(i));
-                    funMS.setExclusive(i, f.getMeanExclusive(i));
-                    funMS.setInclusivePerCall(i, f.getMeanInclusivePerCall(i));
+                    ilpTotal.setNumCalls(f.getTotalNumCalls());
+                    ilpTotal.setNumSubroutines(f.getTotalNumSubr());
+                    ilpTotal.setInclusivePercentage(i, f.getTotalInclusivePercent(i));
+                    ilpTotal.setInclusive(i, f.getTotalInclusive(i));
+                    ilpTotal.setExclusivePercentage(i, f.getTotalExclusivePercent(i));
+                    ilpTotal.setExclusive(i, f.getTotalExclusive(i));
+                    ilpTotal.setInclusivePerCall(i, f.getTotalInclusivePerCall(i));
+                    ilpMean.setNumCalls(f.getMeanNumCalls());
+                    ilpMean.setNumSubroutines(f.getMeanNumSubr());
+                    ilpMean.setInclusivePercentage(i, f.getMeanInclusivePercent(i));
+                    ilpMean.setInclusive(i, f.getMeanInclusive(i));
+                    ilpMean.setExclusivePercentage(i, f.getMeanExclusivePercent(i));
+                    ilpMean.setExclusive(i, f.getMeanExclusive(i));
+                    ilpMean.setInclusivePerCall(i, f.getMeanInclusivePerCall(i));
                 }
-                intervalEvent.setTotalSummary(funTS);
-                intervalEvent.setMeanSummary(funMS);
+                intervalEvent.setTotalSummary(ilpTotal);
+                intervalEvent.setMeanSummary(ilpMean);
             }
         }
 
         // create the user events
-        //    System.out.print("\nCreating user events:");
         for (Iterator it = dataSource.getUserEvents(); it.hasNext();) {
             UserEvent ue = (UserEvent) it.next();
             if (ue != null) {
-                //            System.out.print(".");
-                //          System.out.print("\rCreating the user events: " + ++ucount
-                //                    + " user events found...");
-                // create a user event
                 AtomicEvent atomicEvent = new AtomicEvent(this);
                 atomicEvent.setName(ue.getName());
                 atomicEvent.setID(ue.getID());
-
-                //                // build the group name
-                //                int[] groupIDs = element.getGroups();
-                //                StringBuffer buf = new StringBuffer();
-                //                for (int i = 0; i < element.getNumberOfGroups(); i++) {
-                //                    if (i > 0)
-                //                        buf.append("|");
-                //                    buf.append(groupNames[groupIDs[i]]);
-                //                }
-                //                atomicEvent.setGroup(buf.toString());
-                // put the atomicEvent in the vector
                 atomicEvents.add(atomicEvent);
             }
         }
-
-        //    System.out.print("\nCreating the intervalEvent / user event data:");
-        StringBuffer groupsStringBuffer = new StringBuffer(10);
 
         for (Iterator it = trial.getDataSource().getNodes(); it.hasNext();) {
             Node node = (Node) it.next();
@@ -799,31 +788,30 @@ public class DatabaseAPI {
                     edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
                     Vector intervalEvents = thread.getFunctionProfiles();
                     Vector userevents = thread.getUserEventProfiles();
-                    //Write out intervalEvent data for this thread.
+
+                    // create interval location profiles
                     for (Enumeration e4 = intervalEvents.elements(); e4.hasMoreElements();) {
                         FunctionProfile fp = (FunctionProfile) e4.nextElement();
                         if (fp != null) {
-
-                            IntervalLocationProfile fdo = new IntervalLocationProfile(metricCount);
-                            fdo.setNode(thread.getNodeID());
-                            fdo.setContext(thread.getContextID());
-                            fdo.setThread(thread.getThreadID());
-                            fdo.setIntervalEventID(fp.getFunction().getID());
-                            fdo.setNumCalls(fp.getNumCalls());
-                            fdo.setNumSubroutines(fp.getNumSubr());
-                            // fdo.setInclusivePerCall(fp.getUserSecPerCall());
+                            IntervalLocationProfile ilp = new IntervalLocationProfile(metricCount);
+                            ilp.setNode(thread.getNodeID());
+                            ilp.setContext(thread.getContextID());
+                            ilp.setThread(thread.getThreadID());
+                            ilp.setIntervalEventID(fp.getFunction().getID());
+                            ilp.setNumCalls(fp.getNumCalls());
+                            ilp.setNumSubroutines(fp.getNumSubr());
                             for (int i = 0; i < metricCount; i++) {
-                                fdo.setInclusive(i, fp.getInclusive(i));
-                                fdo.setExclusive(i, fp.getExclusive(i));
-                                fdo.setInclusivePercentage(i, fp.getInclusivePercent(i));
-                                fdo.setExclusivePercentage(i, fp.getExclusivePercent(i));
-                                fdo.setInclusivePerCall(i, fp.getInclusivePerCall(i));
+                                ilp.setInclusive(i, fp.getInclusive(i));
+                                ilp.setExclusive(i, fp.getExclusive(i));
+                                ilp.setInclusivePercentage(i, fp.getInclusivePercent(i));
+                                ilp.setExclusivePercentage(i, fp.getExclusivePercent(i));
+                                ilp.setInclusivePerCall(i, fp.getInclusivePerCall(i));
                             }
-                            intervalEventData.add(fdo);
+                            intervalEventData.add(ilp);
                         }
                     }
 
-                    //Write out user event data for this thread.
+                    // create atomic events
                     if (userevents != null) {
                         for (Enumeration e4 = userevents.elements(); e4.hasMoreElements();) {
                             UserEventProfile uep = (UserEventProfile) e4.nextElement();
@@ -850,6 +838,8 @@ public class DatabaseAPI {
         totalItems = intervalEvents.size() + intervalEventData.size() + atomicEvents.size()
                 + atomicEventData.size();
 
+        // Now upload to the database
+
         try {
             db.setAutoCommit(false);
         } catch (SQLException e) {
@@ -861,22 +851,21 @@ public class DatabaseAPI {
         try {
             // output the trial data, which also saves the intervalEvents,
             // intervalEvent data, user events and user event data
-            if (saveMetricIndex < 0) {
-                //     System.out.println("\nSaving the trial...");
+            if (saveMetricIndex < 0) { // this means save the whole thing???
                 newTrialID = trial.saveTrial(db);
                 trial.setID(newTrialID);
-                Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
+                Hashtable metricHash = saveMetrics(newTrialID, trial, saveMetricIndex);
 
                 if (intervalEvents != null && intervalEvents.size() > 0) {
-                    Hashtable newFunHash = saveIntervalEvents(newTrialID, newMetHash, saveMetricIndex);
+                    Hashtable functionHash = saveIntervalEvents(newTrialID, metricHash, saveMetricIndex);
 
-                    IntervalLocationProfile.saveIntervalEventData(db, newFunHash, intervalEventData.elements(),
-                            newMetHash, saveMetricIndex);
+                    saveIntervalLocationProfiles(db, functionHash, intervalEventData.elements(), metricHash,
+                            saveMetricIndex);
                 }
                 if (atomicEvents != null && atomicEvents.size() > 0) {
-                    Hashtable newUEHash = saveAtomicEvents(newTrialID);
+                    Hashtable atomicEventHash = saveAtomicEvents(newTrialID);
                     if (atomicEventData != null && atomicEventData.size() > 0) {
-                        saveAtomicEventData(newUEHash);
+                        saveAtomicEventData(atomicEventHash);
                     }
                 }
 
@@ -885,10 +874,11 @@ public class DatabaseAPI {
                 newTrialID = trial.getID();
                 //   System.out.println("\nSaving the metric...");
                 Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
+
                 if (intervalEvents != null && intervalEvents.size() > 0) {
                     Hashtable newFunHash = saveIntervalEvents(newTrialID, newMetHash, saveMetricIndex);
-                    IntervalLocationProfile.saveIntervalEventData(db, newFunHash, intervalEventData.elements(),
-                            newMetHash, saveMetricIndex);
+                    saveIntervalLocationProfiles(db, newFunHash, intervalEventData.elements(), newMetHash,
+                            saveMetricIndex);
 
                 }
 
@@ -919,6 +909,369 @@ public class DatabaseAPI {
         return newTrialID;
     }
 
+    private Map uploadMetrics(int trialID, DataSource dataSource) throws SQLException {
+        Map map = new HashMap();
+
+        for (Iterator it = dataSource.getMetrics().iterator(); it.hasNext();) {
+            Metric metric = (Metric) it.next();
+
+            PreparedStatement stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                    + "metric (name, trial) VALUES (?, ?)");
+            stmt.setString(1, metric.getName());
+            stmt.setInt(2, trialID);
+            stmt.executeUpdate();
+            stmt.close();
+
+            String tmpStr = new String();
+            if (db.getDBType().compareTo("mysql") == 0)
+                tmpStr = "select LAST_INSERT_ID();";
+            else if (db.getDBType().compareTo("db2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
+            else if (db.getDBType().compareTo("oracle") == 0)
+                tmpStr = "select " + db.getSchemaPrefix() + "metric_id_seq.currval FROM dual";
+            else
+                tmpStr = "select currval('metric_id_seq');";
+            int dbMetricID = Integer.parseInt(db.getDataItem(tmpStr));
+            map.put(metric, new Integer(dbMetricID));
+        }
+        return map;
+    }
+
+    // fills the interval event table
+    private Map uploadFunctions(int trialID, DataSource dataSource) throws SQLException {
+        Map map = new HashMap();
+
+        for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
+            Function f = (Function) it.next();
+
+            String group = null;
+            Vector groups = f.getGroups();
+            StringBuffer allGroups = new StringBuffer();
+            if (groups != null) {
+                for (int i = 0; i < groups.size(); i++) {
+                    if (i > 0)
+                        allGroups.append("|");
+                    allGroups.append(((Group) groups.get(i)).getName());
+                }
+                if (groups.size() > 0)
+                    group = allGroups.toString();
+            }
+
+            PreparedStatement statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                    + "interval_event (trial, name, group_name) VALUES (?, ?, ?)");
+            statement.setInt(1, trialID);
+            statement.setString(2, f.getName());
+            statement.setString(3, group);
+            statement.executeUpdate();
+            statement.close();
+
+            String tmpStr = new String();
+            if (db.getDBType().compareTo("mysql") == 0)
+                tmpStr = "select LAST_INSERT_ID();";
+            else if (db.getDBType().compareTo("db2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
+            else if (db.getDBType().compareTo("oracle") == 0)
+                tmpStr = "select " + db.getSchemaPrefix() + "interval_event_id_seq.currval FROM dual";
+            else
+                tmpStr = "select currval('interval_event_id_seq');";
+            int newIntervalEventID = Integer.parseInt(db.getDataItem(tmpStr));
+
+            map.put(f, new Integer(newIntervalEventID));
+
+            this.itemsDone++;
+        }
+        return map;
+    }
+
+    // fills the interval event table
+    private Map uploadUserEvents(int trialID, DataSource dataSource) throws SQLException {
+        Map map = new HashMap();
+
+        String group = null; // no groups right now?
+        
+        for (Iterator it = dataSource.getUserEvents(); it.hasNext(); ) {
+            UserEvent ue = (UserEvent) it.next();
+            
+            PreparedStatement statement = null;
+            statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                    + "atomic_event (trial, name, group_name) VALUES (?, ?, ?)");
+            statement.setInt(1, trialID);
+            statement.setString(2, ue.getName());
+            statement.setString(3, group);
+            statement.executeUpdate();
+            statement.close();
+            
+            String tmpStr = new String();
+            if (db.getDBType().compareTo("mysql") == 0)
+                tmpStr = "select LAST_INSERT_ID();";
+            else if (db.getDBType().compareTo("db2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
+            else if (db.getDBType().compareTo("oracle") == 0)
+                tmpStr = "select " + db.getSchemaPrefix() + "atomic_event_id_seq.currval FROM dual";
+            else
+                tmpStr = "select currval('atomic_event_id_seq');";
+            int newAtomicEventID = Integer.parseInt(db.getDataItem(tmpStr));
+            map.put(ue, new Integer(newAtomicEventID));
+
+            this.itemsDone++;
+        }
+        return map;
+    }
+
+    private void addBatchFunctionProfile(PreparedStatement stmt, Thread thread, int metricID, int dbMetricID,
+            FunctionProfile fp, int intervalEventID) throws SQLException {
+
+        stmt.setInt(1, intervalEventID);
+        stmt.setInt(2, dbMetricID);
+        stmt.setDouble(3, fp.getInclusivePercent(metricID));
+        stmt.setDouble(4, fp.getInclusive(metricID));
+        stmt.setDouble(5, fp.getExclusivePercent(metricID));
+        stmt.setDouble(6, fp.getExclusive(metricID));
+        stmt.setDouble(7, fp.getNumCalls());
+        stmt.setDouble(8, fp.getNumSubr());
+        stmt.setDouble(9, fp.getInclusivePerCall(metricID));
+
+        if (thread.getNodeID() >= 0) {
+            stmt.setInt(10, thread.getNodeID());
+            stmt.setInt(11, thread.getContextID());
+            stmt.setInt(12, thread.getThreadID());
+        }
+
+        this.itemsDone++;
+
+        //stmt.addBatch();
+        stmt.executeUpdate();
+    }
+
+    private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map functionMap, Map metricMap)
+            throws SQLException {
+
+        PreparedStatement totalInsertStatement = null;
+        PreparedStatement meanInsertStatement = null;
+        PreparedStatement threadInsertStatement = null;
+
+        if (db.getDBType().compareTo("oracle") == 0) {
+            totalInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            meanInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            threadInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        } else {
+            totalInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            meanInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            threadInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        }
+
+        for (Iterator it5 = dataSource.getMetrics().iterator(); it5.hasNext();) {
+            Metric metric = (Metric) it5.next();
+            Integer dbMetricID = (Integer) metricMap.get(metric);
+
+            for (Iterator it4 = dataSource.getFunctions(); it4.hasNext();) {
+                Function function = (Function) it4.next();
+                Integer intervalEventID = (Integer) functionMap.get(function);
+
+                edu.uoregon.tau.dms.dss.Thread totalData = dataSource.getTotalData();
+
+                addBatchFunctionProfile(totalInsertStatement, totalData, metric.getID(), dbMetricID.intValue(),
+                        function.getTotalProfile(), intervalEventID.intValue());
+
+                edu.uoregon.tau.dms.dss.Thread meanData = dataSource.getMeanData();
+
+                addBatchFunctionProfile(meanInsertStatement, meanData, metric.getID(), dbMetricID.intValue(),
+                        function.getMeanProfile(), intervalEventID.intValue());
+
+                for (Iterator it = dataSource.getNodes(); it.hasNext();) {
+                    Node node = (Node) it.next();
+                    for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                        Context context = (Context) it2.next();
+                        for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                            edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+
+                            FunctionProfile fp = thread.getFunctionProfile(function);
+                            if (fp != null) { // only if this thread calls this function
+                                
+                                if (this.cancelUpload)
+                                    return;
+                                
+                                addBatchFunctionProfile(threadInsertStatement, thread, metric.getID(),
+                                        dbMetricID.intValue(), fp, intervalEventID.intValue());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+//        totalInsertStatement.executeBatch();
+//        meanInsertStatement.executeBatch();
+//        threadInsertStatement.executeBatch();
+
+        totalInsertStatement.close();
+        meanInsertStatement.close();
+        threadInsertStatement.close();
+
+    }
+
+    
+    
+    private void uploadUserEventProfiles(int trialID, DataSource dataSource, Map userEventMap)
+    	throws SQLException {
+        
+        for (Iterator it = dataSource.getNodes(); it.hasNext();) {
+            Node node = (Node) it.next();
+            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                Context context = (Context) it2.next();
+                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+
+                    for (Iterator it4 = thread.getUserEventProfiles().iterator(); it4.hasNext(); ) {
+                        UserEventProfile uep = (UserEventProfile) it4.next();
+                        
+                        if (this.cancelUpload)
+                            return;
+                        
+                        if (uep != null) {
+                            int atomicEventID = ((Integer)userEventMap.get(uep.getUserEvent())).intValue();
+                            
+                    	    PreparedStatement statement = null;
+                    	    statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "atomic_location_profile (atomic_event, node, context, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    	    statement.setInt(1, atomicEventID);
+                    	    statement.setInt(2, thread.getNodeID());
+                    	    statement.setInt(3, thread.getContextID());
+                    	    statement.setInt(4, thread.getThreadID());
+                    	    statement.setInt(5, uep.getUserEventNumberValue());
+                    	    statement.setDouble(6, uep.getUserEventMaxValue());
+                    	    statement.setDouble(7, uep.getUserEventMinValue());
+                    	    statement.setDouble(8, uep.getUserEventMeanValue());
+                    	    statement.setDouble(9, uep.getUserEventSumSquared());
+                    	    statement.executeUpdate();
+                            statement.close();
+                        }
+                        
+                    }
+                }
+            }
+        }
+                    
+    }
+    
+    private void computeUploadSize(DataSource dataSource) {
+        this.totalItems = 0;
+
+        for (Iterator it4 = dataSource.getFunctions(); it4.hasNext();) {
+            Function function = (Function) it4.next();
+            this.totalItems++;
+        }
+
+        int numMetrics = dataSource.getMetrics().size();
+
+        for (Iterator it4 = dataSource.getFunctions(); it4.hasNext();) {
+            Function function = (Function) it4.next();
+
+            this.totalItems += numMetrics; // total
+            this.totalItems += numMetrics; // mean
+
+            for (Iterator it = dataSource.getNodes(); it.hasNext();) {
+                Node node = (Node) it.next();
+                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                    Context context = (Context) it2.next();
+                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+                        FunctionProfile fp = thread.getFunctionProfile(function);
+                        if (fp != null) { // only if this thread calls this function
+                            this.totalItems += numMetrics; // this profile
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public synchronized int uploadTrial(Trial trial, int saveMetricIndex) throws DatabaseException {
+        long start = System.currentTimeMillis();
+
+        DataSource dataSource = trial.getDataSource();
+
+        try {
+            db.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new DatabaseException("Saving Trial Failed: couldn't set AutoCommit to false", e);
+        }
+
+        int newTrialID = -1;
+
+        try {
+            if (saveMetricIndex < 0) { // this means save the whole thing???
+                // save the trial metadata (which returns the new id)
+                newTrialID = trial.saveTrial(db);
+                trial.setID(newTrialID);
+
+                computeUploadSize(dataSource);
+                // upload the metrics and get a map that maps the metrics 0 -> n-1 to their unique DB IDs
+                Map metricMap = uploadMetrics(newTrialID, dataSource);
+                Map functionMap = uploadFunctions(newTrialID, dataSource);
+
+                uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap);
+
+                Map userEventMap = uploadUserEvents(newTrialID, dataSource);
+                
+                uploadUserEventProfiles(newTrialID, dataSource, userEventMap);
+
+                if (this.cancelUpload) {
+                    db.rollback();
+                    deleteTrial(newTrialID);
+                    return -1;
+                }
+                //  System.out.println("New Trial ID: " + newTrialID);
+            } else {
+                //                newTrialID = trial.getID();
+                //                //   System.out.println("\nSaving the metric...");
+                //                Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
+                //                
+                //                if (intervalEvents != null && intervalEvents.size() > 0) {
+                //                    Hashtable newFunHash = saveIntervalEvents(newTrialID, newMetHash, saveMetricIndex);
+                //                    saveIntervalLocationProfiles(db, newFunHash, intervalEventData.elements(),
+                //                            newMetHash, saveMetricIndex);
+                //
+                //                }
+                //
+                //                //   System.out.println("Modified Trial ID: " + newTrialID);
+            }
+
+        } catch (SQLException e) {
+            try {
+                db.rollback();
+                throw new DatabaseException("Saving Trial Failed, rollback successful", e);
+            } catch (SQLException e2) {
+                throw new DatabaseException("Saving Trial Failed, rollback failed!", e2);
+            }
+
+        }
+
+        try {
+            db.commit();
+            db.setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new DatabaseException("Saving Trial Failed: commit failed!", e);
+        }
+
+        long stop = System.currentTimeMillis();
+        long elapsedMillis = stop - start;
+        double elapsedSeconds = (double) (elapsedMillis) / 1000.0;
+//        System.out.println("Elapsed time: " + elapsedSeconds + " seconds.");
+        return newTrialID;
+    }
+
     public int saveApplication() {
         int appid = 0;
         if (application != null) {
@@ -935,11 +1288,11 @@ public class DatabaseAPI {
         return expid;
     }
 
-    public void deleteTrial(int trialID) {
+    public void deleteTrial(int trialID) throws SQLException {
         Trial.deleteTrial(db, trialID);
     }
 
-    public void deleteExperiment(int experimentID) throws DatabaseException {
+    public void deleteExperiment(int experimentID) throws DatabaseException, SQLException {
         // create a new DatabaseAPI to handle this request!
         // Why? Because we have to set the experiment to get the trials
         // and that will screw up the state of the current object.
@@ -958,7 +1311,7 @@ public class DatabaseAPI {
         Experiment.deleteExperiment(db, experimentID);
     }
 
-    public void deleteApplication(int applicationID) throws DatabaseException {
+    public void deleteApplication(int applicationID) throws DatabaseException, SQLException{
         // create a new DatabaseAPI to handle this request!
         // Why? Because we have to set the experiment to get the trials
         // and that will screw up the state of the current object.
@@ -1008,4 +1361,50 @@ public class DatabaseAPI {
             return -1;
         }
     }
+
+    public void saveIntervalLocationProfiles(DB db, Hashtable newFunHash, Enumeration en, Hashtable newMetHash,
+            int saveMetricIndex) throws SQLException {
+        PreparedStatement statement = null;
+        if (db.getDBType().compareTo("oracle") == 0) {
+            statement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        } else {
+            statement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        }
+        IntervalLocationProfile ilp;
+        int i = 0;
+        Integer newMetricID = null;
+        while (en.hasMoreElements()) {
+            ilp = (IntervalLocationProfile) en.nextElement();
+            Integer newIntervalEventID = (Integer) newFunHash.get(new Integer(ilp.getIntervalEventID()));
+            // get the interval_event details
+            i = 0;
+            newMetricID = (Integer) newMetHash.get(new Integer(i));
+            while (newMetricID != null) {
+                if (saveMetricIndex < 0 || i == saveMetricIndex) {
+                    statement.setInt(1, newIntervalEventID.intValue());
+                    statement.setInt(2, ilp.getNode());
+                    statement.setInt(3, ilp.getContext());
+                    statement.setInt(4, ilp.getThread());
+                    statement.setInt(5, newMetricID.intValue());
+                    statement.setDouble(6, ilp.getInclusivePercentage(i));
+                    statement.setDouble(7, ilp.getInclusive(i));
+                    statement.setDouble(8, ilp.getExclusivePercentage(i));
+                    statement.setDouble(9, ilp.getExclusive(i));
+                    statement.setDouble(10, ilp.getNumCalls());
+                    statement.setDouble(11, ilp.getNumSubroutines());
+                    statement.setDouble(12, ilp.getInclusivePerCall(i));
+                    statement.executeUpdate();
+                }
+                newMetricID = (Integer) newMetHash.get(new Integer(++i));
+            }
+
+            //DatabaseAPI.itemsDone++;
+        }
+        statement.close();
+    }
+
 };
