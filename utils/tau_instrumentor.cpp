@@ -24,9 +24,12 @@
 
 /* For C instrumentation */
 enum itemKind_t { ROUTINE, BODY_BEGIN, FIRST_EXECSTMT, BODY_END, RETURN, EXIT};
+enum tau_language_t { tau_c, tau_cplusplus, tau_fortran };
 
 /* For Pooma, add a -noinline flag */
 bool noinline_flag = false; /* instrument inlined functions by default */
+bool lang_specified = false; /* implicit detection of source language using PDB file */
+tau_language_t tau_language; /* language of the file */
 
 struct itemRef {
   itemRef(const pdbItem *i, bool isT) : item(i), isTarget(isT) {
@@ -1107,7 +1110,7 @@ int main(int argc, char **argv)
 
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-g groupname] [-i headerfile]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-g groupname] [-i headerfile] [-c|-c++|-fortran]"<<endl;
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -1147,6 +1150,30 @@ int main(int argc, char **argv)
 #endif /* DEBUG */
           noinline_flag = true;
         }
+        if (strcmp(argv[i], "-c")==0)
+ 	{
+#ifdef DEBUG
+          printf("Language explicitly specified as C\n");
+#endif /* DEBUG */
+          lang_specified = true;
+	  tau_language = tau_c;
+        }
+        if (strcmp(argv[i], "-c++")==0)
+ 	{
+#ifdef DEBUG
+          printf("Language explicitly specified as C++\n");
+#endif /* DEBUG */
+          lang_specified = true;
+	  tau_language = tau_cplusplus;
+        }
+        if (strcmp(argv[i], "-fortran")==0)
+ 	{
+#ifdef DEBUG
+          printf("Language explicitly specified as Fortran\n");
+#endif /* DEBUG */
+          lang_specified = true;
+	  tau_language = tau_fortran;
+        }
         if (strcmp(argv[i], "-g") == 0)
 	{
 	  ++i;
@@ -1184,12 +1211,32 @@ int main(int argc, char **argv)
        cout <<" *** FILE *** "<< (*it)->name()<<endl;
        cout <<"Language "<<l <<endl;
 #endif
-       if (l == PDB::LA_CXX)
-         instrumentCXXFile(p, *it, outFileName, group_name, header_file);
-       if (l == PDB::LA_C)
-         instrumentCFile(p, *it, outFileName, group_name, header_file);
-       if (l == PDB::LA_FORTRAN)
-         instrumentFFile(p, *it, outFileName, group_name);
+       if (lang_specified)
+       { /* language explicitly specified on command line*/
+	 switch (tau_language) { 
+	   case tau_cplusplus : 
+         	instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+		break;
+	   case tau_c :
+         	instrumentCFile(p, *it, outFileName, group_name, header_file);
+		break;
+	   case tau_fortran : 
+         	instrumentFFile(p, *it, outFileName, group_name);
+		break;
+	   default:
+		printf("Language unknown\n ");
+		break;
+	 }
+       }
+       else 
+       { /* implicit detection of language */
+         if (l == PDB::LA_CXX)
+           instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+         if (l == PDB::LA_C)
+           instrumentCFile(p, *it, outFileName, group_name, header_file);
+         if (l == PDB::LA_FORTRAN)
+           instrumentFFile(p, *it, outFileName, group_name);
+       }
      }
   }
 
@@ -1216,8 +1263,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.33 $   $Date: 2002/01/18 23:14:22 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.33 2002/01/18 23:14:22 sameer Exp $
+ * $Revision: 1.34 $   $Date: 2002/01/30 21:13:46 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.34 2002/01/30 21:13:46 sameer Exp $
  ***************************************************************************/
 
 
