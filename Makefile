@@ -14,14 +14,14 @@
  
 ########### Automatically modified by the configure script ############
 CONFIG_ARCH=sgi8k
-CONFIG_CC=cc
-CONFIG_CXX=CC
+CONFIG_CC=gcc
+CONFIG_CXX=KCC
 PCXX_OPT=-g
 USER_OPT=-g
 #######################################################################
  
-ABI 	     = -64		  #ENDIF##MIPSR8K#
-ISA          = -mips4             #ENDIF##MIPSR8K#
+#MIPSR8K#ABI 	     = -64		  #ENDIF#
+#MIPSR8K#ISA          = -mips4             #ENDIF#
 
 ############# Standard Defines ##############
 CC = $(CONFIG_CC) $(ABI) $(ISA)
