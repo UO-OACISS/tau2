@@ -239,7 +239,8 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #INTEL32_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
-#PCL#LEXTRA	       	       = -L$(PCLDIR)/lib -lpcl 	       #ENDIF#
+#SOL2#PCL_EXTRA_LIBS = -lcpc #ENDIF#
+#PCL#LEXTRA	       	       = -L$(PCLDIR)/lib -lpcl $(PCL_EXTRA_LIBS)      #ENDIF#
 #PAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
 #IA64PAPI#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
