@@ -31,7 +31,7 @@
 #****************************************************************************
 #*  Authors :    Sameer Shende (sameer@cs.uoregon.edu) (UO, LANL)
 #*		 Peter Beckman, Steve Karmesin (ACL, LANL)
-#*		 Kathleen Lindlan (UO)		
+#*		 Kathleen Lindlan, Ariya Lohavanichbutr (UO)		
 #*  Principal Investigators : 
 #*		 Janice Cuny, Allen Malony (UO)
 #*  TAU project was developed by Bernd Mohr, Lars Hansen, Kurt Windisch, 
@@ -347,6 +347,26 @@ do
     inteltflop=yes
     shift
     ;; 
+
+  -help)
+    echo "TAU Configuration Utility "
+    echo "***********************************************************************"
+    echo "Usage: configure [OPTIONS]"
+    echo "  where [OPTIONS] are:"
+    echo "-c++=<compiler>  ............................ specify the C++ compiler."
+    echo "-cc=<compiler> ................................ specify the C compiler."
+    echo "-useropt='<parameters>' ............... list of commandline parameters."
+    echo "-pthread .................................. Use pthread thread package."
+    echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
+    echo "-smarts .................. Use SMARTS API for threads (use with above)."
+    echo "-TRACE ..................................... Generate TAU event traces."
+    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
+    echo "-PROFILESTATS .................. Enable standard deviation calculation."
+    echo "-PROFILECOUNTERS .... Use Hardware Performance Counters (default time)."
+    echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
+    echo "-help ...................................... display this help message."
+    exit
+    ;;
 
   -*)
     echo "ERROR: Command line switch \`$arg' not recognized" 1>&2

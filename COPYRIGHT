@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.acl.lanl.gov/tau		           **
 *****************************************************************************
-**    Copyright 1997  						   	   **
+**    Copyright 1998  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
@@ -30,7 +30,7 @@
 *****************************************************************************
 **  Authors :    Sameer Shende (sameer@cs.uoregon.edu) (UO, LANL)
 **		 Peter Beckman, Steve Karmesin (ACL, LANL)
-**		 Kathleen Lindlan (UO)		
+**		 Kathleen Lindlan, Ariya Lohavanichbutr (UO)		
 **  Principal Investigators : 
 **		 Janice Cuny, Allen Malony (UO)
 **  TAU project was developed by Bernd Mohr, Lars Hansen, Kurt Windisch, 

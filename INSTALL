@@ -74,19 +74,20 @@ To compile this package:
 source code and type `./configure'. Running `configure' takes a minute or 
 two.  While it is running, it prints some messages that tell what it is doing. 
    configure takes the following optional arguments:
-   % ./configure -cc=<C Compiler> -c++=<C++ Compiler> 
-     -useropt='<list of commandline parameters>'  
-     -gnu   
-     -sgi
-     -ibm
-     -dec
-     -INTELTFLOP
-     -PROFILECOUNTERS
-     -PROFILECALLS
-     -PROFILESTATS
-     -TRACE
-     -SGITIMERS
-     -pthread
+Usage: configure [OPTIONS]
+  where [OPTIONS] are:
+-c++=<compiler>  ............................ specify the C++ compiler.
+-cc=<compiler> ................................ specify the C compiler.
+-useropt='<parameters>' ............... list of commandline parameters.
+-pthread .................................. Use pthread thread package.
+-tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
+-smarts .................. Use SMARTS API for threads (use with above).
+-TRACE ..................................... Generate TAU event traces.
+-PROFILE ............ Generate profiles (summary statistics) (default).
+-PROFILESTATS .................. Enable standard deviation calculation.
+-PROFILECOUNTERS .... Use Hardware Performance Counters (default time).
+-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
+-help ...................................... display this help message.
 
 Note: By default if 
    % ./configure 
@@ -113,6 +114,9 @@ Note: By default if
    TAU_REGISTER_THREAD() should be used in the spawned thread prior to any 
    profiling calls (see examples/threads).
 
+   -tulipthread=<dir> -smarts should be used to specify the smarts directory
+   and enable the smarts interface. This is required for Pooma users.
+
    Example:
    On SGI Origin 2000, 
    % ./configure -c++=KCC 
@@ -122,6 +126,10 @@ Note: By default if
    % ./configure -TRACE -PROFILE 
    or with g++ 2.8.1+
    % ./configure -useropt=-fguiding-decls
+   or 
+   % ./configure -c++=KCC -SGITIMERS -tulipthread=/home/smarts/build/smarts-1.0
+     -smarts -useropt=-I/home/smarts/build/smarts-1.0/machine-specific/iris4d 
+
   Configure changes Makefiles in all subdirectories. It replaces system 
   dependent options and profiling options. The compilation flags associated
   with the above profiling options are :
