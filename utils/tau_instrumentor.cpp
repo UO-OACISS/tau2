@@ -275,8 +275,14 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
   {
     pdbRoutine::locvec retlocations = (*rit)->returnLocations();
     pdbRoutine::locvec stoplocations = (*rit)->stopLocations();
+
+/* We do not instrument Fortran functions for now as there's a bug in f95parse
+   which does not print out the rret record for the end of the function. When
+   this is fixed, the RO_FINT check below should be removed. */
+
     if ( (*rit)->location().file() == file &&  
          ((*rit)->kind() != pdbItem::RO_FSTFN) &&  
+         ((*rit)->kind() != pdbItem::RO_FINT) &&  
 	 ((*rit)->firstExecStmtLocation().file()) && 
 	 (instrumentEntity((*rit)->fullName())) )
     {
@@ -1485,8 +1491,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.56 $   $Date: 2003/12/11 22:47:56 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.56 2003/12/11 22:47:56 sameer Exp $
+ * $Revision: 1.57 $   $Date: 2004/04/28 18:42:21 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.57 2004/04/28 18:42:21 sameer Exp $
  ***************************************************************************/
 
 
