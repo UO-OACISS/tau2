@@ -203,6 +203,25 @@ insert into interval_total_summary_temp (select interval_event, metric, inclusiv
 insert into interval_mean_summary_temp (select interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call from interval_mean_summary);
 
 
+
+
+select setval('application_temp_id_seq', (nextval('application_id_seq') - 1));
+select setval('experiment_temp_id_seq', (nextval('experiment_id_seq') - 1));
+select setval('trial_temp_id_seq', (nextval('trial_id_seq') - 1));
+select setval('metric_temp_id_seq', (nextval('metric_id_seq') - 1));
+select setval('interval_event_temp_id_seq', (nextval('interval_event_id_seq') - 1));
+select setval('atomic_event_temp_id_seq', (nextval('atomic_event_id_seq') - 1));
+
+
+
+drop INDEX experiment_application_index;
+drop INDEX trial_experiment_index;
+drop INDEX interval_event_trial_index;
+drop INDEX interval_loc_interval_event_metric_index;
+drop INDEX interval_total_interval_event_metric_index;
+drop INDEX interval_mean_interval_event_metric_index;
+drop INDEX interval_loc_f_m_n_c_t_index;
+
 drop table interval_mean_summary CASCADE;
 drop table interval_total_summary CASCADE;
 drop table interval_location_profile CASCADE;
@@ -213,15 +232,6 @@ drop table metric CASCADE;
 drop table trial CASCADE;
 drop table experiment CASCADE;
 drop table application CASCADE;
-
-
-drop INDEX experiment_application_index;
-drop INDEX trial_experiment_index;
-drop INDEX interval_event_trial_index;
-drop INDEX interval_loc_interval_event_metric_index;
-drop INDEX interval_total_interval_event_metric_index;
-drop INDEX interval_mean_interval_event_metric_index;
-drop INDEX interval_loc_f_m_n_c_t_index;
 
 
 
@@ -437,6 +447,16 @@ insert into interval_total_summary (select interval_event, metric, inclusive_per
 
 insert into interval_mean_summary (select interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call, sum_exclusive_squared from interval_mean_summary_temp);
 
+
+
+select setval('application_id_seq', (nextval('application_temp_id_seq') - 1));
+
+select setval('application_id_seq', (nextval('application_temp_id_seq') - 1));
+select setval('experiment_id_seq', (nextval('experiment_temp_id_seq') - 1));
+select setval('trial_id_seq', (nextval('trial_temp_id_seq') - 1));
+select setval('metric_id_seq', (nextval('metric_temp_id_seq') - 1));
+select setval('interval_event_id_seq', (nextval('interval_event_temp_id_seq') - 1));
+select setval('atomic_event_id_seq', (nextval('atomic_event_temp_id_seq') - 1));
 
 drop table interval_mean_summary_temp CASCADE;
 drop table interval_total_summary_temp CASCADE;
