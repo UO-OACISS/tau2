@@ -78,6 +78,12 @@ openmp		- Shows how to manually instrument an OpenMP program using the
 		  the differences in instrumentation and Makefiles. TAU needs to
 		  be configured with the -openmp option to use this. 
 
+opari		- Opari is an OpenMP directive rewriting tool that works with 
+		  TAU. Configure TAU with -opari=<dir> option to use this. This
+		  provides detailed instrumentation of OpenMP constructs. There 
+		  are subdirectories for C++ and OpenMPI to demonstrate the use
+		  of this tool. 
+
 openmpi		- Illustrates TAU's support for hybrid exection models in the 
 		  form of MPI for message passing and OpenMP threads. TAU needs
 		  to be configured with -mpiinc=<dir> -mpilib=<dir> -openmp
