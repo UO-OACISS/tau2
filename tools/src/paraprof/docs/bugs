@@ -94,7 +94,7 @@ When saving an image to the full screen, image looses a bit at the bottom.
 # Report 10
 # Report 
 # Date: 17th June 2004
-# Status: (outstanding)
+# Status: (Completed - Robert Bell (5th August 2004))
 # Reporter: Sameer Shende (University of Oregon)
 When saving an image, the header gets cropped for large names.
 
