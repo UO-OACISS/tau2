@@ -685,6 +685,11 @@ if [ $machine = sgi8k -a $cxx_compiler = g++ ]
       fixmakeargs="$fixmakeargs SGIGNU"
 fi
 
+if [ $machine = t3e -a $cxx_compiler = KCC ]
+  then
+      fixmakeargs="$fixmakeargs CRAYKAI"
+fi
+
 if [ $debugprof = yes ]
   then
     fixmakeargs="$fixmakeargs DEBUGPROF"
