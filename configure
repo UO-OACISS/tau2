@@ -111,6 +111,7 @@ cxx_compiler=default
 fixmakeargs=""
 pcxxopt=-g
 useropt=
+extradir=
 awe=no
 pthread=no
 noex=no
@@ -122,6 +123,7 @@ tcltk=yes
 tcltkfile="/"
 kai=no
 pgi=no
+fujitsu=no
 stdcxxlib=no
 inteltflop=no
 profile=no
@@ -166,11 +168,11 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC ]
       then
         cxx_compiler=$myarg
       else
-      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs' and 'pgCC'"
+      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs' and 'pgCC' and 'FCC' "
 #      exit 1
     fi
     shift
@@ -709,6 +711,8 @@ case $cxx_compiler in
       echo "Default C++ compiler will be PGI pgCC C++ Compiler"
       pgi=yes
       pgiflag=`pgCC -help | head -1 | grep 1.7 | wc -l`
+      extradir=`which pgCC | sed s/pgCC/../`
+
       if [ $pgiflag = 1 ] 
       then
 	echo  "Using PGI ver 1.7 Compiler"
@@ -716,6 +720,13 @@ case $cxx_compiler in
       else
         fixmakeargs="$fixmakeargs PGI PGICC"
       fi
+      ;;
+
+   FCC)
+      echo "Default C++ compiler will be Fujitsu C++ Compiler"	 
+      fujitsu=yes
+      extradir=`which FCC | sed s/FCC/../`
+      fixmakeargs="$fixmakeargs FUJITSU"
       ;;
 
    *)
@@ -755,7 +766,7 @@ then
   fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt $fixmakeargs"
 fi
 
-fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt $fixmakeargs"
+fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt extradir=$extradir $fixmakeargs"
 
 ######################################################################
 # discover the paths for standard system include directories
@@ -810,7 +821,7 @@ EOF
     fixmakeargs="$fixmakeargs NORTTI"
   fi 
 fi
-rm -f get_typeinfo1.C get_typeinfo2.C get_typeinfo*.o
+rm -f get_typeinfo1.C get_typeinfo2.C get_typeinfo*.o *.ti *.ii
 
 ######################################################################
 # Save C++ compiler, C compiler, and USEROPT for build
@@ -1172,6 +1183,11 @@ fi
 if [ $pgi = yes ]
   then
     tauoptions="${tauoptions}-pgi"
+fi 
+
+if [ $fujitsu = yes ]
+  then
+    tauoptions="${tauoptions}-fujitsu"
 fi 
 
 if [ $noex = yes ]
