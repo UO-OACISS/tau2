@@ -66,7 +66,7 @@ $(TARGET).o : $(TARGET).f90 ppm.o
 	@echo "Creating $(TARGET).o:"
 	$(RM) opari.rc
 	$(OPARI_TOOL) -nosrc -table opari.tab.c $*.f90 $*.pomp.f90
-	$(PDTF90PARSE) $*.pomp.f90
+	$(PDTF90PARSE) $*.pomp.f90 -MPDT_MODULES
 	$(TAUINSTR) $*.pomp.pdb $*.pomp.f90 -o $*.inst.f90
 	$(F90) $(FFLAGS) -c $*.inst.f90 -o $@
 
@@ -74,6 +74,11 @@ ppm.o : ppm.f90
 	@echo "*********************************************************"
 	@echo "Creating ppm.o: "
 	$(PDTF90PARSE) $<
+	if [ -d PDT_MODULES ] ; then true; \
+	  else mkdir PDT_MODULES ; fi
+	if [ ! -f PPM.mod ] ; then true ; \
+	  else mv PPM.mod PDT_MODULES ; fi 
+	   
 	$(TAUINSTR) $*.pdb $< -o $*.inst.f90
 	$(F90) $(FFLAGS) -c $*.inst.f90 -o $@
 
@@ -92,7 +97,7 @@ mytimer.o : mytimer.c
 clean: 	
 	@echo "*********************************************************"
 	@echo "Cleaning... :"
-	$(RM) $(TARGET).o $(TARGET) mytimer.o ppm.o *.mod* *.pdb *.tab.* *.pomp.f90 *.inst.* opari.rc *.inc
+	$(RM) -r $(TARGET).o $(TARGET) mytimer.o ppm.o *.mod* *.pdb *.tab.* *.pomp.f90 *.inst.* opari.rc *.inc PDT_MODULES
 ##############################################
 
 $(PDTF90PARSE):
