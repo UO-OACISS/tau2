@@ -12,21 +12,23 @@
 #include "omperf_lib.h"
 #include <Profile/Profiler.h>
 
+#define OpenMP TAU_USER
 
-TAU_GLOBAL_TIMER(tatomic, "atomic enter/exit", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tbarrier, "barrier enter/exit", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tcriticalb, "critical begin/end", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tcriticale, "critical enter/exit", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tfor, "for enter/exit", "[OpenMP]", TAU_DEFAULT);
-TAU_GLOBAL_TIMER(tmaster, "master begin/end", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tparallelb, "parallel begin/end", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tparallelf, "parallel fork/join", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tsectionb, "section begin/end", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tsectione, "sections enter/exit", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tsingleb, "single begin/end", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tsinglee, "single enter/exit", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tworkshare, "workshare enter/exit", "[OpenMP]", TAU_DEFAULT); 
-TAU_GLOBAL_TIMER(tregion, "region begin/end", "[OpenMP]", TAU_DEFAULT); 
+
+TAU_GLOBAL_TIMER(tatomic, "atomic enter/exit", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tbarrier, "barrier enter/exit", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tcriticalb, "critical begin/end", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tcriticale, "critical enter/exit", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tfor, "for enter/exit", "[OpenMP]", OpenMP);
+TAU_GLOBAL_TIMER(tmaster, "master begin/end", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tparallelb, "parallel begin/end", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tparallelf, "parallel fork/join", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tsectionb, "section begin/end", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tsectione, "sections enter/exit", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tsingleb, "single begin/end", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tsinglee, "single enter/exit", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tworkshare, "workshare enter/exit", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tregion, "region begin/end", "[OpenMP]", OpenMP); 
 
 #define FSUB(name) name##_
 
@@ -468,7 +470,7 @@ void omperf_end(struct ompregdescr* r) {
 }
 
 void omperf_init_lock(omp_lock_t *s) {
-  TAU_PROFILE("omp_init_lock", "[OpenMP]", TAU_DEFAULT);
+  TAU_PROFILE("omp_init_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: init lock\n", omp_get_thread_num());
@@ -478,7 +480,7 @@ void omperf_init_lock(omp_lock_t *s) {
 }
 
 void omperf_destroy_lock(omp_lock_t *s) {
-  TAU_PROFILE("omp_destroy_lock", "[OpenMP]", TAU_DEFAULT);
+  TAU_PROFILE("omp_destroy_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: destroy lock\n", omp_get_thread_num());
@@ -488,7 +490,7 @@ void omperf_destroy_lock(omp_lock_t *s) {
 }
 
 void omperf_set_lock(omp_lock_t *s) {
-  TAU_PROFILE("omp_set_lock", "[OpenMP]", TAU_DEFAULT);
+  TAU_PROFILE("omp_set_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: set lock\n", omp_get_thread_num());
@@ -498,7 +500,7 @@ void omperf_set_lock(omp_lock_t *s) {
 }
 
 void omperf_unset_lock(omp_lock_t *s) {
-  TAU_PROFILE("omp_unset_lock", "[OpenMP]", TAU_DEFAULT);
+  TAU_PROFILE("omp_unset_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: unset lock\n", omp_get_thread_num());
@@ -508,7 +510,7 @@ void omperf_unset_lock(omp_lock_t *s) {
 }
 
 int  omperf_test_lock(omp_lock_t *s) {
-  TAU_PROFILE("omp_test_lock", "[OpenMP]", TAU_DEFAULT);
+  TAU_PROFILE("omp_test_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: test lock\n", omp_get_thread_num());
@@ -518,7 +520,7 @@ int  omperf_test_lock(omp_lock_t *s) {
 }
 
 void omperf_init_nest_lock(omp_nest_lock_t *s) {
-  TAU_PROFILE("omp_init_nest_lock", "[OpenMP]", TAU_DEFAULT);
+  TAU_PROFILE("omp_init_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: init nestlock\n", omp_get_thread_num());
@@ -528,7 +530,7 @@ void omperf_init_nest_lock(omp_nest_lock_t *s) {
 }
 
 void omperf_destroy_nest_lock(omp_nest_lock_t *s) {
-  TAU_PROFILE("omp_destroy_nest_lock", "[OpenMP]", TAU_DEFAULT);
+  TAU_PROFILE("omp_destroy_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: destroy nestlock\n", omp_get_thread_num());
@@ -538,7 +540,7 @@ void omperf_destroy_nest_lock(omp_nest_lock_t *s) {
 }
 
 void omperf_set_nest_lock(omp_nest_lock_t *s) {
-  TAU_PROFILE("omp_set_nest_lock", "[OpenMP]", TAU_DEFAULT);
+  TAU_PROFILE("omp_set_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: set nestlock\n", omp_get_thread_num());
@@ -548,7 +550,7 @@ void omperf_set_nest_lock(omp_nest_lock_t *s) {
 }
 
 void omperf_unset_nest_lock(omp_nest_lock_t *s) {
-  TAU_PROFILE("omp_unset_nest_lock", "[OpenMP]", TAU_DEFAULT);
+  TAU_PROFILE("omp_unset_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: unset nestlock\n", omp_get_thread_num());
@@ -558,7 +560,7 @@ void omperf_unset_nest_lock(omp_nest_lock_t *s) {
 }
 
 int  omperf_test_nest_lock(omp_nest_lock_t *s) {
-  TAU_PROFILE("omp_test_nest_lock", "[OpenMP]", TAU_DEFAULT);
+  TAU_PROFILE("omp_test_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: test nestlock\n", omp_get_thread_num());
