@@ -81,8 +81,21 @@ public class Thread implements Comparable{
     public void addFunction(GlobalThreadDataElement ref){
 	functions.addElement(ref);}
   
-    public void addFunction(GlobalThreadDataElement ref, int pos){
-	functions.setElementAt(ref, pos);}
+    public void addFunction(GlobalThreadDataElement ref, int id){
+	//There are two paths here.
+	//1) This id has not been seen in the system before.
+	//   In this case, add to the end of functions.
+	//2) The id has been seen in the system before.
+	//   In this case, check to see if its location is
+	//   not set to null in functions, and if it is not
+	//   set the location to point to ref.
+	if(id >= (functions.size()))
+	    functions.add(ref);
+	else{
+	    if((functions.elementAt(id))==null)
+		functions.setElementAt(ref, id);
+	}
+    }
     
     public void addUserevent(GlobalThreadDataElement ref){
 	userevents.addElement(ref);}

@@ -72,7 +72,7 @@ public abstract class ParaProfDataSession  extends DataSession{
 	return tmpDouble.doubleValue();}
 
     public int getNumberOfMappings(){
-	return numberOfMappings;}
+	return globalMapping.getNumberOfMappings(0);}
 
     public int getNumberOfUserEvents(){
 	return numberOfUserEvents;}
@@ -134,9 +134,6 @@ public abstract class ParaProfDataSession  extends DataSession{
 	Double tmpDouble = new Double(inDouble);
 	maxMeanUserSecPerCallList.add(dataValueLocation, tmpDouble);}
   
-    protected void setNumberOfMappings(int numberOfMappings){
-	this.numberOfMappings = numberOfMappings;}
-
     protected void setNumberOfUserEvents(int numberOfUserEvents){
 	this.numberOfUserEvents = numberOfUserEvents;}
 
@@ -174,7 +171,6 @@ public abstract class ParaProfDataSession  extends DataSession{
     private boolean firstMetric = true;
     private boolean groupCheck = false;
     
-    private int numberOfMappings = 0;
     private int numberOfUserEvents = 0;
     private int totalNumberOfContexts = -1;
     private int totalNumberOfThreads = -1;

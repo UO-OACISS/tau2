@@ -283,11 +283,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		//It's first token will be the number of mappings present.  Get it.
 		tokenString = genericTokenizer.nextToken();
       
-		if(this.firstMetric()){
-		    //Set the number of mappings.
-		    this.setNumberOfMappings(Integer.parseInt(tokenString));
-		}
-		else{
+		if(!(this.firstMetric())){
 		    if((this.getNumberOfMappings()) != Integer.parseInt(tokenString)){
 			System.out.println("***********************");
 			System.out.println("The number of mappings does not match!!!");
@@ -508,11 +504,8 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 			    thread.initializeFunctionList(this.getNumberOfMappings());
 			}
 
-			Vector vector = thread.getFunctionList();
-			globalThreadDataElement = null;
-				
-			globalThreadDataElement = (GlobalThreadDataElement) vector.elementAt(mappingID);
-				
+			globalThreadDataElement = thread.getFunction(mappingID);
+			
 			if(globalThreadDataElement == null){
 			    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
 			    thread.addFunction(globalThreadDataElement, mappingID);

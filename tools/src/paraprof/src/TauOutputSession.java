@@ -257,6 +257,11 @@ public class TauOutputSession extends ParaProfDataSession{
 		files = (File[]) e.nextElement();
 		for(int i=0;i<files.length;i++){
 		    System.out.println("Processing file: " + files[i].getName());
+		    int[] nct = this.getNCT(files[i].getName());
+		    System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
+		    
+		    //First, build the global mapping.  This needs to be done first as
+		    //the system needs to know how many functions are present.
 		}
 	    }
 	}
@@ -272,6 +277,36 @@ public class TauOutputSession extends ParaProfDataSession{
     //######
     //profile.*.*.* string processing methods.
     //######
+     private int[] getNCT(String string){
+	int[] nct = new int[3];
+	StringTokenizer st = new StringTokenizer(string, ".\t\n\r");
+	st.nextToken();
+	nct[0] = Integer.parseInt(st.nextToken());
+	nct[1] = Integer.parseInt(st.nextToken());
+	nct[2] = Integer.parseInt(st.nextToken());
+	return nct;
+    }
+  
+    private String getCounterName(String inString){
+	try{
+	    String tmpString = null;
+	    int tmpInt = inString.indexOf("_MULTI_");
+      
+	    if(tmpInt > 0){
+		//We are reading data from a multiple counter run.
+		//Grab the counter name.
+		tmpString = inString.substring(tmpInt+7);
+		return tmpString;
+	    }
+      	    //We are not reading data from a multiple counter run.
+	    return tmpString; 
+      	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD26");
+	}
+    
+	return null;
+    }
 
     //######
     //End - profile.*.*.* string processing methods.
