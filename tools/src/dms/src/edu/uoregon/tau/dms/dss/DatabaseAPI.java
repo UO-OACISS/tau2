@@ -8,7 +8,7 @@ import java.sql.*;
  * This is the top level class for the Database implementation of the API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.5 2004/12/21 20:49:39 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.6 2004/12/22 00:15:36 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -28,6 +28,7 @@ public class DatabaseAPI {
     protected Vector intervalEventData = null;
     protected Vector atomicEvents = null;
     protected Vector atomicEventData = null;
+
     public String getMetricName(int metricID) {
         if (this.metrics == null) {
             if (this.trial != null) {
@@ -41,15 +42,17 @@ public class DatabaseAPI {
         else
             return null;
     }
+
     public void setApplication(Application application) {
         this.application = application;
     }
+
     public void setExperiment(Experiment experiment) {
         this.experiment = experiment;
     }
+
     // from datasession
-    
-    
+
     private DB db = null;
     private ConnectionManager connector;
     private Hashtable intervalEventHash = null;
@@ -544,7 +547,7 @@ public class DatabaseAPI {
 
     // save the metrics
     private Hashtable saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) {
-        System.out.print("Saving the metrics: ");
+     //   System.out.print("Saving the metrics: ");
         Hashtable newMetHash = new Hashtable();
         Enumeration en = trial.getDataSource().getMetrics().elements();
         Metric metric;
@@ -554,18 +557,18 @@ public class DatabaseAPI {
             int newMetricID = 0;
             if (saveMetricIndex < 0 || saveMetricIndex == i) {
                 newMetricID = metric.saveMetric(db, newTrialID);
-                System.out.print("\rSaving the metrics: " + (i + 1) + " records saved...");
+     //           System.out.print("\rSaving the metrics: " + (i + 1) + " records saved...");
             }
             newMetHash.put(new Integer(i), new Integer(newMetricID));
             i++;
         }
-        System.out.print("\n");
+   //     System.out.print("\n");
         return newMetHash;
     }
 
     // save the intervalEvents
     private Hashtable saveIntervalEvents(int newTrialID, Hashtable newMetHash, int saveMetricIndex) {
-        System.out.print("Saving the intervalEvents: ");
+  //      System.out.print("Saving the intervalEvents: ");
         Hashtable newFunHash = new Hashtable();
         Enumeration en = intervalEvents.elements();
         IntervalEvent intervalEvent;
@@ -575,23 +578,17 @@ public class DatabaseAPI {
             int newIntervalEventID = intervalEvent.saveIntervalEvent(db, newTrialID, newMetHash,
                     saveMetricIndex);
             newFunHash.put(new Integer(intervalEvent.getID()), new Integer(newIntervalEventID));
-            System.out.print("\rSaving the intervalEvents: " + ++count + " records saved...");
-        }
-        System.out.print("\n");
-        return newFunHash;
-    }
+            //System.out.print("\rSaving the intervalEvents: " + ++count + " records saved...");
+            DatabaseAPI.itemsDone++;
 
-    // save the intervalEvent data
-    private void saveIntervalEventData(Hashtable newFunHash, Hashtable newMetHash,
-            int saveMetricIndex) {
-        Enumeration en = intervalEventData.elements();
-        IntervalLocationProfile.saveIntervalEventData(db, newFunHash, en, newMetHash,
-                saveMetricIndex);
+        }
+   //     System.out.print("\n");
+        return newFunHash;
     }
 
     // save the intervalEvents
     private Hashtable saveAtomicEvents(int newTrialID) {
-        System.out.print("Saving the user events:");
+//        System.out.print("Saving the user events:");
         Hashtable newUEHash = new Hashtable();
         Enumeration en = atomicEvents.elements();
         int count = 0;
@@ -600,15 +597,17 @@ public class DatabaseAPI {
             atomicEvent = (AtomicEvent) en.nextElement();
             int newAtomicEventID = atomicEvent.saveAtomicEvent(db, newTrialID);
             newUEHash.put(new Integer(atomicEvent.getID()), new Integer(newAtomicEventID));
-            System.out.print("\rSaving the user events: " + ++count + " records saved...");
+            //System.out.print("\rSaving the user events: " + ++count + " records saved...");
+            DatabaseAPI.itemsDone++;
+
         }
-        System.out.print("\n");
+    //    System.out.print("\n");
         return newUEHash;
     }
 
     // save the intervalEvent data
     private void saveAtomicEventData(Hashtable newUEHash) {
-        System.out.print("Saving the user event data:");
+    //    System.out.print("Saving the user event data:");
         Enumeration en = atomicEventData.elements();
         AtomicLocationProfile uedo;
         int count = 0;
@@ -616,9 +615,9 @@ public class DatabaseAPI {
             uedo = (AtomicLocationProfile) en.nextElement();
             Integer newAtomicEventID = (Integer) newUEHash.get(new Integer(uedo.getAtomicEventID()));
             uedo.saveAtomicEventData(db, newAtomicEventID.intValue());
-            System.out.print("\rSaving the user event data: " + ++count + " records saved...");
+     //       System.out.print("\rSaving the user event data: " + ++count + " records saved...");
         }
-        System.out.print("\n");
+   //     System.out.print("\n");
     }
 
     /**
@@ -644,20 +643,6 @@ public class DatabaseAPI {
     }
 
     /**
-     * Saves the IntervalLocationProfile.
-     * 
-     * @param intervalEventData
-     * @param newIntervalEventID
-     * @param newMetHash
-     * @return database index ID of the saved interval_location_profile record
-     */
-    public void saveIntervalEventData(IntervalLocationProfile intervalEventData,
-            int newIntervalEventID, Hashtable newMetHash) {
-        intervalEventData.saveIntervalEventData(db, newIntervalEventID, newMetHash, -1);
-        return;
-    }
-
-    /**
      * Saves the AtomicEvent object.
      * 
      * @param atomicEvent
@@ -678,6 +663,21 @@ public class DatabaseAPI {
         return;
     }
 
+    
+    
+    // this stuff is a total hack to get some functionality that the new database API will have
+    static int totalItems;
+    static int itemsDone;
+
+    public static int getProgress() {
+        if (totalItems != 0)
+            return (int) ((float) itemsDone / (float) totalItems * 100);
+        return 0;
+    }
+    
+    
+    
+
     /**
      * Saves the ParaProfTrial object to the database
      * 
@@ -686,7 +686,7 @@ public class DatabaseAPI {
      * @return the database index ID of the saved trial record
      */
 
-    public int saveParaProfTrial(Trial trial, int saveMetricIndex) {
+    public synchronized int saveParaProfTrial(Trial trial, int saveMetricIndex) {
         long start = System.currentTimeMillis();
         TrialData mapping = trial.getDataSource().getTrialData();
 
@@ -704,12 +704,11 @@ public class DatabaseAPI {
         //groupNames = groupList.toArray(groupNames);
 
         //String groupNames[] = (String[]) groupList.toArray();
-        
-        
+
         // get the metric count
         metrics = trial.getDataSource().getMetrics();
         int metricCount = metrics.size();
-        System.out.println("Found " + metricCount + " metrics...");
+      //  System.out.println("Found " + metricCount + " metrics...");
 
         // create the Vectors to store the data
         intervalEvents = new Vector();
@@ -720,8 +719,8 @@ public class DatabaseAPI {
         int fcount = 0;
         int ucount = 0;
         // create the intervalEvents
-        System.out.print("Creating the intervalEvents:");
-        
+    //    System.out.print("Creating the intervalEvents:");
+
         for (Iterator it = mapping.getFunctions(); it.hasNext();) {
             Function f = (Function) it.next();
             if (f != null) {
@@ -736,7 +735,7 @@ public class DatabaseAPI {
                 for (int i = 0; i < groups.size(); i++) {
                     if (i > 0)
                         buf.append("|");
-                    buf.append(((Group)groups.get(i)).getName());
+                    buf.append(((Group) groups.get(i)).getName());
                 }
 
                 if (f.getGroups().size() > 0) {
@@ -747,8 +746,8 @@ public class DatabaseAPI {
                 intervalEvents.add(intervalEvent);
 
                 // get the total data
-                System.out.print("\rCreating the intervalEvents: " + ++fcount
-                        + " intervalEvents found...");
+           //     System.out.print("\rCreating the intervalEvents: " + ++fcount
+          //              + " intervalEvents found...");
                 IntervalLocationProfile funTS = new IntervalLocationProfile(metricCount);
                 IntervalLocationProfile funMS = new IntervalLocationProfile(metricCount);
                 for (int i = 0; i < metricCount; i++) {
@@ -773,35 +772,34 @@ public class DatabaseAPI {
         }
 
         // create the user events
-        System.out.print("\nCreating user events:");
+    //    System.out.print("\nCreating user events:");
         for (Iterator it = mapping.getUserEvents(); it.hasNext();) {
             UserEvent ue = (UserEvent) it.next();
             if (ue != null) {
-                System.out.print(".");
-                System.out.print("\rCreating the user events: " + ++ucount
-                        + " user events found...");
+    //            System.out.print(".");
+      //          System.out.print("\rCreating the user events: " + ++ucount
+    //                    + " user events found...");
                 // create a user event
                 AtomicEvent atomicEvent = new AtomicEvent(this);
                 atomicEvent.setName(ue.getName());
                 atomicEvent.setID(ue.getID());
 
-//                // build the group name
-//                int[] groupIDs = element.getGroups();
-//                StringBuffer buf = new StringBuffer();
-//                for (int i = 0; i < element.getNumberOfGroups(); i++) {
-//                    if (i > 0)
-//                        buf.append("|");
-//                    buf.append(groupNames[groupIDs[i]]);
-//                }
-//                atomicEvent.setGroup(buf.toString());
+                //                // build the group name
+                //                int[] groupIDs = element.getGroups();
+                //                StringBuffer buf = new StringBuffer();
+                //                for (int i = 0; i < element.getNumberOfGroups(); i++) {
+                //                    if (i > 0)
+                //                        buf.append("|");
+                //                    buf.append(groupNames[groupIDs[i]]);
+                //                }
+                //                atomicEvent.setGroup(buf.toString());
                 // put the atomicEvent in the vector
                 atomicEvents.add(atomicEvent);
             }
         }
 
-        fcount = 0;
-        ucount = 0;
-        System.out.print("\nCreating the intervalEvent / user event data:");
+       
+    //    System.out.print("\nCreating the intervalEvent / user event data:");
         StringBuffer groupsStringBuffer = new StringBuffer(10);
         Vector nodes = trial.getDataSource().getNCT().getNodes();
         for (Enumeration e1 = nodes.elements(); e1.hasMoreElements();) {
@@ -819,27 +817,21 @@ public class DatabaseAPI {
                         FunctionProfile fp = (FunctionProfile) e4.nextElement();
                         if (fp != null) {
 
-                            if (fcount % 1000 == 0) {
-                                System.out.print("\rCreating the intervalEvent / user event data: "
-                                        + ++fcount + " / " + ucount + " found...");
-                            }
-                            fcount++;
+                      
 
                             IntervalLocationProfile fdo = new IntervalLocationProfile(metricCount);
                             fdo.setNode(thread.getNodeID());
                             fdo.setContext(thread.getContextID());
                             fdo.setThread(thread.getThreadID());
                             fdo.setIntervalEventID(fp.getFunction().getID());
-                            fdo.setNumCalls((int)fp.getNumCalls());
-                            fdo.setNumSubroutines((int)fp.getNumSubr());
+                            fdo.setNumCalls((int) fp.getNumCalls());
+                            fdo.setNumSubroutines((int) fp.getNumSubr());
                             // fdo.setInclusivePerCall(fp.getUserSecPerCall());
                             for (int i = 0; i < metricCount; i++) {
                                 fdo.setInclusive(i, fp.getInclusive(i));
                                 fdo.setExclusive(i, fp.getExclusive(i));
-                                fdo.setInclusivePercentage(i,
-                                        fp.getInclusivePercent(i));
-                                fdo.setExclusivePercentage(i,
-                                        fp.getExclusivePercent(i));
+                                fdo.setInclusivePercentage(i, fp.getInclusivePercent(i));
+                                fdo.setExclusivePercentage(i, fp.getExclusivePercent(i));
                                 fdo.setInclusivePerCall(i, fp.getInclusivePerCall(i));
                             }
                             intervalEventData.add(fdo);
@@ -852,12 +844,7 @@ public class DatabaseAPI {
                             UserEventProfile uep = (UserEventProfile) e4.nextElement();
                             if (uep != null) {
 
-                                if (ucount % 1000 == 0) {
-
-                                    System.out.print("\rCreating the intervalEvent / user event data: "
-                                            + fcount + " / " + ucount + " found...");
-                                }
-                                ucount++;
+                              
                                 AtomicLocationProfile udo = new AtomicLocationProfile();
                                 udo.setAtomicEventID(uep.getUserEvent().getID());
                                 udo.setNode(thread.getNodeID());
@@ -876,6 +863,9 @@ public class DatabaseAPI {
             }
         }
 
+        totalItems = intervalEvents.size() + intervalEventData.size() + atomicEvents.size()
+                + atomicEventData.size();
+
         try {
             db.setAutoCommit(false);
         } catch (SQLException e) {
@@ -887,13 +877,15 @@ public class DatabaseAPI {
         // output the trial data, which also saves the intervalEvents,
         // intervalEvent data, user events and user event data
         if (saveMetricIndex < 0) {
-            System.out.println("\nSaving the trial...");
+       //     System.out.println("\nSaving the trial...");
             newTrialID = trial.saveTrial(db);
             Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
 
             if (intervalEvents != null && intervalEvents.size() > 0) {
                 Hashtable newFunHash = saveIntervalEvents(newTrialID, newMetHash, saveMetricIndex);
-                saveIntervalEventData(newFunHash, newMetHash, saveMetricIndex);
+
+                IntervalLocationProfile.saveIntervalEventData(db, newFunHash,
+                        intervalEventData.elements(), newMetHash, saveMetricIndex);
             }
             if (atomicEvents != null && atomicEvents.size() > 0) {
                 Hashtable newUEHash = saveAtomicEvents(newTrialID);
@@ -902,17 +894,19 @@ public class DatabaseAPI {
                 }
             }
 
-            System.out.println("New Trial ID: " + newTrialID);
+          //  System.out.println("New Trial ID: " + newTrialID);
         } else {
             newTrialID = trial.getID();
-            System.out.println("\nSaving the metric...");
+         //   System.out.println("\nSaving the metric...");
             Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
             if (intervalEvents != null && intervalEvents.size() > 0) {
                 Hashtable newFunHash = saveIntervalEvents(newTrialID, newMetHash, saveMetricIndex);
-                saveIntervalEventData(newFunHash, newMetHash, saveMetricIndex);
+                IntervalLocationProfile.saveIntervalEventData(db, newFunHash,
+                        intervalEventData.elements(), newMetHash, saveMetricIndex);
+
             }
 
-            System.out.println("Modified Trial ID: " + newTrialID);
+         //   System.out.println("Modified Trial ID: " + newTrialID);
         }
 
         try {
@@ -922,11 +916,11 @@ public class DatabaseAPI {
             e.printStackTrace();
             return -1;
         }
-        vacuumDatabase();
+
         long stop = System.currentTimeMillis();
         long elapsedMillis = stop - start;
         double elapsedSeconds = (double) (elapsedMillis) / 1000.0;
-        System.out.println("Elapsed time: " + elapsedSeconds + " seconds.");
+        //System.out.println("Elapsed time: " + elapsedSeconds + " seconds.");
         return newTrialID;
     }
 
@@ -1037,4 +1031,3 @@ public class DatabaseAPI {
         }
     }
 };
-

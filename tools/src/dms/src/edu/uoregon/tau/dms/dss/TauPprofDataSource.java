@@ -30,10 +30,19 @@ public class TauPprofDataSource extends DataSource {
     private Object initializeObject;
 
     public void cancelLoad() {
+        abort = true;
         return;
     }
 
+    private boolean abort = false;
+
+    long totalBytes = 0;
+    long bytesRead = 0;
+
+    
     public int getProgress() {
+        if (totalBytes != 0)
+            return (int) ((float) bytesRead / (float) totalBytes * 100);
         return 0;
     }
 
@@ -81,13 +90,14 @@ public class TauPprofDataSource extends DataSource {
             this.setFirstMetric(true);
             for (Enumeration e = v.elements(); e.hasMoreElements();) {
                 files = (File[]) e.nextElement();
-                System.out.println("Processing data file, please wait ......");
                 long time = System.currentTimeMillis();
 
+                totalBytes = files[0].length();
                 FileInputStream fileIn = new FileInputStream(files[0]);
                 InputStreamReader inReader = new InputStreamReader(fileIn);
                 BufferedReader br = new BufferedReader(inReader);
 
+                
                 //####################################
                 //First Line
                 //####################################
@@ -96,6 +106,8 @@ public class TauPprofDataSource extends DataSource {
                 inputString = br.readLine();
                 if (inputString == null)
                     return;
+              
+                
                 bSDCounter++;
                 //####################################
                 //End - First Line
@@ -169,6 +181,11 @@ public class TauPprofDataSource extends DataSource {
                 //####################################
 
                 while ((inputString = br.readLine()) != null) {
+              
+                    if (abort)
+                        return;
+                    
+                    bytesRead += inputString.length();
                     genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 
                     int lineType = -1;
@@ -265,6 +282,7 @@ public class TauPprofDataSource extends DataSource {
                         
                         //Set number of calls/subroutines/usersec per call.
                         inputString = br.readLine();
+                        bytesRead += inputString.length();
 
                         this.getFunctionDataLine2(inputString);
 
@@ -343,6 +361,7 @@ public class TauPprofDataSource extends DataSource {
 
                         //Get the number of calls and number of sub routines
                         inputString = br.readLine();
+                        bytesRead += inputString.length();
                         this.getFunctionDataLine2(inputString);
 
                         //Set the values.
@@ -375,6 +394,7 @@ public class TauPprofDataSource extends DataSource {
                             //The first line will be the user event heading ...
                             // skip it.
                             br.readLine();
+                            
                             //Now that we know how many user events to expect,
                             // we can grab that number of lines.
                             //Note that inputString is still set the the line
@@ -386,7 +406,10 @@ public class TauPprofDataSource extends DataSource {
                                     (this.getNCT().getThread(nodeID, contextID, threadID)).initializeUsereventList(this.getTrialData().getNumUserEvents());
 
                                 s1 = br.readLine();
+                                bytesRead += s1.length();
                                 s2 = br.readLine();
+                                bytesRead += s2.length();
+
                                 getUserEventData(s1);
                                 // System.out.println("noc:"+usereventDataLine.i0+"min:"+usereventDataLine.d1+"max:"+usereventDataLine.d0+"mean:"+usereventDataLine.d2);
 

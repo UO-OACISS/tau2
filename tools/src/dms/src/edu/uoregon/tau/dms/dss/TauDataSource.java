@@ -96,7 +96,7 @@ public class TauDataSource extends DataSource {
         boolean validFilesFound = false;
 
         for (Enumeration e = v.elements(); e.hasMoreElements();) {
-//            System.out.println("Processing data, please wait ......");
+            //            System.out.println("Processing data, please wait ......");
 
             //Need to call increaseVectorStorage() on all objects that
             // require it.
@@ -137,10 +137,10 @@ public class TauDataSource extends DataSource {
             File[] files = (File[]) e.nextElement();
             for (int i = 0; i < files.length; i++) {
                 filesRead++;
-                
+
                 if (abort)
                     return;
-                
+
                 if (this.debug()) {
                     System.out.println("######");
                     System.out.println("Processing file: " + files[i].getName());
@@ -441,7 +441,7 @@ public class TauDataSource extends DataSource {
                                     userEventProfile.setUserEventSumSquared(usereventDataLine.d3);
 
                                     userEventProfile.updateMax();
-                                    
+
                                 }
                             }
                         }
@@ -462,8 +462,8 @@ public class TauDataSource extends DataSource {
             metric++;
         }
 
-//        if (!validFilesFound)
-//            throw new Exception("No valid profiles found");
+        //        if (!validFilesFound)
+        //            throw new Exception("No valid profiles found");
 
         //Generate derived data.
         this.generateDerivedData();
@@ -473,9 +473,9 @@ public class TauDataSource extends DataSource {
             CallPathUtilFuncs.buildRelations(getTrialData());
         }
 
-//        time = (System.currentTimeMillis()) - time;
-//        System.out.println("Done processing data!");
-//        System.out.println("Time to process (in milliseconds): " + time);
+        //        time = (System.currentTimeMillis()) - time;
+        //        System.out.println("Done processing data!");
+        //        System.out.println("Time to process (in milliseconds): " + time);
     }
 
     public void outputDebugMessage(String debugMessage) {
@@ -485,8 +485,6 @@ public class TauDataSource extends DataSource {
     public String toString() {
         return this.getClass().getName();
     }
-
-  
 
     //####################################
     //End - Public Section.
@@ -570,7 +568,7 @@ public class TauDataSource extends DataSource {
         if (quoteCount == 0) {
             //throw new 
         }
-        
+
         StringTokenizer st2;
 
         if (quoteCount == 2 || quoteCount == 4) { // assume all is well
