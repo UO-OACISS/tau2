@@ -307,7 +307,7 @@ bool isVoidRoutine(itemRef * i)
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C++ program ----------------------------- */
 /* -------------------------------------------------------------------------- */
-int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile) 
+int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 {
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
@@ -409,7 +409,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile)
 	    }
 	    else 
 	    {
-	      ostr <<"TAU_USER);" <<endl; // give an additional line 
+	      ostr <<group_name<<");" <<endl; // give an additional line 
 	    }
 	    // if its a function, it already has a ()
 	    instrumented = true;
@@ -456,7 +456,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile)
 /* -------------------------------------------------------------------------- */
 /* -- BodyBegin for a routine that does return some value ------------------- */
 /* -------------------------------------------------------------------------- */
-void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
+void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& group_name)
 {
 
 #ifdef DEBUG
@@ -481,7 +481,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
   }
   else
   {
-    ostr <<"TAU_USER);" <<endl; // give an additional line
+    ostr <<group_name<<");" <<endl; // give an additional line
   }
 
   ostr <<"\tTAU_PROFILE_START(tautimer); "<<endl;
@@ -491,7 +491,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
 /* -------------------------------------------------------------------------- */
 /* -- Body Begin for a void C routine --------------------------------------- */
 /* -------------------------------------------------------------------------- */
-void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
+void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& group_name)
 {
   ostr <<"{ \n\tTAU_PROFILE_TIMER(tautimer, \""<<
     ((pdbRoutine *)(i->item))->name() << "\", \"" <<
@@ -511,7 +511,7 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
   }
   else
   {
-    ostr <<"TAU_USER);" <<endl; // give an additional line
+    ostr <<group_name<<");" <<endl; // give an additional line
   }
 
   ostr <<"\tTAU_PROFILE_START(tautimer);"<<endl;
@@ -530,7 +530,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression)
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C++ program ----------------------------- */
 /* -------------------------------------------------------------------------- */
-int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile) 
+int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name) 
 { 
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
@@ -628,11 +628,11 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 #ifdef DEBUG 
 		  cout <<"Void return value "<<endl;
 #endif /* DEBUG */
-		  processVoidRoutine(ostr, return_string, *it);
+		  processVoidRoutine(ostr, return_string, *it, group_name);
 		}
 		else
 		{
-		  processNonVoidRoutine(ostr, return_string, *it);
+		  processNonVoidRoutine(ostr, return_string, *it, group_name);
 		}
 		instrumented = true; 
 		break;
@@ -1002,6 +1002,46 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
   ostr.close();
 }
 
+/* -------------------------------------------------------------------------- */
+/* -- Determine the TAU profiling group name associated with the pdb file --- */
+/* -------------------------------------------------------------------------- */
+void setGroupName(PDB& p, string& group_name)
+{
+
+ PDB::macrovec m = p.getMacroVec();
+ string search_string = "TAU_GROUP"; 
+
+ for (PDB::macrovec::iterator it = m.begin(); it != m.end(); ++it)
+ {
+   string macro_name = (*it)->fullName();
+   if (macro_name.find(search_string) != string::npos)
+   { 
+#ifdef DEBUG
+     cout <<"Found group:"<<macro_name<<endl;
+#endif /* DEBUG */
+     if ((*it)->kind() == pdbItem::MA_DEF)
+     {
+	string needle = string("#define TAU_GROUP ");
+	string haystack = (*it)->text(); /* the complete macro text */
+        
+	/* To extract the value of TAU_GROUP, search the macro text */
+        string::size_type pos = haystack.find(needle); 
+	if (pos != string::npos)
+        {
+	  group_name = string("TAU_GROUP_") + haystack.substr(needle.size(),
+	    haystack.size() - needle.size() - pos); 
+#ifdef DEBUG
+	  cout <<"Extracted group name:"<<group_name<<endl;
+#endif /* DEBUG  */
+	}
+     }
+     
+   }
+
+ }
+
+
+}
 
 /* -------------------------------------------------------------------------- */
 /* -- Instrument the program using C, C++ or F90 instrumentation routines --- */
@@ -1009,12 +1049,16 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
 int main(int argc, char **argv)
 {
   string outFileName("out.ins.C");
+  string group_name("TAU_USER"); /* Default: if nothing else is defined */
+
   if (argc < 3) 
   { 
     cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline]"<<endl;
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
+  setGroupName(p, group_name);
+
   const char * filename = argv[2];  
 
   if ((argc == 5) || (argc == 6))
@@ -1063,9 +1107,9 @@ int main(int argc, char **argv)
        cout <<"Language "<<l <<endl;
 #endif
        if (l == PDB::LA_CXX)
-         instrumentCXXFile(p, *it, outFileName);
+         instrumentCXXFile(p, *it, outFileName, group_name);
        if (l == PDB::LA_C)
-         instrumentCFile(p, *it, outFileName);
+         instrumentCFile(p, *it, outFileName, group_name);
        if (l == PDB::LA_FORTRAN)
          instrumentFFile(p, *it, outFileName);
      }
@@ -1094,8 +1138,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 2002/01/04 18:28:56 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.26 2002/01/04 18:28:56 sameer Exp $
+ * $Revision: 1.27 $   $Date: 2002/01/08 02:17:01 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.27 2002/01/08 02:17:01 sameer Exp $
  ***************************************************************************/
 
 
