@@ -88,6 +88,7 @@ DYNINST_PLATFORM = i386-unknown-linux2.0
 ############# Profiling Options #############
 #PROFILE#PROFILEOPT1           = -DPROFILING_ON        #ENDIF#
 #SGITIMERS#PROFILEOPT2         = -DSGI_TIMERS          #ENDIF#
+#CPUTIME#PROFILEOPT2           = -DCPU_TIME          #ENDIF#
 #SGICOUNTERS#PROFILEOPT3       = -DSGI_HW_COUNTERS     #ENDIF#
 #PCL#PROFILEOPT3       	       = -DTAU_PCL -D$(TARGET_SYSTEM) -I$(PCLDIR) #ENDIF#
 #PAPI#PROFILEOPT3              = -DTAU_PAPI -I$(PAPIDIR)/src #ENDIF#
