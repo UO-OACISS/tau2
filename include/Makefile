@@ -46,6 +46,7 @@ TAU_OPTIONS=
 TAU_MPI_INC=
 TAU_MPI_LIB=
 TAU_MPI_FLIB=
+TAU_MPILIB_DIR=
 TAU_PREFIX_INSTALL_DIR=
 #######################################################################
  
@@ -237,6 +238,13 @@ TAU_MPI_LIBS	= $(TAU_MPI_LIB)
 
 TAU_MPI_FLIBS	= $(TAU_MPI_FLIB)
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
+#############################################
+## IBM SPECIFIC CHANGES TO TAU_MPI_LIBS
+#SP1#TAU_MPI_LIBS    = $(TAU_MPI_LIB)  -binitfini:poe_remote_main -L$(TAU_MPILIB_DIR)/ip  -lvtd #ENDIF#
+#SP1#TAU_MPI_FLIBS   = $(TAU_MPI_FLIB) -binitfini:poe_remote_main -L$(TAU_MPILIB_DIR)/ip  -lvtd #ENDIF#
+
+#SP1#TAUMPILIBS      = $(TAU_MPI_LIBS) 	#ENDIF#
+#SP1#TAUMPIFLIBS     = $(TAU_MPI_FLIBS)	#ENDIF#
 #############################################
 # These options could be included in the application Makefile as 
 #CFLAGS        	= $(TAUDEFS) $(TAUINC)

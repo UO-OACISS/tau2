@@ -204,6 +204,12 @@ fi
 	echo "s@^TAU_MPI_FLIB=\(.*\)@TAU_MPI_FLIB=$mpiflib@g" >> $sedout
         #echo "MPIFLIB=$mpiflib" 
         ;;
+
+     mpilib=*)
+        mpilibdir=`echo $1 | sed -e 's/^mpilib=//'`
+	echo "s@^TAU_MPILIB_DIR=\(.*\)@TAU_MPILIB_DIR=$mpilibdir@g" >> $sedout
+        #echo "TAU_MPILIB_DIR=$mpilibdir" 
+        ;;
      
 
 ###############################################################

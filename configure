@@ -1171,7 +1171,7 @@ then
     #echo "mpiincargs= $mpiincargs"
     #echo "mpilibargs= $mpilibargs"
     #echo "mpiflibargs= $mpiflibargs"
-    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
     
   fi # If -d mpilib
 fi # if mpilib is specified
