@@ -165,10 +165,10 @@ private:
 	TauGroup_t MyProfileGroup_;
 	bool	StartStopUsed_;
 	bool 	AddInclFlag; 
-	// There is a class that will do some initialization
-	// of FunctionStack that can't be done with
-	// just the constructor.
-	//friend class ProfilerInitializer;
+	/* There is a class that will do some initialization
+	   of FunctionStack that can't be done with
+	   just the constructor.
+	   friend class ProfilerInitializer; */
 };
 
 
@@ -182,6 +182,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.44 $   $Date: 2002/08/09 18:10:28 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.44 2002/08/09 18:10:28 sameer Exp $ 
+ * $Revision: 1.45 $   $Date: 2003/05/22 00:52:46 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.45 2003/05/22 00:52:46 sameer Exp $ 
  ***************************************************************************/
