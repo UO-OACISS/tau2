@@ -33,18 +33,10 @@
 #include "Profile/Profiler.h"
 
 //////////////////////////////////////////////////////////////////////
-// This profiler is used for mapping between different layers.
-//////////////////////////////////////////////////////////////////////
-//Profiler *& TheTauMapProf()
-//{ 
-//  static Profiler *TauMapProf = (Profiler *) NULL; 
-//
-//  return TauMapProf;
-//}
-
-//////////////////////////////////////////////////////////////////////
 // This global variable is used to keep the function information for
-// mapping. It is passed to the Profiler.
+// mapping. It is passed to the Profiler. It takes the key and returns
+// the FunctionInfo * pointer that contains the id of the function 
+// being mapped. The key is currently in the form of a profile group.
 //////////////////////////////////////////////////////////////////////
 FunctionInfo *& TheTauMapFI(unsigned int Pgroup )
 { 
