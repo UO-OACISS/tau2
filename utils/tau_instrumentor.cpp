@@ -14,6 +14,7 @@
   using std::set;
 # include <algorithm>
   using std::sort;
+  using std::unique;
 #endif
 #include "pdbAll.h"
 
@@ -56,10 +57,8 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
 }
 
 static bool itemEqual(const itemRef* r1, const itemRef* r2) {
-  return ( (r1->kind == r2->kind) &&
-	   (r1->line == r2->line) &&
-           (r1->col  == r2->col) &&
-           (r1->isTarget == r2->isTarget));
+  return ( (r1->line == r2->line) &&
+           (r1->col  == r2->col)); 
 }
  
 void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
@@ -207,7 +206,14 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     }
   }
   sort(itemvec.begin(), itemvec.end(), locCmp);
-  unique(itemvec.begin(), itemvec.end(),itemEqual);
+  itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
+#ifdef DEBUG
+  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
+   iter++)
+  {
+    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"<<endl;
+  }
+#endif /* DEBUG */
 }
 
 void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
@@ -317,12 +323,12 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile)
 #endif 
     bool instrumented = false;
     if (lastInstrumentedLineNo >= (*it)->line )
-    { 
-      // Hey! This line has already been instrumented. Go to the next 
+    {
+      // Hey! This line has already been instrumented. Go to the next
       // entry in the func
 #ifdef DEBUG
       cout <<"Entry already instrumented or brace not found - reached next routine! line = "<<(*it)->line <<endl;
-#endif 
+#endif
       continue; // takes you to the next iteration in the for loop
     }
 
@@ -529,16 +535,6 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
     cout <<"S: "<< (*it)->item->fullName() << " line "<< (*it)->line << " col " << (*it)->col << endl;
 #endif
     bool instrumented = false;
-    if (lastInstrumentedLineNo >= (*it)->line )
-    {
-      // Hey! This line has already been instrumented. Go to the next
-      // entry in the func
-#ifdef DEBUG
-      cout <<"Entry already instrumented or brace not found - reached next routine! line = "<<(*it)->line <<endl;
-#endif
-      continue; // takes you to the next iteration in the for loop
-    }
-
     while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
     {
       inputLineNo ++;
@@ -549,7 +545,6 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
       }
       else
       {
-        // we're at the desired line no. search for an open brace
         int inbufLength = strlen(inbuf);
 #ifdef DEBUG 
 	cout <<"Line " <<(*it)->line <<" Col " <<(*it)->col <<endl;
@@ -580,8 +575,8 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 		{
 		  processNonVoidRoutine(ostr, return_string, *it);
 		}
-		instrumented = true;
-	 	break;
+		instrumented = true; lastInstrumentedLineNo = inputLineNo; 
+		break;
 	  case RETURN: 
 #ifdef DEBUG 
 		cout <<"Return "<<endl;
@@ -655,18 +650,19 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 		  /* if there was no return */
 		  write_from =  (*it)->col - 1;
 #ifdef DEBUG
-		  cout <<"WRITE FROM = "<<write_from<<endl;
+		  cout <<"WRITE FROM (no return found) = "<<write_from<<endl;
+		  cout <<"inbuf = "<<inbuf<<endl;
 #endif /* DEBUG */
 		}
 
-		instrumented = true;
+		instrumented = true; lastInstrumentedLineNo = inputLineNo;
 		break;
 	  case BODY_END: 
 #ifdef DEBUG 
 		cout <<"Body End "<<endl;
 #endif /* DEBUG */
 		ostr<<"\n}\n\tTAU_PROFILE_STOP(tautimer);\n"<<endl; 
-		instrumented = true;
+		instrumented = true; lastInstrumentedLineNo = inputLineNo;
 		break;
 	  case EXIT:
 #ifdef DEBUG 
@@ -676,12 +672,12 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 		for (k = (*it)->col-1; inbuf[k] != ';' ; k++)
 		  ostr<<inbuf[k]; 
 		ostr <<"; }";
-		instrumented = true;
+		instrumented = true; lastInstrumentedLineNo = inputLineNo;
 		write_from = k+1;
 		break; 
 	  default:
 		cout <<"Unknown option in instrumentCFile:"<<(*it)->kind<<endl;
-		instrumented = true;
+		instrumented = true; lastInstrumentedLineNo = inputLineNo;
 		break;
 	}
 	if (it+1 != itemvec.end())
@@ -689,16 +685,21 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 	  write_upto = (*(it+1))->line == (*it)->line ? (*(it+1))->col : inbufLength; 
 #ifdef DEBUG
           cout <<"CHECKING write_upto = "<<write_upto<<endl;
+	  cout <<"it = ("<<(*it)->line<<", "<<(*it)->col<<") ;";
+	  cout <<"it+1 = ("<<(*(it+1))->line<<", "<<(*(it+1))->col<<") ;"<<endl;
 #endif /* DEBUG */
 	}
 	else
 	  write_upto = inbufLength; 
 
+#ifdef DEBUG
+   	cout <<"inbuf: "<<inbuf<<endl;
+#endif /* DEBUG */
 	for (int j=write_from; j < write_upto; j++)
 	{
-#ifdef DEBUG 
+#ifdef DEBUG2 
    	  cout <<"Writing: "<<inbuf[j]<<endl;
-#endif /* DEBUG */
+#endif /* DEBUG2 */
 	  ostr <<inbuf[j];
 	}
 	ostr <<endl;
