@@ -14,9 +14,6 @@ import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.event.*;
-import javax.swing.colorchooser.*;
 
 public class ParaProf implements ActionListener{
     //**********
@@ -203,25 +200,41 @@ public class ParaProf implements ActionListener{
 	return new String("ParaProf Version 1.2 ... The Paraducks Group!");}
   
     //Handles system errors.
-    public static void systemError(Object inObject, Component inComponent, String inString){ 
-	//JOptionPane.showMessageDialog(inComponent, "ParaProf Error", "Internal System Error ... ParaProf will now close!", JOptionPane.ERROR_MESSAGE);
-	if(inObject != null){
-	    if(inObject instanceof Exception){
+    public static void systemError(Object obj, Component component, String string){ 
+	if(obj != null){
+	    if(obj instanceof Exception){
 		if(ParaProf.debugIsOn){
-		    System.out.println(((Exception) inObject).toString());
-		    ((Exception) inObject).printStackTrace();
+		    System.out.println(((Exception) obj).toString());
+		    ((Exception) obj).printStackTrace();
 		    System.out.println("");
 		    System.out.println("");
 		}
-		
-		System.out.println("An exception was caught at " + inString);
+		System.out.println("An error was detected: " + string);
+	    }
+	    if(obj instanceof ParaProfError){
+		ParaProfError paraProfError = (ParaProfError) obj;
+		if(ParaProf.debugIsOn){
+		    if(paraProfError.showPopup)
+			JOptionPane.showMessageDialog(paraProfError.component,
+						      "ParaProf Error", paraProfError.s0, JOptionPane.ERROR_MESSAGE);
+		    if(paraProfError.exp!=null){
+			System.out.println(paraProfError.exp.toString());
+			paraProfError.exp.printStackTrace();
+			System.out.println("");
+			System.out.println("");
+		    }
+			
+		}
+		else{
+		}
+		System.out.println("An error was detected: " + string);
 	    }
 	    else{
-		System.out.println("An error was detected at " + inString);
+		System.out.println("An error has been detected: " + string);
 	    }
 	}
 	else{
-	    System.out.println("An error was detected at " + inString);
+	    System.out.println("An error was detected at " + string);
 	}
 	System.out.println("Please email us at: tau-bugs@cs.uoregon.edu");
 	System.out.println("");
@@ -234,7 +247,6 @@ public class ParaProf implements ActionListener{
     
 	System.exit(0);
     }
-      
 
     // Main entry point
     static public void main(String[] args){
