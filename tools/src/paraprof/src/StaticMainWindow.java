@@ -262,7 +262,6 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  //Setup the static main window data lists.
 	  //####################################
 	  sMWData = new StaticMainWindowData(trial);
-	  sMWData.buildSMWGeneralData();
 	  //####################################
 	  //End - Setup the static main window data lists.
 	  //####################################

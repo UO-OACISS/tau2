@@ -18,7 +18,7 @@ public class StaticMainWindowData{
 	this.trial = trial;
     }
     
-    public void buildSMWGeneralData(){   
+    public Vector getSMWGeneralData(int sortType){   
 	Node node;
 	Context context;
 	Thread thread;
@@ -27,67 +27,55 @@ public class StaticMainWindowData{
 	SMWContext sMWContext;
 	SMWThread sMWThread;
 	SMWThreadDataElement sMWThreadDataElement;
-
-	//Clear the sMWGeneralData list for safety.
-	sMWGeneralData.removeAllElements();
+	GlobalMapping globalMapping = trial.getGlobalMapping();
+	
+	Vector newList = new Vector();
     
 	for(Enumeration e1 = trial.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
 	    node = (Node) e1.nextElement();
 	    //Create a new sMWServer object and set the name properly.
 	    sMWServer = new SMWServer(node.getNodeID());
 	    //Add the server.
-	    sMWGeneralData.addElement(sMWServer);
+	    newList.addElement(sMWServer);
  	    for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		context = (Context) e2.nextElement();
 		//Create a new context object and set the name properly.
 		sMWContext = new SMWContext(sMWServer, context.getContextID());
 		sMWServer.addContext(sMWContext);
 		for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
+		    //Counts the number of SMWThreadDataElements that are actually added.
+		    //It is possible (because of selection criteria - groups for example) to filter
+		    //out all mappings on a particular thread.  The default at present is not to add.
+		    int counter = 0; //Counts the number of SMWThreadDataElements that are actually added.
 		    thread = (Thread) e3.nextElement();
 		    //Create a new thread object.
 		    sMWThread = new SMWThread(sMWContext, thread.getThreadID());
-		    //Add to the context.
-		    sMWContext.addThread(sMWThread);
+		    //Do not add thread to the context until we have verified counter is not zero (done after next loop).
 		    //Now enter the thread data loops for this thread.
 		    for(Enumeration e4 = thread.getFunctionList().elements(); e4.hasMoreElements() ;){
 			globalThreadDataElement = (GlobalThreadDataElement) e4.nextElement();
 			//Only want to add an element if this mapping existed on this thread.
 			//Check for this.
-			if(globalThreadDataElement != null){
+			if((globalThreadDataElement != null) && (globalMapping.displayMapping(globalThreadDataElement.getMappingID()))){
 			    //Create a new thread data object.
 			    sMWThreadDataElement = new SMWThreadDataElement(trial, node.getNodeID(), context.getContextID(), thread.getThreadID(), globalThreadDataElement);
+			    sMWThreadDataElement.setSortType(sortType);
 			    //Add to the thread data object.
 			    sMWThread.addFunction(sMWThreadDataElement);
+			    counter++;
 			}
 		    }
+		    //Sort thread and add to context if required (see above for an explanation).
+		    if(counter!=0){
+			Collections.sort(sMWThread.getFunctionList());
+			sMWContext.addThread(sMWThread);
+		    }
 		}
 	    }
 	}
+	return newList;
     }
 
-    public Vector getSMWGeneralData(int sortType){
-	SMWServer sMWServer;
-	SMWContext sMWContext;
-	SMWThread sMWThread;
-	SMWThreadDataElement sMWThreadDataElement;
-    
-	for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;){
-	    sMWServer = (SMWServer) e1.nextElement();
-	    for(Enumeration e2 = sMWServer.getContextList().elements(); e2.hasMoreElements() ;){
-		sMWContext = (SMWContext) e2.nextElement();
-		for(Enumeration e3 = sMWContext.getThreadList().elements(); e3.hasMoreElements() ;){
-		    sMWThread = (SMWThread) e3.nextElement();
-		    for(Enumeration e4 = sMWThread.getFunctionList().elements(); e4.hasMoreElements() ;){
-			sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-			sMWThreadDataElement.setSortType(sortType);
-		    }
-		    Collections.sort(sMWThread.getFunctionList());
-		}
-	    }
-	}
-	return sMWGeneralData;
-    }
-     
     public Vector getMappingData(int mappingID, int listType, int sortType){
 	Vector newList = new Vector();
 	
@@ -144,7 +132,7 @@ public class StaticMainWindowData{
 	for(Enumeration e = list.elements(); e.hasMoreElements() ;){
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
 	    if(globalMappingElement.getMeanValuesSet()){
-		if(globalMapping.displayGroup(globalThreadDataElement.getMappingID())){
+		if(globalMapping.displayMapping(globalMappingElement.getGlobalID())){
 		    sMWThreadDataElement = new SMWThreadDataElement(trial, -1, -1, -1, globalMappingElement);
 		    sMWThreadDataElement.setSortType(sortType);
 		    newList.addElement(sMWThreadDataElement);
@@ -182,7 +170,7 @@ public class StaticMainWindowData{
 	for(Enumeration e1 = list.elements(); e1.hasMoreElements() ;){
 	    globalThreadDataElement = (GlobalThreadDataElement) e1.nextElement();
 	    if(globalThreadDataElement!=null){
-		if(globalMapping.displayGroup(globalThreadDataElement.getMappingID())){
+		if(globalMapping.displayMapping(globalThreadDataElement.getMappingID())){
 		    sMWThreadDataElement = new SMWThreadDataElement(trial, nodeID, contextID, threadID, globalThreadDataElement);
 		    sMWThreadDataElement.setSortType(sortType);
 		    newList.addElement(sMWThreadDataElement);

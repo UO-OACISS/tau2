@@ -562,12 +562,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    
 	    //Check to see if selected groups only are being displayed.
 	    GlobalMapping tmpGM = trial.getGlobalMapping();
-	    boolean isSelectedGroupOn = false;
-	    int selectedGroupID = 0;
-	    if(tmpGM.getIsSelectedGroupOn()){
-		isSelectedGroupOn = true;
-		selectedGroupID = tmpGM.getSelectedGroupID();
-	    } 
 
 	    //######
 	    //Other initializations.
@@ -816,25 +810,15 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    int tmpStringWidth = fmFont.stringWidth(s1);
 			    g2D.drawString(s1, (barXStart - tmpStringWidth - 5), yCoord);
 				
-			    //Now, at last, draw some data.getThreadDataList()
 			    threadDataList = sMWThread.getFunctionList();
 			    //Cycle through the data values for this thread to get the total.
 			    tmpSum = 0.00;
-				
-			    if(!isSelectedGroupOn){
-				for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
-				    sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+			    for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
+				sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+				if(tmpGM.displayMapping(sMWThreadDataElement.getMappingID()))
 				    tmpSum = tmpSum + (sMWThreadDataElement.getExclusiveValue());
-				}
 			    }
-			    else{
-				for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
-				    sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-				    if(sMWThreadDataElement.isGroupMember(selectedGroupID))
-					tmpSum = tmpSum + (sMWThreadDataElement.getExclusiveValue());
-				}
-			    }
-				
+							
 			    //Now that we have the total, can begin drawing.
 			    colorCounter = 0;
 			    barXCoord = barXStart;
@@ -973,18 +957,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	}
     }
 
-    private boolean groupTest(SMWThreadDataElement sMWThreadDataElement){
-	GlobalMapping globalMapping = trial.getGlobalMapping();
-	boolean isSelectedGroupOn = false;
-	int selectedGroupID = 0;
-	if(globalMapping.getIsSelectedGroupOn()){
-	    isSelectedGroupOn = true;
-	    selectedGroupID = globalMapping.getSelectedGroupID();
-	}
-
-	return false;
-    }
-    
     public Dimension getImageSize(){
 	return this.getPreferredSize();
     }

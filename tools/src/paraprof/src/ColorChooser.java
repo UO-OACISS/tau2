@@ -183,7 +183,7 @@ public class ColorChooser implements WindowListener{
 	return groupHighlightColor;}
   
     public void setGroupHighlightColorID(int groupHighlightColorID){
-	    groupHighlightColorID = groupHighlightColorID;
+	    this.groupHighlightColorID = groupHighlightColorID;
 	    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
     }
   

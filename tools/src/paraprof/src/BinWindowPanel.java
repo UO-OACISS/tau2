@@ -159,14 +159,6 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    //Check to see if selected groups only are being displayed.
 	    GlobalMapping tmpGM = trial.getGlobalMapping();
 	    
-	    boolean isSelectedGroupOn = false;
-	    int selectedGroupID = 0;
-	    
-	    if(tmpGM.getIsSelectedGroupOn()){
-		isSelectedGroupOn = true;
-		selectedGroupID = tmpGM.getSelectedGroupID();
-	    } 
-      
 	    //**********
 	    //Other initializations.
 	    highlighted = false;

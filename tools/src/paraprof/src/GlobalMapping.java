@@ -122,20 +122,20 @@ public class GlobalMapping{
 	    return false;
     }
 
-    public boolean displayGroup(int mappingID){
+    public boolean displayMapping(int mappingID){
 	switch(groupFilter){
 	case 0:
 	    //No specific group selection is required.
 	    return true;
 	case 1:
 	    //Show this group only.
-	    if(this.isGroupMember(mappingID, this.getSelectedGroupID()))
+	    if(this.isGroupMember(mappingID, this.getSelectedGroupID(), 0))
 		return true;
 	    else
 		return false;
 	case 2:
 	    //Show all groups except this one.
-	    if(this.isGroupMember(mappingID, this.getSelectedGroupID()))
+	    if(this.isGroupMember(mappingID, this.getSelectedGroupID(), 0))
 		return false;
 	    else
 		return true;
