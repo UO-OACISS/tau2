@@ -129,6 +129,9 @@ public:
 	FunctionInfo(string& name, string& type, 
 	  unsigned int ProfileGroup = TAU_DEFAULT,
 	  const char *ProfileGroupName = "TAU_DEFAULT");
+	FunctionInfo(string& name, const char * type, 
+	  unsigned int ProfileGroup = TAU_DEFAULT,
+	  const char *ProfileGroupName = "TAU_DEFAULT");
 
 	FunctionInfo(const FunctionInfo& X) ;
 	// When we exit, we have to clean up.
@@ -448,6 +451,6 @@ class RtsLayer
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 1998/03/20 21:47:51 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.9 1998/03/20 21:47:51 sameer Exp $ 
+ * $Revision: 1.10 $   $Date: 1998/03/28 01:12:57 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.10 1998/03/28 01:12:57 sameer Exp $ 
  ***************************************************************************/
