@@ -228,6 +228,16 @@ TAU_EVENT_DATATYPE TauUserEvent::GetMax(int tid)
     return 0;
 }
 
+TAU_EVENT_DATATYPE TauUserEvent::GetSumValue(int tid)
+{  
+  if (NumEvents[tid] != 0L)
+  {
+    return SumValue[tid];
+  }
+  else
+    return 0;
+}
+
 TAU_EVENT_DATATYPE TauUserEvent::GetMean(int tid)
 {
   if (NumEvents[tid] != 0L) 
@@ -304,34 +314,91 @@ TauUserEvent::~TauUserEvent(void)
   DEBUGPROFMSG(" DTOR CALLED for " << GetEventName() << endl;); 
 }
 
-void TauUserEvent::StoreData(void)
+void TauUserEvent::ReportStatistics(bool ForEachThread)
 {
-  /*
-vector::size_type numevents;
+  TAU_EVENT_DATATYPE TotalNumEvents, TotalSumValue, Minima, Maxima;
+  vector<TauUserEvent*>::iterator it;
 
-  numevents = TheEventDB().size();
-  if (numevents > 0) {
-    // Data format 
-    // # % userevents
-    // # name numsamples max min mean sumsqr 
-    fprintf(fp, "# %d userevents\n", static_cast<int> numevents);
-    fprintf(fp, "# eventname numevents max min mean sumsqr\n");
-    
-  */
-    vector<TauUserEvent*>::iterator it;
-    for(it  = TheEventDB().begin(); 
-        it != TheEventDB().end(); it++)
-    {
-      DEBUGPROFMSG("Thr "<< RtsLayer::myThread()<< " TauUserEvent "<< 
-        (*it)->GetEventName() << "\n Min " << (*it)->GetMin() << "\n Max " <<
-        (*it)->GetMax() << "\n Mean " << (*it)->GetMean() << "\n Sum Sqr " <<
-        (*it)->GetSumSqr() << "\n NumEvents " << (*it)->GetNumEvents()<< endl;);
+    cout << "TAU Runtime Statistics" <<endl;
+    cout << "*************************************************************" << endl;
+
+  for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++)
+  {
+    DEBUGPROFMSG("Thr "<< RtsLayer::myThread()<< " TauUserEvent "<< 
+      (*it)->GetEventName() << "\n Min " << (*it)->GetMin() << "\n Max " <<
+      (*it)->GetMax() << "\n Mean " << (*it)->GetMean() << "\n Sum Sqr " <<
+      (*it)->GetSumSqr() << "\n NumEvents " << (*it)->GetNumEvents()<< endl;);
       
-    }
+    TotalNumEvents = TotalSumValue = 0;
+
+    for (int tid = 0; tid < TAU_MAX_THREADS; tid++)
+    { 
+      if ((*it)->GetNumEvents(tid) > 0)
+      { // There were some events on this thread 
+        TotalNumEvents += (*it)->GetNumEvents(tid); 
+	TotalSumValue  += (*it)->GetSumValue(tid);
+
+        if (!(*it)->GetDisableMin())
+        { // Min is not disabled
+	  // take the lesser of Minima and the min on that thread
+	  if (tid > 0) 
+	  { // more than one thread
+	    Minima = (*it)->GetMin(tid) < Minima ? (*it)->GetMin(tid) : Minima;
+	  } 
+	  else 
+	  { // this is the first thread. Initialize Minima to the min on it.
+	    Minima = (*it)->GetMin(tid);
+	  }
+	} 
+
+	if (!(*it)->GetDisableMax())
+	{ // Max is not disabled
+	  // take the maximum of Maxima and max on that thread
+	  if (tid > 0)
+	  { // more than one thread 
+	    Maxima = (*it)->GetMax(tid) > Maxima ? (*it)->GetMax(tid) : Maxima;
+	  } 
+	  else
+	  { // this is the first thread. Initialize Maxima to the max on it.
+	    Maxima = (*it)->GetMax(tid);
+	  }
+	}   
+	  
+
+	if (ForEachThread) 
+	{ // true, print statistics for this thread
+	  cout <<  "n,c,t "<<RtsLayer::myNode() <<"," <<RtsLayer::myContext()
+	       <<  "," << tid << " : Event : "<< (*it)->GetEventName() << endl
+	       <<  " Number : " << (*it)->GetNumEvents(tid) <<endl
+	       <<  " Min    : " << (*it)->GetMin(tid) << endl
+	       <<  " Max    : " << (*it)->GetMax(tid) << endl
+	       <<  " Mean   : " << (*it)->GetMean(tid) << endl
+	       <<  " Sum    : " << (*it)->GetSumValue(tid) << endl << endl;
+	}
+	
+      } // there were no events on this thread 
+    } // for all threads 
+    
+
+
+    cout << "*************************************************************" << endl;
+    cout << "Cumulative Statistics over all threads for Node: "
+	 << RtsLayer::myNode() << " Context: " << RtsLayer::myContext() << endl;
+    cout << "*************************************************************" << endl;
+    cout << "Event Name     = " << (*it)->GetEventName() << endl;
+	        
+    cout << "Total Number   = " << TotalNumEvents << endl;
+    cout << "Total Value    = " << TotalSumValue << endl; 
+    cout << "Minimum Value  = " << Minima << endl;
+    cout << "Maximum Value  = " << Maxima << endl;
+    cout << "-------------------------------------------------------------" <<endl;
+    cout << endl;
+ 
+  } // For all events
 }
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 1998/09/22 01:12:36 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.5 1998/09/22 01:12:36 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 1998/09/24 16:55:00 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.6 1998/09/24 16:55:00 sameer Exp $ 
  ***************************************************************************/
