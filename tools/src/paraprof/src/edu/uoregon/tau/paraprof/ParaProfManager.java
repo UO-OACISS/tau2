@@ -267,7 +267,8 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 				}
 				else if(userObject instanceof Metric){
 				    clickedOnObject = userObject;
-				    popup5.show(ParaProfManager.this, evt.getX(), evt.getY());
+				    if(!((Metric)userObject).getTrial().dBTrial())
+					popup5.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 			    }
 			    else{
@@ -1210,17 +1211,22 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //Note that type 0 and type 1 are switched. Need to move pprof type to be 1
 	    //as the default everywhere.  This is a temporary fix to allow tau profiles
 	    //to be the first string in LoadTrialPanel combo box.
+	    if(type==0)
+		    type=1;
+	    else if(type==1)
+		type=0;
+
 	    if(type!=-1){
 		switch(type){
 		case 0:
 		    if(filePrefix==null)
-			v = fl.getFileList(location, null, type, "profile", UtilFncs.debug);
+			v = fl.getFileList(location, null, type, "pprof", UtilFncs.debug);
 		    else
 			v = fl.getFileList(location, null, type, filePrefix, UtilFncs.debug);
 		    break;
 		case 1:
 		    if(filePrefix==null)
-			v = fl.getFileList(location, null, type, "pprof", UtilFncs.debug);
+			v = fl.getFileList(location, null, type, "profile", UtilFncs.debug);
 		    else
 			v = fl.getFileList(location, null, type, filePrefix, UtilFncs.debug);
 		    break;
