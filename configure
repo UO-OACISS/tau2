@@ -2210,6 +2210,13 @@ then
         mpiflibargs="$mpiflibargs -lutil"
       fi
     fi 
+    # Special check for Intel MPI
+    if [ -r $mpilib/libmpiif.a ]
+    then
+      echo "This looks like an Intel MPI installation."
+      mpilibargs="$mpilibargs -lmpiif -ldl"
+      mpiflibargs="$mpiflibargs -lmpiif -ldl"
+    fi
     # Special check for HPMPI
     if [ -r $mpilib/libmpi_hmp.a ]
     then
