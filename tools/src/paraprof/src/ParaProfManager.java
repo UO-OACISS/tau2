@@ -740,17 +740,17 @@ public class ParaProfManager extends JFrame implements ActionListener
 			    tmpString3 = newTrailName + " : " + tmpString2;
           
 			    //Pop up the dialog if there is already an experiment with this name.
-			    if(exp.isParaProfTrialNamePresent(tmpString3)){
+			    if(exp.isTrialPresent(tmpString3)){
 				JOptionPane.showMessageDialog(this, "A run already exists with that name!", "Warning!"
 							      ,JOptionPane.ERROR_MESSAGE);
 				return;
 			    }
           
-			    trial = exp.addParaProfTrial();
+			    trial = exp.addTrial();
 			    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
 			    trial.setDMTN(trialNode);
 			    trial.setProfilePathName(tmpString1);
-			    trial.setParaProfTrialName(tmpString3);
+			    trial.setName(tmpString3);
 			    trial.buildStaticData(file);
           
 			    //Now update the tree.
@@ -849,12 +849,12 @@ public class ParaProfManager extends JFrame implements ActionListener
 						    tmpString2 = ParaProf.applicationManager.getPathReverse(tmpString1);
 						    tmpString3 = newTrailName + " : " + tmpString2;
                                                 
-						    trial = exp.addParaProfTrial();
+						    trial = exp.addTrial();
 						    trialNode = new DefaultMutableTreeNode(trial);
 						    trial.setDMTN(trialNode);
                         
 						    trial.setProfilePathName(tmpString1);
-						    trial.setParaProfTrialName(tmpString3);
+						    trial.setName(tmpString3);
 						    trial.buildStaticData(testFile);
                     
 						    System.out.println("Found: " + newString);
@@ -1222,7 +1222,7 @@ public class ParaProfManager extends JFrame implements ActionListener
 	    if(parentNode.isRoot()){
 		String tmpString = userObject.toString();
 		if(tmpString.equals("Standard ParaProfApplications")){
-		    treeModel.insertNodeInto(new DefaultMutableTreeNode(ParaProf.applicationManager.addParaProfApplication()),
+		    treeModel.insertNodeInto(new DefaultMutableTreeNode(ParaProf.applicationManager.addApplication()),
 					     selectedNode, selectedNode.getChildCount());
 		}
 		else if(tmpString.equals("Runtime ParaProfApplications")){
@@ -1448,7 +1448,7 @@ class JRacyTableModel extends AbstractTableModel{
 	else{
 	    switch(r){
 	    case(0):
-		returnObject = app.getParaProfApplicationName();
+		returnObject = app.getName();
 		break;
 	    case(1):
 		returnObject = new Integer(app.getID());

@@ -33,7 +33,8 @@ public class ParaProfApplication extends Application{
 	return experiments;}
   
     public ParaProfExperiment addExperiment(){
-	ParaProfExperiment experiment = new ParaProfExperiment(this);
+	ParaProfExperiment experiment = new ParaProfExperiment();
+	experiment.setApplication(this);
 	experiment.setID((experiments.size()));
 	experiments.add(experiment);
 	return experiment;

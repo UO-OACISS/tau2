@@ -85,12 +85,12 @@ public class ParaProf implements ActionListener{
 		//setTitle("ParaProf: " + ParaProf.profilePathName);
 		
 		//Create a default application.
-		ParaProfApplication app = ParaProf.applicationManager.addParaProfApplication();
-		app.setParaProfApplicationName("Default App");
+		ParaProfApplication app = ParaProf.applicationManager.addApplication();
+		app.setName("Default App");
 		
 		//Create a default experiment.
-		ParaProfExperiment exp = app.addParaProfExperiment();
-		exp.setParaProfExperimentName("Default Exp");
+		ParaProfExperiment exp = app.addExperiment();
+		exp.setName("Default Exp");
 		
 		//Add the trial for this pprof.dat file to the experiment.
 		String tmpString1 = null;
@@ -101,11 +101,11 @@ public class ParaProf implements ActionListener{
 		tmpString2 = ParaProf.applicationManager.getPathReverse(tmpString1);
 		tmpString3 = "Default ParaProfTrial" + " : " + tmpString2;
 		
-		trial = exp.addParaProfTrial();
+		trial = exp.addTrial();
 		
 		trial.setProfilePathName(tmpString1);
 		trial.setProfilePathName(tmpString2);
-		trial.setParaProfTrialName(tmpString3);
+		trial.setName(tmpString3);
 		
 		trial.buildStaticData(testForPprofDat);
 		foundSomething = true;
@@ -132,12 +132,12 @@ public class ParaProf implements ActionListener{
 				    //setTitle("ParaProf: " + ParaProf.profilePathName);
 				    
 				    //Create a default application.
-				    ParaProfApplication app = ParaProf.applicationManager.addParaProfApplication();
-				    app.setParaProfApplicationName("Default App");
+				    ParaProfApplication app = ParaProf.applicationManager.addApplication();
+				    app.setName("Default App");
 				    
 				    //Create a default experiment.
-				    exp = app.addParaProfExperiment();
-				    exp.setParaProfExperimentName("Default Exp");
+				    exp = app.addExperiment();
+				    exp.setName("Default Exp");
 				    
 				    //Add the experiment run for this pprof.dat file to the experiment.
 				    String tmpString1 = null;
@@ -148,11 +148,11 @@ public class ParaProf implements ActionListener{
 				    tmpString2 = ParaProf.applicationManager.getPathReverse(tmpString1);
 				    tmpString3 = "Default ParaProfTrial" + " : " + tmpString2;
 				    
-				    trial = exp.addParaProfTrial();
+				    trial = exp.addTrial();
 				    
 				    trial.setProfilePathName(tmpString1);
 				    trial.setProfilePathName(tmpString2);
-				    trial.setParaProfTrialName(tmpString3);
+				    trial.setName(tmpString3);
 				    
 				    trial.buildStaticData(testFile);
 				    

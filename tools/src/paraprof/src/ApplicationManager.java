@@ -14,7 +14,7 @@ public class ApplicationManager extends Observable{
     public ApplicationManager(){}
   
     //Public methods.
-    public ParaProfApplication addParaProfApplication(){
+    public ParaProfApplication addApplication(){
 	ParaProfApplication application = new ParaProfApplication();
 	application.setID((applications.size()));
 	applications.add(application);

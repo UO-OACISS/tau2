@@ -13,11 +13,11 @@ import javax.swing.tree.*;
 public class Metric{
     public Metric(){}
     
-    public void setParentParaProfTrial(ParaProfTrial parentParaProfTrial){
-	this.parentParaProfTrial = parentParaProfTrial;}
+    public void setTrial(ParaProfTrial trial){
+	this.trial = trial;}
 
-    public ParaProfTrial getParentParaProfTrial(){
-	return parentParaProfTrial;}
+    public ParaProfTrial getTrial(){
+	return trial;}
     
     public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode){
 	this.defaultMutableTreeNode = defaultMutableTreeNode;}
@@ -38,20 +38,16 @@ public class Metric{
 	return id;}
     
     public String getIDString(){
-	if(parentParaProfTrial!=null)
-	    return parentParaProfTrial.getParaProfTrialIDString() + id + " - " + name;
+	if(trial!=null)
+	    return trial.getIDString() + ":" + this.getID() + " - " + this.getName();
 	else
-	    return id + " - " + name;
+	    return ":" + this.getID() + " - " + this.getName();
     }
     
     public String toString(){
-	if(parentParaProfTrial!=null)
-	    return parentParaProfTrial.getParaProfTrialIDString() + id + " - " + name;
-	else
-	    return id + " - " + name;
-    }
+	return this.getName();}
     
-    ParaProfTrial parentParaProfTrial = null;
+    ParaProfTrial trial = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
     private String name = null;
     private int id = -1;

@@ -14,14 +14,14 @@ import dms.dss.*;
 
 public class ParaProfExperiment extends Experiment{
 
-    public void setParentParaProfApplication(){
+    public ParaProfExperiment(){
 	super();}
 
-    public void setParentApplication(ParaProfApplication paraProfApplication){
-	this.paraProfApplication = paraProfApplication;}
+    public void setApplication(ParaProfApplication application){
+	this.application = application;}
 
-    public ParaProfApplication getParentApplication(){
-	return parentApplication;}
+    public ParaProfApplication getApplication(){
+	return application;}
   
     public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode){
 	this.defaultMutableTreeNode = defaultMutableTreeNode;}
@@ -33,7 +33,8 @@ public class ParaProfExperiment extends Experiment{
 	return trials;}
   
     public ParaProfTrial addTrial(){
-	ParaProfTrial trial = new ParaProfTrial(this);
+	ParaProfTrial trial = new ParaProfTrial();
+	trial.setExperiment(this);
 	trial.setID((trials.size()));
 	trials.add(trial);
 	return trial;
@@ -49,7 +50,11 @@ public class ParaProfExperiment extends Experiment{
     }
 
     public String getIDString(){
-	return (parentApplication.getIDString()) + (super.getID());}
+	if(application!=null)
+	    return (application.getIDString()) + ":" + (super.getID());
+	else
+	    return  ":" + (super.getID());
+    }
   
     public String toString(){ 
 	return super.getName();}
@@ -57,7 +62,7 @@ public class ParaProfExperiment extends Experiment{
     //####################################
     //Instance data.
     //####################################
-    ParaProfApplication parentApplication = null;
+    ParaProfApplication application = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
     Vector trials = new Vector();
     //####################################

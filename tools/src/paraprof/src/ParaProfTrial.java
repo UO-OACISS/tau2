@@ -23,18 +23,20 @@ import java.io.*;
 import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
+import dms.dss.*;
 
 public class ParaProfTrial extends Trial{
-    public ParaProfTrial(ParaProfExperiment parentExperiment){
-	
-	this.parentExperiment = parentExperiment;}
+    public ParaProfTrial(){
+	super();}
+
+    public void setExperiment(ParaProfExperiment experiment){
+	this.experiment = experiment;}
   
-    public ParaProfExperiment getParentParaProfExperiment(){
-	return parentParaProfExperiment;}
+    public ParaProfExperiment getExperiment(){
+	return experiment;}
   
     public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode){
 	this.defaultMutableTreeNode = defaultMutableTreeNode;}
@@ -43,14 +45,18 @@ public class ParaProfTrial extends Trial{
 	return defaultMutableTreeNode;}
   
     public String getIDString(){
-	return (parentExperiment.getIDString()) + (super.getID());}
+	if(experiment!=null)
+	    return (experiment.getIDString()) + ":" + (super.getID());
+	else
+	    return  ":" + (super.getID());
+    }
   
     public Metric addMetric(){
-	Metric newMetric = new Metric();
-	newMetric.setTrial(this);
-	newMetric.setID((metrics.size()));
-	metrics.add(newMetric);
-	return newMetric;
+	Metric metric = new Metric();
+	metric.setTrial(this);
+	metric.setID((metrics.size()));
+	metrics.add(metric);
+	return metric;
     }
   
     public ColorChooser getColorChooser(){
@@ -84,9 +90,9 @@ public class ParaProfTrial extends Trial{
 	}
 	return -1;
     }
-  
-    public String toString(){
-	return trialName;}
+
+    public String toString(){ 
+	return super.getName();}
   
     public int getNumberOfNodes(){
 	return nodes.size();}
@@ -343,7 +349,7 @@ public class ParaProfTrial extends Trial{
     //####################################
     //Instance data.
     //####################################
-    ParaProfExperiment parentExperiment = null;
+    ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
     private Vector metrics = new Vector();
   
