@@ -60,7 +60,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 
 
 	    if (windowType == 0) { // if this is a 'mean' window
-		if (trial.getGlobalMapping().getMaxMeanExclusiveValue(trial.getSelectedMetricID()) > 100) {
+		if (trial.getGlobalMapping().getMaxMeanExclusivePercentValue(trial.getSelectedMetricID()) > 100) {
 		    exclusivePercentOver100 = true;
 		    percent = false;
 		}
