@@ -28,7 +28,9 @@ Version 2.13 changes (from 2.12):
 16. Added memory utilization tracking (examples/memory) [LLNL].
 17. Added muse user defined events with TAU interrupt handlers [LANL].
 18. Paraprof improvements (clickable callpaths, image, XML support) [LLNL]. 
-19. Added support for psrun, dynaprof, hpmtoolkit, gprof and mpiP for Paraprof.
+19. Fuzzy matching of file names in tau_instrumentor (/home/foo.cpp ./foo.cpp)
+20. Added support for TAU_TRACK_MEMORY_HERE() [LLNL].
+21. Improvements in PerfDMF and ParaProf's ability to connect to database [LLNL].
   
  
 
