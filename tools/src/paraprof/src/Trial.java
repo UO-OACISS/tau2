@@ -28,7 +28,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 
-public class Trial extends Thread{
+public class Trial{ //extends Thread{
     //Constructor.
     public Trial(Experiment inParentExp){
 	parentExperiment = inParentExp;
@@ -51,7 +51,7 @@ public class Trial extends Thread{
 	return nodeRef;
     }
   
-    public synchronized void setTrialName(String inString){
+    public void setTrialName(String inString){
 	trialName = inString;
     }
   
@@ -248,30 +248,22 @@ public class Trial extends Thread{
 	    return true;
     }
   
-    public synchronized void buildStaticData(File inFile){
-	//Set the currentFile, and start the thread.
-	//Note, that only one thread is allowed to run at a time on each trial.
-	//Additional ones are queued.
-	currentFile = inFile;
-    
-	this.start();
-    }
-  
     //The core public function of this class.  It reads pprof dump files ... that is pprof
     //run with the -d option.  If any changes occur to the "pprof -d" file output format,
     //the working of this function might be affected.
   
     //This method is now implemted 
-    public void run(){
+    public void buildStaticData(File inFile){
 	try{
 	    System.out.println("Processing data file, please wait ......");
 	    long time = System.currentTimeMillis();
-      
-	    FileInputStream fileIn = new FileInputStream(currentFile);
-	    ProgressMonitorInputStream progressIn = new ProgressMonitorInputStream(null, "Processing ...", fileIn);
-	    InputStreamReader inReader = new InputStreamReader(progressIn);
+
+	    FileInputStream fileIn = new FileInputStream(inFile);
+	    //ProgressMonitorInputStream progressIn = new ProgressMonitorInputStream(null, "Processing ...", fileIn);
+	    //InputStreamReader inReader = new InputStreamReader(progressIn);
+	    InputStreamReader inReader = new InputStreamReader(fileIn);
 	    BufferedReader br = new BufferedReader(inReader);
-      
+	    
 	    String inputString = null;
 	    String s1 = null;
 	    String s2 = null;
@@ -309,7 +301,7 @@ public class Trial extends Thread{
 	    //Another one.
 	    int i=0;
 	    int maxID = 0;
-      
+
 	    //Process the file.
       
 	    //********************
@@ -361,8 +353,7 @@ public class Trial extends Thread{
       
 	    //Need to call addDefaultToVectors() on all objects that require it.
 	    addDefaultToVectors();
-      
-      
+
 	    //Only need to call addDefaultToVectors() if not the first run.
 	    if(!firstRun){
 	  
@@ -388,10 +379,10 @@ public class Trial extends Thread{
 		Vector tmpContextList;
 		Vector tmpThreadList;
 		Vector tmpThreadDataList;
-	  
+
 		//Get a reference to the global data.
 		Vector tmpVector = getNodes();
-	  
+
 		for(Enumeration e3 = tmpVector.elements(); e3.hasMoreElements() ;){
 		    tmpGlobalServer = (GlobalServer) e3.nextElement();
 	      
@@ -428,7 +419,7 @@ public class Trial extends Thread{
       
 	    if(counterName == null)
 		counterName = new String("Wallclock Time");
-      
+
 	    System.out.println("Counter name is: " + counterName);
       
 	    Value newValue = addValue();
@@ -896,7 +887,7 @@ public class Trial extends Thread{
 	    System.out.println("Done processing data file, please wait ......");
 	    System.out.println("Time to process file (in milliseconds): " + time);
 	    //Ok, now show the static main window.
-	    this.showMainWindow();
+	    //this.showMainWindow();
 	}
         catch(Exception e){
 	    ParaProf.systemError(e, null, "SSD01");

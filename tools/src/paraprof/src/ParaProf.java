@@ -77,7 +77,9 @@ public class ParaProf implements ActionListener
 	    
 	    //Check to see if a "pprof.dat" file exists.  If it does, load it.
 	    File testForPprofDat = new File("pprof.dat");
-      
+	    
+	    boolean foundSomething = false;
+	    Trial trial = null;
 	    if(testForPprofDat.exists()){
 		System.out.println("Found pprof.dat!");
 		
@@ -92,7 +94,6 @@ public class ParaProf implements ActionListener
 		exp.setExperimentName("Default Exp");
 		
 		//Add the trial for this pprof.dat file to the experiment.
-		Trial trial = null;
 		String tmpString1 = null;
 		String tmpString2 = null;
 		String tmpString3 = null;
@@ -108,13 +109,11 @@ public class ParaProf implements ActionListener
 		trial.setTrialName(tmpString3);
 		
 		trial.buildStaticData(testForPprofDat);
+		foundSomething = true;
 	    }
 	    else{
-		boolean foundSomething = false;
-		
 		File file = new File(".");
 		Experiment exp = null;
-		Trial trial = null;
 		
 		String filePath = file.getCanonicalPath();
 		File [] list = file.listFiles();
@@ -173,6 +172,11 @@ public class ParaProf implements ActionListener
 		if(!foundSomething)
 		    System.out.println("Did not find pprof.dat!");
 	    }
+
+	    if(!foundSomething)
+		    System.out.println("No profile data found!");
+	    else
+		trial.showMainWindow();
 	    
 	    ParaProfManager jRM = new ParaProfManager();
 	    jRM.expandDefaultTrialNode();
