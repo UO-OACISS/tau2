@@ -261,7 +261,7 @@ int package_selector(int *data){
 #endif
 		TauMuseCreate();
 	}
-
+        return 0;
 #endif //TAU_MUSE
 
 //=================================================
