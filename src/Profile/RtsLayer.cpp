@@ -1159,6 +1159,24 @@ int RtsLayer::MergeAndConvertTracesIfNecessary(void)
       char cdcmd[1024];
       char *tauroot=TAUROOT;
       char *tauarch=TAU_ARCH;
+      char *conv="tau2vtf";
+      char converter[1024] = {0}; 
+      FILE *in;
+  
+      /* If we can't find tau2vtf, use tau_convert! */
+      sprintf(converter, "%s/%s/bin/%s",tauroot, tauarch, conv);
+      if ((in = fopen(converter, "r")) == NULL)
+      {
+#ifdef DEBUG_PROF
+        printf("Couldn't open %s\n", converter);
+#endif /* DEBUG_PROF */
+        sprintf(converter, "%s/%s/bin/tau_convert", tauroot, tauarch);
+      }
+      else
+      { /* close it */
+        fclose(in);
+      }
+
       /* Should we get rid of intermediate trace files? */
       if((keepfiles = getenv("TAU_KEEP_TRACEFILES")) == NULL)
       {
@@ -1180,7 +1198,7 @@ int RtsLayer::MergeAndConvertTracesIfNecessary(void)
       }
 
       /* create the command */
-      sprintf(cmd, "%s /bin/rm -f app12345678.trc; %s/%s/bin/tau_merge tautrace.*.trc app12345678.trc; %s/%s/bin/tau2vtf app12345678.trc tau.edf %s; %s", cdcmd,tauroot, tauarch, tauroot, tauarch, outfile, rmcmd);
+      sprintf(cmd, "%s /bin/rm -f app12345678.trc; %s/%s/bin/tau_merge tautrace.*.trc app12345678.trc; %s app12345678.trc tau.edf %s; %s", cdcmd,tauroot, tauarch, converter, outfile, rmcmd);
 #ifdef DEBUG_PROF
       printf("The merge/convert cmd is: %s\n", cmd);
 #endif /* DEBUG_PROF */
@@ -1224,6 +1242,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.62 $   $Date: 2004/10/14 23:46:19 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.62 2004/10/14 23:46:19 sameer Exp $ 
+ * $Revision: 1.63 $   $Date: 2004/11/07 00:25:04 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.63 2004/11/07 00:25:04 sameer Exp $ 
  ***************************************************************************/
