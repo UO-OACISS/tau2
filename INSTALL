@@ -306,6 +306,8 @@ II) Platforms :
 	e) Cray T3E with Cray C++ compiler, and KAI KCC.
 	f) Compaq Tru64 Alpha with g++.
         g) Compaq Alpha Linux clusters with g++.
+	i) Microsoft Windows. Tested with MS Visual C++ v5.1.  
+	   
 
    TAU may work with minor modifications on other platforms.
 	
