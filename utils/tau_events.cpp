@@ -47,7 +47,7 @@ using namespace std;
 #endif /* KAI*/ 
 
 # define FILENAME_SIZE 	1024
-# define MAX_OPEN_FILES  256
+# define MAX_OPEN_FILES  16*1024
 # define LINEMAX	64*1024
 FILE * edfFiles[MAX_OPEN_FILES]; /* array of descriptors */
 
