@@ -1899,25 +1899,31 @@ cat << EOF > mpistatus.c
   }
 EOF
   
+  mpicompiler=$cxx_compiler
+
+  if [ $machine = t3e ]
+  then
+    mpicompiler=$c_compiler
+  fi
 
   if [ $machine = sgi64 -a $cxx_compiler = CC ]
   then
     orig_useropt="$orig_useropt -64"
   fi
 
-  if $c_compiler $orig_useropt $mpi_include -c mpi_thread_test.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpi_thread_test.c  1> /dev/null 2>&1
   then
     echo "Thread-safe MPI interface is defined... "
     fixmakeargs="$fixmakeargs MPI_THREADED"
   fi
 
-  if $c_compiler $orig_useropt $mpi_include -c mpi2.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2.c  1> /dev/null 2>&1
   then
     echo "MPI-2 Interface is defined..."
     fixmakeargs="$fixmakeargs MPI2"
     mpi2=yes
   fi
-  if $c_compiler $orig_useropt $mpi_include -c mpi2grequest.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2grequest.c  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
     then 
@@ -1926,7 +1932,7 @@ EOF
     fi
   fi
 
-  if $c_compiler $orig_useropt $mpi_include -c mpi2iorequest.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2iorequest.c  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
     then 
@@ -1936,7 +1942,7 @@ EOF
     fi
   fi
 
-  if $c_compiler $orig_useropt $mpi_include -c mpi2datarep.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2datarep.c  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
     then 
@@ -1945,7 +1951,7 @@ EOF
     fi
   fi
 
-  if $c_compiler $orig_useropt $mpi_include -c mpi2errhandler.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2errhandler.c  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
     then 
@@ -1954,7 +1960,7 @@ EOF
     fi
   fi
 
-  if $c_compiler $orig_useropt $mpi_include -c mpi2hpconst.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2hpconst.c  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
     then 
@@ -1963,25 +1969,25 @@ EOF
     fi
   fi
 
-  if $c_compiler $orig_useropt $mpi_include -c mpi2attr.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2attr.c  1> /dev/null 2>&1
   then
     echo "MPI-2 MPI*attr_functions are defined..."
     fixmakeargs="$fixmakeargs MPIATTR"
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi2typeex.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2typeex.c  1> /dev/null 2>&1
   then
     echo "MPI-2 MPI_Type_dup and MPI_Exscan are defined..."
     fixmakeargs="$fixmakeargs MPITYPEEX"
   fi
 
-  if $c_compiler $orig_useropt $mpi_include -c mpi2add.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2add.c  1> /dev/null 2>&1
   then
     echo "MPI-2 MPI_Add_error* functions are defined..."
     fixmakeargs="$fixmakeargs MPIADDERROR"
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpistatus.c  1> /dev/null 2>&1
+  if $mpicompiler $orig_useropt $mpi_include -c mpistatus.c  1> /dev/null 2>&1
   then
     echo "MPI_Status f2c/c2f found..."
   else
