@@ -15,25 +15,29 @@ public class Thread implements Comparable{
     //Contructor(s).
     //####################################
     public Thread(){
-	doubleList = new double[7];
+	doubleList = new double[Thread.arrayIncrementSize];
+	this.numberOfMetrics = 1;
     }
 
     public Thread(int initialCapacity){
-	doubleList = new double[initialCapacity*7];
+	doubleList = new double[initialCapacity*Thread.arrayIncrementSize];
+	this.numberOfMetrics = initialCapacity;
     }
     
     public Thread(int nodeID, int contextID, int threadID){
 	this.nodeID = nodeID;
 	this.contextID = contextID;
 	this.threadID = threadID;
-	doubleList = new double[7];
+	doubleList = new double[Thread.arrayIncrementSize];
+	this.numberOfMetrics = 1;
     }
 
     public Thread(int nodeID, int contextID, int threadID, int initialCapacity){
 	this.nodeID = nodeID;
 	this.contextID = contextID;
 	this.threadID = threadID;
-	doubleList = new double[initialCapacity*7];
+	doubleList = new double[initialCapacity*Thread.arrayIncrementSize];
+	this.numberOfMetrics = initialCapacity;
     }
     //####################################
     //End - Contructor(s).
@@ -79,13 +83,17 @@ public class Thread implements Comparable{
     public void incrementStorage(){
 	int currentLength = doubleList.length;
 	//can use a little space here ... space for speed! :-)
-	double[] newArray = new double[currentLength+7];
+	double[] newArray = new double[currentLength+Thread.arrayIncrementSize];
 	
 	for(int i=0;i<currentLength;i++){
 	    newArray[i] = doubleList[i];
 	}
 	doubleList = newArray;
+	this.numberOfMetrics++;
     }
+
+    public int getNumberOfMetrics(){
+	return this.numberOfMetrics;}
 
     //A user uses this function at their own risk.
     public void addFunction(GlobalThreadDataElement ref){
@@ -182,6 +190,15 @@ public class Thread implements Comparable{
 	this.setThreadDataHelper(metric);
 	this.setPercentData(metric);
 	this.setThreadDataHelper(metric);
+    }
+
+    public void setThreadDataAllMetrics(){
+	//This needs to be made more efficient (such as that used for setting the mean values).
+	for(int i=0;i<this.getNumberOfMetrics();i++){
+	    this.setThreadDataHelper(i);
+	    this.setPercentData(i);
+	    this.setThreadDataHelper(i);
+	}
     }
 
     public void setMaxInclusiveValue(int metric, double inDouble){
@@ -397,6 +414,9 @@ public class Thread implements Comparable{
     private int maxNumberOfCalls = 0;
     private int maxNumberOfSubRoutines = 0;
     private boolean trimmed = false;
+
+    private int numberOfMetrics = 0;
+    private static int arrayIncrementSize = 7;
 
     private boolean debug = false;
     //When in debugging mode, this class can print a lot of data.

@@ -215,11 +215,15 @@ public class GprofOutputSession extends ParaProfDataSession{
 		    }
 		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 		} // while lines in file
-		thread.setThreadData(0);
+		//Remove after testing is complete.
+		//thread.setThreadData(0);
 	    } // for files in File[]
 	    } // for elements in vector v
+	    //Generate derived data.
+	    this.generateDerivedData(0);
+	    //Remove after testing is complete.
 	    //thread.setThreadData(0);
-	    this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
+	    //this.setMeanDataAllMetrics(0);
 
 	    if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
 		setCallPathDataPresent(true);

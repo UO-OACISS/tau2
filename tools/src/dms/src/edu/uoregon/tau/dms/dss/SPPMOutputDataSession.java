@@ -108,10 +108,11 @@ public class SPPMOutputDataSession extends ParaProfDataSession{
 				}
 	    	}
 
-			// set the mean and total data for all metrics
-			// (totals are calculated to get the means, and are saved)
-			this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
-	    
+		//Generate derived data.
+		this.generateDerivedData(0);
+		//Remove after testing is complete.
+		//this.setMeanDataAllMetrics(0);	
+			    
 	    	//Need to notify observers that we are done.  Be careful here.
 	    	//It is likely that they will modify swing elements.  Make sure
 	    	//to dump request onto the event dispatch thread to ensure

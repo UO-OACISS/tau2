@@ -96,8 +96,10 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 					System.out.println("Time to process file (in milliseconds): " + time);
 				}
 	    	}
-
-			this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
+		//Generate derived data.
+		this.generateDerivedData(0);
+		//Remove after testing is complete.
+		//this.setMeanDataAllMetrics(0);
 	    
 	    	//Need to notify observers that we are done.  Be careful here.
 	    	//It is likely that they will modify swing elements.  Make sure

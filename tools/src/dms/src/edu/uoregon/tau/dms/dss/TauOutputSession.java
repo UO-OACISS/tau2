@@ -404,13 +404,16 @@ public class TauOutputSession extends ParaProfDataSession{
 			    if(this.debug())
 				this.outputDebugMessage("done processing userevents");
 			}
-			thread.setThreadData(metric);
+			//Remove after testing is complete.
+			//thread.setThreadData(metric);
 		    }
 		}
 		metric++;
 	    }
-	    //Generate mean data.
-	    this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
+	    //Generate derived data.
+	    this.generateDerivedData(0);
+	    //Remove after testing is complete.
+	    //this.setMeanDataAllMetrics(0);
 
 	    System.out.println("Processing callpath data ...");
 	    if(this.debug())

@@ -78,7 +78,8 @@ public class PSRunDataSession extends ParaProfDataSession{
 					}
 
 					// generate summary statistics
-					this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
+					//Remove after testing is complete.
+					//this.setMeanDataAllMetrics(0);
 	    
 					if(UtilFncs.debug){
 			    		System.out.println("The total number of threads is: " + 
@@ -94,6 +95,8 @@ public class PSRunDataSession extends ParaProfDataSession{
 					System.out.println("Time to process file (in milliseconds): " + time);
 				}
 	    	}
+		//Generate derived data.
+		this.generateDerivedData(0);
 
 	    	//Need to notify observers that we are done.  Be careful here.
 	    	//It is likely that they will modify swing elements.  Make sure

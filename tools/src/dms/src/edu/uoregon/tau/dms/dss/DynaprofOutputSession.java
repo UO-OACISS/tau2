@@ -170,7 +170,8 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			if(totalLine){
 			    if(metric >= 0){
 				//Compute derived data for this metric.
-				thread.setThreadData(metric);
+				//Remove after testing is complete ... check to see if this if/else structure is needed at all after the removal.
+				//thread.setThreadData(metric);
 				metric++;
 			    }
 			    else
@@ -342,11 +343,14 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			    }
 			}
 		    }
-		    thread.setThreadData(metric);
+		    //Remove after testing is complete.
+		    //thread.setThreadData(metric);
 		}
 
-		//Generate mean data for this trial.
-		this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
+		//Generate derived data.
+		this.generateDerivedData(0);
+		//Remove after testing is complete.
+		//this.setMeanDataAllMetrics(0);
 
 		System.out.println("Processing callpath data ...");
 		if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){

@@ -353,6 +353,16 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	return maxNCT;
     }
     
+    
+    //After loading all data, this function can be called to manage the generation of all the derived data that ParaProf needs
+    //for a particular mapping selection.
+    public void generateDerivedData(int mappingSelection){
+	for(Enumeration e = this.getNCT().getThreads().elements(); e.hasMoreElements() ;){
+	    ((Thread) e.nextElement()).setThreadDataAllMetrics();
+	}
+	this.setMeanDataAllMetrics(mappingSelection);
+    }
+    
     public void setMeanData(int mappingSelection, int metric){
 	if(this.debug()){
 	    this.outputToFile("####################################");
@@ -442,11 +452,13 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	}
     }
 
-    public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics){
+    public void setMeanDataAllMetrics(int mappingSelection){
 	if(this.debug()){
 	    this.outputToFile("####################################");
 	    this.outputToFile("Setting mean data :: public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics)");
 	}
+
+	int numberOfMetrics = this.getNumberOfMetrics();
 	
 	//Cycle through the list of global mapping elements.  For each one, sum up
 	//the exclusive and the inclusive times respectively, and each total by the
