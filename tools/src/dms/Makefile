@@ -19,7 +19,7 @@ classes/dms/dss/*.class: dss/*.java
 	tail .buildtest
 
 clean:
-	rm -rf dms.jar classes/dms examples/*.class .buildtest .simple doc/*.html doc/*.css doc/package-list doc/dms doc/resources
+	rm -rf dms.jar classes/dms examples/*.class .buildtest .simple doc/[a-z]*
 
 .simple: examples/SimpleExample.class
 	examples/testSimpleExample >& .simple
