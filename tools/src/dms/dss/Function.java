@@ -18,7 +18,7 @@ import java.util.Vector;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: Function.java,v 1.7 2003/08/27 17:07:38 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.8 2003/09/02 19:11:04 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -124,6 +124,27 @@ public class Function {
 	}
 
 /**
+ * Gets mean summary data for the function object.
+ * The Trial object associated with this function has a vector of metric
+ * names that represent the metric data stored for each function in the
+ * application.  Multiple metrics can be recorded for each trial.  If the
+ * user has selected a metric before calling getFunctions(), then this method
+ * can be used to return the mean metric data for this 
+ * function/trial/experiment/application combination.
+ * The mean data is averaged across all locations, defined as any combination
+ * of node/context/thread.
+ *
+ * @return	the FunctionDataObject containing the mean data for this function/metric combination.
+ * @see		Trial
+ * @see		FunctionDataObject
+ * @see		DataSession#getFunctions
+ * @see		DataSession#setMetric(String)
+ */
+	public FunctionDataObject getMeanSummary () {
+		return (FunctionDataObject)(this.meanSummary.elementAt(0));
+	}
+
+/**
  * Gets total summary data for the function object.
  * The Trial object associated with this function has a vector of metric
  * names that represent the metric data stored for each function in the
@@ -140,6 +161,27 @@ public class Function {
  */
 	public FunctionDataObject getTotalSummary (int metricIndex) {
 		return (FunctionDataObject)(this.totalSummary.elementAt(metricIndex));
+	}
+
+/**
+ * Gets total summary data for the function object.
+ * The Trial object associated with this function has a vector of metric
+ * names that represent the metric data stored for each function in the
+ * application.  Multiple metrics can be recorded for each trial.  If the
+ * user has selected a metric before calling getFunctions(), then this method
+ * can be used to return the total metric data for this 
+ * function/trial/experiment/application combination.
+ * The total data is summed across all locations, defined as any combination
+ * of node/context/thread.
+ *
+ * @return	the FunctionDataObject containing the total data for this function/metric combination.
+ * @see		Trial
+ * @see		FunctionDataObject
+ * @see		DataSession#getFunctions
+ * @see		DataSession#setMetric(String)
+ */
+	public FunctionDataObject getTotalSummary () {
+		return (FunctionDataObject)(this.totalSummary.elementAt(0));
 	}
 
 /**
