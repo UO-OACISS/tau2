@@ -53,4 +53,29 @@ public class UtilFncs{
       
       return returnString;
     }
+
+    public static int exists(int[] ref, int i){
+	if(ref == null)
+	    return -1;
+	int test = ref.length;
+	for(int j=0;j<test;j++){
+	    if(ref[j]=i)
+		return j;
+	}
+	return -1;
+    }
+
+    public static int exists(Vector ref, int i){
+	//Assuming a vector of Integers.
+	if(ref == null)
+	    return -1;
+	Integer current = null;
+	int test = ref.size;
+	for(int j=0;j<test;j++){
+	    current = (Integer) ref.elementAt(j);
+	    if((current.intValue())==i)
+		return j;
+	}
+	return -1;
+    }
 }

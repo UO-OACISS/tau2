@@ -84,15 +84,31 @@ public class GlobalMappingElement implements Serializable, Comparable{
 
     public void addParent(int id){
 	
-	if(parents==null)
+	if(parents==null){
 	    parents = new int[5];
+	    callPathIDSParents = new int[5][5];
+	}
 	else if(parents.length<numberOfParents){
 	    int currentLength = parents.length;
 	    int[] newArray = new int[currentLength+5];
 	    for(int i=0;i<currentLength;i++){
 		newArray[i] = parents[i];
 	    }
-	    parents = newArray;	    
+	    parents = newArray;
+	    
+	    int[][] newArray2 = new int[currentLength+5][];
+	    for(int j=0;j<currentLength;j++){
+		int subArrayLength = callPathIDSParents[j].length;
+		newArray2[j] = new int[subArrayLength+5];
+		for(int k=0;k<subArrayLength;k++){
+		    newArray2[j][k]=callPathIDS[j][k];
+		}
+	    }
+	    for(int l=currentLength;l<(currentLength+5);l++){
+		newArray2[l] = new int[5];
+	    }
+	    callPathIDSParents = newArray2;
+	    
 	}
 	//Safe to add.
 	parents[numberOfParents] = id;
@@ -115,20 +131,26 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	return numberOfChildren;
     }
 
-    public void addChild(int id){
-	if(children==null)
-	    children = new int[5];
-	else if(children.length<numberOfChildren){
-	    int currentLength = children.length;
-	    int[] newArray = new int[currentLength+5];
-	    for(int i=0;i<currentLength;i++){
-		newArray[i] = children[i];
+    public void addChild(int id,int pathID){
+	//Check to see if this child is already present,
+	//if so, add only the callpath to the system.
+	int tmpInt = UtilFuncs.exists(children,id);
+	if(tmpInt != -1){
+	    if(children==null){
+		children = new Vector();
+		callPathIDSChildren = new Vector();
 	    }
-	    children = newArray;	    
+	    
+
+
+
+	    children[numberOfChildren] = id;
+	    //Check the length of the callpath array.
+	    if(
+	    numberOfChildren++;
 	}
-	//Safe to add.
-	children[numberOfChildren] = id;
-	numberOfChildren++;
+	else{
+	}
     }
     
     public void setColorFlag(boolean inBoolean){
@@ -490,10 +512,11 @@ public class GlobalMappingElement implements Serializable, Comparable{
   
     int[] groups = null;
     int numberOfGroups = 0;
-    int[] parents = null;
-    int numberOfParents = 0;
-    int[] children = null;
     int numberOfChildren = 0;
+    Vector parents = null;
+    Vector children = null;
+    Vector callPathIDSParents = null;
+    Vector callPathIDSChildren = null;
 
     //Color Settings.
     boolean colorFlag = false;

@@ -51,10 +51,10 @@ public class CallPathUtilFuncs{
 		    else
 			parent = s;
 		    //Update parent/child relationships.
-		    gme1 = gm.getGlobalMappingElement(parent,0); 
-		    gme2 = gm.getGlobalMappingElement(child,0);
-		    gme1.addChild(gme2.getGlobalID());
-		    gme2.addParent(gme1.getGlobalID());
+		    gme2 = gm.getGlobalMappingElement(parent,0); 
+		    gme3 = gm.getGlobalMappingElement(child,0);
+		    gme2.addChild(gme2.getGlobalID(),gme1.getGlobalID());
+		    gme3.addParent(gme1.getGlobalID());
 		}
 	    }
 	    
