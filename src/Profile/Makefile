@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -124,7 +124,7 @@ TAU_SHLIBX		= .so
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
-TAU_SHLIB	= libTAU$(TAUOPTIONS)$(TAU_SHLIBX)
+TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
 
 ##############################################
@@ -137,6 +137,9 @@ TAU_SHLIB	= libTAU$(TAUOPTIONS)$(TAU_SHLIBX)
 #JAVA#TAU_JAVA_CLASS1 = $(TAU_JAVA_INSTALLDIR)/Profile.class #ENDIF#
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 ##############################################
+TAU_DSO         = $(TAU_SHLIB)
+TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
+
 
 all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) 
 
@@ -172,7 +175,9 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
-		
+		$(RM) $(INSTALLDEST)/libTAU.so
+		ln -s $@ $(INSTALLDEST)/libTAU.so
+
 $(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX): libTauMpi$(TAU_OPTIONS)$(LSX)
 		$(MAKE) -f Makefile.wrapper install
 
