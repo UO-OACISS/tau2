@@ -1,8 +1,9 @@
 /*
  * UserEventWindow.java
  * 
- * Title: ParaProf Author: Robert Bell Description: The container for the
- * UserEventWindowPanel.
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description: The container for the UserEventWindowPanel.
  */
 
 package edu.uoregon.tau.paraprof;
@@ -454,7 +455,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     //######
     //Panel header.
     //######
-    //This process is separated into two functionProfiles to provide the option
+    //This process is separated into two functions to provide the option
     //of obtaining the current header string being used for the panel
     //without resetting the actual header. Printing and image generation
     //use this functionality for example.
@@ -592,6 +593,6 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 
     private int order = 0; //0: descending order,1: ascending order.
     private int valueType = 12; //12-number of
-    // userevents,14-min,16-max,18-mean.
+    // userEvents,14-min,16-max,18-mean.
 
 }

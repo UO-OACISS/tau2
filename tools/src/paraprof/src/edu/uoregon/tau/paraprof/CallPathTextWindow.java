@@ -11,9 +11,9 @@ import edu.uoregon.tau.dms.dss.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.12 2005/01/04 01:16:26 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.13 2005/01/06 22:49:43 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -29,16 +29,17 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         this.dataSorter = dataSorter;
         this.windowType = windowType;
 
-        setLocation(new java.awt.Point(0, 0));
-        setSize(new java.awt.Dimension(800, 600));
+        setLocation(0, 0);
+        setSize(800, 600);
 
         //Now set the title.
-        if (windowType == 0)
+        if (windowType == 0) {
             this.setTitle("Mean Call Path Data - " + trial.getTrialIdentifier(true));
-        else if (windowType == 1)
+        } else if (windowType == 1) {
             this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
                     + trial.getTrialIdentifier(true));
-        else
+            CallPathUtilFuncs.trimCallPathData(trial.getDataSource(), trial.getDataSource().getThread(nodeID, contextID, threadID));
+        } else
             this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
 
         //Add some window listener code
@@ -282,7 +283,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         //Panel and ScrollPane definition.
         //######
 
-        edu.uoregon.tau.dms.dss.Thread thread = trial.getNCT().getThread(nodeID, contextID, threadID);
+        edu.uoregon.tau.dms.dss.Thread thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
 
         panel = new CallPathTextWindowPanel(trial, thread, this, windowType);
         //The scroll panes into which the list shall be placed.
@@ -473,7 +474,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         } else if (tmpString.equals("colorEvent")) {
             panel.repaint();
         } else if (tmpString.equals("dataEvent")) {
+            this.setHeader();
             sortLocalData();
+            panel.resetAllDrawObjects();
             if (!(trial.isTimeMetric()))
                 units = 0;
             panel.repaint();
@@ -517,7 +520,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, order);
             else {
                 list = new Vector();
-                for (Iterator it = trial.getTrialData().getFunctions(); it.hasNext();)
+                for (Iterator it = trial.getDataSource().getFunctions(); it.hasNext();)
                     list.add(it.next());
             }
         } else {
@@ -527,7 +530,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, valueType + order);
             else {
                 list = new Vector();
-                for (Iterator it = trial.getTrialData().getFunctions(); it.hasNext();)
+                for (Iterator it = trial.getDataSource().getFunctions(); it.hasNext();)
                     list.add(it.next());
                 Collections.sort(list);
             }

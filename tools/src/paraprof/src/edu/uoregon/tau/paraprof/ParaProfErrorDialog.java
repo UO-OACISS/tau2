@@ -94,7 +94,7 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
 
         headerTextArea.setBackground(lbl.getBackground());
 
-        JTextArea errorTextArea = new JTextArea(errorString);
+        JTextArea errorTextArea = new JTextArea("Version: " + ParaProf.getVersionString() + "\n" + errorString);
 
         JButton closeButton = new JButton("Close");
         closeButton.addActionListener(this);

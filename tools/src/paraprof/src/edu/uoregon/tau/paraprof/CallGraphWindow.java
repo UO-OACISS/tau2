@@ -35,9 +35,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.10 2005/01/04 01:16:26 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.11 2005/01/06 22:49:43 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -235,13 +235,13 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         if (meanWindow) {
             thread = trial.getDataSource().getMeanData();
         } else {
-            thread = trial.getNCT().getThread(nodeID, contextID, threadID);
+            thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
         }
 
         if (trial.callPathDataPresent())
-            CallPathUtilFuncs.buildThreadRelations(trial.getTrialData(), thread);
+            CallPathUtilFuncs.buildThreadRelations(trial.getDataSource(), thread);
 
-        functionProfileList = thread.getFunctionList();
+        functionProfileList = thread.getFunctionProfiles();
 
         // create the right-click popup
         JMenuItem jMenuItem = null;
@@ -1608,7 +1608,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                         continue;
                     Function f = fp.getFunction();
 
-                    if (f.isCallPathObject()) { // we only care about call path functionProfiles
+                    if (f.isCallPathFunction()) { // we only care about call path functionProfiles
                         String s = f.getName();
                         if (s.indexOf(dgc.getFunction().getName()) != -1) {
 
@@ -1628,9 +1628,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
                                 //System.out.println(parentString + "=>" + childString);
 
-                                FunctionProfile parentFunction = thread.getFunctionProfile(trial.getTrialData().getFunction(
+                                FunctionProfile parentFunction = thread.getFunctionProfile(trial.getDataSource().getFunction(
                                         parentString));
-                                FunctionProfile childFunction = thread.getFunctionProfile(trial.getTrialData().getFunction(
+                                FunctionProfile childFunction = thread.getFunctionProfile(trial.getDataSource().getFunction(
                                         childString));
 
                                 Vertex v = (Vertex) vertexMap.get(parentFunction);

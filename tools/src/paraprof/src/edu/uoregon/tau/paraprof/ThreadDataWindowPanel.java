@@ -35,7 +35,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         if (nodeID == -1) {
             thread = trial.getDataSource().getMeanData();
         } else {
-            thread = trial.getNCT().getThread(nodeID, contextID, threadID);
+            thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
         }
 
         //if (windowType == 1)

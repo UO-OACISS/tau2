@@ -5,16 +5,16 @@ import edu.uoregon.tau.dms.dss.*;
 /**
  * CallPathDrawObject: This object is used to hold data for the CallPathTextWindowPanel
  *   
- * <P>CVS $Id: CallPathDrawObject.java,v 1.4 2004/12/29 00:09:47 amorris Exp $</P>
+ * <P>CVS $Id: CallPathDrawObject.java,v 1.5 2005/01/06 22:49:43 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		CallPathTextWindow
  * @see		CallPathTextWindowPanel
  */
 public class CallPathDrawObject {
 
-    public CallPathDrawObject(Function func, boolean parent, boolean child, boolean spacer) {
-        this.function = func;
+    public CallPathDrawObject(Function function, boolean parent, boolean child, boolean spacer) {
+        this.function = function;
         this.parent = parent;
         this.child = child;
         this.spacer = spacer;

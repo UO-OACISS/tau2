@@ -6,6 +6,11 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProfUtils {
 
+    // Suppress default constructor for noninstantiability
+    private ParaProfUtils() {
+        // This constructor will never be invoked
+    }
+    
     public static void print(Printable printable) {
         PrinterJob job = PrinterJob.getPrinterJob();
         PageFormat defaultFormat = job.defaultPage();

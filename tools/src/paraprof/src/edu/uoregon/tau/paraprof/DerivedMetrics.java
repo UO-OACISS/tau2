@@ -85,7 +85,7 @@ public class DerivedMetrics {
             int metric = newMetric.getID();
             trialOpA.setSelectedMetricID(metric);
 
-            Iterator l = trialOpA.getTrialData().getFunctions();
+            Iterator l = trialOpA.getDataSource().getFunctions();
 
             //TODO: I'm confused as to whether or not these both need to be
             // done, shouldn't the bottom one do the top stuff anyway?
@@ -93,7 +93,6 @@ public class DerivedMetrics {
                 Function f = (Function) l.next();
                 f.incrementStorage();
             }
-            trialOpA.getTrialData().increaseVectorStorage();
 
             edu.uoregon.tau.dms.dss.Thread meanThread;
             
@@ -102,7 +101,7 @@ public class DerivedMetrics {
             meanThread.incrementStorage();
             
             
-            l = meanThread.getFunctionListIterator();
+            l = meanThread.getFunctionProfileIterator();
             while (l.hasNext()) {
                 FunctionProfile functionProfile = (FunctionProfile) l.next();
                 if (functionProfile != null) {
@@ -118,18 +117,15 @@ public class DerivedMetrics {
             //of the latter.
             //######
 
-            Node node;
-            Context context;
-            edu.uoregon.tau.dms.dss.Thread thread;
-
-            for (Enumeration e1 = trialOpA.getNCT().getNodes().elements(); e1.hasMoreElements();) {
-                node = (Node) e1.nextElement();
-                for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
-                    context = (Context) e2.nextElement();
-                    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
-                        thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
+            
+            for (Iterator it = trialOpA.getDataSource().getNodes(); it.hasNext();) {
+                Node node = (Node) it.next();
+                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                    Context context = (Context) it2.next();
+                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
                         thread.incrementStorage();
-                        l = thread.getFunctionListIterator();
+                        l = thread.getFunctionProfileIterator();
                         while (l.hasNext()) {
                             FunctionProfile functionProfile = (FunctionProfile) l.next();
                             if (functionProfile != null) {

@@ -174,7 +174,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     }
 
     public void showMainWindow() {
-
         if (sMW == null) {
             sMW = new StaticMainWindow(this, UtilFncs.debug);
             ParaProf.incrementNumWindows();
@@ -267,24 +266,21 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //####################################
     //Pass-though methods to the data session for this instance.
     //####################################
-    public TrialData getTrialData() {
-        return dataSource.getTrialData();
-    }
 
-    public NCT getNCT() {
-        return dataSource.getNCT();
-    }
+//    public edu.uoregon.tau.dms.dss.Thread getThread(int nodeID, int contextID, int threadID) {
+//        return dataSource.getThread(nodeID, contextID, threadID);
+//    }
 
     public boolean groupNamesPresent() {
-        return dataSource.groupNamesPresent();
+        return dataSource.getGroupNamesPresent();
     }
 
     public boolean userEventsPresent() {
-        return dataSource.userEventsPresent();
+        return dataSource.getUserEventsPresent();
     }
 
     public boolean callPathDataPresent() {
-        return dataSource.callPathDataPresent();
+        return dataSource.getCallPathDataPresent();
     }
 
     //Overides the parent getMaxNCTNumbers.
@@ -301,6 +297,51 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 
     }
 
+    
+
+    public boolean displayFunction(Function func) {
+        switch (groupFilter) {
+        case 0:
+            //No specific group selection is required.
+            return true;
+        case 1:
+            //Show this group only.
+            if (func.isGroupMember(this.selectedGroup))
+                return true;
+            else
+                return false;
+        case 2:
+            //Show all groups except this one.
+            if (func.isGroupMember(this.selectedGroup))
+                return false;
+            else
+                return true;
+        default:
+            //Default case behaves as case 0.
+            return true;
+        }
+    }
+
+    public void setSelectedGroup(Group group) {
+        this.selectedGroup = group;
+    }
+
+    public Group getSelectedGroup() {
+        return selectedGroup;
+    }
+
+    public void setGroupFilter(int groupFilter) {
+        this.groupFilter = groupFilter;
+    }
+
+    public int getGroupFilter() {
+        return groupFilter;
+    }
+
+    private Group selectedGroup;
+    private int groupFilter = 0;
+    
+    
     //####################################
     //end - Pass-though methods to the data session for this instance.
     //####################################
@@ -320,17 +361,17 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         // Inside ParaProf, these need to be paraprof.Metrics.
         
         int numberOfMetrics = dataSource.getNumberOfMetrics();
-        Vector metrics = new Vector();
+        Vector ppMetrics = new Vector();
         for (int i = 0; i < numberOfMetrics; i++) {
-            ParaProfMetric metric = new ParaProfMetric();
-            metric.setName(dataSource.getMetricName(i));
-            metric.setID(i);
-            metric.setTrial(this);
-            metrics.add(metric);
+            ParaProfMetric ppMetric = new ParaProfMetric();
+            ppMetric.setName(dataSource.getMetricName(i));
+            ppMetric.setID(i);
+            ppMetric.setTrial(this);
+            ppMetrics.add(ppMetric);
         }
 
         //Now set the dataSource's metrics.
-        dataSource.setMetrics(metrics);
+        dataSource.setMetrics(ppMetrics);
 
         //Now set the trial's dataSource object to be this one.
         this.setDataSource(dataSource);

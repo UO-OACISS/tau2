@@ -1,6 +1,7 @@
 /**
  * ParaProfManagerWindow
- * This is the manager window that allows the user to navigate the app/exp/trial tree, including database access.
+ * This is the manager window that allows the user to navigate the app/exp/trial tree, 
+ * including database access.
  *  
  *
  * Notes: Makes heavy use of the TreeWillExpandListener listener to populate the tree nodes. Before a node
@@ -9,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.3 2005/01/04 01:16:27 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.4 2005/01/06 22:49:44 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -1088,8 +1089,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private void showMetric(ParaProfMetric metric) {
         try {
             ParaProfTrial ppTrial = metric.getTrial();
-            ppTrial.setSelectedMetricID(metric.getID());
-            ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
+            if (ppTrial.getSelectedMetricID() != metric.getID()) {
+                ppTrial.setSelectedMetricID(metric.getID());
+                ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
+            }
             ppTrial.showMainWindow();
         } catch (Exception e) {
             ParaProfUtils.handleException(e);

@@ -42,7 +42,11 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         }
 
         if (nodeID == -1) { // if this is a 'mean' window
-            if (trial.getTrialData().getMaxMeanExclusivePercentValue(trial.getSelectedMetricID()) > 100) {
+            
+            edu.uoregon.tau.dms.dss.Thread thread;
+            thread = trial.getDataSource().getMeanData(); 
+            
+            if (thread.getMaxExclusivePercent(trial.getSelectedMetricID()) > 100) {
                 exclusivePercentOver100 = true;
                 percent = false;
             }
@@ -50,7 +54,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         } else {
 
             edu.uoregon.tau.dms.dss.Thread thread;
-            thread = trial.getNCT().getThread(nodeID, contextID, threadID);
+            thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
 
             if (thread.getMaxExclusivePercent(trial.getSelectedMetricID()) > 100) {
                 exclusivePercentOver100 = true;

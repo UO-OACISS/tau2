@@ -300,41 +300,41 @@ class getExclusiveValues extends LispPrimitive {
                 + "," + arg3 + "," + arg4);
         Vector v = new Vector();
 
-        try {
-            //Get the exclusive values for the given metric. Put the result in
-            // a list, and pass it back.
-            ParaProfTrial trial = ParaProf.applicationManager.getTrial(
-                                                                       Integer.parseInt(arg1.toString()),
-                                                                       Integer.parseInt(arg2.toString()),
-                                                                       Integer.parseInt(arg3.toString()));
-
-            int metric = Integer.parseInt(arg4.toString());
-            if (trial != null) {
-                DataSource dataSource = trial.getDataSource();
-                for (Enumeration e1 = dataSource.getNCT().getNodes().elements(); e1.hasMoreElements();) {
-                    Node node = (Node) e1.nextElement();
-                    for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
-                        Context context = (Context) e2.nextElement();
-                        for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
-                            edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
-                            ListIterator l = thread.getFunctionListIterator();
-                            while (l.hasNext()) {
-                                FunctionProfile functionProfile = (FunctionProfile) l.next();
-                                if (functionProfile != null) {
-                                    v.add(lisp.makeReal(functionProfile.getExclusive(metric)));
-                                    System.out.println(functionProfile.getName()
-                                            + ": "
-                                            + functionProfile.getExclusive(metric));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("An exception was caught in: getExclusiveValues(...)");
-            e.printStackTrace();
-        }
+//        try {
+//            //Get the exclusive values for the given metric. Put the result in
+//            // a list, and pass it back.
+//            ParaProfTrial trial = ParaProf.applicationManager.getTrial(
+//                                                                       Integer.parseInt(arg1.toString()),
+//                                                                       Integer.parseInt(arg2.toString()),
+//                                                                       Integer.parseInt(arg3.toString()));
+//
+//            int metric = Integer.parseInt(arg4.toString());
+//            if (trial != null) {
+//                DataSource dataSource = trial.getDataSource();
+//                for (Enumeration e1 = dataSource.getNCT().getNodes().elements(); e1.hasMoreElements();) {
+//                    Node node = (Node) e1.nextElement();
+//                    for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
+//                        Context context = (Context) e2.nextElement();
+//                        for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
+//                            edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
+//                            ListIterator l = thread.getFunctionListIterator();
+//                            while (l.hasNext()) {
+//                                FunctionProfile functionProfile = (FunctionProfile) l.next();
+//                                if (functionProfile != null) {
+//                                    v.add(lisp.makeReal(functionProfile.getExclusive(metric)));
+//                                    System.out.println(functionProfile.getName()
+//                                            + ": "
+//                                            + functionProfile.getExclusive(metric));
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            System.out.println("An exception was caught in: getExclusiveValues(...)");
+//            e.printStackTrace();
+//        }
         return lisp.makeList(v);
     }
 

@@ -13,9 +13,9 @@ import java.text.*;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.11 2005/01/04 01:16:26 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.12 2005/01/06 22:49:43 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -103,9 +103,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
         //Create font.
         monoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
         //Compute the font metrics.
-        fmMonoFont = g2D.getFontMetrics(monoFont);
-        maxFontAscent = fmMonoFont.getMaxAscent();
-        maxFontDescent = fmMonoFont.getMaxDescent();
+        fontMetrics = g2D.getFontMetrics(monoFont);
+        maxFontAscent = fontMetrics.getMaxAscent();
+        maxFontDescent = fontMetrics.getMaxDescent();
         g2D.setFont(monoFont);
 
         if (spacing <= (maxFontAscent + maxFontDescent)) {
@@ -114,26 +114,26 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 
         //TODO: rewrite this crap
 
-        if (windowType == 0) {
+        if (windowType == 0) { // mean callpath data
             Iterator l1 = null;
             Iterator l2 = null;
             Iterator l3 = null;
-            TrialData gm = trial.getTrialData();
 
             String s = null;
             Vector functionList = null;
             FunctionProfile gtde = null;
-            PPFunctionProfile smwtde = null;
+            PPFunctionProfile ppFunctionProfile = null;
             CallPathDrawObject callPathDrawObject = null;
             double d1 = 0.0;
             double d2 = 0.0;
-            double d3 = 0;
+            double d3 = 0.0;
 
             //######
             //Populate drawObjectsComplete vector.
             //This should only happen once.
             //######
             if (drawObjectsComplete == null) {
+               
                 drawObjectsComplete = new Vector();
                 //Add five spacer objects representing the column headings.
                 drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
@@ -143,16 +143,15 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 
                 l1 = window.getDataIterator();
                 while (l1.hasNext()) {
-                    smwtde = (PPFunctionProfile) l1.next();
-                    //Don't draw callpath mapping objects.
-                    if (!(smwtde.isCallPathObject())) {
-                        l2 = smwtde.getParents();
+                    ppFunctionProfile = (PPFunctionProfile) l1.next();
+                    if (!(ppFunctionProfile.isCallPathObject())) {
+                        l2 = ppFunctionProfile.getParents();
                         while (l2.hasNext()) {
                             Function parent = (Function) l2.next();
-                            l3 = smwtde.getParentCallPathIterator(parent);
+                            l3 = ppFunctionProfile.getParentCallPathIterator(parent);
                             d1 = 0.0;
                             d2 = 0.0;
-                            d3 = 0;
+                            d3 = 0.0;
                             while (l3.hasNext()) {
                                 Function parentCallPathID = (Function) l3.next();
                                 d1 = d1 + parentCallPathID.getMeanExclusive(trial.getSelectedMetricID());
@@ -163,21 +162,21 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                             callPathDrawObject.setExclusiveValue(d1);
                             callPathDrawObject.setInclusiveValue(d2);
                             callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
-                            callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
+                            callPathDrawObject.setNumberOfCalls(ppFunctionProfile.getNumberOfCalls());
                             drawObjectsComplete.add(callPathDrawObject);
                         }
-                        callPathDrawObject = new CallPathDrawObject(smwtde.getFunction(), false, false, false);
-                        callPathDrawObject.setExclusiveValue(smwtde.getExclusiveValue());
-                        callPathDrawObject.setInclusiveValue(smwtde.getInclusiveValue());
-                        callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
+                        callPathDrawObject = new CallPathDrawObject(ppFunctionProfile.getFunction(), false, false, false);
+                        callPathDrawObject.setExclusiveValue(ppFunctionProfile.getExclusiveValue());
+                        callPathDrawObject.setInclusiveValue(ppFunctionProfile.getInclusiveValue());
+                        callPathDrawObject.setNumberOfCalls(ppFunctionProfile.getNumberOfCalls());
                         drawObjectsComplete.add(callPathDrawObject);
-                        l2 = smwtde.getChildren();
+                        l2 = ppFunctionProfile.getChildren();
                         while (l2.hasNext()) {
                             Function child = (Function) l2.next();
-                            l3 = smwtde.getChildCallPathIterator(child);
+                            l3 = ppFunctionProfile.getChildCallPathIterator(child);
                             d1 = 0.0;
                             d2 = 0.0;
-                            d3 = 0;
+                            d3 = 0.0;
                             while (l3.hasNext()) {
                                 Function childCallPathID = (Function) l3.next();
                                 d1 = d1 + childCallPathID.getMeanExclusive(trial.getSelectedMetricID());
@@ -297,28 +296,26 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                             callPathDrawObject.getInclusiveValue());
 
                     if (!callPathDrawObject.isSpacer()) {
-                        length = fmMonoFont.stringWidth(callPathDrawObject.getName()) + 10;
-                        if (xWidthNeeded < length)
-                            xWidthNeeded = length;
+                        length = fontMetrics.stringWidth(callPathDrawObject.getName()) + 10;
+                        xWidthNeeded = Math.max(xWidthNeeded, length);
                     }
                 }
 
                 base = 20;
-                startPosition = fmMonoFont.stringWidth("--> ") + base;
-                stringWidth = (fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(), max,
+                startPosition = fontMetrics.stringWidth("--> ") + base;
+                stringWidth = (fontMetrics.stringWidth(UtilFncs.getOutputString(window.units(), max,
                         defaultNumberPrecision))) + 30;
-                check = fmMonoFont.stringWidth("Exclusive");
+                check = fontMetrics.stringWidth("Exclusive  ");
                 if (stringWidth < check)
                     stringWidth = check + 35;
-                numCallsWidth = (fmMonoFont.stringWidth(Double.toString(gm.getMaxMeanNumberOfCalls()))) + 30;
-                check = fmMonoFont.stringWidth("Calls/Tot.Calls");
+                numCallsWidth = fontMetrics.stringWidth(" 100.0 / 100.0      ");
+                check = fontMetrics.stringWidth("Calls/Tot.Calls   ");
                 if (numCallsWidth < check)
                     numCallsWidth = check + 35;
                 excPos = startPosition;
                 incPos = excPos + stringWidth;
                 callsPos1 = incPos + stringWidth;
-                callsPos2 = callsPos1 + numCallsWidth;
-                namePos = callsPos2 + numCallsWidth;
+                namePos = callsPos1 + numCallsWidth;
                 //Add this to the positon of the name plus a little extra.
                 xWidthNeeded = xWidthNeeded + namePos + 20;
 
@@ -460,11 +457,10 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                     yCoord = yCoord + (spacing);
                 }
             }
-        } else if (windowType == 1) {
+        } else if (windowType == 1) { // thread callpath data
             Iterator l1 = null;
             Iterator l2 = null;
             Iterator l3 = null;
-            TrialData gm = trial.getTrialData();
             String s = null;
             Vector functionList = null;
             FunctionProfile gtde = null;
@@ -475,7 +471,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             double d3 = 0;
 
            
-            functionList = thread.getFunctionList();
+            functionList = thread.getFunctionProfiles();
 
             //######
             //Populate drawObjectsComplete vector.
@@ -644,32 +640,32 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                     callPathDrawObject = (CallPathDrawObject) e.nextElement();
                     yHeightNeeded = yHeightNeeded + (spacing);
 
-                    max = setMax(max, fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(),
+                    max = setMax(max, fontMetrics.stringWidth(UtilFncs.getOutputString(window.units(),
                             callPathDrawObject.getExclusiveValue(), defaultNumberPrecision)),
-                            fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(),
+                            fontMetrics.stringWidth(UtilFncs.getOutputString(window.units(),
                                     callPathDrawObject.getInclusiveValue(), defaultNumberPrecision)));
 
                     //			max =
                     // setMax(max,callPathDrawObject.getExclusiveValue(),callPathDrawObject.getInclusiveValue());
 
                     if (!callPathDrawObject.isSpacer()) {
-                        length = fmMonoFont.stringWidth(callPathDrawObject.getName()) + 10;
+                        length = fontMetrics.stringWidth(callPathDrawObject.getName()) + 10;
                         if (xWidthNeeded < length)
                             xWidthNeeded = length;
                     }
                 }
 
                 base = 20;
-                startPosition = fmMonoFont.stringWidth("--> ") + base;
+                startPosition = fontMetrics.stringWidth("--> ") + base;
                 stringWidth =
-                 (fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(),max,defaultNumberPrecision)))+50;
+                 (fontMetrics.stringWidth(UtilFncs.getOutputString(window.units(),max,defaultNumberPrecision)))+50;
                 //stringWidth = (int) max + 10;
 
-                check = fmMonoFont.stringWidth("Exclusive");
+                check = fontMetrics.stringWidth("Exclusive");
                 if (stringWidth < check)
                     stringWidth = check + 25;
-                numCallsWidth = (fmMonoFont.stringWidth(Integer.toString((int) thread.getMaxNumCalls()))) + 25;
-                check = fmMonoFont.stringWidth("Calls/Tot.Calls");
+                numCallsWidth = (fontMetrics.stringWidth(Integer.toString((int) thread.getMaxNumCalls()))) + 25;
+                check = fontMetrics.stringWidth("Calls/Tot.Calls");
                 if (numCallsWidth < check)
                     numCallsWidth = check + 25;
                 excPos = startPosition;
@@ -821,11 +817,10 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                     yCoord = yCoord + (spacing);
                 }
             }
-        } else if (windowType == 2) {
+        } else if (windowType == 2) { // call path thread relations (no numbers)
             Iterator l1 = null;
             Iterator l2 = null;
             Iterator l3 = null;
-            TrialData gm = trial.getTrialData();
             CallPathDrawObject callPathDrawObject = null;
             String s = null;
 
@@ -848,7 +843,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                     Function function = (Function) l1.next(); //Don't draw
                     // callpath
                     // mapping objects.
-                    if (!(function.isCallPathObject())) {
+                    if (!(function.isCallPathFunction())) {
                         l2 = function.getParents();
                         while (l2.hasNext()) {
                             Function parent = (Function) l2.next();
@@ -965,14 +960,14 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                     callPathDrawObject = (CallPathDrawObject) e.nextElement();
                     yHeightNeeded = yHeightNeeded + (spacing);
                     if (!callPathDrawObject.isSpacer()) {
-                        length = fmMonoFont.stringWidth(callPathDrawObject.getName()) + 10;
+                        length = fontMetrics.stringWidth(callPathDrawObject.getName()) + 10;
                         if (xWidthNeeded < length)
                             xWidthNeeded = length;
                     }
                 }
 
                 base = 20;
-                startPosition = fmMonoFont.stringWidth("--> ") + base;
+                startPosition = fontMetrics.stringWidth("--> ") + base;
 
                 xWidthNeeded = xWidthNeeded + 20;
 
@@ -1271,7 +1266,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     CallPathTextWindow window = null;
     int windowType = 0; //0: mean data,1: function data, 2: global relations.
     Font monoFont = null;
-    FontMetrics fmMonoFont = null;
+    FontMetrics fontMetrics = null;
 
     //Some drawing details.
     Vector drawObjectsComplete = null;

@@ -31,7 +31,7 @@ public class Preferences extends JFrame implements ActionListener, Observer {
 
             fontStyle = savedPreferences.getFontStyle();
             fontSize = savedPreferences.getFontSize();
-            
+
             barDetailsSet = savedPreferences.getBarDetailsSet();
             //######
             //End - Set the saved values.
@@ -409,9 +409,8 @@ public class Preferences extends JFrame implements ActionListener, Observer {
                                 //Just output the data for the moment to have a
                                 // look at it.
                                 Vector nameColorVector = new Vector();
-                                TrialData trialData = trial.getTrialData();
 
-                                for (Iterator i = trial.getTrialData().getFunctions(); i.hasNext();) {
+                                for (Iterator i = trial.getDataSource().getFunctions(); i.hasNext();) {
                                     Function f = (Function) i.next();
                                     if (f.getName() != null) {
                                         ColorPair tmpCP = new ColorPair(f.getName(), f.getColor());
@@ -551,70 +550,68 @@ public class Preferences extends JFrame implements ActionListener, Observer {
     }
 
     public void loadColorMap(File inFile) throws FileNotFoundException, IOException {
-            //First, get the file stuff.
-            BufferedReader br = new BufferedReader(new FileReader(inFile));
+        //First, get the file stuff.
+        BufferedReader br = new BufferedReader(new FileReader(inFile));
 
-            Vector nameColorVector = new Vector();
-            String tmpString;
-            int red = 0;
-            int green = 0;
-            int blue = 0;
+        Vector nameColorVector = new Vector();
+        String tmpString;
+        int red = 0;
+        int green = 0;
+        int blue = 0;
 
-            TrialData trialData = trial.getTrialData();
+        //Read in the file line by line!
+        while ((tmpString = br.readLine()) != null) {
+            StringTokenizer getMappingNameTokenizer = new StringTokenizer(tmpString, "\"");
 
-            //Read in the file line by line!
-            while ((tmpString = br.readLine()) != null) {
-                StringTokenizer getMappingNameTokenizer = new StringTokenizer(tmpString, "\"");
+            //The mapping name will be within the first set of quotes.
+            //Grab the first token.
+            tmpString = getMappingNameTokenizer.nextToken();
+            //Grab the second token.
+            tmpString = getMappingNameTokenizer.nextToken();
 
-                //The mapping name will be within the first set of quotes.
-                //Grab the first token.
-                tmpString = getMappingNameTokenizer.nextToken();
-                //Grab the second token.
-                tmpString = getMappingNameTokenizer.nextToken();
+            String name = tmpString;
 
-                String name = tmpString;
+            //The RGB values will be within the next set of quotes.
+            //Grab the third token.
+            tmpString = getMappingNameTokenizer.nextToken();
+            //Grab the forth token.
+            tmpString = getMappingNameTokenizer.nextToken();
 
-                //The RGB values will be within the next set of quotes.
-                //Grab the third token.
-                tmpString = getMappingNameTokenizer.nextToken();
-                //Grab the forth token.
-                tmpString = getMappingNameTokenizer.nextToken();
+            StringTokenizer getColorTokenizer = new StringTokenizer(tmpString, ",");
 
-                StringTokenizer getColorTokenizer = new StringTokenizer(tmpString, ",");
+            tmpString = getColorTokenizer.nextToken();
+            red = Integer.parseInt(tmpString);
 
-                tmpString = getColorTokenizer.nextToken();
-                red = Integer.parseInt(tmpString);
+            tmpString = getColorTokenizer.nextToken();
+            green = Integer.parseInt(tmpString);
 
-                tmpString = getColorTokenizer.nextToken();
-                green = Integer.parseInt(tmpString);
+            tmpString = getColorTokenizer.nextToken();
+            blue = Integer.parseInt(tmpString);
 
-                tmpString = getColorTokenizer.nextToken();
-                blue = Integer.parseInt(tmpString);
+            Color tmpColor = new Color(red, green, blue);
 
-                Color tmpColor = new Color(red, green, blue);
+            ColorPair colorPair = new ColorPair(name, tmpColor);
 
-                ColorPair colorPair = new ColorPair(name, tmpColor);
+            nameColorVector.add(colorPair);
+        }
 
-                nameColorVector.add(colorPair);
+        if (UtilFncs.debug) {
+            System.out.println("**********************");
+            System.out.println("Color values loaded were:");
+        }
+        for (Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements();) {
+            ColorPair tmpCP = (ColorPair) e1.nextElement();
+
+            Function f = trial.getDataSource().getFunction(tmpCP.getName());
+            if (f != null) {
+                Color tmpColor = tmpCP.getColor();
+                f.setSpecificColor(tmpColor);
+                f.setColorFlag(true);
             }
-
-            if (UtilFncs.debug) {
-                System.out.println("**********************");
-                System.out.println("Color values loaded were:");
-            }
-            for (Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements();) {
-                ColorPair tmpCP = (ColorPair) e1.nextElement();
-
-                Function f = trialData.getFunction(tmpCP.getName());
-                if (f != null) {
-                    Color tmpColor = tmpCP.getColor();
-                    f.setSpecificColor(tmpColor);
-                    f.setColorFlag(true);
-                }
-            }
-            if (UtilFncs.debug) {
-                System.out.println("**********************");
-            }
+        }
+        if (UtilFncs.debug) {
+            System.out.println("**********************");
+        }
     }
 
     public void addNotify() {

@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.5 2005/01/04 01:16:26 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.6 2005/01/06 22:49:43 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -284,15 +284,15 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
     private void sortLocalData() {
         list = new Vector();
         if (this.windowType == FUNCTION_LEDGER) {
-            for (Iterator it = trial.getTrialData().getFunctions(); it.hasNext();) {
+            for (Iterator it = trial.getDataSource().getFunctions(); it.hasNext();) {
                 list.addElement(new LedgerDataElement((Function) it.next()));
             }
         } else if (this.windowType == GROUP_LEDGER) {
-            for (Iterator it = trial.getTrialData().getGroups(); it.hasNext();) {
+            for (Iterator it = trial.getDataSource().getGroups(); it.hasNext();) {
                 list.addElement(new LedgerDataElement((Group) it.next()));
             }
         } else if (this.windowType == USEREVENT_LEDGER) {
-            for (Iterator it = trial.getTrialData().getUserEvents(); it.hasNext();) {
+            for (Iterator it = trial.getDataSource().getUserEvents(); it.hasNext();) {
                 list.addElement(new LedgerDataElement((UserEvent) it.next()));
             }
         }

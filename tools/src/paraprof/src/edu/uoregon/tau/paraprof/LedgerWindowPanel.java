@@ -12,11 +12,11 @@ import edu.uoregon.tau.dms.dss.*;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.4 2005/01/04 01:16:27 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.5 2005/01/06 22:49:43 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -329,19 +329,16 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                         lde.setColorFlag(false);
                         trial.getSystemEvents().updateRegisteredObjects("colorEvent");
                     } else if (arg.equals("Show This Group Only")) {
-                        TrialData trialData = trial.getTrialData();
-                        trialData.setSelectedGroup(lde.getGroup());
-                        trialData.setGroupFilter(1);
+                        trial.setSelectedGroup(lde.getGroup());
+                        trial.setGroupFilter(1);
                         trial.getSystemEvents().updateRegisteredObjects("dataEvent");
                     } else if (arg.equals("Show All Groups Except This One")) {
-                        TrialData trialData = trial.getTrialData();
-                        trialData.setSelectedGroup(lde.getGroup());
-                        trialData.setGroupFilter(2);
+                        trial.setSelectedGroup(lde.getGroup());
+                        trial.setGroupFilter(2);
                         trial.getSystemEvents().updateRegisteredObjects("dataEvent");
                     } else if (arg.equals("Show All Groups")) {
-                        TrialData trialData = trial.getTrialData();
-                        trialData.setSelectedGroup(null);
-                        trialData.setGroupFilter(0);
+                        trial.setSelectedGroup(null);
+                        trial.setGroupFilter(0);
                         trial.getSystemEvents().updateRegisteredObjects("dataEvent");
                     }
                 }

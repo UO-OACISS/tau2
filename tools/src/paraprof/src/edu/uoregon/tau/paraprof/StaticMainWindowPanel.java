@@ -818,8 +818,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                 } else if (arg.equals("Show Call Path Thread Relations")) {
                     if (clickedOnObject instanceof PPThread) {
                         PPThread ppThread = (PPThread) clickedOnObject;
-                        CallPathUtilFuncs.trimCallPathData(trial.getTrialData(), trial.getNCT().getThread(
-                                ppThread.getNodeID(), ppThread.getContextID(), ppThread.getThreadID()));
                         CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial,
                                 ppThread.getNodeID(), ppThread.getContextID(), ppThread.getThreadID(),
                                 window.getDataSorter(), 1);

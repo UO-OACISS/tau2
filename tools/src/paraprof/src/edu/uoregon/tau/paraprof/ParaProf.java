@@ -12,14 +12,17 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.25 2005/01/04 01:16:27 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.26 2005/01/06 22:49:44 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  */
 public class ParaProf implements ActionListener {
 
+    private final static String VERSION = "2.1 (01/04/2005)";
+
+    
     //System wide stuff.
     static String homeDirectory = null;
     static File paraProfHomeDirectory = null;
@@ -37,12 +40,13 @@ public class ParaProf implements ActionListener {
     //End - System wide stuff.
 
     //Command line options related.
-    private static int fileType = 0; //0:profile, 1:pprof, 2:dynaprof, 3:mpip,
-    // 4:hpmtoolkit, 5:gprof, 6:psrun
+    private static int fileType = 0; //0:profile, 1:pprof, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
     //End - Command line options related.
 
+    
+    
     private ParaProfTrial pptrial = null;
 
     public ParaProf() {
@@ -173,9 +177,13 @@ public class ParaProf implements ActionListener {
 
     public static String getInfoString() {
         long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
-        return new String("ParaProf Version 2.0 ... The Tau Group!\n Java Heap Size: " + memUsage + "kb");
+        return new String("ParaProf Version " + getVersionString() + "\n Java Heap Size: " + memUsage + "kb"); 
     }
 
+    public static String getVersionString() {
+        return new String(VERSION);
+    }
+    
     // This method is reponsible for any cleanup required in ParaProf 
     // before an exit takes place.
     public static void exitParaProf(int exitValue) {

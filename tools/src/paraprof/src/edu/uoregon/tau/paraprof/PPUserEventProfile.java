@@ -28,7 +28,6 @@ public class PPUserEventProfile implements Comparable {
         this.threadID = threadID;
 
         this.userEventProfile = userEventProfile;
-        this.trialData = trial.getTrialData();
         this.userEvent = userEventProfile.getUserEvent();
     }
 
@@ -269,11 +268,8 @@ public class PPUserEventProfile implements Comparable {
     private int contextID = -1;
     private int threadID = -1;
 
-    //Global edu.uoregon.tau.dms.dss.Thread Data Element Reference.
     UserEventProfile userEventProfile;
 
-    //Global Mapping reference.
-    TrialData trialData;
     UserEvent userEvent = null;
 
     //Drawing coordinates for this thread data object.

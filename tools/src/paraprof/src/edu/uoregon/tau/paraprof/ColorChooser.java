@@ -249,7 +249,6 @@ public class ColorChooser implements WindowListener {
     //otherwise, just set the ones for the specified set.
     public void setColors(ParaProfTrial ppTrial, int selection) {
 
-        TrialData trialData = ppTrial.getTrialData();
         if ((selection == -1) || (selection == 0)) {
             int numberOfColors = this.getNumberOfColors();
 
@@ -264,7 +263,7 @@ public class ColorChooser implements WindowListener {
 
         if ((selection == -1) || (selection == 1)) {
             int numberOfColors = this.getNumberOfGroupColors();
-            for (Iterator i = trialData.getGroups(); i.hasNext();) {
+            for (Iterator i = ppTrial.getDataSource().getGroups(); i.hasNext();) {
                 Group group = (Group) i.next();
                 group.setColor(this.getGroupColor((group.getID()) % numberOfColors));
             }
@@ -272,7 +271,7 @@ public class ColorChooser implements WindowListener {
 
         if ((selection == -1) || (selection == 2)) {
             int numberOfColors = this.getNumberOfColors();
-            for (Iterator i = trialData.getUserEvents(); i.hasNext();) {
+            for (Iterator i = ppTrial.getDataSource().getUserEvents(); i.hasNext();) {
                 UserEvent userEvent = (UserEvent) i.next();
                 userEvent.setColor(this.getColor((userEvent.getID()) % numberOfColors));
             }

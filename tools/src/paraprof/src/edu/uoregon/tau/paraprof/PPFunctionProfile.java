@@ -25,31 +25,25 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class PPFunctionProfile implements Comparable {
 
-    public PPFunctionProfile(ParaProfTrial trial, int nodeID, int contextID, int threadID, FunctionProfile fp) {
-
+    public PPFunctionProfile(ParaProfTrial trial, edu.uoregon.tau.dms.dss.Thread thread, FunctionProfile fp) {
         this.trial = trial;
-        this.nodeID = nodeID;
-        this.contextID = contextID;
-        this.threadID = threadID;
-
+        this.thread = thread;
         this.functionProfile = fp;
-        this.trialData = trial.getTrialData();
 
-        // prefetch these
-        this.function = functionProfile.getFunction();
-        this.meanProfile = function.getMeanProfile();
+        // prefetch this
+        this.meanProfile = functionProfile.getFunction().getMeanProfile();
     }
 
     public int getNodeID() {
-        return nodeID;
+        return thread.getNodeID();
     }
 
     public int getContextID() {
-        return contextID;
+        return thread.getContextID();
     }
 
     public int getThreadID() {
-        return threadID;
+        return thread.getThreadID();
     }
 
     public FunctionProfile getFunctionProfile() {
@@ -57,23 +51,23 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public Function getFunction() {
-        return function;
+        return functionProfile.getFunction();
     }
 
     public String getFunctionName() {
-        return function.getName();
+        return functionProfile.getFunction().getName();
     }
 
     public Color getColor() {
-        return function.getColor();
+        return functionProfile.getFunction().getColor();
     }
 
     public boolean isGroupMember(Group group) {
-        return function.isGroupMember(group);
+        return functionProfile.getFunction().isGroupMember(group);
     }
 
     public boolean isCallPathObject() {
-        return function.isCallPathObject();
+        return functionProfile.getFunction().isCallPathFunction();
     }
 
     public double getInclusiveValue() {
@@ -106,33 +100,30 @@ public class PPFunctionProfile implements Comparable {
 
     //Parent/child interface.
     public Iterator getParents() {
-        if (nodeID != -1)
-            return functionProfile.getParents();
-        else
-            return function.getParents();
+        return functionProfile.getParents();
     }
 
     public Iterator getChildren() {
-        if (nodeID != -1)
-            return functionProfile.getChildren();
-        else
-            return function.getChildren();
+        return functionProfile.getChildren();
     }
 
     public Iterator getParentCallPathIterator(Function parent) {
-        if (nodeID != -1)
-            return functionProfile.getParentCallPathIterator(parent);
-        else
-            return function.getParentCallPathIterator(parent);
+        return functionProfile.getParentCallPathIterator(parent);
     }
 
     public Iterator getChildCallPathIterator(Function child) {
-        if (nodeID != -1)
-            return functionProfile.getChildCallPathIterator(child);
-        else
-            return function.getChildCallPathIterator(child);
+        return functionProfile.getChildCallPathIterator(child);
     }
 
+    
+    public Iterator getChildProfiles() {
+        return functionProfile.getChildProfiles();
+    }
+    
+    public Iterator getParentProfiles() {
+        return functionProfile.getParentProfiles();
+    }
+    
     /*
      * (0) name 
      * (2) exclusive 
@@ -261,7 +252,7 @@ public class PPFunctionProfile implements Comparable {
             // this is here to make sure that things get sorted the same for mean and other threads
             // in the case of callpath profiles, multiple functionProfiles may have the same values
             // we need them in the same order for everyone
-            return f1.function.compareTo(f2.function);
+            return f1.functionProfile.getFunction().compareTo(f2.functionProfile.getFunction());
         } else
             return 1;
     }
@@ -328,22 +319,18 @@ public class PPFunctionProfile implements Comparable {
     //Instance data.
 
     private ParaProfTrial trial = null;
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
+    private edu.uoregon.tau.dms.dss.Thread thread;
 
     private FunctionProfile functionProfile;
     private FunctionProfile meanProfile;
 
-    TrialData trialData;
-    Function function;
 
     // drawing coordinates for this object
-    int xBeg = 0;
-    int xEnd = 0;
-    int yBeg = 0;
-    int yEnd = 0;
+    private int xBeg = 0;
+    private int xEnd = 0;
+    private int yBeg = 0;
+    private int yEnd = 0;
 
-    int sortType;
+    private int sortType;
 
 }

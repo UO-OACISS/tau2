@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.6 2005/01/04 01:16:26 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.7 2005/01/06 22:49:43 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  * @see		HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
@@ -56,7 +56,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         fileMenu.addMenuListener(this);
 
         // options menu
-        optionsMenu = new JMenu("Options");
+        JMenu optionsMenu = new JMenu("Options");
 
         slidersCheckBox = new JCheckBoxMenuItem("Show Number of Bins Slider", false);
         slidersCheckBox.addActionListener(this);
@@ -182,10 +182,9 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         this.dataSorter = dataSorter;
         this.function = function;
 
+        setTitle("Histogram: " + ppTrial.getTrialIdentifier(true));
         setLocation(new java.awt.Point(300, 200));
         setSize(new java.awt.Dimension(670, 630));
-        //Now set the title.
-        setTitle("Histogram: " + ppTrial.getTrialIdentifier(true));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -199,7 +198,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
             this.help(false);
         }
 
-        //Sort the local data.
         sortLocalData();
 
         setupMenus();
@@ -211,15 +209,13 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         numBinsSlider.setSnapToTicks(false);
         numBinsSlider.addChangeListener(this);
 
-        //Setting up the layout system for the main window.
-        contentPane = getContentPane();
-        gbl = new GridBagLayout();
-        contentPane.setLayout(gbl);
-        gbc = new GridBagConstraints();
+        // set up the layout system
+        getContentPane().setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        //Panel and ScrollPane definition.
-        panel = new HistogramWindowPanel(ppTrial, this, function);
+        // panel and scrollpane definition
+        panel = new HistogramWindowPanel(ppTrial, this);
         sp = new JScrollPane(panel);
         this.setHeader();
 
@@ -251,7 +247,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     setVisible(false);
                     dispose();
                     ParaProf.exitParaProf(0);
-
                 } else if (arg.equals("Exclusive")) {
                     valueType = 2;
                     this.setHeader();
@@ -316,6 +311,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
                 } else if (arg.equals("Show Help Window")) {
                     this.help(true);
+                } else {
+                    throw new ParaProfException("The menu item '" + arg + "' is not implemented!");
                 }
             }
         } catch (Exception e) {
@@ -364,13 +361,13 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     public void menuSelected(MenuEvent evt) {
         try {
-            
         	if (ppTrial.isTimeMetric()) {
         	    unitsSubMenu.setEnabled(true);
         	} else {
         	    unitsSubMenu.setEnabled(false);
         	}
-            if (ppTrial.groupNamesPresent())
+
+        	if (ppTrial.groupNamesPresent())
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
             else
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
@@ -390,7 +387,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     public void menuCanceled(MenuEvent evt) {
     }
 
-    // listener for the boxWidthSlider
+    // listener for the numBinsSlider
     public void stateChanged(ChangeEvent event) {
         try {
             numBins = numBinsSlider.getValue();
@@ -407,10 +404,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         String tmpString = (String) arg;
         if (tmpString.equals("prefEvent")) {
             this.setHeader();
-            //Just need to call a repaint on the ThreadDataWindowPanel.
             panel.repaint();
         } else if (tmpString.equals("colorEvent")) {
-            //Just need to call a repaint on the ThreadDataWindowPanel.
             panel.repaint();
         } else if (tmpString.equals("dataEvent")) {
             sortLocalData();
@@ -421,7 +416,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     private void help(boolean display) {
-        //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
         if (display)
             ParaProf.helpWindow.show();
@@ -433,9 +427,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         ParaProf.helpWindow.writeText("");
     }
 
-    //Updates this window's data copy.
     private void sortLocalData() {
-        list = dataSorter.getFunctionData(function, 0, false);
+        data = dataSorter.getFunctionData(function, 0, false);
     }
 
     // This process is separated into two functions to provide the option of obtaining the current 
@@ -465,7 +458,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public Vector getData() {
-        return list;
+        return data;
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
@@ -476,7 +469,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         getContentPane().add(c, gbc);
     }
 
-    //Respond correctly when this window is closed.
     void thisWindowClosing(java.awt.event.WindowEvent e) {
         closeThisWindow();
     }
@@ -506,31 +498,27 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         return numBins;
     }
 
-    //Instance data.
+    // instance data
     private ParaProfTrial ppTrial = null;
     private DataSorter dataSorter = null;
     private Function function = null;
 
-    private JMenu optionsMenu = null;
+    // hold on to these two for 'menuSelected'
     private JMenu windowsMenu = null;
     private JMenu unitsSubMenu = null;
 
-    private Container contentPane = null;
-    private GridBagLayout gbl = null;
-    private GridBagConstraints gbc = null;
 
     private JScrollPane sp = null;
     private HistogramWindowPanel panel = null;
 
-    private Vector list = null;
+    private Vector data = null;
 
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
 
-    private int numBins = 10;
 
     private JCheckBoxMenuItem slidersCheckBox = null;
     private JLabel numBinsLabel = new JLabel("Number of Bins");
     private JSlider numBinsSlider = new JSlider(0, 100, 10);
-
+    private int numBins = 10;
 }
