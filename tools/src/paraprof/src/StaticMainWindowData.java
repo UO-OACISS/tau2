@@ -169,8 +169,6 @@ public class StaticMainWindowData{
     //Instance Data.
     //####################################
     private ParaProfTrial trial = null;
-    private Vector sMWGeneralData = new Vector();
-
     private boolean debug = false; //Off by default.
     //####################################
     //End - Instance Data.

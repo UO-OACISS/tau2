@@ -939,6 +939,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
     private boolean debug = false; //Off by default.
     //####################################
-    //Instance data.
+    //End - Instance data.
     //####################################
 }

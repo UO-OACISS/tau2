@@ -27,6 +27,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     
     //**********
     //Start or define all the persistant objects.
+    static ParaProfLisp paraProfLisp = null;
     static SavedPreferences savedPreferences = new SavedPreferences();
     static ParaProfManager paraProfManager = new ParaProfManager();
     static ApplicationManager applicationManager = new ApplicationManager();
@@ -68,11 +69,15 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		}
 		else{
 		    //Print some kind of error message, and quit the system.
-		    System.out.println("There was an internal error whilst trying to read the Racy preference");
+		    System.out.println("There was an internal error whilst trying to read the ParaProf preference");
 		    System.out.println("file.  Please delete this file, or replace it with a valid one!");
-		    System.out.println("Note: Deleting the file will cause Racy to restore the default preferences");
+		    System.out.println("Note: Deleting the file will cause ParaProf to restore the default preferences");
 		}
 	    }
+
+	    paraProfLisp = new ParaProfLisp(UtilFncs.debug);
+	    //Register lisp primatives in ParaProfLisp.
+	    ParaProf.paraProfLisp.registerParaProfPrimitives();
 
 	    //Create a default application.
 	    ParaProfApplication app = ParaProf.applicationManager.addApplication();
@@ -161,7 +166,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 			System.out.println("Use ParaProf's manager window to load them manually.");
 		    }
 		}
-	    }		
+	    }
 	}
 	catch (Exception e) {
   	    System.out.println("An un-caught exception has occurred within the program!");
@@ -187,6 +192,32 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	//We are only ever watching an instance of ParaProfTrial.
 	ParaProfTrial trial = (ParaProfTrial) obj;
 	trial.showMainWindow();
+
+	//See if the user has defined any lisp code to run.
+	try{
+	    FileInputStream file = new FileInputStream("ParaProfLisp.lp");
+	    //If here, means that no exception was thrown, and there is a lisp file present.
+	    InputStreamReader isr = new InputStreamReader(file);
+	    BufferedReader br = new BufferedReader(isr);
+	    
+	    String inputString = null;
+	    
+	    while((inputString = br.readLine()) != null){
+		System.out.println("Expression: " + inputString);
+		System.out.println(ParaProf.paraProfLisp.eval(inputString));
+	    }
+	    
+	}
+	catch(Exception e){
+	    if(e instanceof FileNotFoundException){
+		System.out.println("No ParaProfLisp.lp file present!");
+	    }
+	    else{
+		//Print some kind of error message, and quit the system.
+		System.out.println("There was an internal error whilst trying to read the ParaProfLisp.pl");
+		System.out.println("Please delete this file, or replace it with a valid one!");
+	    }
+	}
     }
     public void update(){}
     //######

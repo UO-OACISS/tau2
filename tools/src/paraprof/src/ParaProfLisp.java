@@ -23,15 +23,21 @@ import org.jatha.compile.*;
 import org.jatha.machine.*;
 
 public class ParaProfLisp{
-    ParaProfList(){
+    public ParaProfLisp(boolean debug){
 	this.lisp = new Jatha(false, false);
 	this.lisp.init();
 	this.lisp.start();
-	//lisp.COMPILER.Register(new FirstPrimitive(this.lisp));
+	this.debug = debug;
     }
 
-    public void register(LispPrimative lispPrimative){
-	lisp.COMPILER.Register(lispPrimative)}
+    public void register(LispPrimitive lispPrimitive){
+	lisp.COMPILER.Register(lispPrimitive);}
+
+    public void registerParaProfPrimitives(){
+	ParaProfIterator l = ParaProfLispPrimitives.getPrimitiveList(lisp, this.debug());
+	while(l.hasNext()){
+	    this.register((LispPrimitive)l.next());}
+    }
 
     public String eval(String s){
 	String value = null;
@@ -46,11 +52,17 @@ public class ParaProfLisp{
 	return value;
     }
 
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
 
     //####################################
     //Instance Data
     //####################################
     Jatha lisp = null;
+    private boolean debug = false; //Off by default.
     //####################################
     //Instance Data
     //####################################
