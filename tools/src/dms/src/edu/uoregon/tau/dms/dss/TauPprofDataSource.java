@@ -262,8 +262,6 @@ public class TauPprofDataSource extends DataSource {
                         meanProfile.setInclusive(metric, functionDataLine1.d0);
                         meanProfile.setInclusivePercent(metric, functionDataLine1.d1);
 
-                        System.out.println ("value: " + functionDataLine1.d1);
-
                         
                         //Set number of calls/subroutines/usersec per call.
                         inputString = br.readLine();
