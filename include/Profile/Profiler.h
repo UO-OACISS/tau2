@@ -300,7 +300,7 @@ public:
 #ifdef PROFILE_CALLSTACK
   double InclTime_cs;
   double ExclTime_cs;
-  void CallStackTrace();
+  static void CallStackTrace();
 #endif // PROFILE_CALLSTACK ----------------------------------------------
 
 private:
@@ -396,6 +396,7 @@ class RtsLayer
 #define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
 #define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
 #define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
+#define TAU_PROFILE_CALLSTACK()    Profiler::CallStackTrace();
 
 #ifdef NO_RTTI
 #define CT(obj) string(#obj)
@@ -439,6 +440,6 @@ class RtsLayer
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: mikek $
- * $Revision: 1.7 $   $Date: 1998/01/06 00:33:56 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.7 1998/01/06 00:33:56 mikek Exp $ 
+ * $Revision: 1.8 $   $Date: 1998/02/22 23:39:45 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.8 1998/02/22 23:39:45 mikek Exp $ 
  ***************************************************************************/
