@@ -32,9 +32,9 @@ FOR POOMA/SMARTS Users:
 ****************
 % cd /usr/local/packages/tau-2.6
 [FOR SGI]
-% ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS -pdt=/usr/local/packages/pdt-1.0
+% ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS -pdt=/usr/local/packages/pdtoolkit-1.0
 [FOR LINUX PCs]
-% ./configure -arch=linux -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -pdt=/usr/local/packages/pdt-1.0
+% ./configure -arch=linux -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -pdt=/usr/local/packages/pdtoolkit-1.0
 % make install
 
 2. Configure SMARTS
@@ -50,7 +50,7 @@ FOR POOMA/SMARTS Users:
 3. Configure Pooma II 
 *********************
 % setenv TAUDIR     /usr/local/packages/tau-2.6
-% setenv PDTDIR	    /usr/local/packages/pdt-1.0
+% setenv PDTDIR	    /usr/local/packages/pdtoolkit-1.0
 % setenv SMARTSDIR  /usr/local/packages/smarts-1.0
 [FOR SGI]
 % ./configure --arch SGI64KCC --suite PP --parallel --profile --opt
