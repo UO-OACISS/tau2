@@ -188,6 +188,12 @@ void tau_phase_create_dynamic_(void **ptr, char *infname, int slen)
   tau_profile_timer_(ptr, infname, slen);
 }
 
+void tau_profile_timer_dynamic_(void **ptr, char *infname, int slen)
+{ /* This routine is identical to tau_phase_create_dynamic */
+  *ptr = 0;  /* reset it each time so it creates a new timer */
+  tau_profile_timer_(ptr, infname, slen);
+}
+
 void tau_profile_start_(void **profiler)
 { 
 #ifdef DEBUG_PROF
@@ -1076,6 +1082,11 @@ void tau_phase_create_dynamic__(void **ptr, char *infname, int slen)
   tau_phase_create_dynamic_(ptr, infname, slen);
 }
 
+void tau_profile_timer_dynamic__(void **ptr, char *infname, int slen)
+{
+  tau_profile_timer_dynamic_(ptr, infname, slen);
+}
+
 void tau_phase_start__(void **profiler)
 {
   tau_phase_start_(profiler);
@@ -1101,6 +1112,11 @@ void tau_phase_create_dynamic(void **ptr, char *infname, int slen)
   tau_phase_create_dynamic_(ptr, infname, slen);
 }
 
+void tau_profile_timer_dynamic(void **ptr, char *infname, int slen)
+{
+  tau_profile_timer_dynamic_(ptr, infname, slen);
+}
+
 void tau_phase_start(void **profiler)
 {
   tau_phase_start_(profiler);
@@ -1121,6 +1137,11 @@ void TAU_PHASE_CREATE_DYNAMIC(void **ptr, char *infname, int slen)
   tau_phase_create_dynamic_(ptr, infname, slen);
 }
 
+void TAU_PROFILE_TIMER_DYNAMIC(void **ptr, char *infname, int slen)
+{
+  tau_profile_timer_dynamic_(ptr, infname, slen);
+}
+
 void TAU_PHASE_START(void **profiler)
 {
   tau_phase_start_(profiler);
@@ -1136,6 +1157,6 @@ void TAU_PHASE_STOP(void **profiler)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.38 $   $Date: 2005/01/12 02:55:57 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.38 2005/01/12 02:55:57 sameer Exp $ 
+ * $Revision: 1.39 $   $Date: 2005/01/18 23:58:20 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.39 2005/01/18 23:58:20 sameer Exp $ 
  ***************************************************************************/
