@@ -117,6 +117,10 @@ void Profiler::Start(int tid)
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
       DEBUGPROFMSG("Profiler::Start Entering " << ThisFunction->GetName()<<endl;);
 	
+#ifdef TAU_CALLPATH
+        CallPathStart(tid);
+#endif // TAU_CALLPATH
+
 #ifdef TRACING_ON
 #ifdef TAU_EPILOG
 	DEBUGPROFMSG("Calling elg_enter: ["<<ThisFunction->GetFunctionId()<<"] "
@@ -277,6 +281,8 @@ void Profiler::Stop(int tid)
 	  && RtsLayer::TheEnableInstrumentation()) {
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
         DEBUGPROFMSG("Profiler::Stop for routine = " << ThisFunction->GetName()<<endl;);
+
+
 #ifdef TRACING_ON
 #ifdef TAU_EPILOG
         DEBUGPROFMSG("Calling elg_exit(): "<< ThisFunction->GetName()<<endl;);
@@ -308,6 +314,9 @@ void Profiler::Stop(int tid)
 	
 #endif//TAU_MULTIPLE_COUNTERS
 
+#ifdef TAU_CALLPATH
+	    CallPathStop(TotalTime, tid);
+#endif // TAU_CALLPATH
 
         DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
   	  << RtsLayer::myContext() << "," << tid 
@@ -2504,9 +2513,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.76 $   $Date: 2002/07/23 19:32:00 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.76 2002/07/23 19:32:00 bertie Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.77 $   $Date: 2002/08/08 22:23:19 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.77 2002/08/08 22:23:19 sameer Exp $ 
  ***************************************************************************/
 
 	

@@ -685,6 +685,10 @@ fi
 	echo "NOTE: Using Profile Statistics (Std. Dev. of Excl time/counts)"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PROFILECALLPATH)
+	echo "NOTE: Using Call Path Profiles"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PROFILECALLS)
 	echo "NOTE: Using PROFILECALLS for tracing timings for each function invocation "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

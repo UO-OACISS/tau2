@@ -99,6 +99,14 @@ public:
 	// Clean up data from this invocation.
 	void Stop(int tid = RtsLayer::myThread());
 	~Profiler();
+#ifdef TAU_CALLPATH
+        void CallPathStart(int tid);
+#ifdef TAU_MULTIPLE_COUNTERS
+        void CallPathStop(double* totaltime, int tid);
+#else  // TAU_MULTIPLE_COUNTERS 
+        void CallPathStop(double totaltime, int tid);
+#endif // TAU_MULTIPLE_COUNTERS 
+#endif // TAU_CALLPATH 
   	static void ProfileExit(const char *message=0, 
 	  int tid = RtsLayer::myThread());
 	static bool createDirectories();
@@ -139,6 +147,9 @@ public:
 	double StartTime[MAX_TAU_COUNTERS];
 #endif//TAU_MULTIPLE_COUNTERS
 	FunctionInfo * ThisFunction;
+#ifdef TAU_CALLPATH
+	FunctionInfo * CallPathFunction;
+#endif // TAU_CALLPATH
 	Profiler * ParentProfiler; 
 
 
@@ -169,7 +180,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: bertie $
- * $Revision: 1.42 $   $Date: 2002/03/29 00:37:23 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.42 2002/03/29 00:37:23 bertie Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.43 $   $Date: 2002/08/08 22:23:17 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.43 2002/08/08 22:23:17 sameer Exp $ 
  ***************************************************************************/

@@ -91,6 +91,11 @@ JDKARCH                 = linux
 #EPILOG#OPARI_O 	=  #ENDIF#
 
 #############################################
+# CallPath OBJECTS
+#############################################
+#PROFILECALLPATH#CALLPATH_O  = TauCallPath.o #ENDIF#
+
+#############################################
 # DYNINST DEFAULT ARCH
 #############################################
 DYNINST_PLATFORM 	= $(PLATFORM) 
@@ -189,6 +194,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #PAPIVIRTUAL#PROFILEOPT34       = -DTAU_PAPI_VIRTUAL    #ENDIF#
 #SGICOUNTERS#PROFILEOPT35      = -DSGI_HW_COUNTERS     #ENDIF#
 #EPILOG#PROFILEOPT36	       = -DTAU_EPILOG -I$(EPILOGDIR)/include	#ENDIF#
+#PROFILECALLPATH#PROFILEOPT36  = -DTAU_CALLPATH #ENDIF#
 
 
 #FOR F90 MPI on SGI

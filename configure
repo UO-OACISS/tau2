@@ -145,6 +145,7 @@ monitor=no
 profilecounters=no
 multiplecounters=no
 profilestats=no
+callpath=no
 profilecalls=no
 profilecallstack=no
 trace=no
@@ -465,6 +466,12 @@ do
   -PROFILECALLS)
     profile=yes
     profilecalls=yes
+    shift
+    ;;
+
+  -PROFILECALLPATH)
+    profile=yes
+    callpath=yes
     shift
     ;;
 
@@ -860,6 +867,11 @@ fi
 if [ $profilestats = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILESTATS"
+fi
+
+if [ $callpath = yes ]
+  then
+    fixmakeargs="$fixmakeargs PROFILECALLPATH"
 fi
 
 if [ $profilecallstack = yes ]
