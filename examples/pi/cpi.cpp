@@ -26,14 +26,14 @@ double f(double a)
     return (4.0 / (1.0 + a*a));
 }
 
-void main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     int i, n, myid, numprocs, namelen;
     double mySum, h, sum, x;
     double startwtime, timePi, timeE, time1;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
 
-    TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
+    TAU_PROFILE("main()", "int (int, char **)", TAU_DEFAULT);
     TAU_PROFILE_INIT(argc,argv);
     MPI_Init(&argc,&argv);
     TAU_PROFILE_TIMER(t1, "main-init()", "int (int, char **)",  TAU_USER);
@@ -139,4 +139,5 @@ void main(int argc, char* argv[])
     */
 
     MPI_Finalize();
+    return 0;
 }
