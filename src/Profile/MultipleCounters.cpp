@@ -39,6 +39,17 @@ using namespace std;
 
 #ifdef TAU_MPI
 extern TauUserEvent& TheSendEvent(void);
+extern TauUserEvent& TheRecvEvent(void);
+extern TauUserEvent& TheBcastEvent(void);
+extern TauUserEvent& TheReduceEvent(void);
+extern TauUserEvent& TheReduceScatterEvent(void);
+extern TauUserEvent& TheScanEvent(void);
+extern TauUserEvent& TheAllReduceEvent(void);
+extern TauUserEvent& TheAlltoallEvent(void);
+extern TauUserEvent& TheScatterEvent(void);
+extern TauUserEvent& TheGatherEvent(void);
+extern TauUserEvent& TheAllgatherEvent(void);
+
 #endif /* TAU_MPI */
 
 
@@ -677,7 +688,18 @@ void MultipleCounterLayer::tauMUSEMCL(int tid, double values[]){
 
 void MultipleCounterLayer::tauMPIMessageSizeMCL(int tid, double values[]){
 #ifdef TAU_MPI
-  values[tauMPIMessageSizeMCL_CP[0]] = TheSendEvent().GetSumValue(tid); //Currently TAU_EVENT_DATATYPE is a double.
+  values[tauMPIMessageSizeMCL_CP[0]] = TheSendEvent().GetSumValue(tid) 
+	+ TheRecvEvent().GetSumValue(tid) 
+	+ TheBcastEvent().GetSumValue(tid)
+	+ TheReduceEvent().GetSumValue(tid)
+	+ TheReduceScatterEvent().GetSumValue(tid)
+	+ TheScanEvent().GetSumValue(tid)
+	+ TheAllReduceEvent().GetSumValue(tid)
+	+ TheAlltoallEvent().GetSumValue(tid)
+	+ TheScatterEvent().GetSumValue(tid)
+	+ TheGatherEvent().GetSumValue(tid)
+	+ TheAllgatherEvent().GetSumValue(tid);
+ //Currently TAU_EVENT_DATATYPE is a double.
 #endif//TAU_MPI
 }
 
