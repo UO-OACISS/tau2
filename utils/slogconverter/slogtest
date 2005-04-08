@@ -311,7 +311,7 @@ int main(void)
 	return 0;
 }
 EOF
-make -f mk
+make -f mk > /dev/null
 #$TAU_CCOM tau$$.c
 ./a.out
 /bin/rm -f tau$$.c
