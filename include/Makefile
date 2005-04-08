@@ -44,6 +44,7 @@ TAUGCCLIBDIR=
 PCLDIR=
 PAPIDIR=
 PAPISUBDIR=
+CHARMDIR=
 PDTDIR=
 PDTCOMPDIR=
 DYNINSTDIR=
@@ -296,6 +297,8 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #MPIADDERROR#PROFILEOPT54  = -DTAU_MPIADDERROR   #ENDIF#
 #MPINEEDSTATUSCONV#PROFILEOPT55  = -DTAU_MPI_NEEDS_STATUS   #ENDIF#
 #DEPTHLIMIT#PROFILEOPT56      = -DTAU_DEPTH_LIMIT       #ENDIF#
+#TAU_CHARM#PROFILEOPT57 = -DTAU_CHARM -I$(CHARMDIR)/include #ENDIF#
+
 
 
 #For F90 support for all platforms
@@ -434,6 +437,9 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 # We need -lCio with SGI CC 7.4+
 #SGICC#TAU_LINKER_OPT7 = -lCio #ENDIF#
 
+# charm
+#TAU_CHARM#TAU_LINKER_OPT8 = -lconv-core #ENDIF#
+
 #USE_IBMXLC#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
 #GNU#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
 #KAI#TAU_IBM_PYTHON_SHFLAG = --backend -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp --backend -Wl,-einitpytau#ENDIF#
@@ -513,13 +519,13 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT45) $(PROFILEOPT46) $(PROFILEOPT47) $(PROFILEOPT48) \
               $(PROFILEOPT49) $(PROFILEOPT50) $(PROFILEOPT51) $(PROFILEOPT52) \
               $(PROFILEOPT53) $(PROFILEOPT54) $(PROFILEOPT55) $(PROFILEOPT56) \
-              $(TRACEOPT)
+	      $(PROFILEOPT57) $(TRACEOPT)
 
 ##############################################
 
 TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT4) $(TAU_LINKER_OPT5) $(TAU_LINKER_OPT6) \
-                  $(TAU_LINKER_OPT7) 
+                  $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8)
 
 ##############################################
 

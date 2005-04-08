@@ -139,6 +139,7 @@ python=no
 extradir=
 awe=no
 pthread=no
+charm=no
 muse=no
 muse_event=no
 muse_multiple=no
@@ -353,6 +354,13 @@ do
  
   -pthread)
       pthread=yes
+    shift
+    ;;
+
+  -charm=*)
+      pthread=yes
+      charm=yes
+      charmdir=`echo $arg | sed -e 's/-charm=//'`
     shift
     ;;
 
@@ -814,6 +822,7 @@ do
     echo "-arch=<architecture> ................... Specify a target architecture."
     echo "   options       [bgl|ibm64|ibm64linux|solaris2-64|sgin32|sgi64|sgio32]"
     echo "-pthread .................................. Use pthread thread package."
+    echo "-charm=<dir> .............................. Use charm++ thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
@@ -2948,6 +2957,13 @@ if [ $pthread = yes ]
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
     echo "$machine: PTDIR = $ptdir" >> ./build/Config.info
     tauoptions="${tauoptions}-pthread"
+fi
+
+if [ $charm = yes ]
+    then
+    fixmakeargs="$fixmakeargs TAU_CHARM charmdir=$charmdir"
+    echo "$machine: CHARMDIR = $charmdir" >> ./build/Config.info
+    tauoptions="${tauoptions}-charm"
 fi
 
 if [ $compensate = yes ]

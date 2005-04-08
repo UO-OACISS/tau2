@@ -89,6 +89,11 @@ fi
 	echo "s,^PTDIR=.*$,PTDIR=$ptdir,g" >> $sedout
 	;;
 
+     charmdir=*)
+        charmdir=`echo $1 | sed -e 's/^charmdir=//'`
+	echo "s,^CHARMDIR=.*$,CHARMDIR=$charmdir,g" >> $sedout
+	;;
+
      pcldir=*)
         pcldir=`echo $1 | sed -e 's/^pcldir=//'`
 	echo "s,^PCLDIR=.*$,PCLDIR=$pcldir,g" >> $sedout
@@ -702,6 +707,10 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      AWE_AVAILABLE)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TAU_CHARM)
+	echo "NOTE: Using charm++ (converse) threads"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PTHREAD_AVAILABLE)

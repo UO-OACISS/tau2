@@ -36,3 +36,4 @@ s@^USER_OPT=\(.*\)@USER_OPT=-g@g
 s@^PDT_CXX=\(.*\)@PDT_CXX=@g
 s@^TAU_SHMEM_INC=\(.*\)@TAU_SHMEM_INC=@g
 s@^TAU_SHMEM_LIB=\(.*\)@TAU_SHMEM_LIB=@g
+s@^CHARMDIR=\(.*\)@CHARMDIR=@g
