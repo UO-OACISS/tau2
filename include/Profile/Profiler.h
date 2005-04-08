@@ -41,7 +41,18 @@
 #endif//TAU_MULTIPLE_COUNTERS
 
 #if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC))
+
+
+#ifndef TAU_MAX_THREADS
+
+#ifdef TAU_CHARM
+#define TAU_MAX_THREADS 512
+#else
 #define TAU_MAX_THREADS 128
+#endif
+
+#endif
+
 #else
 #define TAU_MAX_THREADS 1
 #endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS || OPENMP || SPROC */
@@ -216,7 +227,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.57 $   $Date: 2005/03/15 00:18:02 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.57 2005/03/15 00:18:02 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: amorris $
+ * $Revision: 1.58 $   $Date: 2005/04/08 22:12:17 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.58 2005/04/08 22:12:17 amorris Exp $ 
  ***************************************************************************/
