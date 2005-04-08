@@ -37,7 +37,15 @@
 //////////////////////////////////////////////////////////////////////
 
 #ifdef PTHREADS
+
+#ifdef TAU_CHARM
+extern "C" {
+#include <cpthreads.h>
+}
+#else 
 #include <pthread.h>
+#endif
+
 class PthreadLayer 
 { // Layer for RtsLayer to interact with pthreads 
   public:
@@ -71,9 +79,9 @@ class PthreadLayer
 	
 
 /***************************************************************************
- * $RCSfile: PthreadLayer.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2005/01/05 01:57:47 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.3 2005/01/05 01:57:47 sameer Exp $
+ * $RCSfile: PthreadLayer.h,v $   $Author: amorris $
+ * $Revision: 1.4 $   $Date: 2005/04/08 20:01:09 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.4 2005/04/08 20:01:09 amorris Exp $
  ***************************************************************************/
 
 
