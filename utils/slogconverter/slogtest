@@ -283,6 +283,14 @@ $TAU_CCOM tau$$.c
 /bin/rm -f a.out  
 
 
+cat <<EOF > mk
+include include/Makefile
+
+a.out :
+	\$(TAU_CC) \$(USER_OPT) tau$$.c
+EOF
+
+
 cat <<EOF > tau$$.c
 #include <stdio.h>
 
@@ -303,11 +311,12 @@ int main(void)
 	return 0;
 }
 EOF
-$TAU_CCOM tau$$.c
+make -f mk
+#$TAU_CCOM tau$$.c
 ./a.out
 /bin/rm -f tau$$.c
 /bin/rm -f a.out
-
+/bin/rm -f mk
 
 cat <<EOF > tau$$.c  
 #include <stdio.h>
