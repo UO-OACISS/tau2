@@ -3025,8 +3025,6 @@ then
     echo "You need javac in your path while using SLOG2. Please re-configure TAU."
   fi
   fixmakeargs="$fixmakeargs jdkdir=$jdkdir"
-  /bin/rm -f utils/slogconverter/trace_impl.h
-  utils/slogconverter/slogtest $jdkdir > utils/slogconverter/trace_impl.h
 fi
 
 if [ $pdt = yes ]
@@ -4091,6 +4089,12 @@ then
 fi
     
   
+
+if [ $slog2 = yes ]
+then
+  /bin/rm -f utils/slogconverter/trace_impl.h
+  utils/slogconverter/slogtest $jdkdir > utils/slogconverter/trace_impl.h
+fi
 
 
 
