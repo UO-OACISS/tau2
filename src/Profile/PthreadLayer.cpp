@@ -33,7 +33,6 @@
 //////////////////////////////////////////////////////////////////////
 
 //#define DEBUG_PROF
-#include <pthread.h>
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 using namespace std;
@@ -42,7 +41,13 @@ using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include "Profile/Profiler.h"
 
-
+#ifdef TAU_CHARM
+extern "C" {
+#include <cpthreads.h>
+}
+#else 
+#include <pthread.h>
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class PthreadLayer
@@ -206,8 +211,8 @@ int PthreadLayer::UnLockEnv(void)
 }  
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.7 $   $Date: 2005/01/05 02:11:05 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.7 2005/01/05 02:11:05 amorris Exp $
+ * $Revision: 1.8 $   $Date: 2005/04/08 19:59:36 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.8 2005/04/08 19:59:36 amorris Exp $
  ***************************************************************************/
 
 
