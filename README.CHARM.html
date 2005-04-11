@@ -1,0 +1,278 @@
+<html>
+<h1>Using TAU with charm++</h1>
+<h2>(tested with 5.4 release 1)</h2>
+
+<p>Note that when TAU is built with charm++, only charm++ programs can use the
+resulting library.  Additionally, no TAU calls can be made before the
+ConverseInit call.
+
+<p>When using TAU_COMPILER with charm++, the following change must be made to
+charm/src/conv-core/converse.h :
+
+<pre>
+static __inline__ unsigned long long int rdtsc(void)
+{
+        unsigned long long int x;
+#ifdef CMK_IA64
+	__asm__ __volatile__("mov %0=ar.itc" : "=r"(x) :: "memory");
+#else
+        __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
+#endif
+        return x;
+}
+</pre>
+
+Must be changed to :
+
+<pre>
+static __inline__ unsigned long long int rdtsc(void)
+{
+        unsigned long long int x;
+<font color=red>#ifndef TAU_CHARM</font>
+#ifdef CMK_IA64
+	__asm__ __volatile__("mov %0=ar.itc" : "=r"(x) :: "memory");
+#else
+        __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
+#endif
+<font color=red>#endif</font>
+        return x;
+}
+</pre>
+
+This is due to the EDG front-end parse not parsing the __asm__ directive
+properly.
+
+
+<h2>Using TAU with NAMD</h2>
+Example:  To build TAU for NAMD 2.5 (with automatic instrumentation) :
+
+<ol>
+<li> Download and install PDT
+
+<pre>
+  wget http://www.cs.uoregon.edu/research/paracomp/proj/pdtoolkit/Download/pdt_latest.tar.gz
+  tar xzf pdt_latest.tar.gz
+  cd pdtoolkit-3.3.1
+  ./configure ; make ; make install 
+</pre>
+
+<li> Download and install TAU
+
+<pre>
+  wget http://www.cs.uoregon.edu/research/paracomp/proj/tau/tauprofile/dist/tau_latest.tar.gz
+  tar xzf tau_latest.tar.gz
+  cd tau-2.14.3
+  ./configure -pdt=&lt;path to pdt&gt; -charm=&lt;path to charm&gt;
+</pre>
+
+Note that TAU can be configure to use various options (-TRACE,
+-PROFILECALLPATH, etc) with -PROFILE as the default.<br>
+
+
+<li> Apply the TAU NAMD 2.5 patch
+<pre>
+cd NAMD_2.5_Source
+patch &lt; path/to/tau/examples/charm/namd-2.5.patch
+</pre>
+Alternatively see <a href=#manual>the manual patching instructions</a> below.
+
+
+<li> Make the following changes to arch/Linux-i686-g++.arch (or your .arch file):
+
+   <ul>
+   <li> Add "include <path to tau>/include/Makefile"
+   <li> Change <pre>"CXX = ..."</pre> to <pre>"CXX = $(TAU_COMPILER) -optTauSelectFile=&lt;path to select.tau&gt; ..."</pre>
+   <li> Change <pre>"CC = ..."</pre> to <pre>"CC = $(TAU_COMPILER) -optTauSelectFile=&lt;path to select.tau&gt; ..."</pre> 
+    </ul>
+For example :
+<pre>
+<font color=red>include /home/amorris/tau2/include/Makefile</font>
+
+NAMD_ARCH = Linux-i686
+CHARMARCH = net-linux
+
+CXX = <font color=red>$(TAU_COMPILER) -optTauSelectFile=/home/amorris/select.tau</font> g++ -DSOCKLEN_T=socklen_t -DNO_STRSTREAM_H
+CXXOPTS = -O3 -march=pentiumpro -ffast-math -static
+CC = <font color=red>$(TAU_COMPILER) -optTauSelectFile=/home/amorris/select.tau</font> gcc
+COPTS = -O3 -march=pentiumpro -ffast-math -static
+</pre>
+
+
+<li> We recommend that you set the environment variables PROFILEDIR and TRACEDIR
+<pre>
+export PROFILEDIR=/tmp
+export TRACEDIR=/tmp
+</pre>
+
+
+<li> After execution, you should file profile.X.X.X files in your $PROFILEDIR, view these wwith pprof or paraprof
+
+</ol>
+
+<a NAME="manual"><h2>Manual patching instructions</h2></a>
+<ol>
+
+<li> Make the above change to converse.h
+
+<li> Create the selective instrumentation file.  We have had success using the
+   following select.tau file :
+
+<pre>
+BEGIN_EXCLUDE_LIST
+void Sequencer::thread#
+void Controller::thread#
+int NAMD_read_int#
+void PDBDATA::scan#
+Real PDBAtom::zcoor#
+Real PDBAtom::ycoor#
+Real PDBAtom::xcoor#
+Bool Molocule::is_hydrogen#
+END_EXCLUDE_LIST
+
+BEGIN_FILE_EXCLUDE_LIST
+*mainfunc.C
+*memusage.C
+*BackEnd.C
+END_FILE_EXCLUDE_LIST
+</pre>
+
+<li> Make the following changes to Makefile :
+
+<p>Add $(TAU_COMPILER) to the link phase, as shown
+
+<pre>
+namd2:	$(INCDIR) $(DSTDIR) $(OBJS) $(LIBS)
+	$(MAKEBUILDINFO)
+	<font color=red>$(TAU_COMPILER)</font> $(CHARMC) -verbose -ld++-option \
+	"$(COPTI)$(CHARMINC) $(COPTI)$(INCDIR) $(COPTI)$(SRCDIR) $(CXXOPTS)" \
+	-module NeighborLB -module commlib -language charm++ \
+	$(BUILDINFO).o \
+	$(OBJS) \
+	$(DPMTALIB) \
+	$(DPMELIB) \
+	$(TCLLIB) \
+	$(FFTLIB) \
+	$(PLUGINLIB) \
+	-lm -o namd2
+</pre>
+
+
+
+<li> Make the following changes to BackEnd.C
+
+<ul>
+<li> Add the following to the top of BackEnd.C:
+<pre>
+<font color=red>#include &lt;TAU.h&gt;
+extern "C" void Tau_create_top_level_timer_if_necessary(void);</font>
+</pre>
+
+<li> Change BackEnd::init as follows:
+
+<pre>
+void BackEnd::init(int argc, char **argv) {
+  ConverseInit(argc, argv, slave_init, 1, 1);  // calls slave_init on others
+  <font color=red>TAU_PROFILE_SET_NODE(CmiMyPe());
+  Tau_create_top_level_timer_if_necessary();
+  TAU_PROFILE("BackEnd::init", "", TAU_DEFAULT);</font>
+  cpuTime_start = CmiCpuTimer();
+  wallTime_start = CmiWallTimer();
+  if ( CmiMyPe() ) {
+    slave_init(argc, argv);  // for procs that call main
+    <font color=red>TAU_PROFILE_EXIT("Calling ConverseExit()");</font>
+    ConverseExit();  // should never return
+  }
+  all_init(argc, argv);
+</pre>
+</ul>
+
+<li> Make the following changes to mainfunc.C
+<ul>
+<li> Add the following to the top of mainfun.C:
+
+<pre>
+<font color=red>#include &lt;TAU.h&gt;</font>
+</pre>
+
+
+<li> Change main as follows:
+<pre>
+int main(int argc, char **argv) {
+  BackEnd::init(argc,argv);
+  <font color=red>TAU_PROFILE("int main(int, char**) C", " ", TAU_DEFAULT);</font>
+  ScriptTcl *script = new ScriptTcl;
+  Node::Object()->setScript(script);
+
+  ...
+
+
+  <font color=red>TAU_PROFILE_EXIT("main exiting");</font>
+  BackEnd::exit();
+  return 0;
+}
+</pre>
+
+</ul>
+
+<li> Change Controller.C as follows:
+<ul>
+
+<li> Add the following to the top of Controller.C:
+<pre>
+<font color=red>#include &lt;TAU.h&gt;</font>
+</pre>
+
+<li> Make the following change to ::threadRun
+<pre>
+void Controller::threadRun(Controller* arg)
+{
+  <font color=red>TAU_REGISTER_THREAD();</font>
+  arg->algorithm();
+}
+</pre>
+
+
+<li> Make the following change to ::terminate
+<pre>
+void Controller::terminate(void) {
+  <font color=red>TAU_PROFILE_EXIT("Controller::terminate");</font>
+  BackEnd::awaken();
+  CthFree(thread);
+  CthSuspend();
+}
+</pre>
+</ul>
+
+<li> Change Sequencer.C as follows:
+<ul>
+
+<li> Add the following to the top of Sequencer.C:
+<pre>
+<font color=red>#include &lt;TAU.h&gt;</font>
+</pre>
+
+<li> Make the following change to ::threadRun
+<pre>
+void Sequencer::threadRun(Sequencer* arg)
+{
+  <font color=red>TAU_REGISTER_THREAD();</font>
+  arg->algorithm();
+}
+</pre>
+
+
+<li> Make the following change to ::terminate
+<pre>
+void Sequencer::terminate(void) {
+  <font color=red>TAU_PROFILE_EXIT("Sequencer::terminate");</font>
+  CthFree(thread);
+  CthSuspend();
+}
+</pre>
+</ul>
+
+
+
+</ol>
+
+</html>
