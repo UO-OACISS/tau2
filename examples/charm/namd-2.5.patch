@@ -1,0 +1,201 @@
+diff -rNc ../orig/NAMD_2.5_Source/charm/src/conv-core/converse.h ./charm/src/conv-core/converse.h
+*** ../orig/NAMD_2.5_Source/charm/src/conv-core/converse.h	2003-08-05 16:42:34.000000000 -0700
+--- ./charm/src/conv-core/converse.h	2005-04-11 09:50:11.436189424 -0700
+***************
+*** 418,428 ****
+--- 418,430 ----
+  static __inline__ unsigned long long int rdtsc(void)
+  {
+          unsigned long long int x;
++ #ifndef TAU_CHARM
+  #ifdef CMK_IA64
+  	__asm__ __volatile__("mov %0=ar.itc" : "=r"(x) :: "memory");
+  #else
+          __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
+  #endif
++ #endif
+          return x;
+  }
+  
+diff -rNc ../orig/NAMD_2.5_Source/Makefile ./Makefile
+*** ../orig/NAMD_2.5_Source/Makefile	2003-09-26 15:08:45.000000000 -0700
+--- ./Makefile	2005-04-11 09:41:43.817359216 -0700
+***************
+*** 256,262 ****
+  
+  namd2:	$(INCDIR) $(DSTDIR) $(OBJS) $(LIBS)
+  	$(MAKEBUILDINFO)
+! 	$(CHARMC) -verbose -ld++-option \
+  	"$(COPTI)$(CHARMINC) $(COPTI)$(INCDIR) $(COPTI)$(SRCDIR) $(CXXOPTS)" \
+  	-module NeighborLB -module commlib -language charm++ \
+  	$(BUILDINFO).o \
+--- 256,262 ----
+  
+  namd2:	$(INCDIR) $(DSTDIR) $(OBJS) $(LIBS)
+  	$(MAKEBUILDINFO)
+! 	$(TAU_COMPILER) $(CHARMC) -verbose -ld++-option \
+  	"$(COPTI)$(CHARMINC) $(COPTI)$(INCDIR) $(COPTI)$(SRCDIR) $(CXXOPTS)" \
+  	-module NeighborLB -module commlib -language charm++ \
+  	$(BUILDINFO).o \
+diff -rNc ../orig/NAMD_2.5_Source/select.tau ./select.tau
+*** ../orig/NAMD_2.5_Source/select.tau	1969-12-31 16:00:00.000000000 -0800
+--- ./select.tau	2005-04-11 09:41:21.692722672 -0700
+***************
+*** 0 ****
+--- 1,18 ----
++ BEGIN_EXCLUDE_LIST
++ void Sequencer::threadRun(Sequencer *)
++ void Controller::threadRun(Controller *)
++ void Sequencer::thread#
++ void Controller::thread#
++ int NAMD_read_int#
++ void PDBDATA::scan#
++ Real PDBAtom::zcoor#
++ Real PDBAtom::ycoor#
++ Real PDBAtom::xcoor#
++ Bool Molocule::is_hydrogen#
++ END_EXCLUDE_LIST
++ 
++ BEGIN_FILE_EXCLUDE_LIST
++ *mainfunc.C
++ *memusage.C
++ *BackEnd.C
++ END_FILE_EXCLUDE_LIST
+diff -rNc ../orig/NAMD_2.5_Source/src/BackEnd.C ./src/BackEnd.C
+*** ../orig/NAMD_2.5_Source/src/BackEnd.C	2003-05-15 14:45:03.000000000 -0700
+--- ./src/BackEnd.C	2005-04-11 09:43:47.370576272 -0700
+***************
+*** 4,9 ****
+--- 4,12 ----
+  ***  All rights reserved.
+  **/
+  
++ #include <TAU.h>
++ extern "C" void Tau_create_top_level_timer_if_necessary(void);
++ 
+  #include "BackEnd.h"
+  
+  #include "converse.h"
+***************
+*** 97,106 ****
+--- 100,113 ----
+  // called by main on one or all procs
+  void BackEnd::init(int argc, char **argv) {
+    ConverseInit(argc, argv, slave_init, 1, 1);  // calls slave_init on others
++   TAU_PROFILE_SET_NODE(CmiMyPe());
++   Tau_create_top_level_timer_if_necessary();
++   TAU_PROFILE("BackEnd::init", "", TAU_DEFAULT);
+    cpuTime_start = CmiCpuTimer();
+    wallTime_start = CmiWallTimer();
+    if ( CmiMyPe() ) {
+      slave_init(argc, argv);  // for procs that call main
++     TAU_PROFILE_EXIT("Calling ConverseExit()");
+      ConverseExit();  // should never return
+    }
+    all_init(argc, argv);
+diff -rNc ../orig/NAMD_2.5_Source/src/Controller.C ./src/Controller.C
+*** ../orig/NAMD_2.5_Source/src/Controller.C	2003-09-22 14:30:29.000000000 -0700
+--- ./src/Controller.C	2005-04-11 09:46:12.290545088 -0700
+***************
+*** 4,9 ****
+--- 4,10 ----
+  ***  All rights reserved.
+  **/
+  
++ #include <TAU.h>
+  #include "memusage.h"
+  #include "Node.h"
+  #include "Molecule.h"
+***************
+*** 110,115 ****
+--- 111,117 ----
+  
+  void Controller::threadRun(Controller* arg)
+  {
++     TAU_REGISTER_THREAD();
+      arg->algorithm();
+  }
+  
+***************
+*** 1673,1678 ****
+--- 1675,1681 ----
+  }
+  
+  void Controller::terminate(void) {
++   TAU_PROFILE_EXIT("Controller::terminate");
+    BackEnd::awaken();
+    CthFree(thread);
+    CthSuspend();
+diff -rNc ../orig/NAMD_2.5_Source/src/mainfunc.C ./src/mainfunc.C
+*** ../orig/NAMD_2.5_Source/src/mainfunc.C	2002-07-23 13:50:01.000000000 -0700
+--- ./src/mainfunc.C	2005-04-11 09:45:01.766266408 -0700
+***************
+*** 3,9 ****
+  ***  The Board of Trustees of the University of Illinois.
+  ***  All rights reserved.
+  **/
+! 
+  #include "memusage.h"
+  #include "converse.h"
+  #include "common.h"
+--- 3,9 ----
+  ***  The Board of Trustees of the University of Illinois.
+  ***  All rights reserved.
+  **/
+! #include <TAU.h>
+  #include "memusage.h"
+  #include "converse.h"
+  #include "common.h"
+***************
+*** 32,37 ****
+--- 32,38 ----
+  
+  int main(int argc, char **argv) {
+    BackEnd::init(argc,argv);
++   TAU_PROFILE("int main(int, char**) C", " ", TAU_DEFAULT);
+    ScriptTcl *script = new ScriptTcl;
+    Node::Object()->setScript(script);
+  
+***************
+*** 83,88 ****
+--- 84,90 ----
+  }
+  #endif
+  
++   TAU_PROFILE_EXIT("main exitting");
+    BackEnd::exit();
+    return 0;
+  }
+diff -rNc ../orig/NAMD_2.5_Source/src/Sequencer.C ./src/Sequencer.C
+*** ../orig/NAMD_2.5_Source/src/Sequencer.C	2003-07-28 18:56:22.000000000 -0700
+--- ./src/Sequencer.C	2005-04-11 09:46:54.347151512 -0700
+***************
+*** 4,9 ****
+--- 4,10 ----
+  ***  All rights reserved.
+  **/
+  
++ #include <TAU.h>
+  #include "Node.h"
+  #include "SimParameters.h"
+  #include "Sequencer.h"
+***************
+*** 60,65 ****
+--- 61,67 ----
+  // Invoked by thread
+  void Sequencer::threadRun(Sequencer* arg)
+  {
++     TAU_REGISTER_THREAD();
+      arg->algorithm();
+  }
+  
+***************
+*** 1246,1251 ****
+--- 1248,1254 ----
+  }
+  
+  void Sequencer::terminate() {
++   TAU_PROFILE_EXIT("Sequencer::terminate");
+    CthFree(thread);
+    CthSuspend();
+  }
