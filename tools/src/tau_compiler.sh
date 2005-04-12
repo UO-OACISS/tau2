@@ -93,7 +93,7 @@ printError() {
 evalWithDebugMessage() {
 	echoIfVerbose "\n\nDebug: $2"
 	echoIfVerbose "Executing>  $1"
-	eval $1
+	$1
 #	echoIfVerbose "....."
 }
 
