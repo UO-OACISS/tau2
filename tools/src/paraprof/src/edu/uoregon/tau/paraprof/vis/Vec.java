@@ -7,9 +7,9 @@ package edu.uoregon.tau.paraprof.vis;
  *   
  * TODO : This class is complete
  *
- * <P>CVS $Id: Vec.java,v 1.2 2005/04/05 22:38:11 amorris Exp $</P>
+ * <P>CVS $Id: Vec.java,v 1.3 2005/04/15 01:29:03 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see Matrix
  */
 public class Vec {
@@ -151,7 +151,7 @@ public class Vec {
      * Adds two Vecs together.  Vec adding is commutative
      * @param a		the first Vec
      * @param b		the second Vec
-     * @return
+     * @return		the sum of the two Vecs
      */
     static Vec add(Vec a, Vec b) {
         return new Vec(a.x() + b.x(), a.y() + b.y(), a.z() + b.z());

@@ -15,8 +15,12 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 /**
  * Draws axes with labels
- * 
- * @author amorris
+ *    
+ * TODO : ...
+ *
+ * <P>CVS $Id: Axes.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
+ * @author	Alan Morris
+ * @version	$Revision: 1.3 $
  */
 public class Axes implements Shape {
 
@@ -39,10 +43,9 @@ public class Axes implements Shape {
 
     private int font = GLUT.STROKE_MONO_ROMAN;
 
-    
     private float stringSize = 3;
     private float labelSize = 8;
-    
+
     private boolean enabled = true;
     private Color highlightColor = new Color(1, 0, 0);
 
@@ -51,7 +54,16 @@ public class Axes implements Shape {
     private int selectedRow = -1;
     private int selectedCol = -1;
 
+    private Color textColor = Color.WHITE;
+    private Color majorColor = Color.WHITE;
+    private Color minorColor = new Color(0.5f,0.5f,0.5f);
 
+
+    // this is to keep track of the old reverseVideo value
+    // I need to come up with a better way of tracking the settings
+    // we have to know whether to recreate the display list or not
+    private boolean oldReverseVideo;
+    
     /**
      * Type safe enum for axes orientation
      */
@@ -131,7 +143,7 @@ public class Axes implements Shape {
 
     /**
      * Sets whether or not the data points land on the intersection of two lines of the axes or inbetween
-     * @param offset - whether or not the axes are offset
+     * @param onEdge - whether or not the axes are offset
      */
     public void setOnEdge(boolean onEdge) {
         this.onEdge = onEdge;
@@ -141,8 +153,7 @@ public class Axes implements Shape {
     public boolean getOnEdge() {
         return this.onEdge;
     }
-    
-    
+
     /**
      * Sets the size of the axes.  Note that this is usually called by the plot.
      * @param xSize - size in the x direction
@@ -157,7 +168,7 @@ public class Axes implements Shape {
             setAutoTickSkip();
         this.dirty = true;
     }
-    
+
     /**
      * Sets the highlight color (for the selectedRow, selectedCol)
      * @param color - the color to use
@@ -299,7 +310,15 @@ public class Axes implements Shape {
         dirty = true;
     }
 
-    public void render(GLDrawable glDrawable) {
+    public void render(VisRenderer visRenderer) {
+        GLDrawable glDrawable = visRenderer.getGLDrawable();
+
+        if (oldReverseVideo != visRenderer.getReverseVideo()) {
+            dirty = true;
+        }
+        
+        oldReverseVideo = visRenderer.getReverseVideo();
+        
         if (!enabled)
             return;
 
@@ -308,7 +327,7 @@ public class Axes implements Shape {
         if (dirty || displayList == 0) {
             displayList = gl.glGenLists(1);
             gl.glNewList(displayList, GL.GL_COMPILE);
-            privateRender(glDrawable);
+            privateRender(visRenderer);
             gl.glEndList();
             dirty = false;
         }
@@ -352,7 +371,32 @@ public class Axes implements Shape {
 
     }
 
-    private void drawGrid(GL gl, int numx, int numy, float xSize, float ySize, int xLabelSkip, int yLabelSkip) {
+    private void setMajorColor(VisRenderer visRenderer) {
+        //        gl.glColor3f(0.9f, 0.9f, 0.9f);
+        //gl.glColor3f(1.0f, 0, 0);
+
+        VisTools.glSetInvertableColor(visRenderer, majorColor);
+
+    }
+
+    private void setTextColor(VisRenderer visRenderer) {
+        // gl.glColor3f(0, 0, 1);
+        VisTools.glSetInvertableColor(visRenderer, textColor);
+
+    }
+
+    private void setMinorColor(VisRenderer visRenderer) {
+        //        gl.glColor3f(0.5f, 0.5f, 0.5f);
+        //gl.glColor3f(0,1,0);
+
+        VisTools.glSetInvertableColor(visRenderer, minorColor);
+
+    }
+
+    private void drawGrid(VisRenderer visRenderer, int numx, int numy, float xSize, float ySize, int xLabelSkip, int yLabelSkip) {
+        GL gl = visRenderer.getGLDrawable().getGL();
+        setMinorColor(visRenderer);
+
         gl.glBegin(GL.GL_LINES);
         int xOffset = 0;
         int yOffset = 0;
@@ -365,26 +409,26 @@ public class Axes implements Shape {
         for (int x = 0; x < numx; x++) {
             if ((x - xOffset) % (xLabelSkip + 1) == 0 || x == numx - 1) {
                 if (x == 0 || x == numx - 1) {
-                    gl.glColor3f(0.9f, 0.9f, 0.9f);
+                    setMajorColor(visRenderer);
                 }
                 float position = (float) x / (numx - 1) * xSize;
                 gl.glVertex3f(position, 0, 0);
                 gl.glVertex3f(position, ySize, 0);
                 if (x == 0 || x == numx - 1) {
-                    gl.glColor3f(0.5f, 0.5f, 0.5f);
+                    setMinorColor(visRenderer);
                 }
             }
         }
         for (int y = 0; y < numy; y++) {
             if ((y - yOffset) % (yLabelSkip + 1) == 0 || y == numy - 1) {
                 if (y == 0 || y == numy - 1) {
-                    gl.glColor3f(0.9f, 0.9f, 0.9f);
+                    setMajorColor(visRenderer);
                 }
                 float pos = (float) y / (numy - 1) * ySize;
                 gl.glVertex3f(0, pos, 0);
                 gl.glVertex3f(xSize, pos, 0);
                 if (y == 0 || y == numy - 1) {
-                    gl.glColor3f(0.5f, 0.5f, 0.5f);
+                    setMinorColor(visRenderer);
                 }
             }
         }
@@ -392,11 +436,11 @@ public class Axes implements Shape {
 
     }
 
-    private void privateRender(GLDrawable glDrawable) {
+    private void privateRender(VisRenderer visRenderer) {
         if (!enabled)
             return;
 
-        GL gl = glDrawable.getGL();
+        GL gl = visRenderer.getGLDrawable().getGL();
 
         // don't highlight on if they're not both on
         if (selectedRow < 0 || selectedCol < 0) {
@@ -421,7 +465,7 @@ public class Axes implements Shape {
 
         gl.glDisable(GL.GL_LIGHTING);
 
-        gl.glColor3f(0.5f, 0.5f, 0.5f);
+        //  gl.glColor3f(0.5f, 0.5f, 0.5f);
 
         //        gl.glEnable(GL.GL_LINE_SMOOTH);
         //        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
@@ -432,14 +476,14 @@ public class Axes implements Shape {
         gl.glDisable(GL.GL_LINE_SMOOTH);
 
         // grid for x-y plane
-        drawGrid(gl, numx, numy, xSize, ySize, this.xLabelSkip, this.yLabelSkip);
+        drawGrid(visRenderer, numx, numy, xSize, ySize, this.xLabelSkip, this.yLabelSkip);
 
         // grid for x-z plane
         gl.glPushMatrix();
         if (orientation == Orientation.NE || orientation == Orientation.SE)
             gl.glTranslatef(0, ySize, 0);
         gl.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-        drawGrid(gl, numx, numz, xSize, zSize, this.xLabelSkip, this.zLabelSkip);
+        drawGrid(visRenderer, numx, numz, xSize, zSize, this.xLabelSkip, this.zLabelSkip);
         gl.glPopMatrix();
 
         // grid for y-z plane
@@ -448,10 +492,10 @@ public class Axes implements Shape {
             gl.glTranslatef(xSize, 0, 0);
         gl.glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
         gl.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-        drawGrid(gl, numy, numz, ySize, zSize, this.yLabelSkip, this.zLabelSkip);
+        drawGrid(visRenderer, numy, numz, ySize, zSize, this.yLabelSkip, this.zLabelSkip);
         gl.glPopMatrix();
 
-        gl.glColor3f(0.9f, 0.9f, 0.9f);
+        setMajorColor(visRenderer);
 
         // Draw the Y axis strings
         float increment = ySize / (numy - 1);
@@ -472,7 +516,7 @@ public class Axes implements Shape {
 
         if (onEdge)
             gl.glTranslatef(0.0f, increment, 0.0f);
-        drawLabels(gl, ylabel, yStrings, increment, yLabelSkip, yTickSkip, orientation == Orientation.NE
+        drawLabels(visRenderer, ylabel, yStrings, increment, yLabelSkip, yTickSkip, orientation == Orientation.NE
                 || orientation == Orientation.SW, selectedRow);
         gl.glPopMatrix();
 
@@ -496,7 +540,7 @@ public class Axes implements Shape {
 
         if (onEdge)
             gl.glTranslatef(0.0f, increment, 0.0f);
-        drawLabels(gl, xlabel, xStrings, increment, xLabelSkip, xTickSkip, orientation == Orientation.NW
+        drawLabels(visRenderer, xlabel, xStrings, increment, xLabelSkip, xTickSkip, orientation == Orientation.NW
                 || orientation == Orientation.SE, selectedCol);
         gl.glPopMatrix();
 
@@ -519,7 +563,7 @@ public class Axes implements Shape {
         }
         gl.glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
         gl.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-        drawLabels(gl, zlabel, zStrings, increment, zLabelSkip, zTickSkip, orientation == Orientation.NW
+        drawLabels(visRenderer, zlabel, zStrings, increment, zLabelSkip, zTickSkip, orientation == Orientation.NW
                 || orientation == Orientation.NE, -1);
         gl.glPopMatrix();
 
@@ -541,7 +585,7 @@ public class Axes implements Shape {
         gl.glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
         gl.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
 
-        drawLabels(gl, zlabel, zStrings, increment, zLabelSkip, zTickSkip, orientation == Orientation.SE
+        drawLabels(visRenderer, zlabel, zStrings, increment, zLabelSkip, zTickSkip, orientation == Orientation.SE
                 || orientation == Orientation.SW, -1);
         gl.glPopMatrix();
 
@@ -549,19 +593,21 @@ public class Axes implements Shape {
 
     }
 
-    private void drawLabels(GL gl, String label, Vector strings, float increment, int labelSkip, int tickSkip,
+    private void drawLabels(VisRenderer visRenderer, String label, Vector strings, float increment, int labelSkip, int tickSkip,
             boolean leftJustified, int selected) {
         // Draw the strings for an axis
 
+        GL gl = visRenderer.getGLDrawable().getGL();
         float maxPoint = 0;
+
+        setTextColor(visRenderer);
 
         for (int i = 0; i < strings.size(); i++) {
 
             if (i % (labelSkip + 1) == 0) {
 
                 if (i == selected) {
-                    gl.glColor3f(highlightColor.getRed() / 255.0f, highlightColor.getGreen() / 255.0f,
-                            highlightColor.getBlue() / 255.0f);
+                    VisTools.glSetColor(gl, highlightColor);
                 }
 
                 String string = (String) strings.get(i);
@@ -615,8 +661,8 @@ public class Axes implements Shape {
             }
             gl.glTranslatef(0.0f, increment, 0.0f); // move 'increment' in the y direction for the next string
 
-            if (i == selected) {
-                gl.glColor3f(1, 1, 1);
+            if (i == selected) { // set it back to the regular text color if this one was selected
+                setTextColor(visRenderer);
             }
 
         }
@@ -637,7 +683,6 @@ public class Axes implements Shape {
                 float width = glut.glutStrokeLength(font, line);
 
                 gl.glTranslatef(-width / 2, 0, 0);
-                gl.glColor3f(1, 1, 1);
 
                 // Render The Text
                 for (int c = 0; c < line.length(); c++) {
@@ -660,7 +705,6 @@ public class Axes implements Shape {
                 float width = glut.glutStrokeLength(font, line);
 
                 gl.glTranslatef(-width / 2, 0, 0);
-                gl.glColor3f(1, 1, 1);
 
                 // Render The Text
                 for (int c = 0; c < line.length(); c++) {
@@ -674,8 +718,6 @@ public class Axes implements Shape {
 
         }
         gl.glPopMatrix();
-
-        gl.glColor3f(1, 1, 1);
 
     }
 
@@ -704,4 +746,30 @@ public class Axes implements Shape {
         this.autoSkip = autoSkip;
     }
 
+    public Color getMajorColor() {
+        return majorColor;
+    }
+
+    public void setMajorColor(Color majorColor) {
+        this.majorColor = majorColor;
+        this.dirty = true;
+    }
+
+    public Color getMinorColor() {
+        return minorColor;
+    }
+
+    public void setMinorColor(Color minorColor) {
+        this.minorColor = minorColor;
+        this.dirty = true;
+    }
+
+    public Color getTextColor() {
+        return textColor;
+    }
+
+    public void setTextColor(Color textColor) {
+        this.textColor = textColor;
+        this.dirty = true;
+    }
 }

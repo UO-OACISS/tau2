@@ -150,7 +150,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 
         optionsMenu.add(subMenu);
 
-        box = new JCheckBoxMenuItem("Display Sliders", false);
+        box = new JCheckBoxMenuItem("Show Width Slider", false);
         box.addActionListener(this);
         optionsMenu.add(box);
 
@@ -324,7 +324,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                         order = 1;
                     sortLocalData();
                     panel.repaint();
-                } else if (arg.equals("Display Sliders")) {
+                } else if (arg.equals("Show Width Slider")) {
                     if (((JCheckBoxMenuItem) optionsMenu.getItem(2)).isSelected())
                         displaySiders(true);
                     else

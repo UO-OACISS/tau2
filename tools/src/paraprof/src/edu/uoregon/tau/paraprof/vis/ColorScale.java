@@ -12,6 +12,17 @@ import net.java.games.jogl.GLDrawable;
 import net.java.games.jogl.util.GLUT;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 
+/**
+ * Draws a colorscale and also provides services to other vis components,
+ * allowing them to query values (0..1) and get colors in the current
+ * color set. 
+ *    
+ * TODO: Provide control over font size perhaps?
+ *
+ * <P>CVS $Id: ColorScale.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
+ * @author	Alan Morris
+ * @version	$Revision: 1.3 $
+ */
 public class ColorScale extends Observable implements Shape {
 
     public static class ColorSet {
@@ -21,6 +32,8 @@ public class ColorScale extends Observable implements Shape {
         public final double colorsG[];
         public final double colorsB[];
 
+        
+        
         private ColorSet(String name, double[] colorsR, double[] colorsG, double[] colorsB) {
             this.name = name;
             this.colorsR = colorsR;
@@ -47,6 +60,8 @@ public class ColorScale extends Observable implements Shape {
         public static ColorSet[] VALUES = { RAINBOW, GRAYSCALE, BLUE_RED, BLUE_WHITE_RED };
 
     }
+
+    private Color textColor = Color.WHITE;
 
     private int font = GLUT.STROKE_MONO_ROMAN;
 
@@ -212,7 +227,10 @@ public class ColorScale extends Observable implements Shape {
         gl.glPopMatrix();
     }
 
-    public void render(GLDrawable glDrawable) {
+    public void render(VisRenderer visRenderer) {
+        GLDrawable glDrawable = visRenderer.getGLDrawable();
+
+//    public void render(GLDrawable glDrawable, Vec direction) {
         if (!enabled)
             return;
 
@@ -222,14 +240,16 @@ public class ColorScale extends Observable implements Shape {
         if (dirty || displayList == 0) {
             displayList = gl.glGenLists(1);
             gl.glNewList(displayList, GL.GL_COMPILE);
-            privateRender(glDrawable);
+            privateRender(visRenderer);
             gl.glEndList();
             dirty = false;
         }
         gl.glCallList(displayList);
     }
 
-    private void privateRender(GLDrawable glDrawable) {
+    private void privateRender(VisRenderer visRenderer) {
+        GLDrawable glDrawable = visRenderer.getGLDrawable();
+
         GL gl = glDrawable.getGL();
         if (enabled == false)
             return;
@@ -272,17 +292,21 @@ public class ColorScale extends Observable implements Shape {
             float ratio2 = ((float) (i + 1)) / nBlocks;
             Color c2 = getColor(ratio2);
 
-            gl.glColor4f(c1.getRed() / 255.0f, c1.getGreen() / 255.0f, c1.getBlue() / 255.0f, 1.0f);
+            VisTools.glSetColor(gl, c1);
             gl.glVertex3f(pixelWidth, i * increment, 0);
             gl.glVertex3f(0, i * increment, 0);
-            gl.glColor4f(c2.getRed() / 255.0f, c2.getGreen() / 255.0f, c2.getBlue() / 255.0f, 1.0f);
+            VisTools.glSetColor(gl, c2);
             gl.glVertex3f(0, (i + 1) * increment, 0);
             gl.glVertex3f(pixelWidth, (i + 1) * increment, 0);
 
         }
         gl.glEnd();
 
-        gl.glColor3f(1.0f, 1.0f, 1.0f);
+        if (visRenderer.getReverseVideo()) {
+            VisTools.glSetColor(gl, VisTools.invert(textColor));
+        } else {
+            VisTools.glSetColor(gl, textColor);
+        }
 
         drawText(gl, pixelWidth / 2, pixelHeight + 10, highString);
         drawText(gl, pixelWidth / 2, -15.0, lowString);

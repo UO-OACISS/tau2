@@ -50,10 +50,6 @@ public abstract class ValueType {
     
     public static final ValueType EXCLUSIVE = new ValueType("Exclusive") {
 
-        //        double getValue (PPFunctionProfile ppFunctionProfile) {
-        //            return ppFunctionProfile.getExclusiveValue();
-        //        }
-
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getExclusive(metric);
         }
@@ -62,16 +58,17 @@ public abstract class ValueType {
         	return thread.getMaxExclusive(metric);
         }
 
-        //        int makeComparison(FunctionProfile a, FunctionProfile b, int metric) {
-        //            return Double.compare(a.getExclusive(metric), b.getExclusive(metric));
-        //        }
-
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             if (!ppMetric.isTimeMetric())
                 return " counts";
             return timeUnits(units);
         }
 
+        public int getUnits(int units, ParaProfMetric ppMetric) {
+            if (ppMetric.isTimeMetric())
+                return units;
+            return 0;
+        }
     };
 
     public static final ValueType EXCLUSIVE_PERCENT = new ValueType("Exclusive percent") {
@@ -86,6 +83,9 @@ public abstract class ValueType {
             return " %";
         }
 
+        public int getUnits(int units, ParaProfMetric ppMetric) {
+            return 0;
+        }
     };
 
     public static final ValueType INCLUSIVE = new ValueType("Inclusive") {
@@ -100,6 +100,11 @@ public abstract class ValueType {
                 return " counts";
             return timeUnits(units);
         }
+        public int getUnits(int units, ParaProfMetric ppMetric) {
+            if (ppMetric.isTimeMetric())
+                return units;
+            return 0;
+        }
     };
 
     public static final ValueType INCLUSIVE_PERCENT = new ValueType("Inclusive percent") {
@@ -112,7 +117,9 @@ public abstract class ValueType {
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             return " %";
         }
-        
+        public int getUnits(int units, ParaProfMetric ppMetric) {
+            return 0;
+        }
     };
 
     public static final ValueType NUMCALLS = new ValueType("Number of Calls") {
@@ -125,6 +132,9 @@ public abstract class ValueType {
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             return " calls";
         }
+        public int getUnits(int units, ParaProfMetric ppMetric) {
+            return 0;
+        }
     };
 
     public static final ValueType NUMSUBR = new ValueType("Number of Child Calls") {
@@ -136,6 +146,9 @@ public abstract class ValueType {
         }
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             return " calls";
+        }
+        public int getUnits(int units, ParaProfMetric ppMetric) {
+            return 0;
         }
     };
     
@@ -151,6 +164,11 @@ public abstract class ValueType {
                 return " counts per call";
             return timeUnits(units) + " per call";
         }
+        public int getUnits(int units, ParaProfMetric ppMetric) {
+            if (ppMetric.isTimeMetric())
+                return units;
+            return 0;
+        }
     };
     
     public static final ValueType EXCLUSIVE_PER_CALL = new ValueType("Exclusive per Call") {
@@ -165,44 +183,19 @@ public abstract class ValueType {
                 return " counts per call";
             return timeUnits(units) + " per call";
         }
+        public int getUnits(int units, ParaProfMetric ppMetric) {
+            if (ppMetric.isTimeMetric())
+                return units;
+            return 0;
+        }
     };
-
-    //    public static final ValueType EXCLUSIVE_PERCENT = new ValueType("exclusive_percent");
-    //    public static final ValueType INCLUSIVE = new ValueType("inclusive");
-    //    public static final ValueType INCLUSIVE_PERCENT = new ValueType("inclusive_percent");
-    //    public static final ValueType NUMCALLS = new ValueType("numcalls");
-    //    public static final ValueType NUMSUBR = new ValueType("numsubr");
-    //    public static final ValueType INCLUSIVE_PER_CALL = new ValueType("inclusive_per_call");
-    //    public static final ValueType EXCLUSIVE_PER_CALL = new ValueType("exclusive_per_call");
-
-    //    abstract int makeComparison (FunctionProfile a, FunctionProfile b, int metric);
-    //abstract double getValue (PPFunctionProfile ppFunctionProfile);
 
     public abstract double getValue(FunctionProfile functionProfile, int metric);
     public abstract double getThreadMaxValue(edu.uoregon.tau.dms.dss.Thread thread, int metric);
-    
-    
     public abstract String getSuffix(int units, ParaProfMetric ppMetric);
-        
+    public abstract int getUnits(int units, ParaProfMetric ppMetric);
         
     
     public static ValueType[] VALUES = { EXCLUSIVE, INCLUSIVE, EXCLUSIVE_PERCENT, INCLUSIVE_PERCENT, NUMCALLS, NUMSUBR, INCLUSIVE_PER_CALL, EXCLUSIVE_PER_CALL };
 }
 
-//public class ValueType {
-//    
-//    private final String name;
-//    
-//    private ValueType(String name) { this.name = name; }
-//    
-//    public String toString() { return name; }
-//    
-//    public static final ValueType EXCLUSIVE = new ValueType("exclusive");
-//    public static final ValueType EXCLUSIVE_PERCENT = new ValueType("exclusive_percent");
-//    public static final ValueType INCLUSIVE = new ValueType("inclusive");
-//    public static final ValueType INCLUSIVE_PERCENT = new ValueType("inclusive_percent");
-//    public static final ValueType NUMCALLS = new ValueType("numcalls");
-//    public static final ValueType NUMSUBR = new ValueType("numsubr");
-//    public static final ValueType INCLUSIVE_PER_CALL = new ValueType("inclusive_per_call");
-//    public static final ValueType EXCLUSIVE_PER_CALL = new ValueType("exclusive_per_call");
-//}

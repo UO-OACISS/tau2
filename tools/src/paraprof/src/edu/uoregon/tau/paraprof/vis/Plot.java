@@ -5,7 +5,16 @@ import java.util.Observer;
 
 import javax.swing.JPanel;
 
-
+/**
+ * Interface for plots
+ *    
+ * TODO: selected row/column only apply to a subset of the plots, maybe they 
+ * don't belong here.
+ *
+ * <P>CVS $Id: Plot.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
+ * @author	Alan Morris
+ * @version	$Revision: 1.3 $
+ */
 public interface Plot extends Shape, Observer {
 
     

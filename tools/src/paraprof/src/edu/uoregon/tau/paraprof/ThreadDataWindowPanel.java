@@ -87,6 +87,11 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         }
     }
 
+    public void resetStringSize() {
+        maxRightSizeStringPixelSize = 0;
+    }
+    
+    
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         list = window.getData();
 
@@ -123,6 +128,14 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
+        
+        if (maxRightSizeStringPixelSize == 0) {
+            for (int i = 0; i < list.size(); i++) {
+                ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
+                maxRightSizeStringPixelSize = Math.max(maxRightSizeStringPixelSize, fmFont.stringWidth(ppFunctionProfile.getFunctionName() + 5));
+            }
+        }
+        
         //######
         //Set max values.
         //######
@@ -303,15 +316,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
                     yCoord);
     }
 
-    public void changeInMultiples() {
-        computeBarLength();
+    public void setBarLength(int barLength) {
+        this.barLength = Math.max(1,barLength);
         this.repaint();
-    }
-
-    public void computeBarLength() {
-        double sliderValue = (double) window.getSliderValue();
-        double sliderMultiple = window.getSliderMultiple();
-        barLength = baseBarLength * ((int) (sliderValue * sliderMultiple));
     }
 
     public void actionPerformed(ActionEvent evt) {
@@ -414,13 +421,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
         for (int i = startElement; i <= endElement; i++) {
             ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
-            //As a temporary fix, at 500 pixels to the end.
-            width = barXCoord + 5 + (fmFont.stringWidth(ppFunctionProfile.getFunctionName())) + 500;
-            if (width > newXPanelSize)
-                newXPanelSize = width;
+            maxRightSizeStringPixelSize = Math.max(maxRightSizeStringPixelSize, fmFont.stringWidth(ppFunctionProfile.getFunctionName() + 5));
         }
 
-        newYPanelSize = barSpacing + ((list.size() + 1) * barSpacing);
+        width = barXCoord + 5 + maxRightSizeStringPixelSize;
+        newXPanelSize = Math.max(newXPanelSize, width);
+
+        newYPanelSize = barSpacing + ((list.size()-1 ) * barSpacing);
 
         if ((newYPanelSize != yPanelSize) || (newXPanelSize != xPanelSize)) {
             yPanelSize = newYPanelSize;
@@ -445,6 +452,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     private int barLength = 0;
     private int textOffset = 60;
 
+    
+    private int maxRightSizeStringPixelSize = 0;
+    
     private ParaProfTrial trial = null;
     private ThreadDataWindow window = null;
     private edu.uoregon.tau.dms.dss.Thread thread = null;

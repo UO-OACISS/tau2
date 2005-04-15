@@ -13,7 +13,7 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
 /**
  * Draws a scatterplot along 4 axes
  *
- * @author amorris
+ * @author Alan Morris
  *
  * TODO ...
  */
@@ -173,9 +173,13 @@ public class ScatterPlot implements Plot {
         return panel;
     }
 
-    public void render(GLDrawable glDrawable) {
+    public void render(VisRenderer visRenderer) {
+        GLDrawable glDrawable = visRenderer.getGLDrawable();
+        Vec direction = visRenderer.getViewDirection();
+
+//    public void render(GLDrawable glDrawable, Vec direction) {
         if (axes != null)
-            axes.render(glDrawable);
+            axes.render(visRenderer);
 
         if (!enabled)
             return;

@@ -15,9 +15,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.14 2005/03/22 00:33:44 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.15 2005/04/15 01:29:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
@@ -127,7 +127,6 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
 
         //        double maxValue = ParaProfUtils.getMaxValue(function, window.getValueType(), window.isPercent(), ppTrial);
         double maxValue = window.getMaxValue();
-
 
         // too bad these next few lines are bullshit 
         // (you can't determine the max width by looking at the max value)  1.0E99 > 43.34534, but is thinner
@@ -301,7 +300,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Show Mean Statistics Window")) {
-                    StatWindow statWindow = new StatWindow(ppTrial, -1, -1, -1, window.getDataSorter(), false);
+                    StatWindow statWindow = new StatWindow(ppTrial, -1, -1, -1, false);
                     ppTrial.getSystemEvents().addObserver(statWindow);
                     statWindow.show();
                 } else if (arg.equals("Show Mean User Event Statistics Window")) {
@@ -309,7 +308,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
                         StatWindow statWindow = new StatWindow(ppTrial, ppFunctionProfile.getNodeID(),
                                 ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID(),
-                                window.getDataSorter(), true);
+                                true);
                         ppTrial.getSystemEvents().addObserver(statWindow);
                         statWindow.show();
                     }
@@ -331,8 +330,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
                         StatWindow statWindow = new StatWindow(ppTrial, ppFunctionProfile.getNodeID(),
-                                ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID(),
-                                window.getDataSorter(), false);
+                                ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID(), false);
                         ppTrial.getSystemEvents().addObserver(statWindow);
                         statWindow.show();
                     }
@@ -341,7 +339,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
                         StatWindow statWindow = new StatWindow(ppTrial, ppFunctionProfile.getNodeID(),
                                 ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID(),
-                                window.getDataSorter(), true);
+                                 true);
                         ppTrial.getSystemEvents().addObserver(statWindow);
                         statWindow.show();
                     }
@@ -356,17 +354,17 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                     }
 
                 } else if (arg.equals("Show Thread Call Graph")) {
-                    
+
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
 
-                        CallGraphWindow tmpRef = new CallGraphWindow(ppTrial,ppTrial.getDataSource().getThread(ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID()));
+                        CallGraphWindow tmpRef = new CallGraphWindow(ppTrial,
+                                ppTrial.getDataSource().getThread(ppFunctionProfile.getNodeID(),
+                                        ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID()));
                         ppTrial.getSystemEvents().addObserver(tmpRef);
                         tmpRef.show();
 
                     }
-
 
                 } else if (arg.equals("Change Function Color")) {
                     Color tmpCol = function.getColor();
@@ -415,7 +413,6 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                         popup3.show(this, evt.getX(), evt.getY());
                 } else {
                     if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
-                        
 
                         ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial,
                                 ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
@@ -460,15 +457,9 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         return d;
     }
 
-    public void changeInMultiples() {
-        computeBarLength();
+    public void setBarLength(int barLength) {
+        this.barLength = Math.max(1,barLength);
         this.repaint();
-    }
-
-    public void computeBarLength() {
-        double sliderValue = (double) window.getSliderValue();
-        double sliderMultiple = window.getSliderMultiple();
-        barLength = (int) (baseBarLength * ((double) (sliderValue * sliderMultiple)));
     }
 
     //This method sets both xPanelSize and yPanelSize.

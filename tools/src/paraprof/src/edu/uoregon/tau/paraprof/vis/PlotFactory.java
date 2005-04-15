@@ -1,17 +1,16 @@
-/*
- * Created on Apr 1, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
+
 package edu.uoregon.tau.paraprof.vis;
 
 import java.util.Vector;
 
 /**
- * @author amorris
+ * Factory for creating simple plots
+ *    
+ * TODO: Implement other factory methods
  *
- * TODO ...
+ * <P>CVS $Id: PlotFactory.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
+ * @author	Alan Morris
+ * @version	$Revision: 1.3 $
  */
 public class PlotFactory {
 

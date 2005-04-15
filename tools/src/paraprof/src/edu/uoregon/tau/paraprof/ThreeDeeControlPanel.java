@@ -1,9 +1,4 @@
-/*
- * Created on Mar 11, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
+
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
@@ -20,9 +15,13 @@ import edu.uoregon.tau.paraprof.vis.Plot;
 import edu.uoregon.tau.paraprof.vis.VisRenderer;
 
 /**
- * @author amorris
+ * This is the control panel for the ThreeDeeWindow.
+ *    
+ * TODO : ...
  *
- * TODO ...
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
+ * @author	Alan Morris
+ * @version	$Revision: 1.3 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -60,17 +59,17 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weighty = 0;
 
         ButtonGroup group = new ButtonGroup();
-        JRadioButton jrb = new JRadioButton(VisType.TRIANGLE_MESH_PLOT.toString(), true);
+        JRadioButton jrb = new JRadioButton(VisType.TRIANGLE_MESH_PLOT.toString(), settings.getVisType() == VisType.TRIANGLE_MESH_PLOT);
         jrb.addActionListener(this);
         group.add(jrb);
         addCompItem(this, jrb, gbc, 0, 0, 1, 1);
 
-        jrb = new JRadioButton(VisType.BAR_PLOT.toString());
+        jrb = new JRadioButton(VisType.BAR_PLOT.toString(), settings.getVisType() == VisType.BAR_PLOT);
         jrb.addActionListener(this);
         group.add(jrb);
         addCompItem(this, jrb, gbc, 0, 2, 1, 1);
 
-        jrb = new JRadioButton(VisType.SCATTER_PLOT.toString());
+        jrb = new JRadioButton(VisType.SCATTER_PLOT.toString(), settings.getVisType() == VisType.SCATTER_PLOT);
         jrb.addActionListener(this);
         group.add(jrb);
         addCompItem(this, jrb, gbc, 0, 3, 1, 1);
@@ -98,7 +97,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         addCompItem(this, subPanel, gbc, 0, 5, 1, 1);
         revalidate();
         validate();
-        //System.out.println("minimum size is now: " + this.getMinimumSize());
         this.setPreferredSize(this.getMinimumSize());
     }
 
@@ -162,7 +160,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
                     if (fSelector.choose()) {
                         Function selectedFunction = (Function) fSelector.getSelectedObject();
-                        //System.out.println (selectedFunction + " was selected");
                         settings.setScatterFunction(selectedFunction, index);
 
                         String fname = "   <none>";

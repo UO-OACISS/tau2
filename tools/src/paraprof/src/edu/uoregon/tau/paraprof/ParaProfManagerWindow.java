@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.15 2005/04/04 22:26:01 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.16 2005/04/15 01:29:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -921,7 +921,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 ParaProfApplication application = (ParaProfApplication) userObject;
                 if (application.dBApplication()) {
                     //Refresh the experiments list.
-                    //System.out.println("Loading experiment list ...");
                     for (int i = selectedNode.getChildCount(); i > 0; i--) {
                         treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                     }
@@ -1057,7 +1056,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 //At this point, in both the db and non-db cases, the trial
                 //is either loading or not. Check this before displaying.
                 if (!ppTrial.loading()) {
-                    //System.out.println("Loading metric list ...");
                     for (int i = selectedNode.getChildCount(); i > 0; i--) {
                         treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                     }
@@ -1069,7 +1067,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         metric.setDMTN(metricNode);
                         treeModel.insertNodeInto(metricNode, selectedNode, selectedNode.getChildCount());
                     }
-                    //System.out.println("Done loading metric list.");
 
                     jSplitInnerPane.setRightComponent(getTable(userObject));
                     jSplitInnerPane.setDividerLocation(0.5);

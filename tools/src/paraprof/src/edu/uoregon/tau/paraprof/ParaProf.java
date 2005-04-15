@@ -11,11 +11,11 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.34 2005/04/05 22:38:10 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.35 2005/04/15 01:29:01 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.34 $
+ * @version $Revision: 1.35 $
  */
 public class ParaProf implements ActionListener {
 
@@ -304,8 +304,7 @@ public class ParaProf implements ActionListener {
 
         ParaProf.homeDirectory = System.getProperty("user.home");
 
-        //Bring ParaProf into being!
-        ParaProf paraProf = new ParaProf();
+        final ParaProf paraProf = new ParaProf();
 
         //######
         //Process command line arguments.
@@ -375,6 +374,10 @@ public class ParaProf implements ActionListener {
         //            jTimer.start();
         //        }
 
-        paraProf.startSystem();
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                paraProf.startSystem();
+            }
+        });
     }
 }

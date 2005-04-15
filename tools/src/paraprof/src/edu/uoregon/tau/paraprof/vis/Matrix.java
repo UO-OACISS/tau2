@@ -6,9 +6,9 @@ package edu.uoregon.tau.paraprof.vis;
  *    
  * TODO : This class is complete
  *
- * <P>CVS $Id: Matrix.java,v 1.2 2005/04/05 22:38:10 amorris Exp $</P>
+ * <P>CVS $Id: Matrix.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see Vec
  */
 public class Matrix {
@@ -109,7 +109,7 @@ public class Matrix {
     /**
      * Transforms a given vector with this matrix
      * @param v		the vector to transform
-     * @return
+     * @return		the transformed vector
      */
     public Vec transform(Vec v) {
         Vec out = new Vec(0.0, 0.0, 0.0);

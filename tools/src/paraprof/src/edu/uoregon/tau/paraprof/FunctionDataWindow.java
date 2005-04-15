@@ -13,9 +13,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.15 2005/04/04 22:26:00 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.16 2005/04/15 01:29:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -66,15 +66,10 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
         sortLocalData();
 
-        //Slider setup.
-        //Do the slider stuff, but don't add. By default, sliders are off.
-        String sliderMultipleStrings[] = { "1.00", "0.75", "0.50", "0.25", "0.10" };
-        sliderMultiple = new JComboBox(sliderMultipleStrings);
-        sliderMultiple.addActionListener(this);
 
         barLengthSlider.setPaintTicks(true);
-        barLengthSlider.setMajorTickSpacing(5);
-        barLengthSlider.setMinorTickSpacing(1);
+        barLengthSlider.setMajorTickSpacing(400);
+        barLengthSlider.setMinorTickSpacing(50);
         barLengthSlider.setPaintLabels(true);
         barLengthSlider.setSnapToTicks(true);
         barLengthSlider.addChangeListener(this);
@@ -251,7 +246,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         optionsMenu.add(subMenu);
 
 
-        box = new JCheckBoxMenuItem("Display Sliders", false);
+        box = new JCheckBoxMenuItem("Show Width Slider", false);
         box.addActionListener(this);
         optionsMenu.add(box);
 
@@ -357,7 +352,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                     units = 3;
                     this.setHeader();
                     panel.repaint();
-                } else if (arg.equals("Display Sliders")) {
+                } else if (arg.equals("Show Width Slider")) {
                     if (((JCheckBoxMenuItem) optionsMenu.getItem(5)).isSelected())
                         displaySliders(true);
                     else
@@ -395,8 +390,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                 } else {
                     throw new ParaProfException("Menu system not implemented properly: " + arg);
                 }
-            } else if (EventSrc == sliderMultiple) {
-                panel.changeInMultiples();
             }
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -405,7 +398,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
     public void stateChanged(ChangeEvent event) {
         try {
-            panel.changeInMultiples();
+            panel.setBarLength(barLengthSlider.getValue());
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -609,55 +602,33 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                     + "\n";
     }
 
-    public int getSliderValue() {
-        int tmpInt = -1;
-        tmpInt = barLengthSlider.getValue();
-        return tmpInt;
-    }
-
-    public double getSliderMultiple() {
-        String tmpString = null;
-        tmpString = (String) sliderMultiple.getSelectedItem();
-        return Double.parseDouble(tmpString);
-    }
 
     private void displaySliders(boolean displaySliders) {
         GridBagConstraints gbc = new GridBagConstraints();
         if (displaySliders) {
             getContentPane().remove(sp);
 
+
+            gbc.insets = new Insets(5,5,5,5);
             gbc.fill = GridBagConstraints.NONE;
             gbc.anchor = GridBagConstraints.EAST;
-            gbc.weightx = 0;
-            gbc.weighty = 0;
-            addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
-
-            gbc.fill = GridBagConstraints.NONE;
-            gbc.anchor = GridBagConstraints.WEST;
-            gbc.weightx = 100;
-            gbc.weighty = 0;
-            addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
-
-            gbc.fill = GridBagConstraints.NONE;
-            gbc.anchor = GridBagConstraints.EAST;
-            gbc.weightx = 0;
-            gbc.weighty = 0;
-            addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
+            gbc.weightx = 0.10;
+            gbc.weighty = 0.01;
+            addCompItem(barLengthLabel, gbc, 0, 0, 1, 1);
 
             gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.anchor = GridBagConstraints.WEST;
-            gbc.weightx = 100;
-            gbc.weighty = 0;
-            addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
+            gbc.weightx = 0.70;
+            gbc.weighty = 0.01;
+            addCompItem(barLengthSlider, gbc, 1, 0, 1, 1);
 
+            gbc.insets = new Insets(0,0,0,0);
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 100;
-            gbc.weighty = 100;
-            addCompItem(sp, gbc, 0, 1, 4, 1);
+            gbc.weightx = 1.0;
+            gbc.weighty = 0.99;
+            addCompItem(sp, gbc, 0, 1, 2, 1);
         } else {
-            getContentPane().remove(sliderMultipleLabel);
-            getContentPane().remove(sliderMultiple);
             getContentPane().remove(barLengthLabel);
             getContentPane().remove(barLengthSlider);
             getContentPane().remove(sp);
@@ -709,14 +680,11 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     private JCheckBoxMenuItem sortByNCTCheckbox = null;
     private JCheckBoxMenuItem descendingOrderCheckBox = null;
     private JCheckBoxMenuItem showValuesAsPercent = null;
-    private JCheckBoxMenuItem displaySliders = null;
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
 
-    private JLabel sliderMultipleLabel = new JLabel("Slider Multiple");
-    private JComboBox sliderMultiple;
-    private JLabel barLengthLabel = new JLabel("Bar Multiple");
-    private JSlider barLengthSlider = new JSlider(0, 40, 1);
+    private JLabel barLengthLabel = new JLabel("Bar Width");
+    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
 
     private FunctionDataWindowPanel panel = null;
     private JScrollPane sp = null;

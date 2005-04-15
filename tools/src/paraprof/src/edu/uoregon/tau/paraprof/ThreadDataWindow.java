@@ -93,24 +93,14 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 
         this.setHeader();
 
-        //######
-        //Slider setup.
-        //Do the slider stuff, but don't add.  By default, sliders are off.
-        //######
-        String sliderMultipleStrings[] = { "1.00", "0.75", "0.50", "0.25", "0.10" };
-        sliderMultiple = new JComboBox(sliderMultipleStrings);
-        sliderMultiple.addActionListener(this);
 
         barLengthSlider.setPaintTicks(true);
-        barLengthSlider.setMajorTickSpacing(5);
-        barLengthSlider.setMinorTickSpacing(1);
+        barLengthSlider.setMajorTickSpacing(400);
+        barLengthSlider.setMinorTickSpacing(50);
         barLengthSlider.setPaintLabels(true);
         barLengthSlider.setSnapToTicks(true);
         barLengthSlider.addChangeListener(this);
-        //######
-        //End - Slider setup.
-        //Do the slider stuff, but don't add.  By default, sliders are off.
-        //######
+
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
@@ -287,7 +277,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 
         optionsMenu.add(subMenu);
 
-        box = new JCheckBoxMenuItem("Display Sliders", false);
+        box = new JCheckBoxMenuItem("Show Width Slider", false);
         box.addActionListener(this);
         optionsMenu.add(box);
 
@@ -464,11 +454,11 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
                     units = 3;
                     this.setHeader();
                     panel.repaint();
-                } else if (arg.equals("Display Sliders")) {
+                } else if (arg.equals("Show Width Slider")) {
                     if (((JCheckBoxMenuItem) optionsMenu.getItem(5)).isSelected())
-                        displaySiders(true);
+                        displaySliders(true);
                     else
-                        displaySiders(false);
+                        displaySliders(false);
                 } else if (arg.equals("Show Path Title in Reverse")) {
                     if (ppThread.getNodeID() == -1)
                         this.setTitle("Mean Data Window: "
@@ -496,8 +486,6 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
                 } else if (arg.equals("Show Help Window")) {
                     this.help(true);
                 }
-            } else if (EventSrc == sliderMultiple) {
-                panel.changeInMultiples();
             }
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -506,7 +494,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 
     public void stateChanged(ChangeEvent event) {
         try {
-            panel.changeInMultiples();
+            panel.setBarLength(barLengthSlider.getValue());
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -653,6 +641,8 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             percent = false;
         }
 
+        panel.resetStringSize();
+        
     }
 
     public Vector getData() {
@@ -722,64 +712,42 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
                     + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
     }
 
-    public int getSliderValue() {
-        int tmpInt = -1;
+   
 
-        tmpInt = barLengthSlider.getValue();
-        return tmpInt;
-    }
-
-    public double getSliderMultiple() {
-        String tmpString = null;
-        tmpString = (String) sliderMultiple.getSelectedItem();
-        return Double.parseDouble(tmpString);
-
-    }
-
-    private void displaySiders(boolean displaySliders) {
+    private void displaySliders(boolean displaySliders) {
+        GridBagConstraints gbc = new GridBagConstraints();
         if (displaySliders) {
-            contentPane.remove(sp);
+            getContentPane().remove(sp);
 
+
+            gbc.insets = new Insets(5,5,5,5);
             gbc.fill = GridBagConstraints.NONE;
             gbc.anchor = GridBagConstraints.EAST;
             gbc.weightx = 0.10;
             gbc.weighty = 0.01;
-            addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
-
-            gbc.fill = GridBagConstraints.NONE;
-            gbc.anchor = GridBagConstraints.WEST;
-            gbc.weightx = 0.10;
-            gbc.weighty = 0.01;
-            addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
-
-            gbc.fill = GridBagConstraints.NONE;
-            gbc.anchor = GridBagConstraints.EAST;
-            gbc.weightx = 0.10;
-            gbc.weighty = 0.01;
-            addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
+            addCompItem(barLengthLabel, gbc, 0, 0, 1, 1);
 
             gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.anchor = GridBagConstraints.WEST;
             gbc.weightx = 0.70;
             gbc.weighty = 0.01;
-            addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
+            addCompItem(barLengthSlider, gbc, 1, 0, 1, 1);
 
+            gbc.insets = new Insets(0,0,0,0);
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 0.95;
-            gbc.weighty = 0.98;
-            addCompItem(sp, gbc, 0, 1, 4, 1);
+            gbc.weightx = 1.0;
+            gbc.weighty = 0.99;
+            addCompItem(sp, gbc, 0, 1, 2, 1);
         } else {
-            contentPane.remove(sliderMultipleLabel);
-            contentPane.remove(sliderMultiple);
-            contentPane.remove(barLengthLabel);
-            contentPane.remove(barLengthSlider);
-            contentPane.remove(sp);
+            getContentPane().remove(barLengthLabel);
+            getContentPane().remove(barLengthSlider);
+            getContentPane().remove(sp);
 
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 0.95;
-            gbc.weighty = 0.98;
+            gbc.weightx = 100;
+            gbc.weighty = 100;
             addCompItem(sp, gbc, 0, 0, 1, 1);
         }
 
@@ -831,11 +799,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
 
-    private JLabel sliderMultipleLabel = new JLabel("Slider Multiple");
-    private JComboBox sliderMultiple;
-    private JLabel barLengthLabel = new JLabel("Bar Multiple");
-    private JSlider barLengthSlider = new JSlider(0, 40, 1);
+    private JLabel barLengthLabel = new JLabel("Bar Width");
+    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
 
+    
     private Container contentPane = null;
     private GridBagLayout gbl = null;
     private GridBagConstraints gbc = null;

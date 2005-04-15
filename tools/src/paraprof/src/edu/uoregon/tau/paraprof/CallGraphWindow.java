@@ -31,9 +31,13 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.24 2005/04/04 22:26:00 amorris Exp $</P>
+ * TODO: Infinite.  The 2nd half of Sugiyama's algorithm should probably
+ *       be implemented.  Plenty of other things could be done as well, such
+ *       as using box height as another metric.
+ *       
+ * <P>CVS $Id: CallGraphWindow.java,v 1.25 2005/04/15 01:29:01 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.24 $
+ * @version	$Revision: 1.25 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, KeyListener,
         ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -489,7 +493,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         ButtonGroup group = null;
         JRadioButtonMenuItem button = null;
 
-        slidersCheckBox = new JCheckBoxMenuItem("Display Width Slider", false);
+        slidersCheckBox = new JCheckBoxMenuItem("Show Width Slider", false);
         slidersCheckBox.addActionListener(this);
         optionsMenu.add(slidersCheckBox);
 
@@ -2160,7 +2164,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput.saveImage((ParaProfImageInterface) this);
 
-                } else if (arg.equals("Display Width Slider")) {
+                } else if (arg.equals("Show Width Slider")) {
                     if (slidersCheckBox.isSelected())
                         displaySliders(true);
                     else

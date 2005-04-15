@@ -797,14 +797,14 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Show Mean Statistics Window")) {
-                    StatWindow statWindow = new StatWindow(trial, -1, -1, -1, window.getDataSorter(), false);
+                    StatWindow statWindow = new StatWindow(trial, -1, -1, -1, false);
                     trial.getSystemEvents().addObserver(statWindow);
                     statWindow.show();
                 } else if (arg.equals("Show Mean User Event Statistics Window")) {
                     if (clickedOnObject instanceof PPThread) {
                         PPThread ppThread = (PPThread) clickedOnObject;
                         StatWindow statWindow = new StatWindow(trial, ppThread.getNodeID(),
-                                ppThread.getContextID(), ppThread.getThreadID(), window.getDataSorter(), true);
+                                ppThread.getContextID(), ppThread.getThreadID(), true);
                         trial.getSystemEvents().addObserver(statWindow);
                         statWindow.show();
                     }
@@ -845,7 +845,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                     if (clickedOnObject instanceof PPThread) {
                         PPThread ppThread = (PPThread) clickedOnObject;
                         StatWindow statWindow = new StatWindow(trial, ppThread.getNodeID(),
-                                ppThread.getContextID(), ppThread.getThreadID(), window.getDataSorter(), false);
+                                ppThread.getContextID(), ppThread.getThreadID(), false);
                         trial.getSystemEvents().addObserver(statWindow);
                         statWindow.show();
                     }
@@ -853,7 +853,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                     if (clickedOnObject instanceof PPThread) {
                         PPThread ppThread = (PPThread) clickedOnObject;
                         StatWindow statWindow = new StatWindow(trial, ppThread.getNodeID(),
-                                ppThread.getContextID(), ppThread.getThreadID(), window.getDataSorter(), true);
+                                ppThread.getContextID(), ppThread.getThreadID(), true);
                         trial.getSystemEvents().addObserver(statWindow);
                         statWindow.show();
                     }
@@ -1021,17 +1021,22 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     public void popupMenuCanceled(PopupMenuEvent evt) {
     }
 
-    public void changeInMultiples() {
-        computeBarLength();
+//    public void changeInMultiples() {
+//        computeBarLength();
+//        this.repaint();
+//    }
+//
+//    public void computeBarLength() {
+//        double sliderValue = (double) window.getSliderValue();
+//        double sliderMultiple = window.getSliderMultiple();
+//        barLength = (int) (baseBarLength * ((double) (sliderValue * sliderMultiple)));
+//    }
+
+    public void setBarLength(int barLength) {
+        this.barLength = Math.max(1,barLength);
         this.repaint();
     }
-
-    public void computeBarLength() {
-        double sliderValue = (double) window.getSliderValue();
-        double sliderMultiple = window.getSliderMultiple();
-        barLength = (int) (baseBarLength * ((double) (sliderValue * sliderMultiple)));
-    }
-
+    
     //This method sets both xPanelSize and yPanelSize.
     private boolean resizePanel(FontMetrics fmFont, int width) {
         boolean resized = false;

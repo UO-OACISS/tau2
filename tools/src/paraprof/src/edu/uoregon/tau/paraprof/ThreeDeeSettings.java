@@ -1,9 +1,4 @@
-/*
- * Created on Mar 12, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
+
 package edu.uoregon.tau.paraprof;
 
 import edu.uoregon.tau.dms.dss.Function;
@@ -14,17 +9,25 @@ import edu.uoregon.tau.paraprof.vis.Axes.Orientation;
 
 
 /**
- * @author amorris
+ * Represents the settings of the 3d window/control panels
+ * This class is not really that useful since the shapes (plots) themselves
+ * do most of the controlling.  The original idea was that this could be
+ * cloned such that the user could continue to drag a slider, so if the visualization
+ * was slow, it wouldn't do a redraw 5 times inbetween, you would just get the 
+ * last setting.  Unfortunately, all the JOGL stuff is forced onto the AWT-EventQueue
+ * thread, so my plan got nixed.
+ *    
+ * TODO : ...
  *
- * TODO ...
+ * <P>CVS $Id: ThreeDeeSettings.java,v 1.2 2005/04/15 01:29:02 amorris Exp $</P>
+ * @author	Alan Morris
+ * @version	$Revision: 1.2 $
  */
 public class ThreeDeeSettings implements Cloneable {
 
 
     
     private float plotWidth, plotHeight, plotDepth;
-//    private Plot plot;
-//    private Axes axes;
     
     private int heightMetricID, colorMetricID;
     private ValueType colorValue = ValueType.EXCLUSIVE, heightValue = ValueType.EXCLUSIVE;
@@ -40,7 +43,7 @@ public class ThreeDeeSettings implements Cloneable {
     private ValueType[] scatterValueTypes = {ValueType.EXCLUSIVE, ValueType.EXCLUSIVE, ValueType.EXCLUSIVE, ValueType.EXCLUSIVE};
     private Function[] scatterFunctions = new Function[4];
     
-    
+    // the function and thread selected by the two scrollbars
     private int[] selections = {-1, 0};
     
     private Vec scatterAim = new Vec(7.5f, 7.5f, 7.5f), scatterEye;

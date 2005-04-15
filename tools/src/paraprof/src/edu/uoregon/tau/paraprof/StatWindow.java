@@ -17,10 +17,10 @@ import edu.uoregon.tau.paraprof.enums.*;
 
 public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer {
 
-    public StatWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, DataSorter dataSorter,
+    public StatWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
             boolean userEventWindow) {
         this.ppTrial = trial;
-        this.dataSorter = dataSorter;
+        this.dataSorter = new DataSorter(trial);
         this.nodeID = nodeID;
         this.contextID = contextID;
         this.threadID = threadID;

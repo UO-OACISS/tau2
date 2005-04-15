@@ -7,30 +7,88 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.event.*;
 
-
 public class ParaProfUtils {
+
+    static boolean verbose;
+    static boolean verboseSet;
 
     // Suppress default constructor for noninstantiability
     private ParaProfUtils() {
         // This constructor will never be invoked
     }
 
-    public static void helperAddRadioMenuItem(String name, String command, boolean on, ButtonGroup group, JMenu menu, ActionListener act) {
+    private static void checkVerbose() {
+        if (!verboseSet) {
+            if (System.getProperty("paraprof.verbose") != null) {
+                verbose = true;
+            }
+            verboseSet = true;
+        }
+    }
+    public static void verr(String string) {
+        checkVerbose();
+        
+        if (verbose) {
+            System.err.println(string);
+        }
+    }
+
+    public static void vout(String string) {
+        checkVerbose();
+
+        if (verbose) {
+            System.out.println(string);
+        }
+    }
+
+    public static void vout(Object obj, String string) {
+        checkVerbose();
+
+        if (verbose) {
+
+            String className = obj.getClass().getName();
+            int lastDot = className.lastIndexOf('.');
+            if (lastDot != -1) {
+                className = className.substring(lastDot + 1);
+            }
+
+            System.out.println(className + ": " + string);
+        }
+    }
+    
+    public static void verr(Object obj, String string) {
+        checkVerbose();
+
+        if (verbose) {
+
+            String className = obj.getClass().getName();
+            int lastDot = className.lastIndexOf('.');
+            if (lastDot != -1) {
+                className = className.substring(lastDot + 1);
+            }
+
+            System.err.println(className + ": " + string);
+        }
+    }
+
+    public static void helperAddRadioMenuItem(String name, String command, boolean on, ButtonGroup group,
+            JMenu menu, ActionListener act) {
         JRadioButtonMenuItem item = new JRadioButtonMenuItem(name, on);
         item.addActionListener(act);
         item.setActionCommand(command);
         group.add(item);
         menu.add(item);
     }
-    
-    public static void addCompItem(Container jPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+
+    public static void addCompItem(Container jPanel, Component c, GridBagConstraints gbc, int x, int y, int w,
+            int h) {
         gbc.gridx = x;
         gbc.gridy = y;
         gbc.gridwidth = w;
         gbc.gridheight = h;
         jPanel.add(c, gbc);
     }
-    
+
     public static void print(Printable printable) {
         PrinterJob job = PrinterJob.getPrinterJob();
         PageFormat defaultFormat = job.defaultPage();
@@ -77,98 +135,5 @@ public class ParaProfUtils {
     public static void handleException(Exception e) {
         new ParaProfErrorDialog(e);
     }
-
-    public static double getValue(PPFunctionProfile ppFunctionProfile, int valueType, boolean percent) {
-        double value = 0;
-        switch (valueType) {
-        case 2:
-            if (percent)
-                value = ppFunctionProfile.getExclusivePercentValue();
-            else
-                value = ppFunctionProfile.getExclusiveValue();
-            break;
-        case 4:
-            if (percent)
-                value = ppFunctionProfile.getInclusivePercentValue();
-            else
-                value = ppFunctionProfile.getInclusiveValue();
-            break;
-        case 6:
-            value = ppFunctionProfile.getNumberOfCalls();
-            break;
-        case 8:
-            value = ppFunctionProfile.getNumberOfSubRoutines();
-            break;
-        case 10:
-            value = ppFunctionProfile.getInclusivePerCall();
-            break;
-        default:
-            throw new ParaProfException("Invalid Value Type: " + valueType);
-        }
-        return value;
-    }
-
-//    public static double getMaxValue(Function function, int valueType, boolean percent, ParaProfTrial ppTrial) {
-//        double maxValue = 0;
-//        switch (valueType) {
-//        case 2:
-//            if (percent) {
-//                maxValue = function.getMaxExclusivePercent(ppTrial.getSelectedMetricID());
-//            } else {
-//                maxValue = function.getMaxExclusive(ppTrial.getSelectedMetricID());
-//            }
-//            break;
-//        case 4:
-//            if (percent) {
-//                maxValue = function.getMaxInclusivePercent(ppTrial.getSelectedMetricID());
-//            } else {
-//                maxValue = function.getMaxInclusive(ppTrial.getSelectedMetricID());
-//            }
-//            break;
-//        case 6:
-//            maxValue = function.getMaxNumCalls();
-//            break;
-//        case 8:
-//            maxValue = function.getMaxNumSubr();
-//            break;
-//        case 10:
-//            maxValue = function.getMaxInclusivePerCall(ppTrial.getSelectedMetricID());
-//            break;
-//        default:
-//            throw new ParaProfException("Invalid Value Type: " + valueType);
-//        }
-//        return maxValue;
-//    }
-
-//    public static double getMaxThreadValue(edu.uoregon.tau.dms.dss.Thread thread, int valueType,
-//            boolean percent, ParaProfTrial ppTrial) {
-//        double maxValue = 0;
-//        switch (valueType) {
-//        case 2:
-//            if (percent)
-//                maxValue = thread.getMaxExclusivePercent(ppTrial.getSelectedMetricID());
-//            else
-//                maxValue = thread.getMaxExclusive(ppTrial.getSelectedMetricID());
-//            break;
-//        case 4:
-//            if (percent)
-//                maxValue = thread.getMaxInclusivePercent(ppTrial.getSelectedMetricID());
-//            else
-//                maxValue = thread.getMaxInclusive(ppTrial.getSelectedMetricID());
-//            break;
-//        case 6:
-//            maxValue = thread.getMaxNumCalls();
-//            break;
-//        case 8:
-//            maxValue = thread.getMaxNumSubr();
-//            break;
-//        case 10:
-//            maxValue = thread.getMaxInclusivePerCall(ppTrial.getSelectedMetricID());
-//            break;
-//        default:
-//            throw new ParaProfException("Invalid Value Type: " + valueType);
-//        }
-//        return maxValue;
-//    }
 
 }

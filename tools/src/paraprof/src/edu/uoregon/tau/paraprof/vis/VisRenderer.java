@@ -14,9 +14,18 @@ import net.java.games.jogl.*;
 import net.java.games.jogl.util.BufferUtils;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 
+/**
+ * This object manages the JOGL interface
+ *    
+ * TODO: Add FPS indication
+ * 
+ * <P>CVS $Id: VisRenderer.java,v 1.3 2005/04/15 01:29:03 amorris Exp $</P>
+ * @author	Alan Morris
+ * @version	$Revision: 1.3 $
+ */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
-    private class Animator extends Thread {
+    private class VisAnimator extends Thread {
 
         public void run() {
             stop = false;
@@ -24,15 +33,11 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
                 try {
                     if (rotateSpeed == 0) {
                         Thread.sleep(250);
-
                     } else {
-                        //System.out.println("bob");
-                        //                    Thread.sleep(1000);
                         VisRenderer.this.rotate(rotateSpeed, 0);
-                        //                    VisRenderer.this.redraw();
                     }
                 } catch (Exception e) {
-
+                    // Who cares if we were interrupted
                 }
             }
         }
@@ -50,20 +55,29 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     private GL gl;
     private GLU glu;
-    private GLDrawable gldrawable;
+    private GLDrawable glDrawable;
 
     private Vec eye; // The location of the eye
     private Vec aim = new Vec(0, 0, 0); // Where the eye is focused at
     private Vec vup; // The canonical V-up vector
 
+    private Vec viewDirection;
+    
     final static private float rad = (float) (3.14 / 180);
     final static private float lateralSense = 1 * rad;
     final static private float verticalSense = 1 * rad;
 
-    private double viewAngle = -30 * rad; // The angle from the x-y plane that the eye is placed 
-    private double viewDirection = -135 * rad; // The angle on the x-y plane that the eye is placed
+    private double viewAltitude = -30 * rad; // The angle from the x-y plane that the eye is placed 
+    private double viewAzimuth = -135 * rad; // The angle on the x-y plane that the eye is placed
     private double viewDistance = 50.0; // The distance from the eye to the aim
+    private float fovy = 45.0f; // field of view (y direction)
 
+    private boolean reverseVideo = false;
+    
+    private Color backColor = Color.WHITE;
+    private Color foreColor = Color.BLACK;
+    
+    // the list of shapes to draw
     private Vector shapes = new Vector();
 
     private float fps;
@@ -71,30 +85,37 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     private int width, height;
 
-    private BufferedImage screenShot;
-    
-
-    private float fovy = 45.0f;
-
+    // screenshot capability
     private boolean makeScreenShot;
+    private BufferedImage screenShot;
+
+    // auto-rotation capability
+    private VisAnimator visAnimator;
+    private volatile float rotateSpeed = 0.5f;
 
     public VisRenderer() {
     }
 
+    /**
+     * Add a shape to the list of shapes to be drawn
+     * @param shape		the shape to add
+     */
     public void addShape(Shape shape) {
         shapes.add(shape);
     }
 
+    /**
+     * Remove a shape from the list of shapes to be drawn
+     * @param shape		the shape to remove
+     */
     public void removeShape(Shape shape) {
-
         shapes.remove(shape);
-        System.gc();
     }
 
     private void setLighting() {
 
         //float lightPosition[] = { 0.7f, 1.0f, 0.6f, 0.0f };
-        float lightPosition[] = { 1.0f, 1.0f, 1.0f, 0.0f };
+        float lightPosition[] = { 0.0f, 0.0f, 1.0f, 0.0f };
         //float lightPosition[] = { 5.7f, 5.0f, 5.6f, 1.0f };
 
         //        float lightPosition[] = { 0f, 10.0f, 10.0f, 1.0f };
@@ -102,7 +123,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         //      float lightPosition2[] = { 0.7f, -1.0f, 0.6f, 0.0f };
         float whiteLight[] = { 0.75f, 0.75f, 0.75f, 1.0f };
         //float ambientLight[] = { 0.15f, 0.15f, 0.15f, 1.0f };
-        float ambientLight[] = { 0.25f, 0.25f, 0.25f, 1.0f };
+        float ambientLight[] = { 0.15f, 0.15f, 0.15f, 1.0f };
 
         //      float mat_shininess[] = { 50.0f };
         //    float mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -130,24 +151,44 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     }
 
+    /**
+     * This method is called by JOGL, do not use.
+     *
+     * @see net.java.games.jogl.GLEventListener#init(net.java.games.jogl.GLDrawable)
+     * 
+     * @param drawable	The drawable provided by JOGL
+     */
     public void init(GLDrawable drawable) {
         gl = drawable.getGL();
         glu = drawable.getGLU();
-        this.gldrawable = drawable;
-        System.err.println("INIT GL IS: " + gl.getClass().getName());
-        System.err.println("GL_VENDOR: " + gl.glGetString(GL.GL_VENDOR));
-        System.err.println("GL_RENDERER: " + gl.glGetString(GL.GL_RENDERER));
-        System.err.println("GL_VERSION: " + gl.glGetString(GL.GL_VERSION));
-        System.err.println();
+        this.glDrawable = drawable;
+
+        ParaProfUtils.verr(this, "Initializing OpenGL (JOGL)");
+        ParaProfUtils.verr(this, "INIT GL IS: " + gl.getClass().getName());
+        ParaProfUtils.verr(this, "GL_VENDOR: " + gl.glGetString(GL.GL_VENDOR));
+        ParaProfUtils.verr(this, "GL_RENDERER: " + gl.glGetString(GL.GL_RENDERER));
+        ParaProfUtils.verr(this, "GL_VERSION: " + gl.glGetString(GL.GL_VERSION));
 
         gl.glEnable(GL.GL_CULL_FACE);
         gl.glEnable(GL.GL_DEPTH_TEST);
 
         setLighting();
 
-        // gl.glEnable(GL.GL_NORMALIZE);
-
         computeEye();
+
+        
+        
+        if (System.getProperty("vis.polyline") != null) {
+            gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE);
+        }
+        
+        if (System.getProperty("vis.polyfill") != null) {
+            gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL);
+        }
+
+        if (System.getProperty("vis.polypoint") != null) {
+            gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_POINT);
+        }
 
         drawable.addMouseListener(this);
         drawable.addMouseMotionListener(this);
@@ -163,10 +204,10 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         //System.out.println ("viewAngle now " + viewAngle);
         //System.out.println ("viewDirection now " + viewDirection);
 
-        eye = new Vec((float) Math.cos(viewAngle), 0.0f, (float) Math.sin(viewAngle));
+        eye = new Vec((float) Math.cos(viewAltitude), 0.0f, (float) Math.sin(viewAltitude));
 
-        eye.sety(eye.x() * Math.sin(viewDirection));
-        eye.setx(eye.x() * Math.cos(viewDirection));
+        eye.sety(eye.x() * Math.sin(viewAzimuth));
+        eye.setx(eye.x() * Math.cos(viewAzimuth));
 
         eye.normalize();
 
@@ -177,31 +218,31 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         eye.setz(eye.z() * viewDistance);
 
         eye = eye.add(aim);
-
-        //          System.out.println ("eye now " + eye);
-
     }
 
+    /**
+     * Cleans up resources used by this object.
+     */
     public void cleanUp() {
-        if (animator != null) {
-            animator.end();
+        if (visAnimator != null) {
+            visAnimator.end();
         }
     }
 
     private void rotate(float x, float y) {
         final float limit = 90.0f;
 
-        viewAngle += verticalSense * y;
-        if (viewAngle < -rad * limit)
-            viewAngle = -rad * limit;
-        if (viewAngle > rad * limit)
-            viewAngle = rad * limit;
+        viewAltitude += verticalSense * y;
+        if (viewAltitude < -rad * limit)
+            viewAltitude = -rad * limit;
+        if (viewAltitude > rad * limit)
+            viewAltitude = rad * limit;
 
-        viewDirection += lateralSense * x;
-        if (viewDirection >= 2 * 3.14f)
-            viewDirection -= 2 * 3.14f;
-        if (viewDirection >= 2 * 3.14f)
-            viewDirection -= 2 * 3.14f;
+        viewAzimuth += lateralSense * x;
+        if (viewAzimuth >= 2 * 3.14f)
+            viewAzimuth -= 2 * 3.14f;
+        if (viewAzimuth >= 2 * 3.14f)
+            viewAzimuth -= 2 * 3.14f;
 
         computeEye();
         redraw();
@@ -209,10 +250,10 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     private void translate(float x, float y) {
 
-        double oldViewAngle = viewAngle;
+        double oldViewAngle = viewAltitude;
         float oldz = aim.z();
 
-        viewAngle = 45.0;
+        viewAltitude = 45.0;
 
         computeEye();
 
@@ -251,25 +292,36 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         aim = M.transform(aim);
 
         aim.setz(oldz);
-        viewAngle = oldViewAngle;
+        viewAltitude = oldViewAngle;
 
         computeEye();
 
         redraw();
     }
 
+    /**
+     * Redraws the shapes
+     */
     public void redraw() {
-        gldrawable.display();
+        glDrawable.display();
     }
 
+    /**
+     * Creates a screenshot of the current display
+     * @return	the screenshot
+     */
     public BufferedImage createScreenShot() {
         // screenshot must be taken within display loop
         // set a boolean tag and rerun display loop
         makeScreenShot = true;
-        gldrawable.display();
+        glDrawable.display();
         return screenShot;
     }
 
+    /**
+     * This method is called by JOGL, do not use.
+     * @see net.java.games.jogl.GLEventListener#reshape(net.java.games.jogl.GLDrawable, int, int, int, int)
+     */
     public void reshape(GLDrawable drawable, int x, int y, int width, int height) {
         this.width = width;
         this.height = height;
@@ -280,12 +332,26 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         gl.glLoadIdentity();
     }
 
-
+    /**
+     * This method is called by JOGL, do not use.
+     * To force a redraw, use VisRenderer.redraw()
+     *
+     * @see net.java.games.jogl.GLEventListener#display(net.java.games.jogl.GLDrawable)
+     */
     public void display(GLDrawable drawable) {
 
         reshape(drawable, 0, 0, this.getWidth(), this.getHeight());
 
-        gl = new DebugGL(drawable.getGL());
+        //        gl = new DebugGL(drawable.getGL());
+
+//        gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+        if (reverseVideo) {
+            //gl.glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
+            gl.glClearColor(238/255.0f, 238/255.0f, 238/255.0f, 1.0f);
+        } else {
+            gl.glClearColor(0,0,0,0);
+        }
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 
         gl.glPushMatrix();
@@ -293,16 +359,21 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
         setLighting();
 
+        if (aim == null) {
+            aim = new Vec(0, 0, 0);
+        }
         glu.gluLookAt(aim.x(), aim.y(), aim.z(), eye.x(), eye.y(), eye.z(), vup.x(), vup.y(), vup.z());
 
+        viewDirection = eye.subtract(aim);
+        
         for (int i = 0; i < shapes.size(); i++) {
             Shape shape = (Shape) shapes.get(i);
-            shape.render(drawable);
+            shape.render(this);
         }
 
-//        int err = gl.glGetError();
-//        if (err != GL.GL_NO_ERROR)
-//            System.out.println("err = " + glu.gluErrorString(err));
+        //        int err = gl.glGetError();
+        //        if (err != GL.GL_NO_ERROR)
+        //            System.out.println("err = " + glu.gluErrorString(err));
 
         gl.glPopMatrix();
         framesRendered++;
@@ -322,7 +393,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         ByteBuffer pixelsRGB = BufferUtils.newByteBuffer(width * height * 3);
 
         GL gl = drawable.getGL();
-              
+
         gl.glReadBuffer(GL.GL_BACK);
         gl.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1);
 
@@ -428,19 +499,18 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         }
     }
 
-    
     public void zoomIn() {
         viewDistance /= 1.1;
         computeEye();
-        gldrawable.display();
+        glDrawable.display();
     }
-    
+
     public void zoomOut() {
         viewDistance *= 1.1;
         computeEye();
-        gldrawable.display();
+        glDrawable.display();
     }
-    
+
     /**
      * @return Returns the fps.
      */
@@ -494,18 +564,41 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         computeEye();
     }
 
-    private Animator animator;
-    private volatile float rotateSpeed = 0.5f;
-
     public JPanel getControlPanel() {
         JPanel panel = new JPanel();
         panel.setBorder(BorderFactory.createLoweredBevelBorder());
         panel.setLayout(new GridBagLayout());
 
-      
+        final JCheckBox rotateCheckBox = new JCheckBox("Rotate", visAnimator != null);
+        rotateCheckBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                    if (rotateCheckBox.isSelected()) {
+                        visAnimator = new VisAnimator();
+                        visAnimator.start();
+                    } else {
+                        visAnimator.end();
+                        visAnimator = null;
+                    }
 
-        final JCheckBox rotateCheckBox = new JCheckBox("Rotate", animator != null);
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+        });
 
+        final JCheckBox reverseCheckBox = new JCheckBox("Reverse Video", reverseVideo);
+        reverseCheckBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                        setReverseVideo(reverseCheckBox.isSelected());
+                }
+                 catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+        });
+        
         final JSlider speedSlider = new JSlider(0, 200, (int) (Math.sqrt(rotateSpeed) * 100));
 
         speedSlider.addChangeListener(new ChangeListener() {
@@ -519,24 +612,6 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
         });
 
-        rotateCheckBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                try {
-                    if (rotateCheckBox.isSelected()) {
-                        animator = new Animator();
-                        animator.start();
-                    } else {
-                        animator.end();
-                        animator = null;
-                    }
-
-                } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
-                }
-            }
-        });
-
-        
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.weighty = 0.2;
@@ -553,7 +628,30 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         gbc.fill = GridBagConstraints.HORIZONTAL;
         ParaProfUtils.addCompItem(panel, speedSlider, gbc, 1, 1, 1, 1);
 
+        ParaProfUtils.addCompItem(panel, reverseCheckBox, gbc, 0, 2, 2, 1);
+
         return panel;
     }
 
+    
+  
+    
+    public boolean getReverseVideo() {
+        return reverseVideo;
+    }
+    
+    public void setReverseVideo(boolean reverseVideo) {
+        this.reverseVideo = reverseVideo;
+        this.redraw();
+    }
+    
+    
+    public GLDrawable getGLDrawable() {
+        return glDrawable;
+    }
+    
+    public Vec getViewDirection() {
+        return viewDirection;
+    }
+    
 }
