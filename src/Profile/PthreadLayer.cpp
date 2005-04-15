@@ -102,6 +102,10 @@ int PthreadLayer::RegisterThread(void)
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::GetThreadId(void) 
 {
+#ifdef TAU_CHARM
+  if (RtsLayer::myNode() == -1)
+    return 0;
+#endif
 
   int *id; 
   static int initflag = PthreadLayer::InitializeThreadData();
@@ -211,8 +215,8 @@ int PthreadLayer::UnLockEnv(void)
 }  
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.8 $   $Date: 2005/04/08 19:59:36 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.8 2005/04/08 19:59:36 amorris Exp $
+ * $Revision: 1.9 $   $Date: 2005/04/15 22:04:10 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.9 2005/04/15 22:04:10 amorris Exp $
  ***************************************************************************/
 
 

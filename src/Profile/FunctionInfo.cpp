@@ -321,48 +321,90 @@ long FunctionInfo::GetFunctionId(void)
 void tauCreateFI(FunctionInfo **ptr, const char *name, const char *type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
   if (*ptr == 0) {
+
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+      RtsLayer::LockEnv();
+#else
     RtsLayer::LockEnv();
+#endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+      RtsLayer::UnLockEnv();
+#else
     RtsLayer::UnLockEnv();
+#endif
+
   }
 }
 
 void tauCreateFI(FunctionInfo **ptr, const char *name, const string& type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
   if (*ptr == 0) {
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+      RtsLayer::LockEnv();
+#else
     RtsLayer::LockEnv();
+#endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+      RtsLayer::UnLockEnv();
+#else
     RtsLayer::UnLockEnv();
+#endif
   }
 }
 
 void tauCreateFI(FunctionInfo **ptr, const string& name, const char *type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
   if (*ptr == 0) {
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+      RtsLayer::LockEnv();
+#else
     RtsLayer::LockEnv();
+#endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+      RtsLayer::UnLockEnv();
+#else
     RtsLayer::UnLockEnv();
+#endif
   }
 }
 
 void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
   if (*ptr == 0) {
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+      RtsLayer::LockEnv();
+#else
     RtsLayer::LockEnv();
+#endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+      RtsLayer::UnLockEnv();
+#else
     RtsLayer::UnLockEnv();
+#endif
   }
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.36 $   $Date: 2005/01/05 21:29:41 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.36 2005/01/05 21:29:41 amorris Exp $ 
+ * $Revision: 1.37 $   $Date: 2005/04/15 22:04:10 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.37 2005/04/15 22:04:10 amorris Exp $ 
  ***************************************************************************/
