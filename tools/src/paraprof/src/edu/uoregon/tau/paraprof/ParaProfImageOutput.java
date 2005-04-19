@@ -40,7 +40,7 @@ public class ParaProfImageOutput {
         fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.JPG));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-        ParaProfImageOptionsPanel paraProfImageOptionsPanel = new ParaProfImageOptionsPanel((Component) ref);
+        ParaProfImageOptionsPanel paraProfImageOptionsPanel = new ParaProfImageOptionsPanel((Component) ref, true);
         fileChooser.setAccessory(paraProfImageOptionsPanel);
         fileChooser.addPropertyChangeListener(paraProfImageOptionsPanel);
         int resultValue = fileChooser.showSaveDialog((Component) ref);
@@ -137,7 +137,7 @@ public class ParaProfImageOutput {
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         final ParaProfImageOptionsPanel paraProfImageOptionsPanel = new ParaProfImageOptionsPanel(
-                (Component) ref);
+                (Component) ref, false);
         fileChooser.setAccessory(paraProfImageOptionsPanel);
         fileChooser.addPropertyChangeListener(paraProfImageOptionsPanel);
         int resultValue = fileChooser.showSaveDialog((Component) ref);

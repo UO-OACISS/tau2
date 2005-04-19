@@ -65,17 +65,12 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
         setTitle("Load Trial");
 
-        //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 thisWindowClosing(evt);
             }
         });
 
-        //####################################
-        //Create and add the components.
-        //####################################
-        //Setting up the layout system for the main window.
 
         trialTypes = new JComboBox(trialTypeStrings);
         trialTypes.addActionListener(this);
@@ -127,25 +122,14 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         gbc.weightx = 0;
         gbc.weighty = 0;
         addCompItem(jButton, gbc, 2, 2, 1, 1);
-        //####################################
-        //End - Create and add the components.
-        //####################################
     }
 
-    //####################################
-    //Interface code.
-    //####################################
-
-    //######
-    //ActionListener.
-    //######
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
             String arg = evt.getActionCommand();
             if (arg.equals("Select Directory")) {
                 JFileChooser jFileChooser = new JFileChooser(lastDirectory);
-                //JFileChooser jFileChooser = new JFileChooser(System.getProperty("user.dir"));
                 jFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 jFileChooser.setMultiSelectionEnabled(false);
                 jFileChooser.setDialogTitle("Select Directory");
@@ -154,7 +138,6 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                     return;
                 }
                 lastDirectory = jFileChooser.getSelectedFile().getParent();
-                //User clicked the approve option.
                 dirLocationField.setText(jFileChooser.getSelectedFile().getCanonicalPath());
 
             } else if (arg.equals("  Select File(s)  ")) {
@@ -166,9 +149,8 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 if ((jFileChooser.showOpenDialog(this)) != JFileChooser.APPROVE_OPTION) {
                     return;
                 }
-                //User clicked the approve option.
-                selectedFiles = jFileChooser.getSelectedFiles();
 
+                selectedFiles = jFileChooser.getSelectedFiles();
                 lastDirectory = jFileChooser.getSelectedFile().getParent();
                 
                 if (selectedFiles.length > 1) {

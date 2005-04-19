@@ -35,9 +35,9 @@ import java.awt.print.*;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.25 2005/04/15 01:29:01 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.26 2005/04/19 23:25:19 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.25 $
+ * @version	$Revision: 1.26 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, KeyListener,
         ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -2084,47 +2084,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
             if (EventSrc instanceof JMenuItem) {
 
-                //                if (EventSrc instanceof JRadioButtonMenuItem) {
-                //                    JRadioButtonMenuItem jrbmi = (JRadioButtonMenuItem) EventSrc;
-                //
-                //                    if (jrbmi.getActionCommand().startsWith("Box Width")) {
-                //
-                //                        if (jrbmi.getActionCommand().equals("Box Width Static")) {
-                //                            this.widthOption = CallGraphOption.STATIC;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Width Name Length")) {
-                //                            this.widthOption = OPTION_NAME;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Width Exclusive")) {
-                //                            this.widthOption = OPTION_EXCLUSIVE;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Width Inclusive")) {
-                //                            this.widthOption = OPTION_INCLUSIVE;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Width NumCalls")) {
-                //                            this.widthOption = OPTION_NUMCALLS;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Width NumSubr")) {
-                //                            this.widthOption = OPTION_NUMSUBR;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Width InclPerCall")) {
-                //                            this.widthOption = OPTION_INCLPERCALL;
-                //                        }
-                //                        recreateGraph();
-                //                    }
-                //
-                //                    if (jrbmi.getActionCommand().startsWith("Box Color")) {
-                //
-                //                        if (jrbmi.getActionCommand().equals("Box Color Static")) {
-                //                            this.colorOption = OPTION_STATIC;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Color Exclusive")) {
-                //                            this.colorOption = OPTION_EXCLUSIVE;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Color Inclusive")) {
-                //                            this.colorOption = OPTION_INCLUSIVE;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Color NumCalls")) {
-                //                            this.colorOption = OPTION_NUMCALLS;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Color NumSubr")) {
-                //                            this.colorOption = OPTION_NUMSUBR;
-                //                        } else if (jrbmi.getActionCommand().equals("Box Color InclPerCall")) {
-                //                            this.colorOption = OPTION_INCLPERCALL;
-                //                        }
-                //                        recreateGraph();
-                //                    }
-                //                }
+             
 
                 String arg = evt.getActionCommand();
 

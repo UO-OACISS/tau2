@@ -14,7 +14,7 @@ import java.beans.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProfImageOptionsPanel extends JPanel implements PropertyChangeListener {
-    public ParaProfImageOptionsPanel(Component component) {
+    public ParaProfImageOptionsPanel(Component component, boolean dumbControls) {
         this.component = component;
 
         //Window Stuff.
@@ -26,17 +26,19 @@ public class ParaProfImageOptionsPanel extends JPanel implements PropertyChangeL
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        addCompItem(fullScreen, gbc, 0, 0, 1, 1);
+        if (dumbControls) {
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            addCompItem(fullScreen, gbc, 0, 0, 1, 1);
 
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        addCompItem(prependHeader, gbc, 0, 1, 1, 1);
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            addCompItem(prependHeader, gbc, 0, 1, 1, 1);
+        }
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;

@@ -13,9 +13,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.16 2005/04/15 01:29:01 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.17 2005/04/19 23:25:19 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -107,13 +107,12 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                 } else {
                     button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName());
                 }
-                final int m = i;
+                final int metricID = i;
 
                 button.addActionListener(new ActionListener() {
-                    final int metric = m;
 
                     public void actionPerformed(ActionEvent evt) {
-                        dataSorter.setSelectedMetricID(metric);
+                        dataSorter.setSelectedMetricID(metricID);
                         dataSorter.setValueType(valueType);
                         sortLocalData();
                         panel.repaint();

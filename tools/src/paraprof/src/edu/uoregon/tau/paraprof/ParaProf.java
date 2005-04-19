@@ -11,14 +11,15 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.35 2005/04/15 01:29:01 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.36 2005/04/19 23:25:19 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.35 $
+ * @version $Revision: 1.36 $
  */
 public class ParaProf implements ActionListener {
 
+    // This class handles uncaught throwables on the AWT-EventQueue thread
     static public class XThrowableHandler {
         
         public XThrowableHandler() {
@@ -33,7 +34,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "2.1 (with TAU 2.14.1) (01/21/2005)";
+    private final static String VERSION = "2.2 (with TAU 2.14.3) (04/19/2005)";
 
     static ColorMap colorMap = new ColorMap();
 
@@ -49,7 +50,7 @@ public class ParaProf implements ActionListener {
     static ColorChooser colorChooser;
 
     static ParaProfManagerWindow paraProfManager = null;
-    static ApplicationManager applicationManager = null;
+    static ApplicationManager applicationManager = new ApplicationManager();
     static HelpWindow helpWindow = null;
     static PreferencesWindow preferencesWindow;
     static Runtime runtime = null;
@@ -120,7 +121,6 @@ public class ParaProf implements ActionListener {
     }
 
     public void loadDefaultTrial() {
-        ParaProf.applicationManager = new ApplicationManager();
 
         // Create a default application.
         ParaProfApplication app = ParaProf.applicationManager.addApplication();

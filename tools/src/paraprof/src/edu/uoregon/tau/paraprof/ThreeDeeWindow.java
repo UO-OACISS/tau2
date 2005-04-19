@@ -259,7 +259,19 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         DataSource dataSource = ppTrial.getDataSource();
 
         int numThreads = dataSource.getNumThreads();
-        int numFunctions = dataSource.getNumFunctions();
+        int numFunctions = 0;
+        
+        // We must actually count the number of functions, in case there is a group mask
+        for (Iterator funcIter = ppTrial.getDataSource().getFunctions(); funcIter.hasNext();) {
+            Function function = (Function) funcIter.next();
+
+            if (ppTrial.displayFunction(function)) {
+                numFunctions++;
+            }
+        }
+        
+        
+        
         float[][] heightValues = new float[numFunctions][numThreads];
         float[][] colorValues = new float[numFunctions][numThreads];
 
@@ -668,6 +680,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
             generate3dModel(false, settings);
             visRenderer.redraw();
+            controlPanel.dataChanged();
         }
 
     }
@@ -703,17 +716,13 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         ParaProf.helpWindow.clearText();
         if (display)
             ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("This is the Call Graph Window");
+        ParaProf.helpWindow.writeText("This is the 3D Window");
         ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("This window shows you a graph of call paths present in the profile data.");
+        ParaProf.helpWindow.writeText("This window displays profile data in three dimensions through the Triangle Mesh Plot, the Bar Plot, and the ScatterPlot");
         ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Click on a box to highlight paths that go through that function.");
+        ParaProf.helpWindow.writeText("Change between the plots by selecting the desired type from the radio buttons in the upper right.");
         ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Right-click on a box to access the Function Data Window for that function.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Experiment with the \"Box Width by...\" and \"Box Color by...\" menus (under Options) to display different types of data.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("If you only see a single line of boxes (no edges connecting them), it probably means that your profile data does not contain call path data.  If you believe this to be incorrect please contact us with the data at tau-bugs@cs.uoregon.edu");
+        ParaProf.helpWindow.writeText("Experiment with the controls at the right.");
         ParaProf.helpWindow.writeText("");
     }
 
@@ -809,18 +818,22 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
             } else if (arg.equals("Microseconds")) {
                 units = 0;
                 setAxisStrings();
+                controlPanel.dataChanged();
                 visRenderer.redraw();
             } else if (arg.equals("Milliseconds")) {
                 units = 1;
                 setAxisStrings();
+                controlPanel.dataChanged();
                 visRenderer.redraw();
             } else if (arg.equals("Seconds")) {
                 units = 2;
                 setAxisStrings();
+                controlPanel.dataChanged();
                 visRenderer.redraw();
             } else if (arg.equals("hr:min:sec")) {
                 units = 3;
                 setAxisStrings();
+                controlPanel.dataChanged();
                 visRenderer.redraw();
 
             } else if (arg.equals("Save Image")) {

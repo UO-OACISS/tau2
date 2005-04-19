@@ -1,4 +1,3 @@
-
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
@@ -19,9 +18,9 @@ import edu.uoregon.tau.paraprof.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.4 2005/04/19 23:25:20 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -41,7 +40,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     private int selectedTab;
     private JTabbedPane tabbedPane; // keep a handle to remember the selected tab
-    
+
     public ThreeDeeControlPanel(ThreeDeeWindow window, ThreeDeeSettings settings, ParaProfTrial ppTrial,
             VisRenderer visRenderer) {
         this.settings = settings;
@@ -59,7 +58,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weighty = 0;
 
         ButtonGroup group = new ButtonGroup();
-        JRadioButton jrb = new JRadioButton(VisType.TRIANGLE_MESH_PLOT.toString(), settings.getVisType() == VisType.TRIANGLE_MESH_PLOT);
+        JRadioButton jrb = new JRadioButton(VisType.TRIANGLE_MESH_PLOT.toString(),
+                settings.getVisType() == VisType.TRIANGLE_MESH_PLOT);
         jrb.addActionListener(this);
         group.add(jrb);
         addCompItem(this, jrb, gbc, 0, 0, 1, 1);
@@ -154,7 +154,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         functionButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
-                    
+
                     FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
                             ppTrial.getDisplayedFunctions().iterator(), settings.getScatterFunctions()[index]);
 
@@ -242,7 +242,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
         tabbedPane.setMinimumSize(new Dimension(300, 160));
         tabbedPane.setSelectedIndex(selectedTab);
-        
+
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 0.5;
         gbc.weighty = 0.5;
@@ -253,6 +253,63 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     }
 
+    
+    private JPanel createSelectorPanel(int min, int max, final Vector names, final int index) {
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        final JScrollBar scrollBar = new JScrollBar(JScrollBar.HORIZONTAL, settings.getSelections()[index], 1,
+                min, max);
+        scrollBar.setBlockIncrement((max-min) / 10);
+
+        final JTextField textField = new JTextField("<none>");
+
+        textField.setHorizontalAlignment(JTextField.CENTER);
+
+        if (settings.getSelections()[index] >= 0) {
+            if (names != null) {
+                textField.setText((String) names.get(settings.getSelections()[index]));
+            }
+        }
+
+        textField.setEditable(false);
+        textField.setCaretPosition(0);
+
+        
+        scrollBar.addAdjustmentListener(new AdjustmentListener() {
+            public void adjustmentValueChanged(AdjustmentEvent e) {
+                int selection = scrollBar.getValue();
+                settings.setSelection(index, selection);
+                if (selection >= 0 && names != null) {
+                    textField.setText((String) names.get(selection));
+                } else {
+                    textField.setText("<none>");
+                }
+                textField.setCaretPosition(0);
+
+                heightValueField.setText(window.getSelectedHeightValue());
+                colorValueField.setText(window.getSelectedColorValue());
+
+                window.redraw();
+            }
+        });
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.5;
+        gbc.weighty = 0.5;
+
+        ParaProfUtils.addCompItem(panel, textField, gbc, 1, 0, 1, 1);
+        ParaProfUtils.addCompItem(panel, scrollBar, gbc, 1, 1, 1, 1);
+
+        return panel;
+    }
+
+    
     private JPanel createFullDataPanel() {
 
         JPanel regularPanel = new JPanel();
@@ -261,8 +318,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
-
-      
 
         ActionListener metricChanger = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -279,6 +334,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     settings.setRegularAim(visRenderer.getAim());
                     settings.setRegularEye(visRenderer.getEye());
 
+                    
+                    heightValueField.setText(window.getSelectedHeightValue());
+                    colorValueField.setText(window.getSelectedColorValue());
+
                     window.redraw();
 
                 } catch (Exception e) {
@@ -287,17 +346,15 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
             }
 
         };
-        
-        
+
         String[] items = new String[ppTrial.getNumberOfMetrics()];
         for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
             items[i] = ppTrial.getMetric(i).getName();
         }
-        
+
         heightValueBox = new JComboBox(ValueType.VALUES);
         heightValueBox.setSelectedItem(settings.getHeightValue());
         heightValueBox.addActionListener(metricChanger);
-
 
         heightMetricBox = new JComboBox(items);
         heightMetricBox.setSelectedIndex(settings.getHeightMetricID());
@@ -326,8 +383,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane.setMinimumSize(new Dimension(290, 160));
         tabbedPane.setSelectedIndex(selectedTab);
 
-
-        JPanel functionSelectorPanel = createSelectorPanel(-1, ppTrial.getDataSource().getNumFunctions(),
+        JPanel functionSelectorPanel = createSelectorPanel(-1, window.getFunctionNames().size(),
                 window.getFunctionNames(), 0);
         JPanel nodeSelectorPanel = createSelectorPanel(0, ppTrial.getDataSource().getNumThreads(),
                 window.getThreadNames(), 1);
@@ -350,6 +406,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         heightValueField.setEditable(false);
         colorValueField.setEditable(false);
+        
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0.0;
@@ -377,77 +434,25 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         return regularPanel;
     }
 
-    private JPanel createSelectorPanel(int min, int max, final Vector names, final int index) {
-
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridBagLayout());
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-
-        final JScrollBar scrollBar = new JScrollBar(JScrollBar.HORIZONTAL, settings.getSelections()[index], 1,
-                min, max);
-
-        final JTextField textField = new JTextField("<none>");
-
-        textField.setHorizontalAlignment(JTextField.CENTER);
-        textField.setCaretPosition(0);
-        
-        textField.setEditable(false);
-        //      scrollbar.setBlockIncrement(100);
-        if (settings.getSelections()[index] >= 0) {
-            if (names != null) {
-                textField.setText((String) names.get(settings.getSelections()[index]));
-            }
-        }
-
-        scrollBar.addAdjustmentListener(new AdjustmentListener() {
-            public void adjustmentValueChanged(AdjustmentEvent e) {
-                settings.setSelection(index, scrollBar.getValue());
-                if (settings.getSelections()[index] >= 0 && names != null) {
-                    textField.setText((String) names.get(settings.getSelections()[index]));
-                } else {
-                    textField.setText("<none>");
-                }
-                textField.setCaretPosition(0);
-
-                heightValueField.setText(window.getSelectedHeightValue());
-                colorValueField.setText(window.getSelectedColorValue());
-
-                window.redraw();
-            }
-        });
-
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.weightx = 0.5;
-        gbc.weighty = 0.5;
-
-        ParaProfUtils.addCompItem(panel, textField, gbc, 1, 0, 1, 1);
-        ParaProfUtils.addCompItem(panel, scrollBar, gbc, 1, 1, 1, 1);
-
-        return panel;
-    }
-
+   
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
 
             if (EventSrc instanceof JRadioButton) {
 
-
                 selectedTab = tabbedPane.getSelectedIndex();
 
                 String arg = evt.getActionCommand();
                 Plot plot = window.getPlot();
 
-                if (settings.getVisType() == VisType.BAR_PLOT || settings.getVisType() == VisType.TRIANGLE_MESH_PLOT) {
+                if (settings.getVisType() == VisType.BAR_PLOT
+                        || settings.getVisType() == VisType.TRIANGLE_MESH_PLOT) {
                     settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
                     settings.setRegularAim(visRenderer.getAim());
                     settings.setRegularEye(visRenderer.getEye());
                 } else if (settings.getVisType() == VisType.SCATTER_PLOT) {
-//                    settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
+                    //                    settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
                     settings.setScatterAim(visRenderer.getAim());
                     settings.setScatterEye(visRenderer.getEye());
                 }
@@ -466,6 +471,13 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
+    }
+
+    public void dataChanged() {
+        window.redraw();
+        createSubPanel();
+        heightValueField.setText(window.getSelectedHeightValue());
+        colorValueField.setText(window.getSelectedColorValue());
     }
 
     private void addCompItem(JPanel jPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
