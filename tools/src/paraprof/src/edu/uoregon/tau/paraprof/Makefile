@@ -18,10 +18,10 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
              PPThread.java ThreadDataWindowPanel.java LedgerWindowPanel.java PPFunctionProfile.java \
              UserEventWindow.java DBConfiguration.java ParaProfMetric.java \
 	     UserEventWindowPanel.java PPUserEventProfile.java LoadTrialProgressWindow.java ColorBar.java \
-             ParaProfManagerWindow.java StatWindow.java LoadTrialWindow.java DataSourceThreadControl.java \
+             ParaProfManagerWindow.java StatWindow.java LoadTrialWindow.java \
              ParaProfManagerTableModel.java StatWindowPanel.java ParaProfLisp.java ParaProfLispPrimitives.java \
-             StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java DisplayProperties.java \
-	     ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java ParaProfObserver.java \
+             StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java \
+	     ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java \
 	     ColorDefaultsWindow.java ColorMap.java ColorMapWindow.java PreferencesWindow.java \
 	     
 
