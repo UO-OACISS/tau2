@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.16 2005/04/15 01:29:01 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.17 2005/04/19 21:24:23 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -628,6 +628,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
             boolean found = false;
             ListIterator l = databaseAPI.getApplicationList();
+
             while (l.hasNext()) {
                 ParaProfApplication dbApp = new ParaProfApplication((Application) l.next());
 
@@ -667,6 +668,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
             if (!found) {
                 Application newApp = new Application(ppApp);
+                newApp.setID(-1);  // must set the ID to -1 to indicate that this is a new application (bug found by Sameer on 2005-04-19)
                 ParaProfApplication application = new ParaProfApplication(newApp);
                 application.setDBApplication(true);
                 application.setID(databaseAPI.saveApplication(application));
@@ -740,6 +742,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         if (!found) {
             Experiment newExp = new Experiment(ppExp);
             ParaProfExperiment experiment = new ParaProfExperiment(newExp);
+            newExp.setID(-1);  // must set the ID to -1 to indicate that this is a new application (bug found by Sameer on 2005-04-19)
             experiment.setDBExperiment(true);
             experiment.setApplicationID(dbApp.getID());
             experiment.setID(databaseAPI.saveExperiment(experiment));
@@ -767,6 +770,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         }
 
         ParaProfTrial dbTrial = new ParaProfTrial(ppTrial.getTrial());
+        dbTrial.setID(-1);
         dbTrial.setExperimentID(dbExp.getID());
         dbTrial.setApplicationID(dbExp.getApplicationID());
         dbTrial.getTrial().setDataSource(ppTrial.getDataSource());
