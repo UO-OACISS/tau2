@@ -22,7 +22,7 @@ public class ParaProfImageOutput{
     public ParaProfImageOutput(){
     }
 
-    public void saveImage(ParaProfImageInterface ref){
+    public static void saveImage(ParaProfImageInterface ref){
 	try{
 	    JOptionPane.showMessageDialog(null, "Jar compiled for jdk-ver < 1.4. Image support not available.",
 						      "Image Error!",
