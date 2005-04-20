@@ -526,7 +526,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     private ParaProfTrial trial = null;
     private StatWindow window = null;
     private boolean userEventWindow;
-    private Vector list = null;
+    private Vector list = new Vector();
 
     private Font monoFont = null;
     private FontMetrics fmMonoFont = null;

@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.12 2005/04/04 22:26:00 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.13 2005/04/20 22:34:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -29,7 +29,7 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
     private JMenu windowsMenu = null;
     private JScrollPane sp = null;
     private LedgerWindowPanel panel = null;
-    private Vector list = null;
+    private Vector list = new Vector();
     
     public void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();

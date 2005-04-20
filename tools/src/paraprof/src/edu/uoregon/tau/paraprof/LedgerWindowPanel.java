@@ -12,11 +12,11 @@ import edu.uoregon.tau.dms.dss.*;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.7 2005/03/08 01:11:18 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.8 2005/04/20 22:34:01 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -36,7 +36,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
 
-    private Vector list = null;
+    private Vector list = new Vector();
 
     private boolean widthSet = false;
     private int windowType = -1;

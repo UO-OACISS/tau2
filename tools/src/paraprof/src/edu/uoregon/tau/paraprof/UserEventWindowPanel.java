@@ -380,6 +380,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         return new Dimension(xPanelSize, yPanelSize);
     }
 
+    
 
     private String counterName = null;
 
@@ -393,7 +394,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     private boolean groupMember = false;
     private ParaProfTrial trial = null;
     private UserEventWindow window = null;
-    private Vector list = null;
+    private Vector list = new Vector();
     int xPanelSize = 0;
     int yPanelSize = 0;
 

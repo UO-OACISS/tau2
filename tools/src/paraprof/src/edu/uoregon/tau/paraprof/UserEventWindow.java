@@ -588,7 +588,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     JScrollPane sp = null;
     JLabel label = null;
 
-    private Vector list = null;
+    private Vector list = new Vector();
 
     private int order = 0; //0: descending order,1: ascending order.
     private int valueType = 12; //12-number of

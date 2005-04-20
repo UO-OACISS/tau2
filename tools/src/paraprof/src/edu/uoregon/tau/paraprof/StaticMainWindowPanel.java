@@ -1071,7 +1071,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
     //list[1]:The result of a call to getMeanData in DataSorter
 
-    private Vector list;
+    private Vector list = new Vector();
 
     //Drawing information.
     private int barHeight = -1;

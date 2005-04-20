@@ -15,9 +15,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.15 2005/04/15 01:29:01 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.16 2005/04/20 22:34:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
@@ -486,7 +486,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
     //Instance data.
     private ParaProfTrial ppTrial = null;
     private FunctionDataWindow window = null;
-    private Vector list = null;
+    private Vector list = new Vector();
     private Function function = null;
 
     //Drawing information.

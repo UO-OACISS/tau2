@@ -631,6 +631,6 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     // DataSorter
     //list[1]:The result of a call to getMeanData in DataSorter
 
-    private Vector list;
+    private Vector list = new Vector();
 
 }

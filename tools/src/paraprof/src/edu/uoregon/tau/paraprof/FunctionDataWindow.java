@@ -13,9 +13,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.17 2005/04/19 23:25:19 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.18 2005/04/20 22:34:00 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.17 $
+ * @version	$Revision: 1.18 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -688,7 +688,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     private FunctionDataWindowPanel panel = null;
     private JScrollPane sp = null;
 
-    private Vector list = null;
+    private Vector list = new Vector();
 
     private double maxValue;
 

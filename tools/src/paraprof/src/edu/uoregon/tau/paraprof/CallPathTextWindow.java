@@ -12,9 +12,9 @@ import edu.uoregon.tau.paraprof.enums.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.19 2005/04/20 21:13:03 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.20 2005/04/20 22:34:00 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.19 $
+ * @version	$Revision: 1.20 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -40,7 +40,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private JScrollPane sp = null;
     private CallPathTextWindowPanel panel = null;
 
-    private Vector list = null;
+    private Vector list = new Vector();
 
     private boolean name = false; //true: sort by name,false: sort by value.
     private int order = 0; //0: descending order,1: ascending order.

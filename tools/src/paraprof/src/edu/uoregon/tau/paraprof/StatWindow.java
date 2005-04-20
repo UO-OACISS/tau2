@@ -639,7 +639,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     private JScrollPane jScrollpane = null;
     private StatWindowPanel panel = null;
 
-    Vector list = null;
+    Vector list = new Vector();
 
     //    private int order = 0; //0: descending order,1: ascending order.
     //private int valueType = 2; //2-exclusive,4-inclusive,6-number of
