@@ -60,9 +60,9 @@
 #ifndef __READVTF_H
 #define __READVTF_H
 
-using namespace std;
 #include <iostream>
 #include <string>
+using namespace std;
 
 #include <string.h>
 #include "binarytree.h"

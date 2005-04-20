@@ -96,7 +96,6 @@
 #ifndef __BINARYTREE_H
 #define __BINARYTREE_H
 
-using namespace std;
 
 #include <fstream>
 #include <iostream>
@@ -105,6 +104,7 @@ using namespace std;
 #include <stdio.h>
 #include "node.h"
 #include "nodeC.h"
+using namespace std;
 
 class nodeC;
 

@@ -32,8 +32,8 @@
 ************************************************************************/
 #ifndef __TRAY_H
 #define __TRAY_H
-using namespace std;
 #include <iostream>
+using namespace std;
 class tray
 {
 private:
