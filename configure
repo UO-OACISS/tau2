@@ -1367,7 +1367,7 @@ if [ $machine = apple ]
       fortran_compiler=yes
   fi
   # xlc++ doesn't like include/Memory. Move this directory
-  if [ -d include/Memory ] 
+  if [ -d include/Memory -a ! -d include/MemoryWrapper ] 
   then
     mv include/Memory include/MemoryWrapper	
   fi
