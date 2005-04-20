@@ -14,6 +14,8 @@ mpiinc=no
 mpilib=no
 tag=no
 tagopt=
+pdtcxxopt=
+pdtcxxarg=
 vtf=no
 vtfopt=
 useropt=no
@@ -21,6 +23,7 @@ papi=no
 opari=no
 mpilibrary=no
 tauprefix=unknown
+tauexecprefix=unknown
 
 # PARSE COMMAND LINE SWITCHES
 ###############################################################
@@ -112,6 +115,13 @@ do
     shift
     ;;
 
+  -pdt_c++=*)
+    pdtcxx=yes
+    pdtcxxarg=`echo $arg | sed -e 's/-pdt_c++=//'`
+    pdtcxxopt=-pdt_c++=$pdtcxxarg
+    shift
+    ;;
+
   -tag=*)
     tag=yes
     tautag=`echo $arg | sed -e 's/-tag=//'`
@@ -127,6 +137,11 @@ do
 
   -prefix=*)
     tauprefix=`echo $arg | sed -e 's/-prefix=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -exec-prefix=*)
+    tauexecprefix=`echo $arg | sed -e 's/-exec-prefix=//' -e 's/ /_/g'`
     shift
     ;;
 
@@ -149,6 +164,7 @@ do
     echo "-useropt=<options>  "
     echo "-pdt=<pdtdir>  "
     echo "-pdtcompdir=<compdir>  "
+    echo "-pdt_c++=<C++ Compiler>  "
     echo "-papi=<papidir>  "
     echo "-vtf=<vtfdir>  "
     echo "-dyninst=<dyninstdir>  "
@@ -159,6 +175,8 @@ do
     echo "-tag=<unique name> "
     echo "-nocomm"
     echo "-opari=<oparidir>  "
+    echo "-prefix=<dir>  "
+    echo "-exec-prefix=<dir>  "
     shift
     exit
     ;;
@@ -198,16 +216,22 @@ then
   tagopt="$tagopt -prefix=$tauprefix"
 fi
 
+# Add exec-prefix to tagopt
+if [ $tauexecprefix != unknown ]
+then
+  tagopt="$tagopt -exec-prefix=$tauexecprefix"
+fi
+
 # Take care of wish version prompt
 echo " " > wishver
 
 # Now we compose the arguments
   if [ $pdt = yes ]
   then
-    pdtopt="-pdt=$pdtdir"
+    pdtopt="-pdt=$pdtdir $pdtcxxopt"
     if [ $pdtcomp = yes ]
     then
-      pdtopt="-pdt=$pdtdir -pdtcompdir=$pdtcompdir"
+      pdtopt="-pdt=$pdtdir $pdtcxxopt -pdtcompdir=$pdtcompdir"
     fi
   fi
 
@@ -255,6 +279,11 @@ echo " " > wishver
     ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -PROFILECALLPATH <wishver
     make clean; make install
   
+# Add depth limit
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -DEPTHLIMIT"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -DEPTHLIMIT <wishver
+    make clean; make install
+
 # Add COMPENSATE
     echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -COMPENSATE"
     ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -COMPENSATE <wishver

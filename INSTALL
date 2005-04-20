@@ -89,6 +89,7 @@ Usage: configure [OPTIONS]
 -jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+).
 -dyninst=<dir> ................... Specify location of DynInst Package.
 -vtf=<dir> ......... Specify location of VTF3 Trace Generation Package.
+-slog2=<dir> .......... Specify location of SLOG2 SDK/Jumpshot Package.
 -mpi .......................... Specify use of TAU MPI wrapper library.
 -mpiinc=<dir> ............. Specify location of MPI include dir and use
                            the TAU MPI Profiling and Tracing Interface.
@@ -118,6 +119,7 @@ Usage: configure [OPTIONS]
 -PROFILECALLPATH ......................... Generate call path profiles.
 -PROFILEPHASE .......................... Generate phase based profiles.
 -PROFILESTATS .................. Enable standard deviation calculation.
+-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth.
 -PROFILEMEMORY .. Track heap memory utilization at each function entry.
 -MULTIPLECOUNTERS ............ Use multiple hardware counters and time.
 -COMPENSATE ........ Compensate for profiling measurement perturbation.
@@ -292,6 +294,14 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    formerly known as vampir, a commercial trace visualization tool developed
    by TU. Dresden, Germany. 
 
+-slog2=<directory>
+   Specifies the location of the SLOG2 SDK trace generation package. TAU's
+   binary traces can be converted to the SLOG2 format using tau2slog2, a tool
+   that uses the SLOG2 SDK. The SLOG2 format is read by the Jumpshot4 trace
+   visualization software, a freely available trace visualizer from Argonne National
+   Laboratories.
+   [ Ref: http://www-unix.mcs.anl.gov/perfvis/download/index.htm#slog2sdk ]
+
 -mpiinc=<dir>
    
    Specifies the directory  where mpi header files reside (such as mpi.h and 
@@ -390,6 +400,18 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    deviation of the exclusive time/counts spent in each profiled block. This 
    option is an extension of -PROFILE, the default profiling option.
 
+-DEPTHLIMIT
+   
+   Allows users to enable instrumentation at runtime based on the depth of a 
+   calling routine on a callstack. The depth is specified using the environment 
+   variable TAU_DEPTH_LIMIT. When its value is 1, instrumentation in the top-level
+   routine such as main (in C/C++) or program (in F90) is activated. When it is 2,
+   only routine invoked directly by main and main are recorded. When a routine appears
+   at a depth of 2 and at 10 and we set the limit at 5, then the routine is recorded
+   when its depth is 2, and ignored when its depth is 10 on the calling stack. This can
+   be used with -PROFILECALLPATH to generate a tree of height <h> from the main routine
+   by setting TAU_CALLPATH_DEPTH and TAU_DEPTH_LIMIT variables to <h>. 
+   
 -PROFILEMEMORY
    
    Specifies tracking heap memory utilitization for each instrumented function.
