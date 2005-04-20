@@ -11,11 +11,11 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.36 2005/04/19 23:25:19 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.37 2005/04/20 21:13:03 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.36 $
+ * @version $Revision: 1.37 $
  */
 public class ParaProf implements ActionListener {
 
@@ -34,7 +34,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "2.2 (with TAU 2.14.3) (04/19/2005)";
+    private final static String VERSION = "2.2 (with TAU 2.14.3) (04/20/2005)";
 
     static ColorMap colorMap = new ColorMap();
 

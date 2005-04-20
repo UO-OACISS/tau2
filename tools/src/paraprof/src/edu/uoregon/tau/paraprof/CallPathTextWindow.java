@@ -12,9 +12,9 @@ import edu.uoregon.tau.paraprof.enums.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.18 2005/04/04 22:26:00 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.19 2005/04/20 21:13:03 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -261,13 +261,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         showMetaData.addActionListener(this);
         optionsMenu.add(showMetaData);
 
-        box = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-        box.addActionListener(this);
-        optionsMenu.add(box);
-
-        box = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
-        box.addActionListener(this);
-        optionsMenu.add(box);
 
         optionsMenu.addMenuListener(this);
 

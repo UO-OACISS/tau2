@@ -35,9 +35,9 @@ import java.awt.print.*;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.26 2005/04/19 23:25:19 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.27 2005/04/20 21:13:03 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.26 $
+ * @version	$Revision: 1.27 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, KeyListener,
         ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -662,6 +662,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         } else if (option == CallGraphOption.EXCLUSIVE_PER_CALL) {
             maxValue = thread.getMaxExclusivePerCall(metric);
         } else if (option == CallGraphOption.STATIC) {
+            maxValue = 1;
+        } else if (this.widthOption == CallGraphOption.NAME_LENGTH) {
             maxValue = 1;
         } else {
             throw new ParaProfException("Unexpected CallGraphOption : " + option);
