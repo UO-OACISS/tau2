@@ -6,7 +6,7 @@ then
   export TAU_CCOM=cc
 fi
 
-if [ `uname -s ` == "Darwin" ] 
+if [ `uname -s ` = "Darwin" ] 
 then
   export TAU_CCOM=c++
 fi
@@ -277,7 +277,7 @@ int main(void)
 	return 0;
 }
 EOF
-$TAU_CCOM tau$$.c
+$TAU_CCOM -o a.out tau$$.c
 ./a.out
 /bin/rm -f tau$$.c
 /bin/rm -f a.out  
@@ -287,7 +287,7 @@ cat <<EOF > mk
 include include/Makefile
 
 a.out :
-	\$(TAU_CC) \$(USER_OPT) tau$$.c
+	\$(TAU_CC) \$(USER_OPT) -o a.out tau$$.c
 EOF
 
 
@@ -328,7 +328,7 @@ int main(void)
         return 0;
 }
 EOF
-if $TAU_CCOM tau$$.c > /dev/null 2>&1
+if $TAU_CCOM -o a.out tau$$.c > /dev/null 2>&1
 then
 	./a.out
 	/bin/rm -f a.out
@@ -398,7 +398,7 @@ int main(void)
 	}
 }
 EOF
-$TAU_CCOM tau$$.c
+$TAU_CCOM -o a.out tau$$.c
 ./a.out
 /bin/rm -f tau$$.c
 /bin/rm -f a.out
