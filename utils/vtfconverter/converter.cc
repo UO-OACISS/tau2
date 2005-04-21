@@ -8,11 +8,11 @@
 	A driver for the VTF format conversion program.
 ************************************************************************/
 
-using namespace std;
 #include <iostream>
 #include <string>
 #include <stdlib.h>
 #include "readVTF.h"
+using namespace std;
 
 void displayHelp(void);
 void displayCommandLine(void);
