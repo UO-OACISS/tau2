@@ -526,7 +526,7 @@ dprintf("TestUDef1\n");
     /*/int             lgd_pos, lbl_pos;*/
    /*/ char           *newline;*/
     /*/char           *info_A;  *info_B;*/
-    legend = malloc((strlen(name)+1));
+    legend = (char*) malloc((strlen(name)+1));
 
       memcpy(legend,  name, strlen(name)+1);
     legend_len  = strlen( legend );
@@ -912,7 +912,7 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
   
 	
 
-    legend = malloc((strlen(name)+1));
+  legend = (char*) malloc((strlen(name)+1));
     
 
 	memcpy(legend,  name, strlen(name)+1);
@@ -1320,7 +1320,7 @@ char *name = "message";
 		
 	
     type_idx = messageTag+maxidx;
-    legend=malloc(strlen(name)+1);
+    legend = (char*) malloc(strlen(name)+1);
 
 
     	memcpy(legend,  name, strlen(name)+1);
@@ -1733,7 +1733,7 @@ int TRACE_Open( const char filespec[], TRACE_file *fp )
         return 0;
      }
      
-	contain=malloc(strlen(filespec)+1);
+	contain = (char*) malloc(strlen(filespec)+1);
 	tr = (TRACE_file) malloc( sizeof(struct _trace_file) );
 	
 	
