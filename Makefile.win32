@@ -8,6 +8,10 @@
 # use "nmake /f makefile.win32 "VTF=<path\to\libvtf3.lib> tau2vtf
 # (e.g. nmake /f makefile.win32 "VTF=c:\" tau2vtf)
 
+# To build the slog2 trace input dll
+# use "nmake /f makefile.win32 "JDK=<path\to\jdk>" "SLOG2=<path\to\slog2>" tau2slog2
+# (e.g. nmake /f makefile.win32 "JDK=c:\\j2sdk1.4.2_05" "SLOG2=c:\slog2sdk-1.2.5beta" tau2slog2
+
 # To build dll's for use with java
 # use "nmake /f makefile.win32 "JDK=<path\to\jdk> java
 # (e.g. nmake /f makefile.win32 "JDK=c:\j2sdk1.4.2_05" java)
@@ -33,7 +37,7 @@ TAU_TRACE_OBJS= $(TAU_TRACE_SRCS:.cpp=.obj)
 TAU_JAVA_OBJS= $(TAU_JAVA_SRC:.cpp=.obj)
 
 all : win32 pprof tau_convert tau_merge tau_reduce libs
-	
+
 java :
 	-md win32\java
 	-del $(TAU_PROFILE_OBJS)
@@ -44,7 +48,7 @@ java :
 	nmake /f Makefile.win32 "FLAGS = -DTRACING_ON -DJAVA /MT -I$(JDK)/include -I$(JDK)/include/win32" tau-trace.dll
 	-del win32\java\*.lib win32\java\*.exp
 
-	
+
 tau-profile.dll : $(TAU_PROFILE_OBJS) $(TAU_JAVA_OBJS)
 	link /dll /OUT:"win32\java\tau-profile.dll" $(TAU_PROFILE_OBJS) $(TAU_JAVA_OBJS) $(JDK)/lib/jvm.lib
 
@@ -53,9 +57,9 @@ tau-callpath.dll : $(TAU_CALLPATH_OBJS) $(TAU_JAVA_OBJS)
 
 tau-trace.dll : $(TAU_TRACE_OBJS) $(TAU_JAVA_OBJS)
 	link /dll /OUT:"win32\java\tau-trace.dll" $(TAU_TRACE_OBJS) $(TAU_JAVA_OBJS) $(JDK)/lib/jvm.lib
-	
 
-	
+
+
 libs : 
 	-del $(TAU_PROFILE_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON" tau-profile.lib
@@ -74,43 +78,51 @@ libs :
 tau2vtf :
 	$(CC) $(CFLAGS) -DTRACING_ON -o win32\bin\tau2vtf utils\tau2vtf.cpp src\TraceInput\TAU_tf.cpp src\TraceInput\TAU_Cwrapper.cpp -Isrc\TraceInput -I$(VTF) /link $(VTF)\libvtf3.lib
 
+
+tau2slog2 :
+	$(CC) -c /O2 /Gd /nologo /TC /EHsc -Iinclude -DTRACING_ON utils\slogconverter\src\trace_tau.c -Iutils\slogconverter\ -I$(SLOG2)\src\logformat\trace
+	$(CC) -c /O2 /Gd /nologo /TC /EHsc -DTRACING_ON $(SLOG2)\src\logformat\trace\logformat_trace_InputLog.c -Iutils\slogconverter\ -I$(JDK)\include -I$(JDK)\include\win32
+	$(CC) -c $(CFLAGS) -DTRACING_ON src\TraceInput\TAU_tf.cpp -I../../include -Isrc\TraceInput
+	$(CC) -c $(CFLAGS) -DTRACING_ON src\TraceInput\TAU_Cwrapper.cpp -I../../include -Isrc\TraceInput
+	link /dll /OUT:"win32\bin\TraceInput.dll" trace_tau.obj logformat_trace_InputLog.obj TAU_tf.obj TAU_Cwrapper.obj
+
 tau_instrumentor :
 	$(CC) $(CFLAGS) -o win32\bin\tau_instrumentor utils\tau_instrumentor.cpp utils\tau_selective.cpp -I$(PDT)\ductape\inc /link $(PDT)\windows\lib\ductape.lib	
-	
+
 win32 :
 	md win32
 	md win32\bin
 	md win32\lib
-	
+
 
 
 pprof : utils\function_data.cpp utils\pprof.cpp utils\user_event_data.cpp
 	$(CC) $(CFLAGS) -o win32\bin\pprof utils\function_data.cpp utils\pprof.cpp utils\user_event_data.cpp
-	
-	
+
+
 tau_convert : utils\tau_convert.c
 	$(CC) $(CFLAGS) -o win32\bin\tau_convert utils\tau_convert.c	
-	
+
 tau_merge : utils\tau_events.cpp utils\tau_merge.c utils\getopt.cpp
 	$(CC) $(CFLAGS) -o win32\bin\tau_merge utils\tau_events.cpp utils\tau_merge.c utils\getopt.cpp	
-	
+
 tau_reduce : utils\tau_reduce.cpp utils\pprof_elem.cpp
 	$(CC) $(CFLAGS) -o win32\bin\tau_reduce utils\tau_reduce.cpp utils\pprof_elem.cpp
-	
-	
+
+
 tau-profile.lib : $(TAU_PROFILE_OBJS)
 	lib /OUT:"win32\lib\tau-profile.lib" $(TAU_PROFILE_OBJS)
 
 tau-profile-mt.lib : $(TAU_PROFILE_OBJS)
 	lib /OUT:"win32\lib\tau-profile-mt.lib" $(TAU_PROFILE_OBJS)
-	
+
 
 tau-callpath.lib : $(TAU_CALLPATH_OBJS)
 	lib /OUT:"win32\lib\tau-callpath.lib" $(TAU_CALLPATH_OBJS)
 
 tau-callpath-mt.lib : $(TAU_CALLPATH_OBJS)
 	lib /OUT:"win32\lib\tau-callpath-mt.lib" $(TAU_CALLPATH_OBJS)
-	
+
 tau-trace.lib : $(TAU_TRACE_OBJS)
 	lib /OUT:"win32\lib\tau-trace.lib" $(TAU_TRACE_OBJS)
 
@@ -121,4 +133,4 @@ tau-trace-mt.lib : $(TAU_TRACE_OBJS)
 
 .cpp.obj :
 	$(CC) $(FLAGS) $(CFLAGS) /Fo$@ -c $<
-	
+
