@@ -8,13 +8,19 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
+
 import javax.swing.*;
 import javax.swing.event.*;
-import java.awt.print.*;
-import edu.uoregon.tau.dms.dss.*;
+
+import edu.uoregon.tau.dms.dss.UserEvent;
+import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 
 public class UserEventWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
 
@@ -123,7 +129,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         subMenu = new JMenu("Select Value Type");
         group = new ButtonGroup();
 
-        button = new JRadioButtonMenuItem("Number of Userevents", true);
+        button = new JRadioButtonMenuItem("Number of Samples", true);
         button.addActionListener(this);
         group.add(button);
         subMenu.add(button);
@@ -255,13 +261,9 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         //Slider setup.
         //Do the slider stuff, but don't add. By default, sliders are off.
         //######
-        String sliderMultipleStrings[] = { "1.00", "0.75", "0.50", "0.25", "0.10" };
-        sliderMultiple = new JComboBox(sliderMultipleStrings);
-        sliderMultiple.addActionListener(this);
-
         barLengthSlider.setPaintTicks(true);
-        barLengthSlider.setMajorTickSpacing(5);
-        barLengthSlider.setMinorTickSpacing(1);
+        barLengthSlider.setMajorTickSpacing(400);
+        barLengthSlider.setMinorTickSpacing(50);
         barLengthSlider.setPaintLabels(true);
         barLengthSlider.setSnapToTicks(true);
         barLengthSlider.addChangeListener(this);
@@ -273,7 +275,8 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0.95;
         gbc.weighty = 0.98;
-        addCompItem(sp, gbc, 0, 0, 1, 1);
+        addCompItem(sp, gbc, 0, 1, 2, 1);
+
         ParaProf.incrementNumWindows();
     }
 
@@ -297,31 +300,33 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                     setVisible(false);
                     dispose();
                     ParaProf.exitParaProf(0);
-                } else if (arg.equals("Number of Userevents")) {
-                    valueType = 12;
+                } else if (arg.equals("Number of Samples")) {
+                    userEventValueType = UserEventValueType.NUMSAMPLES;
+                    sortLocalData();
                     this.setHeader();
                     panel.repaint();
                 } else if (arg.equals("Min. Value")) {
-                    valueType = 14;
+                    userEventValueType = UserEventValueType.MIN;
+                    sortLocalData();
                     this.setHeader();
                     panel.repaint();
                 } else if (arg.equals("Max. Value")) {
-                    valueType = 16;
+                    userEventValueType = UserEventValueType.MAX;
+                    sortLocalData();
                     this.setHeader();
                     panel.repaint();
                 } else if (arg.equals("Mean Value")) {
-                    valueType = 18;
+                    userEventValueType = UserEventValueType.MEAN;
+                    sortLocalData();
                     this.setHeader();
                     panel.repaint();
                 } else if (arg.equals("Standard Deviation")) {
-                    valueType = 20;
+                    userEventValueType = UserEventValueType.STDDEV;
+                    sortLocalData();
                     this.setHeader();
                     panel.repaint();
                 } else if (arg.equals("Descending Order")) {
-                    if (((JCheckBoxMenuItem) optionsMenu.getItem(0)).isSelected())
-                        order = 0;
-                    else
-                        order = 1;
+                    dataSorter.setDescendingOrder(((JCheckBoxMenuItem) optionsMenu.getItem(0)).isSelected());
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Show Width Slider")) {
@@ -344,7 +349,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                     (new LedgerWindow(trial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
                     CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getDataSorter(),
-                            1);
+                            0);
                     trial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
@@ -354,8 +359,6 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                 } else if (arg.equals("Show Help Window")) {
                     this.help(true);
                 }
-            } else if (EventSrc == sliderMultiple) {
-                panel.changeInMultiples();
             }
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -364,11 +367,10 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 
     public void stateChanged(ChangeEvent event) {
         try {
-            panel.changeInMultiples();
+            panel.setBarLength(barLengthSlider.getValue());
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
-
     }
 
     public void menuSelected(MenuEvent evt) {
@@ -427,6 +429,8 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public void sortLocalData() {
+
+        dataSorter.setUserEventValueType(userEventValueType);
         list = dataSorter.getUserEventData(userEvent);
     }
 
@@ -434,8 +438,8 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         return list;
     }
 
-    public int getValueType() {
-        return valueType;
+    public UserEventValueType getValueType() {
+        return userEventValueType;
     }
 
     public Dimension getViewportSize() {
@@ -471,70 +475,34 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public String getHeaderString() {
-        return "Name: " + userEvent.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType)
+        return "Name: " + userEvent.getName() + "\n" + "Value Type: " + userEventValueType.toString()
                 + "\n";
     }
 
-    public int getSliderValue() {
-        int tmpInt = -1;
-        tmpInt = barLengthSlider.getValue();
-        return tmpInt;
-    }
-
-    public double getSliderMultiple() {
-        String tmpString = null;
-        tmpString = (String) sliderMultiple.getSelectedItem();
-        return Double.parseDouble(tmpString);
-    }
 
     private void displaySiders(boolean displaySliders) {
+        GridBagConstraints gbc = new GridBagConstraints();
         if (displaySliders) {
-            contentPane.remove(sp);
 
+            gbc.insets = new Insets(5, 5, 5, 5);
             gbc.fill = GridBagConstraints.NONE;
             gbc.anchor = GridBagConstraints.EAST;
             gbc.weightx = 0.10;
             gbc.weighty = 0.01;
-            addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
-
-            gbc.fill = GridBagConstraints.NONE;
-            gbc.anchor = GridBagConstraints.WEST;
-            gbc.weightx = 0.10;
-            gbc.weighty = 0.01;
-            addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
-
-            gbc.fill = GridBagConstraints.NONE;
-            gbc.anchor = GridBagConstraints.EAST;
-            gbc.weightx = 0.10;
-            gbc.weighty = 0.01;
-            addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
+            addCompItem(barLengthLabel, gbc, 0, 0, 1, 1);
 
             gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.anchor = GridBagConstraints.WEST;
             gbc.weightx = 0.70;
             gbc.weighty = 0.01;
-            addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
+            addCompItem(barLengthSlider, gbc, 1, 0, 1, 1);
 
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 0.95;
-            gbc.weighty = 0.98;
-            addCompItem(sp, gbc, 0, 1, 4, 1);
         } else {
-            contentPane.remove(sliderMultipleLabel);
-            contentPane.remove(sliderMultiple);
-            contentPane.remove(barLengthLabel);
-            contentPane.remove(barLengthSlider);
-            contentPane.remove(sp);
-
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 0.95;
-            gbc.weighty = 0.98;
-            addCompItem(sp, gbc, 0, 0, 1, 1);
+            getContentPane().remove(barLengthLabel);
+            getContentPane().remove(barLengthSlider);
         }
 
-        //Now call validate so that these componant changes are displayed.
+        //Now call validate so that these component changes are displayed.
         validate();
     }
 
@@ -575,10 +543,8 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
 
-    private JLabel sliderMultipleLabel = new JLabel("Slider Multiple");
-    private JComboBox sliderMultiple;
-    private JLabel barLengthLabel = new JLabel("Bar Multiple");
-    private JSlider barLengthSlider = new JSlider(0, 40, 1);
+    private JLabel barLengthLabel = new JLabel("Bar Width");
+    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
 
     private Container contentPane = null;
     private GridBagLayout gbl = null;
@@ -590,8 +556,9 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 
     private Vector list = new Vector();
 
-    private int order = 0; //0: descending order,1: ascending order.
-    private int valueType = 12; //12-number of
+    UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
+    
+//    private int valueType = 12; //12-number of
     // userEvents,14-min,16-max,18-mean.
 
 }

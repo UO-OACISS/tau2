@@ -168,7 +168,7 @@ public class PPUserEventProfile implements Comparable {
             //                    dataSorter.getSelectedMetricID()), valueType.getValue(this.meanProfile,
             //                    dataSorter.getSelectedMetricID())));
             //
-        } else if (dataSorter.getSortType() == SortType.VALUE) {
+        } else if (dataSorter.getSortType() == SortType.VALUE || dataSorter.getSortType() == SortType.MEAN_VALUE) {
             return checkDescending(compareToHelper(valueType.getValue(this.getUserEventProfile()),
                     valueType.getValue(other.getUserEventProfile())));
 

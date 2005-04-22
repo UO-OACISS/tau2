@@ -19,11 +19,17 @@ public abstract class UserEventValueType {
         public double getValue(UserEventProfile uep) {
             return uep.getUserEventNumberValue();
         }
+        public double getMaxValue(UserEvent ue) {
+            return ue.getMaxUserEventNumberValue();
+        }
     };
 
     public static final UserEventValueType MAX = new UserEventValueType("Max Value") {
         public double getValue(UserEventProfile uep) {
             return uep.getUserEventMaxValue();
+        }
+        public double getMaxValue(UserEvent ue) {
+            return ue.getMaxUserEventMaxValue();
         }
     };
 
@@ -31,11 +37,17 @@ public abstract class UserEventValueType {
         public double getValue(UserEventProfile uep) {
             return uep.getUserEventMinValue();
         }
+        public double getMaxValue(UserEvent ue) {
+            return ue.getMaxUserEventMinValue();
+        }
     };
 
     public static final UserEventValueType MEAN = new UserEventValueType("Mean Value") {
         public double getValue(UserEventProfile uep) {
             return uep.getUserEventMeanValue();
+        }
+        public double getMaxValue(UserEvent ue) {
+            return ue.getMaxUserEventMeanValue();
         }
     };
 
@@ -43,8 +55,14 @@ public abstract class UserEventValueType {
         public double getValue(UserEventProfile uep) {
             return uep.getUserEventStdDev();
         }
+        public double getMaxValue(UserEvent ue) {
+            return ue.getMaxUserEventStdDev();
+        }
     };
 
     public abstract double getValue(UserEventProfile uep);
 
+    public abstract double getMaxValue(UserEvent ue);
+    
+    
 }

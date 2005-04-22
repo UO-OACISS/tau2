@@ -98,25 +98,8 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
-        switch (window.getValueType()) {
-        case 12:
-            maxValue = userEvent.getMaxUserEventNumberValue();
-            break;
-        case 14:
-            maxValue = userEvent.getMaxUserEventMinValue();
-            break;
-        case 16:
-            maxValue = userEvent.getMaxUserEventMaxValue();
-            break;
-        case 18:
-            maxValue = userEvent.getMaxUserEventMeanValue();
-            break;
-        case 20:
-            maxValue = userEvent.getMaxUserEventStdDev();
-            break;
-        default:
-            throw new ParaProfException("Unexpected type: " + window.getValueType());
-        }
+        
+        maxValue = window.getValueType().getMaxValue(userEvent);
 
         stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0, maxValue, ParaProf.defaultNumberPrecision)); //No units required in
         // this window. Thus pass
@@ -203,25 +186,8 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 
         for (int i = startElement; i <= endElement; i++) {
             ppUserEventProfile = (PPUserEventProfile) list.elementAt(i);
-            switch (window.getValueType()) {
-            case 12:
-                value = ppUserEventProfile.getUserEventNumberValue();
-                break;
-            case 14:
-                value = ppUserEventProfile.getUserEventMinValue();
-                break;
-            case 16:
-                value = ppUserEventProfile.getUserEventMaxValue();
-                break;
-            case 18:
-                value = ppUserEventProfile.getUserEventMeanValue();
-                break;
-            case 20:
-                value = ppUserEventProfile.getStdDev();
-                break;
-            default:
-                throw new ParaProfException("Unexpected type: " + window.getValueType());
-            }
+            
+            value = window.getValueType().getValue(ppUserEventProfile.getUserEventProfile());
 
             //For consistancy in drawing, the y coord is updated at the
             // beginning of the loop.
@@ -347,18 +313,6 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     }
 
     
-   
-    public void changeInMultiples() {
-        computeBarLength();
-        this.repaint();
-    }
-
-    public void computeBarLength() {
-            double sliderValue = (double) window.getSliderValue();
-            double sliderMultiple = window.getSliderMultiple();
-            barLength = (int)(baseBarLength * (sliderValue * sliderMultiple));
-    }
-
     //This method sets both xPanelSize and yPanelSize.
     private boolean resizePanel(FontMetrics fmFont, int barXCoord) {
         boolean resized = false;
@@ -381,7 +335,10 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     }
 
     
-
+    public void setBarLength(int barLength) {
+        this.barLength = Math.max(1, barLength);
+        this.repaint();
+    }
     private String counterName = null;
 
     private UserEvent userEvent = null;
