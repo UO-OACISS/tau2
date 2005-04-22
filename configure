@@ -3266,7 +3266,7 @@ EOF
           taugcclibdir=`g++ -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
           taugcclib=`g++ -print-libgcc-file-name `
           taugcclib2dir=`which g++ | sed s/g++/../`         
-          if ifort f1.o f2.o -o foo -L$taugcclib2dir -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1
+          if ifort f1.o f2.o -o foo -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1
           then
       #      echo "Confirmed  - links with gcc libs"
             echo "Intel v8.1+ compilers used"
