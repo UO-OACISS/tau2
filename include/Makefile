@@ -157,6 +157,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 
 ############# Fortran Compiler #############
 #GNU_FORTRAN#TAU_F90         = g77              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#GNU_GFORTRAN#TAU_F90         = gfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SGI_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM_FORTRAN#TAU_F90         = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGL#TAU_F90         = blrts_xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -342,6 +343,7 @@ TAU_GCCLIB	= -lgcc_s
 #PATHSCALE_FORTRAN#TAU_FORTRANLIBS       = -lpathfstart -lpathfortran #ENDIF#
 #NAGWARE_FORTRAN#TAU_FORTRANLIBS		= $(EXTRADIR)/lib/quickfit.o -L$(EXTRADIR)/lib -lf96 #ENDIF#
 #GNU_FORTRAN#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
+#GNU_GFORTRAN#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
 #SGI_FORTRAN#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
 #USE_IBMXLC#TAU_IBM_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
 #GNU#TAU_IBM_FORTRANLIBS	       =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#

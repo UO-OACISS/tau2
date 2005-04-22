@@ -284,11 +284,11 @@ do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = pathscale ] 
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = pathscale -o $myarg = gfortran ] 
     then
       fortran_compiler=$myarg
     else
-      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nagware', and 'pathscale' "
+      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nagware', 'pathscale', and 'gfortran' "
       exit 1
     fi
     shift
@@ -1648,6 +1648,11 @@ case $fortran_compiler in
    gnu)
       echo "Default Fortran compiler will be GNU g77"
       fixmakeargs="$fixmakeargs GNU_FORTRAN"
+      ;;
+
+   gfortran)
+      echo "Default Fortran compiler will be GNU gfortran"
+      fixmakeargs="$fixmakeargs GNU_GFORTRAN"
       ;;
 
    sgi)

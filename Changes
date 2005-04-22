@@ -26,6 +26,8 @@ Version 2.14 changes (from 2.13):
 14. Added support for depth limit profiling and tracing (-DEPTHLIMIT) [ORNL].
 15. Changes to the MPI wrapper library (for S3D) [ORNL]. 
 16. TAU_MPI_MESSAGE_SIZE now reports sizes for MPI_Send, Recv, Allreduce, etc.[ORNL].
+17. Added support for Charm thread library [UIUC, LLNL].
+18. Added support for gfortran compiler (-fortran=gfortran). 
 
 
 Version 2.13 changes (from 2.12):
