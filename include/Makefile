@@ -98,7 +98,7 @@ LSX = .a
 # JAVA DEFAULT ARCH 
 #############################################
 JDKARCH                 = linux
-#DEC_ALPHA#JDKARCH      = alpha      #ENDIF#
+#COMPAQ_ALPHA#JDKARCH   = alpha      #ENDIF#
 #SOL2#JDKARCH           = solaris    #ENDIF#
 #SGIMP#JDKARCH          = irix       #ENDIF#
 #SP1#JDKARCH            = aix        #ENDIF#
