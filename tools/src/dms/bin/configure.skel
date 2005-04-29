@@ -100,15 +100,28 @@ if [ ! -r ${JDBC_JAR} ]; then
 	    fi
 	    
 	    if [ x${JDBC_ROOT} == "xmysql.jar" ]; then
-		wget http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-3.0.14-production.tar.gz/from/http://mysql.247available.com/
-		gunzip mysql-connector-java-3.0.14-production.tar.gz
-		tar -Oxf mysql-connector-java-3.0.14-production.tar mysql-connector-java-3.0.14-production/mysql-connector-java-3.0.14-production-bin.jar > ${JDBC_JAR}
-		rm mysql-connector-java-3.0.14-production.tar
+		/bin/rm -f mysql-redirect.html
+                wget http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html
+                URL=`grep URL mysql-redirect.html | sed s/URL=//`
+                FILE=`grep FILE mysql-redirect.html | sed s/FILE=//`
+                TAR=`grep TAR mysql-redirect.html | sed s/TAR=//`
+                JAR=`grep JAR mysql-redirect.html | sed s/JAR=//`
+                echo wget "$URL"
+                wget "$URL"
+                gunzip "$FILE"
+                tar -Oxf "$TAR" "$JAR" > ${JDBC_JAR}
+                rm "$TAR"
+		/bin/rm -f mysql-redirect.html
 	    fi
 	    
 	    if [ x${JDBC_ROOT} == "xpostgresql.jar" ]; then
-		wget http://jdbc.postgresql.org/download/pg74.214.jdbc2.jar
-		mv pg74.214.jdbc2.jar ${JDBC_JAR}
+		/bin/rm -f postgresql-redirect.html
+                wget http://www.cs.uoregon.edu/research/paracomp/tau/postgresql-redirect.html
+                URL=`grep URL postgresql-redirect.html | sed s/URL=//`
+                FILE=`grep FILE postgresql-redirect.html | sed s/FILE=//`
+		wget "$URL"
+		mv "$FILE" ${JDBC_JAR}
+		/bin/rm -f postgresql-redirect.html
 	    fi
 	    
 	    
