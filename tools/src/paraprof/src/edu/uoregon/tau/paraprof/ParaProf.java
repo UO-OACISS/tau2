@@ -11,11 +11,11 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.37 2005/04/20 21:13:03 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.38 2005/05/03 18:02:05 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.37 $
+ * @version $Revision: 1.38 $
  */
 public class ParaProf implements ActionListener {
 
@@ -57,6 +57,7 @@ public class ParaProf implements ActionListener {
     static private int numWindowsOpen = 0;
     //End - System wide stuff.
 
+    
     //Command line options related.
     private static int fileType = 0; //0:profile, 1:pprof, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun
     private static File sourceFiles[] = new File[0];
@@ -196,12 +197,12 @@ public class ParaProf implements ActionListener {
 
             ParaProf.preferencesWindow = new PreferencesWindow(preferences);
 
-            javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
+//            javax.swing.SwingUtilities.invokeLater(new Runnable() {
+  //              public void run() {
                     System.setProperty("sun.awt.exception.handler", XThrowableHandler.class.getName());
                     loadDefaultTrial();
-                }
-            });
+    //            }
+      //      });
 
         } catch (Exception e) {
             ParaProfUtils.handleException(e);

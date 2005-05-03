@@ -16,34 +16,37 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class LoadTrialWindow extends JFrame implements ActionListener {
 
-    
     static String lastDirectory;
 
     private ParaProfManagerWindow paraProfManagerWindow = null;
     private ParaProfApplication application = null;
     private ParaProfExperiment experiment = null;
+    private boolean newExperiment;
+    private boolean newApplication;
+    
     private JTextField dirLocationField = new JTextField(lastDirectory, 30);
     //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun.
     //String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP",
     // "hpmtoolkit", "gprof", "psrun"};
-    private String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
-            "PSRun" };
+    private String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit",
+            "Gprof", "PSRun" };
     private JComboBox trialTypes = null;
     private File selectedFiles[];
     private JButton selectButton = null;
 
-    
     public LoadTrialWindow(ParaProfManagerWindow paraProfManager, ParaProfApplication application,
-            ParaProfExperiment experiment) {
+            ParaProfExperiment experiment, boolean newApplication, boolean newExperiment) {
         this.paraProfManagerWindow = paraProfManager;
         this.application = application;
         this.experiment = experiment;
+        this.newApplication = newApplication;
+        this.newExperiment = newExperiment;
 
         if (lastDirectory == null) {
             lastDirectory = System.getProperty("user.dir");
             dirLocationField.setText(lastDirectory);
         }
-        
+
         //Window Stuff.
         int windowWidth = 400;
         int windowHeight = 200;
@@ -70,7 +73,6 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 thisWindowClosing(evt);
             }
         });
-
 
         trialTypes = new JComboBox(trialTypeStrings);
         trialTypes.addActionListener(this);
@@ -152,7 +154,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
 
                 selectedFiles = jFileChooser.getSelectedFiles();
                 lastDirectory = jFileChooser.getSelectedFile().getParent();
-                
+
                 if (selectedFiles.length > 1) {
                     dirLocationField.setText("<Multiple Files Selected>");
                     dirLocationField.setEditable(false);
@@ -161,6 +163,14 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                     dirLocationField.setEditable(true);
                 }
             } else if (arg.equals("Cancel")) {
+                // note that these are null if they're not top level (so this won't delete an application that has other experiments)
+
+                if (newExperiment) {
+                    paraProfManagerWindow.handleDelete(experiment);
+                }
+                if (newApplication) {
+                    paraProfManagerWindow.handleDelete(application);
+                }
                 closeThisWindow();
             } else if (arg.equals("Ok")) {
                 if (trialTypes.getSelectedIndex() == 0) {
@@ -171,8 +181,8 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                                 + " does not exist");
                         return;
                     }
-                    paraProfManagerWindow.addTrial(application, experiment, files, trialTypes.getSelectedIndex(),
-                            false);
+                    paraProfManagerWindow.addTrial(application, experiment, files,
+                            trialTypes.getSelectedIndex(), false);
                 } else {
                     if (selectedFiles == null) {
                         selectedFiles = new File[1];
