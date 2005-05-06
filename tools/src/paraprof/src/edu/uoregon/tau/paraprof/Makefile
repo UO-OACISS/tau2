@@ -23,14 +23,14 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
              StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java \
 	     ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java \
 	     ColorDefaultsWindow.java ColorMap.java ColorMapWindow.java PreferencesWindow.java \
-	     
+	     Searcher.java SearchPanel.java
 
 VIS_SOURCES = $(wildcard vis/*.java) ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java FunctionSelectorDialog.java
-ENUMS_SOURCES = $(wildcard enums/*.java) 
+OTHER_SOURCES = $(wildcard enums/*.java) $(wildcard interfaces/*.java)
 
-NEW_SOURCES=$(BASE_SOURCES) $(VIS_SOURCES) $(ENUMS_SOURCES) ParaProfImageOutput.java
+NEW_SOURCES=$(BASE_SOURCES) $(VIS_SOURCES) $(OTHER_SOURCES) ParaProfImageOutput.java
 
-OLD_SOURCES=$(BASE_SOURCES) $(ENUMS_SOURCES) ./wrapper/ParaProfImageOutput.java ./wrapper/ThreeDeeWindow.java
+OLD_SOURCES=$(BASE_SOURCES) $(OTHER_SOURCES) ./wrapper/ParaProfImageOutput.java ./wrapper/ThreeDeeWindow.java
 
 TOOLS_SRC=$(TAUROOT)/tools/src
 
