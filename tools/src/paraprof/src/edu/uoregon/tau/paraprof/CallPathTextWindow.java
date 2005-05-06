@@ -21,9 +21,9 @@ import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.21 2005/05/06 01:00:01 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.22 2005/05/06 01:19:10 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.21 $
+ * @version	$Revision: 1.22 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -185,7 +185,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         ButtonGroup group = null;
         JRadioButtonMenuItem button = null;
 
-        
         showFindPanelBox = new JCheckBoxMenuItem("Show Find Panel", false);
         showFindPanelBox.addActionListener(this);
         optionsMenu.add(showFindPanelBox);
@@ -199,7 +198,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         optionsMenu.add(showMetaData);
 
         optionsMenu.add(new JSeparator());
-        
 
         descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
         descendingOrder.addActionListener(this);
@@ -563,7 +561,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 Collections.sort(list);
             }
         }
-        
+
     }
 
     public Vector getData() {
@@ -683,13 +681,8 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public void keyPressed(KeyEvent e) {
-        int onmask = KeyEvent.CTRL_DOWN_MASK;
-        int offmask = 0;
-        if ((e.getModifiersEx() & (onmask | offmask)) == onmask) {
-            if (e.getKeyCode() == KeyEvent.VK_F) {
-                showSearchPanel(true);
-            }
-
+        if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F) {
+            showSearchPanel(true);
         }
     }
 

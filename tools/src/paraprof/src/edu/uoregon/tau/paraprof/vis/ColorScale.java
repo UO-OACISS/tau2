@@ -19,9 +19,9 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  *    
  * TODO: Provide control over font size perhaps?
  *
- * <P>CVS $Id: ColorScale.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.4 2005/05/06 01:19:11 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class ColorScale extends Observable implements Shape {
 
@@ -61,7 +61,7 @@ public class ColorScale extends Observable implements Shape {
 
     }
 
-    private Color textColor = Color.WHITE;
+    private Color textColor = Color.white;
 
     private int font = GLUT.STROKE_MONO_ROMAN;
 

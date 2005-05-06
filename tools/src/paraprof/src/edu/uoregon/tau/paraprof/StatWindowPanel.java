@@ -163,7 +163,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         } else if (!userEventWindow && (ppFunctionProfile.isGroupMember(trial.getHighlightedGroup()))) {
             g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
         } else {
-            g2D.setColor(Color.BLACK);
+            g2D.setColor(Color.black);
         }
     }
 
@@ -263,19 +263,19 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         //Draw the first dashed string.
         yCoord = yCoord + spacing;
         searcher.drawHighlights(g2D, xOffset, yCoord, 0);
-        g2D.setColor(Color.BLACK);
+        g2D.setColor(Color.black);
         g2D.drawString(dashString, xOffset, yCoord);
         yCoord = yCoord + spacing;
 
         //Draw the heading.
         searcher.drawHighlights(g2D, xOffset, yCoord, 1);
-        g2D.setColor(Color.BLACK);
+        g2D.setColor(Color.black);
         g2D.drawString(headerString, xOffset, yCoord);
         yCoord = yCoord + spacing;
 
         //Draw the second dashed string.
         searcher.drawHighlights(g2D, xOffset, yCoord, 2);
-        g2D.setColor(Color.BLACK);
+        g2D.setColor(Color.black);
         g2D.drawString(dashString, xOffset, yCoord);
 
         if (toScreen)

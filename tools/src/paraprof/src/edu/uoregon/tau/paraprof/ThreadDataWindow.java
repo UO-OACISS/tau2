@@ -36,6 +36,47 @@ import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 public class ThreadDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener,
         KeyListener, SearchableOwner, ScrollBarController {
 
+    
+    private PPThread ppThread;
+    private ParaProfTrial ppTrial = null;
+    private DataSorter dataSorter = null;
+
+    private JMenu optionsMenu = null;
+    private JMenu windowsMenu = null;
+    private JMenu unitsSubMenu = null;
+
+    private JCheckBoxMenuItem sortByName = null;
+    private JCheckBoxMenuItem descendingOrder = null;
+    private JCheckBoxMenuItem showValuesAsPercent = null;
+    private JCheckBoxMenuItem showPathTitleInReverse = null;
+    private JCheckBoxMenuItem showMetaData = null;
+    private JCheckBoxMenuItem showFindPanelBox;
+    
+    private JLabel barLengthLabel = new JLabel("Bar Width");
+    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
+
+    private Container contentPane = null;
+    private GridBagLayout gbl = null;
+    private GridBagConstraints gbc = null;
+
+    private JScrollPane jScrollPane;
+    private ThreadDataWindowPanel panel;
+
+    private Vector list = new Vector();
+
+    //private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
+
+    private boolean percent;
+    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+
+    private SearchPanel searchPanel;
+
+    // for derived metrics the exclusive could be higher than the inclusive, so the percent
+    // will be higher than 100.  This may confuse users so we disable showing percentages if one
+    // goes over 100.
+    private boolean exclusivePercentOver100 = false;
+
+    
     public ThreadDataWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID) {
 
         this.ppTrial = trial;
@@ -818,57 +859,14 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         return ppThread;
     }
 
-    private PPThread ppThread;
-    private ParaProfTrial ppTrial = null;
-    private DataSorter dataSorter = null;
-
-    private JMenu optionsMenu = null;
-    private JMenu windowsMenu = null;
-    private JMenu unitsSubMenu = null;
-
-    private JCheckBoxMenuItem sortByName = null;
-    private JCheckBoxMenuItem descendingOrder = null;
-    private JCheckBoxMenuItem showValuesAsPercent = null;
-    private JCheckBoxMenuItem showPathTitleInReverse = null;
-    private JCheckBoxMenuItem showMetaData = null;
-    private JCheckBoxMenuItem showFindPanelBox;
-    
-    private JLabel barLengthLabel = new JLabel("Bar Width");
-    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
-
-    private Container contentPane = null;
-    private GridBagLayout gbl = null;
-    private GridBagConstraints gbc = null;
-
-    private JScrollPane jScrollPane;
-    private ThreadDataWindowPanel panel;
-
-    private Vector list = new Vector();
-
-    //private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
-
-    private boolean percent;
-    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
-
-    private SearchPanel searchPanel;
-
-    // for derived metrics the exclusive could be higher than the inclusive, so the percent
-    // will be higher than 100.  This may confuse users so we disable showing percentages if one
-    // goes over 100.
-    private boolean exclusivePercentOver100 = false;
 
     public JScrollPane getJScrollPane() {
         return jScrollPane;
     }
 
     public void keyPressed(KeyEvent e) {
-        int onmask = KeyEvent.CTRL_DOWN_MASK;
-        int offmask = 0;
-        if ((e.getModifiersEx() & (onmask | offmask)) == onmask) {
-            if (e.getKeyCode() == KeyEvent.VK_F) {
-                showSearchPanel(true);
-            }
-
+        if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F) {
+            showSearchPanel(true);
         }
     }
 

@@ -19,9 +19,9 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  *    
  * TODO: Add FPS indication
  * 
- * <P>CVS $Id: VisRenderer.java,v 1.3 2005/04/15 01:29:03 amorris Exp $</P>
+ * <P>CVS $Id: VisRenderer.java,v 1.4 2005/05/06 01:19:11 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
@@ -74,8 +74,8 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     private boolean reverseVideo = false;
     
-    private Color backColor = Color.WHITE;
-    private Color foreColor = Color.BLACK;
+    private Color backColor = Color.white;
+    private Color foreColor = Color.black;
     
     // the list of shapes to draw
     private Vector shapes = new Vector();

@@ -44,11 +44,11 @@ public class SearchPanel extends JPanel {
                     searchable.searchNext();
                 } else {
                     if (searchable.setSearchString(searchField.getText())) {
-                        searchField.setBackground(Color.WHITE);
-                        searchField.setForeground(Color.BLACK);
+                        searchField.setBackground(Color.white);
+                        searchField.setForeground(Color.black);
                     } else {
                         searchField.setBackground(new Color(255,102,102));
-                        searchField.setForeground(Color.WHITE);
+                        searchField.setForeground(Color.white);
                     }
                 }
             }
@@ -110,11 +110,11 @@ public class SearchPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 searchable.setSearchMatchCase(matchCaseBox.isSelected());
                 if (searchable.setSearchString(searchField.getText())) {
-                    searchField.setBackground(Color.WHITE);
-                    searchField.setForeground(Color.BLACK);
+                    searchField.setBackground(Color.white);
+                    searchField.setForeground(Color.black);
                 } else {
                     searchField.setBackground(new Color(255,102,102));
-                    searchField.setForeground(Color.WHITE);
+                    searchField.setForeground(Color.white);
                 }
             }
         });

@@ -338,7 +338,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener,
         searcher.drawHighlights(g2D, x, y, line);
    
         // now draw the actual text
-        g2D.setPaint(Color.BLACK);
+        g2D.setPaint(Color.black);
         g2D.drawString(functionName, x, y);
     }
     

@@ -18,9 +18,9 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Axes.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.4 2005/05/06 01:19:11 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class Axes implements Shape {
 
@@ -54,8 +54,8 @@ public class Axes implements Shape {
     private int selectedRow = -1;
     private int selectedCol = -1;
 
-    private Color textColor = Color.WHITE;
-    private Color majorColor = Color.WHITE;
+    private Color textColor = Color.white;
+    private Color majorColor = Color.white;
     private Color minorColor = new Color(0.5f,0.5f,0.5f);
 
 

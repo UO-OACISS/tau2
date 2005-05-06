@@ -29,6 +29,32 @@ import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner,
         ScrollBarController, KeyListener {
 
+    //Instance data.
+    private ParaProfTrial ppTrial = null;
+    private DataSorter dataSorter;
+    private int nodeID = -1;
+    private int contextID = -1;
+    private int threadID = -1;
+    private boolean userEventWindow;
+
+    private JMenu optionsMenu = null;
+    private JMenu windowsMenu = null;
+    private JMenu unitsSubMenu = null;
+
+    private boolean sortByName;
+
+    private JCheckBoxMenuItem descendingOrder = null;
+    private JCheckBoxMenuItem showPathTitleInReverse = null;
+    private JCheckBoxMenuItem showMetaData = null;
+    private JCheckBoxMenuItem showFindPanelBox;
+
+    private JScrollPane jScrollpane = null;
+    private StatWindowPanel panel = null;
+
+    private Vector list = new Vector();
+
+    private SearchPanel searchPanel;
+
     public StatWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, boolean userEventWindow) {
         this.ppTrial = trial;
         this.dataSorter = new DataSorter(trial);
@@ -140,7 +166,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
         optionsMenu.add(new JSeparator());
 
-        
         descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
         descendingOrder.addActionListener(this);
         optionsMenu.add(descendingOrder);
@@ -241,7 +266,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         subMenu.add(button);
         optionsMenu.add(subMenu);
         //End - Set the value type options.
-
 
         optionsMenu.addMenuListener(this);
         //######
@@ -480,8 +504,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                 } else if (arg.equals("Show User Event Ledger")) {
                     (new LedgerWindow(ppTrial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1,
-                            this.getDataSorter(), 2);
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, this.getDataSorter(), 2);
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
@@ -592,7 +615,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         } else {
             list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
         }
-        
+
         panel.resetStringSize();
     }
 
@@ -638,8 +661,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         if (userEventWindow)
             return "Sorted By: " + dataSorter.getUserEventValueType() + "\n";
         else
-            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n"
-                    + "Sorted By: " + dataSorter.getValueType() + "\n" + "Units: "
+            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Sorted By: "
+                    + dataSorter.getValueType() + "\n" + "Units: "
                     + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
     }
 
@@ -662,32 +685,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         }
         dispose();
     }
-
-    //Instance data.
-    private ParaProfTrial ppTrial = null;
-    private DataSorter dataSorter;
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
-    private boolean userEventWindow;
-
-    private JMenu optionsMenu = null;
-    private JMenu windowsMenu = null;
-    private JMenu unitsSubMenu = null;
-
-    private boolean sortByName;
-    
-    private JCheckBoxMenuItem descendingOrder = null;
-    private JCheckBoxMenuItem showPathTitleInReverse = null;
-    private JCheckBoxMenuItem showMetaData = null;
-    private JCheckBoxMenuItem showFindPanelBox;
-
-    private JScrollPane jScrollpane = null;
-    private StatWindowPanel panel = null;
-
-    Vector list = new Vector();
-
-    private SearchPanel searchPanel;
 
     //    private int order = 0; //0: descending order,1: ascending order.
     //private int valueType = 2; //2-exclusive,4-inclusive,6-number of
@@ -734,23 +731,18 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     }
 
     public void keyPressed(KeyEvent e) {
-        int onmask = KeyEvent.CTRL_DOWN_MASK;
-        int offmask = 0;
-        if ((e.getModifiersEx() & (onmask | offmask)) == onmask) {
-            if (e.getKeyCode() == KeyEvent.VK_F) {
-                showSearchPanel(true);
-            }
-
+        if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F) {
+            showSearchPanel(true);
         }
     }
 
     public void keyReleased(KeyEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 
     public void keyTyped(KeyEvent e) {
         // TODO Auto-generated method stub
-        
+
     }
 }

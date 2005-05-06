@@ -17,6 +17,6 @@ public interface Searchable {
     
     
     public final static Color searchColor = new Color(102, 255, 102);
-    public final static Color highlightColor = Color.YELLOW;
+    public final static Color highlightColor = Color.yellow;
     public final static Color selectionColor = new Color(184, 207, 229);
 }

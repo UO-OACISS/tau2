@@ -748,7 +748,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
                 }
             };
 
-            g.drawImage(screenShot, 0, 0, Color.BLACK, imageObserver);
+            g.drawImage(screenShot, 0, 0, Color.black, imageObserver);
 
             //            renderIt((Graphics2D) g, false, true, false);
 
