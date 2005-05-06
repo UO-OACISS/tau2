@@ -29,6 +29,11 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
         setBackground(Color.white);
 
+        setAutoscrolls(true);
+        searcher = new Searcher(this, window);
+        addMouseListener(searcher);
+        addMouseMotionListener(searcher);
+
         trial = pptrial;
         this.window = window;
         this.userEventWindow = userEventWindow;
@@ -45,7 +50,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             JMenuItem changeColorItem = new JMenuItem("Change User Event Color");
             changeColorItem.addActionListener(this);
             popup.add(changeColorItem);
-
 
         } else {
             JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
@@ -104,6 +108,65 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
     }
 
+    public void setSearchLines(String headerString, String dashString) {
+
+        if (searcher.getSearchLines() == null && list != null) {
+            Vector searchLines = new Vector();
+            searchLines.add(dashString);
+            searchLines.add(headerString);
+            searchLines.add(dashString);
+
+            for (int i = 0; i < list.size(); i++) {
+                String statString;
+                String nameString;
+
+                if (userEventWindow) {
+                    nameString = ((PPUserEventProfile) list.elementAt(i)).getUserEventName();
+                    statString = ((PPUserEventProfile) list.elementAt(i)).getUserEventStatString(ParaProf.defaultNumberPrecision);
+                    statString = statString + nameString;
+                } else {
+                    nameString = ((PPFunctionProfile) list.elementAt(i)).getFunctionName();
+                    statString = ((PPFunctionProfile) list.elementAt(i)).getStatString(window.units());
+                    statString = statString + "   " + nameString;
+                }
+
+
+
+                maxLinePixelWidth = Math.max(maxLinePixelWidth,
+                                charWidth * statString.length() + xOffset);
+
+                searchLines.add(statString);
+            }
+
+            searcher.setSearchLines(searchLines);
+        }
+
+    }
+
+    private void setStatStringColor(Graphics2D g2D, PPUserEventProfile ppUserEventProfile,
+            PPFunctionProfile ppFunctionProfile) {
+
+        int highLightID = -1;
+        if (userEventWindow) {
+            UserEvent userEvent = trial.getHighlightedUserEvent();
+            if (userEvent != null)
+                highLightID = userEvent.getID();
+        } else {
+            Function function = trial.getHighlightedFunction();
+            if (function != null)
+                highLightID = function.getID();
+        }
+
+        if ((userEventWindow && ppUserEventProfile.getUserEvent().getID() == highLightID)
+                || (!userEventWindow && ppFunctionProfile.getFunction().getID() == highLightID)) {
+            g2D.setColor(trial.getColorChooser().getHighlightColor());
+        } else if (!userEventWindow && (ppFunctionProfile.isGroupMember(trial.getHighlightedGroup()))) {
+            g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
+        } else {
+            g2D.setColor(Color.BLACK);
+        }
+    }
+
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         list = window.getData();
@@ -113,33 +176,14 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         if ((list.size()) == 0)
             return;
 
-        //######
-        //Some declarations.
-        //######
-        PPFunctionProfile ppFunctionProfile = null;
-        PPUserEventProfile ppUserEventProfile = null;
-
-        Color tmpColor;
         int yCoord = 0;
-        String tmpString = null;
-        String dashString = "";
-        int tmpXWidthCalc = 0;
-        //######
-        //Some declarations.
-        //######
 
-        //In this window, a Monospaced font has to be used. This will
-        // probably
-        // not be the same
-        //font as the rest of ParaProf. As a result, some extra work will
-        // have
-        // to be done to calculate
-        //spacing.
+        //In this window, a Monospaced font has to be used. This will probably
+        // not be the same font as the rest of ParaProf. As a result, some extra work will
+        // have to be done to calculate spacing.
         int fontSize = trial.getPreferencesWindow().getBarHeight();
         spacing = trial.getPreferencesWindow().getBarSpacing();
-        //Create font.
         monoFont = new Font("Monospaced", trial.getPreferencesWindow().getFontStyle(), fontSize);
-        //Compute the font metrics.
         fmMonoFont = g2D.getFontMetrics(monoFont);
         maxFontAscent = fmMonoFont.getMaxAscent();
         maxFontDescent = fmMonoFont.getMaxDescent();
@@ -149,6 +193,8 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         if (spacing <= (maxFontAscent + maxFontDescent)) {
             spacing = spacing + 1;
         }
+
+        searcher.setLineHeight(spacing);
 
         //######
         //Draw the header if required.
@@ -181,45 +227,56 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         //End - Draw the header if required.
         //######
 
+        String headerString;
         if (userEventWindow) {
-            tmpString = StatWindowPanel.getUserEventStatStringHeading();
+            headerString = StatWindowPanel.getUserEventStatStringHeading();
 
         } else {
             if (trial.isTimeMetric())
-                tmpString = PPFunctionProfile.getStatStringHeading("Time");
+                headerString = PPFunctionProfile.getStatStringHeading("Time");
             else
-                tmpString = PPFunctionProfile.getStatStringHeading("Counts");
+                headerString = PPFunctionProfile.getStatStringHeading("Counts");
         }
 
         //Calculate the name position.
-        int namePosition = fmMonoFont.stringWidth(tmpString) + 20; //Note
-        // that
-        // 20
-        // is the begin
-        // draw
-        // position.
+        int namePosition = fmMonoFont.stringWidth(headerString) + xOffset;
 
         //Now append "name" to the end of the string.
-        tmpString = tmpString + "Name";
-        int tmpInt = tmpString.length();
+        headerString = headerString + "Name";
 
-        for (int i = 0; i < tmpInt; i++) {
+        String dashString = "";
+        for (int i = 0; i < headerString.length(); i++) {
             dashString = dashString + "-";
         }
+
+        charWidth = fmMonoFont.stringWidth("A");
+
+        
+        
+        setSearchLines(headerString, dashString);
+
+        searcher.setG2d(g2D);
+        searcher.setXOffset(xOffset);
 
         g2D.setColor(Color.black);
 
         //Draw the first dashed string.
         yCoord = yCoord + spacing;
-        g2D.drawString(dashString, 20, yCoord);
-        yCoord = yCoord + spacing + 10;
+        searcher.drawHighlights(g2D, xOffset, yCoord, 0);
+        g2D.setColor(Color.BLACK);
+        g2D.drawString(dashString, xOffset, yCoord);
+        yCoord = yCoord + spacing;
 
         //Draw the heading.
-        g2D.drawString(tmpString, 20, yCoord);
-        yCoord = yCoord + spacing + 10;
+        searcher.drawHighlights(g2D, xOffset, yCoord, 1);
+        g2D.setColor(Color.BLACK);
+        g2D.drawString(headerString, xOffset, yCoord);
+        yCoord = yCoord + spacing;
 
         //Draw the second dashed string.
-        g2D.drawString(dashString, 20, yCoord);
+        searcher.drawHighlights(g2D, xOffset, yCoord, 2);
+        g2D.setColor(Color.BLACK);
+        g2D.drawString(dashString, xOffset, yCoord);
 
         if (toScreen)
             startLocation = yCoord;
@@ -231,16 +288,14 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         int yEnd = 0;
         int startElement = 0;
         int endElement = 0;
-        Rectangle clipRect = null;
-        Rectangle viewRect = null;
 
         if (!fullWindow) {
             if (toScreen) {
-                clipRect = g2D.getClipBounds();
+                Rectangle clipRect = g2D.getClipBounds();
                 yBeg = (int) clipRect.getY();
                 yEnd = (int) (yBeg + clipRect.getHeight());
             } else {
-                viewRect = window.getViewRect();
+                Rectangle viewRect = window.getViewRect();
                 yBeg = (int) viewRect.getY();
                 yEnd = (int) (yBeg + viewRect.getHeight());
             }
@@ -266,83 +321,47 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             endElement = ((list.size()) - 1);
         }
 
+        searcher.setVisibleLines(startElement, endElement);
+
         for (int i = startElement; i <= endElement; i++) {
+            String statString;
+            PPFunctionProfile ppFunctionProfile = null;
+            PPUserEventProfile ppUserEventProfile = null;
+
             if (userEventWindow) {
                 ppUserEventProfile = (PPUserEventProfile) list.elementAt(i);
-                tmpString = ppUserEventProfile.getUserEventStatString(ParaProf.defaultNumberPrecision);
+                statString = ppUserEventProfile.getUserEventStatString(ParaProf.defaultNumberPrecision);
             } else {
                 ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
-                tmpString = ppFunctionProfile.getStatString(window.units());
+                statString = ppFunctionProfile.getStatString(window.units());
             }
 
             yCoord = yCoord + spacing;
 
-            g2D.setColor(Color.black);
-
-            int highLightColor = -1;
+            String nameString;
+            Color nameColor;
             if (userEventWindow) {
-                UserEvent userEvent = trial.getHighlightedUserEvent();
-                if (userEvent != null)
-                    highLightColor = userEvent.getID();
+                nameColor = ppUserEventProfile.getColor();
+                nameString = ppUserEventProfile.getUserEventName();
             } else {
-                Function function = trial.getHighlightedFunction();
-                if (function != null)
-                    highLightColor = function.getID();
-            }
-            if ((userEventWindow && ppUserEventProfile.getUserEvent().getID() == highLightColor)
-                    || (!userEventWindow && ppFunctionProfile.getFunction().getID() == highLightColor)) {
-                g2D.setColor(trial.getColorChooser().getHighlightColor());
-                (new TextLayout(tmpString, monoFont, frc)).draw(g2D, 20, yCoord);
-
-                if (userEventWindow) {
-                    g2D.setColor(ppUserEventProfile.getColor());
-                    (new TextLayout(ppUserEventProfile.getUserEventName(), monoFont, frc)).draw(g2D,
-                            namePosition, yCoord);
-                } else {
-                    g2D.setColor(ppFunctionProfile.getColor());
-                    (new TextLayout(ppFunctionProfile.getFunctionName(), monoFont, frc)).draw(g2D,
-                            namePosition, yCoord);
-                }
-
-            } else if (!userEventWindow
-                    && (ppFunctionProfile.isGroupMember(trial.getHighlightedGroup()))) {
-                g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
-                (new TextLayout(tmpString, monoFont, frc)).draw(g2D, 20, yCoord);
-                //g2D.drawString(tmpString, 20, yCoord);
-                g2D.setColor(ppFunctionProfile.getColor());
-                (new TextLayout(ppFunctionProfile.getFunctionName(), monoFont, frc)).draw(g2D, namePosition,
-                        yCoord);
-            } else {
-                (new TextLayout(tmpString, monoFont, frc)).draw(g2D, 20, yCoord);
-                //g2D.drawString(tmpString, 20, yCoord);
-                if (userEventWindow) {
-                    g2D.setColor(ppUserEventProfile.getColor());
-                    (new TextLayout(ppUserEventProfile.getUserEventName(), monoFont, frc)).draw(g2D,
-                            namePosition, yCoord);
-                } else {
-                    g2D.setColor(ppFunctionProfile.getColor());
-                    (new TextLayout(ppFunctionProfile.getFunctionName(), monoFont, frc)).draw(g2D,
-                            namePosition, yCoord);
-                }
-
+                nameColor = ppFunctionProfile.getColor();
+                nameString = ppFunctionProfile.getFunctionName();
             }
 
-            if (userEventWindow) {
-                //Figure out how wide that string was for x coord reasons.
-                if (tmpXWidthCalc < (20 + namePosition + fmMonoFont.stringWidth(ppUserEventProfile.getUserEventName()))) {
-                    tmpXWidthCalc = (20 + namePosition + fmMonoFont.stringWidth(ppUserEventProfile.getUserEventName()));
-                }
-            } else {
-                //Figure out how wide that string was for x coord reasons.
-                if (tmpXWidthCalc < (20 + namePosition + fmMonoFont.stringWidth(ppFunctionProfile.getFunctionName()))) {
-                    tmpXWidthCalc = (20 + namePosition + fmMonoFont.stringWidth(ppFunctionProfile.getFunctionName()));
-                }
-            }
+            String fullLine = statString + "   " + nameString;
+            searcher.drawHighlights(g2D, xOffset, yCoord, i+3);
+
+            setStatStringColor(g2D, ppUserEventProfile, ppFunctionProfile);
+            (new TextLayout(statString, monoFont, frc)).draw(g2D, xOffset, yCoord);
+
+            g2D.setColor(nameColor);
+            (new TextLayout(nameString, monoFont, frc)).draw(g2D, namePosition, yCoord);
+
         }
         //Resize the panel if needed.
-        if ((newYPanelSize != yPanelSize) || (tmpXWidthCalc >= xPanelSize)) {
+        if ((newYPanelSize != yPanelSize) || (maxLinePixelWidth >= xPanelSize)) {
             yPanelSize = newYPanelSize + 1;
-            xPanelSize = tmpXWidthCalc + 1;
+            xPanelSize = maxLinePixelWidth + 5;
             revalidate();
         }
     }
@@ -463,8 +482,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                             clickedOnObject = ppUserEventProfile;
                             popup.show(this, evt.getX(), evt.getY());
                         } else {
-                            trial.toggleHighlightedUserEvent(
-                                    ppUserEventProfile.getUserEvent());
+                            trial.toggleHighlightedUserEvent(ppUserEventProfile.getUserEvent());
                         }
 
                     } else {
@@ -483,6 +501,11 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
+    }
+    
+    public void resetStringSize() {
+        maxLinePixelWidth = 0;
+        searcher.setSearchLines(null);
     }
 
     public void mousePressed(MouseEvent evt) {
@@ -535,5 +558,15 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     private Object clickedOnObject = null;
 
     private int lastHeaderEndPosition = 0;
+
+    private int maxLinePixelWidth = 0;
+    private Searcher searcher;
+
+    private int charWidth = 0;
+    private int xOffset = 20;
+    
+    public Searcher getSearcher() {
+        return searcher;
+    }
 
 }

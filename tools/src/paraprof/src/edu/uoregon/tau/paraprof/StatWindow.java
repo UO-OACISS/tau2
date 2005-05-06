@@ -6,19 +6,30 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
+
 import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.print.*;
-import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.paraprof.enums.*;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
-public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer {
+import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.enums.SortType;
+import edu.uoregon.tau.paraprof.enums.UserEventValueType;
+import edu.uoregon.tau.paraprof.enums.ValueType;
+import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
+import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 
-    public StatWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
-            boolean userEventWindow) {
+public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner,
+        ScrollBarController, KeyListener {
+
+    public StatWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, boolean userEventWindow) {
         this.ppTrial = trial;
         this.dataSorter = new DataSorter(trial);
         this.nodeID = nodeID;
@@ -42,6 +53,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                     + trial.getTrialIdentifier(true));
         }
 
+        addKeyListener(this);
+
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -58,6 +71,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //Code to generate the menus.
         //####################################
         JMenuBar mainMenu = new JMenuBar();
+
+        mainMenu.addKeyListener(this);
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
@@ -111,10 +126,21 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         ButtonGroup group = null;
         JRadioButtonMenuItem button = null;
 
-        sortByName = new JCheckBoxMenuItem("Sort By Name", false);
-        sortByName.addActionListener(this);
-        optionsMenu.add(sortByName);
+        showFindPanelBox = new JCheckBoxMenuItem("Show Find Panel", false);
+        showFindPanelBox.addActionListener(this);
+        optionsMenu.add(showFindPanelBox);
 
+        showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+        showPathTitleInReverse.addActionListener(this);
+        optionsMenu.add(showPathTitleInReverse);
+
+        showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+        showMetaData.addActionListener(this);
+        optionsMenu.add(showMetaData);
+
+        optionsMenu.add(new JSeparator());
+
+        
         descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
         descendingOrder.addActionListener(this);
         optionsMenu.add(descendingOrder);
@@ -152,6 +178,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         group = new ButtonGroup();
 
         if (userEventWindow) {
+            button = new JRadioButtonMenuItem("Name", false);
+            button.addActionListener(this);
+            group.add(button);
+            subMenu.add(button);
+
             button = new JRadioButtonMenuItem("Number of Samples", true);
             button.addActionListener(this);
             group.add(button);
@@ -178,6 +209,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             subMenu.add(button);
 
         } else {
+            button = new JRadioButtonMenuItem("Name", false);
+            button.addActionListener(this);
+            group.add(button);
+            subMenu.add(button);
+
             button = new JRadioButtonMenuItem("Exclusive", true);
             button.addActionListener(this);
             group.add(button);
@@ -206,13 +242,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         optionsMenu.add(subMenu);
         //End - Set the value type options.
 
-        showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-        showPathTitleInReverse.addActionListener(this);
-        optionsMenu.add(showPathTitleInReverse);
-
-        showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
-        showMetaData.addActionListener(this);
-        optionsMenu.add(showMetaData);
 
         optionsMenu.addMenuListener(this);
         //######
@@ -339,63 +368,80 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                     setVisible(false);
                     dispose();
                     ParaProf.exitParaProf(0);
-                } else if (arg.equals("Sort By Name")) {
+                } else if (arg.equals("Name")) {
+                    sortByName = true;
                     sortLocalData();
                     panel.repaint();
+                } else if (arg.equals("Show Find Panel")) {
+                    if (showFindPanelBox.isSelected())
+                        showSearchPanel(true);
+                    else
+                        showSearchPanel(false);
                 } else if (arg.equals("Descending Order")) {
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Exclusive")) {
+                    sortByName = false;
                     dataSorter.setValueType(ValueType.EXCLUSIVE);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Inclusive")) {
+                    sortByName = false;
                     dataSorter.setValueType(ValueType.INCLUSIVE);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Number of Calls")) {
+                    sortByName = false;
                     dataSorter.setValueType(ValueType.NUMCALLS);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Number of Child Calls")) {
+                    sortByName = false;
                     dataSorter.setValueType(ValueType.NUMSUBR);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Inclusive Per Call")) {
+                    sortByName = false;
                     dataSorter.setValueType(ValueType.INCLUSIVE_PER_CALL);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Exclusive Per Call")) {
+                    sortByName = false;
                     dataSorter.setValueType(ValueType.EXCLUSIVE_PER_CALL);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Number of Samples")) {
+                    sortByName = false;
                     dataSorter.setUserEventValueType(UserEventValueType.NUMSAMPLES);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Min. Value")) {
+                    sortByName = false;
                     dataSorter.setUserEventValueType(UserEventValueType.MIN);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Max. Value")) {
+                    sortByName = false;
                     dataSorter.setUserEventValueType(UserEventValueType.MAX);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Mean Value")) {
+                    sortByName = false;
                     dataSorter.setUserEventValueType(UserEventValueType.MEAN);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Standard Deviation")) {
+                    sortByName = false;
                     dataSorter.setUserEventValueType(UserEventValueType.STDDEV);
                     this.setHeader();
                     sortLocalData();
@@ -533,7 +579,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     //Updates this window's data copy.
     private void sortLocalData() {
 
-        if (sortByName.isSelected()) {
+        if (sortByName) {
             dataSorter.setSortType(SortType.NAME);
         } else {
             dataSorter.setSortType(SortType.VALUE);
@@ -546,6 +592,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         } else {
             list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
         }
+        
+        panel.resetStringSize();
     }
 
     public Vector getData() {
@@ -564,11 +612,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         return jScrollpane.getViewport().getViewRect();
     }
 
-    public void setVerticalScrollBarPosition(int position) {
-        JScrollBar scrollBar = jScrollpane.getVerticalScrollBar();
-        scrollBar.setValue(position);
-    }
-
     //######
     //Panel header.
     //######
@@ -582,6 +625,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
+            jTextArea.addKeyListener(this);
             PreferencesWindow p = ppTrial.getPreferencesWindow();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
@@ -631,15 +675,19 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     private JMenu windowsMenu = null;
     private JMenu unitsSubMenu = null;
 
-    private JCheckBoxMenuItem sortByName = null;
+    private boolean sortByName;
+    
     private JCheckBoxMenuItem descendingOrder = null;
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
+    private JCheckBoxMenuItem showFindPanelBox;
 
     private JScrollPane jScrollpane = null;
     private StatWindowPanel panel = null;
 
     Vector list = new Vector();
+
+    private SearchPanel searchPanel;
 
     //    private int order = 0; //0: descending order,1: ascending order.
     //private int valueType = 2; //2-exclusive,4-inclusive,6-number of
@@ -649,4 +697,60 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     //private ValueType valueType;
     //private UserEventValueType userEventValueType;
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+
+    public void showSearchPanel(boolean show) {
+        if (show) {
+            if (searchPanel == null) {
+                searchPanel = new SearchPanel(this, panel.getSearcher());
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.insets = new Insets(5, 5, 5, 5);
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                gbc.anchor = GridBagConstraints.CENTER;
+                gbc.weightx = 0.10;
+                gbc.weighty = 0.01;
+                addCompItem(searchPanel, gbc, 0, 3, 2, 1);
+                searchPanel.setFocus();
+            }
+        } else {
+            getContentPane().remove(searchPanel);
+            searchPanel = null;
+        }
+        showFindPanelBox.setSelected(show);
+        validate();
+    }
+
+    public void setVerticalScrollBarPosition(int position) {
+        JScrollBar scrollBar = jScrollpane.getVerticalScrollBar();
+        scrollBar.setValue(position);
+    }
+
+    public void setHorizontalScrollBarPosition(int position) {
+        JScrollBar scrollBar = jScrollpane.getHorizontalScrollBar();
+        scrollBar.setValue(position);
+    }
+
+    public Dimension getThisViewportSize() {
+        return this.getViewportSize();
+    }
+
+    public void keyPressed(KeyEvent e) {
+        int onmask = KeyEvent.CTRL_DOWN_MASK;
+        int offmask = 0;
+        if ((e.getModifiersEx() & (onmask | offmask)) == onmask) {
+            if (e.getKeyCode() == KeyEvent.VK_F) {
+                showSearchPanel(true);
+            }
+
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void keyTyped(KeyEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
 }

@@ -3,46 +3,58 @@
  * ThreadDataWindowPanel.java
  * 
  * Title: ParaProf 
- * Author: Robert Bell 
+ * Author: Robert Bell, Alan Morris 
  * Description:
  */
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
-import java.awt.print.*;
-import javax.swing.*;
-import java.awt.geom.*;
-import java.text.*;
 import java.awt.font.*;
-import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.paraprof.enums.*;
+import java.awt.geom.AffineTransform;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
-public class ThreadDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
-        ParaProfImageInterface {
+import javax.swing.*;
 
+import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.enums.ValueType;
+import edu.uoregon.tau.paraprof.interfaces.Searchable;
+
+public class ThreadDataWindowPanel extends JPanel implements ActionListener, 
+        Printable, ParaProfImageInterface, MouseListener {
     public ThreadDataWindowPanel(ParaProfTrial trial, int nodeID, int contextID, int threadID,
             ThreadDataWindow tDWindow) {
         setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
         setBackground(Color.white);
 
-        //Add this object as a mouse listener.
-        addMouseListener(this);
+        searcher = new Searcher(this, tDWindow);
+        addMouseListener(searcher);
+        addMouseMotionListener(searcher);
 
+        
+        addMouseListener(this);
+        
         this.trial = trial;
         this.window = tDWindow;
         barLength = baseBarLength;
+
+        setAutoscrolls(true);
 
         if (nodeID == -1) {
             thread = trial.getDataSource().getMeanData();
         } else {
             thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
         }
-
-        //if (windowType == 1)
-        //thread = trial.getNCT().getThread(nodeID, contextID, threadID);
 
         //Add items to the popu menu.
         JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
@@ -58,7 +70,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         popup.add(resetColorItem);
 
         //Schedule a repaint of this panel.
-        this.repaint();
+        repaint();
     }
 
     public void paintComponent(Graphics g) {
@@ -88,10 +100,21 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     }
 
     public void resetStringSize() {
-        maxRightSizeStringPixelSize = 0;
+        maxRightSideStringPixelWidth = 0;
+        searcher.setSearchLines(null);
     }
-    
-    
+
+    private void setSearchLines() {
+        if (searcher.getSearchLines() == null && list != null) {
+            Vector searchLines = new Vector();
+            for (int i = 0; i < list.size(); i++) {
+                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
+                searchLines.add(ppFunctionProfile.getFunctionName());
+            }
+            searcher.setSearchLines(searchLines);
+        }
+    }
+
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         list = window.getData();
 
@@ -99,7 +122,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         //Some declarations.
         //######
         double value = 0.0;
-        double maxValue = 0.0;
         int stringWidth = 0;
         int yCoord = 0;
         int barXCoord = barLength + textOffset;
@@ -122,30 +144,31 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         barSpacing = trial.getPreferencesWindow().getBarSpacing();
         barHeight = trial.getPreferencesWindow().getBarHeight();
 
+        searcher.setLineHeight(barSpacing);
+        
         //Obtain the font and its metrics.
-        Font font = new Font(trial.getPreferencesWindow().getParaProfFont(), trial.getPreferencesWindow().getFontStyle(),
-                barHeight);
+        Font font = new Font(trial.getPreferencesWindow().getParaProfFont(),
+                trial.getPreferencesWindow().getFontStyle(), barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
-        
-        if (maxRightSizeStringPixelSize == 0) {
+        if (maxRightSideStringPixelWidth == 0) {
             for (int i = 0; i < list.size(); i++) {
                 ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
-                maxRightSizeStringPixelSize = Math.max(maxRightSizeStringPixelSize, fmFont.stringWidth(ppFunctionProfile.getFunctionName() + 5));
+                maxRightSideStringPixelWidth = Math.max(maxRightSideStringPixelWidth,
+                        fmFont.stringWidth(ppFunctionProfile.getFunctionName() + 5));
             }
         }
-        
+
+        setSearchLines();
+
         //######
         //Set max values.
         //######
+        double maxValue = window.getDataSorter().getValueType().getThreadMaxValue(
+                window.getPPThread().getThread(), window.getDataSorter().getSelectedMetricID());
 
-        //maxValue = ParaProfUtils.getMaxThreadValue(thread, window.getValueType(), window.isPercent(), trial);
-
-        maxValue = window.getDataSorter().getValueType().getThreadMaxValue(window.getPPThread().getThread(), window.getDataSorter().getSelectedMetricID());
-//        maxValue = window.getPPThread().getMaxValue(window.getValueType(), window.isPercent());
-
-        
+        // this is crap, this is not the correct way to determine the largest string
         if (window.isPercent()) {
             stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0, maxValue, 6) + "%");
             barXCoord = barXCoord + stringWidth;
@@ -165,7 +188,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         Rectangle clipRect = null;
         Rectangle viewRect = null;
 
-        if (!fullWindow) {
+        if (!fullWindow) { // determine clipping
             if (toScreen) {
                 clipRect = g2D.getClipBounds();
                 yBeg = (int) clipRect.getY();
@@ -192,7 +215,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
             if (toScreen)
                 yCoord = yCoord + (startElement * barSpacing);
-        } else {
+        } else { // no clipping, draw all elements
             startElement = 0;
             endElement = ((list.size()) - 1);
         }
@@ -200,8 +223,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         //At this point we can determine the size this panel will
         //require. If we need to resize, don't do any more drawing,
         //just call revalidate. Make sure we check the instruction value as
-        // we only want to
-        //revalidate if we are drawing to the screen.
+        // we only want to revalidate if we are drawing to the screen.
         if (resizePanel(fmFont, barXCoord, list, startElement, endElement) && toScreen) {
             this.revalidate();
             return;
@@ -233,32 +255,34 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             lastHeaderEndPosition = yCoord;
         }
 
+        searcher.setVisibleLines(startElement, endElement);
+        searcher.setG2d(g2D);
+        searcher.setXOffset(barXCoord + 5);
+
         // Iterate through each function and draw it's bar
         for (int i = startElement; i <= endElement; i++) {
             ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
 
             //value = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), window.isPercent());
             value = ppFunctionProfile.getValue();
-            
+
             yCoord = yCoord + (barSpacing);
-            drawBar(g2D, fmFont, value, maxValue, barXCoord, yCoord, barHeight, ppFunctionProfile, toScreen);
+            drawBar(g2D, fmFont, maxValue, barXCoord, yCoord, barHeight, ppFunctionProfile, i, toScreen);
         }
+
     }
 
-    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, int barXCoord,
-            int yCoord, int barHeight, PPFunctionProfile ppFunctionProfile, boolean toScreen) {
-        int xLength = 0;
-        double d = 0.0;
-        String s = null;
-        int stringWidth = 0;
-        int stringStart = 0;
+    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double maxValue, int barXCoord, int yCoord,
+            int barHeight, PPFunctionProfile ppFunctionProfile, int line, boolean toScreen) {
 
-        Function f = ppFunctionProfile.getFunction();
+        double value = ppFunctionProfile.getValue();
+        Function function = ppFunctionProfile.getFunction();
         String functionName = ppFunctionProfile.getFunctionName();
+        String originalFunctionName = functionName;
         boolean groupMember = ppFunctionProfile.isGroupMember(trial.getHighlightedGroup());
 
-        d = (value / maxValue);
-        xLength = (int) (d * barLength);
+        double d = (value / maxValue);
+        int xLength = (int) (d * barLength);
         if (xLength == 0)
             xLength = 1;
 
@@ -266,7 +290,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             g2D.setColor(ppFunctionProfile.getColor());
             g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 
-            if (f == (trial.getHighlightedFunction())) {
+            if (function == (trial.getHighlightedFunction())) {
                 g2D.setColor(trial.getColorChooser().getHighlightColor());
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
                 g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
@@ -279,7 +303,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
             }
         } else {
-            if (f == (trial.getHighlightedFunction()))
+            if (function == (trial.getHighlightedFunction()))
                 g2D.setColor(trial.getColorChooser().getHighlightColor());
             else if (groupMember)
                 g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
@@ -291,38 +315,44 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
         //Draw the value next to the bar.
         g2D.setColor(Color.black);
-        //Do not want to put a percent sign after the bar if we are not
-        // exclusive or inclusive.
+        //Do not want to put a percent sign after the bar if we are not doing exclusive or inclusive.
+
+        String leftString;
         
         if (window.getDataSorter().getValueType() == ValueType.EXCLUSIVE_PERCENT
                 || window.getDataSorter().getValueType() == ValueType.INCLUSIVE_PERCENT) {
-            //s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
-            //s = (UtilFncs.adjustDoublePresision(value, 4)) + "%";
-            s = UtilFncs.getOutputString(0, value, 6) + "%";
+            leftString = UtilFncs.getOutputString(0, value, 6) + "%";
 
-        } else
-            s = UtilFncs.getOutputString(window.units(), value, ParaProf.defaultNumberPrecision);
-        stringWidth = fmFont.stringWidth(s);
-        //Now draw the percent value to the left of the bar.
-        stringStart = barXCoord - xLength - stringWidth - 5;
-        g2D.drawString(s, stringStart, yCoord);
+        } else {
+            leftString = UtilFncs.getOutputString(window.units(), value, ParaProf.defaultNumberPrecision);
+        }
 
-        g2D.drawString(functionName, (barXCoord + 5), yCoord);
+        int stringWidth = fmFont.stringWidth(leftString);
+        int stringStart = barXCoord - xLength - stringWidth - 5;
 
-        stringWidth = fmFont.stringWidth(functionName);
-        //Update the drawing coordinates if we are drawing to the screen.
-        if (toScreen)
-            ppFunctionProfile.setDrawCoords(stringStart, (barXCoord + 5 + stringWidth), (yCoord - barHeight),
-                    yCoord);
+        g2D.drawString(leftString, stringStart, yCoord);
+
+        int x = (barXCoord + 5);
+        int y = yCoord;
+
+        searcher.drawHighlights(g2D, x, y, line);
+   
+        // now draw the actual text
+        g2D.setPaint(Color.BLACK);
+        g2D.drawString(functionName, x, y);
     }
+    
+    
+   
+        
 
     public void setBarLength(int barLength) {
-        this.barLength = Math.max(1,barLength);
+        this.barLength = Math.max(1, barLength);
         this.repaint();
     }
 
     public void actionPerformed(ActionEvent evt) {
-
+        // handle the popup menu's items
         try {
             Object EventSrc = evt.getSource();
             if (EventSrc instanceof JMenuItem) {
@@ -375,11 +405,11 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
             if (list != null && index < list.size()) {
                 ppFunctionProfile = (PPFunctionProfile) list.elementAt(index);
-                if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) { // right click
                     clickedOnObject = ppFunctionProfile.getFunction();
                     popup.show(this, evt.getX(), evt.getY());
                     return;
-                } else {
+                } else { // not right click
                     trial.toggleHighlightedFunction(ppFunctionProfile.getFunction());
                 }
             }
@@ -388,8 +418,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         }
     }
 
-    public void mousePressed(MouseEvent evt) {
-    }
 
     public void mouseReleased(MouseEvent evt) {
     }
@@ -398,6 +426,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     }
 
     public void mouseExited(MouseEvent evt) {
+    }
+
+    public void mouseMoved(MouseEvent e) {
+    }
+
+    public void mouseDragged(MouseEvent evt) {
+
     }
 
     public Dimension getImageSize(boolean fullScreen, boolean header) {
@@ -421,13 +456,14 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
         for (int i = startElement; i <= endElement; i++) {
             ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
-            maxRightSizeStringPixelSize = Math.max(maxRightSizeStringPixelSize, fmFont.stringWidth(ppFunctionProfile.getFunctionName() + 5));
+            maxRightSideStringPixelWidth = Math.max(maxRightSideStringPixelWidth,
+                    fmFont.stringWidth(ppFunctionProfile.getFunctionName() + 5));
         }
 
-        width = barXCoord + 5 + maxRightSizeStringPixelSize;
+        width = barXCoord + 5 + maxRightSideStringPixelWidth;
         newXPanelSize = Math.max(newXPanelSize, width);
 
-        newYPanelSize = barSpacing + ((list.size()-1 ) * barSpacing);
+        newYPanelSize = barSpacing + ((list.size() - 1) * barSpacing);
 
         if ((newYPanelSize != yPanelSize) || (newXPanelSize != xPanelSize)) {
             yPanelSize = newYPanelSize;
@@ -442,6 +478,10 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         return new Dimension(xPanelSize, (yPanelSize + 10));
     }
 
+   
+
+  
+
     //Instance data.
     private int xPanelSize = 640;
     private int yPanelSize = 480;
@@ -452,17 +492,30 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     private int barLength = 0;
     private int textOffset = 60;
 
-    
-    private int maxRightSizeStringPixelSize = 0;
-    
+    private int maxRightSideStringPixelWidth = 0;
+
     private ParaProfTrial trial = null;
     private ThreadDataWindow window = null;
     private edu.uoregon.tau.dms.dss.Thread thread = null;
-    private Vector list = null;
+    private Vector list = new Vector();
 
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
 
     private int lastHeaderEndPosition = 0;
+    
+
+    private Searcher searcher;
+
+    public Searcher getSearcher() {
+        return searcher;
+    }
+
+    public void mousePressed(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    
 
 }

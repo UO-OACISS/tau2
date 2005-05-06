@@ -18,16 +18,23 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
+
 import javax.swing.*;
 import javax.swing.event.*;
-import java.awt.print.*;
-import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.paraprof.enums.*;
 
-public class ThreadDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
+import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.enums.SortType;
+import edu.uoregon.tau.paraprof.enums.ValueType;
+import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
+import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
+
+public class ThreadDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener,
+        KeyListener, SearchableOwner, ScrollBarController {
 
     public ThreadDataWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID) {
 
@@ -35,12 +42,6 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         dataSorter = new DataSorter(trial);
         dataSorter.setSelectedMetricID(trial.getDefaultMetricID());
         dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
-
-        // for derived metrics, default to values, percentages usually don't mean much
-//        if (trial.isDerivedMetric()) {
-//            percent = false;
-//            dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
-//        }
 
         if (nodeID == -1) { // if this is a 'mean' window
             edu.uoregon.tau.dms.dss.Thread thread;
@@ -69,46 +70,44 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             }
         });
 
-        //Set the help window text if required.
+        //Set the help window text if required.new JPanel()
         if (ParaProf.helpWindow.isVisible()) {
             this.help(false);
         }
 
         setupMenus();
 
-        //####################################
-        //Create and add the components.
-        //####################################
-        //Setting up the layout system for the main window.
         contentPane = getContentPane();
-        gbl = new GridBagLayout();
-        contentPane.setLayout(gbl);
+        contentPane.setLayout(new GridBagLayout());
         gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(5, 5, 0, 5);
 
         panel = new ThreadDataWindowPanel(trial, nodeID, contextID, threadID, this);
-        sp = new JScrollPane(panel);
-        JScrollBar vScollBar = sp.getVerticalScrollBar();
-        vScollBar.setUnitIncrement(35);
+        this.addKeyListener(this);
+
+        jScrollPane = new JScrollPane(panel);
+
+        jScrollPane.setAutoscrolls(false);
+        JScrollBar vScrollBar = jScrollPane.getVerticalScrollBar();
+        vScrollBar.setUnitIncrement(35);
 
         this.setHeader();
 
+        requestFocus();
 
         barLengthSlider.setPaintTicks(true);
         barLengthSlider.setMajorTickSpacing(400);
         barLengthSlider.setMinorTickSpacing(50);
         barLengthSlider.setPaintLabels(true);
-        barLengthSlider.setSnapToTicks(true);
+        barLengthSlider.setSnapToTicks(false);
         barLengthSlider.addChangeListener(this);
-
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0.95;
         gbc.weighty = 0.98;
-        addCompItem(sp, gbc, 0, 0, 1, 1);
+        addCompItem(jScrollPane, gbc, 0, 1, 2, 1);
 
-        //Sort the local data.
         sortLocalData();
 
         ParaProf.incrementNumWindows();
@@ -160,6 +159,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
+        mainMenu.addKeyListener(this);
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
@@ -204,6 +204,26 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             }
         };
 
+        
+        box = new JCheckBoxMenuItem("Show Width Slider", false);
+        box.addActionListener(this);
+        optionsMenu.add(box);
+
+        showFindPanelBox = new JCheckBoxMenuItem("Show Find Panel", false);
+        showFindPanelBox.addActionListener(this);
+        optionsMenu.add(showFindPanelBox);
+
+        showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+        showPathTitleInReverse.addActionListener(this);
+        optionsMenu.add(showPathTitleInReverse);
+
+        showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+        showMetaData.addActionListener(this);
+        optionsMenu.add(showMetaData);
+        
+        
+        optionsMenu.add(new JSeparator());
+        
         sortByName = new JCheckBoxMenuItem("Sort By Name", false);
         sortByName.addActionListener(this);
         optionsMenu.add(sortByName);
@@ -249,8 +269,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
                 || dataSorter.getValueType() == ValueType.EXCLUSIVE_PERCENT, group));
         subMenu.add(createMetricMenu(ValueType.INCLUSIVE, dataSorter.getValueType() == ValueType.INCLUSIVE
                 || dataSorter.getValueType() == ValueType.INCLUSIVE_PERCENT, group));
-        subMenu.add(createMetricMenu(ValueType.INCLUSIVE_PER_CALL, dataSorter.getValueType() == ValueType.INCLUSIVE_PER_CALL, group));
-        subMenu.add(createMetricMenu(ValueType.EXCLUSIVE_PER_CALL, dataSorter.getValueType() == ValueType.EXCLUSIVE_PER_CALL, group));
+        subMenu.add(createMetricMenu(ValueType.INCLUSIVE_PER_CALL,
+                dataSorter.getValueType() == ValueType.INCLUSIVE_PER_CALL, group));
+        subMenu.add(createMetricMenu(ValueType.EXCLUSIVE_PER_CALL,
+                dataSorter.getValueType() == ValueType.EXCLUSIVE_PER_CALL, group));
 
         button = new JRadioButtonMenuItem("Number of Calls", dataSorter.getValueType() == ValueType.NUMCALLS);
         button.addActionListener(new ActionListener() {
@@ -277,21 +299,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 
         optionsMenu.add(subMenu);
 
-        box = new JCheckBoxMenuItem("Show Width Slider", false);
-        box.addActionListener(this);
-        optionsMenu.add(box);
-
-        showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-        showPathTitleInReverse.addActionListener(this);
-        optionsMenu.add(showPathTitleInReverse);
-
-        showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
-        showMetaData.addActionListener(this);
-        optionsMenu.add(showMetaData);
+     
 
         optionsMenu.addMenuListener(this);
 
-        
         //######
         //Windows menu
         //######
@@ -455,16 +466,23 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
                     this.setHeader();
                     panel.repaint();
                 } else if (arg.equals("Show Width Slider")) {
-                    if (((JCheckBoxMenuItem) optionsMenu.getItem(5)).isSelected())
-                        displaySliders(true);
+                    if (((JCheckBoxMenuItem) EventSrc).isSelected())
+                        showWidthSlider(true);
                     else
-                        displaySliders(false);
+                        showWidthSlider(false);
+                } else if (arg.equals("Show Find Panel")) {
+                    if (showFindPanelBox.isSelected())
+                        showSearchPanel(true);
+                    else
+                        showSearchPanel(false);
+
                 } else if (arg.equals("Show Path Title in Reverse")) {
                     if (ppThread.getNodeID() == -1)
                         this.setTitle("Mean Data Window: "
                                 + ppTrial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
                     else
-                        this.setTitle("n,c,t, " + ppThread.getNodeID() + "," + ppThread.getContextID() + "," + ppThread.getThreadID() + " - "
+                        this.setTitle("n,c,t, " + ppThread.getNodeID() + "," + ppThread.getContextID() + ","
+                                + ppThread.getThreadID() + " - "
                                 + ppTrial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
                 } else if (arg.equals("Show Meta Data in Panel"))
                     this.setHeader();
@@ -475,8 +493,8 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
                 } else if (arg.equals("Show User Event Ledger")) {
                     (new LedgerWindow(ppTrial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, this.getDataSorter(),
-                            2);
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1,
+                            this.getDataSorter(), 2);
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
@@ -498,7 +516,6 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
-
     }
 
     public void menuSelected(MenuEvent evt) {
@@ -633,6 +650,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         } else {
             dataSorter.setSortType(SortType.VALUE);
         }
+        
 
         list = ppThread.getSortedFunctionProfiles(this.dataSorter, false);
 
@@ -642,7 +660,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         }
 
         panel.resetStringSize();
-        
+
     }
 
     public Vector getData() {
@@ -668,18 +686,24 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     }
 
     public Dimension getViewportSize() {
-        return sp.getViewport().getExtentSize();
+        return jScrollPane.getViewport().getExtentSize();
     }
 
     public Rectangle getViewRect() {
-        return sp.getViewport().getViewRect();
+        return jScrollPane.getViewport().getViewRect();
     }
 
     public void setVerticalScrollBarPosition(int position) {
-        JScrollBar scrollBar = sp.getVerticalScrollBar();
+        JScrollBar scrollBar = jScrollPane.getVerticalScrollBar();
         scrollBar.setValue(position);
     }
 
+    public void setHorizontalScrollBarPosition(int position) {
+        JScrollBar scrollBar = jScrollPane.getHorizontalScrollBar();
+        scrollBar.setValue(position);
+    }
+
+    
     //######
     //Panel header.
     //######
@@ -696,31 +720,53 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             PreferencesWindow p = ppTrial.getPreferencesWindow();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
-            sp.setColumnHeaderView(jTextArea);
+            jScrollPane.setColumnHeaderView(jTextArea);
+
+            jTextArea.addKeyListener(this);
         } else
-            sp.setColumnHeaderView(null);
+            jScrollPane.setColumnHeaderView(null);
     }
 
     public String getHeaderString() {
         if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
                 || showValuesAsPercent.isSelected())
-            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Value Type: "
-                    + dataSorter.getValueType() + "\n";
+            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n"
+                    + "Value Type: " + dataSorter.getValueType() + "\n";
         else
-            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Value Type: "
-                    + dataSorter.getValueType() + "\n" + "Units: "
-                    + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
+            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n"
+                    + "Value Type: " + dataSorter.getValueType() + "\n" + "Units: "
+                    + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric())
+                    + "\n";
     }
 
-   
+    public void showSearchPanel(boolean show) {
+        if (show) {
+            if (searchPanel == null) {
+                searchPanel = new SearchPanel(this, panel.getSearcher());
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.insets = new Insets(5, 5, 5, 5);
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                gbc.anchor = GridBagConstraints.CENTER;
+                gbc.weightx = 0.10;
+                gbc.weighty = 0.01;
+                addCompItem(searchPanel, gbc, 0, 3, 2, 1);
+                searchPanel.setFocus();
+            }
+        } else {
+            getContentPane().remove(searchPanel);
+            searchPanel = null;
+        }
+        
+        showFindPanelBox.setSelected(show);
+        validate();
+    }
 
-    private void displaySliders(boolean displaySliders) {
+    
+    private void showWidthSlider(boolean displaySliders) {
         GridBagConstraints gbc = new GridBagConstraints();
         if (displaySliders) {
-            getContentPane().remove(sp);
 
-
-            gbc.insets = new Insets(5,5,5,5);
+            gbc.insets = new Insets(5, 5, 5, 5);
             gbc.fill = GridBagConstraints.NONE;
             gbc.anchor = GridBagConstraints.EAST;
             gbc.weightx = 0.10;
@@ -733,25 +779,12 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             gbc.weighty = 0.01;
             addCompItem(barLengthSlider, gbc, 1, 0, 1, 1);
 
-            gbc.insets = new Insets(0,0,0,0);
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 1.0;
-            gbc.weighty = 0.99;
-            addCompItem(sp, gbc, 0, 1, 2, 1);
         } else {
             getContentPane().remove(barLengthLabel);
             getContentPane().remove(barLengthSlider);
-            getContentPane().remove(sp);
-
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 100;
-            gbc.weighty = 100;
-            addCompItem(sp, gbc, 0, 0, 1, 1);
         }
 
-        //Now call validate so that these componant changes are displayed.
+        //Now call validate so that these component changes are displayed.
         validate();
     }
 
@@ -798,28 +831,54 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     private JCheckBoxMenuItem showValuesAsPercent = null;
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
-
+    private JCheckBoxMenuItem showFindPanelBox;
+    
     private JLabel barLengthLabel = new JLabel("Bar Width");
     private JSlider barLengthSlider = new JSlider(0, 2000, 250);
 
-    
     private Container contentPane = null;
     private GridBagLayout gbl = null;
     private GridBagConstraints gbc = null;
 
-    private JScrollPane sp = null;
-    private ThreadDataWindowPanel panel = null;
+    private JScrollPane jScrollPane;
+    private ThreadDataWindowPanel panel;
 
-    private Vector list = null;
+    private Vector list = new Vector();
 
     //private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
 
     private boolean percent;
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
 
+    private SearchPanel searchPanel;
+
     // for derived metrics the exclusive could be higher than the inclusive, so the percent
     // will be higher than 100.  This may confuse users so we disable showing percentages if one
     // goes over 100.
     private boolean exclusivePercentOver100 = false;
 
+    public JScrollPane getJScrollPane() {
+        return jScrollPane;
+    }
+
+    public void keyPressed(KeyEvent e) {
+        int onmask = KeyEvent.CTRL_DOWN_MASK;
+        int offmask = 0;
+        if ((e.getModifiersEx() & (onmask | offmask)) == onmask) {
+            if (e.getKeyCode() == KeyEvent.VK_F) {
+                showSearchPanel(true);
+            }
+
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {
+    }
+
+    public void keyTyped(KeyEvent e) {
+    }
+
+    public Dimension getThisViewportSize() {
+        return getViewportSize();
+    }
 }

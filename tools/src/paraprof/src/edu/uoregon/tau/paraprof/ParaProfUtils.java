@@ -1,11 +1,15 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.print.*;
 import java.awt.*;
-import edu.uoregon.tau.dms.dss.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.event.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionListener;
+import java.awt.print.*;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JMenu;
+import javax.swing.JRadioButtonMenuItem;
 
 public class ParaProfUtils {
 
@@ -108,6 +112,14 @@ public class ParaProfUtils {
 
     }
 
+    public static void setClipboardContents(String contents, ClipboardOwner owner) {
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        StringSelection st = new StringSelection(contents);
+        Clipboard cp = tk.getSystemSelection();
+        cp.setContents(st, owner);
+        cp = tk.getSystemClipboard();
+        cp.setContents(st, owner);   
+    }
     public static void scaleForPrint(Graphics g, PageFormat pageFormat, int width, int height) {
         double pageWidth = pageFormat.getImageableWidth();
         double pageHeight = pageFormat.getImageableHeight();

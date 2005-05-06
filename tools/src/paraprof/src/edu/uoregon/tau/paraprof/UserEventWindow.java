@@ -265,7 +265,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         barLengthSlider.setMajorTickSpacing(400);
         barLengthSlider.setMinorTickSpacing(50);
         barLengthSlider.setPaintLabels(true);
-        barLengthSlider.setSnapToTicks(true);
+        barLengthSlider.setSnapToTicks(false);
         barLengthSlider.addChangeListener(this);
         //######
         //End - Slider setup.

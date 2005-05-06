@@ -13,9 +13,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.18 2005/04/20 22:34:00 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.19 2005/05/06 01:00:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -71,7 +71,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         barLengthSlider.setMajorTickSpacing(400);
         barLengthSlider.setMinorTickSpacing(50);
         barLengthSlider.setPaintLabels(true);
-        barLengthSlider.setSnapToTicks(true);
+        barLengthSlider.setSnapToTicks(false);
         barLengthSlider.addChangeListener(this);
 
         // add the scrollpane
@@ -164,6 +164,20 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         ButtonGroup group = null;
         JRadioButtonMenuItem button = null;
 
+        box = new JCheckBoxMenuItem("Show Width Slider", false);
+        box.addActionListener(this);
+        optionsMenu.add(box);
+
+        showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+        showPathTitleInReverse.addActionListener(this);
+        optionsMenu.add(showPathTitleInReverse);
+
+        showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+        showMetaData.addActionListener(this);
+        optionsMenu.add(showMetaData);
+
+        optionsMenu.add(new JSeparator());
+        
         ActionListener sortData = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 sortLocalData();
@@ -245,17 +259,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         optionsMenu.add(subMenu);
 
 
-        box = new JCheckBoxMenuItem("Show Width Slider", false);
-        box.addActionListener(this);
-        optionsMenu.add(box);
-
-        showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-        showPathTitleInReverse.addActionListener(this);
-        optionsMenu.add(showPathTitleInReverse);
-
-        showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
-        showMetaData.addActionListener(this);
-        optionsMenu.add(showMetaData);
 
         optionsMenu.addMenuListener(this);
 
@@ -352,11 +355,10 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                     this.setHeader();
                     panel.repaint();
                 } else if (arg.equals("Show Width Slider")) {
-                    if (((JCheckBoxMenuItem) optionsMenu.getItem(5)).isSelected())
-                        displaySliders(true);
+                    if (((JCheckBoxMenuItem) EventSrc).isSelected())
+                        showWidthSlider(true);
                     else
-                        displaySliders(false);
-
+                        showWidthSlider(false);
                 } else if (arg.equals("Show ParaProf Manager")) {
                     (new ParaProfManagerWindow()).show();
                 } else if (arg.equals("Show Path Title in Reverse"))
@@ -602,7 +604,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     }
 
 
-    private void displaySliders(boolean displaySliders) {
+    private void showWidthSlider(boolean displaySliders) {
         GridBagConstraints gbc = new GridBagConstraints();
         if (displaySliders) {
             getContentPane().remove(sp);

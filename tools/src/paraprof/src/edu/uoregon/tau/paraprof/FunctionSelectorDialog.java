@@ -18,9 +18,9 @@ import javax.swing.*;
  *   
  * TODO: nothing
  *
- * <P>CVS $Id: FunctionSelectorDialog.java,v 1.3 2005/04/19 23:25:19 amorris Exp $</P>
+ * <P>CVS $Id: FunctionSelectorDialog.java,v 1.4 2005/05/06 01:00:01 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class FunctionSelectorDialog extends JDialog {
 
@@ -123,8 +123,8 @@ public class FunctionSelectorDialog extends JDialog {
         
         
         JPanel buttonPanel = new JPanel();
-        buttonPanel.add(cancelButton);
         buttonPanel.add(okButton);
+        buttonPanel.add(cancelButton);
         ParaProfUtils.addCompItem(panel, sp, gbc, 0, 0, 1, 1);
 
         gbc.fill = GridBagConstraints.NONE;

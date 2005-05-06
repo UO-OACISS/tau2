@@ -62,6 +62,21 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         //Options menu.
         optionsMenu = new JMenu("Options");
 
+        slidersCheckBox = new JCheckBoxMenuItem("Show Width Slider", false);
+        slidersCheckBox.addActionListener(this);
+        optionsMenu.add(slidersCheckBox);
+
+
+        pathTitleCheckBox = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+        pathTitleCheckBox.addActionListener(this);
+        optionsMenu.add(pathTitleCheckBox);
+
+        metaDataCheckBox = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+        metaDataCheckBox.addActionListener(this);
+        optionsMenu.add(metaDataCheckBox);
+
+        optionsMenu.add(new JSeparator());
+
         nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
         nameCheckBox.addActionListener(this);
         optionsMenu.add(nameCheckBox);
@@ -82,17 +97,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         stackBarsCheckBox.addActionListener(this);
         optionsMenu.add(stackBarsCheckBox);
 
-        slidersCheckBox = new JCheckBoxMenuItem("Show Width Slider", false);
-        slidersCheckBox.addActionListener(this);
-        optionsMenu.add(slidersCheckBox);
 
-        pathTitleCheckBox = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-        pathTitleCheckBox.addActionListener(this);
-        optionsMenu.add(pathTitleCheckBox);
-
-        metaDataCheckBox = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
-        metaDataCheckBox.addActionListener(this);
-        optionsMenu.add(metaDataCheckBox);
 
         //Windows menu
         windowsMenu = new JMenu("Windows");
@@ -220,7 +225,6 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         barLengthSlider.setMajorTickSpacing(400);
         barLengthSlider.setMinorTickSpacing(50);
         barLengthSlider.setPaintLabels(true);
-        barLengthSlider.setSnapToTicks(true);
         barLengthSlider.addChangeListener(this);
         //End - Slider setup.
 

@@ -129,11 +129,7 @@ public class PPFunctionProfile implements Comparable {
         return dataSorter;
     }
 
-    //    public double getComparisonValue() {
-    //        return dataSorter.getValueType().getValue(
-    //        
-    //    }
-    //    
+    
     public double getValue() {
         return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID());
     }
@@ -181,114 +177,7 @@ public class PPFunctionProfile implements Comparable {
         }
     }
 
-    /*
-     * (0) name 
-     * (2) exclusive 
-     * (4) inclusive 
-     * (6) number of calls 
-     * (8) number of subroutines 
-     * (10) per call value 
-     * (12) userevent number value 
-     * (14) userevent min value 
-     * (16) userevent max value 
-     * (18) userevent mean value
-     * (20) mean exclusive 
-     * (22) mean inclusive 
-     * (24) mean number of calls 
-     * (26) mean number of subroutines 
-     * (28) mean per call value 
-     * (30) n,c,t.
-     * 
-     * The even values represent these items sorted in descending order, the odd
-     * values in ascending order. Thus (0) is name descending, and (1) is name
-     * ascending. Set sortType to the integer value required.
-     */
-
-    //    public int compareTo(Object inObject) {
-    //        switch (sortType) {
-    //        case 0:
-    //            return (((PPFunctionProfile) inObject).getFunctionName()).compareTo(this.getFunctionName());
-    //        case 1:
-    //            return (this.getFunctionName()).compareTo(((PPFunctionProfile) inObject).getFunctionName());
-    //        case 2:
-    //            return compareToHelper(((PPFunctionProfile) inObject).getExclusiveValue(), this.getExclusiveValue());
-    //        case 3:
-    //            return compareToHelper(this.getExclusiveValue(), ((PPFunctionProfile) inObject).getExclusiveValue());
-    //        case 4:
-    //            return compareToHelper(((PPFunctionProfile) inObject).getInclusiveValue(), this.getInclusiveValue());
-    //        case 5:
-    //            return compareToHelper(this.getInclusiveValue(), ((PPFunctionProfile) inObject).getInclusiveValue());
-    //        case 6:
-    //            return compareToHelper(((PPFunctionProfile) inObject).getNumberOfCalls(), this.getNumberOfCalls());
-    //        case 7:
-    //            return compareToHelper(this.getNumberOfCalls(), ((PPFunctionProfile) inObject).getNumberOfCalls());
-    //        case 8:
-    //            return compareToHelper(((PPFunctionProfile) inObject).getNumberOfSubRoutines(),
-    //                    this.getNumberOfSubRoutines());
-    //        case 9:
-    //            return compareToHelper(this.getNumberOfSubRoutines(),
-    //                    ((PPFunctionProfile) inObject).getNumberOfSubRoutines());
-    //        case 10:
-    //            return compareToHelper(((PPFunctionProfile) inObject).getInclusivePerCall(),
-    //                    this.getInclusivePerCall());
-    //        case 11:
-    //            return compareToHelper(this.getInclusivePerCall(),
-    //                    ((PPFunctionProfile) inObject).getInclusivePerCall());
-    //        case 20:
-    //            return compareToHelper(
-    //                    ((PPFunctionProfile) inObject).meanProfile.getExclusive(trial.getSelectedMetricID()),
-    //                    this.meanProfile.getExclusive(dataSorter.getSelectedMetricID()), this,
-    //                    (PPFunctionProfile) inObject);
-    //        case 21:
-    //            return compareToHelper(this.meanProfile.getExclusive(trial.getSelectedMetricID()),
-    //                    ((PPFunctionProfile) inObject).meanProfile.getExclusive(trial.getSelectedMetricID()), this,
-    //                    (PPFunctionProfile) inObject);
-    //        case 22:
-    //            return compareToHelper(
-    //                    ((PPFunctionProfile) inObject).meanProfile.getInclusive(trial.getSelectedMetricID()),
-    //                    this.meanProfile.getInclusive(trial.getSelectedMetricID()));
-    //        case 23:
-    //            return compareToHelper(this.meanProfile.getInclusive(trial.getSelectedMetricID()),
-    //                    ((PPFunctionProfile) inObject).meanProfile.getInclusive(trial.getSelectedMetricID()));
-    //        case 24:
-    //            return compareToHelper(((PPFunctionProfile) inObject).meanProfile.getNumCalls(),
-    //                    this.meanProfile.getNumCalls());
-    //        case 25:
-    //            return compareToHelper(this.meanProfile.getNumCalls(),
-    //                    ((PPFunctionProfile) inObject).meanProfile.getNumCalls());
-    //        case 26:
-    //            return compareToHelper(((PPFunctionProfile) inObject).meanProfile.getNumSubr(),
-    //                    this.meanProfile.getNumSubr());
-    //        case 27:
-    //            return compareToHelper(this.meanProfile.getNumSubr(),
-    //                    ((PPFunctionProfile) inObject).meanProfile.getNumSubr());
-    //        case 28:
-    //            return compareToHelper(
-    //                    ((PPFunctionProfile) inObject).meanProfile.getInclusivePerCall(trial.getSelectedMetricID()),
-    //                    this.meanProfile.getInclusivePerCall(trial.getSelectedMetricID()));
-    //        case 29:
-    //            return compareToHelper(this.meanProfile.getInclusivePerCall(trial.getSelectedMetricID()),
-    //                    ((PPFunctionProfile) inObject).meanProfile.getInclusivePerCall(trial.getSelectedMetricID()));
-    //        case 30:
-    //            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) inObject;
-    //            if (ppFunctionProfile.getNodeID() != this.getNodeID())
-    //                return ppFunctionProfile.getNodeID() - this.getNodeID();
-    //            else if (ppFunctionProfile.getContextID() != this.getContextID())
-    //                return ppFunctionProfile.getContextID() - this.getContextID();
-    //            else
-    //                return ppFunctionProfile.getThreadID() - this.getThreadID();
-    //        case 31:
-    //            ppFunctionProfile = (PPFunctionProfile) inObject;
-    //            if (ppFunctionProfile.getNodeID() != this.getNodeID())
-    //                return this.getNodeID() - ppFunctionProfile.getNodeID();
-    //            else if (ppFunctionProfile.getContextID() != this.getContextID())
-    //                return this.getContextID() - ppFunctionProfile.getContextID();
-    //            else
-    //                return this.getThreadID() - ppFunctionProfile.getThreadID();
-    //        default:
-    //            throw new ParaProfException("Unexpected sort type: " + sortType);
-    //        }
-    //    }
+   
     private int compareToHelper(double d1, double d2) {
         double result = d1 - d2;
         if (result < 0.00)
