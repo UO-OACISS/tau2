@@ -19,10 +19,39 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 import edu.uoregon.tau.dms.dss.UserEvent;
-import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 
-public class UserEventWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
+public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
+
+    
+    //Instance data.
+    private ParaProfTrial trial = null;
+    private DataSorter dataSorter = null;
+
+    UserEvent userEvent = null;
+
+    private JMenu optionsMenu = null;
+
+    private JCheckBoxMenuItem descendingOrder = null;
+    private JCheckBoxMenuItem showPathTitleInReverse = null;
+    private JCheckBoxMenuItem showMetaData = null;
+
+    private JLabel barLengthLabel = new JLabel("Bar Width");
+    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
+
+    private Container contentPane = null;
+    private GridBagLayout gbl = null;
+    private GridBagConstraints gbc = null;
+
+    UserEventWindowPanel panel = null;
+    JScrollPane sp = null;
+    JLabel label = null;
+
+    private Vector list = new Vector();
+
+    UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
+    
 
     public UserEventWindow(ParaProfTrial trial, UserEvent userEvent, DataSorter dataSorter) {
         this.userEvent = userEvent;
@@ -47,7 +76,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         setLocation(xPosition, yPosition);
 
         //Now set the title.
-        this.setTitle("User Event Window: " + trial.getTrialIdentifier(true));
+        this.setTitle("User Event Window: " + trial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -71,50 +100,10 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-        //######
-        //File menu.
-        //######
-        JMenu fileMenu = new JMenu("File");
+       
 
-        //Save menu.
-        subMenu = new JMenu("Save ...");
 
-        /*
-         * menuItem = new JMenuItem("ParaProf Preferences");
-         * menuItem.addActionListener(this); subMenu.add(menuItem);
-         */
-
-        menuItem = new JMenuItem("Save Image");
-        menuItem.addActionListener(this);
-        subMenu.add(menuItem);
-
-        fileMenu.add(subMenu);
-        //End - Save menu.
-
-        menuItem = new JMenuItem("Preferences...");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Print");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close This Window");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Exit ParaProf!");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        fileMenu.addMenuListener(this);
-        //######
-        //End - File menu.
-        //######
-
-        //######
         //Options menu.
-        //######
         optionsMenu = new JMenu("Options");
 
         ButtonGroup group = null;
@@ -160,81 +149,21 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         box.addActionListener(this);
         optionsMenu.add(box);
 
-        showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-        showPathTitleInReverse.addActionListener(this);
-        optionsMenu.add(showPathTitleInReverse);
 
         showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
         showMetaData.addActionListener(this);
         optionsMenu.add(showMetaData);
 
-        optionsMenu.addMenuListener(this);
-        //######
-        //End - Options menu.
-        //######
 
-        //######
-        //Windows menu
-        //######
-        windowsMenu = new JMenu("Windows");
-
-        menuItem = new JMenuItem("Show ParaProf Manager");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Function Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Group Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show User Event Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Call Path Relations");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close All Sub-Windows");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        windowsMenu.addMenuListener(this);
-        //######
-        //End - Windows menu
-        //######
-
-        //######
-        //Help menu.
-        //######
-        JMenu helpMenu = new JMenu("Help");
-
-        menuItem = new JMenuItem("Show Help Window");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        menuItem = new JMenuItem("About ParaProf");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        helpMenu.addMenuListener(this);
-        //######
-        //End - Help menu.
-        //######
-
+       
         //Now, add all the menus to the main menu.
-        mainMenu.add(fileMenu);
+        mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
-        mainMenu.add(windowsMenu);
-        mainMenu.add(helpMenu);
+        mainMenu.add(ParaProfUtils.createTrialMenu(trial, this));
+        mainMenu.add(ParaProfUtils.createWindowsMenu(trial, this));
+        mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
-        //####################################
-        //End - Code to generate the menus.
-        //####################################
 
         //####################################
         //Create and add the components.
@@ -267,10 +196,8 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         barLengthSlider.setPaintLabels(true);
         barLengthSlider.setSnapToTicks(false);
         barLengthSlider.addChangeListener(this);
-        //######
-        //End - Slider setup.
-        //Do the slider stuff, but don't add. By default, sliders are off.
-        //######
+
+        
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0.95;
@@ -287,20 +214,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
 
-                if (arg.equals("Print")) {
-                    ParaProfUtils.print(panel);
-                } else if (arg.equals("Preferences...")) {
-                    trial.getPreferencesWindow().showPreferencesWindow();
-                } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput.saveImage(panel);
-                }
-                if (arg.equals("Close This Window")) {
-                    closeThisWindow();
-                } else if (arg.equals("Exit ParaProf!")) {
-                    setVisible(false);
-                    dispose();
-                    ParaProf.exitParaProf(0);
-                } else if (arg.equals("Number of Samples")) {
+                if (arg.equals("Number of Samples")) {
                     userEventValueType = UserEventValueType.NUMSAMPLES;
                     sortLocalData();
                     this.setHeader();
@@ -334,30 +248,8 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                         displaySiders(true);
                     else
                         displaySiders(false);
-                } else if (arg.equals("Show Path Title in Reverse")) {
-                    this.setTitle("User Event Window: "
-                            + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
                 } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
-                } else if (arg.equals("Show ParaProf Manager")) {
-                    (new ParaProfManagerWindow()).show();
-                } else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(trial, 0)).show();
-                } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(trial, 1)).show();
-                } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(trial, 2)).show();
-                } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getDataSorter(),
-                            0);
-                    trial.getSystemEvents().addObserver(tmpRef);
-                    tmpRef.show();
-                } else if (arg.equals("Close All Sub-Windows")) {
-                    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-                } else if (arg.equals("About ParaProf")) {
-                    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
-                } else if (arg.equals("Show Help Window")) {
-                    this.help(true);
                 }
             }
         } catch (Exception e) {
@@ -373,22 +265,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         }
     }
 
-    public void menuSelected(MenuEvent evt) {
-        try {
-            if (trial.groupNamesPresent())
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
-
-            if (trial.userEventsPresent())
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
-
-        } catch (Exception e) {
-            ParaProfUtils.handleException(e);
-        }
-    }
+   
 
     public void menuDeselected(MenuEvent evt) {
     }
@@ -407,7 +284,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         }
     }
 
-    private void help(boolean display) {
+    public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
         if (display)
@@ -519,7 +396,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         closeThisWindow();
     }
 
-    void closeThisWindow() {
+    public void closeThisWindow() {
         try {
             setVisible(false);
             trial.getSystemEvents().deleteObserver(this);
@@ -530,35 +407,6 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         dispose();
     }
 
-    //Instance data.
-    private ParaProfTrial trial = null;
-    private DataSorter dataSorter = null;
-
-    UserEvent userEvent = null;
-
-    private JMenu optionsMenu = null;
-    private JMenu windowsMenu = null;
-
-    private JCheckBoxMenuItem descendingOrder = null;
-    private JCheckBoxMenuItem showPathTitleInReverse = null;
-    private JCheckBoxMenuItem showMetaData = null;
-
-    private JLabel barLengthLabel = new JLabel("Bar Width");
-    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
-
-    private Container contentPane = null;
-    private GridBagLayout gbl = null;
-    private GridBagConstraints gbc = null;
-
-    UserEventWindowPanel panel = null;
-    JScrollPane sp = null;
-    JLabel label = null;
-
-    private Vector list = new Vector();
-
-    UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
-    
-//    private int valueType = 12; //12-number of
-    // userEvents,14-min,16-max,18-mean.
+ 
 
 }

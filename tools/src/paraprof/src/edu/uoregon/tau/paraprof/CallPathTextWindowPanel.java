@@ -13,9 +13,9 @@ import java.text.*;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.17 2005/05/06 01:00:01 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.18 2005/05/07 02:36:52 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.17 $
+ * @version	$Revision: 1.18 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -25,14 +25,54 @@ import java.text.*;
  *             system.
  *          3) (Alan) Actually, renderIt needs to be completely rewritten
  */
-public class CallPathTextWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
+public class CallPathTextWindowPanel extends JPanel implements MouseListener, Printable,
         ParaProfImageInterface {
+
+    //Instance data.
+    private int xPanelSize = 800;
+    private int yPanelSize = 600;
+    private boolean calculatePanelSize = true;
+
+    private edu.uoregon.tau.dms.dss.Thread thread;
+
+    private ParaProfTrial ppTrial = null;
+    private CallPathTextWindow window = null;
+    private int windowType = 0; //0: mean data,1: function data, 2: global relations.
+    private Font monoFont = null;
+    private FontMetrics fontMetrics = null;
+
+    //Some drawing details.
+    private Vector drawObjectsComplete = null;
+    private Vector drawObjects = null;
+    private int spacing = 0;
+
+    private int base = 20;
+    private int startPosition = 0;
+    private int stringWidth = 0;
+    private int numCallsWidth = 0;
+    private int excPos = 0;
+    private int incPos = 0;
+    private int callsPos1 = 0;
+    private int namePos = 0;
+    private int yHeightNeeded = 0;
+    private int xWidthNeeded = 0;
+
+    private Object clickedOnObject = null;
+
+    private int lastHeaderEndPosition = 0;
+
+    private Searcher searcher;
+
+    private String normalHeader = "      Exclusive        Inclusive      Calls/Tot.Calls     Name[id]";
+    private String normalDashString = "      --------------------------------------------------------------------------------";
+
+    private JPopupMenu popup;
 
     public CallPathTextWindowPanel(ParaProfTrial trial, edu.uoregon.tau.dms.dss.Thread thread,
             CallPathTextWindow cPTWindow, int windowType) {
 
         this.thread = thread;
-        this.trial = trial;
+        this.ppTrial = trial;
         this.window = cPTWindow;
         this.windowType = windowType;
 
@@ -44,23 +84,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
         setBackground(Color.white);
 
         addMouseListener(this);
-
-        //Add items to the popu menu.
-        JMenuItem jMenuItem = new JMenuItem("Show Function Details");
-        jMenuItem.addActionListener(this);
-        popup.add(jMenuItem);
-
-        jMenuItem = new JMenuItem("Find Function");
-        jMenuItem.addActionListener(this);
-        popup.add(jMenuItem);
-
-        jMenuItem = new JMenuItem("Change Function Color");
-        jMenuItem.addActionListener(this);
-        popup.add(jMenuItem);
-
-        jMenuItem = new JMenuItem("Reset to Generic Color");
-        jMenuItem.addActionListener(this);
-        popup.add(jMenuItem);
 
     }
 
@@ -113,8 +136,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 
                     while (l3.hasNext()) {
                         FunctionProfile callPath = (FunctionProfile) l3.next();
-                        d1 = d1 + callPath.getExclusive(trial.getDefaultMetricID());
-                        d2 = d2 + callPath.getInclusive(trial.getDefaultMetricID());
+                        d1 = d1 + callPath.getExclusive(ppTrial.getDefaultMetricID());
+                        d2 = d2 + callPath.getInclusive(ppTrial.getDefaultMetricID());
                         d3 = d3 + callPath.getNumCalls();
                     }
                     CallPathDrawObject callPathDrawObject = new CallPathDrawObject(parent.getFunction(), true, false,
@@ -140,8 +163,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                     double d3 = 0.0;
                     for (Iterator it3 = ppFunctionProfile.getFunctionProfile().getChildProfileCallPathIterator(child); it3.hasNext();) {
                         FunctionProfile callPath = (FunctionProfile) it3.next();
-                        d1 = d1 + callPath.getExclusive(trial.getDefaultMetricID());
-                        d2 = d2 + callPath.getInclusive(trial.getDefaultMetricID());
+                        d1 = d1 + callPath.getExclusive(ppTrial.getDefaultMetricID());
+                        d2 = d2 + callPath.getInclusive(ppTrial.getDefaultMetricID());
                         d3 = d3 + callPath.getNumCalls();
                     }
                     callPathDrawObject = new CallPathDrawObject(child.getFunction(), false, true, false);
@@ -233,8 +256,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 default:
                 }
             }
-        } else
+        } else {
             drawObjects = drawObjectsComplete;
+        }
 
     }
 
@@ -357,19 +381,20 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 String line;
                 CallPathDrawObject callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
                 if (i == 1) {
-                    line = "    Exclusive      Inclusive      Calls/Tot.Calls     Name[id]";
+                    line = normalHeader;
                 } else if (i == 2) {
-                    line = "    --------------------------------------------------------------------------------";
+                    line = normalDashString;
                 } else if (!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()) {
 
                     Function function = callPathDrawObject.getFunction();
 
-                    line = "--> " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 9)
+                    line = "--> "
+                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
                             + "      "
-                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 9)
+                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
                             + "      " + callPathDrawObject.getNumberOfCalls();
 
-                    line = UtilFncs.pad(line, 54) + callPathDrawObject.getName() + "[" + function.getID() + "]";
+                    line = UtilFncs.pad(line, 58) + callPathDrawObject.getName() + "[" + function.getID() + "]";
 
                 } else if (callPathDrawObject.isSpacer()) {
                     line = " ";
@@ -377,13 +402,14 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 
                     Function function = callPathDrawObject.getFunction();
 
-                    line = "    " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 9)
+                    line = "    "
+                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
                             + "      "
-                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 9)
+                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
                             + "      " + callPathDrawObject.getNumberOfCallsFromCallPathObjects() + "/"
                             + callPathDrawObject.getNumberOfCalls();
 
-                    line = UtilFncs.pad(line, 54) + callPathDrawObject.getName() + "[" + function.getID() + "]";
+                    line = UtilFncs.pad(line, 58) + callPathDrawObject.getName() + "[" + function.getID() + "]";
 
                 }
                 searchLines.add(line);
@@ -391,7 +417,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             searcher.setSearchLines(searchLines);
         }
     }
-
 
     private void setSearchLinesStupid() {
         if (searcher.getSearchLines() == null) {
@@ -429,11 +454,11 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
         // probably not be the same font as the rest of ParaProf. As a result, some extra work will
         // have to be done to calculate spacing.
 
-        int fontSize = trial.getPreferencesWindow().getBarHeight();
-        spacing = trial.getPreferencesWindow().getBarSpacing();
+        int fontSize = ppTrial.getPreferencesWindow().getBarHeight();
+        spacing = ppTrial.getPreferencesWindow().getBarSpacing();
 
         //Create font.
-        monoFont = new Font("Monospaced", trial.getPreferencesWindow().getFontStyle(), fontSize);
+        monoFont = new Font("Monospaced", ppTrial.getPreferencesWindow().getFontStyle(), fontSize);
         //Compute the font metrics.
         fontMetrics = g2D.getFontMetrics(monoFont);
         int maxFontAscent = fontMetrics.getMaxAscent();
@@ -444,7 +469,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             spacing = spacing + 1;
         }
 
-        base = 20;
         searcher.setXOffset(base);
         searcher.setG2d(g2D);
         searcher.setLineHeight(spacing);
@@ -463,7 +487,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             double d2 = 0.0;
             double d3 = 0;
 
-            CallPathUtilFuncs.buildThreadRelations(trial.getDataSource(), thread);
+            CallPathUtilFuncs.buildThreadRelations(ppTrial.getDataSource(), thread);
 
             functionProfiles = thread.getFunctionProfiles();
 
@@ -476,6 +500,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             //Populate drawObjects vector.
             if (drawObjects == null) {
                 createDrawObjects();
+                searcher.setSearchLines(null);
+                setSearchLines();
             }
 
             //######
@@ -495,10 +521,11 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 }
 
                 int charWidth = fontMetrics.stringWidth("A");
+                startPosition = fontMetrics.stringWidth("--> ") + base;
 
                 excPos = base + (charWidth * 4);
-                incPos = excPos + (charWidth * 15);
-                callsPos1 = incPos + (charWidth * 15);
+                incPos = excPos + (charWidth * 17);
+                callsPos1 = incPos + (charWidth * 17);
                 namePos = callsPos1 + (charWidth * 20);
 
                 xWidthNeeded = (maxNameLength * charWidth) + namePos + 30;
@@ -517,53 +544,20 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                     revalidate();
                 this.calculatePanelSize = false;
 
-                setSearchLines();
 
             }
             //######
             //End - Set panel size.
             //######
 
-            int yBeg = 0;
-            int yEnd = 0;
-            int startElement = 0;
-            int endElement = 0;
-            Rectangle clipRect = null;
-            Rectangle viewRect = null;
+            
+            // determine which elements to draw (clipping)
+            int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, drawObjects.size(), spacing, yCoord);
+            int startElement = clips[0];
+            int endElement = clips[1];
+            yCoord = clips[2];
 
-            if (!fullWindow) {
-                if (toScreen) {
-                    clipRect = g2D.getClipBounds();
-                    yBeg = (int) clipRect.getY();
-                    yEnd = (int) (yBeg + clipRect.getHeight());
-                } else {
-                    viewRect = window.getViewRect();
-                    yBeg = (int) viewRect.getY();
-                    yEnd = (int) (yBeg + viewRect.getHeight());
-                }
-
-                startElement = ((yBeg - yCoord) / spacing) - 1;
-                endElement = ((yEnd - yCoord) / spacing) + 1;
-
-                if (startElement < 0)
-                    startElement = 0;
-
-                if (endElement < 0)
-                    endElement = 0;
-
-                if (startElement > (drawObjects.size() - 1))
-                    startElement = (drawObjects.size() - 1);
-
-                if (endElement > (drawObjects.size() - 1))
-                    endElement = (drawObjects.size() - 1);
-
-                if (toScreen)
-                    yCoord = yCoord + (startElement * spacing);
-            } else {
-                startElement = 0;
-                endElement = ((drawObjects.size()) - 1);
-            }
-
+            
             g2D.setColor(Color.black);
             //######
             //Draw the header if required.
@@ -590,22 +584,22 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 
                 callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
                 if (i == 1) {
-                    String header = "    Exclusive      Inclusive      Calls/Tot.Calls     Name[id]";
+                    String header = normalHeader;
                     g2D.drawString(header, base, yCoord);
                 } else if (i == 2) {
-                    String dashString = "    --------------------------------------------------------------------------------";
+                    String dashString = normalDashString;
                     g2D.drawString(dashString, base, yCoord);
                 } else if (!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()) {
 
                     String stats = "--> "
-                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 9)
+                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
                             + "      "
-                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 9)
+                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
                             + "      " + callPathDrawObject.getNumberOfCalls();
                     g2D.drawString(stats, base, yCoord);
 
                     Function function = callPathDrawObject.getFunction();
-                    if (trial.getHighlightedFunction() == function) {
+                    if (ppTrial.getHighlightedFunction() == function) {
                         g2D.setColor(Color.red);
                     }
 
@@ -615,22 +609,22 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 } else {
 
                     String stats = "    "
-                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 9)
+                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
                             + "      "
-                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 9)
+                            + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
                             + "      " + callPathDrawObject.getNumberOfCallsFromCallPathObjects() + "/"
                             + callPathDrawObject.getNumberOfCalls();
 
                     //g2D.drawString(stats, base, yCoord);
                     Function function = callPathDrawObject.getFunction();
 
-                    if (trial.getHighlightedFunction() == function) {
+                    if (ppTrial.getHighlightedFunction() == function) {
                         g2D.setColor(Color.red);
                     }
 
                     String functionString = callPathDrawObject.getName() + "[" + function.getID() + "]";
 
-                    stats = UtilFncs.pad(stats, 54) + functionString;
+                    stats = UtilFncs.pad(stats, 58) + functionString;
 
                     g2D.drawString(stats, base, yCoord);
 
@@ -647,7 +641,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             CallPathDrawObject callPathDrawObject = null;
             String s = null;
 
-            CallPathUtilFuncs.buildThreadRelations(trial.getDataSource(), thread);
+            CallPathUtilFuncs.buildThreadRelations(ppTrial.getDataSource(), thread);
 
             //Populate drawObjectsComplete vector.
             //This should only happen once.
@@ -671,14 +665,12 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                     }
                 }
 
-                base = 20;
                 startPosition = fontMetrics.stringWidth("--> ") + base;
 
                 int charWidth = fontMetrics.stringWidth("A");
 
                 xWidthNeeded = (maxNameLength * charWidth) + startPosition + 30;
 
-                
                 boolean sizeChange = false;
                 //Resize the panel if needed.
                 if (xWidthNeeded > xPanelSize) {
@@ -697,44 +689,12 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 this.calculatePanelSize = false;
             }
 
-            int yBeg = 0;
-            int yEnd = 0;
-            int startElement = 0;
-            int endElement = 0;
-            Rectangle clipRect = null;
-            Rectangle viewRect = null;
-
-            if (!fullWindow) {
-                if (toScreen) {
-                    clipRect = g2D.getClipBounds();
-                    yBeg = (int) clipRect.getY();
-                    yEnd = (int) (yBeg + clipRect.getHeight());
-                } else {
-                    viewRect = window.getViewRect();
-                    yBeg = (int) viewRect.getY();
-                    yEnd = (int) (yBeg + viewRect.getHeight());
-                }
-                startElement = ((yBeg - yCoord) / spacing) - 1;
-                endElement = ((yEnd - yCoord) / spacing) + 1;
-
-                if (startElement < 0)
-                    startElement = 0;
-
-                if (endElement < 0)
-                    endElement = 0;
-
-                if (startElement > (drawObjects.size() - 1))
-                    startElement = (drawObjects.size() - 1);
-
-                if (endElement > (drawObjects.size() - 1))
-                    endElement = (drawObjects.size() - 1);
-
-                if (toScreen)
-                    yCoord = yCoord + (startElement * spacing);
-            } else {
-                startElement = 0;
-                endElement = ((drawObjects.size()) - 1);
-            }
+            
+            // determine which elements to draw (clipping)
+            int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, drawObjects.size(), spacing, yCoord);
+            int startElement = clips[0];
+            int endElement = clips[1];
+            yCoord = clips[2];
 
             g2D.setColor(Color.black);
             //######
@@ -781,7 +741,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 } else if (!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()) {
 
                     Function function = callPathDrawObject.getFunction();
-                    if (trial.getHighlightedFunction() == function) {
+                    if (ppTrial.getHighlightedFunction() == function) {
                         g2D.setColor(Color.red);
                     }
                     line = "--> " + callPathDrawObject.getName() + "[" + function.getID() + "]";
@@ -790,76 +750,22 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 } else {
 
                     Function function = callPathDrawObject.getFunction();
-                    if (trial.getHighlightedFunction() == function) {
+                    if (ppTrial.getHighlightedFunction() == function) {
                         g2D.setColor(Color.red);
                     }
                     line = "    " + callPathDrawObject.getName() + "[" + function.getID() + "]";
                 }
-                
+
                 if (line != "") {
                     g2D.drawString(line, base, yCoord);
                 }
-                
+
                 yCoord = yCoord + spacing;
             }
         }
     }
 
-    public void actionPerformed(ActionEvent evt) {
-        try {
-            Object EventSrc = evt.getSource();
-
-            CallPathDrawObject callPathDrawObject = null;
-
-            if (EventSrc instanceof JMenuItem) {
-                String arg = evt.getActionCommand();
-                if (arg.equals("Show Function Details")) {
-                    if (clickedOnObject instanceof CallPathDrawObject) {
-                        callPathDrawObject = (CallPathDrawObject) clickedOnObject;
-                        trial.setHighlightedFunction(callPathDrawObject.getFunction());
-                        FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial,
-                                callPathDrawObject.getFunction());
-                        trial.getSystemEvents().addObserver(functionDataWindow);
-                        functionDataWindow.show();
-                    }
-                } else if (arg.equals("Find Function")) {
-                    if (clickedOnObject instanceof CallPathDrawObject) {
-                        Function function = ((CallPathDrawObject) clickedOnObject).getFunction();
-                        int size = drawObjects.size();
-                        for (int i = 0; i < size; i++) {
-                            callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
-                            if ((callPathDrawObject.getFunction() == function) && (!callPathDrawObject.isParentChild())) {
-                                Dimension dimension = window.getViewportSize();
-                                window.setVerticalScrollBarPosition((i * (trial.getPreferencesWindow().getBarSpacing()))
-                                        - ((int) dimension.getHeight() / 2));
-                                trial.setHighlightedFunction(function);
-                                return;
-                            }
-                        }
-                    }
-                } else if (arg.equals("Change Function Color")) {
-                    if (clickedOnObject instanceof CallPathDrawObject) {
-                        Function function = ((CallPathDrawObject) clickedOnObject).getFunction();
-                        Color color = function.getColor();
-                        color = JColorChooser.showDialog(this, "Please select a new color", color);
-                        if (color != null) {
-                            function.setSpecificColor(color);
-                            function.setColorFlag(true);
-                            trial.getSystemEvents().updateRegisteredObjects("colorEvent");
-                        }
-                    }
-                } else if (arg.equals("Reset to Generic Color")) {
-                    if (clickedOnObject instanceof CallPathDrawObject) {
-                        Function function = ((CallPathDrawObject) clickedOnObject).getFunction();
-                        function.setColorFlag(false);
-                        trial.getSystemEvents().updateRegisteredObjects("colorEvent");
-                    }
-                }
-            }
-        } catch (Exception e) {
-            ParaProfUtils.handleException(e);
-        }
-    }
+   
 
     public void mouseClicked(MouseEvent evt) {
         try {
@@ -870,18 +776,44 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             //Get the number of times clicked.
             int clickCount = evt.getClickCount();
 
-            CallPathDrawObject callPathDrawObject = null;
 
             //Calculate which CallPathDrawObject was clicked on.
-            int index = (yCoord - 1) / (trial.getPreferencesWindow().getBarSpacing()) ;
+            int index = (yCoord - 1) / (ppTrial.getPreferencesWindow().getBarSpacing());
 
             if (index < drawObjects.size()) {
-                callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(index);
+                final CallPathDrawObject callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(index);
                 if (!callPathDrawObject.isSpacer()) {
                     if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
-                        clickedOnObject = callPathDrawObject;
+                        JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial,
+                                callPathDrawObject.getFunction(), this);
+
+                        JMenuItem menuItem = new JMenuItem("Find Function");
+                        menuItem.addActionListener(new ActionListener() {
+                            public void actionPerformed(ActionEvent evt) {
+                                try {
+
+                                    Function function = callPathDrawObject.getFunction();
+                                    int size = drawObjects.size();
+                                    for (int i = 0; i < size; i++) {
+                                        CallPathDrawObject callPathDrawObject2 = (CallPathDrawObject) drawObjects.elementAt(i);
+                                        if ((callPathDrawObject2.getFunction() == function)
+                                                && (!callPathDrawObject2.isParentChild())) {
+                                            Dimension dimension = window.getViewportSize();
+                                            window.setVerticalScrollBarPosition((i * (ppTrial.getPreferencesWindow().getBarSpacing()))
+                                                    - ((int) dimension.getHeight() / 2));
+                                            ppTrial.setHighlightedFunction(function);
+                                            return;
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    ParaProfUtils.handleException(e);
+                                }
+                            }
+
+                        });
+
+                        popup.add(menuItem);
                         popup.show(this, evt.getX(), evt.getY());
-                        return;
                     } else {
                         //Check to see if the click occured to the left of
                         // startPosition.
@@ -894,7 +826,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                             }
                             drawObjects = null;
                         }
-                        trial.toggleHighlightedFunction(callPathDrawObject.getFunction());
+                        ppTrial.toggleHighlightedFunction(callPathDrawObject.getFunction());
                     }
                 }
             }
@@ -938,42 +870,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     public Dimension getPreferredSize() {
         return new Dimension(xPanelSize, (yPanelSize + 10));
     }
-
-    //Instance data.
-    private int xPanelSize = 800;
-    private int yPanelSize = 600;
-    private boolean calculatePanelSize = true;
-
-    private edu.uoregon.tau.dms.dss.Thread thread;
-
-    private ParaProfTrial trial = null;
-    private CallPathTextWindow window = null;
-    private int windowType = 0; //0: mean data,1: function data, 2: global relations.
-    private Font monoFont = null;
-    private FontMetrics fontMetrics = null;
-
-    //Some drawing details.
-    private Vector drawObjectsComplete = null;
-    private Vector drawObjects = null;
-    private int spacing = 0;
-
-    private int base = 0;
-    private int startPosition = 0;
-    private int stringWidth = 0;
-    private int numCallsWidth = 0;
-    private int excPos = 0;
-    private int incPos = 0;
-    private int callsPos1 = 0;
-    private int namePos = 0;
-    private int yHeightNeeded = 0;
-    private int xWidthNeeded = 0;
-
-    private JPopupMenu popup = new JPopupMenu();
-    private Object clickedOnObject = null;
-
-    private int lastHeaderEndPosition = 0;
-
-    private Searcher searcher;
 
     public Searcher getSearcher() {
         return searcher;

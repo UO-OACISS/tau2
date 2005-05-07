@@ -2,9 +2,6 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyListener;
 import java.util.*;
 
 import javax.swing.*;
@@ -15,22 +12,24 @@ import edu.uoregon.tau.dms.dss.DssIterator;
 import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
+import edu.uoregon.tau.paraprof.interfaces.*;
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
 import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.22 2005/05/06 01:19:10 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.23 2005/05/07 02:36:52 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.22 $
+ * @version	$Revision: 1.23 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
 public class CallPathTextWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner,
-        ScrollBarController, KeyListener {
+        ScrollBarController, KeyListener, ParaProfWindow, UnitListener {
 
-    private ParaProfTrial trial = null;
+    private ParaProfTrial ppTrial = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
@@ -38,7 +37,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private int windowType = 0; //0: mean data,1: function data, 2: global relations.
 
     private JMenu optionsMenu = null;
-    private JMenu windowsMenu = null;
     private JMenu unitsSubMenu = null;
 
     private boolean sortByName;
@@ -55,19 +53,17 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     private SearchPanel searchPanel;
 
-    private int order = 0; //0: descending order,1: ascending order.
-    //private int valueType = 2; //2-exclusive,4-inclusive,6-number of
-    // calls,8-number of subroutines,10-per call value.
-    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+    private int order = 0;
+    private int units = ParaProf.preferences.getUnits();
 
-    public CallPathTextWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, DataSorter dataSorter,
+    public CallPathTextWindow(ParaProfTrial ppTrial, int nodeID, int contextID, int threadID, DataSorter dataSorter,
             int windowType) {
 
-        this.trial = trial;
+        this.ppTrial = ppTrial;
         this.nodeID = nodeID;
         this.contextID = contextID;
         this.threadID = threadID;
-        this.dataSorter = dataSorter;
+        this.dataSorter = new DataSorter(ppTrial);
         this.windowType = windowType;
 
         setLocation(0, 0);
@@ -77,13 +73,13 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
         //Now set the title.
         if (windowType == 0) {
-            this.setTitle("Mean Call Path Data - " + trial.getTrialIdentifier(true));
+            this.setTitle("Mean Call Path Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (windowType == 1) {
             this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                    + trial.getTrialIdentifier(true));
+                    + ppTrial.getTrialIdentifier(true));
             //CallPathUtilFuncs.trimCallPathData(trial.getDataSource(), trial.getDataSource().getThread(nodeID, contextID, threadID));
         } else
-            this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
+            this.setTitle("Call Path Data Relations - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -97,7 +93,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             this.help(false);
         }
 
-        setupMenus();
+       
 
         //####################################
         //Create and add the components.
@@ -109,15 +105,16 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        edu.uoregon.tau.dms.dss.Thread thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
+        edu.uoregon.tau.dms.dss.Thread thread = ppTrial.getDataSource().getThread(nodeID, contextID, threadID);
 
         if (windowType == 0 || windowType == 2) {
-            thread = trial.getDataSource().getMeanData();
+            thread = ppTrial.getDataSource().getMeanData();
         }
 
-        panel = new CallPathTextWindowPanel(trial, thread, this, windowType);
+        panel = new CallPathTextWindowPanel(ppTrial, thread, this, windowType);
         //The scroll panes into which the list shall be placed.
 
+        setupMenus();
         sp = new JScrollPane(panel);
 
         JScrollBar vScrollBar = sp.getVerticalScrollBar();
@@ -142,41 +139,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-        //File menu.
-        JMenu fileMenu = new JMenu("File");
 
-        //Save menu.
-        subMenu = new JMenu("Save ...");
-
-        /*
-         * menuItem = new JMenuItem("ParaProf Preferences");
-         * menuItem.addActionListener(this); subMenu.add(menuItem);
-         */
-
-        menuItem = new JMenuItem("Save Image");
-        menuItem.addActionListener(this);
-        subMenu.add(menuItem);
-
-        fileMenu.add(subMenu);
-        //End - Save menu.
-
-        menuItem = new JMenuItem("Preferences...");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Print");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close This Window");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Exit ParaProf!");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        fileMenu.addMenuListener(this);
 
         //Options menu.
         optionsMenu = new JMenu("Options");
@@ -189,44 +152,17 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         showFindPanelBox.addActionListener(this);
         optionsMenu.add(showFindPanelBox);
 
-        showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-        showPathTitleInReverse.addActionListener(this);
-        optionsMenu.add(showPathTitleInReverse);
-
         showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
         showMetaData.addActionListener(this);
         optionsMenu.add(showMetaData);
 
         optionsMenu.add(new JSeparator());
 
-        descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
-        descendingOrder.addActionListener(this);
-        optionsMenu.add(descendingOrder);
+        collapsedView = new JCheckBoxMenuItem("Collapsible View", false);
+        collapsedView.addActionListener(this);
+        optionsMenu.add(collapsedView);
 
-        //Units submenu.
-        unitsSubMenu = new JMenu("Select Units");
-        group = new ButtonGroup();
-
-        button = new JRadioButtonMenuItem("hr:min:sec", false);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
-        button = new JRadioButtonMenuItem("Seconds", false);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
-        button = new JRadioButtonMenuItem("Milliseconds", false);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
-        button = new JRadioButtonMenuItem("Microseconds", true);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
+        unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units);
         optionsMenu.add(unitsSubMenu);
         //End - Units submenu.
 
@@ -272,59 +208,21 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         optionsMenu.add(subMenu);
         //End - Set the value type options.
 
-        collapsedView = new JCheckBoxMenuItem("Collapsed View", false);
-        collapsedView.addActionListener(this);
-        optionsMenu.add(collapsedView);
+        descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
+        descendingOrder.addActionListener(this);
+        optionsMenu.add(descendingOrder);
+
 
         optionsMenu.addMenuListener(this);
 
-        //Windows menu
-        windowsMenu = new JMenu("Windows");
-
-        menuItem = new JMenuItem("Show ParaProf Manager");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Function Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Group Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show User Event Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Call Path Relations");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close All Sub-Windows");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        windowsMenu.addMenuListener(this);
-
-        //Help menu.
-        JMenu helpMenu = new JMenu("Help");
-
-        menuItem = new JMenuItem("Show Help Window");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        menuItem = new JMenuItem("About ParaProf");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        helpMenu.addMenuListener(this);
+        
 
         //Now, add all the menus to the main menu.
-        mainMenu.add(fileMenu);
+        mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
-        mainMenu.add(windowsMenu);
-        mainMenu.add(helpMenu);
+        mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
+        mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
+        mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
     }
@@ -338,7 +236,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 if (arg.equals("Print")) {
                     ParaProfUtils.print(panel);
                 } else if (arg.equals("Preferences...")) {
-                    trial.getPreferencesWindow().showPreferencesWindow();
+                    ppTrial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput.saveImage(panel);
                 } else if (arg.equals("Close This Window")) {
@@ -396,60 +294,16 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                     sortLocalData();
                     panel.resetAllDrawObjects();
                     panel.repaint();
-                } else if (arg.equals("Microseconds")) {
-                    units = 0;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("Milliseconds")) {
-                    units = 1;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("Seconds")) {
-                    units = 2;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("hr:min:sec")) {
-                    units = 3;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("Collapsed View")) {
+                } else if (arg.equals("Collapsible View")) {
                     panel.resetAllDrawObjects();
                     panel.repaint();
-                } else if (arg.equals("Show Path Title in Reverse")) {
-                    if (windowType == 0)
-                        this.setTitle("Mean Call Path Data - "
-                                + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
-                    else if (windowType == 1)
-                        this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                                + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
-                    else
-                        this.setTitle("Call Path Data Relations - "
-                                + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
                 } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
-                } else if (arg.equals("Show ParaProf Manager")) {
-                    (new ParaProfManagerWindow()).show();
                 } else if (arg.equals("Show Find Panel")) {
                     if (showFindPanelBox.isSelected())
                         showSearchPanel(true);
                     else
                         showSearchPanel(false);
-                } else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(trial, 0)).show();
-                } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(trial, 1)).show();
-                } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(trial, 2)).show();
-                } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getDataSorter(), 2);
-                    trial.getSystemEvents().addObserver(tmpRef);
-                    tmpRef.show();
-                } else if (arg.equals("Close All Sub-Windows")) {
-                    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-                } else if (arg.equals("About ParaProf")) {
-                    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
-                } else if (arg.equals("Show Help Window")) {
-                    this.help(true);
                 }
             }
         } catch (Exception e) {
@@ -459,20 +313,10 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     public void menuSelected(MenuEvent evt) {
         try {
-            if (trial.isTimeMetric())
+            if (ppTrial.isTimeMetric())
                 unitsSubMenu.setEnabled(true);
             else
                 unitsSubMenu.setEnabled(false);
-
-            if (trial.groupNamesPresent())
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
-
-            if (trial.userEventsPresent())
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
 
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -496,15 +340,13 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             this.setHeader();
             sortLocalData();
             panel.resetAllDrawObjects();
-            if (!(trial.isTimeMetric()))
-                units = 0;
             panel.repaint();
         } else if (tmpString.equals("subWindowCloseEvent")) {
             closeThisWindow();
         }
     }
 
-    private void help(boolean display) {
+    public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
         if (display)
@@ -539,7 +381,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             dataSorter.setSortType(SortType.VALUE);
 
         dataSorter.setDescendingOrder(descendingOrder.isSelected());
-        dataSorter.setSelectedMetricID(trial.getDefaultMetricID());
+        dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
 
         this.setHeader();
 
@@ -548,7 +390,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
             } else {
                 list = new Vector();
-                for (Iterator it = trial.getDataSource().getFunctions(); it.hasNext();)
+                for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();)
                     list.add(it.next());
             }
         } else {
@@ -556,7 +398,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
             } else {
                 list = new Vector();
-                for (Iterator it = trial.getDataSource().getFunctions(); it.hasNext();)
+                for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();)
                     list.add(it.next());
                 Collections.sort(list);
             }
@@ -577,7 +419,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public int units() {
-        return units;
+        if (ppTrial.isTimeMetric())
+            return units;
+        return 0;
     }
 
     public boolean showCollapsedView() {
@@ -624,7 +468,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
             jTextArea.addKeyListener(this);
-            PreferencesWindow p = trial.getPreferencesWindow();
+            PreferencesWindow p = ppTrial.getPreferencesWindow();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
             sp.setColumnHeaderView(jTextArea);
@@ -633,7 +477,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public String getHeaderString() {
-        return "Metric Name: " + (trial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Sorted By: "
+        return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Sorted By: "
                 + dataSorter.getValueType() + "\n" + "Units: "
                 + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
     }
@@ -644,7 +488,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     public void closeThisWindow() {
         setVisible(false);
-        trial.getSystemEvents().deleteObserver(this);
+        ppTrial.getSystemEvents().deleteObserver(this);
         ParaProf.decrementNumWindows();
         dispose();
     }
@@ -694,5 +538,12 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     public void keyTyped(KeyEvent e) {
         // TODO Auto-generated method stub
 
+    }
+
+    public void setUnits(int units) {
+        this.units = units; 
+        this.setHeader();
+        panel.repaint();
+        
     }
 }

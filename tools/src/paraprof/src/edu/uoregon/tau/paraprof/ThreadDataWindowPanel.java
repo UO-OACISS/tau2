@@ -181,44 +181,11 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener,
         //End - Set max values.
         //######
 
-        int yBeg = 0;
-        int yEnd = 0;
-        int startElement = 0;
-        int endElement = 0;
-        Rectangle clipRect = null;
-        Rectangle viewRect = null;
-
-        if (!fullWindow) { // determine clipping
-            if (toScreen) {
-                clipRect = g2D.getClipBounds();
-                yBeg = (int) clipRect.getY();
-                yEnd = (int) (yBeg + clipRect.getHeight());
-            } else {
-                viewRect = window.getViewRect();
-                yBeg = (int) viewRect.getY();
-                yEnd = (int) (yBeg + viewRect.getHeight());
-            }
-            startElement = ((yBeg - yCoord) / barSpacing) - 1;
-            endElement = ((yEnd - yCoord) / barSpacing) + 1;
-
-            if (startElement < 0)
-                startElement = 0;
-
-            if (endElement < 0)
-                endElement = 0;
-
-            if (startElement > (list.size() - 1))
-                startElement = (list.size() - 1);
-
-            if (endElement > (list.size() - 1))
-                endElement = (list.size() - 1);
-
-            if (toScreen)
-                yCoord = yCoord + (startElement * barSpacing);
-        } else { // no clipping, draw all elements
-            startElement = 0;
-            endElement = ((list.size()) - 1);
-        }
+        //determine which elements to draw (clipping)
+        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(), barSpacing, yCoord);
+        int startElement = clips[0];
+        int endElement = clips[1];
+        yCoord = clips[2];
 
         //At this point we can determine the size this panel will
         //require. If we need to resize, don't do any more drawing,

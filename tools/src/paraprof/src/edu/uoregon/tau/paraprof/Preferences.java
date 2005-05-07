@@ -147,6 +147,35 @@ public class Preferences implements Serializable {
     private Point managerWindowPosition;
     private Map assignedColors;
     
+    private boolean showValuesAsPercent = true;
+    private boolean showPathTitleInReverse = true;
+    private int units = 0;
+    
+    
     static final long serialVersionUID = 183442743456314793L;
+
+    public boolean getShowPathTitleInReverse() {
+        return showPathTitleInReverse;
+    }
+
+    public void setShowPathTitleInReverse(boolean showPathTitleInReverse) {
+        this.showPathTitleInReverse = showPathTitleInReverse;
+    }
+
+    public boolean getShowValuesAsPercent() {
+        return showValuesAsPercent;
+    }
+
+    public void setShowValuesAsPercent(boolean showValuesAsPercent) {
+        this.showValuesAsPercent = showValuesAsPercent;
+    }
+
+    public int getUnits() {
+        return units;
+    }
+
+    public void setUnits(int units) {
+        this.units = units;
+    }
     
 }

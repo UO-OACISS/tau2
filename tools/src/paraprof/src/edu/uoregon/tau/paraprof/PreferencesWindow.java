@@ -25,7 +25,6 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     private JCheckBox bold;
     private JCheckBox italic;
 
-    private JLabel fontLabel = new JLabel("Font");
     private JComboBox fontComboBox;
     private JLabel barHeightLabel = new JLabel("Size");
     private JSlider barHeightSlider = new JSlider(SwingConstants.HORIZONTAL, 0, 40, 0);
@@ -41,6 +40,11 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     private int fontStyle = Font.PLAIN;
     private int fontSize = 12;
 
+    JComboBox unitsBox;
+    JCheckBox showValuesAsPercentBox = new JCheckBox("Show Values as Percent");
+    JCheckBox showPathTitleInReverseBox = new JCheckBox("Show Path Title in Reverse");
+    
+    
     void setControls() {
         int tmpInt = fontComboBox.getItemCount();
         int counter = 0;
@@ -67,11 +71,21 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     public PreferencesWindow(Preferences preferences) {
         this.preferences = preferences;
 
+        String[] items = new String[4];
+        items[0] = "Microseconds";
+        items[1] = "Milliseconds";
+        items[2] = "Seconds";
+        items[3] = "hr:mm:ss";
+        unitsBox = new JComboBox(items); 
+
         if (preferences.getLoaded()) {
             // Set preferences based on saved values.
             paraProfFont = preferences.getParaProfFont();
             fontStyle = preferences.getFontStyle();
             fontSize = preferences.getFontSize();
+            unitsBox.setSelectedIndex(preferences.getUnits());
+            showValuesAsPercentBox.setSelected(preferences.getShowValuesAsPercent());
+            showPathTitleInReverseBox.setSelected(preferences.getShowPathTitleInReverse());
         }
 
         //Add some window listener code
@@ -95,7 +109,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         setTitle("ParaProf Preferences");
 
         int windowWidth = 550;
-        int windowHeight = 300;
+        int windowHeight = 400;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
         //There is really no need to resize this window.
@@ -123,17 +137,16 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
         //Setup the layout system for the main window.
         Container contentPane = getContentPane();
-        GridBagLayout gbl = new GridBagLayout();
-        contentPane.setLayout(gbl);
+        contentPane.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
         JScrollPane jScrollPane = new JScrollPane(prefSpacingPanel);
         jScrollPane.setPreferredSize(new Dimension(300, 200));
 
-        bold = new JCheckBox("Bold Font");
+        bold = new JCheckBox("Bold");
         bold.addActionListener(this);
-        italic = new JCheckBox("Italic Font");
+        italic = new JCheckBox("Italic");
         italic.addActionListener(this);
 
         setControls();
@@ -144,42 +157,67 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         barHeightSlider.setPaintLabels(true);
         barHeightSlider.addChangeListener(prefSpacingPanel);
 
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.EAST;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        addCompItem(fontLabel, gbc, 0, 0, 1, 1);
-
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        addCompItem(fontComboBox, gbc, 1, 0, 1, 1);
-
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        addCompItem(bold, gbc, 0, 1, 2, 1);
-
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        addCompItem(italic, gbc, 0, 2, 2, 1);
+        JPanel fontPanel = new JPanel();
+        fontPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Font"));
+        fontPanel.setLayout(new GridBagLayout());
+        
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        addCompItem(barHeightLabel, gbc, 0, 3, 2, 1);
+        ParaProfUtils.addCompItem(fontPanel, fontComboBox, gbc, 0, 0, 2, 1);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        ParaProfUtils.addCompItem(fontPanel, bold, gbc, 0, 1, 1, 1);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        ParaProfUtils.addCompItem(fontPanel, italic, gbc, 0, 2, 1, 1);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        ParaProfUtils.addCompItem(fontPanel, barHeightLabel, gbc, 1, 1, 1, 1);
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0.25;
         gbc.weighty = 0.25;
-        addCompItem(barHeightSlider, gbc, 0, 4, 2, 1);
+        ParaProfUtils.addCompItem(fontPanel, barHeightSlider, gbc, 1, 2, 1, 1);
 
+        
+        
+        
+        
+
+
+
+        JPanel defaultsPanel = new JPanel();
+        defaultsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Window defaults"));
+        defaultsPanel.setLayout(new GridBagLayout());
+
+        
+        JLabel unitsLabel = new JLabel("Units");
+        
+        
+        ParaProfUtils.addCompItem(defaultsPanel, unitsLabel, gbc, 0, 0, 1, 1);
+        ParaProfUtils.addCompItem(defaultsPanel, unitsBox, gbc, 1, 0, 1, 1);
+        ParaProfUtils.addCompItem(defaultsPanel, showValuesAsPercentBox, gbc, 0, 1, 2, 1);
+        ParaProfUtils.addCompItem(defaultsPanel, showPathTitleInReverseBox, gbc, 0, 2, 2, 1);
+        
+        
+        
+        addCompItem(fontPanel, gbc, 0, 0, 2, 1);
+        addCompItem(defaultsPanel, gbc, 0, 1, 2, 1);
+
+        
         JButton defaultButton = new JButton("Restore Defaults");
         defaultButton.addActionListener(this);
         gbc.fill = GridBagConstraints.NONE;
@@ -276,6 +314,9 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setParaProfFont(paraProfFont);
         ParaProf.preferences.setFontStyle(fontStyle);
         ParaProf.preferences.setFontSize(fontSize);
+        ParaProf.preferences.setUnits(unitsBox.getSelectedIndex());
+        ParaProf.preferences.setShowValuesAsPercent(showValuesAsPercentBox.isSelected());
+        ParaProf.preferences.setShowPathTitleInReverse(showPathTitleInReverseBox.isSelected());
     }
 
     public boolean areBarDetailsSet() {
@@ -440,6 +481,10 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     paraProfFont = "SansSerif";
                     fontStyle = Font.PLAIN;
                     fontSize = 12;
+                    unitsBox.setSelectedIndex(0);
+                    showValuesAsPercentBox.setSelected(true);
+                    showPathTitleInReverseBox.setSelected(true);
+
                     setControls();
                 }
 

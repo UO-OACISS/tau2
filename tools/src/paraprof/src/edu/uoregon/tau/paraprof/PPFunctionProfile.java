@@ -63,6 +63,8 @@ public class PPFunctionProfile implements Comparable {
         return thread.getThreadID();
     }
 
+   
+    
     public FunctionProfile getFunctionProfile() {
         return functionProfile;
     }
@@ -251,11 +253,15 @@ public class PPFunctionProfile implements Comparable {
 //        + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
         return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad("Exclusive", 16)
         + UtilFncs.lpad("Inclusive", 18) + UtilFncs.lpad("#Calls", 14)
-        + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
+        + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Inclusive/Call", 21) + "   ";
     }
 
     public String toString() {
         return functionProfile.toString();
+    }
+
+    public edu.uoregon.tau.dms.dss.Thread getThread() {
+        return thread;
     }
 
 }

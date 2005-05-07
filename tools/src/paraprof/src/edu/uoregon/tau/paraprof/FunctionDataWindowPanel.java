@@ -15,17 +15,34 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.16 2005/04/20 22:34:01 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.17 2005/05/07 02:36:52 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  * @see		FunctionDataWindow
  */
-public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
-        ParaProfImageInterface {
+public class FunctionDataWindowPanel extends JPanel implements MouseListener, Printable, ParaProfImageInterface {
 
-    public FunctionDataWindowPanel(ParaProfTrial trial, Function function, FunctionDataWindow window) {
+    private ParaProfTrial ppTrial = null;
+    private FunctionDataWindow window = null;
+    private Vector list = new Vector();
+    private Function function = null;
 
-        this.ppTrial = trial;
+    //Drawing information.
+    private int barHeight = -1;
+    private int barSpacing = -1;
+    private int baseBarLength = 250;
+    private int barLength = 0;
+    private int textOffset = 60;
+    private int barXCoord = 0;
+    private int lastHeaderEndPosition = 0;
+
+    //Panel information.
+    private int xPanelSize = 0;
+    private int yPanelSize = 0;
+
+    public FunctionDataWindowPanel(ParaProfTrial ppTrial, Function function, FunctionDataWindow window) {
+
+        this.ppTrial = ppTrial;
         this.window = window;
         this.function = function;
         barLength = baseBarLength;
@@ -33,45 +50,6 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         setBackground(Color.white);
 
         addMouseListener(this);
-
-        //Add items to the first popup menu.
-        JMenuItem jMenuItem = new JMenuItem("Show Mean Statistics Window");
-        jMenuItem.addActionListener(this);
-        popup1.add(jMenuItem);
-
-        jMenuItem = new JMenuItem("Show Mean Call Path Thread Relations");
-        jMenuItem.addActionListener(this);
-        popup1.add(jMenuItem);
-        jMenuItem = new JMenuItem("Show Mean Call Graph");
-        jMenuItem.addActionListener(this);
-        popup1.add(jMenuItem);
-
-        //Add items to the seccond popup menu.
-        jMenuItem = new JMenuItem("Show Statistics Window");
-        jMenuItem.addActionListener(this);
-        popup2.add(jMenuItem);
-
-        if (trial.userEventsPresent()) {
-            jMenuItem = new JMenuItem("Show User Event Statistics Window");
-            jMenuItem.addActionListener(this);
-            popup2.add(jMenuItem);
-        }
-
-        jMenuItem = new JMenuItem("Show Call Path Thread Relations");
-        jMenuItem.addActionListener(this);
-        popup2.add(jMenuItem);
-        jMenuItem = new JMenuItem("Show Thread Call Graph");
-        jMenuItem.addActionListener(this);
-        popup2.add(jMenuItem);
-
-        //Add items to the third popup menu.
-        jMenuItem = new JMenuItem("Change Function Color");
-        jMenuItem.addActionListener(this);
-        popup3.add(jMenuItem);
-
-        jMenuItem = new JMenuItem("Reset to Generic Color");
-        jMenuItem.addActionListener(this);
-        popup3.add(jMenuItem);
 
     }
 
@@ -146,42 +124,13 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             return;
         }
 
-        int yBeg = 0;
-        int yEnd = 0;
-        int startElement = 0;
-        int endElement = 0;
+        // determine which elements to draw (clipping)
+        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(), barSpacing, yCoord);
+        int startElement = clips[0];
+        int endElement = clips[1];
+        yCoord = clips[2];
 
-        if (!fullWindow) {
-            if (toScreen) {
-                Rectangle clipRect = g2D.getClipBounds();
-                yBeg = (int) clipRect.getY();
-                yEnd = (int) (yBeg + clipRect.getHeight());
-            } else {
-                Rectangle viewRect = window.getViewRect();
-                yBeg = (int) viewRect.getY();
-                yEnd = (int) (yBeg + viewRect.getHeight());
-            }
-            startElement = ((yBeg - yCoord) / barSpacing) - 1;
-            endElement = ((yEnd - yCoord) / barSpacing) + 1;
-
-            if (startElement < 0)
-                startElement = 0;
-
-            if (endElement < 0)
-                endElement = 0;
-
-            if (startElement > (list.size() - 1))
-                startElement = (list.size() - 1);
-
-            if (endElement > (list.size() - 1))
-                endElement = (list.size() - 1);
-
-            if (toScreen)
-                yCoord = yCoord + (startElement * barSpacing);
-        } else {
-            startElement = 0;
-            endElement = ((list.size()) - 1);
-        }
+     
 
         //Check for group membership.
         boolean groupMember = function.isGroupMember(ppTrial.getHighlightedGroup());
@@ -225,16 +174,16 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             if (ppFunctionProfile.getNodeID() == -1) {
                 barString = "mean";
             } else {
-                barString = "n,c,t " + (ppFunctionProfile.getNodeID()) + ","
-                        + (ppFunctionProfile.getContextID()) + "," + (ppFunctionProfile.getThreadID());
+                barString = "n,c,t " + (ppFunctionProfile.getNodeID()) + "," + (ppFunctionProfile.getContextID()) + ","
+                        + (ppFunctionProfile.getThreadID());
             }
 
             drawBar(g2D, fmFont, value, maxValue, barString, barXCoord, yCoord, barHeight, groupMember);
         }
     }
 
-    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text,
-            int barXCoord, int yCoord, int barHeight, boolean groupMember) {
+    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text, int barXCoord,
+            int yCoord, int barHeight, boolean groupMember) {
         int xLength = 0;
         double d = 0.0;
         String s = null;
@@ -292,100 +241,6 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         g2D.drawString(text, (barXCoord + 5), yCoord);
     }
 
-    public void actionPerformed(ActionEvent evt) {
-        try {
-            Object EventSrc = evt.getSource();
-            PPFunctionProfile ppFunctionProfile = null;
-
-            if (EventSrc instanceof JMenuItem) {
-                String arg = evt.getActionCommand();
-                if (arg.equals("Show Mean Statistics Window")) {
-                    StatWindow statWindow = new StatWindow(ppTrial, -1, -1, -1, false);
-                    ppTrial.getSystemEvents().addObserver(statWindow);
-                    statWindow.show();
-                } else if (arg.equals("Show Mean User Event Statistics Window")) {
-                    if (clickedOnObject instanceof PPFunctionProfile) {
-                        ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        StatWindow statWindow = new StatWindow(ppTrial, ppFunctionProfile.getNodeID(),
-                                ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID(),
-                                true);
-                        ppTrial.getSystemEvents().addObserver(statWindow);
-                        statWindow.show();
-                    }
-                } else if (arg.equals("Show Mean Call Path Thread Relations")) {
-                    if (clickedOnObject instanceof PPFunctionProfile) {
-                        ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial,
-                                ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID(), window.getDataSorter(), 0);
-                        ppTrial.getSystemEvents().addObserver(callPathTextWindow);
-                        callPathTextWindow.show();
-                    }
-                } else if (arg.equals("Show Mean Call Graph")) {
-                    CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppTrial.getDataSource().getMeanData());
-                    ppTrial.getSystemEvents().addObserver(tmpRef);
-                    tmpRef.show();
-
-                } else if (arg.equals("Show Statistics Window")) {
-                    if (clickedOnObject instanceof PPFunctionProfile) {
-                        ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        StatWindow statWindow = new StatWindow(ppTrial, ppFunctionProfile.getNodeID(),
-                                ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID(), false);
-                        ppTrial.getSystemEvents().addObserver(statWindow);
-                        statWindow.show();
-                    }
-                } else if (arg.equals("Show User Event Statistics Window")) {
-                    if (clickedOnObject instanceof PPFunctionProfile) {
-                        ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        StatWindow statWindow = new StatWindow(ppTrial, ppFunctionProfile.getNodeID(),
-                                ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID(),
-                                 true);
-                        ppTrial.getSystemEvents().addObserver(statWindow);
-                        statWindow.show();
-                    }
-                } else if (arg.equals("Show Call Path Thread Relations")) {
-                    if (clickedOnObject instanceof PPFunctionProfile) {
-                        ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial,
-                                ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID(), window.getDataSorter(), 1);
-                        ppTrial.getSystemEvents().addObserver(callPathTextWindow);
-                        callPathTextWindow.show();
-                    }
-
-                } else if (arg.equals("Show Thread Call Graph")) {
-
-                    if (clickedOnObject instanceof PPFunctionProfile) {
-                        ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-
-                        CallGraphWindow tmpRef = new CallGraphWindow(ppTrial,
-                                ppTrial.getDataSource().getThread(ppFunctionProfile.getNodeID(),
-                                        ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID()));
-                        ppTrial.getSystemEvents().addObserver(tmpRef);
-                        tmpRef.show();
-
-                    }
-
-                } else if (arg.equals("Change Function Color")) {
-                    Color tmpCol = function.getColor();
-
-                    JColorChooser tmpJColorChooser = new JColorChooser();
-                    tmpCol = JColorChooser.showDialog(this, "Please select a new color", tmpCol);
-                    if (tmpCol != null) {
-                        function.setSpecificColor(tmpCol);
-                        function.setColorFlag(true);
-                        ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
-                    }
-                } else if (arg.equals("Reset to Generic Color")) {
-                    function.setColorFlag(false);
-                    ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
-                }
-            }
-        } catch (Exception e) {
-            ParaProfUtils.handleException(e);
-        }
-    }
-
     public void mouseClicked(MouseEvent evt) {
         try {
             //Get the location of the mouse.
@@ -402,26 +257,26 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
 
             if (list != null && index < list.size()) {
                 ppFunctionProfile = (PPFunctionProfile) list.elementAt(index);
-                if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
-                    clickedOnObject = ppFunctionProfile;
-                    if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
-                        if (index == 0)
-                            popup1.show(this, evt.getX(), evt.getY());
-                        else
-                            popup2.show(this, evt.getX(), evt.getY());
-                    } else
-                        popup3.show(this, evt.getX(), evt.getY());
-                } else {
-                    if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
 
-                        ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial,
-                                ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID());
-                        ppTrial.getSystemEvents().addObserver(threadDataWindow);
-                        threadDataWindow.show();
+                if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                    if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
+                        ParaProfUtils.handleThreadClick(ppTrial, ppFunctionProfile.getThread(), this, evt);
                     } else {
-                        ppTrial.toggleHighlightedFunction(function);
+                        JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial,
+                                ppFunctionProfile.getFunction(), this);
+                        popup.show(this, evt.getX(), evt.getY());
                     }
+                    return;
+                }
+
+                if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
+
+                    ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial, ppFunctionProfile.getNodeID(),
+                            ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID());
+                    ppTrial.getSystemEvents().addObserver(threadDataWindow);
+                    threadDataWindow.show();
+                } else {
+                    ppTrial.toggleHighlightedFunction(function);
                 }
             }
         } catch (Exception e) {
@@ -458,7 +313,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
     }
 
     public void setBarLength(int barLength) {
-        this.barLength = Math.max(1,barLength);
+        this.barLength = Math.max(1, barLength);
         this.repaint();
     }
 
@@ -483,28 +338,4 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         return new Dimension(xPanelSize, yPanelSize);
     }
 
-    //Instance data.
-    private ParaProfTrial ppTrial = null;
-    private FunctionDataWindow window = null;
-    private Vector list = new Vector();
-    private Function function = null;
-
-    //Drawing information.
-    private int barHeight = -1;
-    private int barSpacing = -1;
-    private int baseBarLength = 250;
-    private int barLength = 0;
-    private int textOffset = 60;
-    private int barXCoord = 0;
-    private int lastHeaderEndPosition = 0;
-
-    //Panel information.
-    int xPanelSize = 0;
-    int yPanelSize = 0;
-
-    //Popup menu stuff.
-    private JPopupMenu popup1 = new JPopupMenu();
-    private JPopupMenu popup2 = new JPopupMenu();
-    private JPopupMenu popup3 = new JPopupMenu();
-    private Object clickedOnObject = null;
 }

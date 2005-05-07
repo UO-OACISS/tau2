@@ -1,24 +1,30 @@
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+
 import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.print.*;
-import edu.uoregon.tau.dms.dss.*;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
+
+import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.Group;
+import edu.uoregon.tau.dms.dss.UserEvent;
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 
 /**
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.13 2005/04/20 22:34:01 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.14 2005/05/07 02:36:53 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
-public class LedgerWindow extends JFrame implements ActionListener, MenuListener, Observer {
+public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
     public static final int FUNCTION_LEDGER = 0;
     public static final int GROUP_LEDGER = 1;
@@ -26,93 +32,17 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
     private int windowType = -1; //0:function, 1:group, 2:userevent.
 
     private ParaProfTrial trial = null;
-    private JMenu windowsMenu = null;
     private JScrollPane sp = null;
     private LedgerWindowPanel panel = null;
     private Vector list = new Vector();
     
     public void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
-        JMenu subMenu = null;
-        JMenuItem menuItem = null;
 
-        //File menu.
-        JMenu fileMenu = new JMenu("File");
-
-        //Save menu.
-        subMenu = new JMenu("Save ...");
-
-        menuItem = new JMenuItem("Save Image");
-        menuItem.addActionListener(this);
-        subMenu.add(menuItem);
-
-        fileMenu.add(subMenu);
-        //End - Save menu.
-
-        menuItem = new JMenuItem("Preferences...");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Print");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close This Window");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Exit ParaProf!");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        fileMenu.addMenuListener(this);
-
-        //Windows menu
-        windowsMenu = new JMenu("Windows");
-
-        menuItem = new JMenuItem("Show ParaProf Manager");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Function Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Group Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show User Event Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Call Path Relations");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close All Sub-Windows");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        windowsMenu.addMenuListener(this);
-
-        //Help menu.
-        JMenu helpMenu = new JMenu("Help");
-
-        menuItem = new JMenuItem("Show Help Window");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        menuItem = new JMenuItem("About ParaProf");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        helpMenu.addMenuListener(this);
-
-        //Now, add all the menus to the main menu.
-        mainMenu.add(fileMenu);
-        mainMenu.add(windowsMenu);
-        mainMenu.add(helpMenu);
+        mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
+        mainMenu.add(ParaProfUtils.createTrialMenu(trial, this));
+        mainMenu.add(ParaProfUtils.createWindowsMenu(trial, this));
+        mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
     }
@@ -151,7 +81,7 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
             this.help(false);
         }
 
-        setupMenus();
+       
 
         //Sort the local data.
         sortLocalData();
@@ -164,10 +94,11 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
         //Panel and ScrollPane definition.
         panel = new LedgerWindowPanel(trial, this, windowType);
         sp = new JScrollPane(panel);
-        JScrollBar vScollBar = sp.getVerticalScrollBar();
-        vScollBar.setUnitIncrement(35);
+        JScrollBar vScrollBar = sp.getVerticalScrollBar();
+        vScrollBar.setUnitIncrement(35);
 
-
+        setupMenus();
+        
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 1;
@@ -179,70 +110,6 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
         ParaProf.incrementNumWindows();
     }
 
-    public void actionPerformed(ActionEvent evt) {
-        try {
-            Object EventSrc = evt.getSource();
-
-            if (EventSrc instanceof JMenuItem) {
-                String arg = evt.getActionCommand();
-                if (arg.equals("Print")) {
-                    ParaProfUtils.print(panel);
-                } else if (arg.equals("Preferences...")) {
-                    trial.getPreferencesWindow().showPreferencesWindow();
-                } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput.saveImage(panel);
-                } else if (arg.equals("Close This Window")) {
-                    closeThisWindow();
-                } else if (arg.equals("Exit ParaProf!")) {
-                    setVisible(false);
-                    dispose();
-                    ParaProf.exitParaProf(0);
-                } else if (arg.equals("Show ParaProf Manager")) {
-                    (new ParaProfManagerWindow()).show();
-                } else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(trial, 0)).show();
-                } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(trial, 1)).show();
-                } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(trial, 2)).show();
-                } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, new DataSorter(trial), 2);
-                    trial.getSystemEvents().addObserver(tmpRef);
-                    tmpRef.show();
-                } else if (arg.equals("Close All Sub-Windows")) {
-                    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-                } else if (arg.equals("About ParaProf")) {
-                    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
-                } else if (arg.equals("Show Help Window")) {
-                    this.help(true);
-                }
-            }
-        } catch (Exception e) {
-            ParaProfUtils.handleException(e);
-        }
-    }
-
-    public void menuSelected(MenuEvent evt) {
-        try {
-            if (trial.groupNamesPresent())
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
-
-            if (trial.userEventsPresent())
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
-        } catch (Exception e) {
-            ParaProfUtils.handleException(e);
-        }
-    }
-
-    public void menuDeselected(MenuEvent evt) {
-    }
-
-    public void menuCanceled(MenuEvent evt) {
-    }
 
     public void update(Observable o, Object arg) {
             String tmpString = (String) arg;
@@ -258,7 +125,7 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
             }
     }
 
-    private void help(boolean display) {
+    public void help(boolean display) {
         ParaProf.helpWindow.clearText();
         if (display)
             ParaProf.helpWindow.show();
@@ -324,11 +191,11 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
     }
 
     //Respond correctly when this window is closed.
-    void thisWindowClosing(java.awt.event.WindowEvent e) {
+    private void thisWindowClosing(java.awt.event.WindowEvent e) {
         closeThisWindow();
     }
 
-    void closeThisWindow() {
+    public void closeThisWindow() {
         try {
             setVisible(false);
             trial.getSystemEvents().deleteObserver(this);

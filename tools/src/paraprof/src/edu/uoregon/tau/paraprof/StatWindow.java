@@ -8,9 +8,6 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyListener;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
@@ -23,11 +20,13 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
+import edu.uoregon.tau.paraprof.interfaces.*;
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
 import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 
 public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner,
-        ScrollBarController, KeyListener {
+        ScrollBarController, KeyListener, ParaProfWindow, UnitListener {
 
     //Instance data.
     private ParaProfTrial ppTrial = null;
@@ -38,9 +37,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     private boolean userEventWindow;
 
     private JMenu optionsMenu = null;
-    private JMenu windowsMenu = null;
     private JMenu unitsSubMenu = null;
-
     private boolean sortByName;
 
     private JCheckBoxMenuItem descendingOrder = null;
@@ -53,11 +50,14 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     private Vector list = new Vector();
 
+    private int units = ParaProf.preferences.getUnits();
+
+    
     private SearchPanel searchPanel;
 
-    public StatWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, boolean userEventWindow) {
-        this.ppTrial = trial;
-        this.dataSorter = new DataSorter(trial);
+    public StatWindow(ParaProfTrial ppTrial, int nodeID, int contextID, int threadID, boolean userEventWindow) {
+        this.ppTrial = ppTrial;
+        this.dataSorter = new DataSorter(ppTrial);
         this.nodeID = nodeID;
         this.contextID = contextID;
         this.threadID = threadID;
@@ -73,10 +73,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
         //Now set the title.
         if (nodeID == -1)
-            this.setTitle("Mean Data Statistics: " + trial.getTrialIdentifier(true));
+            this.setTitle("Mean Data Statistics: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         else {
             this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                    + trial.getTrialIdentifier(true));
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         }
 
         addKeyListener(this);
@@ -102,47 +102,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-        //######
-        //File menu.
-        //######
-        JMenu fileMenu = new JMenu("File");
-
-        //Save menu.
-        subMenu = new JMenu("Save ...");
-
-        /*
-         * menuItem = new JMenuItem("ParaProf Preferences");
-         * menuItem.addActionListener(this); subMenu.add(menuItem);
-         */
-
-        menuItem = new JMenuItem("Save Image");
-        menuItem.addActionListener(this);
-        subMenu.add(menuItem);
-
-        fileMenu.add(subMenu);
-        //End - Save menu.
-
-        menuItem = new JMenuItem("Preferences...");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Print");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close This Window");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Exit ParaProf!");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        fileMenu.addMenuListener(this);
-        //######
-        //End - File menu.
-        //######
-
+       
+       
         //######
         //Options menu.
         //######
@@ -156,10 +117,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         showFindPanelBox.addActionListener(this);
         optionsMenu.add(showFindPanelBox);
 
-        showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-        showPathTitleInReverse.addActionListener(this);
-        optionsMenu.add(showPathTitleInReverse);
-
         showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
         showMetaData.addActionListener(this);
         optionsMenu.add(showMetaData);
@@ -171,33 +128,15 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         optionsMenu.add(descendingOrder);
 
         //Units submenu.
-        unitsSubMenu = new JMenu("Select Units");
+
         if (!userEventWindow) {
-            group = new ButtonGroup();
-
-            button = new JRadioButtonMenuItem("hr:min:sec", false);
-            button.addActionListener(this);
-            group.add(button);
-            unitsSubMenu.add(button);
-
-            button = new JRadioButtonMenuItem("Seconds", false);
-            button.addActionListener(this);
-            group.add(button);
-            unitsSubMenu.add(button);
-
-            button = new JRadioButtonMenuItem("Milliseconds", false);
-            button.addActionListener(this);
-            group.add(button);
-            unitsSubMenu.add(button);
-
-            button = new JRadioButtonMenuItem("Microseconds", true);
-            button.addActionListener(this);
-            group.add(button);
-            unitsSubMenu.add(button);
+            unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units);
+        } else { 
+            unitsSubMenu = new JMenu("Select Units");
         }
         optionsMenu.add(unitsSubMenu);
-        //End - Units submenu.
 
+        
         //Set the value type options.
         subMenu = new JMenu("Sort By");
         group = new ButtonGroup();
@@ -272,65 +211,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //End - Options menu.
         //######
 
-        //######
-        //Windows menu
-        //######
-        windowsMenu = new JMenu("Windows");
+     
 
-        menuItem = new JMenuItem("Show ParaProf Manager");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Function Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Group Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show User Event Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Call Path Relations");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close All Sub-Windows");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        windowsMenu.addMenuListener(this);
-        //######
-        //End - Windows menu
-        //######
-
-        //######
-        //Help menu.
-        //######
-        JMenu helpMenu = new JMenu("Help");
-
-        menuItem = new JMenuItem("Show Help Window");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        menuItem = new JMenuItem("About ParaProf");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        helpMenu.addMenuListener(this);
-        //######
-        //End - Help menu.
-        //######
-
-        //Now, add all the menus to the main menu.
-        mainMenu.add(fileMenu);
-        mainMenu.add(optionsMenu);
-        mainMenu.add(windowsMenu);
-        mainMenu.add(helpMenu);
-
-        setJMenuBar(mainMenu);
+      
         //####################################
         //End - Code to generate the menus.
         //####################################
@@ -348,7 +231,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //######
         //Panel and ScrollPane definition.
         //######
-        panel = new StatWindowPanel(trial, nodeID, contextID, threadID, this, userEventWindow);
+        panel = new StatWindowPanel(ppTrial, nodeID, contextID, threadID, this, userEventWindow);
         jScrollpane = new JScrollPane(panel);
 
         JScrollBar jScrollBar = jScrollpane.getVerticalScrollBar();
@@ -371,6 +254,17 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //####################################
         //End - Create and add the components.
         //####################################
+        
+        
+        //Now, add all the menus to the main menu.
+        mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
+        mainMenu.add(optionsMenu);
+        mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
+        mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
+        mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
+
+        setJMenuBar(mainMenu);
+        
         ParaProf.incrementNumWindows();
     }
 
@@ -380,19 +274,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
-                if (arg.equals("Print")) {
-                    ParaProfUtils.print(panel);
-                } else if (arg.equals("Preferences...")) {
-                    ppTrial.getPreferencesWindow().showPreferencesWindow();
-                } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput.saveImage(panel);
-                } else if (arg.equals("Close This Window")) {
-                    closeThisWindow();
-                } else if (arg.equals("Exit ParaProf!")) {
-                    setVisible(false);
-                    dispose();
-                    ParaProf.exitParaProf(0);
-                } else if (arg.equals("Name")) {
+                if (arg.equals("Name")) {
                     sortByName = true;
                     sortLocalData();
                     panel.repaint();
@@ -470,49 +352,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
-                } else if (arg.equals("Microseconds")) {
-                    units = 0;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("Milliseconds")) {
-                    units = 1;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("Seconds")) {
-                    units = 2;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("hr:min:sec")) {
-                    units = 3;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("Show Path Title in Reverse")) {
-                    if (nodeID == -1)
-                        this.setTitle("Mean Data Window Total: "
-                                + ppTrial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
-                    else
-                        this.setTitle("Total " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                                + ppTrial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
                 } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
-                } else if (arg.equals("Show ParaProf Manager")) {
-                    (new ParaProfManagerWindow()).show();
-                } else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(ppTrial, 0)).show();
-                } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(ppTrial, 1)).show();
-                } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(ppTrial, 2)).show();
-                } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, this.getDataSorter(), 2);
-                    ppTrial.getSystemEvents().addObserver(tmpRef);
-                    tmpRef.show();
-                } else if (arg.equals("Close All Sub-Windows")) {
-                    ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-                } else if (arg.equals("About ParaProf")) {
-                    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
-                } else if (arg.equals("Show Help Window")) {
-                    this.help(true);
                 }
             }
         } catch (Exception e) {
@@ -526,16 +367,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                 unitsSubMenu.setEnabled(true);
             else
                 unitsSubMenu.setEnabled(false);
-
-            if (ppTrial.groupNamesPresent())
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
-
-            if (ppTrial.userEventsPresent())
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
 
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -569,7 +400,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         }
     }
 
-    private void help(boolean display) {
+    public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
         if (display)
@@ -624,7 +455,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     }
 
     public int units() {
-        return units;
+        if (ppTrial.isTimeMetric())
+            return units;
+        return 0;
     }
 
     public Dimension getViewportSize() {
@@ -675,7 +508,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         closeThisWindow();
     }
 
-    void closeThisWindow() {
+    public void closeThisWindow() {
         try {
             setVisible(false);
             ppTrial.getSystemEvents().deleteObserver(this);
@@ -686,14 +519,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         dispose();
     }
 
-    //    private int order = 0; //0: descending order,1: ascending order.
-    //private int valueType = 2; //2-exclusive,4-inclusive,6-number of
-    // calls,8-number of subroutines,10-per call
-    // value.
-
-    //private ValueType valueType;
-    //private UserEventValueType userEventValueType;
-    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
 
     public void showSearchPanel(boolean show) {
         if (show) {
@@ -744,5 +569,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     public void keyTyped(KeyEvent e) {
         // TODO Auto-generated method stub
 
+    }
+
+    public void setUnits(int units) {
+        this.units = units;
+        this.setHeader();
+        panel.repaint();
     }
 }

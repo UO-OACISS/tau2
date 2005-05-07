@@ -1,31 +1,25 @@
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.util.*;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
 import javax.swing.event.*;
-import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.paraprof.enums.*;
 
 import org.jgraph.JGraph;
 import org.jgraph.graph.*;
 
-import javax.swing.*;
-
-import java.util.Hashtable;
-import java.awt.Dimension;
-import java.awt.FontMetrics;
-import java.awt.GridBagLayout;
-import java.awt.Rectangle;
-import java.awt.Color;
-import java.util.Map;
-
-import javax.swing.border.BevelBorder;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.Point2D;
-import java.awt.print.*;
+import edu.uoregon.tau.dms.dss.CallPathUtilFuncs;
+import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.FunctionProfile;
+import edu.uoregon.tau.paraprof.enums.CallGraphOption;
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 
 /**
  * CallGraphWindow.java
@@ -35,12 +29,12 @@ import java.awt.print.*;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.27 2005/04/20 21:13:03 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.28 2005/05/07 02:36:51 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.27 $
+ * @version	$Revision: 1.28 $
  */
-public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, KeyListener,
-        ChangeListener, Observer, ParaProfImageInterface, Printable {
+public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
+        ChangeListener, Observer, ParaProfImageInterface, Printable, ParaProfWindow {
 
     private static final int MARGIN = 20;
     private static final int HORIZONTAL_SPACING = 10;
@@ -177,10 +171,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                     Function f = ((Function) gc.getFunction());
 
                     if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
-                        clickedOnObject = f;
+                        JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, f, this);
                         popup.show(this, evt.getX(), evt.getY());
-                        return;
-
                     } else {
                         ppTrial.toggleHighlightedFunction(f);
                     }
@@ -291,18 +283,13 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         functionProfileList = thread.getFunctionProfiles();
 
-        // create the right-click popup
-        JMenuItem jMenuItem = null;
-        jMenuItem = new JMenuItem("Show Function Details");
-        jMenuItem.addActionListener(this);
-        popup.add(jMenuItem);
 
         //Now set the title.
         if (meanWindow)
-            this.setTitle("Mean Call Graph - " + trial.getTrialIdentifier(true));
+            this.setTitle("Mean Call Graph - " + trial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         else
             this.setTitle("Call Graph " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
-                    + thread.getThreadID() + " - " + trial.getTrialIdentifier(true));
+                    + thread.getThreadID() + " - " + trial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -458,33 +445,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-        JMenu fileMenu = new JMenu("File");
-
-        subMenu = new JMenu("Save ...");
-
-        menuItem = new JMenuItem("Save Image");
-        menuItem.addActionListener(this);
-        subMenu.add(menuItem);
-
-        fileMenu.add(subMenu);
-
-        menuItem = new JMenuItem("Preferences...");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Print");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close This Window");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Exit ParaProf!");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        fileMenu.addMenuListener(this);
+       
 
         // options menu 
         optionsMenu = new JMenu("Options");
@@ -597,52 +558,12 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         optionsMenu.add(subMenu);
 
-        optionsMenu.addMenuListener(this);
-
-        windowsMenu = new JMenu("Windows");
-
-        menuItem = new JMenuItem("Show ParaProf Manager");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Function Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Group Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show User Event Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Call Path Relations");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close All Sub-Windows");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        windowsMenu.addMenuListener(this);
-        JMenu helpMenu = new JMenu("Help");
-
-        menuItem = new JMenuItem("Show Help Window");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        menuItem = new JMenuItem("About ParaProf");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        helpMenu.addMenuListener(this);
-
         // now add all the menus to the main menu
-        mainMenu.add(fileMenu);
+        mainMenu.add(ParaProfUtils.createFileMenu(this, this, this));
         mainMenu.add(optionsMenu);
-        mainMenu.add(windowsMenu);
-        mainMenu.add(helpMenu);
+        mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
+        mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
+        mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
     }
@@ -1717,28 +1638,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         validate();
     }
 
-    public void menuSelected(MenuEvent evt) {
-        try {
-            if (ppTrial.groupNamesPresent())
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
-
-            if (ppTrial.userEventsPresent())
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
-
-        } catch (Exception e) {
-            new ParaProfErrorDialog(e);
-        }
-    }
-
-    public void menuDeselected(MenuEvent evt) {
-    }
-
-    public void menuCanceled(MenuEvent evt) {
-    }
 
     public Edge getEdge(FunctionProfile p, FunctionProfile c) {
 
@@ -1919,7 +1818,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     }
 
-    private void help(boolean display) {
+    public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
         if (display)
@@ -1959,7 +1858,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         closeThisWindow();
     }
 
-    void closeThisWindow() {
+    public void closeThisWindow() {
         setVisible(false);
         ppTrial.getSystemEvents().deleteObserver(this);
         ParaProf.decrementNumWindows();
@@ -2086,57 +1985,13 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
             if (EventSrc instanceof JMenuItem) {
 
-             
-
                 String arg = evt.getActionCommand();
 
-                if (arg.equals("Show Function Details")) {
-                    FunctionDataWindow tmpRef = new FunctionDataWindow(ppTrial, (Function) clickedOnObject);
-
-                    ppTrial.getSystemEvents().addObserver(tmpRef);
-                    tmpRef.show();
-
-                } else if (arg.equals("Exit ParaProf!")) {
-                    setVisible(false);
-                    dispose();
-                    ParaProf.exitParaProf(0);
-
-                } else if (arg.equals("Preferences...")) {
-                    ppTrial.getPreferencesWindow().showPreferencesWindow();
-                } else if (arg.equals("Close This Window")) {
-                    closeThisWindow();
-                } else if (arg.equals("Show ParaProf Manager")) {
-                    (new ParaProfManagerWindow()).show();
-                } else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(ppTrial, 0)).show();
-                } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(ppTrial, 1)).show();
-                } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(ppTrial, 2)).show();
-                } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, new DataSorter(
-                            ppTrial), 2);
-                    ppTrial.getSystemEvents().addObserver(tmpRef);
-                    tmpRef.show();
-                } else if (arg.equals("Close All Sub-Windows")) {
-                    ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-
-                } else if (arg.equals("Print")) {
-                    ParaProfUtils.print(this);
-                } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput.saveImage((ParaProfImageInterface) this);
-
-                } else if (arg.equals("Show Width Slider")) {
+                 if (arg.equals("Show Width Slider")) {
                     if (slidersCheckBox.isSelected())
                         displaySliders(true);
                     else
                         displaySliders(false);
-                } else if (arg.equals("Close All Sub-Windows")) {
-                    ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-                } else if (arg.equals("About ParaProf")) {
-                    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
-                } else if (arg.equals("Show Help Window")) {
-                    this.help(true);
                 }
 
             }
@@ -2151,7 +2006,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     private boolean meanWindow = false;
 
     private JMenu optionsMenu = null;
-    private JMenu windowsMenu = null;
 
     private JMenuItem groupLedger = null;
     private JMenuItem usereventLedger = null;
@@ -2181,7 +2035,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     private int colorMetricID;
     private Font font;
     private int boxHeight;
-    private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null; // stores the function that was right-clicked on
     private double scale = 1.0;
 

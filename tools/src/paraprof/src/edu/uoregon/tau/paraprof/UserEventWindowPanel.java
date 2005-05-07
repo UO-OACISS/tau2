@@ -70,8 +70,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
             return NO_SUCH_PAGE;
         }
     }
-    
-    
+
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         list = window.getData();
@@ -93,12 +92,11 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         barHeight = trial.getPreferencesWindow().getBarHeight();
 
         //Obtain the font and its metrics.
-        Font font = new Font(trial.getPreferencesWindow().getParaProfFont(), trial.getPreferencesWindow().getFontStyle(),
-                barHeight);
+        Font font = new Font(trial.getPreferencesWindow().getParaProfFont(),
+                trial.getPreferencesWindow().getFontStyle(), barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
-        
         maxValue = window.getValueType().getMaxValue(userEvent);
 
         stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0, maxValue, ParaProf.defaultNumberPrecision)); //No units required in
@@ -114,44 +112,12 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
             return;
         }
 
-        int yBeg = 0;
-        int yEnd = 0;
-        int startElement = 0;
-        int endElement = 0;
-        Rectangle clipRect = null;
-        Rectangle viewRect = null;
-
-        if (!fullWindow) {
-            if (toScreen) {
-                clipRect = g2D.getClipBounds();
-                yBeg = (int) clipRect.getY();
-                yEnd = (int) (yBeg + clipRect.getHeight());
-            } else {
-                viewRect = window.getViewRect();
-                yBeg = (int) viewRect.getY();
-                yEnd = (int) (yBeg + viewRect.getHeight());
-            }
-            startElement = ((yBeg - yCoord) / barSpacing) - 1;
-            endElement = ((yEnd - yCoord) / barSpacing) + 1;
-
-            if (startElement < 0)
-                startElement = 0;
-
-            if (endElement < 0)
-                endElement = 0;
-
-            if (startElement > (list.size() - 1))
-                startElement = (list.size() - 1);
-
-            if (endElement > (list.size() - 1))
-                endElement = (list.size() - 1);
-
-            if (toScreen)
-                yCoord = yCoord + (startElement * barSpacing);
-        } else {
-            startElement = 0;
-            endElement = ((list.size()) - 1);
-        }
+        //determine which elements to draw (clipping)
+        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow,
+                list.size(), barSpacing, yCoord);
+        int startElement = clips[0];
+        int endElement = clips[1];
+        yCoord = clips[2];
 
         //######
         //Draw the header if required.
@@ -186,21 +152,21 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 
         for (int i = startElement; i <= endElement; i++) {
             ppUserEventProfile = (PPUserEventProfile) list.elementAt(i);
-            
+
             value = window.getValueType().getValue(ppUserEventProfile.getUserEventProfile());
 
             //For consistancy in drawing, the y coord is updated at the
             // beginning of the loop.
             yCoord = yCoord + (barSpacing);
             drawBar(g2D, fmFont, value, maxValue, "n,c,t " + (ppUserEventProfile.getNodeID()) + ","
-                    + (ppUserEventProfile.getContextID()) + "," + (ppUserEventProfile.getThreadID()),
-                    barXCoord, yCoord, barHeight, groupMember);
+                    + (ppUserEventProfile.getContextID()) + "," + (ppUserEventProfile.getThreadID()), barXCoord,
+                    yCoord, barHeight, groupMember);
         }
 
     }
 
-    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text,
-            int barXCoord, int yCoord, int barHeight, boolean groupMember) {
+    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text, int barXCoord,
+            int yCoord, int barHeight, boolean groupMember) {
 
         int xLength = 0;
         double d = 0.0;
@@ -287,8 +253,6 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         }
     }
 
-
-
     public void mousePressed(MouseEvent evt) {
     }
 
@@ -301,7 +265,6 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     public void mouseExited(MouseEvent evt) {
     }
 
-  
     public Dimension getImageSize(boolean fullScreen, boolean header) {
         Dimension d = null;
         if (fullScreen)
@@ -312,21 +275,20 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         return d;
     }
 
-    
     //This method sets both xPanelSize and yPanelSize.
     private boolean resizePanel(FontMetrics fmFont, int barXCoord) {
         boolean resized = false;
-            int newYPanelSize = ((window.getData().size()) + 2) * barSpacing + 10;
-            int[] nct = trial.getMaxNCTNumbers();
-            String nctString = "n,c,t " + nct[0] + "," + nct[1] + "," + nct[2];
-            ;
-            int newXPanelSize = barXCoord + 5 + (fmFont.stringWidth(nctString)) + 25;
-            if ((newYPanelSize != yPanelSize) || (newXPanelSize != xPanelSize)) {
-                yPanelSize = newYPanelSize;
-                xPanelSize = newXPanelSize;
-                this.setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
-                resized = false;
-            }
+        int newYPanelSize = ((window.getData().size()) + 2) * barSpacing + 10;
+        int[] nct = trial.getMaxNCTNumbers();
+        String nctString = "n,c,t " + nct[0] + "," + nct[1] + "," + nct[2];
+        ;
+        int newXPanelSize = barXCoord + 5 + (fmFont.stringWidth(nctString)) + 25;
+        if ((newYPanelSize != yPanelSize) || (newXPanelSize != xPanelSize)) {
+            yPanelSize = newYPanelSize;
+            xPanelSize = newXPanelSize;
+            this.setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
+            resized = false;
+        }
         return resized;
     }
 
@@ -334,11 +296,11 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         return new Dimension(xPanelSize, yPanelSize);
     }
 
-    
     public void setBarLength(int barLength) {
         this.barLength = Math.max(1, barLength);
         this.repaint();
     }
+
     private String counterName = null;
 
     private UserEvent userEvent = null;

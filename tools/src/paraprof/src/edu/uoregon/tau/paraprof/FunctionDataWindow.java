@@ -1,25 +1,57 @@
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+
 import javax.swing.*;
 import javax.swing.event.*;
-import java.awt.print.*;
-import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.paraprof.enums.*;
+
+import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.enums.SortType;
+import edu.uoregon.tau.paraprof.enums.ValueType;
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 
 /**
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.19 2005/05/06 01:00:01 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.20 2005/05/07 02:36:52 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.19 $
+ * @version	$Revision: 1.20 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
-        ChangeListener {
+        ChangeListener, ParaProfWindow, UnitListener {
+
+
+    private ParaProfTrial ppTrial = null;
+    private DataSorter dataSorter = null;
+
+    private Function function = null;
+
+    private JMenu optionsMenu = null;
+    private JMenu unitsSubMenu = null;
+
+    private JCheckBoxMenuItem sortByNCTCheckbox = null;
+    private JCheckBoxMenuItem descendingOrderCheckBox = null;
+    private JCheckBoxMenuItem showValuesAsPercent = null;
+    private JCheckBoxMenuItem showPathTitleInReverse = null;
+    private JCheckBoxMenuItem showMetaData = null;
+
+    private JLabel barLengthLabel = new JLabel("Bar Width");
+    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
+
+    private FunctionDataWindowPanel panel = null;
+    private JScrollPane sp = null;
+
+    private Vector list = new Vector();
+
+    private double maxValue;
+    private int units = ParaProf.preferences.getUnits();
 
     public FunctionDataWindow(ParaProfTrial trial, Function function) {
         this.ppTrial = trial;
@@ -30,7 +62,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
         //Now set the title.
-        this.setTitle("Function Data Window: " + trial.getTrialIdentifier(true));
+        this.setTitle("Function Data Window: " + trial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -49,7 +81,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             this.help(false);
         }
 
-        setupMenus();
 
         //Setting up the layout system for the main window.
         getContentPane().setLayout(new GridBagLayout());
@@ -59,9 +90,12 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         //Panel and ScrollPane definition.
         panel = new FunctionDataWindowPanel(trial, function, this);
         sp = new JScrollPane(panel);
-        JScrollBar vScollBar = sp.getVerticalScrollBar();
-        vScollBar.setUnitIncrement(35);
+        JScrollBar vScrollBar = sp.getVerticalScrollBar();
+        vScrollBar.setUnitIncrement(35);
 
+        setupMenus();
+
+        
         this.setHeader();
 
         sortLocalData();
@@ -130,33 +164,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-        JMenu fileMenu = new JMenu("File");
-
-        subMenu = new JMenu("Save ...");
-
-        menuItem = new JMenuItem("Save Image");
-        menuItem.addActionListener(this);
-        subMenu.add(menuItem);
-
-        fileMenu.add(subMenu);
-
-        menuItem = new JMenuItem("Preferences...");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Print");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close This Window");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Exit ParaProf!");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        fileMenu.addMenuListener(this);
+        
 
         optionsMenu = new JMenu("Options");
 
@@ -167,10 +175,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         box = new JCheckBoxMenuItem("Show Width Slider", false);
         box.addActionListener(this);
         optionsMenu.add(box);
-
-        showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-        showPathTitleInReverse.addActionListener(this);
-        optionsMenu.add(showPathTitleInReverse);
 
         showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
         showMetaData.addActionListener(this);
@@ -193,33 +197,11 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         descendingOrderCheckBox.addActionListener(sortData);
         optionsMenu.add(descendingOrderCheckBox);
 
-        showValuesAsPercent = new JCheckBoxMenuItem("Show Values as Percent", true);
+        showValuesAsPercent = new JCheckBoxMenuItem("Show Values as Percent", ParaProf.preferences.getShowValuesAsPercent());
         showValuesAsPercent.addActionListener(sortData);
         optionsMenu.add(showValuesAsPercent);
 
-        unitsSubMenu = new JMenu("Select Units");
-        group = new ButtonGroup();
-
-        button = new JRadioButtonMenuItem("hr:min:sec", false);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
-        button = new JRadioButtonMenuItem("Seconds", false);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
-        button = new JRadioButtonMenuItem("Milliseconds", false);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
-        button = new JRadioButtonMenuItem("Microseconds", true);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
+        unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units);
         optionsMenu.add(unitsSubMenu);
 
         //Set the value type options.
@@ -257,62 +239,16 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         subMenu.add(button);
 
         optionsMenu.add(subMenu);
-
-
-
         optionsMenu.addMenuListener(this);
 
-        // windows menu
-        windowsMenu = new JMenu("Windows");
-
-        menuItem = new JMenuItem("Show ParaProf Manager");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Function Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Group Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show User Event Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Call Path Relations");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Histogram");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close All Sub-Windows");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        windowsMenu.addMenuListener(this);
-
-        //Help menu.
-        JMenu helpMenu = new JMenu("Help");
-
-        menuItem = new JMenuItem("Show Help Window");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        menuItem = new JMenuItem("About ParaProf");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        helpMenu.addMenuListener(this);
+      
 
         //Now, add all the menus to the main menu.
-        mainMenu.add(fileMenu);
+        mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
-        mainMenu.add(windowsMenu);
-        mainMenu.add(helpMenu);
+        mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
+        mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
+        mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
     }
@@ -325,69 +261,13 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
-                if (arg.equals("Print")) {
-                    ParaProfUtils.print(panel);
-                } else if (arg.equals("Preferences...")) {
-                    ppTrial.getPreferencesWindow().showPreferencesWindow();
-                } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput.saveImage(panel);
-                } else if (arg.equals("Close This Window")) {
-                    closeThisWindow();
-                } else if (arg.equals("Exit ParaProf!")) {
-                    setVisible(false);
-                    dispose();
-                    ParaProf.exitParaProf(0);
-
-                } else if (arg.equals("Microseconds")) {
-                    units = 0;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("Milliseconds")) {
-                    units = 1;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("Seconds")) {
-                    units = 2;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("hr:min:sec")) {
-                    units = 3;
-                    this.setHeader();
-                    panel.repaint();
-                } else if (arg.equals("Show Width Slider")) {
+                if (arg.equals("Show Width Slider")) {
                     if (((JCheckBoxMenuItem) EventSrc).isSelected())
                         showWidthSlider(true);
                     else
                         showWidthSlider(false);
-                } else if (arg.equals("Show ParaProf Manager")) {
-                    (new ParaProfManagerWindow()).show();
-                } else if (arg.equals("Show Path Title in Reverse"))
-                    this.setTitle("Function Data Window: "
-                            + ppTrial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
-                else if (arg.equals("Show Meta Data in Panel"))
+                } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
-                else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(ppTrial, 0)).show();
-                } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(ppTrial, 1)).show();
-                } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(ppTrial, 2)).show();
-                } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1,
-                            this.getDataSorter(), 2);
-                    ppTrial.getSystemEvents().addObserver(tmpRef);
-                    tmpRef.show();
-                } else if (arg.equals("Show Histogram")) {
-
-                    HistogramWindow tmpRef = new HistogramWindow(ppTrial, function);
-                    ppTrial.getSystemEvents().addObserver(tmpRef);
-                    tmpRef.show();
-                } else if (arg.equals("Close All Sub-Windows")) {
-                    ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-                } else if (arg.equals("About ParaProf")) {
-                    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
-                } else if (arg.equals("Show Help Window")) {
-                    this.help(true);
                 } else {
                     throw new ParaProfException("Menu system not implemented properly: " + arg);
                 }
@@ -437,16 +317,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                 }
             }
 
-            if (ppTrial.groupNamesPresent())
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
-
-            if (ppTrial.userEventsPresent())
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
-
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -477,7 +347,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         }
     }
 
-    private void help(boolean display) {
+    public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
         if (display)
@@ -669,30 +539,9 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         dispose();
     }
 
-    private ParaProfTrial ppTrial = null;
-    private DataSorter dataSorter = null;
-
-    private Function function = null;
-
-    private JMenu optionsMenu = null;
-    private JMenu windowsMenu = null;
-    private JMenu unitsSubMenu = null;
-
-    private JCheckBoxMenuItem sortByNCTCheckbox = null;
-    private JCheckBoxMenuItem descendingOrderCheckBox = null;
-    private JCheckBoxMenuItem showValuesAsPercent = null;
-    private JCheckBoxMenuItem showPathTitleInReverse = null;
-    private JCheckBoxMenuItem showMetaData = null;
-
-    private JLabel barLengthLabel = new JLabel("Bar Width");
-    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
-
-    private FunctionDataWindowPanel panel = null;
-    private JScrollPane sp = null;
-
-    private Vector list = new Vector();
-
-    private double maxValue;
-
-    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+    public void setUnits(int units) {
+        this.units = units;
+        this.setHeader();
+        panel.repaint();
+    }
 }

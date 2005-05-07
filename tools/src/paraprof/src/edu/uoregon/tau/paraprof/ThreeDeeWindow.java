@@ -9,23 +9,22 @@ import java.awt.print.Printable;
 import java.util.*;
 
 import javax.swing.*;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
 
 import net.java.games.jogl.*;
 import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.dms.dss.Thread;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.vis.*;
 
-public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListener, KeyListener, Observer,
-        Printable {
+public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListener, Observer, Printable, ParaProfWindow, UnitListener {
 
     private final int defaultToScatter = 4000;
 
-    GLCanvas canvas;
-    VisRenderer visRenderer = new VisRenderer();
+    private GLCanvas canvas;
+    private VisRenderer visRenderer = new VisRenderer();
 
     private Plot plot;
     private Axes axes;
@@ -34,7 +33,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
     private ParaProfTrial ppTrial;
 
     private JMenu optionsMenu = null;
-    private JMenu windowsMenu = null;
 
     private ThreeDeeControlPanel controlPanel;
 
@@ -63,7 +61,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
     private Vector functions;
     private Vector threads;
 
-    private int units;
+    private int units = ParaProf.preferences.getUnits();
 
     float maxHeightValue = 0;
     float maxColorValue = 0;
@@ -76,7 +74,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
         ppTrial.getSystemEvents().addObserver(this);
 
-        this.setTitle("ParaProf Visualizer");
+        this.setTitle("ParaProf Visualizer: "
+                + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -246,7 +245,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         if (plot != null) {
             plot.cleanUp();
         }
-        
+
         if (settings.getVisType() == VisType.SCATTER_PLOT) {
             generateScatterPlot(autoSize, settings);
             return;
@@ -260,7 +259,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
         int numThreads = dataSource.getNumThreads();
         int numFunctions = 0;
-        
+
         // We must actually count the number of functions, in case there is a group mask
         for (Iterator funcIter = ppTrial.getDataSource().getFunctions(); funcIter.hasNext();) {
             Function function = (Function) funcIter.next();
@@ -269,9 +268,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
                 numFunctions++;
             }
         }
-        
-        
-        
+
         float[][] heightValues = new float[numFunctions][numThreads];
         float[][] colorValues = new float[numFunctions][numThreads];
 
@@ -292,8 +289,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
                     Context context = (Context) it2.next();
                     for (Iterator it3 = context.getThreads(); it3.hasNext();) {
                         edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
-                        threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":"
-                                + thread.getThreadID());
+                        threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID());
                         threads.add(thread);
                     }
                 }
@@ -390,8 +386,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
                         settings.getPlotHeight(), heightValues, colorValues, colorScale);
                 plot = triangleMeshPlot;
             } else {
-                triangleMeshPlot.setValues(settings.getPlotWidth(), settings.getPlotDepth(),
-                        settings.getPlotHeight(), heightValues, colorValues);
+                triangleMeshPlot.setValues(settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(),
+                        heightValues, colorValues);
                 plot = triangleMeshPlot;
             }
         } else {
@@ -400,8 +396,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
             if (barPlot == null) {
 
                 barPlot = new BarPlot();
-                barPlot.initialize(axes, settings.getPlotWidth(), settings.getPlotDepth(),
-                        settings.getPlotHeight(), heightValues, colorValues, colorScale);
+                barPlot.initialize(axes, settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(),
+                        heightValues, colorValues, colorScale);
                 plot = barPlot;
             } else {
                 barPlot.setValues(settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(),
@@ -413,8 +409,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
     private void updateSettings(ThreeDeeSettings newSettings) {
 
-
-        
         if (oldSettings.getAxisOrientation() != newSettings.getAxisOrientation()) {
             axes.setOrientation(newSettings.getAxisOrientation());
         }
@@ -499,140 +493,33 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-        JMenu fileMenu = new JMenu("File");
-
-        subMenu = new JMenu("Save ...");
-        subMenu.getPopupMenu().setLightWeightPopupEnabled(false);
-        subMenu.getPopupMenu().setLightWeightPopupEnabled(false);
-
-        menuItem = new JMenuItem("Save Image");
-        menuItem.addActionListener(this);
-        subMenu.add(menuItem);
-
-        fileMenu.add(subMenu);
-        fileMenu.getPopupMenu().setLightWeightPopupEnabled(false);
-
-        menuItem = new JMenuItem("Preferences...");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Print");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close This Window");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Exit ParaProf!");
-        menuItem.addActionListener(this);
-        fileMenu.add(menuItem);
-
-        fileMenu.addMenuListener(this);
-
         optionsMenu = new JMenu("Options");
         optionsMenu.getPopupMenu().setLightWeightPopupEnabled(false);
 
-        JMenu unitsSubMenu = new JMenu("Select Units");
+        JMenu unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units);
         unitsSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);
-
-        ButtonGroup group = new ButtonGroup();
-
-        JRadioButtonMenuItem button = new JRadioButtonMenuItem("hr:min:sec", false);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
-        button = new JRadioButtonMenuItem("Seconds", false);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
-        button = new JRadioButtonMenuItem("Milliseconds", false);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
-        button = new JRadioButtonMenuItem("Microseconds", true);
-        button.addActionListener(this);
-        group.add(button);
-        unitsSubMenu.add(button);
-
         optionsMenu.add(unitsSubMenu);
 
-        windowsMenu = new JMenu("Windows");
+        // now add all the menus to the main menu
+        
+        JMenu fileMenu = ParaProfUtils.createFileMenu(this, this, this);
+        JMenu trialMenu = ParaProfUtils.createTrialMenu(ppTrial, this);
+        JMenu windowsMenu = ParaProfUtils.createWindowsMenu(ppTrial, this);
+        JMenu helpMenu = ParaProfUtils.createHelpMenu(this, this);
+        
+        fileMenu.getPopupMenu().setLightWeightPopupEnabled(false);
+        trialMenu.getPopupMenu().setLightWeightPopupEnabled(false);
         windowsMenu.getPopupMenu().setLightWeightPopupEnabled(false);
-
-        menuItem = new JMenuItem("Show ParaProf Manager");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Function Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Group Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show User Event Ledger");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Call Path Relations");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close All Sub-Windows");
-        menuItem.addActionListener(this);
-        windowsMenu.add(menuItem);
-
-        windowsMenu.addMenuListener(this);
-        JMenu helpMenu = new JMenu("Help");
         helpMenu.getPopupMenu().setLightWeightPopupEnabled(false);
 
-        menuItem = new JMenuItem("Show Help Window");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        menuItem = new JMenuItem("About ParaProf");
-        menuItem.addActionListener(this);
-        helpMenu.add(menuItem);
-
-        helpMenu.addMenuListener(this);
-
-        // now add all the menus to the main menu
+        
         mainMenu.add(fileMenu);
         mainMenu.add(optionsMenu);
+        mainMenu.add(trialMenu);
         mainMenu.add(windowsMenu);
         mainMenu.add(helpMenu);
 
         setJMenuBar(mainMenu);
-    }
-
-    // Menu Interface Implementation
-
-    public void menuSelected(MenuEvent evt) {
-        try {
-            if (ppTrial.groupNamesPresent())
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
-
-            if (ppTrial.userEventsPresent())
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
-            else
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
-
-        } catch (Exception e) {
-            new ParaProfErrorDialog(e);
-        }
-    }
-
-    public void menuDeselected(MenuEvent evt) {
-    }
-
-    public void menuCanceled(MenuEvent evt) {
     }
 
     public int getUnits() {
@@ -667,8 +554,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
             functionNames = null;
 
-            if (settings.getVisType() == VisType.BAR_PLOT
-                    || settings.getVisType() == VisType.TRIANGLE_MESH_PLOT) {
+            if (settings.getVisType() == VisType.BAR_PLOT || settings.getVisType() == VisType.TRIANGLE_MESH_PLOT) {
                 settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
                 settings.setRegularAim(visRenderer.getAim());
                 settings.setRegularEye(visRenderer.getEye());
@@ -689,7 +575,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         closeThisWindow();
     }
 
-    void closeThisWindow() {
+    public void closeThisWindow() {
         setVisible(false);
         ppTrial.getSystemEvents().deleteObserver(this);
         ParaProf.decrementNumWindows();
@@ -708,10 +594,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         plot = null;
 
         dispose();
-//        System.gc();
+        //        System.gc();
     }
 
-    private void help(boolean display) {
+    public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
         if (display)
@@ -766,7 +652,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
             if (EventSrc instanceof javax.swing.Timer) {
                 // the timer has ticked, get progress and post
                 if (visRenderer == null) { // if it's been closed, go away
-                    ((javax.swing.Timer)EventSrc).stop();
+                    ((javax.swing.Timer) EventSrc).stop();
                     return;
                 }
 
@@ -786,65 +672,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
                 return;
             }
 
-            String arg = evt.getActionCommand();
-
-            if (arg.equals("Exit ParaProf!")) {
-                setVisible(false);
-                dispose();
-                ParaProf.exitParaProf(0);
-
-            } else if (arg.equals("Preferences...")) {
-                ppTrial.getPreferencesWindow().showPreferencesWindow();
-            } else if (arg.equals("Close This Window")) {
-                closeThisWindow();
-            } else if (arg.equals("Show ParaProf Manager")) {
-                (new ParaProfManagerWindow()).show();
-            } else if (arg.equals("Show Function Ledger")) {
-                (new LedgerWindow(ppTrial, 0)).show();
-            } else if (arg.equals("Show Group Ledger")) {
-                (new LedgerWindow(ppTrial, 1)).show();
-            } else if (arg.equals("Show User Event Ledger")) {
-                (new LedgerWindow(ppTrial, 2)).show();
-            } else if (arg.equals("Show Call Path Relations")) {
-                CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1,
-                        new DataSorter(ppTrial), 2);
-                ppTrial.getSystemEvents().addObserver(tmpRef);
-                tmpRef.show();
-            } else if (arg.equals("Close All Sub-Windows")) {
-                ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-
-            } else if (arg.equals("Print")) {
-                ParaProfUtils.print(this);
-            } else if (arg.equals("Microseconds")) {
-                units = 0;
-                setAxisStrings();
-                controlPanel.dataChanged();
-                visRenderer.redraw();
-            } else if (arg.equals("Milliseconds")) {
-                units = 1;
-                setAxisStrings();
-                controlPanel.dataChanged();
-                visRenderer.redraw();
-            } else if (arg.equals("Seconds")) {
-                units = 2;
-                setAxisStrings();
-                controlPanel.dataChanged();
-                visRenderer.redraw();
-            } else if (arg.equals("hr:min:sec")) {
-                units = 3;
-                setAxisStrings();
-                controlPanel.dataChanged();
-                visRenderer.redraw();
-
-            } else if (arg.equals("Save Image")) {
-                ParaProfImageOutput.save3dImage(ThreeDeeWindow.this);
-            } else if (arg.equals("Close All Sub-Windows")) {
-                ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-            } else if (arg.equals("About ParaProf")) {
-                JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
-            } else if (arg.equals("Show Help Window")) {
-                this.help(true);
-            }
 
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -901,8 +728,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
         Thread thread = (Thread) threads.get(settings.getSelections()[1]);
 
-        Function function = ppTrial.getDataSource().getFunction(
-                (String) functionNames.get(settings.getSelections()[0]));
+        Function function = ppTrial.getDataSource().getFunction((String) functionNames.get(settings.getSelections()[0]));
         FunctionProfile fp = thread.getFunctionProfile(function);
 
         if (fp == null) {
@@ -915,8 +741,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
             units = 0;
         }
 
-        return UtilFncs.getOutputString(units,
-                settings.getHeightValue().getValue(fp, settings.getHeightMetricID()), 6).trim()
+        return UtilFncs.getOutputString(units, settings.getHeightValue().getValue(fp, settings.getHeightMetricID()), 6).trim()
                 + getUnitsString(units, settings.getHeightValue(), ppMetric);
 
         //Double.toString(settings.getHeightValue().getValue(fp, settings.getHeightMetricID()));
@@ -932,8 +757,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
 
         Thread thread = (Thread) threads.get(settings.getSelections()[1]);
 
-        Function function = ppTrial.getDataSource().getFunction(
-                (String) functionNames.get(settings.getSelections()[0]));
+        Function function = ppTrial.getDataSource().getFunction((String) functionNames.get(settings.getSelections()[0]));
         FunctionProfile fp = thread.getFunctionProfile(function);
 
         if (fp == null) {
@@ -946,8 +770,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
             units = 0;
         }
 
-        return UtilFncs.getOutputString(units,
-                settings.getColorValue().getValue(fp, settings.getColorMetricID()), 6).trim()
+        return UtilFncs.getOutputString(units, settings.getColorValue().getValue(fp, settings.getColorMetricID()), 6).trim()
                 + getUnitsString(units, settings.getColorValue(), ppMetric);
 
         //return Double.toString(settings.getColorValue().getValue(fp, settings.getColorMetricID()));
@@ -971,11 +794,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
                 if (scatterFunctions[f] != null) {
                     // e.g. "MPI_Recv()\n(Exclusive, Time)"
                     if (scatterValueTypes[f] == ValueType.NUMCALLS || scatterValueTypes[f] == ValueType.NUMSUBR) {
-                        axisNames.add(scatterFunctions[f].getName() + "\n(" + scatterValueTypes[f].toString()
-                                + ")");
+                        axisNames.add(scatterFunctions[f].getName() + "\n(" + scatterValueTypes[f].toString() + ")");
                     } else {
-                        axisNames.add(scatterFunctions[f].getName() + "\n(" + scatterValueTypes[f].toString()
-                                + ", " + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
+                        axisNames.add(scatterFunctions[f].getName() + "\n(" + scatterValueTypes[f].toString() + ", "
+                                + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
                     }
                 } else {
                     axisNames.add("none");
@@ -1011,8 +833,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
             colorScale.setStrings(UtilFncs.getOutputString(units, minScatterValues[3], 6).trim(),
                     UtilFncs.getOutputString(units, maxScatterValues[3], 6).trim(), (String) axisNames.get(3));
 
-            scatterPlotAxes.setStrings((String) axisNames.get(0), (String) axisNames.get(1),
-                    (String) axisNames.get(2), axisStrings[0], axisStrings[1], axisStrings[2]);
+            scatterPlotAxes.setStrings((String) axisNames.get(0), (String) axisNames.get(1), (String) axisNames.get(2),
+                    axisStrings[0], axisStrings[1], axisStrings[2]);
 
         } else {
 
@@ -1041,8 +863,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
             //String zAxisLabel = settings.getHeightValue().toString() + ", " + ppTrial.getMetricName(settings.getHeightMetricID());
             //String zAxisLabel = "";
 
-            fullDataPlotAxes.setStrings("Threads", "Functions", zAxisLabel, threadNames, functionNames,
-                    zStrings);
+            fullDataPlotAxes.setStrings("Threads", "Functions", zAxisLabel, threadNames, functionNames, zStrings);
         }
     }
 
@@ -1078,6 +899,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
             ParaProfUtils.handleException(exp);
         }
 
+    }
+
+    public void setUnits(int units) {
+        // TODO Auto-generated method stub
+        this.units = units;
+        setAxisStrings();
+        controlPanel.dataChanged();
+        visRenderer.redraw();
     }
 
 }

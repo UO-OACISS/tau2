@@ -284,42 +284,11 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         //Set up some panel dimensions.
         newYPanelSize = yCoord + ((list.size() + 1) * spacing);
 
-        int yBeg = 0;
-        int yEnd = 0;
-        int startElement = 0;
-        int endElement = 0;
-
-        if (!fullWindow) {
-            if (toScreen) {
-                Rectangle clipRect = g2D.getClipBounds();
-                yBeg = (int) clipRect.getY();
-                yEnd = (int) (yBeg + clipRect.getHeight());
-            } else {
-                Rectangle viewRect = window.getViewRect();
-                yBeg = (int) viewRect.getY();
-                yEnd = (int) (yBeg + viewRect.getHeight());
-            }
-            startElement = ((yBeg - yCoord) / spacing) - 1;
-            endElement = ((yEnd - yCoord) / spacing) + 1;
-
-            if (startElement < 0)
-                startElement = 0;
-
-            if (endElement < 0)
-                endElement = 0;
-
-            if (startElement > (list.size() - 1))
-                startElement = (list.size() - 1);
-
-            if (endElement > (list.size() - 1))
-                endElement = (list.size() - 1);
-
-            if (toScreen)
-                yCoord = yCoord + (startElement * spacing);
-        } else {
-            startElement = 0;
-            endElement = ((list.size()) - 1);
-        }
+//      determine which elements to draw (clipping)
+        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(), spacing, yCoord);
+        int startElement = clips[0];
+        int endElement = clips[1];
+        yCoord = clips[2];
 
         searcher.setVisibleLines(startElement, endElement);
 

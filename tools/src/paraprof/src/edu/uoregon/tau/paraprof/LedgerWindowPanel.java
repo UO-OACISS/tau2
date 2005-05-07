@@ -1,22 +1,25 @@
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.print.*;
-import java.awt.geom.*;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.util.Enumeration;
+import java.util.Vector;
+
 import javax.swing.*;
-import edu.uoregon.tau.dms.dss.*;
+
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 
 /**
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.8 2005/04/20 22:34:01 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.9 2005/05/07 02:36:53 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -187,47 +190,14 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             return;
         }
 
-        int yBeg = 0;
-        int yEnd = 0;
-        int startElement = 0;
-        int endElement = 0;
-        Rectangle clipRect = null;
-        Rectangle viewRect = null;
-
-        if (!fullWindow) {
-            if (toScreen) {
-                clipRect = g2D.getClipBounds();
-                yBeg = (int) clipRect.getY();
-                yEnd = (int) (yBeg + clipRect.getHeight());
-            } else {
-                viewRect = window.getViewRect();
-                yBeg = (int) viewRect.getY();
-                yEnd = (int) (yBeg + viewRect.getHeight());
-            }
-            startElement = ((yBeg - yCoord) / barSpacing) - 1;
-            endElement = ((yEnd - yCoord) / barSpacing) + 1;
-
-            if (startElement < 0)
-                startElement = 0;
-
-            if (endElement < 0)
-                endElement = 0;
-
-            if (startElement > (list.size() - 1))
-                startElement = (list.size() - 1);
-
-            if (endElement > (list.size() - 1))
-                endElement = (list.size() - 1);
-
-            if (toScreen)
-                yCoord = yCoord + ((startElement - 1) * barSpacing);
-        } else {
-            startElement = 0;
-            endElement = ((list.size()) - 1);
-        }
+//      determine which elements to draw (clipping)
+        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(), barSpacing, yCoord);
+        int startElement = clips[0];
+        int endElement = clips[1];
+        yCoord = clips[2];
+        
 
         xCoord = 5;
-        yCoord = yCoord + (barSpacing);
 
         for (int i = startElement; i <= endElement; i++) {
             LedgerDataElement lde = (LedgerDataElement) list.get(i);
@@ -439,6 +409,16 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
     public Dimension getPreferredSize() {
         return new Dimension((xPanelSize + 10), (yPanelSize + 10));
+    }
+
+    public void help(boolean display) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public Rectangle getViewRect() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
