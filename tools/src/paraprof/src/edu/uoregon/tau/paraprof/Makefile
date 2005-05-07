@@ -37,11 +37,15 @@ TOOLS_SRC=$(TAUROOT)/tools/src
 CC=javac
 CC-OLD=javac
 
+NOW = $(shell date)
+
 new: $(TOOLS_SRC)/paraprof/bin/ParaProf.jar
 
 old: ../bin/ParaProf-Old.jar
 
 $(TOOLS_SRC)/paraprof/bin/ParaProf.jar: $(NEW_SOURCES)
+	/bin/mv ParaProf.java ParaProf.java.orig
+	sed "s/XXXXX/$(NOW)/" ParaProf.java.orig > ParaProf.java
 	rm -f ./paraprof/*.class
 	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jogl.jar:$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar $(NEW_SOURCES)
 	cp ./resources/*.gif ./classes/edu/uoregon/tau/paraprof
@@ -49,14 +53,20 @@ $(TOOLS_SRC)/paraprof/bin/ParaProf.jar: $(NEW_SOURCES)
 	mv ./classes/ParaProf.jar $(TOOLS_SRC)/paraprof/bin
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf.jar
 	cp $(TOOLS_SRC)/paraprof/bin/ParaProf.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
+	/bin/rm ParaProf.java
+	/bin/mv ParaProf.java.orig ParaProf.java
 
 ../bin/ParaProf-Old.jar: $(OLD_SOURCES)
+	/bin/mv ParaProf.java ParaProf.java.orig
+	sed "s/XXXXX/$(NOW)/" ParaProf.java.orig > ParaProf.java
 	rm -f ./paraprof/*.class
 	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jogl.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/jgraph-1.3.jar $(OLD_SOURCES)
 	cd classes; jar -cvf ParaProf-Old.jar edu
 	mv ./classes/ParaProf-Old.jar $(TOOLS_SRC)/paraprof/bin
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf-Old.jar
 	cp $(TOOLS_SRC)/paraprof/bin/ParaProf-Old.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
+	/bin/rm ParaProf.java
+	/bin/mv ParaProf.java.orig ParaProf.java
 
 clean:
 	rm -f classes/edu/uoregon/tau/paraprof/*.class
