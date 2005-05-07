@@ -31,4 +31,10 @@ public class ParaProfImageOutput{
 	catch(Exception e){
 	}
     }
+
+    
+    public static void save3dImage(final ThreeDeeWindow ref) throws IOException {
+
+    }
+
 }

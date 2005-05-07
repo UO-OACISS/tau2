@@ -8,7 +8,7 @@ CONFIG_ARCH=@TAUARCH@
 TAUROOT=@TAUROOT@
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java ParaProfTreeCellRenderer.java \
-             HistogramWindow.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
+             HistogramWindow.java ParaProf.java ParaProfTrial.java FullDataWindowPanel.java \
              HistogramWindowPanel.java ParaProfApplication.java SystemEvents.java \
              CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java PrefSpacingPanel.java \
              CallPathTextWindowPanel.java Preferences.java FunctionDataWindow.java \
@@ -20,7 +20,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
 	     UserEventWindowPanel.java PPUserEventProfile.java LoadTrialProgressWindow.java ColorBar.java \
              ParaProfManagerWindow.java StatWindow.java LoadTrialWindow.java \
              ParaProfManagerTableModel.java StatWindowPanel.java ParaProfLisp.java ParaProfLispPrimitives.java \
-             StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java \
+             FullDataWindow.java ParaProfTreeNodeUserObject.java Interpreter.java \
 	     ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java \
 	     ColorDefaultsWindow.java ColorMap.java ColorMapWindow.java PreferencesWindow.java \
 	     Searcher.java SearchPanel.java
@@ -28,9 +28,9 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
 VIS_SOURCES = $(wildcard vis/*.java) ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java FunctionSelectorDialog.java
 OTHER_SOURCES = $(wildcard enums/*.java) $(wildcard interfaces/*.java)
 
-NEW_SOURCES=$(BASE_SOURCES) $(VIS_SOURCES) $(OTHER_SOURCES) ParaProfImageOutput.java
+NEW_SOURCES=$(BASE_SOURCES) $(VIS_SOURCES) $(OTHER_SOURCES) ParaProfImageOutput.java JVMDependent.java
 
-OLD_SOURCES=$(BASE_SOURCES) $(OTHER_SOURCES) ./wrapper/ParaProfImageOutput.java ./wrapper/ThreeDeeWindow.java
+OLD_SOURCES=$(BASE_SOURCES) $(OTHER_SOURCES) ./wrapper/ParaProfImageOutput.java ./wrapper/ThreeDeeWindow.java ./wrapper/JVMDependent.java
 
 TOOLS_SRC=$(TAUROOT)/tools/src
 
