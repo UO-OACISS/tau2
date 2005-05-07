@@ -115,7 +115,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             this.help(false);
         }
 
-        setupMenus();
+       
 
         contentPane = getContentPane();
         contentPane.setLayout(new GridBagLayout());
@@ -125,6 +125,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         panel = new ThreadDataWindowPanel(trial, nodeID, contextID, threadID, this);
         this.addKeyListener(this);
 
+        
+        setupMenus();
+        
         jScrollPane = new JScrollPane(panel);
 
         jScrollPane.setAutoscrolls(false);

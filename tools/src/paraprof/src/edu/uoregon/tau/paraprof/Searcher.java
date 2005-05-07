@@ -496,7 +496,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
         determineSelection();
 
         // set the clipboard
-        ParaProfUtils.setClipboardContents(selectionString, this);
+        JVMDependent.setClipboardContents(selectionString, this);
         panel.repaint();
 
     }

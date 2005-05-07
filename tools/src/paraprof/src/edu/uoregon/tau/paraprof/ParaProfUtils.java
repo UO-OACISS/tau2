@@ -224,15 +224,12 @@ public class ParaProfUtils {
         return helpMenu;
     }
 
-    
     public static JMenu createFileMenu(final ParaProfWindow window, final Printable printable, final Object panel) {
-     
 
         if (printable == null) {
             throw new ParaProfException("File menu created with null panel!");
         }
-        
-        
+
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
 
@@ -246,7 +243,7 @@ public class ParaProfUtils {
                     } else if (arg.equals("Preferences...")) {
                         ParaProf.preferencesWindow.showPreferencesWindow();
                     } else if (arg.equals("Save Image")) {
-                        
+
                         if (panel instanceof ParaProfImageInterface) {
                             ParaProfImageInterface ppImageInterface = (ParaProfImageInterface) panel;
                             ParaProfImageOutput.saveImage(ppImageInterface);
@@ -256,7 +253,7 @@ public class ParaProfUtils {
                             ThreeDeeWindow threeDeeWindow = (ThreeDeeWindow) panel;
                             ParaProfImageOutput.save3dImage(threeDeeWindow);
                         }
-                        
+
                     } else if (arg.equals("Close This Window")) {
                         window.closeThisWindow();
                     } else if (arg.equals("Exit ParaProf!")) {
@@ -268,7 +265,7 @@ public class ParaProfUtils {
             }
 
         };
-        
+
         JMenu fileMenu = new JMenu("File");
 
         JMenu subMenu = new JMenu("Save ...");
@@ -297,7 +294,7 @@ public class ParaProfUtils {
 
         return fileMenu;
     }
-    
+
     public static JMenu createWindowsMenu(final ParaProfTrial ppTrial, final JFrame owner) {
 
         ActionListener actionListener = new ActionListener() {
@@ -306,17 +303,17 @@ public class ParaProfUtils {
                 try {
                     Object EventSrc = evt.getSource();
 
-                        String arg = evt.getActionCommand();
+                    String arg = evt.getActionCommand();
 
-                        if (arg.equals("Show ParaProf Manager")) {
-                            (new ParaProfManagerWindow()).show();
-                        } else if (arg.equals("Show Function Ledger")) {
-                            (new LedgerWindow(ppTrial, 0)).show();
-                        } else if (arg.equals("Show Group Ledger")) {
-                            (new LedgerWindow(ppTrial, 1)).show();
-                        } else if (arg.equals("Show User Event Ledger")) {
-                            (new LedgerWindow(ppTrial, 2)).show();
-                        }
+                    if (arg.equals("Show ParaProf Manager")) {
+                        (new ParaProfManagerWindow()).show();
+                    } else if (arg.equals("Show Function Ledger")) {
+                        (new LedgerWindow(ppTrial, 0)).show();
+                    } else if (arg.equals("Show Group Ledger")) {
+                        (new LedgerWindow(ppTrial, 1)).show();
+                    } else if (arg.equals("Show User Event Ledger")) {
+                        (new LedgerWindow(ppTrial, 2)).show();
+                    }
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
@@ -366,15 +363,6 @@ public class ParaProfUtils {
         return windowsMenu;
     }
 
-    public static void setClipboardContents(String contents, ClipboardOwner owner) {
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        StringSelection st = new StringSelection(contents);
-        Clipboard cp = tk.getSystemSelection();
-        cp.setContents(st, owner);
-        cp = tk.getSystemClipboard();
-        cp.setContents(st, owner);
-    }
-
     public static void scaleForPrint(Graphics g, PageFormat pageFormat, int width, int height) {
         double pageWidth = pageFormat.getImageableWidth();
         double pageHeight = pageFormat.getImageableHeight();
@@ -399,30 +387,29 @@ public class ParaProfUtils {
         g2.scale(scale, scale);
     }
 
-    
-    public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function, final JComponent owner) {
+    public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function,
+            final JComponent owner) {
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
                     Object EventSrc = evt.getSource();
 
                     String arg = evt.getActionCommand();
-                    
+
                     if (arg.equals("Show Function Details")) {
-                        FunctionDataWindow functionDataWindow = new FunctionDataWindow(ppTrial,
-                                function);
+                        FunctionDataWindow functionDataWindow = new FunctionDataWindow(ppTrial, function);
                         ppTrial.getSystemEvents().addObserver(functionDataWindow);
                         functionDataWindow.show();
                     } else if (arg.equals("Show Function Histogram")) {
 
                         HistogramWindow hw = new HistogramWindow(ppTrial, function);
-                                    ppTrial.getSystemEvents().addObserver(hw);
-                            hw.show();
+                        ppTrial.getSystemEvents().addObserver(hw);
+                        hw.show();
                     } else if (arg.equals("Assign Function Color")) {
                         ParaProf.colorMap.assignColor(owner, function);
                     } else if (arg.equals("Reset to Default Color")) {
-                            ParaProf.colorMap.removeColor(function);
-                            ParaProf.colorMap.reassignColors();
+                        ParaProf.colorMap.removeColor(function);
+                        ParaProf.colorMap.reassignColors();
                     }
 
                 } catch (Exception e) {
@@ -431,10 +418,9 @@ public class ParaProfUtils {
             }
 
         };
-        
-        
+
         JPopupMenu functionPopup = new JPopupMenu();
-        
+
         //Add items to the third popup menu.
         JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
         functionDetailsItem.addActionListener(actionListener);
@@ -453,11 +439,11 @@ public class ParaProfUtils {
         functionPopup.add(jMenuItem);
 
         return functionPopup;
-        
+
     }
-    
-    public static void handleThreadClick(final ParaProfTrial ppTrial, final edu.uoregon.tau.dms.dss.Thread thread, JPanel owner,
-            MouseEvent evt) {
+
+    public static void handleThreadClick(final ParaProfTrial ppTrial, final edu.uoregon.tau.dms.dss.Thread thread,
+            JPanel owner, MouseEvent evt) {
         if (thread.getNodeID() == -1) { // mean
             JPopupMenu meanThreadPopup = new JPopupMenu();
             ActionListener actionListener = new ActionListener() {
@@ -509,8 +495,8 @@ public class ParaProfUtils {
 
                         String arg = evt.getActionCommand();
                         if (arg.equals("Show Thread Statistics Window")) {
-                            StatWindow statWindow = new StatWindow(ppTrial, thread.getNodeID(),
-                                    thread.getContextID(), thread.getThreadID(), false);
+                            StatWindow statWindow = new StatWindow(ppTrial, thread.getNodeID(), thread.getContextID(),
+                                    thread.getThreadID(), false);
                             ppTrial.getSystemEvents().addObserver(statWindow);
                             statWindow.show();
                         } else if (arg.equals("Show Thread Call Graph")) {
@@ -518,13 +504,13 @@ public class ParaProfUtils {
                             ppTrial.getSystemEvents().addObserver(tmpRef);
                             tmpRef.show();
                         } else if (arg.equals("Show Call Path Thread Relations")) {
-                            CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial,
-                                    thread.getNodeID(), thread.getContextID(), thread.getThreadID(), null, 1);
+                            CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial, thread.getNodeID(),
+                                    thread.getContextID(), thread.getThreadID(), null, 1);
                             ppTrial.getSystemEvents().addObserver(callPathTextWindow);
                             callPathTextWindow.show();
                         } else if (arg.equals("Show User Event Statistics Window")) {
-                            StatWindow statWindow = new StatWindow(ppTrial, thread.getNodeID(),
-                                    thread.getContextID(), thread.getThreadID(), true);
+                            StatWindow statWindow = new StatWindow(ppTrial, thread.getNodeID(), thread.getContextID(),
+                                    thread.getThreadID(), true);
                             ppTrial.getSystemEvents().addObserver(statWindow);
                             statWindow.show();
                         }
@@ -562,8 +548,8 @@ public class ParaProfUtils {
         }
     }
 
-    
-    public static int[] computeClipping(Rectangle clipRect, Rectangle viewRect, boolean toScreen, boolean fullWindow, int size, int barSpacing, int yCoord ) {
+    public static int[] computeClipping(Rectangle clipRect, Rectangle viewRect, boolean toScreen, boolean fullWindow,
+            int size, int barSpacing, int yCoord) {
 
         int startElement, endElement;
         if (!fullWindow) {
@@ -599,25 +585,22 @@ public class ParaProfUtils {
             endElement = (size - 1);
         }
 
-        
         int[] clips = new int[3];
         clips[0] = startElement;
         clips[1] = endElement;
         clips[2] = yCoord;
         return clips;
     }
-    
-    
+
     public static JMenu createUnitsMenu(final UnitListener unitListener, int initialUnits) {
-     
+
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
                     Object EventSrc = evt.getSource();
 
                     String arg = evt.getActionCommand();
-                    
-                    
+
                     if (arg.equals("Microseconds")) {
                         unitListener.setUnits(0);
                     } else if (arg.equals("Milliseconds")) {
@@ -626,19 +609,17 @@ public class ParaProfUtils {
                         unitListener.setUnits(2);
                     } else if (arg.equals("hr:min:sec")) {
                         unitListener.setUnits(3);
-                    } 
-                    
+                    }
+
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
             }
 
         };
-        
+
         JMenu unitsSubMenu = new JMenu("Select Units");
         ButtonGroup group = new ButtonGroup();
-
-
 
         JRadioButtonMenuItem button = new JRadioButtonMenuItem("Microseconds", initialUnits == 0);
         button.addActionListener(actionListener);
@@ -660,9 +641,9 @@ public class ParaProfUtils {
         group.add(button);
         unitsSubMenu.add(button);
 
-        return unitsSubMenu;        
+        return unitsSubMenu;
     }
-    
+
     public static void handleException(Exception e) {
         new ParaProfErrorDialog(e);
     }
