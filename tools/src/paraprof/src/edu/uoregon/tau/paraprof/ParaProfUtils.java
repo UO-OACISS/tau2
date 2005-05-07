@@ -131,6 +131,12 @@ public class ParaProfUtils {
 
                         if (arg.equals("Show 3D Window")) {
 
+                            if (JVMDependent.version.equals("1.3")) {
+                                JOptionPane.showMessageDialog(owner,
+                                "3D Visualization requires Java 1.4 or above\nPlease make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
+                                return;
+                            }
+                            
                             //Gears.main(null);
                             //(new Gears()).show();
 
