@@ -92,7 +92,8 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
         //Sort the local data.
         sortLocalData();
-
+        panel = new UserEventWindowPanel(trial, userEvent, this);
+        
         //####################################
         //Code to generate the menus.
         //####################################
@@ -178,7 +179,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         //######
         //Panel and ScrollPane definition.
         //######
-        panel = new UserEventWindowPanel(trial, userEvent, this);
+       
         //The scroll panes into which the list shall be placed.
         sp = new JScrollPane(panel);
         this.setHeader();

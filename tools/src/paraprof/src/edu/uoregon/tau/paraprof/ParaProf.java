@@ -11,11 +11,11 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.38 2005/05/03 18:02:05 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.39 2005/05/07 03:13:30 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.38 $
+ * @version $Revision: 1.39 $
  */
 public class ParaProf implements ActionListener {
 
@@ -34,7 +34,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "2.2 (with TAU 2.14.3) (04/20/2005)";
+    private final static String VERSION = "( Built XXXXX )";
 
     static ColorMap colorMap = new ColorMap();
 
@@ -220,7 +220,9 @@ public class ParaProf implements ActionListener {
 
     public static String getInfoString() {
         long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
-        return new String("ParaProf Version " + getVersionString() + "\n Java Heap Size: " + memUsage + "kb");
+        long memTotal = Runtime.getRuntime().maxMemory() / 1024 / 1024;
+        
+        return new String("ParaProf 3 " + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\nJVM Maximum: " + memTotal + "mb");
     }
 
     public static String getVersionString() {
