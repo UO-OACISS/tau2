@@ -17,9 +17,13 @@ public class JVMDependent {
         Toolkit tk = Toolkit.getDefaultToolkit();
         StringSelection st = new StringSelection(contents);
         Clipboard cp = tk.getSystemSelection();
-        cp.setContents(st, owner);
+        if (cp != null) { // some systems (e.g. windows) don't have a system selection clipboard
+            cp.setContents(st, owner);
+        }
         cp = tk.getSystemClipboard();
-        cp.setContents(st, owner);
+        if (cp != null) {
+            cp.setContents(st, owner);
+        }
     }
     
     
