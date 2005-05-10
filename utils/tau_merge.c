@@ -482,7 +482,7 @@ int main(int argc, char *argv[])
   if ( (numtrc < 1) || errflag )
   {
     fprintf (stderr,
-             "usage: %s [-a] [-r] [-n] inputtraces* (outputtrace|-) [-e eventedf* ] [-m mergededf]\n", argv[0]);
+             "usage: %s [-a] [-r] [-n] [-e eventedf*] [-m mergededf] inputtraces* (outputtrace|-) \n", argv[0]);
     fprintf(stderr,
     "Note: %s assumes edf files are named events.<nodeid>.edf and \n", argv[0]);
     fprintf(stderr,"      generates a merged edf file tau.edf\n");
@@ -491,8 +491,8 @@ int main(int argc, char *argv[])
     fprintf(stderr,"-n : do not block waiting for new events. Offline merge\n");
     fprintf(stderr,"-e <files> : provide a list of event definition files corresponding to traces\n");
     fprintf(stderr,"-m <mergededf> : specify the name of the merged event definition file\n");
-    fprintf(stderr,"e.g., % %s tautrace.*.trc app.trc\n", argv[0]);
-    fprintf(stderr,"e.g., % %s tautrace.[0-255].*.trc app.trc -e events.[0-255].edf -m ev0_255merged.edf\n", argv[0]);
+    fprintf(stderr,"e.g., > %s tautrace.*.trc app.trc\n", argv[0]);
+    fprintf(stderr,"e.g., > %s -e events.[0-255].edf -m ev0_255merged.edf tautrace.[0-255].*.trc app.trc\n", argv[0]);
 
 
 
