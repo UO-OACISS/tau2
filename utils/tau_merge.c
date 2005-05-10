@@ -492,7 +492,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"-e <files> : provide a list of event definition files corresponding to traces\n");
     fprintf(stderr,"-m <mergededf> : specify the name of the merged event definition file\n");
     fprintf(stderr,"e.g., % %s tautrace.*.trc app.trc\n", argv[0]);
-    fprintf(stderr,"e.g., % %s tautrace.[0-255].*.trc events.[0-255].edf app.trc -m ev0_255merged.edf\n", argv[0]);
+    fprintf(stderr,"e.g., % %s tautrace.[0-255].*.trc app.trc -e events.[0-255].edf -m ev0_255merged.edf\n", argv[0]);
 
 
 
