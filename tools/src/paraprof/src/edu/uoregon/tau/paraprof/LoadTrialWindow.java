@@ -29,7 +29,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
     //String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP",
     // "hpmtoolkit", "gprof", "psrun"};
     private String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit",
-            "Gprof", "PSRun" };
+            "Gprof", "PSRun", "ParaProf Packed Profile" };
     private JComboBox trialTypes = null;
     private File selectedFiles[];
     private JButton selectButton = null;

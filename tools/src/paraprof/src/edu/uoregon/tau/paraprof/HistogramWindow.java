@@ -21,9 +21,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.11 2005/05/07 02:36:53 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.12 2005/05/10 01:48:37 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow, UnitListener {
@@ -74,7 +74,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
         sortLocalData();
 
-        setupMenus();
 
         numBinsSlider.setPaintTicks(true);
         numBinsSlider.setMajorTickSpacing(50);
@@ -98,6 +97,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         gbc.weightx = 0.95;
         gbc.weighty = 0.98;
         addCompItem(sp, gbc, 0, 0, 1, 1);
+
+        setupMenus();
 
         ParaProf.incrementNumWindows();
     }
@@ -169,7 +170,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
-        mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
+        //mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
@@ -346,11 +347,11 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     public String getHeaderString() {
         if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
             return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
-                    + function.getName() + "\n" + "Value Type: " + dataSorter.getValueType()
+                    + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType()
                     + "\n";
         else
             return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
-                    + function.getName() + "\n" + "Value Type: " + dataSorter.getValueType()
+                    + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType()
                     + "\n" + "Units: "
                     + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
     }

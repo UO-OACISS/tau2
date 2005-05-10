@@ -9,9 +9,9 @@ import java.text.*;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.5 2005/01/19 02:30:02 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.6 2005/05/10 01:48:36 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		FunctionProfile
  */
 public class Function implements Serializable, Comparable {
@@ -19,6 +19,7 @@ public class Function implements Serializable, Comparable {
     private final static int METRIC_SIZE = 5;
 
     private String name = null;
+    private String reversedName = null;
     private int id = -1;
     private Vector groups = null;
     private boolean callPathFunction = false;
@@ -45,6 +46,36 @@ public class Function implements Serializable, Comparable {
         return name;
     }
 
+    public String getReversedName() {
+        if (reversedName == null) {
+            if (callPathFunction == false) {
+                reversedName = name;
+            } else {
+
+                String s = name;
+                int location = s.lastIndexOf("=>");
+                reversedName = "";
+
+                while (location != -1) {
+                    String childName = s.substring(location + 3, s.length());
+                    
+                    childName = childName.trim();
+                    reversedName = reversedName + childName;
+                    s = s.substring(0, location);
+
+                    
+                    location = s.lastIndexOf("=>");
+                    if (location != -1) {
+                        reversedName = reversedName + " <= ";
+                    }
+                }
+
+            }
+        }
+        
+        return reversedName;
+    }
+    
     public String toString() {
         return name;
     }

@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.23 2005/05/07 02:36:52 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.24 2005/05/10 01:48:37 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.23 $
+ * @version	$Revision: 1.24 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -220,7 +220,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
-        mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
+        //mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 

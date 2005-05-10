@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  * 
  * TODO: transparency controls.  Back to front drawing (utilize 'direction') for correct blending
  *
- * <P>CVS $Id: TriangleMeshPlot.java,v 1.3 2005/04/15 01:29:03 amorris Exp $</P>
+ * <P>CVS $Id: TriangleMeshPlot.java,v 1.4 2005/05/10 01:48:40 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 
 public class TriangleMeshPlot implements Plot {
@@ -854,15 +854,23 @@ public class TriangleMeshPlot implements Plot {
             }
         });
 
-        final JSlider plotWidthSlider = new JSlider(5, 100, (int) xSize);
-        final JSlider plotDepthSlider = new JSlider(5, 100, (int) ySize);
-        final JSlider plotHeightSlider = new JSlider(2, 40, (int) zSize);
+        final JSlider plotWidthSlider = new JSlider(5, 300, (int) xSize);
+        final JSlider plotDepthSlider = new JSlider(5, 300, (int) ySize);
+        final JSlider plotHeightSlider = new JSlider(2, 50, (int) zSize);
 
         ChangeListener chageListener = new ChangeListener() {
             public void stateChanged(ChangeEvent event) {
                 try {
+                    
+                    //double width = plotWidthSlider.getValue() / 7.5f;
+                   // width *= width;
+                    
+                    //System.out.println(width);
+                    
                     TriangleMeshPlot.this.setSize(plotWidthSlider.getValue(), plotDepthSlider.getValue(),
                             plotHeightSlider.getValue());
+                    //TriangleMeshPlot.this.setSize((int)width, plotDepthSlider.getValue(),
+                    //        plotHeightSlider.getValue());
                     visRenderer.redraw();
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);

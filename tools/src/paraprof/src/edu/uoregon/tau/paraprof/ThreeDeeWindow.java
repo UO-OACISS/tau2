@@ -308,7 +308,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             }
 
             if (addFunctionNames) {
-                functionNames.add(function.getName());
+                functionNames.add(ParaProfUtils.getFunctionName(function));
                 functions.add(function);
             }
             int threadIndex = 0;
@@ -503,19 +503,19 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         // now add all the menus to the main menu
         
         JMenu fileMenu = ParaProfUtils.createFileMenu(this, this, this);
-        JMenu trialMenu = ParaProfUtils.createTrialMenu(ppTrial, this);
+        //JMenu trialMenu = ParaProfUtils.createTrialMenu(ppTrial, this);
         JMenu windowsMenu = ParaProfUtils.createWindowsMenu(ppTrial, this);
         JMenu helpMenu = ParaProfUtils.createHelpMenu(this, this);
         
         fileMenu.getPopupMenu().setLightWeightPopupEnabled(false);
-        trialMenu.getPopupMenu().setLightWeightPopupEnabled(false);
+        //trialMenu.getPopupMenu().setLightWeightPopupEnabled(false);
         windowsMenu.getPopupMenu().setLightWeightPopupEnabled(false);
         helpMenu.getPopupMenu().setLightWeightPopupEnabled(false);
 
         
         mainMenu.add(fileMenu);
         mainMenu.add(optionsMenu);
-        mainMenu.add(trialMenu);
+        //mainMenu.add(trialMenu);
         mainMenu.add(windowsMenu);
         mainMenu.add(helpMenu);
 
@@ -794,9 +794,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                 if (scatterFunctions[f] != null) {
                     // e.g. "MPI_Recv()\n(Exclusive, Time)"
                     if (scatterValueTypes[f] == ValueType.NUMCALLS || scatterValueTypes[f] == ValueType.NUMSUBR) {
-                        axisNames.add(scatterFunctions[f].getName() + "\n(" + scatterValueTypes[f].toString() + ")");
+                        axisNames.add(ParaProfUtils.getFunctionName(scatterFunctions[f]) + "\n(" + scatterValueTypes[f].toString() + ")");
                     } else {
-                        axisNames.add(scatterFunctions[f].getName() + "\n(" + scatterValueTypes[f].toString() + ", "
+                        axisNames.add(ParaProfUtils.getFunctionName(scatterFunctions[f]) + "\n(" + scatterValueTypes[f].toString() + ", "
                                 + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
                     }
                 } else {

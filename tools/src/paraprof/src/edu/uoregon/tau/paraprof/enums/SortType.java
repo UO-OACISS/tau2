@@ -67,5 +67,4 @@ public class SortType {
     public static final SortType NCT = new SortType("nct");
     public static final SortType VALUE = new SortType("value");
     public static final SortType NAME = new SortType("name");
-
 }

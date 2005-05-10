@@ -63,8 +63,6 @@ public class PPFunctionProfile implements Comparable {
         return thread.getThreadID();
     }
 
-   
-    
     public FunctionProfile getFunctionProfile() {
         return functionProfile;
     }
@@ -74,7 +72,15 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public String getFunctionName() {
-        return functionProfile.getFunction().getName();
+        if (ParaProf.preferences.getReversedCallPaths()) {
+            return functionProfile.getFunction().getReversedName();
+        } else {
+            return functionProfile.getFunction().getName();
+        }
+    }
+
+    public String getFunctionNameReversedCallPath() {
+        return functionProfile.getFunction().getReversedName();
     }
 
     public Color getColor() {
@@ -131,7 +137,6 @@ public class PPFunctionProfile implements Comparable {
         return dataSorter;
     }
 
-    
     public double getValue() {
         return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID());
     }
@@ -151,7 +156,6 @@ public class PPFunctionProfile implements Comparable {
 
         if (dataSorter.getSortType() == SortType.NAME) {
             return checkDescending(other.getFunctionName().compareTo(this.getFunctionName()));
-
         } else if (dataSorter.getSortType() == SortType.NCT) {
             if (other.getNodeID() != this.getNodeID())
                 return checkDescending(this.getNodeID() - other.getNodeID());
@@ -161,9 +165,9 @@ public class PPFunctionProfile implements Comparable {
                 return checkDescending(this.getThreadID() - other.getThreadID());
         } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
 
-//            return checkDescending(Double.compare(valueType.getValue(this.meanProfile,
-//                    dataSorter.getSelectedMetricID()), valueType.getValue(other.meanProfile,
-//                    dataSorter.getSelectedMetricID())));
+            //            return checkDescending(Double.compare(valueType.getValue(this.meanProfile,
+            //                    dataSorter.getSelectedMetricID()), valueType.getValue(other.meanProfile,
+            //                    dataSorter.getSelectedMetricID())));
 
             return checkDescending(compareToHelper(valueType.getValue(this.meanProfile,
                     dataSorter.getSelectedMetricID()), valueType.getValue(other.meanProfile,
@@ -179,7 +183,6 @@ public class PPFunctionProfile implements Comparable {
         }
     }
 
-   
     private int compareToHelper(double d1, double d2) {
         double result = d1 - d2;
         if (result < 0.00)
@@ -238,8 +241,7 @@ public class PPFunctionProfile implements Comparable {
         tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 16);
         tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(), 12);
         tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(), 12);
-        tmpString = tmpString + "  "
-                + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(metric), 19);
+        tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(metric), 19);
 
         //Everything should be added now except the function name.
         return tmpString;
@@ -248,12 +250,12 @@ public class PPFunctionProfile implements Comparable {
     // Static Functions
 
     public static String getStatStringHeading(String metricType) {
-//        return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad(metricType, 16)
-//        + UtilFncs.lpad("Total " + metricType, 18) + UtilFncs.lpad("#Calls", 14)
-//        + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
+        //        return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad(metricType, 16)
+        //        + UtilFncs.lpad("Total " + metricType, 18) + UtilFncs.lpad("#Calls", 14)
+        //        + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
         return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad("Exclusive", 16)
-        + UtilFncs.lpad("Inclusive", 18) + UtilFncs.lpad("#Calls", 14)
-        + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Inclusive/Call", 21) + "   ";
+                + UtilFncs.lpad("Inclusive", 18) + UtilFncs.lpad("#Calls", 14) + UtilFncs.lpad("#Child Calls", 14)
+                + UtilFncs.lpad("Inclusive/Call", 21) + "   ";
     }
 
     public String toString() {

@@ -8,9 +8,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.11 2005/03/10 18:14:04 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.12 2005/05/10 01:48:36 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		TrialData
  * @see		NCT
  */
@@ -132,6 +132,11 @@ public abstract class DataSource {
         return group;
     }
 
+    
+    public int getNumGroups() {
+        return groups.size();
+    }
+    
     public Iterator getGroups() {
         return groups.values().iterator();
     }
@@ -538,7 +543,7 @@ public abstract class DataSource {
 
     //Returns the total number of threads in this trial.
     public int getTotalNumberOfThreads() {
-        int totalNumberOfThreads = -1;
+        int totalNumberOfThreads = 0;
         for (Iterator it = this.getNodes(); it.hasNext();) {
             Node node = (Node) it.next();
             for (Iterator it2 = node.getContexts(); it2.hasNext();) {

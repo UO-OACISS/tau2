@@ -8,10 +8,11 @@ import java.sql.SQLException;
 public class EventDistance extends DistanceAnalysis {
 
 	public EventDistance (DatabaseAPI session, Trial inTrial, Metric inMetric) {
-		super (session, inTrial, inMetric);
+		// we call super(); for fun
+        super (session, inTrial, inMetric);
 	}
-
-	protected void getTotals() {
+    
+  	protected void getTotals() {
 
 		// build the query to get total amounts
 		StringBuffer buf = new StringBuffer();

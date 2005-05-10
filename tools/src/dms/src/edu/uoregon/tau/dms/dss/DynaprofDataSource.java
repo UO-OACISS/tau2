@@ -95,7 +95,7 @@ public class DynaprofDataSource extends DataSource {
             }
 
             int[] nct = this.getNCT(files[i].getName());
-            nodeID = nodeID++;
+            nodeID++;
             threadID = nct[2];
 
             node = this.addNode(nodeID);

@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.19 2005/05/03 18:02:05 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.20 2005/05/10 01:48:38 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.19 $
+ * @version	$Revision: 1.20 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -344,11 +344,17 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem = new JMenuItem("Upload Trial to DB");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Export as Packed Profile");
+        jMenuItem.addActionListener(this);
+        stdTrialPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
 
         // DB trial popup
+        jMenuItem = new JMenuItem("Export as Packed Profile");
+        jMenuItem.addActionListener(this);
+        dbTrialPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
         dbTrialPopup.add(jMenuItem);
@@ -665,6 +671,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         }
                     });
                     thread.start();
+                } else if (arg.equals("Export as Packed Profile")) {
+                    ParaProfUtils.exportTrial((ParaProfTrial) clickedOnObject, this);
                 }
             }
         } catch (Exception e) {

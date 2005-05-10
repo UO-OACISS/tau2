@@ -259,7 +259,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
-        mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
+        //mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 

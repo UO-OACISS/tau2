@@ -28,7 +28,8 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     private boolean searchUp;
 
     private int lineHeight;
-
+    private int maxDescent;
+    
     private JPanel panel;
     private ScrollBarController scrollBarController;
 
@@ -503,7 +504,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void mouseDragged(MouseEvent e) {
         selectionEndX = e.getX();
-        selectionEndY = e.getY();
+        selectionEndY = e.getY() - maxDescent;
 
         if (selectionStartY < selectionEndY) {
             selectionStartLine = selectionStartY / lineHeight;
@@ -545,6 +546,10 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void setLineHeight(int lineHeight) {
         this.lineHeight = lineHeight;
+    }
+
+    public void setMaxDescent(int maxDescent) {
+        this.maxDescent = maxDescent;
     }
 
 }

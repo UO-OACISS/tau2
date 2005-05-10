@@ -29,9 +29,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.28 2005/05/07 02:36:51 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.29 2005/05/10 01:48:37 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.28 $
+ * @version	$Revision: 1.29 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ParaProfImageInterface, Printable, ParaProfWindow {
@@ -561,7 +561,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         // now add all the menus to the main menu
         mainMenu.add(ParaProfUtils.createFileMenu(this, this, this));
         mainMenu.add(optionsMenu);
-        mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
+        //mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 

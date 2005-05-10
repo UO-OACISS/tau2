@@ -11,11 +11,11 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.40 2005/05/07 03:26:06 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.41 2005/05/10 01:48:38 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.40 $
+ * @version $Revision: 1.41 $
  */
 public class ParaProf implements ActionListener {
 
@@ -97,7 +97,7 @@ public class ParaProf implements ActionListener {
         System.err.println("Usage: paraprof [options] <files/directory> \n\n" + "Options:\n\n"
                 + "  -f, --filetype <filetype>        Specify type of performance data, options are:\n"
                 + "                                   profiles (default), pprof, dynaprof, mpip,\n"
-                + "                                   gprof, psrun, hpm\n"
+                + "                                   gprof, psrun, hpm, packed\n"
                 + "  -h, --help                       Display this help message\n"
                 + "  -p                               Use `pprof` to compute derived data\n"
                 + "  -i, --fixnames                   Use the fixnames option for gprof\n\n" + "Notes:\n"
@@ -361,6 +361,8 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = 5;
             } else if (fileTypeString.equals("psrun")) {
                 ParaProf.fileType = 6;
+            } else if (fileTypeString.equals("packed")) {
+                ParaProf.fileType = 7;
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();

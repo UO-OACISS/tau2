@@ -19,9 +19,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.20 2005/05/07 02:36:52 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.21 2005/05/10 01:48:37 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.20 $
+ * @version	$Revision: 1.21 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -246,7 +246,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
-        mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
+        //mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
@@ -353,7 +353,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         if (display)
             ParaProf.helpWindow.show();
         ParaProf.helpWindow.writeText("This is the function data window for:");
-        ParaProf.helpWindow.writeText(function.getName());
+        ParaProf.helpWindow.writeText(ParaProfUtils.getFunctionName(function));
         ParaProf.helpWindow.writeText("");
         ParaProf.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
         ParaProf.helpWindow.writeText("");
@@ -464,10 +464,10 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
                 || showValuesAsPercent.isSelected())
             return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n"
-                    + "Name: " + function.getName() + "\n" + "Value Type: " + dataSorter.getValueType() + "\n";
+                    + "Name: " + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n";
         else
             return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n"
-                    + "Name: " + function.getName() + "\n" + "Value Type: " + dataSorter.getValueType() + "\n"
+                    + "Name: " + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n"
                     + "Units: "
                     + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric())
                     + "\n";

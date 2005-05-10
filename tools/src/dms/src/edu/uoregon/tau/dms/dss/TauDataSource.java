@@ -70,7 +70,6 @@ public class TauDataSource extends DataSource {
         Function func = null;
         FunctionProfile functionProfile = null;
 
-        UserEvent userEvent = null;
         UserEventProfile userEventProfile = null;
 
   
@@ -287,7 +286,7 @@ public class TauDataSource extends DataSource {
                                 // User events
                                 if (usereventDataLine.i0 != 0) {
 
-                                    userEvent = this.addUserEvent(usereventDataLine.s0);
+                                    UserEvent userEvent = this.addUserEvent(usereventDataLine.s0);
                                     userEventProfile = thread.getUserEventProfile(userEvent);
 
                                     if (userEventProfile == null) {
@@ -330,8 +329,8 @@ public class TauDataSource extends DataSource {
             setCallPathDataPresent(true);
         }
 
-//        time = (System.currentTimeMillis()) - time;
-//        System.out.println("Time to process (in milliseconds): " + time);
+        //time = (System.currentTimeMillis()) - time;
+        //System.out.println("Time to process (in milliseconds): " + time);
     }
 
     public String toString() {

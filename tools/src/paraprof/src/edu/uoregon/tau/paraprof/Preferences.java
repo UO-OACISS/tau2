@@ -150,7 +150,7 @@ public class Preferences implements Serializable {
     private boolean showValuesAsPercent = true;
     private boolean showPathTitleInReverse = true;
     private int units = 0;
-    
+    private boolean reversedCallPaths = false;
     
     static final long serialVersionUID = 183442743456314793L;
 
@@ -176,6 +176,14 @@ public class Preferences implements Serializable {
 
     public void setUnits(int units) {
         this.units = units;
+    }
+
+    public boolean getReversedCallPaths() {
+        return reversedCallPaths;
+    }
+
+    public void setReversedCallPaths(boolean reversedCallPaths) {
+        this.reversedCallPaths = reversedCallPaths;
     }
     
 }

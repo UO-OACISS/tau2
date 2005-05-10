@@ -18,9 +18,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.14 2005/05/07 02:36:53 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.15 2005/05/10 01:48:38 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -40,7 +40,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
         JMenuBar mainMenu = new JMenuBar();
 
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
-        mainMenu.add(ParaProfUtils.createTrialMenu(trial, this));
+        //mainMenu.add(ParaProfUtils.createTrialMenu(trial, this));
         mainMenu.add(ParaProfUtils.createWindowsMenu(trial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 

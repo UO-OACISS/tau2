@@ -18,9 +18,9 @@ import edu.uoregon.tau.paraprof.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.4 2005/04/19 23:25:20 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.5 2005/05/10 01:48:39 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -164,7 +164,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
                         String fname = "   <none>";
                         if (settings.getScatterFunctions()[index] != null) {
-                            fname = settings.getScatterFunctions()[index].getName();
+                            fname = ParaProfUtils.getFunctionName(settings.getScatterFunctions()[index]);
                         }
                         functionField.setText(fname);
                         window.redraw();

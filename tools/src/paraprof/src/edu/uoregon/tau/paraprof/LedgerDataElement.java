@@ -10,9 +10,9 @@ import java.awt.*;
  * This provides the ledger window classes a uniform interface to dealing with these objects.
  * It also holds draw coordinates for mouse events.
  * 
- * <P>CVS $Id: LedgerDataElement.java,v 1.5 2005/03/08 01:11:18 amorris Exp $</P>
+ * <P>CVS $Id: LedgerDataElement.java,v 1.6 2005/05/10 01:48:38 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		LedgerWindow
  * @see		LedgerWindowPanel
  */
@@ -48,7 +48,7 @@ public class LedgerDataElement {
     
     public String getName() {
         if (elementType == FUNCTION) {
-            return function.getName();
+            return ParaProfUtils.getFunctionName(function);
         } else if (elementType == GROUP) {
             return group.getName();
         } else if (elementType == USEREVENT) {

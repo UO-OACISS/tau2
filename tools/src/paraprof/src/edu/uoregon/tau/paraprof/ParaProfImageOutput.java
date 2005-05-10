@@ -18,6 +18,7 @@ import java.util.Iterator;
 import javax.imageio.*;
 import javax.imageio.stream.ImageOutputStream;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 
 public class ParaProfImageOutput {
 
@@ -50,6 +51,10 @@ public class ParaProfImageOutput {
 
         //Get both the file and FileFilter.
         File f = fileChooser.getSelectedFile();
+
+        
+       
+        
         javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
         String path = f.getCanonicalPath();
         //Append extension if required.
@@ -70,6 +75,13 @@ public class ParaProfImageOutput {
                 f = new File(path);
             }
 
+            if (f.exists()) {
+                int response = JOptionPane.showConfirmDialog((Component)ref, f + " already exists\nOverwrite existing file?", "Confirm Overwrite",
+                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (response == JOptionPane.CANCEL_OPTION)
+                    return;
+            }
+            
             // I'm doing this twice right now because the getImageSize won't be correct until 
             // renderIt has been called with the appropriate settings.  Stupid, I know.
             Dimension d = ref.getImageSize(paraProfImageOptionsPanel.isFullScreen(),

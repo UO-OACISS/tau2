@@ -35,6 +35,8 @@ public class ParaProfImageFormatFileFilter extends javax.swing.filechooser.FileF
             return "JPEG File (*.jpg)";
         else if (extension.equals("png"))
             return "PNG File (*.png)";
+        else if (extension.equals("ppk"))
+            return "ParaProf Packaged Profile (*.ppk)";
         else
             return "Unknown Extension (*.";
     }
@@ -65,6 +67,7 @@ public class ParaProfImageFormatFileFilter extends javax.swing.filechooser.FileF
 
     static String JPG = "jpg";
     static String PNG = "png";
+    static String PPK = "ppk";
     //####################################
     //End - Instance Data.
     //####################################

@@ -1,19 +1,20 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.ClipboardOwner;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.print.*;
+import java.io.*;
+import java.util.Iterator;
+import java.util.Vector;
+import java.util.zip.GZIPOutputStream;
 
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
-import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 
@@ -118,80 +119,82 @@ public class ParaProfUtils {
 
     }
 
-    public static JMenu createTrialMenu(final ParaProfTrial ppTrial, final JFrame owner) {
-
-        ActionListener actionListener = new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-
-                try {
-                    Object EventSrc = evt.getSource();
-
-                    if (EventSrc instanceof JMenuItem) {
-                        String arg = evt.getActionCommand();
-
-                        if (arg.equals("Show 3D Window")) {
-
-                            if (JVMDependent.version.equals("1.3")) {
-                                JOptionPane.showMessageDialog(owner,
-                                "3D Visualization requires Java 1.4 or above\nPlease make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
-                                return;
-                            }
-                            
-                            //Gears.main(null);
-                            //(new Gears()).show();
-
-                            try {
-                                (new ThreeDeeWindow(ppTrial)).show();
-                                //(new ThreeDeeWindow()).show();
-                            } catch (UnsatisfiedLinkError e) {
-                                JOptionPane.showMessageDialog(
-                                        owner,
-                                        "Unable to load jogl library.  Possible reasons:\nlibjogl.so is not in your LD_LIBRARY_PATH.\nJogl is not built for this platform.\nOpenGL is not installed\n\nJogl is available at jogl.dev.java.net");
-                            } catch (UnsupportedClassVersionError e) {
-                                JOptionPane.showMessageDialog(owner,
-                                        "Unsupported class version.  Are you using Java 1.4 or above?");
-                            }
-                        } else if (arg.equals("Show Call Path Relations")) {
-                            CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, null, 2);
-                            ppTrial.getSystemEvents().addObserver(tmpRef);
-                            tmpRef.show();
-                        } else if (arg.equals("Show Mean Call Graph")) {
-                            CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppTrial.getDataSource().getMeanData());
-                            ppTrial.getSystemEvents().addObserver(tmpRef);
-                            tmpRef.show();
-                        } else if (arg.equals("Close All Sub-Windows")) {
-                            ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-                        }
-                    }
-                } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
-                }
-            }
-
-        };
-
-        JMenu trialMenu = new JMenu("Trial");
-
-        JMenuItem menuItem;
-
-        menuItem = new JMenuItem("Show 3D Window");
-        menuItem.addActionListener(actionListener);
-        trialMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Call Path Relations");
-        menuItem.addActionListener(actionListener);
-        trialMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Show Mean Call Graph");
-        menuItem.addActionListener(actionListener);
-        trialMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Close All Sub-Windows");
-        menuItem.addActionListener(actionListener);
-        trialMenu.add(menuItem);
-
-        return trialMenu;
-    }
+    //
+    //    public static JMenu createTrialMenu(final ParaProfTrial ppTrial, final JFrame owner) {
+    //
+    //        ActionListener actionListener = new ActionListener() {
+    //            public void actionPerformed(ActionEvent evt) {
+    //
+    //                try {
+    //                    Object EventSrc = evt.getSource();
+    //
+    //                    if (EventSrc instanceof JMenuItem) {
+    //                        String arg = evt.getActionCommand();
+    //
+    //                        if (arg.equals("Show 3D Window")) {
+    //
+    //                            if (JVMDependent.version.equals("1.3")) {
+    //                                JOptionPane.showMessageDialog(
+    //                                        owner,
+    //                                        "3D Visualization requires Java 1.4 or above\nPlease make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
+    //                                return;
+    //                            }
+    //
+    //                            //Gears.main(null);
+    //                            //(new Gears()).show();
+    //
+    //                            try {
+    //                                (new ThreeDeeWindow(ppTrial)).show();
+    //                                //(new ThreeDeeWindow()).show();
+    //                            } catch (UnsatisfiedLinkError e) {
+    //                                JOptionPane.showMessageDialog(
+    //                                        owner,
+    //                                        "Unable to load jogl library.  Possible reasons:\nlibjogl.so is not in your LD_LIBRARY_PATH.\nJogl is not built for this platform.\nOpenGL is not installed\n\nJogl is available at jogl.dev.java.net");
+    //                            } catch (UnsupportedClassVersionError e) {
+    //                                JOptionPane.showMessageDialog(owner,
+    //                                        "Unsupported class version.  Are you using Java 1.4 or above?");
+    //                            }
+    //                        } else if (arg.equals("Show Call Path Relations")) {
+    //                            CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, null, 2);
+    //                            ppTrial.getSystemEvents().addObserver(tmpRef);
+    //                            tmpRef.show();
+    //                        } else if (arg.equals("Show Mean Call Graph")) {
+    //                            CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppTrial.getDataSource().getMeanData());
+    //                            ppTrial.getSystemEvents().addObserver(tmpRef);
+    //                            tmpRef.show();
+    //                        } else if (arg.equals("Close All Sub-Windows")) {
+    //                            ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+    //                        }
+    //                    }
+    //                } catch (Exception e) {
+    //                    ParaProfUtils.handleException(e);
+    //                }
+    //            }
+    //
+    //        };
+    //
+    //        JMenu trialMenu = new JMenu("Trial");
+    //
+    //        JMenuItem menuItem;
+    //
+    //        menuItem = new JMenuItem("Show 3D Window");
+    //        menuItem.addActionListener(actionListener);
+    //        trialMenu.add(menuItem);
+    //
+    //        menuItem = new JMenuItem("Show Call Path Relations");
+    //        menuItem.addActionListener(actionListener);
+    //        trialMenu.add(menuItem);
+    //
+    //        menuItem = new JMenuItem("Show Mean Call Graph");
+    //        menuItem.addActionListener(actionListener);
+    //        trialMenu.add(menuItem);
+    //
+    //        menuItem = new JMenuItem("Close All Sub-Windows");
+    //        menuItem.addActionListener(actionListener);
+    //        trialMenu.add(menuItem);
+    //
+    //        return trialMenu;
+    //    }
 
     public static JMenu createHelpMenu(final JFrame owner, final ParaProfWindow ppWindow) {
 
@@ -301,6 +304,49 @@ public class ParaProfUtils {
         return fileMenu;
     }
 
+    public static JMenu createThreadMenu(final ParaProfTrial ppTrial, final JFrame owner,
+            final edu.uoregon.tau.dms.dss.Thread thread) {
+
+        JMenu threadMenu = new JMenu("Thread");
+
+        JMenuItem menuItem;
+
+        menuItem = new JMenuItem("Function Graph");
+        threadMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Callpath Relations");
+        threadMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Call Graph");
+        threadMenu.add(menuItem);
+
+        menuItem = new JMenuItem("Function Statistics");
+        threadMenu.add(menuItem);
+
+        menuItem = new JMenuItem("User Event Statistics");
+        threadMenu.add(menuItem);
+
+        return threadMenu;
+
+    }
+
+    public static JMenu createFunctionMenu(final ParaProfTrial ppTrial, final JFrame owner,
+            final edu.uoregon.tau.dms.dss.Thread thread) {
+
+        JMenu menu = new JMenu("Function");
+
+        JMenuItem menuItem;
+
+        menuItem = new JMenuItem("Thread Graph");
+        menu.add(menuItem);
+
+        menuItem = new JMenuItem("Histogram");
+        menu.add(menuItem);
+
+        return menu;
+
+    }
+
     public static JMenu createWindowsMenu(final ParaProfTrial ppTrial, final JFrame owner) {
 
         ActionListener actionListener = new ActionListener() {
@@ -311,15 +357,45 @@ public class ParaProfUtils {
 
                     String arg = evt.getActionCommand();
 
-                    if (arg.equals("Show ParaProf Manager")) {
+                    if (arg.equals("ParaProf Manager")) {
                         (new ParaProfManagerWindow()).show();
-                    } else if (arg.equals("Show Function Ledger")) {
+                    } else if (arg.equals("Function Ledger")) {
                         (new LedgerWindow(ppTrial, 0)).show();
-                    } else if (arg.equals("Show Group Ledger")) {
+                    } else if (arg.equals("Group Ledger")) {
                         (new LedgerWindow(ppTrial, 1)).show();
-                    } else if (arg.equals("Show User Event Ledger")) {
+                    } else if (arg.equals("User Event Ledger")) {
                         (new LedgerWindow(ppTrial, 2)).show();
+                    } else if (arg.equals("3D Visualization")) {
+
+                        if (JVMDependent.version.equals("1.3")) {
+                            JOptionPane.showMessageDialog(
+                                    owner,
+                                    "3D Visualization requires Java 1.4 or above\nPlease make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
+                            return;
+                        }
+
+                        //Gears.main(null);
+                        //(new Gears()).show();
+
+                        try {
+                            (new ThreeDeeWindow(ppTrial)).show();
+                            //(new ThreeDeeWindow()).show();
+                        } catch (UnsatisfiedLinkError e) {
+                            JOptionPane.showMessageDialog(
+                                    owner,
+                                    "Unable to load jogl library.  Possible reasons:\nlibjogl.so is not in your LD_LIBRARY_PATH.\nJogl is not built for this platform.\nOpenGL is not installed\n\nJogl is available at jogl.dev.java.net");
+                        } catch (UnsupportedClassVersionError e) {
+                            JOptionPane.showMessageDialog(owner,
+                                    "Unsupported class version.  Are you using Java 1.4 or above?");
+                        }
+                    } else if (arg.equals("Call Path Relations")) {
+                        CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, null, 2);
+                        ppTrial.getSystemEvents().addObserver(tmpRef);
+                        tmpRef.show();
+                    } else if (arg.equals("Close All Sub-Windows")) {
+                        ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
                     }
+
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
@@ -331,21 +407,39 @@ public class ParaProfUtils {
 
         JMenuItem menuItem;
 
-        menuItem = new JMenuItem("Show ParaProf Manager");
+        menuItem = new JMenuItem("ParaProf Manager");
         menuItem.addActionListener(actionListener);
         windowsMenu.add(menuItem);
 
-        menuItem = new JMenuItem("Show Function Ledger");
+        windowsMenu.add(new JSeparator());
+
+        menuItem = new JMenuItem("3D Visualization");
         menuItem.addActionListener(actionListener);
         windowsMenu.add(menuItem);
 
-        final JMenuItem groupLedger = new JMenuItem("Show Group Ledger");
+        menuItem = new JMenuItem("Call Path Relations");
+        menuItem.addActionListener(actionListener);
+        windowsMenu.add(menuItem);
+
+        windowsMenu.add(new JSeparator());
+
+        menuItem = new JMenuItem("Function Ledger");
+        menuItem.addActionListener(actionListener);
+        windowsMenu.add(menuItem);
+
+        final JMenuItem groupLedger = new JMenuItem("Group Ledger");
         groupLedger.addActionListener(actionListener);
         windowsMenu.add(groupLedger);
 
-        final JMenuItem userEventLedger = new JMenuItem("Show User Event Ledger");
+        final JMenuItem userEventLedger = new JMenuItem("User Event Ledger");
         userEventLedger.addActionListener(actionListener);
         windowsMenu.add(userEventLedger);
+
+        windowsMenu.add(new JSeparator());
+
+        menuItem = new JMenuItem("Close All Sub-Windows");
+        menuItem.addActionListener(actionListener);
+        windowsMenu.add(menuItem);
 
         MenuListener menuListener = new MenuListener() {
             public void menuSelected(MenuEvent evt) {
@@ -648,6 +742,200 @@ public class ParaProfUtils {
         unitsSubMenu.add(button);
 
         return unitsSubMenu;
+    }
+
+    private static int findGroupID(Group groups[], Group group) {
+        for (int i = 0; i < groups.length; i++) {
+            if (groups[i] == group) {
+                return i;
+            }
+        }
+        throw new ParaProfException("Couldn't find group: " + group.getName());
+    }
+
+    public static void exportTrial(ParaProfTrial ppTrial, Component owner) {
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Export Trial");
+        //Set the directory.
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+        javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
+
+        fileChooser.setFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.PPK));
+
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        int resultValue = fileChooser.showSaveDialog(owner);
+        if (resultValue != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        try {
+
+            File file = fileChooser.getSelectedFile();
+            String path = file.getCanonicalPath();
+
+            String extension = ParaProfImageFormatFileFilter.getExtension(file);
+            if (extension == null) {
+                path = path + ".ppk";
+                file = new File(path);
+            }
+
+            if (file.exists()) {
+                int response = JOptionPane.showConfirmDialog(owner, file + " already exists\nOverwrite existing file?",
+                        "Confirm Overwrite", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (response == JOptionPane.CANCEL_OPTION)
+                    return;
+            }
+
+            //File file = new File("/home/amorris/test.ppk");
+            FileOutputStream ostream = new FileOutputStream(file);
+            GZIPOutputStream gzip = new GZIPOutputStream(ostream);
+            BufferedOutputStream bw = new BufferedOutputStream(gzip);
+            DataOutputStream p = new DataOutputStream(bw);
+
+            DataSource dataSource = ppTrial.getDataSource();
+
+            int numFunctions = dataSource.getNumFunctions();
+            int numMetrics = dataSource.getNumberOfMetrics();
+            int numUserEvents = dataSource.getNumUserEvents();
+            int numGroups = dataSource.getNumGroups();
+
+            // write out version
+            p.writeInt(1);
+
+            // write out metric names
+            p.writeInt(numMetrics);
+            for (int i = 0; i < numMetrics; i++) {
+                String metricName = dataSource.getMetricName(i);
+                p.writeUTF(metricName);
+            }
+
+            int idx = 0;
+
+            // write out group names
+            p.writeInt(numGroups);
+            Group groups[] = new Group[numGroups];
+            for (Iterator it = dataSource.getGroups(); it.hasNext();) {
+                Group group = (Group) it.next();
+                String groupName = group.getName();
+                p.writeUTF(groupName);
+                groups[idx++] = group;
+            }
+
+            Function functions[] = new Function[numFunctions];
+            idx = 0;
+            // write out function names
+            p.writeInt(numFunctions);
+            for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
+                Function function = (Function) it.next();
+                functions[idx++] = function;
+                p.writeUTF(function.getName());
+
+                Vector thisGroups = function.getGroups();
+                if (thisGroups == null) {
+                    p.writeInt(0);
+                } else {
+                    p.writeInt(thisGroups.size());
+                    for (int i = 0; i < thisGroups.size(); i++) {
+                        Group group = (Group) thisGroups.get(i);
+                        p.writeInt(findGroupID(groups, group));
+                    }
+                }
+            }
+
+            UserEvent userEvents[] = new UserEvent[numUserEvents];
+            idx = 0;
+            // write out user event names
+            p.writeInt(numUserEvents);
+            for (Iterator it = dataSource.getUserEvents(); it.hasNext();) {
+                UserEvent userEvent = (UserEvent) it.next();
+                userEvents[idx++] = userEvent;
+                p.writeUTF(userEvent.getName());
+            }
+
+            p.writeInt(dataSource.getTotalNumberOfThreads());
+
+            for (Iterator it = ppTrial.getDataSource().getNodes(); it.hasNext();) {
+                Node node = (Node) it.next();
+                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                    Context context = (Context) it2.next();
+                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+
+                        //System.out.println("writing " + thread.getNodeID() + "," + thread.getContextID() + "," + thread.getThreadID());
+                        p.writeInt(thread.getNodeID());
+                        p.writeInt(thread.getContextID());
+                        p.writeInt(thread.getThreadID());
+
+                        // count function profiles
+                        int count = 0;
+                        for (int i = 0; i < numFunctions; i++) {
+                            FunctionProfile fp = thread.getFunctionProfile(functions[i]);
+                            if (fp != null) {
+                                count++;
+                            }
+                        }
+                        p.writeInt(count);
+
+                        // write out function profiles
+                        for (int i = 0; i < numFunctions; i++) {
+                            FunctionProfile fp = thread.getFunctionProfile(functions[i]);
+
+                            if (fp != null) {
+                                p.writeInt(i); // which function
+                                p.writeDouble(fp.getNumCalls());
+                                p.writeDouble(fp.getNumSubr());
+
+                                for (int j = 0; j < numMetrics; j++) {
+                                    p.writeDouble(fp.getExclusive(j));
+                                    p.writeDouble(fp.getInclusive(j));
+                                }
+                            }
+                        }
+
+                        // count user event profiles
+                        count = 0;
+                        for (int i = 0; i < numUserEvents; i++) {
+                            UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
+                            if (uep != null) {
+                                count++;
+                            }
+                        }
+
+                        p.writeInt(count); // number of user event profiles
+
+                        // write out user event profiles
+                        for (int i = 0; i < numUserEvents; i++) {
+                            UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
+
+                            if (uep != null) {
+                                p.writeInt(i);
+                                p.writeInt(uep.getUserEventNumberValue());
+                                p.writeDouble(uep.getUserEventMinValue());
+                                p.writeDouble(uep.getUserEventMaxValue());
+                                p.writeDouble(uep.getUserEventMeanValue());
+                                p.writeDouble(uep.getUserEventSumSquared());
+                            }
+                        }
+                    }
+                }
+            }
+
+            p.close();
+            gzip.close();
+            ostream.close();
+
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
+        }
+
+    }
+
+    public static String getFunctionName(Function function) {
+        if (ParaProf.preferences.getReversedCallPaths()) {
+            return function.getReversedName();
+        }
+        return function.getName();
     }
 
     public static void handleException(Exception e) {

@@ -14,6 +14,8 @@ public class JVMDependent {
     }
 
     public static void setClipboardContents(String contents, ClipboardOwner owner) {
+        if (contents == null || contents == "")
+            return;
         Toolkit tk = Toolkit.getDefaultToolkit();
         StringSelection st = new StringSelection(contents);
         Clipboard cp = tk.getSystemSelection();

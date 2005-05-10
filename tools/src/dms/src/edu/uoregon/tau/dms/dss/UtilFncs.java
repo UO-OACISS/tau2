@@ -686,6 +686,15 @@ public class UtilFncs {
             v.add(sourceFiles);
             dataSource = new PSRunDataSource(v);
             break;
+        case 7:
+            if (sourceFiles.length != 1) {
+                throw new DataSourceException("Packed Profile type: you must specify exactly one file");
+            }
+            if (sourceFiles[0].isDirectory()) {
+                throw new DataSourceException("Packed Profile type: you must specify a file, not a directory");
+            }
+            dataSource = new PackedProfileDatasource(sourceFiles[0]);
+            break;
         default:
             break;
         }

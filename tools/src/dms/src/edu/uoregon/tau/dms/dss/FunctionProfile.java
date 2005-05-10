@@ -6,13 +6,12 @@ import java.text.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.9 2005/03/08 00:55:53 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.10 2005/05/10 01:48:36 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		Function
  */
 public class FunctionProfile implements Comparable {
-
     private static final int METRIC_SIZE = 4;
 
     private Function function;
@@ -23,13 +22,10 @@ public class FunctionProfile implements Comparable {
     // unused profile calls
     //private Vector calls;
 
-
     private Set childProfiles;
     private Set parentProfiles;
     private Map childProfileCallPathSets;
     private Map parentProfileCallPathSets;
-
-    
 
     public FunctionProfile(Function function) {
         this(function, 1);
@@ -96,13 +92,13 @@ public class FunctionProfile implements Comparable {
         return numSubr;
     }
 
-//    public void setInclusivePerCall(int metric, double value) {
-//        this.insertDouble(metric, 4, value);
-//    }
+    //    public void setInclusivePerCall(int metric, double value) {
+    //        this.insertDouble(metric, 4, value);
+    //    }
 
     public double getInclusivePerCall(int metric) {
         return this.getInclusive(metric) / this.getNumCalls();
-//        return this.getDouble(metric, 4);
+        //        return this.getDouble(metric, 4);
     }
 
     public double getExclusivePerCall(int metric) {
@@ -143,8 +139,6 @@ public class FunctionProfile implements Comparable {
         if (childProfiles == null)
             childProfiles = new TreeSet();
         childProfiles.add(child);
-        
-
 
         if (childProfileCallPathSets == null)
             childProfileCallPathSets = new TreeMap();
@@ -164,8 +158,7 @@ public class FunctionProfile implements Comparable {
         if (parentProfiles == null)
             parentProfiles = new TreeSet();
         parentProfiles.add(parent);
-        
-        
+
         if (parentProfileCallPathSets == null)
             parentProfileCallPathSets = new TreeMap();
 
@@ -192,7 +185,6 @@ public class FunctionProfile implements Comparable {
         return new DssIterator();
     }
 
-
     public Iterator getParentProfileCallPathIterator(FunctionProfile parent) {
         if (parentProfileCallPathSets == null)
             return new DssIterator();
@@ -204,7 +196,7 @@ public class FunctionProfile implements Comparable {
             return new DssIterator();
         return ((Set) childProfileCallPathSets.get(child)).iterator();
     }
-    
+
     /**
      * Passthrough to the actual function's isCallPathFunction
      * 
@@ -213,7 +205,6 @@ public class FunctionProfile implements Comparable {
     public boolean isCallPathFunction() {
         return function.isCallPathFunction();
     }
-
 
     private void insertDouble(int metric, int offset, double inDouble) {
         int actualLocation = (metric * METRIC_SIZE) + offset;

@@ -160,7 +160,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
-        mainMenu.add(ParaProfUtils.createTrialMenu(trial, this));
+        //mainMenu.add(ParaProfUtils.createTrialMenu(trial, this));
         mainMenu.add(ParaProfUtils.createWindowsMenu(trial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 

@@ -13,9 +13,9 @@ import java.text.*;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.18 2005/05/07 02:36:52 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.19 2005/05/10 01:48:37 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -652,6 +652,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
             //Populate drawObjects vector.
             if (drawObjects == null) {
                 createDrawObjectsStupid();
+                searcher.setSearchLines(null);
+                setSearchLinesStupid();
             }
 
             //Set panel size.
@@ -684,7 +686,6 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                 if (sizeChange && toScreen)
                     revalidate();
 
-                setSearchLinesStupid();
 
                 this.calculatePanelSize = false;
             }

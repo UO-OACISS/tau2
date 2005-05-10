@@ -43,6 +43,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     JComboBox unitsBox;
     JCheckBox showValuesAsPercentBox = new JCheckBox("Show Values as Percent");
     JCheckBox showPathTitleInReverseBox = new JCheckBox("Show Path Title in Reverse");
+    JCheckBox reverseCallPathsBox = new JCheckBox("Reverse Call Paths");
     
     
     void setControls() {
@@ -86,6 +87,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             unitsBox.setSelectedIndex(preferences.getUnits());
             showValuesAsPercentBox.setSelected(preferences.getShowValuesAsPercent());
             showPathTitleInReverseBox.setSelected(preferences.getShowPathTitleInReverse());
+            reverseCallPathsBox.setSelected(preferences.getReversedCallPaths());
         }
 
         //Add some window listener code
@@ -109,7 +111,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         setTitle("ParaProf Preferences");
 
         int windowWidth = 550;
-        int windowHeight = 400;
+        int windowHeight = 350;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
         //There is really no need to resize this window.
@@ -210,12 +212,19 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProfUtils.addCompItem(defaultsPanel, unitsLabel, gbc, 0, 0, 1, 1);
         ParaProfUtils.addCompItem(defaultsPanel, unitsBox, gbc, 1, 0, 1, 1);
         ParaProfUtils.addCompItem(defaultsPanel, showValuesAsPercentBox, gbc, 0, 1, 2, 1);
-        ParaProfUtils.addCompItem(defaultsPanel, showPathTitleInReverseBox, gbc, 0, 2, 2, 1);
+        
+        
+        JPanel settingsPanel = new JPanel();
+        settingsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Settings"));
+        settingsPanel.setLayout(new GridBagLayout());
+        ParaProfUtils.addCompItem(settingsPanel, showPathTitleInReverseBox, gbc, 0, 2, 2, 1);
+        ParaProfUtils.addCompItem(settingsPanel, reverseCallPathsBox, gbc, 0, 3, 2, 1);
         
         
         
-        addCompItem(fontPanel, gbc, 0, 0, 2, 1);
-        addCompItem(defaultsPanel, gbc, 0, 1, 2, 1);
+        addCompItem(fontPanel, gbc, 0, 0, 1, 1);
+        addCompItem(defaultsPanel, gbc, 0, 1, 1, 1);
+        addCompItem(settingsPanel, gbc, 1, 1, 1, 1);
 
         
         JButton defaultButton = new JButton("Restore Defaults");
@@ -224,13 +233,13 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        addCompItem(defaultButton, gbc, 0, 5, 2, 1);
+        addCompItem(defaultButton, gbc, 0, 2, 1, 1);
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.EAST;
         gbc.weightx = 0.5;
         gbc.weighty = 0.5;
-        addCompItem(jScrollPane, gbc, 2, 0, 2, 5);
+        addCompItem(jScrollPane, gbc, 1, 0, 1, 1);
 
         JPanel applyCancelPanel = new JPanel();
 
@@ -245,7 +254,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         gbc.anchor = GridBagConstraints.EAST;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        addCompItem(applyCancelPanel, gbc, 3, 5, 1, 1);
+        addCompItem(applyCancelPanel, gbc, 1, 2, 1, 1);
 
         setSavedPreferences();
 
@@ -317,6 +326,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setUnits(unitsBox.getSelectedIndex());
         ParaProf.preferences.setShowValuesAsPercent(showValuesAsPercentBox.isSelected());
         ParaProf.preferences.setShowPathTitleInReverse(showPathTitleInReverseBox.isSelected());
+        ParaProf.preferences.setReversedCallPaths(reverseCallPathsBox.isSelected());
     }
 
     public boolean areBarDetailsSet() {
@@ -429,12 +439,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     ParaProf.exitParaProf(0);
                 } else if (arg.equals("Apply and Close Window")) {
                     setVisible(false);
-                    setSavedPreferences();
-                    Vector trials = ParaProf.paraProfManager.getLoadedTrials();
-                    for (Iterator it = trials.iterator(); it.hasNext();) {
-                        ParaProfTrial ppTrial = (ParaProfTrial) it.next();
-                        ppTrial.getSystemEvents().updateRegisteredObjects("prefEvent");
-                    }
+                    apply();
                 }
 
             } else if (EventSrc instanceof JCheckBox) {
@@ -465,12 +470,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                 prefSpacingPanel.repaint();
             } else if (EventSrc instanceof JButton) {
                 if (arg.equals("Apply")) {
-                    setSavedPreferences();
-                    Vector trials = ParaProf.paraProfManager.getLoadedTrials();
-                    for (Iterator it = trials.iterator(); it.hasNext();) {
-                        ParaProfTrial ppTrial = (ParaProfTrial) it.next();
-                        ppTrial.getSystemEvents().updateRegisteredObjects("prefEvent");
-                    }
+                    apply();
                 } else if (arg.equals("Cancel")) {
                     setVisible(false);
                     paraProfFont = preferences.getParaProfFont();
@@ -484,7 +484,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     unitsBox.setSelectedIndex(0);
                     showValuesAsPercentBox.setSelected(true);
                     showPathTitleInReverseBox.setSelected(true);
-
+                    reverseCallPathsBox.setSelected(false);
                     setControls();
                 }
 
@@ -494,6 +494,21 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         }
     }
 
+    private void apply() {
+        boolean needDataEvent = false;
+        if (reverseCallPathsBox.isSelected() != ParaProf.preferences.getReversedCallPaths()) {
+            needDataEvent = true;
+        }
+        
+        setSavedPreferences();
+        Vector trials = ParaProf.paraProfManager.getLoadedTrials();
+        for (Iterator it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+            ppTrial.getSystemEvents().updateRegisteredObjects("prefEvent");
+            ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
+        }
+    }
+    
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
         if (tmpString.equals("colorEvent")) {

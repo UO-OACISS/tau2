@@ -21,9 +21,9 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  * TODO: Display lists for transparency!!!
  *       Distinguish between zero and not called?!?
  *
- * <P>CVS $Id: BarPlot.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
+ * <P>CVS $Id: BarPlot.java,v 1.4 2005/05/10 01:48:40 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class BarPlot implements Plot {
 
@@ -802,9 +802,9 @@ public class BarPlot implements Plot {
             }
         });
 
-        final JSlider plotWidthSlider = new JSlider(5, 100, (int) xSize);
-        final JSlider plotDepthSlider = new JSlider(5, 100, (int) ySize);
-        final JSlider plotHeightSlider = new JSlider(2, 40, (int) zSize);
+        final JSlider plotWidthSlider = new JSlider(5, 300, (int) xSize);
+        final JSlider plotDepthSlider = new JSlider(5, 300, (int) ySize);
+        final JSlider plotHeightSlider = new JSlider(2, 50, (int) zSize);
 
         ChangeListener chageListener = new ChangeListener() {
             public void stateChanged(ChangeEvent event) {
