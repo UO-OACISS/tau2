@@ -4,8 +4,6 @@ import java.io.*;
 import java.sql.SQLException;
 import java.util.zip.GZIPInputStream;
 
-import edu.uoregon.tau.paraprof.ParaProfException;
-
 public class PackedProfileDatasource extends DataSource {
 
     class TrackerInputStream extends FilterInputStream {
@@ -75,7 +73,7 @@ public class PackedProfileDatasource extends DataSource {
         int version = p.readInt();
         
         if (version != 1) {
-            throw new ParaProfException("Bad version number: " + version);
+            throw new DataSourceException("Bad version number: " + version);
         }
         
         int numMetrics = p.readInt();
