@@ -46,9 +46,13 @@ double& TheTauFullTimerOverhead()
 double*& TheTauNullTimerOverhead()
 {
   static double *over = new double[MAX_TAU_COUNTERS];
-
-  for (int i = 0; i < MAX_TAU_COUNTERS; i++) {
-    over[i] = 0.0;
+  static int flag = 0;
+  
+  if (flag == 0) {
+    flag = 1;
+    for (int i = 0; i < MAX_TAU_COUNTERS; i++) {
+      over[i] = 0.0;
+    }
   }
 
   return over;
@@ -57,14 +61,19 @@ double*& TheTauNullTimerOverhead()
 double*& TheTauFullTimerOverhead()
 {
   static double *full = new double[MAX_TAU_COUNTERS];
+  static int flag = 0;
 
-  for (int i = 0; i < MAX_TAU_COUNTERS; i++) {
-    full[i] = 0.0;
+  if (flag == 0) {
+    flag = 1;
+    for (int i = 0; i < MAX_TAU_COUNTERS; i++) {
+      full[i] = 0.0;
+    }
   }
 
   return full;
 }
 #endif /* TAU_MULTIPLE_COUNTERS */
+
 #ifdef TAU_DEPTH_LIMIT
 int& TauGetDepthLimit(void);
 #endif /* TAU_DEPTH_LIMIT */
