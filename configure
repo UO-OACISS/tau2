@@ -265,7 +265,8 @@ do
     ;;
 
   -pdt_c++=*)
-    myarg=`echo $arg | sed 's/-pdt_c++=//'`
+    pdt_cxx_full_path=`echo $arg | sed 's@-pdt_c++=@@g'`
+    myarg=`echo $arg |  echo $arg | sed 's@-pdt_c++=@@g' | sed 's@.*/@@g'`
     if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ ]
       then
         pdt_cxx_compiler=$myarg
@@ -1373,6 +1374,11 @@ if [ $machine = apple ]
   if [ -d include/Memory -a ! -d include/MemoryWrapper ] 
   then
     mv include/Memory include/MemoryWrapper	
+  else
+    if [ -d include/Memory -a -d include/MemoryWrapper ]
+    then 
+      /bin/rm -rf include/Memory
+    fi 
   fi
 fi
 
@@ -3062,7 +3068,15 @@ then
 
   if [ $pdt_cxx_compiler != default ]
   then
-    fixmakeargs="$fixmakeargs PDTCXX pdtcxx=$pdt_cxx_compiler"
+# Check if they specified -pdt_c++=/usr/bin/g++ instead of just g++ 
+    if [ "x$pdt_cxx_full_path" != "x$pdt_cxx_compiler" ]
+    then
+      pdt_cxx_used=$pdt_cxx_full_path
+    else
+      pdt_cxx_used=$pdt_cxx_compiler
+    fi
+
+    fixmakeargs="$fixmakeargs PDTCXX pdtcxx=$pdt_cxx_used"
     if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
     then
       if [ $pdt_cxx_compiler = CC ]
