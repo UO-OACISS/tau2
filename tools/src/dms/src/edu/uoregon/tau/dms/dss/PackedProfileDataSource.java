@@ -69,12 +69,30 @@ public class PackedProfileDatasource extends DataSource {
         
         totalBytes = file.length();
 
+        // read and check magic cookie
+        char cookie1 = p.readChar();
+        char cookie2 = p.readChar();
+        char cookie3 = p.readChar();
         
+        if (!(cookie1 == 'P' && cookie2 == 'P' && cookie3 == 'K')) {
+            throw new DataSourceException("This doesn't look like a packed profile");
+        }
+        
+        // read file version
         int version = p.readInt();
         
-        if (version != 1) {
-            throw new DataSourceException("Bad version number: " + version);
+        // read lowest compatibility version
+        int compatible = p.readInt();
+        
+        if (compatible != 1) {
+            throw new DataSourceException("This packed profile is not compatible, please upgrade\nVersion: " + compatible + " > " + "1");
         }
+        
+        // skip over header
+        int bytesToSkip = p.readInt();
+        
+        p.skipBytes(bytesToSkip);
+        
         
         int numMetrics = p.readInt();
 

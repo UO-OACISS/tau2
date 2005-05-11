@@ -13,6 +13,7 @@ import javax.swing.*;
 import net.java.games.jogl.*;
 import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.dms.dss.Thread;
+import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
@@ -31,20 +32,13 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     private ColorScale colorScale = new ColorScale();
 
     private ParaProfTrial ppTrial;
-
     private JMenu optionsMenu = null;
-
+    private DataSorter dataSorter;
+    
     private ThreeDeeControlPanel controlPanel;
-
     private ThreeDeeSettings settings = new ThreeDeeSettings();
-
-    private ThreeDeeSettings latestSettings;
-
-    private Object lock = new Object();
-
     private ThreeDeeSettings oldSettings;
-
-    private javax.swing.Timer jTimer;
+    private javax.swing.Timer fpsTimer;
 
     private JSplitPane jSplitPane;
 
@@ -72,6 +66,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     public ThreeDeeWindow(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
 
+        dataSorter = new DataSorter(ppTrial);
+        dataSorter.setSortType(SortType.NAME);
         ppTrial.getSystemEvents().addObserver(this);
 
         this.setTitle("ParaProf Visualizer: "
@@ -166,8 +162,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         this.show();
 
         if (System.getProperty("vis.fps") != null) {
-            jTimer = new javax.swing.Timer(1000, this);
-            jTimer.start();
+            fpsTimer = new javax.swing.Timer(1000, this);
+            fpsTimer.start();
         }
 
         ParaProf.incrementNumWindows();
@@ -260,14 +256,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         int numThreads = dataSource.getNumThreads();
         int numFunctions = 0;
 
-        // We must actually count the number of functions, in case there is a group mask
-        for (Iterator funcIter = ppTrial.getDataSource().getFunctions(); funcIter.hasNext();) {
-            Function function = (Function) funcIter.next();
-
-            if (ppTrial.displayFunction(function)) {
-                numFunctions++;
-            }
-        }
+        // get the 'mean' thread's functions to sort by
+        Vector list = dataSorter.getFunctionProfiles(-1,-1,-1);
+        
+        numFunctions = list.size();
 
         float[][] heightValues = new float[numFunctions][numThreads];
         float[][] colorValues = new float[numFunctions][numThreads];
@@ -300,12 +292,16 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         maxColorValue = 0;
 
         int funcIndex = 0;
-        for (Iterator funcIter = ppTrial.getDataSource().getFunctions(); funcIter.hasNext();) {
-            Function function = (Function) funcIter.next();
+        for (int i = 0; i < list.size(); i++) {
+            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(i);
+            Function function = ppFunctionProfile.getFunction(); 
+            
+        //for (Iterator funcIter = ppTrial.getDataSource().getFunctions(); funcIter.hasNext();) {
+          //  Function function = (Function) funcIter.next();
 
-            if (!ppTrial.displayFunction(function)) {
-                continue;
-            }
+//            if (!ppTrial.displayFunction(function)) {
+//                continue;
+//            }
 
             if (addFunctionNames) {
                 functionNames.add(ParaProfUtils.getFunctionName(function));
@@ -551,22 +547,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             //            }
 
         } else if (tmpString.equals("dataEvent")) {
-
-            functionNames = null;
-
-            if (settings.getVisType() == VisType.BAR_PLOT || settings.getVisType() == VisType.TRIANGLE_MESH_PLOT) {
-                settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
-                settings.setRegularAim(visRenderer.getAim());
-                settings.setRegularEye(visRenderer.getEye());
-            } else if (settings.getVisType() == VisType.SCATTER_PLOT) {
-                //                settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
-                settings.setScatterAim(visRenderer.getAim());
-                settings.setScatterEye(visRenderer.getEye());
-            }
-
-            generate3dModel(false, settings);
-            visRenderer.redraw();
-            controlPanel.dataChanged();
+            sortLocalData();
         }
 
     }
@@ -597,6 +578,24 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         //        System.gc();
     }
 
+    private void sortLocalData() {
+        functionNames = null;
+
+        if (settings.getVisType() == VisType.BAR_PLOT || settings.getVisType() == VisType.TRIANGLE_MESH_PLOT) {
+            settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
+            settings.setRegularAim(visRenderer.getAim());
+            settings.setRegularEye(visRenderer.getEye());
+        } else if (settings.getVisType() == VisType.SCATTER_PLOT) {
+            //                settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
+            settings.setScatterAim(visRenderer.getAim());
+            settings.setScatterEye(visRenderer.getEye());
+        }
+
+        generate3dModel(false, settings);
+        visRenderer.redraw();
+        controlPanel.dataChanged();
+    }
+    
     public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();

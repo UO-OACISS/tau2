@@ -800,9 +800,21 @@ public class ParaProfUtils {
             int numUserEvents = dataSource.getNumUserEvents();
             int numGroups = dataSource.getNumGroups();
 
+            
+            // write out magic cookie
+            p.writeChar('P');
+            p.writeChar('P');
+            p.writeChar('K');
+            
             // write out version
             p.writeInt(1);
 
+            // write out lowest compatibility version
+            p.writeInt(1);
+            
+            // write out size of header in bytes
+            p.writeInt(0);
+            
             // write out metric names
             p.writeInt(numMetrics);
             for (int i = 0; i < numMetrics; i++) {
