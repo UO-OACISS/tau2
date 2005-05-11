@@ -197,3 +197,12 @@ taucompiler	- using $(TAU_COMPILER) in your Makefile before the compiler
                   and compiles the source file and links in the correct 
                   libraries. A Fortran 90 example illustrates its use in the 
                   f90 subdirectory.
+
+userevent       - TAU's user defined events can show context information 
+                  highlighting the callpath that led to the event. This is 
+                  supported using the TAU_REGISTER_CONTEXT_EVENT and 
+                  TAU_CONTEXT_EVENT calls. It uses the TAU_CALLPATH_DEPTH env.
+                  variable. This feature works independently of the callpath 
+                  or phase profiling options, which apply to bracketed entry and
+                  exit events - not atomic events. You can disable tracking 
+                  the callpath at runtime. 
