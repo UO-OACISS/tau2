@@ -4,7 +4,7 @@ import java.io.*;
 import java.sql.SQLException;
 import java.util.zip.GZIPInputStream;
 
-public class PackedProfileDatasource extends DataSource {
+public class PackedProfileDataSource extends DataSource {
 
     class TrackerInputStream extends FilterInputStream {
         private int count;
@@ -42,7 +42,7 @@ public class PackedProfileDatasource extends DataSource {
     private volatile long bytesRead = 0;
     TrackerInputStream tracker;
 
-    public PackedProfileDatasource(File file) {
+    public PackedProfileDataSource(File file) {
         this.file = file;
     }
 

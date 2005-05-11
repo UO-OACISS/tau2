@@ -693,7 +693,7 @@ public class UtilFncs {
             if (sourceFiles[0].isDirectory()) {
                 throw new DataSourceException("Packed Profile type: you must specify a file, not a directory");
             }
-            dataSource = new PackedProfileDatasource(sourceFiles[0]);
+            dataSource = new PackedProfileDataSource(sourceFiles[0]);
             break;
         default:
             break;
