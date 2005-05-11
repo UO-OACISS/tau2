@@ -41,7 +41,7 @@ selected metrics:
 [tau2/examples/multicounter]$ ls -la
 drwxr-xr-x    8 bertie   paraduck     4096 Mar 15 18:57 .
 drwxr-xr-x   26 bertie   paraduck     4096 Mar 15 18:42 ..
-drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 CPU_TIME
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 MULTI__CPU_TIME
 drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:41 CVS
 drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 MULTI__GET_TIME_OF_DAY
 drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 MULTI__LINUX_TIMERS
@@ -115,7 +115,7 @@ LINUX_TIMERS       --- For -LINUXTIMERS configuration option under Linux
 CPU_TIME           --- For user+system time from getrusage() call with -CPUTIME
 CRAY_TIMERS	   --- For cray timers
 TAU_MUSE	   --- For MAGNET User-Space Environment
-TAU_MPI_MESSAGE_SIZE - For tracking mpi send message event 
+TAU_MPI_MESSAGE_SIZE - For tracking mpi message event for all MPI operations
 P_WALL_CLOCK_TIME  --- For PAPI's WALLCLOCK time using -PAPIWALLCLOCK
 P_VIRTUAL_TIME     --- For PAPI's process virtual time using -PAPIVIRTUAL
 
@@ -127,5 +127,4 @@ PAPI_FP_INS        --- For floating point operations using PAPI (-papi=<dir>)
 
 NOTE: When -MULTIPLECOUNTERS is used with -TRACE option, the tracing library
 uses the wallclock time from the function specified in the COUNTER1 variable. This
-should typically point to wallclock time routines (such as GET_TIME_OF_DAY or SGI_TIMERS
-or LINUX_TIMERS). 
+must point to GET_TIME_OF_DAY.
