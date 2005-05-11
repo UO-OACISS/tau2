@@ -76,6 +76,18 @@ class TauUserEvent {
     static void ReportStatistics(bool ForEachThread = false); 
 };
 
+class TauContextUserEvent {
+  public:
+    TauContextUserEvent(const char * EName, bool MonoIncr=false);
+    ~TauContextUserEvent(); 
+    void SetDisableContext(bool value);
+    void TriggerEvent( TAU_EVENT_DATATYPE data, int tid = RtsLayer::myThread());
+  private:
+    bool DisableContext;
+    TauUserEvent *uevent;
+    bool MonotonicallyIncreasing;
+};
+
 
 TAU_STD_NAMESPACE vector<TauUserEvent*>& TheEventDB(void);
 /*    
@@ -106,6 +118,6 @@ TAU_STD_NAMESPACE vector<TauUserEvent*>& TheEventDB(void);
 
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2004/11/02 20:27:06 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.10 2004/11/02 20:27:06 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 2005/05/11 19:55:06 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.11 2005/05/11 19:55:06 sameer Exp $ 
  ***************************************************************************/

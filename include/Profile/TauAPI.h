@@ -256,7 +256,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_GET_EVENT_VALS(v1,v2,v3,v4,v5,v6,v7) \
                                Profiler::getUserEventValues(v1,v2,&v3,&v4,&v5,&v6,&v7);
 
-#define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
+#define TAU_REGISTER_EVENT(event, name)  	static TauUserEvent event(name);
 #define TAU_EVENT(event, data) 		 	(event).TriggerEvent(data);
 #define TAU_EVENT_SET_NAME(event, name) 	(event).SetEventName(name);
 #define TAU_EVENT_DISABLE_MIN(event) 		(event).SetDisableMin(true);
@@ -265,6 +265,13 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_EVENT_DISABLE_STDDEV(event) 	(event).SetDisableStdDev(true);
 #define TAU_REPORT_STATISTICS()			TauUserEvent::ReportStatistics();
 #define TAU_REPORT_THREAD_STATISTICS()		TauUserEvent::ReportStatistics(true);
+
+#define TAU_REGISTER_CONTEXT_EVENT(event, name) static TauContextUserEvent event(name);
+#define TAU_CONTEXT_EVENT(event, data)		(event).TriggerEvent(data);
+#define TAU_DISABLE_CONTEXT_EVENT(event)	(event).SetDisableContext(true);
+#define TAU_ENABLE_CONTEXT_EVENT(event)		(event).SetDisableContext(false);
+
+
 
 #define TAU_REGISTER_THREAD()			RtsLayer::RegisterThread();
 #define TAU_REGISTER_FORK(id, op) 		RtsLayer::RegisterFork(id, op);
@@ -285,6 +292,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_DISABLE_TRACKING_MUSE_EVENTS()	TauDisableTrackingMuseEvents()
 #define TAU_TRACK_MUSE_EVENTS()			TauTrackMuseEvents()
 #define TAU_SET_INTERRUPT_INTERVAL(value)	TauSetInterruptInterval(value)
+
 
 #ifdef NO_RTTI
 /* #define CT(obj) string(#obj) */
@@ -368,6 +376,12 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_GLOBAL_TIMER_START(timer)
 #define TAU_GLOBAL_TIMER_STOP()
 
+#define TAU_REGISTER_CONTEXT_EVENT(event, name)
+#define TAU_CONTEXT_EVENT(event, data)
+#define TAU_DISABLE_CONTEXT_EVENT(event)
+#define TAU_ENABLE_CONTEXT_EVENT(event)
+
+
 
 #define CT(obj)
 
@@ -394,6 +408,6 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.49 $   $Date: 2005/01/18 23:57:20 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.49 2005/01/18 23:57:20 sameer Exp $ 
+ * $Revision: 1.50 $   $Date: 2005/05/11 19:55:06 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.50 2005/05/11 19:55:06 sameer Exp $ 
  ***************************************************************************/
