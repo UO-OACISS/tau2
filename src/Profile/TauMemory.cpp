@@ -202,8 +202,46 @@ extern "C" void Tau_free_C(const char *file, int line, void *p)
   Tau_free(file, line, p);
 }
 
+//////////////////////////////////////////////////////////////////////
+// The amount of memory available for use (in MB) 
+//////////////////////////////////////////////////////////////////////
+
+#define TAU_BLOCK_COUNT 1024
+
+int TauGetFreeMemory(void)
+{
+  char* blocks[TAU_BLOCK_COUNT];
+  char* ptr;
+  int i,j;
+  int freemem = 0;
+  int factor = 1;
+
+  i = 0; /* initialize it */
+  while (1)
+  {
+    ptr = (char *) malloc(factor*1024*1024); /* 1MB chunk */
+    if (ptr && i < TAU_BLOCK_COUNT)
+    { /* so we don't go over the size of the blocks */
+      blocks[i] = ptr;
+      i++; /* increment the no. of elements in the blocks array */
+      freemem += factor; /* assign the MB allocated */
+      factor *= 2;  /* try with twice as much the next time */
+    }
+    else
+    {
+      if (factor == 1) break; /* out of the loop */
+      factor = 1; /* try with a smaller chunk size */
+    }
+  }
+
+  for (j=0; j < i; j++)
+    free(blocks[j]);
+
+  return freemem;
+}
+
 /***************************************************************************
- * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
- * $Revision: 1.7 $   $Date: 2004/09/01 18:52:35 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.7 2004/09/01 18:52:35 amorris Exp $ 
+ * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
+ * $Revision: 1.8 $   $Date: 2005/05/13 00:11:55 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.8 2005/05/13 00:11:55 sameer Exp $ 
  ***************************************************************************/
