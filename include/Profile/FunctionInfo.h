@@ -113,6 +113,10 @@ public:
 	TauUserEvent * MemoryEvent;
 	TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
 #endif // TAU_PROFILEMEMORY
+#ifdef TAU_PROFILEHEADROOM
+	TauUserEvent * HeadroomEvent;
+	TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
+#endif // TAU_PROFILEHEADROOM
 
 
 
@@ -304,6 +308,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.30 $   $Date: 2005/01/05 22:57:10 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.30 2005/01/05 22:57:10 sameer Exp $ 
+ * $Revision: 1.31 $   $Date: 2005/05/17 19:32:10 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.31 2005/05/17 19:32:10 sameer Exp $ 
  ***************************************************************************/

@@ -286,8 +286,12 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_GET_PROFILE_GROUP(group)		RtsLayer::getProfileGroup(group)
 #define TAU_ENABLE_TRACKING_MEMORY()		TauEnableTrackingMemory()
 #define TAU_DISABLE_TRACKING_MEMORY()		TauDisableTrackingMemory()
-#define TAU_TRACK_MEMORY()			TauTrackMemoryUtilization()
+#define TAU_ENABLE_TRACKING_MEMORY_HEADROOM()	TauEnableTrackingMemoryHeadroom()
+#define TAU_DISABLE_TRACKING_MEMORY_HEADROOM()	TauDisableTrackingMemoryHeadroom()
+#define TAU_TRACK_MEMORY()			TauTrackMemoryUtilization(true)
+#define TAU_TRACK_MEMORY_HEADROOM()		TauTrackMemoryUtilization(false)
 #define TAU_TRACK_MEMORY_HERE()			TauTrackMemoryHere()
+#define TAU_TRACK_MEMORY_HEADROOM_HERE()	TauTrackMemoryHeadroomHere()
 #define TAU_ENABLE_TRACKING_MUSE_EVENTS()	TauEnableTrackingMuseEvents()
 #define TAU_DISABLE_TRACKING_MUSE_EVENTS()	TauDisableTrackingMuseEvents()
 #define TAU_TRACK_MUSE_EVENTS()			TauTrackMuseEvents()
@@ -408,6 +412,6 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.50 $   $Date: 2005/05/11 19:55:06 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.50 2005/05/11 19:55:06 sameer Exp $ 
+ * $Revision: 1.51 $   $Date: 2005/05/17 19:32:10 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.51 2005/05/17 19:32:10 sameer Exp $ 
  ***************************************************************************/
