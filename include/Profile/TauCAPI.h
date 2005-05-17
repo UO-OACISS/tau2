@@ -94,7 +94,14 @@ extern "C" {
                                    event = Tau_get_userevent(name); \
                                    taufirst##event = 0; }
 				
+#define TAU_REGISTER_CONTEXT_EVENT(event, name)	static int taufirst##event = 1;\
+                                 static void *event; \
+                                 if (taufirst##event == 1) { \
+                                   event = Tau_get_context_userevent(name); \
+                                   taufirst##event = 0; } 
+                                   
 #define TAU_EVENT(event, data)			Tau_userevent(event, data);
+#define TAU_CONTEXT_EVENT(event, data)		Tau_context_userevent(event, data);
 #define TAU_EVENT_SET_NAME(event, name)	Tau_set_event_name(event, name); 	
 #define TAU_REPORT_STATISTICS()		Tau_report_statistics();
 #define TAU_REPORT_THREAD_STATISTICS()  Tau_report_thread_statistics();
@@ -133,6 +140,10 @@ extern "C" {
 #define TAU_DISABLE_TRACKING_MEMORY()	Tau_disable_tracking_memory()
 #define TAU_TRACK_MEMORY()		Tau_track_memory()
 #define TAU_TRACK_MEMORY_HERE()		Tau_track_memory_here()
+#define TAU_TRACK_MEMORY_HEADROOM()	Tau_track_memory_headroom()
+#define TAU_TRACK_MEMORY_HEADROOM_HERE()	Tau_track_memory_headroom_here()
+#define TAU_ENABLE_TRACKING_MEMORY_HEADROOM()	Tau_enable_tracking_memory_headroom()
+#define TAU_DISABLE_TRACKING_MEMORY_HEADROOM()	Tau_disable_tracking_memory_headroom()
 #define TAU_ENABLE_TRACKING_MUSE_EVENTS()	Tau_enable_tracking_muse_events()	
 #define TAU_DISABLE_TRACKING_MUSE_EVENTS()	Tau_disable_tracking_muse_events()
 #define TAU_TRACK_MUSE_EVENTS()			Tau_track_muse_events()		
@@ -205,7 +216,9 @@ extern void Tau_dump_function_values_incr(const char **functionList, int num);
 extern void Tau_register_thread();
 extern void Tau_register_fork(int nodeid, enum TauFork_t opcode);
 extern void * Tau_get_userevent(char *name);
+extern void * Tau_get_context_userevent(char *name);
 extern void Tau_userevent(void *event, double data);
+extern void Tau_context_userevent(void *event, double data);
 extern void Tau_set_event_name(void *event, char * name);
 extern void Tau_report_statistics(void);
 extern void Tau_report_thread_statistics(void);
@@ -341,7 +354,7 @@ extern void Tau_global_stop(void);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.38 $   $Date: 2005/01/18 23:57:39 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.38 2005/01/18 23:57:39 sameer Exp $
+ * $Revision: 1.39 $   $Date: 2005/05/17 23:51:24 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.39 2005/05/17 23:51:24 sameer Exp $
  ***************************************************************************/
 

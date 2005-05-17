@@ -30,13 +30,16 @@ void TauTrackMuseEvents(void);
 void TauTrackMemoryHere(void);
 double TauGetMaxRSS(void);
 int  TauGetFreeMemory(void);
+void TauTrackMemoryHeadroomHere(void);
+int TauEnableTrackingMemoryHeadroom(void);
+int TauDisableTrackingMemoryHeadroom(void);
 
 #endif /* _TAU_HANDLER_H_ */
   
 /***************************************************************************
  * $RCSfile: TauHandler.h,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2005/05/17 19:32:10 $
- * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.5 2005/05/17 19:32:10 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 2005/05/17 23:51:24 $
+ * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.6 2005/05/17 23:51:24 sameer Exp $ 
  ***************************************************************************/
 
 	
