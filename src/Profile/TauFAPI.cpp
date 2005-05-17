@@ -54,7 +54,9 @@ void Tau_disable_instrumentation(void);
 void Tau_trace_sendmsg(int type, int destination, int length);
 void Tau_trace_recvmsg(int type, int source, int length);
 void * Tau_get_userevent(char *name);
+void * Tau_get_context_userevent(char *name);
 void Tau_userevent(void *ue, double data);
+void Tau_context_userevent(void *ue, double data);
 void Tau_report_statistics(void);
 void Tau_report_thread_statistics(void);
 void Tau_dump(void);
@@ -73,6 +75,11 @@ void Tau_disable_tracking_memory(void);
 void Tau_enable_tracking_muse_events(void);
 void Tau_disable_tracking_muse_events(void);
 void Tau_set_interrupt_interval(int value);
+void Tau_track_memory_headroom(void);
+void Tau_track_memory_headroom_here(void); 
+void Tau_enable_tracking_memory_headroom(void);
+void Tau_disable_tracking_memory_headroom(void);
+
 
 
 #define EXTRACT_GROUP(n, l, gr, gr_name) TauGroup_t gr; char *gr_name = (char *) malloc(l+1); tau_extract_groupinfo(n, gr, gr_name); 
@@ -303,6 +310,16 @@ void tau_track_memory_here(void)
   Tau_track_memory_here();
 } 
 
+void tau_track_memory_headroom(void)
+{
+  Tau_track_memory_headroom();
+} 
+
+void tau_track_memory_headroom_here(void)
+{
+  Tau_track_memory_headroom_here();
+} 
+
 void tau_track_muse_events(void)
 {
   Tau_track_muse_events();
@@ -316,6 +333,16 @@ void tau_enable_tracking_memory(void)
 void tau_disable_tracking_memory(void)
 {
   Tau_disable_tracking_memory();
+} 
+
+void tau_enable_tracking_memory_headroom(void)
+{
+  Tau_enable_tracking_memory_headroom();
+} 
+
+void tau_disable_tracking_memory_headroom(void)
+{
+  Tau_disable_tracking_memory_headroom();
 } 
 
 void tau_enable_tracking_muse_events(void)
@@ -442,9 +469,32 @@ void tau_register_event_(void **ptr, char *event_name, int flen)
 
 }
 
+void tau_register_context_event_(void **ptr, char *event_name, int flen)
+{
+
+  if (*ptr == 0)
+  {  // remove garbage characters from the end of name
+    char * ename = (char *) malloc((size_t)flen+1);
+    strncpy(ename, event_name, flen);
+    ename[flen] = '\0';
+#ifdef DEBUG_PROF
+    printf("Tau_get_context_userevent() \n");
+#endif /* DEBUG_PROF */
+    *ptr = Tau_get_context_userevent(ename);
+    free(ename);
+  }
+  return;
+
+}
+
 void tau_event_(void **ptr, double *data)
 {
   Tau_userevent(*ptr, *data);
+}
+
+void tau_context_event_(void **ptr, double *data)
+{
+  Tau_context_userevent((void *)*ptr, *data);
 }
 
 void tau_report_statistics_(void)
@@ -470,6 +520,16 @@ void tau_track_memory_here_(void)
   Tau_track_memory_here();
 } 
 
+void tau_track_memory_headroom_(void)
+{
+  Tau_track_memory_headroom();
+} 
+
+void tau_track_memory_headroom_here_(void)
+{
+  Tau_track_memory_headroom_here();
+} 
+
 void tau_track_muse_events_(void)
 {
   Tau_track_muse_events();
@@ -483,6 +543,16 @@ void tau_enable_tracking_memory_(void)
 void tau_disable_tracking_memory_(void)
 {
   Tau_disable_tracking_memory();
+} 
+
+void tau_enable_tracking_memory_headroom_(void)
+{
+  Tau_enable_tracking_memory_headroom();
+} 
+
+void tau_disable_tracking_memory_headroom_(void)
+{
+  Tau_disable_tracking_memory_headroom();
 } 
 
 void tau_enable_tracking_muse_events_(void)
@@ -662,9 +732,39 @@ void TAU_REGISTER_EVENT(void **ptr, char *event_name, int flen)
 
 }
 
+void TAU_REGISTER_CONTEXT_EVENT(void **ptr, char *event_name, int flen)
+{
+
+  if (*ptr == 0)
+  {  // remove garbage characters from the end of name
+    if (flen < 1024) event_name[flen] = '\0';
+    else
+    for(int i=0; i<1024; i++)
+    {
+      if (!VALID_NAME_CHAR(event_name[i]))
+      {
+        event_name[i] = '\0';
+        break;
+      }
+    }
+#ifdef DEBUG_PROF
+    printf("Tau_get_context_userevent() \n");
+#endif /* DEBUG_PROF */
+    *ptr = Tau_get_context_userevent(event_name);
+  }
+  return;
+
+}
+
+
 void TAU_EVENT(void **ptr, double *data)
 {
   Tau_userevent(*ptr, *data);
+}
+
+void TAU_CONTEXT_EVENT(void **ptr, double *data)
+{
+  Tau_context_userevent(*ptr, *data);
 }
 
 void TAU_REPORT_STATISTICS(void)
@@ -729,6 +829,16 @@ void TAU_TRACK_MEMORY_HERE(void)
   Tau_track_memory_here();
 } 
 
+void TAU_TRACK_MEMORY_HEADROOM(void)
+{
+  Tau_track_memory_headroom();
+} 
+
+void TAU_TRACK_MEMORY_HEADROOM_HERE(void)
+{
+  Tau_track_memory_headroom_here();
+} 
+
 void TAU_TRACK_MUSE_EVENTS(void)
 {
   Tau_track_muse_events();
@@ -742,6 +852,16 @@ void TAU_ENABLE_TRACKING_MEMORY(void)
 void TAU_DISABLE_TRACKING_MEMORY(void)
 {
   Tau_disable_tracking_memory();
+} 
+
+void TAU_ENABLE_TRACKING_MEMORY_HEADROOM(void)
+{
+  Tau_enable_tracking_memory_headroom();
+} 
+
+void TAU_DISABLE_TRACKING_MEMORY_HEADROOM(void)
+{
+  Tau_disable_tracking_memory_headroom();
 } 
 
 void TAU_ENABLE_TRACKING_MUSE_EVENTS(void)
@@ -841,11 +961,38 @@ void tau_register_event(int **ptr, char *event_name, int flen)
 
 }
 
+void tau_register_context_event(int **ptr, char *event_name, int flen)
+{
+
+  if (*ptr == 0)
+  {  // remove garbage characters from the end of name
+    for(int i=0; i<1024; i++)
+    {
+      if (!VALID_NAME_CHAR(event_name[i]))
+      {
+        event_name[i] = '\0';
+        break;
+      }
+    }
+#ifdef DEBUG_PROF
+    printf("Tau_get_context_userevent() \n");
+#endif /* DEBUG_PROF */
+    *ptr = (int *)Tau_get_context_userevent(event_name);
+  }
+  return;
+
+}
+
+
 void tau_event(int **ptr, double *data)
 {
   Tau_userevent((void *)*ptr, *data);
 }
 
+void tau_context_event(int **ptr, double *data)
+{
+  Tau_context_userevent((void *)*ptr, *data);
+}
 //#endif /* TAU_XLC || TAU_AIX || HP_FORTRAN */
 
 
@@ -968,9 +1115,41 @@ void tau_register_event__(void **ptr, char *event_name, int flen)
 
 }
 
+void tau_register_context_event__(void **ptr, char *event_name, int flen)
+{
+
+  if (*ptr == 0)
+  {  // remove garbage characters from the end of name
+    char * newname=new char[flen+1] ;
+    for (int j =0; j < flen; j++)
+      newname[j] = event_name[j];
+
+    newname[flen] = '\0';
+    for(int i=0; i<strlen(newname); i++)
+    {
+      if (!VALID_NAME_CHAR(newname[i]))
+      {
+        newname[i] = '\0';
+        break;
+      }
+    }
+#ifdef DEBUG_PROF
+    printf("tau_get_context_userevent() \n");
+#endif /* DEBUG_PROF */
+    *ptr = Tau_get_context_userevent(newname);
+  }
+  return;
+
+}
+
 void tau_event__(void **ptr, double *data)
 {
   Tau_userevent(*ptr, *data);
+}
+
+void tau_context_event__(int **ptr, double *data)
+{
+  Tau_context_userevent((void *)*ptr, *data);
 }
 
 void tau_report_statistics__(void)
@@ -1038,6 +1217,16 @@ void tau_track_memory_here__(void)
   Tau_track_memory_here();
 } 
 
+void tau_track_memory_headroom__(void)
+{
+  Tau_track_memory_headroom();
+} 
+
+void tau_track_memory_headroom_here__(void)
+{
+  Tau_track_memory_headroom_here();
+} 
+
 void tau_track_muse_events__(void)
 {
   Tau_track_muse_events();
@@ -1051,6 +1240,16 @@ void tau_enable_tracking_memory__(void)
 void tau_disable_tracking_memory__(void)
 {
   Tau_disable_tracking_memory();
+} 
+
+void tau_enable_tracking_memory_headroom__(void)
+{
+  Tau_enable_tracking_memory_headroom();
+} 
+
+void tau_disable_tracking_memory_headroom__(void)
+{
+  Tau_disable_tracking_memory_headroom();
 } 
 
 void tau_enable_tracking_muse_events__(void)
@@ -1153,6 +1352,6 @@ void TAU_PHASE_STOP(void **profiler)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.40 $   $Date: 2005/02/21 19:57:42 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.40 2005/02/21 19:57:42 sameer Exp $ 
+ * $Revision: 1.41 $   $Date: 2005/05/17 23:52:16 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.41 2005/05/17 23:52:16 sameer Exp $ 
  ***************************************************************************/

@@ -452,6 +452,21 @@ extern "C" void Tau_userevent(void *ue, double data)
 } 
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void * Tau_get_context_userevent(char *name)
+{
+  TauContextUserEvent *ue;
+  ue = new TauContextUserEvent(name);
+  return (void *) ue;
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_context_userevent(void *ue, double data)
+{
+  TauContextUserEvent *t = (TauContextUserEvent *) ue;
+  t->TriggerEvent(data);
+} 
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_event_name(void *ue, char *name)
 {
   TauUserEvent *t = (TauUserEvent *) ue;
@@ -575,6 +590,18 @@ extern "C" void Tau_track_memory_here(void)
 } 
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_track_memory_headroom(void)
+{
+  TAU_TRACK_MEMORY_HEADROOM();
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_track_memory_headroom_here(void)
+{
+  TAU_TRACK_MEMORY_HEADROOM_HERE();
+} 
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_track_muse_events(void)
 {
   TAU_TRACK_MUSE_EVENTS();
@@ -590,6 +617,18 @@ extern "C" void Tau_enable_tracking_memory(void)
 extern "C" void Tau_disable_tracking_memory(void)
 {
   TAU_DISABLE_TRACKING_MEMORY();
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_enable_tracking_memory_headroom(void)
+{
+  TAU_ENABLE_TRACKING_MEMORY_HEADROOM();
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_disable_tracking_memory_headroom(void)
+{
+  TAU_DISABLE_TRACKING_MEMORY_HEADROOM();
 } 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -620,7 +659,7 @@ extern "C" void Tau_global_stop(void)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.49 $   $Date: 2005/01/19 21:54:17 $
- * VERSION: $Id: TauCAPI.cpp,v 1.49 2005/01/19 21:54:17 sameer Exp $
+ * $Revision: 1.50 $   $Date: 2005/05/17 23:52:16 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.50 2005/05/17 23:52:16 sameer Exp $
  ***************************************************************************/
 
