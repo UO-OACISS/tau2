@@ -203,7 +203,6 @@ vtf=no
 slog2=no
 opari=no
 epilog=no
-tau2elg=no
 opari_region=no
 opari_construct=no
 dyninst=no
@@ -460,18 +459,6 @@ do
       epilog=yes
       trace=yes
       epilogdir=`echo $arg | sed -e 's/-epilog=//'`
-      if [ ! -d $epilogdir ]
-      then
-        echo "Error: Cannot access EPILOG directory $epilogdir"
-        exit 1
-      fi
-    shift
-    ;;
-
-  -tau2elg=*)
-      trace=yes
-      tau2elg=yes
-      epilogdir=`echo $arg | sed -e 's/-tau2elg=//'`
       if [ ! -d $epilogdir ]
       then
         echo "Error: Cannot access EPILOG directory $epilogdir"
@@ -3057,11 +3044,6 @@ fi
 if [ $vtf = yes ]
 then
   fixmakeargs="$fixmakeargs VTF vtfdir=$vtfdir"
-fi
-
-if [ $tau2elg = yes ]
-then
-  fixmakeargs="$fixmakeargs TAU2ELG epilogdir=$epilogdir"
 fi
 
 if [ $slog2 = yes ]
