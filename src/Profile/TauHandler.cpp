@@ -52,6 +52,7 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
+
 //////////////////////////////////////////////////////////////////////
 // Routines
 //////////////////////////////////////////////////////////////////////
@@ -62,6 +63,15 @@ using namespace std;
 bool& TheIsTauTrackingMemory(void)
 {
   static bool isit = false; /* TAU is not tracking memory */
+  return isit;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Is TAU tracking memory headroom events? Set to true/false.
+//////////////////////////////////////////////////////////////////////
+bool& TheIsTauTrackingMemoryHeadroom(void)
+{
+  static bool isit = false; /* TAU is not tracking memory headroom */
   return isit;
 }
 
@@ -85,6 +95,16 @@ int TauEnableTrackingMemory(void)
 }
 
 //////////////////////////////////////////////////////////////////////
+// Start tracking memory 
+//////////////////////////////////////////////////////////////////////
+int TauEnableTrackingMemoryHeadroom(void)
+{
+  // Set tracking to true
+  TheIsTauTrackingMemoryHeadroom() = true;
+  return 1; 
+}
+
+//////////////////////////////////////////////////////////////////////
 // Start tracking MUSE events 
 //////////////////////////////////////////////////////////////////////
 void TauEnableTrackingMuseEvents(void)
@@ -101,6 +121,15 @@ void TauEnableTrackingMuseEvents(void)
 int TauDisableTrackingMemory(void)
 {
   TheIsTauTrackingMemory() = false;
+  return 0;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Stop tracking memory headroom
+//////////////////////////////////////////////////////////////////////
+int TauDisableTrackingMemoryHeadroom(void)
+{
+  TheIsTauTrackingMemoryHeadroom() = false;
   return 0;
 }
 
@@ -163,6 +192,15 @@ TauUserEvent& TheTauMemoryEvent(void)
 }
 
 //////////////////////////////////////////////////////////////////////
+// Get user defined event
+//////////////////////////////////////////////////////////////////////
+TauContextUserEvent& TheTauMemoryHeadroomEvent(void)
+{
+  static TauContextUserEvent mem("Memory Headroom Left (in MB)");
+  return mem;
+}
+
+//////////////////////////////////////////////////////////////////////
 // TAU's alarm signal handler
 //////////////////////////////////////////////////////////////////////
 void TauAlarmHandler(int signum)
@@ -201,6 +239,12 @@ void TauAlarmHandler(int signum)
     TheTauMemoryEvent().TriggerEvent(TauGetMaxRSS());
   }
 
+  if (TheIsTauTrackingMemoryHeadroom())
+  {
+    /* trigger an event with the memory headroom available */
+    TheTauMemoryHeadroomEvent().TriggerEvent((double)TauGetFreeMemory());
+  }
+
 #ifdef TAU_MUSE_EVENT 
   if (TheIsTauTrackingMuseEvents())
   { /* get an array of doubles from MUSE */
@@ -221,13 +265,21 @@ void TauAlarmHandler(int signum)
 //////////////////////////////////////////////////////////////////////
 // Track Memory
 //////////////////////////////////////////////////////////////////////
-void TauTrackMemoryUtilization(void)
+void TauTrackMemoryUtilization(bool allocated)
+//////////////////////////////////////////////////////////////////////
+// Argument: allocated. TauTrackMemoryUtilization can keep track of memory
+// allocated or memory free (headroom to grow). Accordingly, it is true
+// for tracking memory allocated, and false to check the headroom 
+//////////////////////////////////////////////////////////////////////
 {
 #ifndef TAU_WINDOWS
   struct sigaction new_action, old_action;
 
-  // we're tracking memory
-  TheIsTauTrackingMemory() = true; 
+  // Are we tracking memory or headroom. Check the allocated argument. 
+  if (allocated)
+    TheIsTauTrackingMemory() = true; 
+  else
+    TheIsTauTrackingMemoryHeadroom() = true; 
 
   // set signal handler 
   new_action.sa_handler = TauAlarmHandler; 
@@ -256,6 +308,23 @@ void TauTrackMemoryHere(void)
   {
     /* trigger an event with the memory used */
     TheTauMemoryEvent().TriggerEvent(TauGetMaxRSS());
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Track Memory headroom events at this location in the source code
+//////////////////////////////////////////////////////////////////////
+void TauTrackMemoryHeadroomHere(void)
+{
+  /* Enable tracking memory by default */
+  static int flag = TauEnableTrackingMemoryHeadroom();
+ 
+  /* Check and see if we're *still* tracking memory events */
+  if (TheIsTauTrackingMemoryHeadroom())
+  {
+    /* trigger an event with the memory headroom available */
+    
+    TheTauMemoryHeadroomEvent().TriggerEvent((double)TauGetFreeMemory());
   }
 }
 
@@ -288,8 +357,8 @@ void TauTrackMuseEvents(void)
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2005/02/23 17:11:35 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.11 2005/02/23 17:11:35 sameer Exp $ 
+ * $Revision: 1.12 $   $Date: 2005/05/17 19:33:23 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.12 2005/05/17 19:33:23 sameer Exp $ 
  ***************************************************************************/
 
 	

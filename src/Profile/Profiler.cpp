@@ -226,6 +226,9 @@ void Profiler::Start(int tid)
 #ifdef TAU_PROFILEMEMORY
       ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
 #endif /* TAU_PROFILEMEMORY */
+#ifdef TAU_PROFILEHEADROOM
+      ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
+#endif /* TAU_PROFILEHEADROOM */
 #ifdef TAU_COMPENSATE
 	SetNumChildren(0); /* for instrumentation perturbation compensation */
 #endif /* TAU_COMPENSATE */
@@ -2819,8 +2822,8 @@ void Profiler::SetDepthLimit(int value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.111 $   $Date: 2005/03/15 00:17:34 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.111 2005/03/15 00:17:34 sameer Exp $ 
+ * $Revision: 1.112 $   $Date: 2005/05/17 19:33:23 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.112 2005/05/17 19:33:23 sameer Exp $ 
  ***************************************************************************/
 
 	
