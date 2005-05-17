@@ -170,6 +170,7 @@ profilecounters=no
 multiplecounters=no
 profilestats=no
 profilememory=no
+profileheadroom=no
 callpath=no
 depthlimit=no
 phase=no
@@ -727,6 +728,12 @@ do
     shift
     ;;
 
+  -PROFILEHEADROOM)
+    profile=yes
+    profileheadroom=yes
+    shift
+    ;;
+
   -PROFILECALLSTACK)
     profile=yes
     profilecallstack=yes
@@ -869,6 +876,7 @@ do
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
+    echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
@@ -1233,6 +1241,12 @@ if [ $profilememory = yes ]
     tauoptions="${tauoptions}-memory"
 fi
 
+if [ $profileheadroom = yes ]
+  then
+    fixmakeargs="$fixmakeargs PROFILEHEADROOM"
+    tauoptions="${tauoptions}-headroom"
+fi
+
 if [ $tag = yes ]
 then
   tauoptions="${tauoptions}-${tautag}"
@@ -1360,7 +1374,7 @@ fi
 
 if [ $machine = apple ]
   then
-  if [ $cxx_compiler = g++ ]
+  if [ $cxx_compiler = g++ -o $cxx_compiler = c++ ]
     then
       fixmakeargs="$fixmakeargs APPLECXX"
   fi
@@ -2440,7 +2454,7 @@ fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt 
 ######################################################################
 # discover the paths for standard system include directories
 
-if [ $cxx_compiler = pgCC -o $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = icpc -o $cxx_compiler = pathCC ] 
+if [ $cxx_compiler = pgCC -o $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = icpc -o $cxx_compiler = pathCC -o $cxx_compiler = c++ ] 
 then
 cat << EOF > get_stdinc.C
 #include <stddef.h>
