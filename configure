@@ -170,7 +170,6 @@ profilecounters=no
 multiplecounters=no
 profilestats=no
 profilememory=no
-profileheadroom=no
 callpath=no
 depthlimit=no
 phase=no
@@ -204,6 +203,7 @@ vtf=no
 slog2=no
 opari=no
 epilog=no
+tau2elg=no
 opari_region=no
 opari_construct=no
 dyninst=no
@@ -460,6 +460,18 @@ do
       epilog=yes
       trace=yes
       epilogdir=`echo $arg | sed -e 's/-epilog=//'`
+      if [ ! -d $epilogdir ]
+      then
+        echo "Error: Cannot access EPILOG directory $epilogdir"
+        exit 1
+      fi
+    shift
+    ;;
+
+  -tau2elg=*)
+      trace=yes
+      tau2elg=yes
+      epilogdir=`echo $arg | sed -e 's/-tau2elg=//'`
       if [ ! -d $epilogdir ]
       then
         echo "Error: Cannot access EPILOG directory $epilogdir"
@@ -728,12 +740,6 @@ do
     shift
     ;;
 
-  -PROFILEHEADROOM)
-    profile=yes
-    profileheadroom=yes
-    shift
-    ;;
-
   -PROFILECALLSTACK)
     profile=yes
     profilecallstack=yes
@@ -876,7 +882,6 @@ do
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
-    echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
@@ -1241,12 +1246,6 @@ if [ $profilememory = yes ]
     tauoptions="${tauoptions}-memory"
 fi
 
-if [ $profileheadroom = yes ]
-  then
-    fixmakeargs="$fixmakeargs PROFILEHEADROOM"
-    tauoptions="${tauoptions}-headroom"
-fi
-
 if [ $tag = yes ]
 then
   tauoptions="${tauoptions}-${tautag}"
@@ -1374,7 +1373,7 @@ fi
 
 if [ $machine = apple ]
   then
-  if [ $cxx_compiler = g++ -o $cxx_compiler = c++ ]
+  if [ $cxx_compiler = g++ ]
     then
       fixmakeargs="$fixmakeargs APPLECXX"
   fi
@@ -2454,7 +2453,7 @@ fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt 
 ######################################################################
 # discover the paths for standard system include directories
 
-if [ $cxx_compiler = pgCC -o $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = icpc -o $cxx_compiler = pathCC -o $cxx_compiler = c++ ] 
+if [ $cxx_compiler = pgCC -o $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = icpc -o $cxx_compiler = pathCC ] 
 then
 cat << EOF > get_stdinc.C
 #include <stddef.h>
@@ -3058,6 +3057,11 @@ fi
 if [ $vtf = yes ]
 then
   fixmakeargs="$fixmakeargs VTF vtfdir=$vtfdir"
+fi
+
+if [ $tau2elg = yes ]
+then
+  fixmakeargs="$fixmakeargs TAU2ELG epilogdir=$epilogdir"
 fi
 
 if [ $slog2 = yes ]
