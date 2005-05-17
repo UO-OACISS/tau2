@@ -121,6 +121,7 @@ Usage: configure [OPTIONS]
 -PROFILESTATS .................. Enable standard deviation calculation.
 -DEPTHLIMIT ........... Disable instrumentation beyond a certain depth.
 -PROFILEMEMORY .. Track heap memory utilization at each function entry.
+-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry.
 -MULTIPLECOUNTERS ............ Use multiple hardware counters and time.
 -COMPENSATE ........ Compensate for profiling measurement perturbation.
 -SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
@@ -417,6 +418,13 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    Specifies tracking heap memory utilitization for each instrumented function.
    When any function entry takes place, a sample of the heap memory used is 
    taken. This data is stored as user-defined event data in profiles/traces. 
+
+-PROFILEMEMORY
+   
+   Specifies tracking memory available in the heap (as opposed to memory 
+   utilization tracking in -PROFILEMEMORY). When any function entry takes place,
+   a sample of the memory available (headroom to grow) is taken. This data is 
+   stored as user-defined event data in profiles/traces. 
    
 -COMPENSATE 
    
