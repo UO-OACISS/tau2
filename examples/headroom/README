@@ -1,0 +1,86 @@
+TAU's memory headroom API and -PROFILEHEADROOM measurement option 
+-----------------------------------------------------------------
+
+TAU's memory evaluation options fall into two categories:
+1) Memory utilization options that examine how much heap memory is currently 
+used, and
+2) Memory headroom evaluation options that examine how much a program can grow
+(or how much headroom it has) before it runs out of free memory on the heap. 
+TAU tries to call malloc with chunks that progressively increase in size, until
+all memory is exhausted. Then it frees those chunks, keeping track of how much
+memory it successfully allocated. 
+
+In this document, we examine the second set of options. 
+
+2a) TAU_TRACK_MEMORY_HEADROOM()
+This call sets up a signal handler that is invoked every 10 seconds by an 
+interrupt. Inside, it evaluates how much memory it can allocate and associates
+it with the callstack. The user can vary the size of the callstack by setting
+the environment variable TAU_CALLSTACK_DEPTH (default is 2). 
+The examples/headroom/track subdirectory has an example that illustrates the 
+use of this call.  To disable tracking this headroom at runtime, the user 
+may call:
+TAU_DISABLE_TRACKING_MEMORY_HEADROOM() and call
+TAU_ENABLE_TRACKING_MEMORY_HEADROOM() to re-enable tracking of the headroom. 
+To set a different interrupt interval, call
+TAU_SET_INTERRUPT_INTERVAL(value)
+where value (in seconds) represents the inter-interrupt interval. 
+
+A sample profile generated has:
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         3       4067       4061       4065      2.828  Memory Headroom Left (in MB)
+         3       4067       4061       4065      2.828  Memory Headroom Left (in MB) : void quicksort(int *, int, int)   => void quicksort(int *, int, int)  
+--------------------------------------------------------------------------------
+
+2b) TAU_TRACK_MEMORY_HEADROOM_HERE()
+Sometimes it is useful to track the memory available at a certain point in the 
+program, rather than rely on an interrupt. TAU_TRACK_MEMORY_HEADROOM_HERE() 
+allows us to examine the memory available at a particular location in the source
+code and associate it with the currently executing callstack. 
+The examples/headroom/here subdirectory has an example that illustrates this usage.
+
+  ary = new double [1024*1024*50];
+  TAU_TRACK_MEMORY_HEADROOM_HERE(); /* takes a sample here!  */
+  sleep(1);
+
+A sample profile looks like this:
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         3       3672       3672       3672          0  Memory Headroom Left (in MB)
+         1       3672       3672       3672          0  Memory Headroom Left (in MB) : main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4)
+         1       3672       3672       3672          0  Memory Headroom Left (in MB) : main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4) => f4() (sleeps 4 sec, calls f2)
+         1       3672       3672       3672          0  Memory Headroom Left (in MB) : main() (calls f1, f5) => f5() (sleeps 5 sec)
+---------------------------------------------------------------------------------------
+
+2c) -PROFILEHEADROOM
+Similar to the -PROFILEMEMORY configuration option that takes a sample of the 
+memory utilization at each function entry, we now have -PROFILEHEADROOM. In this
+-PROFILEHEADROOM option, a sample is taken at instrumented function's entry and
+associated with the function name. This option is meant to be used as a 
+debugging aid due the high cost associated with executing a series of malloc 
+calls. The cost was 106 microseconds on an IBM BG/L (700 MHz CPU). To use this
+option, simply configure TAU with the -PROFILEHEADROOM option and choose any
+method for instrumentation (PDT, MPI, hand instrumentation). You do not need
+to annotate the source code in any special way (as is required for 2a and 2b). 
+The examples/headroom/available subdirectory has a simple example that produces the following profile when TAU is configured with the -PROFILEHEADROOM option. 
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         1       4071       4071       4071          0  f1() (sleeps 1 sec, calls f2, f4) - Memory Headroom Available (MB)
+         2       3671       3671       3671          0  f2() (sleeps 2 sec, calls f3) - Memory Headroom Available (MB)
+         2       3671       3671       3671          0  f3() (sleeps 3 sec) - Memory Headroom Available (MB)
+         1       3671       3671       3671          0  f4() (sleeps 4 sec, calls f2) - Memory Headroom Available (MB)
+         1       3671       3671       3671          0  f5() (sleeps 5 sec) - Memory Headroom Available (MB)
+         1       4071       4071       4071          0  main() (calls f1, f5) - Memory Headroom Available (MB)
+---------------------------------------------------------------------------------------
+
+If you any suggestions for memory options in tau, please send us an e-mail at
+tau-team@cs.uoregon.edu.
