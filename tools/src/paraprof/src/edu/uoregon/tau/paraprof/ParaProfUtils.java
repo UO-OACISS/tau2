@@ -975,7 +975,11 @@ public class ParaProfUtils {
                         }
                     }
 
-                    bw.write(count + " templated_functions_MULTI_" + dataSource.getMetricName(metricID) + "\n");
+                    if (dataSource.getNumberOfMetrics() == 0 && dataSource.getMetricName(metricID) == "Time") {
+                        bw.write(count + " templated_functions\n");
+                    } else {
+                        bw.write(count + " templated_functions_MULTI_" + dataSource.getMetricName(metricID) + "\n");
+                    }
                     bw.write("# Name Calls Subrs Excl Incl ProfileCalls\n");
 
                     // write out function profiles
