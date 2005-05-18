@@ -975,7 +975,7 @@ public class ParaProfUtils {
                         }
                     }
 
-                    if (dataSource.getNumberOfMetrics() == 0 && dataSource.getMetricName(metricID) == "Time") {
+                    if (dataSource.getNumberOfMetrics() == 1 && dataSource.getMetricName(metricID).equals("Time")) {
                         bw.write(count + " templated_functions\n");
                     } else {
                         bw.write(count + " templated_functions_MULTI_" + dataSource.getMetricName(metricID) + "\n");
@@ -1091,7 +1091,7 @@ public class ParaProfUtils {
                 if (!success) {
                     System.err.println("Failed to create directory: " + name);
                 } else {
-                    writeMetric(name, dataSource, 0, functions, groupStrings, userEvents);
+                    writeMetric(name, dataSource, i, functions, groupStrings, userEvents);
                 }
             }
         }
