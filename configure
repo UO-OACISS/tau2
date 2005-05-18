@@ -2521,6 +2521,25 @@ fi
 rm -f get_typeinfo1.C get_typeinfo2.C get_typeinfo*.o *.ti *.ii
 
 ######################################################################
+# If epilog is used, check and see if it supports v2.1's write interface
+if [ $epilog =  yes ]
+then
+  echo "Checking epilog write interface:"
+cat << EOF > elgtest.C
+#include <elg_rw.h>
+int foo(ElgOut *out, elg_ui4 eventc)
+{
+  return ElgOut_write_NUM_EVENTS(out, eventc);
+}
+EOF
+ if $cxx_compiler $orig_useropt -I$epilogdir/src -I$epilogdir/include -c elgtest.C 1> /dev/null 2>&1
+  then
+    fixmakeargs="$fixmakeargs TAU2EPILOG"
+  fi
+  rm -f elgtest.C elgtest.o 
+fi
+
+######################################################################
 # Save C++ compiler, C compiler, and USEROPT for build
 
 echo "$machine: cxx         = $cxx_compiler" >> ./build/Config.info

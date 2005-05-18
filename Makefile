@@ -68,7 +68,7 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 
 #SLOG2#SLOGCONVERTER=utils/slogconverter/src#ENDIF#
 
-#EPILOG#ELGCONVERTER=utils/elgconverter #ENDIF#
+#TAU2EPILOG#ELGCONVERTER=utils/elgconverter #ENDIF#
 
 
 

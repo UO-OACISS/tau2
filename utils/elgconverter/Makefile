@@ -4,7 +4,7 @@ CC               = $(CONFIG_CC)
 CXX		 = $(CONFIG_CXX)
 RM               = /bin/rm -f
 LIBS		= $(TAU_TRACE_INPUT_LIB) -L$(EPILOGDIR)/lib -lelg
-CFLAGS        	= $(TAU_INCLUDE)
+CFLAGS        	= $(TAU_INCLUDE)  -I$(EPILOGDIR)/include -I$(EPILOGDIR)/src 
 
 
 all:	tau2elg

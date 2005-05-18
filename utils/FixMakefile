@@ -757,6 +757,10 @@ fi
 	echo "NOTE: Using VTF3 library to build tau2vtf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     TAU2EPILOG)
+	echo "NOTE: Using Kojak 2.1+ Epilog write interface to build tau2elg ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      SLOG2)
 	echo "NOTE: Using SLOG2SDK library to build tau2slog2 trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
