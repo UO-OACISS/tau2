@@ -419,12 +419,14 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    When any function entry takes place, a sample of the heap memory used is 
    taken. This data is stored as user-defined event data in profiles/traces. 
 
--PROFILEMEMORY
+-PROFILEHEADROOM
    
    Specifies tracking memory available in the heap (as opposed to memory 
    utilization tracking in -PROFILEMEMORY). When any function entry takes place,
    a sample of the memory available (headroom to grow) is taken. This data is 
-   stored as user-defined event data in profiles/traces. 
+   stored as user-defined event data in profiles/traces. Please refer to the
+   examples/headroom/README file for a full explanation of these headroom
+   options and the C++/C/F90 API for evaluating the headroom. 
    
 -COMPENSATE 
    
