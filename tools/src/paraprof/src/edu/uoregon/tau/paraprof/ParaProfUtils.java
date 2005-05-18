@@ -945,7 +945,8 @@ public class ParaProfUtils {
 
     }
 
-    private static void writeMetric(String root, DataSource dataSource, int metricID, Function[] functions, String[] groupStrings, UserEvent[] userEvents) throws IOException {
+    private static void writeMetric(String root, DataSource dataSource, int metricID, Function[] functions,
+            String[] groupStrings, UserEvent[] userEvents) throws IOException {
 
         int numFunctions = dataSource.getNumFunctions();
         int numMetrics = dataSource.getNumberOfMetrics();
@@ -988,16 +989,16 @@ public class ParaProfUtils {
 
                         if (fp != null) {
                             bw.write('"' + functions[i].getName() + "\" ");
-                            bw.write((int)fp.getNumCalls() + " ");
-                            bw.write((int)fp.getNumSubr() + " ");
+                            bw.write((int) fp.getNumCalls() + " ");
+                            bw.write((int) fp.getNumSubr() + " ");
                             bw.write(fp.getExclusive(metricID) + " ");
                             bw.write(fp.getInclusive(metricID) + " ");
                             bw.write("0 " + "GROUP=\"" + groupStrings[i] + "\"\n");
                         }
                     }
-                    
+
                     bw.write("0 aggregates\n");
-                    
+
                     // count user event profiles
                     count = 0;
                     for (int i = 0; i < numUserEvents; i++) {
@@ -1007,20 +1008,22 @@ public class ParaProfUtils {
                         }
                     }
 
-                    bw.write(count + " userevents\n");
-                    bw.write("# eventname numevents max min mean sumsqr\n");
-                    
-                    // write out user event profiles
-                    for (int i = 0; i < numUserEvents; i++) {
-                        UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
+                    if (count > 0) {
+                        bw.write(count + " userevents\n");
+                        bw.write("# eventname numevents max min mean sumsqr\n");
 
-                        if (uep != null) {
-                            bw.write('"' + userEvents[i].getName() + "\" ");
-                            bw.write(uep.getUserEventNumberValue() + " ");
-                            bw.write(uep.getUserEventMaxValue() + " ");
-                            bw.write(uep.getUserEventMinValue() + " ");
-                            bw.write(uep.getUserEventMeanValue() + " ");
-                            bw.write(uep.getUserEventSumSquared() + "\n");
+                        // write out user event profiles
+                        for (int i = 0; i < numUserEvents; i++) {
+                            UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
+
+                            if (uep != null) {
+                                bw.write('"' + userEvents[i].getName() + "\" ");
+                                bw.write(uep.getUserEventNumberValue() + " ");
+                                bw.write(uep.getUserEventMaxValue() + " ");
+                                bw.write(uep.getUserEventMinValue() + " ");
+                                bw.write(uep.getUserEventMeanValue() + " ");
+                                bw.write(uep.getUserEventSumSquared() + "\n");
+                            }
                         }
                     }
                     bw.close();
@@ -1034,7 +1037,6 @@ public class ParaProfUtils {
 
     public static void writeProfiles(DataSource dataSource, File directory) throws IOException {
 
-        
         int numFunctions = dataSource.getNumFunctions();
         int numMetrics = dataSource.getNumberOfMetrics();
         int numUserEvents = dataSource.getNumUserEvents();
@@ -1081,7 +1083,7 @@ public class ParaProfUtils {
             UserEvent userEvent = (UserEvent) it.next();
             userEvents[idx++] = userEvent;
         }
-        
+
         if (numMetrics == 1) {
             writeMetric(".", dataSource, 0, functions, groupStrings, userEvents);
         } else {
