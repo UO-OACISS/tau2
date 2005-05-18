@@ -667,6 +667,17 @@ Usage: installtau [OPTIONS]
    % make clean; make
    Before you do this, please ensure that javac (1.2+) is in your path. 
 
+   IMPORTANT NOTE:
+   ***************
+   If you see an error that looks like:
+   May 18, 2005 2:27:19 PM java.util.prefs.FileSystemPreferences 
+   checkLockFile0ErrorCode
+   WARNING: Could not lock User prefs. Unix error code 52.
+
+   please make sure  that you've used ssh -Y to login to your remote node. 
+   If you see windows that don't look right (in size), this may be the cause
+   of the problem as well. You need a trusted ssh connection for Java's Swing. 
+
 5. Performance Database: PerfDMF
 
    Performance Data Management Framework (PerfDMF) is a tool related to the 
