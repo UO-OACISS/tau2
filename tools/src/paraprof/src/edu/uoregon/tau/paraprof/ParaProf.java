@@ -1,30 +1,35 @@
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
-import java.io.*;
-import java.awt.event.*;
 import jargs.gnu.CmdLineParser;
-import edu.uoregon.tau.dms.dss.*;
-import javax.swing.*;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.Iterator;
+import java.util.Vector;
+
+import edu.uoregon.tau.dms.dss.DataSource;
+import edu.uoregon.tau.dms.dss.FileList;
+import edu.uoregon.tau.dms.dss.UtilFncs;
 
 /**
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.41 2005/05/10 01:48:38 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.42 2005/05/18 19:14:37 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.41 $
+ * @version $Revision: 1.42 $
  */
 public class ParaProf implements ActionListener {
 
     // This class handles uncaught throwables on the AWT-EventQueue thread
     static public class XThrowableHandler {
-        
+
         public XThrowableHandler() {
         }
-        
+
         public void handle(Throwable t) throws Throwable {
             if (t instanceof Exception) {
                 ParaProfUtils.handleException((Exception) t);
@@ -41,10 +46,7 @@ public class ParaProf implements ActionListener {
     //System wide stuff.
     static String homeDirectory = null;
     static File paraProfHomeDirectory = null;
-    static String profilePathName = null; //This contains the path to the
-    // currently loaded profile data.
     static int defaultNumberPrecision = 6;
-    static boolean dbSupport = false;
     //static ParaProfLisp paraProfLisp = null;
     static Preferences preferences = null;
     static ColorChooser colorChooser;
@@ -57,7 +59,6 @@ public class ParaProf implements ActionListener {
     static private int numWindowsOpen = 0;
     //End - System wide stuff.
 
-    
     //Command line options related.
     private static int fileType = 0; //0:profile, 1:pprof, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun
     private static File sourceFiles[] = new File[0];
@@ -94,18 +95,26 @@ public class ParaProf implements ActionListener {
     }
 
     private static void outputHelp() {
-        System.err.println("Usage: paraprof [options] <files/directory> \n\n" + "Options:\n\n"
-                + "  -f, --filetype <filetype>        Specify type of performance data, options are:\n"
-                + "                                   profiles (default), pprof, dynaprof, mpip,\n"
-                + "                                   gprof, psrun, hpm, packed\n"
-                + "  -h, --help                       Display this help message\n"
-                + "  -p                               Use `pprof` to compute derived data\n"
-                + "  -i, --fixnames                   Use the fixnames option for gprof\n\n" + "Notes:\n"
+        System.err.println("Usage: paraprof [options] <files/directory> \n\n"
+                + "Options:\n\n"
+                + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
+                + "                                    profiles (default), pprof, dynaprof, mpip,\n"
+                + "                                    gprof, psrun, hpm, packed\n"
+                + "\n"
+                + "  -h, --help                      Display this help message\n"
+                + "  -p                              Use `pprof` to compute derived data\n"
+                + "  -i, --fixnames                  Use the fixnames option for gprof\n"
+                + "\n"
+                + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
+                + "                                    (does not launch ParaProf GUI)\n"
+                + "  --dump                          Dump profile data to TAU profile format\n"
+                + "                                    (does not launch ParaProf GUI)\n"
+                + "\n"
+                + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
-                + "or, in the case of multiple counters, directories named MULTI_* containing\n"
-                + "profile data.\n\n");
+                + "or, in the case of multiple counters, directories named MULTI_* containing\n" + "profile data.\n\n");
     }
 
     static void incrementNumWindows() {
@@ -153,8 +162,8 @@ public class ParaProf implements ActionListener {
 
                 //Try and load a preference file ... ParaProfPreferences.dat
                 try {
-                    FileInputStream savedPreferenceFIS = new FileInputStream(
-                            ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf");
+                    FileInputStream savedPreferenceFIS = new FileInputStream(ParaProf.paraProfHomeDirectory.getPath()
+                            + "/ParaProf.conf");
 
                     //If here, means that no exception was thrown, and there is a preference file present.
                     //Create ObjectInputStream and try to read it in.
@@ -197,12 +206,12 @@ public class ParaProf implements ActionListener {
 
             ParaProf.preferencesWindow = new PreferencesWindow(preferences);
 
-//            javax.swing.SwingUtilities.invokeLater(new Runnable() {
-  //              public void run() {
-                    System.setProperty("sun.awt.exception.handler", XThrowableHandler.class.getName());
-                    loadDefaultTrial();
-    //            }
-      //      });
+            //            javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            //              public void run() {
+            System.setProperty("sun.awt.exception.handler", XThrowableHandler.class.getName());
+            loadDefaultTrial();
+            //            }
+            //      });
 
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -220,7 +229,7 @@ public class ParaProf implements ActionListener {
 
     public static String getInfoString() {
         long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
-        
+
         return new String("ParaProf 3\n" + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\n");
     }
 
@@ -228,8 +237,7 @@ public class ParaProf implements ActionListener {
         return new String(VERSION);
     }
 
-    public static void loadPreferences(File file) throws FileNotFoundException, IOException,
-            ClassNotFoundException {
+    public static void loadPreferences(File file) throws FileNotFoundException, IOException, ClassNotFoundException {
 
         FileInputStream savedPreferenceFIS = new FileInputStream(file);
 
@@ -260,21 +268,6 @@ public class ParaProf implements ActionListener {
         //} catch (Exception e) {
         //   e.printStackTrace();
         //}
-
-        //        if (
-        //        File file = new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.prefs");
-        //
-        //        try {
-        //            ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
-        //            this.setSavedPreferences();
-        //            prefsOut.writeObject(ParaProf.savedPreferences);
-        //            prefsOut.close();
-        //        } catch (Exception e) {
-        //            //Display an error
-        //            JOptionPane.showMessageDialog(this,
-        //                    "An error occured while trying to save ParaProf preferences.", "Error!",
-        //                    JOptionPane.ERROR_MESSAGE);
-        //        }
 
         savePreferences(new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf"));
 
@@ -315,26 +308,34 @@ public class ParaProf implements ActionListener {
         //######
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
-        CmdLineParser.Option debugOpt = parser.addBooleanOption('d', "debug");
         CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
         CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
         CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
+        CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
+        CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
+
         try {
             parser.parse(args);
         } catch (CmdLineParser.OptionException e) {
             System.err.println("paraprof: " + e.getMessage());
             ParaProf.usage();
-            exitParaProf(-1);
+            System.exit(-1);
         }
 
         Boolean help = (Boolean) parser.getOptionValue(helpOpt);
-        Boolean debug = (Boolean) parser.getOptionValue(debugOpt);
         String fileTypeString = (String) parser.getOptionValue(typeOpt);
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
+        String pack = (String) parser.getOptionValue(packOpt);
+        Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
+
+        if (pack != null && unpack != null) {
+            System.err.println("--pack and --dump are mutually exclusive");
+            System.exit(-1);
+        }
 
         if (help != null && help.booleanValue()) {
             ParaProf.outputHelp();
-            exitParaProf(-1);
+            System.exit(-1);
         }
 
         String sourceFilenames[] = parser.getRemainingArgs();
@@ -366,7 +367,7 @@ public class ParaProf implements ActionListener {
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();
-                exitParaProf(-1);
+                System.exit(-1);
             }
         }
 
@@ -378,6 +379,45 @@ public class ParaProf implements ActionListener {
         //            jTimer.start();
         //        }
 
+        if (pack != null) {
+            try {
+
+                DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
+                System.out.println("Loading data...");
+                dataSource.load();
+                System.out.println("Packing data...");
+                ParaProfUtils.writePacked(dataSource, new File(pack));
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            System.exit(0);
+        }
+
+
+        if (unpack != null && unpack.booleanValue()) {
+            try {
+
+                FileList fl = new FileList();
+                Vector v = fl.helperFindProfiles(".");
+                if (v.size() != 0) {
+                    System.err.println("Error: profiles found in current directory, please remove first");
+                    return;
+                }
+
+                DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
+                System.out.println("Loading data...");
+                dataSource.load();
+                System.out.println("Creating TAU Profile data...");
+                ParaProfUtils.writeProfiles(dataSource, new File("."));
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            System.exit(0);
+        }
+
+        
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 paraProf.startSystem();
