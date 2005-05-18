@@ -206,3 +206,10 @@ userevent       - TAU's user defined events can show context information
                   or phase profiling options, which apply to bracketed entry and
                   exit events - not atomic events. You can disable tracking 
                   the callpath at runtime. 
+
+headroom        - TAU's memory headroom evalution options are discussed at 
+                  length in the examples/headroom/README file. The amount of
+                  heap memory that can be allocated at any given point in the 
+                  program's execution are tracked in this directory (and three
+                  subdirectories - track, here, and available). -PROFILEHEADROOM
+                  configuration option may be used with these examples. 
