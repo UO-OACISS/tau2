@@ -35,7 +35,7 @@ int f2(void)
 */
   printf("Inside f2: sleeps 2 sec, calls f3\n");
   
-  TAU_EVENT(event, 232+count);
+  TAU_CONTEXT_EVENT(event, 232+count);
   sleep(2);
   f3();
   return 0;
