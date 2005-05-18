@@ -3,8 +3,8 @@ include ../../include/Makefile
 CC               = $(CONFIG_CC)
 CXX		 = $(CONFIG_CXX)
 RM               = /bin/rm -f
-LIBS		= $(TAU_TRACE_INPUT_LIB) -L$(EPILOGDIR)/lib -lelg
-CFLAGS        	= $(TAU_INCLUDE)  -I$(EPILOGDIR)/include -I$(EPILOGDIR)/src 
+LIBS		= $(TAU_TRACE_INPUT_LIB) -L$(EPILOGDIR)/lib -lelg.base
+CFLAGS        	= $(TAU_INCLUDE) -I$(EPILOGDIR)/include
 
 
 all:	tau2elg
