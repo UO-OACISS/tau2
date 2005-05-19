@@ -474,6 +474,12 @@ int main(int argc, char **argv)
 	* we'll need to modify the way we describe the cpus/threads */
 	//VTF3_WriteDefsyscpunums(fcb, 1, &totalnidtids);
 	ElgOut_write_MACHINE(elgo, 0, numthreads.size(), ELG_NO_ID);
+	elg_ui1 *comdef = new elg_ui1[8];
+	for(int z = 0; z<8; z++)
+	{
+		comdef[z]=1;
+	}
+	ElgOut_write_MPI_COMM(elgo, 0, 1, comdef);
 	/* Then write out the thread names if it is multi-threaded */
 	if (multiThreaded)
 	{ /* create the thread ids */
