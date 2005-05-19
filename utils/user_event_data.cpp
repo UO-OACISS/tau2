@@ -17,7 +17,7 @@
   //empty constructor
   user_event_data::user_event_data() {
     numevents = meanvalue = sumsqr = 0;
-    maxvalue  = DBL_MIN;
+    maxvalue  = -DBL_MAX;
     minvalue  = DBL_MAX;
   }
 
@@ -57,8 +57,8 @@
 
 
 /***************************************************************************
- * $RCSfile: user_event_data.cpp,v $   $Author: ntrebon $
- * $Revision: 1.1 $   $Date: 2002/07/25 20:40:13 $
- * TAU_VERSION_ID: $Id: user_event_data.cpp,v 1.1 2002/07/25 20:40:13 ntrebon Exp $
+ * $RCSfile: user_event_data.cpp,v $   $Author: amorris $
+ * $Revision: 1.2 $   $Date: 2005/05/19 17:19:31 $
+ * TAU_VERSION_ID: $Id: user_event_data.cpp,v 1.2 2005/05/19 17:19:31 amorris Exp $
  ***************************************************************************/
 
