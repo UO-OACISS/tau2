@@ -183,6 +183,7 @@ craytimers=no
 linuxtimers=no
 alphatimers=no
 cputime=no
+javacputime=no
 papiwallclock=no
 papivirtual=no
 use_pcxx=no
@@ -780,6 +781,11 @@ do
     shift
     ;;
 
+  -JAVACPUTIME)
+    javacputime=yes
+    shift
+    ;;
+
   -PAPIWALLCLOCK)
     papiwallclock=yes
     shift
@@ -883,6 +889,7 @@ do
     echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
     echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
     echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
+    echo "-JAVACPUTIME ...................... Use JVMPI thread specific cpu time."
     echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
     echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
     echo "-noex .................. Use no exceptions while compiling the library."
@@ -1336,6 +1343,11 @@ fi
 if [ $cputime = yes ]
   then
     fixmakeargs="$fixmakeargs CPUTIME"
+fi
+
+if [ $javacputime = yes ]
+  then
+    fixmakeargs="$fixmakeargs JAVACPUTIME"
 fi
 
 if [ $papiwallclock = yes ]

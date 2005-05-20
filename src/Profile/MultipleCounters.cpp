@@ -23,6 +23,10 @@ using namespace std;
 #include <unistd.h>
 #endif // CPU_TIME
 
+#ifdef JAVA_CPU_TIME
+#include "Profile/JavaThreadLayer.h"
+#endif // JAVA_CPU_TIME
+
 #ifdef CRAY_TIMERS
 #include <intrinsics.h>
 #include <sys/param.h>
@@ -84,6 +88,12 @@ int MultipleCounterLayer::cpuTimeMCL_CP[1];
 int MultipleCounterLayer::cpuTimeMCL_FP;
 #endif // CPU_TIME
 
+#ifdef JAVA_CPU_TIME
+int MultipleCounterLayer::javaCpuTimeMCL_CP[1];
+int MultipleCounterLayer::javaCpuTimeMCL_FP;
+#endif // JAVA_CPU_TIME
+
+
 #ifdef TAU_MUSE
 int MultipleCounterLayer::tauMUSEMCL_CP[1];
 int MultipleCounterLayer::tauMUSEMCL_FP;
@@ -125,6 +135,7 @@ firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   linuxTimerMCLInit,
 						   sgiTimersMCLInit,
 						   cpuTimeMCLInit,
+						   javaCpuTimeMCLInit,
 						   crayTimersMCLInit,
 						   tauMUSEMCLInit,
 						   tauMPIMessageSizeMCLInit,
@@ -186,6 +197,11 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     MultipleCounterLayer::cpuTimeMCL_CP[0] = -1;
     MultipleCounterLayer::cpuTimeMCL_FP = -1;
 #endif // CPU_TIME
+
+#ifdef JAVA_CPU_TIME
+    MultipleCounterLayer::javaCpuTimeMCL_CP[0] = -1;
+    MultipleCounterLayer::javaCpuTimeMCL_FP = -1;
+#endif // JAVA_CPU_TIME
 
 #ifdef TAU_MUSE
     MultipleCounterLayer::tauMUSEMCL_CP[0] = -1;
@@ -461,6 +477,26 @@ bool MultipleCounterLayer::cpuTimeMCLInit(int functionPosition){
 #endif//CPU_TIME
 }
 
+bool MultipleCounterLayer::javaCpuTimeMCLInit(int functionPosition){
+#ifdef JAVA_CPU_TIME
+  for(int i=0; i<MAX_TAU_COUNTERS; i++){
+    if(MultipleCounterLayer::names[i] != NULL){
+      if(strcmp(MultipleCounterLayer::names[i], "JAVA_CPU_TIME") == 0){
+	javaCpuTimeMCL_CP[0] = i;
+	MultipleCounterLayer::counterUsed[i] = true;
+	MultipleCounterLayer::numberOfCounters[i] = 1;
+	MultipleCounterLayer::functionArray[functionPosition] = javaCpuTimeMCL;
+	javaCpuTimeMCL_FP = functionPosition;
+	return true;
+      }
+    }
+  }
+  return false;
+#else //JAVA_CPU_TIME
+  return false;
+#endif//JAVA_CPU_TIME
+}
+
 bool MultipleCounterLayer::tauMUSEMCLInit(int functionPosition){
 #ifdef TAU_MUSE
   for(int i=0; i<MAX_TAU_COUNTERS; i++){
@@ -679,6 +715,17 @@ void MultipleCounterLayer::cpuTimeMCL(int tid, double values[]){
   + (current_usage.ru_utime.tv_usec + current_usage.ru_stime.tv_usec);
 #endif//CPU_TIME
 }
+
+void MultipleCounterLayer::javaCpuTimeMCL(int tid, double values[]){
+#ifdef  JAVA_CPU_TIME
+  struct rusage current_usage;
+
+  getrusage (RUSAGE_SELF, &current_usage);
+
+  values[javaCpuTimeMCL_CP[0]] = JavaThreadLayer::getCurrentThreadCpuTime();
+#endif//JAVA_CPU_TIME
+}
+
 
 void MultipleCounterLayer::tauMUSEMCL(int tid, double values[]){
 #ifdef TAU_MUSE 

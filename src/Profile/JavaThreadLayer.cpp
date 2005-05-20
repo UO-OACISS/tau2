@@ -263,14 +263,19 @@ int JavaThreadLayer::TotalThreads(void)
 
   return count;
 }
+
+// Use JVMPI to get per thread cpu time (microseconds)
+jlong JavaThreadLayer::getCurrentThreadCpuTime(void) {
+  return tau_jvmpi_interface->GetCurrentThreadCpuTime() / 1000;
+}
   
 // EOF JavaThreadLayer.cpp 
 
 
 /***************************************************************************
- * $RCSfile: JavaThreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2005/01/05 02:21:07 $
- * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.3 2005/01/05 02:21:07 sameer Exp $
+ * $RCSfile: JavaThreadLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.4 $   $Date: 2005/05/20 20:30:36 $
+ * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.4 2005/05/20 20:30:36 amorris Exp $
  ***************************************************************************/
 
 

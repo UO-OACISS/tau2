@@ -56,6 +56,8 @@ class  JavaThreadLayer
 	static int LockEnv(void);	 // locks the tauEnvMutex
 	static int UnLockEnv(void);	 // unlocks the tauEnvMutex
 	static int TotalThreads(void); 	 // returns the thread count
+        // return the current thread's cpu time, in nanoseconds (as reported by jvmpi)
+        static jlong getCurrentThreadCpuTime(void); 
 
 	static JVMPI_Interface 	    *tau_jvmpi_interface;
 	static JavaVM 	   	    *tauVM; 	     // Virtual machine 
@@ -72,9 +74,9 @@ class  JavaThreadLayer
 	
 
 /***************************************************************************
- * $RCSfile: JavaThreadLayer.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2005/01/05 01:57:46 $
- * POOMA_VERSION_ID: $Id: JavaThreadLayer.h,v 1.2 2005/01/05 01:57:46 sameer Exp $
+ * $RCSfile: JavaThreadLayer.h,v $   $Author: amorris $
+ * $Revision: 1.3 $   $Date: 2005/05/20 20:30:36 $
+ * POOMA_VERSION_ID: $Id: JavaThreadLayer.h,v 1.3 2005/05/20 20:30:36 amorris Exp $
  ***************************************************************************/
 
 

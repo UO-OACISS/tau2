@@ -24,7 +24,7 @@ extern "C" {
 #endif /* TAU_PAPI */
 
 
-#define SIZE_OF_INIT_ARRAY 11 //!!Change this if functions are added to the system!!
+#define SIZE_OF_INIT_ARRAY 12 //!!Change this if functions are added to the system!!
 
 
 //Some useful typedefs
@@ -67,6 +67,9 @@ class MultipleCounterLayer
 
   static bool cpuTimeMCLInit(int functionPosition);
   static void cpuTimeMCL(int tid, double values[]);
+
+  static bool javaCpuTimeMCLInit(int functionPosition);
+  static void javaCpuTimeMCL(int tid, double values[]);
 
   static bool tauMUSEMCLInit(int functionPosition);
   static void tauMUSEMCL(int tid, double values[]);
@@ -114,6 +117,11 @@ class MultipleCounterLayer
   static int cpuTimeMCL_CP[1];
   static int cpuTimeMCL_FP;
 #endif // CPU_TIME
+
+#ifdef JAVA_CPU_TIME
+  static int javaCpuTimeMCL_CP[1];
+  static int javaCpuTimeMCL_FP;
+#endif // JAVA_CPU_TIME
 
 #ifdef TAU_MUSE
   static int tauMUSEMCL_CP[1];

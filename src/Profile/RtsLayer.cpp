@@ -78,6 +78,10 @@ using namespace std;
 #include <unistd.h>
 #endif // CPU_TIME
 
+#ifdef JAVA_CPU_TIME
+#include "Profile/JavaThreadLayer.h"
+#endif // JAVA_CPU_TIME
+
 
 #ifdef TAU_WINDOWS
 //include the header for windows time functions.
@@ -377,6 +381,7 @@ double getUserTimeInSec(void)
 {
   double current_time = 0;
 #ifdef CPU_TIME
+  
   struct rusage current_usage;
 
   getrusage (RUSAGE_SELF, &current_usage);
@@ -534,6 +539,9 @@ double RtsLayer::getUSecD (int tid) {
 #ifdef CPU_TIME
   return getUserTimeInSec();
 #else // CPU_TIME
+#ifdef JAVA_CPU_TIME
+  return JavaThreadLayer::getCurrentThreadCpuTime();
+#else // JAVA_CPU_TIME
 #ifdef SGI_HW_COUNTERS
   return RtsLayer::GetEventCounter();
 #else  //SGI_HW_COUNTERS
@@ -631,18 +639,19 @@ double RtsLayer::getUSecD (int tid) {
   last_timestamp = timestamp;
   return timestamp;
 #endif // TAU_MUSE_EVENT
-#endif /* TAU_MUSE */
+#endif // TAU_MUSE 
 #endif // TAU_WINDOWS
 #else  // TULIP_TIMERS by default.  
   return pcxx_GetUSecD();
-#endif  //POOMA_TFLOP
-#endif /* TAU_LINUX_TIMERS */
-#endif 	//SGI_TIMERS
+#endif // POOMA_TFLOP
+#endif // TAU_LINUX_TIMERS
+#endif // SGI_TIMERS
 
-#endif  // SGI_HW_COUNTERS
+#endif // SGI_HW_COUNTERS
+#endif // JAVA_CPU_TIME
 #endif // CPU_TIME
 #endif // TAU_PAPI
-#endif  // TAU_PCL
+#endif // TAU_PCL
 }
 #endif //TAU_MULTIPLE_COUNTERS
 
@@ -1241,7 +1250,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.63 $   $Date: 2004/11/07 00:25:04 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.63 2004/11/07 00:25:04 sameer Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.64 $   $Date: 2005/05/20 20:30:36 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.64 2005/05/20 20:30:36 amorris Exp $ 
  ***************************************************************************/

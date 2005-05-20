@@ -898,6 +898,10 @@ ALPHATIMERS)
 	echo "NOTE: Using usertime + system time for Profiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     JAVACPUTIME)
+	echo "NOTE: Using JVMPI thread specific cpu time"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PAPIWALLCLOCK)
 	echo "NOTE: Using PAPI's low overhead wall clock time"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
