@@ -2581,7 +2581,9 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
     }
   }
 #elif TRACING_ON
+#ifndef TAU_EPILOG
   TraceEvFlush(tid);
+#endif /* TAU_EPILOG */
 #endif //PROFILING_ON
   return 1;
 }
@@ -2822,8 +2824,8 @@ void Profiler::SetDepthLimit(int value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.112 $   $Date: 2005/05/17 19:33:23 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.112 2005/05/17 19:33:23 sameer Exp $ 
+ * $Revision: 1.113 $   $Date: 2005/05/24 18:42:51 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.113 2005/05/24 18:42:51 sameer Exp $ 
  ***************************************************************************/
 
 	

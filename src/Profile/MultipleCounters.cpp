@@ -987,11 +987,13 @@ void MultipleCounterLayer::triggerCounterEvents(unsigned long long timestamp, do
 {
   int i;
   static int countersUsed = MultipleCounterLayer::getNumberOfCountersUsed();
+#ifndef TAU_EPILOG
   for (i = 1; i < countersUsed; i++)
   { /* for each event */
     TraceEvent(counterEvents[i]->GetEventId(), (long long) values[i], tid, timestamp, 1);
     // 1 in the last parameter is for use timestamp 
   }
+#endif /* TAU_EPILOG */
 
 }
 #endif /* TAU_MULTIPLE_COUNTERS && TRACING_ON */
