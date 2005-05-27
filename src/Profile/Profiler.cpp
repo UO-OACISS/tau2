@@ -191,6 +191,28 @@ char * TauGetCounterString(void)
 //////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////
+void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current)
+{
+  /* Go up the callstack and enable all events on it */
+	if (current != (Profiler *) NULL)
+	{
+	  DEBUGPROFMSG(RtsLayer::myNode()<<" This func = "<<current->ThisFunction->GetName()<<" RecordEvent = "<<current->RecordEvent<<endl;);
+	  if (!current->RecordEvent)
+	  { 
+	    DEBUGPROFMSG(RtsLayer::myNode()<< " Enabling event "<<current->ThisFunction->GetName()<<endl;);
+	    current->RecordEvent = true;
+	    EnableAllEventsOnCallStack(tid, current->ParentProfiler);
+	    /* process the current event */
+	    DEBUGPROFMSG(RtsLayer::myNode()<<" Processing EVENT "<<current->ThisFunction->GetName()<<endl;);
+	    TraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64) current->StartTime, 1); 
+#ifdef TAU_MULTIPLE_COUNTERS 
+            MultipleCounterLayer::triggerCounterEvents((x_uint64) current->StartTime[0], current->StartTime, tid);
+#endif /* TAU_MULTIPLE_COUNTERS */
+	  }
+	}
+}
+
+//////////////////////////////////////////////////////////////////////
 
 void Profiler::Start(int tid)
 { 
@@ -252,6 +274,17 @@ void Profiler::Start(int tid)
 #endif // TAU_CALLPATH
 
 #ifdef TRACING_ON
+#ifdef TAU_MPITRACE
+	if (MyProfileGroup_ & TAU_MESSAGE)
+	{
+	  /* if we're in the group, we must first enable all the other events
+	   * on the callstack */
+	   DEBUGPROFMSG(RtsLayer::myNode()<< " Function is enabled: "<<ThisFunction->GetName()<<endl;);
+	 
+	  EnableAllEventsOnCallStack(tid, this);
+	
+	}
+#else /* TAU_MPITRACE */
 #ifdef TAU_EPILOG
 	DEBUGPROFMSG("Calling elg_enter: ["<<ThisFunction->GetFunctionId()<<"] "
 	     << ThisFunction->GetName()<<endl;);
@@ -264,6 +297,7 @@ void Profiler::Start(int tid)
 	MultipleCounterLayer::triggerCounterEvents(TimeStamp, StartTime, tid);
 #endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_EPILOG */
+#endif /* TAU_MPITRACE */
 #endif /* TRACING_ON */
 
 #ifdef PROFILING_ON
@@ -328,6 +362,9 @@ Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup,
       StartStopUsed_ = StartStop; // will need it later in ~Profiler
       MyProfileGroup_ = ProfileGroup ;
       ThisFunction = function ; 
+#ifdef TAU_MPITRACE
+      RecordEvent = false; /* by default, we don't record this event */
+#endif /* TAU_MPITRACE */
 #ifdef TAU_PROFILEPHASE
       SetPhase(false); /* By default it is not in phase */
 #endif /* TAU_PROFILEPHASE */ 
@@ -485,17 +522,25 @@ void Profiler::Stop(int tid)
 #endif//TAU_MULTIPLE_COUNTERS
 
 #ifdef TRACING_ON
+
 #ifdef TAU_EPILOG
         DEBUGPROFMSG("Calling elg_exit(): "<< ThisFunction->GetName()<<endl;);
 	elg_exit();
 #else /* TAU_EPILOG */
-	TraceEvent(ThisFunction->GetFunctionId(), -1, tid, TimeStamp, 1); 
-	// -1 is for exit, 1 is for use TimeStamp in the last argument
-	DEBUGPROFMSG("Stop TimeStamp for Tracing = "<<TimeStamp<<endl;);
-#endif /* TAU_EPILOG */
+#ifdef TAU_MPITRACE
+	if (RecordEvent)
+	{
+#endif /* TAU_MPITRACE */
+	  TraceEvent(ThisFunction->GetFunctionId(), -1, tid, TimeStamp, 1); 
+	  // -1 is for exit, 1 is for use TimeStamp in the last argument
+	  DEBUGPROFMSG("Stop TimeStamp for Tracing = "<<TimeStamp<<endl;);
 #ifdef TAU_MULTIPLE_COUNTERS 
-	MultipleCounterLayer::triggerCounterEvents(TimeStamp, CurrentTime, tid);
+	  MultipleCounterLayer::triggerCounterEvents(TimeStamp, CurrentTime, tid);
 #endif /* TAU_MULTIPLE_COUNTERS */
+#ifdef TAU_MPITRACE
+	}
+#endif /* TAU_MPITRACE */
+#endif /* TAU_EPILOG */
 #endif //TRACING_ON
 
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
@@ -2824,8 +2869,8 @@ void Profiler::SetDepthLimit(int value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.113 $   $Date: 2005/05/24 18:42:51 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.113 2005/05/24 18:42:51 sameer Exp $ 
+ * $Revision: 1.114 $   $Date: 2005/05/27 22:09:47 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.114 2005/05/27 22:09:47 sameer Exp $ 
  ***************************************************************************/
 
 	

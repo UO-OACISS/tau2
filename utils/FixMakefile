@@ -753,6 +753,10 @@ fi
 	echo "NOTE: Using PDT for TAU Source Code Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     MPITRACE)
+	echo "NOTE: Using instrumentation of MPI and ancestor events ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      VTF)
 	echo "NOTE: Using VTF3 library to build tau2vtf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

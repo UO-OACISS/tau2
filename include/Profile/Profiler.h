@@ -202,6 +202,9 @@ public:
 	int  GetDepthLimit(void);
 	void SetDepthLimit(int value);
 #endif /* TAU_DEPTH_LIMIT */ 
+#ifdef TAU_MPITRACE
+	void EnableAllEventsOnCallStack(int tid, Profiler *current);
+#endif /* TAU_MPITRACE */
 
 private:
 	TauGroup_t MyProfileGroup_;
@@ -215,6 +218,10 @@ private:
 #ifdef TAU_DEPTH_LIMIT
 	int  profiledepth; 
 #endif /* TAU_DEPTH_LIMIT */
+
+#ifdef TAU_MPITRACE
+	bool 	RecordEvent; /* true when an MPI call is in the callpath */
+#endif /* TAU_MPITRACE */
 };
 
 
@@ -227,7 +234,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.58 $   $Date: 2005/04/08 22:12:17 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.58 2005/04/08 22:12:17 amorris Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.59 $   $Date: 2005/05/27 22:09:47 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.59 2005/05/27 22:09:47 sameer Exp $ 
  ***************************************************************************/

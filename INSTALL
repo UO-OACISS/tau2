@@ -115,6 +115,7 @@ Usage: configure [OPTIONS]
 -muse_multiple......................... Specify the use of MAGNET/MUSE.
                                     w/ monotonically increasing values.
 -TRACE ..................................... Generate TAU event traces.
+-MPITRACE ... Generate event traces for MPI events and their ancestors.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILECALLPATH ......................... Generate call path profiles.
 -PROFILEPHASE .......................... Generate phase based profiles.
@@ -128,6 +129,7 @@ Usage: configure [OPTIONS]
 -CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems.
 -LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time.
 -CPUTIME .......... Use usertime+system time instead of wallclock time.
+-JAVACPUTIME ...................... Use JVMPI thread specific cpu time.
 -PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi.
 -PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation.
 -noex .................. Use no exceptions while compiling the library.
@@ -352,6 +354,14 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    be used with other tools such as EXPERT. EPILOG comes with its own 
    implementation of the MPI wrapper library and the POMP library used with 
    Opari. Using option overrides TAU's libraries for MPI, and OpenMP.
+
+-MPITRACE
+   
+   Specifies the tracing option and generates event traces for MPI calls and
+   routines that are ancestors of MPI calls in the callstack. This option is 
+   useful for generating traces that are converted to the EPILOG trace format.
+   KOJAK's Expert automatic diagnosis tool needs traces with events that 
+   call MPI routines. Do not use this option with the -TRACE option. 
 
 -pythoninc=<dir>
    
