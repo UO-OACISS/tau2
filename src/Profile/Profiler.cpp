@@ -190,6 +190,8 @@ char * TauGetCounterString(void)
 // Member Function Definitions For class Profiler
 //////////////////////////////////////////////////////////////////////
 
+#ifdef TAU_MPITRACE
+
 //////////////////////////////////////////////////////////////////////
 void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current)
 {
@@ -212,6 +214,7 @@ void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current)
 	}
 }
 
+#endif /* TAU_MPITRACE */
 //////////////////////////////////////////////////////////////////////
 
 void Profiler::Start(int tid)
@@ -2868,9 +2871,9 @@ void Profiler::SetDepthLimit(int value)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.114 $   $Date: 2005/05/27 22:09:47 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.114 2005/05/27 22:09:47 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.115 $   $Date: 2005/05/27 22:23:02 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.115 2005/05/27 22:23:02 amorris Exp $ 
  ***************************************************************************/
 
 	
