@@ -213,3 +213,8 @@ headroom        - TAU's memory headroom evalution options are discussed at
                   program's execution are tracked in this directory (and three
                   subdirectories - track, here, and available). -PROFILEHEADROOM
                   configuration option may be used with these examples. 
+
+mpitrace        - Kojak's Expert tool needs traces that record events that call
+                  MPI routines. We track this information at runtime when TAU
+                  is configured with the -MPITRACE option. This example 
+                  illustrates its use. 
