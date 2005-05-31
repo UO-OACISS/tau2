@@ -13,20 +13,20 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
              CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java PrefSpacingPanel.java \
              CallPathTextWindowPanel.java Preferences.java FunctionDataWindow.java \
              ColorChooser.java FunctionDataWindowPanel.java ParaProfExperiment.java ThreadDataWindow.java \
-             ColorPair.java LedgerWindow.java ParaProfImageInterface.java ParaProfImageOptionsPanel.java \
+             ColorPair.java LedgerWindow.java ParaProfImageOptionsPanel.java \
              ParaProfImageFormatFileFilter.java LedgerDataElement.java DataSorter.java CallGraphWindow.java \
              PPThread.java ThreadDataWindowPanel.java LedgerWindowPanel.java PPFunctionProfile.java \
              UserEventWindow.java DBConfiguration.java ParaProfMetric.java \
 	     UserEventWindowPanel.java PPUserEventProfile.java LoadTrialProgressWindow.java ColorBar.java \
              ParaProfManagerWindow.java StatWindow.java LoadTrialWindow.java \
-             ParaProfManagerTableModel.java StatWindowPanel.java ParaProfLisp.java ParaProfLispPrimitives.java \
-             FullDataWindow.java ParaProfTreeNodeUserObject.java Interpreter.java \
+             ParaProfManagerTableModel.java StatWindowPanel.java \
+             FullDataWindow.java ParaProfTreeNodeUserObject.java \
 	     ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java \
 	     ColorDefaultsWindow.java ColorMap.java ColorMapWindow.java PreferencesWindow.java \
 	     Searcher.java SearchPanel.java
 
 VIS_SOURCES = $(wildcard vis/*.java) ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java FunctionSelectorDialog.java
-OTHER_SOURCES = $(wildcard enums/*.java) $(wildcard interfaces/*.java)
+OTHER_SOURCES = $(wildcard enums/*.java) $(wildcard interfaces/*.java) $(wildcard treetable/*.java)
 
 NEW_SOURCES=$(BASE_SOURCES) $(VIS_SOURCES) $(OTHER_SOURCES) ParaProfImageOutput.java JVMDependent.java
 
