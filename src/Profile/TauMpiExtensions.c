@@ -283,6 +283,7 @@ void mpi_type_free_keyval__( MPI_Fint *  type_keyval, MPI_Fint * ierr)
 /******************************************************/
 
 
+#ifdef TAU_MPIATTRFUNCTION
 /******************************************************
 ***      MPI_Type_get_attr wrapper function 
 ******************************************************/
@@ -387,6 +388,7 @@ void mpi_type_set_attr__( MPI_Fint *  type, MPI_Fint *  type_keyval, MPI_Aint * 
 
 /******************************************************/
 /******************************************************/
+#endif /* TAU_MPIATTRFUNCTION  */
 
 
 #ifdef TAU_MPITYPEEX

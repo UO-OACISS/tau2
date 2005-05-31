@@ -1959,6 +1959,11 @@ cat <<EOF > mpi2attr.$msuf
   {
     return 0;
   }
+
+  int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute, int *flag)
+  {
+    return PMPI_Type_get_attr(type, type_keyval, attribute, flag);
+  }
 EOF
 
   cat <<EOF > mpi2typeex.$msuf
