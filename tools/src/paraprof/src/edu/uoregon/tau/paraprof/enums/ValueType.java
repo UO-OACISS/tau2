@@ -1,19 +1,18 @@
-/*
- * Created on Mar 2, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package edu.uoregon.tau.paraprof.enums;
 
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.dms.dss.*;
 
 /**
- * @author amorris
+ * type-safe enum pattern for type of sorting
+ *    
+ * TODO : nothing, this class is complete
  *
- * TODO ...
+ * <P>CVS $Id: ValueType.java,v 1.4 2005/05/31 23:21:50 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.4 $
  */
+
 public abstract class ValueType {
 
     private final String name;

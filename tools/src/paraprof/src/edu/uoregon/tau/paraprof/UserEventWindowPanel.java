@@ -10,18 +10,42 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.print.*;
-import javax.swing.*;
-import java.awt.geom.*;
-import java.text.*;
 import java.awt.font.*;
-import edu.uoregon.tau.dms.dss.*;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import javax.swing.*;
+
+import edu.uoregon.tau.dms.dss.UserEvent;
+import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 
 public class UserEventWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
-        ParaProfImageInterface {
+        ImageExport {
+
+    private String counterName = null;
+    private UserEvent userEvent = null;
+    private int barHeight = -1;
+    private int barSpacing = -1;
+    private int baseBarLength = 250;
+    private int barLength = 0;
+    private int textOffset = 60;
+    private int maxXLength = 0;
+    private boolean groupMember = false;
+    private ParaProfTrial trial = null;
+    private UserEventWindow window = null;
+    private List list = new ArrayList();
+    private int xPanelSize = 0;
+    private int yPanelSize = 0;
+    private JPopupMenu popup = new JPopupMenu();
+    private int lastHeaderEndPosition = 0;
 
     public UserEventWindowPanel(ParaProfTrial trial, UserEvent userEvent, UserEventWindow uEWindow) {
         this.trial = trial;
@@ -48,7 +72,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, true, false, false);
+            export((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
             window.closeThisWindow();
@@ -62,7 +86,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
             }
 
             ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
-            renderIt((Graphics2D) g, false, true, false);
+            export((Graphics2D) g, false, true, false);
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
@@ -71,7 +95,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         }
     }
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         list = window.getData();
 
@@ -151,7 +175,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         //######
 
         for (int i = startElement; i <= endElement; i++) {
-            ppUserEventProfile = (PPUserEventProfile) list.elementAt(i);
+            ppUserEventProfile = (PPUserEventProfile) list.get(i);
 
             value = window.getValueType().getValue(ppUserEventProfile.getUserEventProfile());
 
@@ -301,23 +325,4 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         this.repaint();
     }
 
-    private String counterName = null;
-
-    private UserEvent userEvent = null;
-    private int barHeight = -1;
-    private int barSpacing = -1;
-    private int baseBarLength = 250;
-    private int barLength = 0;
-    private int textOffset = 60;
-    private int maxXLength = 0;
-    private boolean groupMember = false;
-    private ParaProfTrial trial = null;
-    private UserEventWindow window = null;
-    private Vector list = new Vector();
-    int xPanelSize = 0;
-    int yPanelSize = 0;
-
-    private JPopupMenu popup = new JPopupMenu();
-
-    private int lastHeaderEndPosition = 0;
 }

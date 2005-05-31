@@ -1,28 +1,50 @@
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
-import java.awt.font.*;
-
 import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.print.*;
-import java.awt.geom.*;
-//import javax.print.*;
-import edu.uoregon.tau.dms.dss.*;
-import java.text.*;
+import java.awt.event.MouseEvent;
+import java.awt.font.*;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import javax.swing.JPanel;
+
+import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 
 /**
  * HistogramWindowPanel
  * This is the panel for the HistogramWindow.
  *  
- * <P>CVS $Id: HistogramWindowPanel.java,v 1.10 2005/03/08 01:11:18 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindowPanel.java,v 1.11 2005/05/31 23:21:48 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		HistogramWindow
  */
-public class HistogramWindowPanel extends JPanel implements Printable, ParaProfImageInterface {
+public class HistogramWindowPanel extends JPanel implements Printable, ImageExport {
+
+    private ParaProfTrial ppTrial = null;
+    private HistogramWindow window = null;
+    private List data = null;
+
+    private int xPanelSize;
+    private int yPanelSize;
+
+    // need to keep this stuff around for the tooltip computation
+    private int[] bins;
+    private int maxInAnyBin;
+    private double maxValue;
+    private double minValue;
+    private double binWidth;
+
+    private int xOffset;
+
+    // need to keep this around for getImageSize
+    private int lastHeaderEndPosition = 0;
 
     public HistogramWindowPanel(ParaProfTrial ppTrial, HistogramWindow window) {
         this.ppTrial = ppTrial;
@@ -53,8 +75,8 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
             String minString = UtilFncs.getOutputString(window.units(), minValue + (bin * binWidth), 5);
             String maxString = UtilFncs.getOutputString(window.units(), minValue + ((bin + 1) * binWidth), 5);
 
-            return "<html>Number of threads: " + bins[bin] + "<br>Range minimum: " + minString
-                    + "<br>Range maximum: " + maxString + "</html>";
+            return "<html>Number of threads: " + bins[bin] + "<br>Range minimum: " + minString + "<br>Range maximum: "
+                    + maxString + "</html>";
         } catch (Exception e) {
             // it's just a tooltip
             return null;
@@ -64,7 +86,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, true, false, false);
+            export((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
             window.closeThisWindow();
@@ -78,7 +100,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
             }
 
             ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
-            renderIt((Graphics2D) g, false, true, false);
+            export((Graphics2D) g, false, true, false);
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
@@ -113,17 +135,17 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
         int numThreads = 0;
 
         boolean start = true;
-        for (Enumeration e1 = data.elements(); e1.hasMoreElements();) {
-            ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
+        for (int i = 0; i < data.size(); i++) {
+            ppFunctionProfile = (PPFunctionProfile) data.get(i);
 
-                numThreads++;
-                double tmpValue = ppFunctionProfile.getValue(); 
-                if (start) {
-                    minValue = tmpValue;
-                    start = false;
-                }
-                maxValue = Math.max(maxValue, tmpValue);
-                minValue = Math.min(minValue, tmpValue);
+            numThreads++;
+            double tmpValue = ppFunctionProfile.getValue();
+            if (start) {
+                minValue = tmpValue;
+                start = false;
+            }
+            maxValue = Math.max(maxValue, tmpValue);
+            minValue = Math.min(minValue, tmpValue);
         }
 
         int numBins = window.getNumBins();
@@ -140,16 +162,16 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
         int count = 0;
 
         // fill the bins
-        for (Enumeration e1 = data.elements(); e1.hasMoreElements();) {
-            ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
-                double tmpDataValue = ppFunctionProfile.getValue();
-                for (int j = 0; j < numBins; j++) {
-                    if (tmpDataValue <= (minValue + (binWidth * (j + 1)))) {
-                        bins[j]++;
-                        count++;
-                        break;
-                    }
+        for (int i = 0; i < data.size(); i++) {
+            ppFunctionProfile = (PPFunctionProfile) data.get(i);
+            double tmpDataValue = ppFunctionProfile.getValue();
+            for (int j = 0; j < numBins; j++) {
+                if (tmpDataValue <= (minValue + (binWidth * (j + 1)))) {
+                    bins[j]++;
+                    count++;
+                    break;
                 }
+            }
         }
 
         // find the max number of threads in any bin
@@ -160,7 +182,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
 
     }
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         processData();
 
@@ -237,15 +259,14 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
         g2D.drawLine(xOffset, 400 + yOffset, endOfChart, 400 + yOffset);
 
         for (int i = 1; i < bins.length + 1; i++) {
-            g2D.drawLine(xOffset + 4 + i * rectWidth - spacing, 400 + yOffset, xOffset + 4 + i * rectWidth
-                    - spacing, 405 + yOffset);
+            g2D.drawLine(xOffset + 4 + i * rectWidth - spacing, 400 + yOffset, xOffset + 4 + i * rectWidth - spacing,
+                    405 + yOffset);
         }
 
         String maxString = "Max Value = " + UtilFncs.getOutputString(window.units(), maxValue, 5);
         int maxStringWidth = fontMetrics.stringWidth(maxString);
 
-        g2D.drawString("Min Value = " + UtilFncs.getOutputString(window.units(), minValue, 5), xOffset,
-                420 + yOffset);
+        g2D.drawString("Min Value = " + UtilFncs.getOutputString(window.units(), minValue, 5), xOffset, 420 + yOffset);
         g2D.drawString(maxString, endOfChart - maxStringWidth, 420 + yOffset);
 
         xPanelSize = endOfChart + 10;
@@ -290,22 +311,4 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
         return new Dimension(xPanelSize + 10, yPanelSize + 10);
     }
 
-    // instance data
-    private ParaProfTrial ppTrial = null;
-    private HistogramWindow window = null;
-    private Vector data = null;
-
-    private int xPanelSize;
-    private int yPanelSize;
-
-    // need to keep this stuff around for the tooltip computation
-    private int[] bins;
-    private int maxInAnyBin;
-    private double maxValue;
-    private double minValue;
-    private int xOffset;
-    private double binWidth;
-
-    // need to keep this around for getImageSize
-    private int lastHeaderEndPosition = 0;
 }

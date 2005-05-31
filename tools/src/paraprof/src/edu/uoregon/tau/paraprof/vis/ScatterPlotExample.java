@@ -1,7 +1,6 @@
 package edu.uoregon.tau.paraprof.vis;
 
 import java.awt.*;
-import java.util.Vector;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -15,9 +14,9 @@ import net.java.games.jogl.GLDrawableFactory;
 /**
  * An example of the vis package's ScatterPlot
  *    
- * <P>CVS $Id: ScatterPlotExample.java,v 1.3 2005/04/15 01:29:03 amorris Exp $</P>
+ * <P>CVS $Id: ScatterPlotExample.java,v 1.4 2005/05/31 23:21:53 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class ScatterPlotExample {
 

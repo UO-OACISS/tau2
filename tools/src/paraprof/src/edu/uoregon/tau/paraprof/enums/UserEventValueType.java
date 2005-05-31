@@ -3,6 +3,15 @@ package edu.uoregon.tau.paraprof.enums;
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.dms.dss.*;
 
+/**
+ * type-safe enum pattern for value type
+ *    
+ * TODO : nothing, this class is complete
+ *
+ * <P>CVS $Id: UserEventValueType.java,v 1.3 2005/05/31 23:21:50 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.3 $
+ */
 public abstract class UserEventValueType {
 
     private final String name;

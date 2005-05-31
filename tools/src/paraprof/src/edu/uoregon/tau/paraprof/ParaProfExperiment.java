@@ -69,8 +69,8 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
         return trials;
     }
 
-    public DssIterator getTrialList() {
-        return new DssIterator(trials);
+    public ListIterator getTrialList() {
+        return trials.listIterator();
     }
 
     public ParaProfTrial getTrial(int trialID) {

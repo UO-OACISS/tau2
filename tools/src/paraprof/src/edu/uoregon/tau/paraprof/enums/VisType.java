@@ -1,15 +1,13 @@
-/*
- * Created on Mar 15, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package edu.uoregon.tau.paraprof.enums;
 
 /**
- * @author amorris
+ * type-safe enum pattern for visualization type
+ *    
+ * TODO : nothing, this class is complete
  *
- * TODO ...
+ * <P>CVS $Id: VisType.java,v 1.2 2005/05/31 23:21:50 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
  */
 public class VisType {
 

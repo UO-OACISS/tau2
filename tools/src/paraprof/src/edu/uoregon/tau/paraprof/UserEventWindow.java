@@ -11,12 +11,13 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Vector;
+import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.MenuEvent;
 
 import edu.uoregon.tau.dms.dss.UserEvent;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
@@ -48,7 +49,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     JScrollPane sp = null;
     JLabel label = null;
 
-    private Vector list = new Vector();
+    private List list = new ArrayList();
 
     UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
     
@@ -312,7 +313,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         list = dataSorter.getUserEventData(userEvent);
     }
 
-    public Vector getData() {
+    public List getData() {
         return list;
     }
 

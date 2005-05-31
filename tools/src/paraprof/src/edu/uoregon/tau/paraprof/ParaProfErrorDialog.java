@@ -10,13 +10,10 @@ import java.io.*;
 
 public class ParaProfErrorDialog extends JFrame implements ActionListener {
 
-    ParaProfErrorDialog(Exception obj) {
+    public ParaProfErrorDialog(Exception obj) {
 
         String errorString = null;
 
-        
-        
-        
         if (obj instanceof DataSourceException) {
             DataSourceException dse = (DataSourceException) obj;
             Exception e = dse.getException();
@@ -75,7 +72,6 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
 
         setLocation(xPosition, yPosition);
 
-        
         //JTextArea headerTextArea = new JTextArea("<html>An unexpected error has occurred.<br>Please email us at: tau-bugs@cs.uoregon.edu with the message given below.  If possible, please also send the profile files that caused this error as well as a brief description of your sequence of actions.<br>Thanks for your help!</html>");
 
         JTextArea headerTextArea;

@@ -13,8 +13,22 @@ import java.util.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class PPThread {
+    private int miscXBeg;
+    private int miscXEnd;
+    private int miscYBeg;
+    private int miscYEnd;
 
+    
+    private ParaProfTrial ppTrial;
+    private edu.uoregon.tau.dms.dss.Thread thread = null;
+    private List functions = new ArrayList();
+    private List userevents = new ArrayList();
+    //To aid with drawing searches.
+    private int yDrawCoord = -1;
 
+    private double maxExclusivePercent;
+
+    
     public PPThread(edu.uoregon.tau.dms.dss.Thread thread, ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
         this.thread = thread;
@@ -37,27 +51,27 @@ public class PPThread {
     }
 
     public void addFunction(PPFunctionProfile ppFunctionProfile) {
-        functions.addElement(ppFunctionProfile);
+        functions.add(ppFunctionProfile);
     }
 
     public void addUserevent(PPFunctionProfile ppFunctionProfile) {
-        userevents.addElement(ppFunctionProfile);
+        userevents.add(ppFunctionProfile);
     }
 
-    public Vector getFunctionList() {
+    public List getFunctionList() {
         return functions;
     }
 
     public ListIterator getFunctionListIterator() {
-        return new DssIterator(functions);
+        return functions.listIterator();
     }
 
-    public Vector getUsereventList() {
+    public List getUsereventList() {
         return userevents;
     }
 
     public ListIterator getUsereventListIterator() {
-        return new DssIterator(userevents);
+        return userevents.listIterator();
     }
 
     
@@ -65,104 +79,28 @@ public class PPThread {
     
     
     
-    
-    private double maxExclusive;
-    private double maxExclusivePercent;
-    private double maxInclusive;
-    private double maxInclusivePercent;
-    private double maxNumCalls;
-    private double maxNumSubr;
-    private double maxInclusivePerCall;
-
-    public double getMaxExclusive() {
-        return maxExclusive;
-    }
-
     
     public double getMaxExclusivePercent() {
         return maxExclusivePercent;
     }
 
 
-    public double getMaxInclusive() {
-        return maxInclusive;
-    }
-    public double getMaxInclusivePercent() {
-        return maxInclusivePercent;
-    }
-    public double getMaxNumCalls() {
-        return maxNumCalls;
-    }
-    public double getMaxNumSubr() {
-        return maxNumSubr;
-    }
-    public double getMaxInclusivePerCall() {
-        return maxInclusivePerCall;
-    }
-
-    
-    
-    public double getMaxValue(int valueType, boolean percent) {
-        double maxValue = 0;
-        switch (valueType) {
-        case 2:
-            if (percent)
-                maxValue = maxExclusivePercent;
-            else
-                maxValue = maxExclusive;
-            break;
-        case 4:
-            if (percent)
-                maxValue = maxInclusivePercent;
-            else
-                maxValue = maxInclusive;
-            break;
-        case 6:
-            maxValue = maxNumCalls;
-            break;
-        case 8:
-            maxValue = maxNumSubr;
-            break;
-        case 10:
-            maxValue = maxInclusivePerCall;
-            break;
-        default:
-            throw new ParaProfException("Invalid Value Type: " + valueType);
-        }
-        return maxValue;   
-        
-    }
     
     public Vector getSortedFunctionProfiles(DataSorter dataSorter, boolean getAll) {
         Vector newList = null;
 
-        Vector functionList = thread.getFunctionProfiles();
+        List functionList = thread.getFunctionProfiles();
         newList = new Vector();
 
-        maxExclusive = 0;
         maxExclusivePercent = 0;
-        maxInclusive = 0;
-        maxInclusivePercent = 0;
-        maxNumCalls = 0;
-        maxNumSubr = 0;
-        maxInclusivePerCall = 0;
         
-        for (Enumeration e1 = functionList.elements(); e1.hasMoreElements();) {
-            FunctionProfile functionProfile = (FunctionProfile) e1.nextElement();
+        for (Iterator e1 = functionList.iterator(); e1.hasNext();) {
+            FunctionProfile functionProfile = (FunctionProfile) e1.next();
             if (functionProfile != null) {
                 if (getAll || ppTrial.displayFunction(functionProfile.getFunction())) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(dataSorter, thread, functionProfile);
                     newList.addElement(ppFunctionProfile);
-
-                 
-                    maxExclusive = Math.max(maxExclusive, functionProfile.getExclusive(ppTrial.getDefaultMetricID()));
-                    maxInclusive = Math.max(maxInclusive, functionProfile.getInclusive(ppTrial.getDefaultMetricID()));
                     maxExclusivePercent = Math.max(maxExclusivePercent, functionProfile.getExclusivePercent(ppTrial.getDefaultMetricID()));
-                    maxInclusivePercent = Math.max(maxInclusivePercent, functionProfile.getInclusivePercent(ppTrial.getDefaultMetricID()));
-                    maxNumCalls = Math.max(maxNumCalls, functionProfile.getNumCalls());
-                    maxNumSubr = Math.max(maxNumSubr, functionProfile.getNumSubr());
-                    maxInclusivePerCall = Math.max(maxInclusivePerCall, functionProfile.getInclusivePerCall(ppTrial.getDefaultMetricID()));
-                    
                 }
             }
         }
@@ -170,15 +108,6 @@ public class PPThread {
         return newList;
     }
 
-    
-
-    
-    
-    
-    
-    
-    
-    
     
     
     
@@ -215,16 +144,5 @@ public class PPThread {
         return miscYEnd;
     }
 
-    int miscXBeg;
-    int miscXEnd;
-    int miscYBeg;
-    int miscYEnd;
-
-    
-    private ParaProfTrial ppTrial;
-    private edu.uoregon.tau.dms.dss.Thread thread = null;
-    private Vector functions = new Vector();
-    private Vector userevents = new Vector();
-    //To aid with drawing searches.
-    int yDrawCoord = -1;
+   
 }

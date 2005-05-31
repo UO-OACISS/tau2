@@ -1,16 +1,19 @@
 /*
  * StatWindow.java
  * 
- * Title: ParaProf Author: Robert Bell Description:
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description:
  */
 
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Vector;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
@@ -21,9 +24,6 @@ import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.*;
-import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
-import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
-import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 
 public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner,
         ScrollBarController, KeyListener, ParaProfWindow, UnitListener {
@@ -48,7 +48,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     private JScrollPane jScrollpane = null;
     private StatWindowPanel panel = null;
 
-    private Vector list = new Vector();
+    private List list = new ArrayList();
 
     private int units = ParaProf.preferences.getUnits();
 
@@ -130,7 +130,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //Units submenu.
 
         if (!userEventWindow) {
-            unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units);
+            unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         } else { 
             unitsSubMenu = new JMenu("Select Units");
         }
@@ -450,7 +450,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         panel.resetStringSize();
     }
 
-    public Vector getData() {
+    public List getData() {
         return list;
     }
 

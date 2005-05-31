@@ -35,7 +35,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.colorchooser.ColorSelectionModel;
 
 /**
- * @author amorris
+ * @author Robert Bell, Alan Morris
  *
  * TODO ...
  */
@@ -145,11 +145,7 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
 
         //Add the JColorChooser.
         addCompItem(clrChooser, gbc, 2, 0, 1, 6);
-        //####################################
-        //End - Create and add the components.
-        //####################################
 
-        //Now populate the color list.
         populateColorList();
     }
     
@@ -168,23 +164,6 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
         exitItem.addActionListener(this);
         fileMenu.add(exitItem);
 
-        //######
-        //Help menu.
-        //######
-        /*
-         * JMenu helpMenu = new JMenu("Help");
-         * 
-         * //Add a menu item. JMenuItem aboutItem = new JMenuItem("About
-         * Racy"); helpMenu.add(aboutItem);
-         * 
-         * //Add a menu item. JMenuItem showHelpWindowItem = new
-         * JMenuItem("Show Help Window");
-         * showHelpWindowItem.addActionListener(this);
-         * helpMenu.add(showHelpWindowItem);
-         */
-        //######
-        //Help menu.
-        //######
         //Now, add all the menus to the main menu.
         mainMenu.add(fileMenu);
         //mainMenu.add(helpMenu);
@@ -370,8 +349,6 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
 }
 
 class CustomCellRenderer implements ListCellRenderer {
-    CustomCellRenderer() {
-    }
 
     public Component getListCellRendererComponent(final JList list, final Object value, final int index,
             final boolean isSelected, final boolean cellHasFocus) {
@@ -451,11 +428,6 @@ class CustomCellRenderer implements ListCellRenderer {
 
                 g.drawString(id, xStringPos1, yStringPos1);
 
-                //               int xStringPos2 = 50 + (((xSize - 50) - thisXFontSize) / 2);
-                //               int yStringPos2 = (ySize - 5);
-
-                //                g.setColor(isSelected ? list.getSelectionForeground() : list.getForeground());
-                //                g.drawString(tmpString2, xStringPos2, yStringPos2);
             }
 
             public Dimension getPreferredSize() {

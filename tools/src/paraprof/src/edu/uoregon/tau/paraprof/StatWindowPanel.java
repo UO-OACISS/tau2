@@ -9,20 +9,57 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
-import java.text.*;
-import java.awt.font.*;
-import java.awt.font.TextAttribute;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.font.*;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
+import java.util.*;
+import java.util.List;
+
 import javax.swing.*;
-import java.awt.geom.*;
-import java.awt.print.*;
-import edu.uoregon.tau.dms.dss.*;
+
+import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.UserEvent;
+import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 
 public class StatWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
-        ParaProfImageInterface {
+        ImageExport {
 
+    //Instance data.
+    private int xPanelSize = 800;
+    private int yPanelSize = 600;
+    private int newXPanelSize = 0;
+    private int newYPanelSize = 0;
+
+    //Some drawing details.
+    private int startLocation = 0;
+    private int maxFontAscent = 0;
+    private int maxFontDescent = 0;
+    private int spacing = 0;
+
+    private ParaProfTrial trial = null;
+    private StatWindow window = null;
+    private boolean userEventWindow;
+    private List list = new ArrayList();
+
+    private Font monoFont = null;
+    private FontMetrics fmMonoFont = null;
+
+    private JPopupMenu popup = new JPopupMenu();
+    private Object clickedOnObject = null;
+
+    private int lastHeaderEndPosition = 0;
+
+    private int maxLinePixelWidth = 0;
+    private Searcher searcher;
+
+    private int charWidth = 0;
+    private int xOffset = 20;
+    
     public StatWindowPanel(ParaProfTrial pptrial, int nodeID, int contextID, int threadID, StatWindow window,
             boolean userEventWindow) {
 
@@ -77,7 +114,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, true, false, false);
+            export((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
             window.closeThisWindow();
@@ -91,7 +128,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             }
 
             ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
-            renderIt((Graphics2D) g, false, true, false);
+            export((Graphics2D) g, false, true, false);
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
@@ -111,7 +148,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     public void setSearchLines(String headerString, String dashString) {
 
         if (searcher.getSearchLines() == null && list != null) {
-            Vector searchLines = new Vector();
+            List searchLines = new ArrayList();
             searchLines.add(dashString);
             searchLines.add(headerString);
             searchLines.add(dashString);
@@ -121,12 +158,12 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                 String nameString;
 
                 if (userEventWindow) {
-                    nameString = ((PPUserEventProfile) list.elementAt(i)).getUserEventName();
-                    statString = ((PPUserEventProfile) list.elementAt(i)).getUserEventStatString(ParaProf.defaultNumberPrecision);
+                    nameString = ((PPUserEventProfile) list.get(i)).getUserEventName();
+                    statString = ((PPUserEventProfile) list.get(i)).getUserEventStatString(ParaProf.defaultNumberPrecision);
                     statString = statString + nameString;
                 } else {
-                    nameString = ((PPFunctionProfile) list.elementAt(i)).getFunctionName();
-                    statString = ((PPFunctionProfile) list.elementAt(i)).getStatString(window.units());
+                    nameString = ((PPFunctionProfile) list.get(i)).getFunctionName();
+                    statString = ((PPFunctionProfile) list.get(i)).getStatString(window.units());
                     statString = statString + "   " + nameString;
                 }
 
@@ -167,7 +204,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         }
     }
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         list = window.getData();
 
@@ -298,10 +335,10 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             PPUserEventProfile ppUserEventProfile = null;
 
             if (userEventWindow) {
-                ppUserEventProfile = (PPUserEventProfile) list.elementAt(i);
+                ppUserEventProfile = (PPUserEventProfile) list.get(i);
                 statString = ppUserEventProfile.getUserEventStatString(ParaProf.defaultNumberPrecision);
             } else {
-                ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
+                ppFunctionProfile = (PPFunctionProfile) list.get(i);
                 statString = ppFunctionProfile.getStatString(window.units());
             }
 
@@ -446,7 +483,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                     if (userEventWindow) {
                         PPUserEventProfile ppUserEventProfile = null;
 
-                        ppUserEventProfile = (PPUserEventProfile) list.elementAt(tmpInt2);
+                        ppUserEventProfile = (PPUserEventProfile) list.get(tmpInt2);
                         if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
                             clickedOnObject = ppUserEventProfile;
                             popup.show(this, evt.getX(), evt.getY());
@@ -456,7 +493,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
                     } else {
                         PPFunctionProfile ppFunctionProfile = null;
-                        ppFunctionProfile = (PPFunctionProfile) list.elementAt(tmpInt2);
+                        ppFunctionProfile = (PPFunctionProfile) list.get(tmpInt2);
                         if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
                             clickedOnObject = ppFunctionProfile;
                             popup.show(this, evt.getX(), evt.getY());
@@ -503,36 +540,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         return new Dimension(xPanelSize, (yPanelSize + 10));
     }
 
-    //Instance data.
-    private int xPanelSize = 800;
-    private int yPanelSize = 600;
-    private int newXPanelSize = 0;
-    private int newYPanelSize = 0;
-
-    //Some drawing details.
-    private int startLocation = 0;
-    private int maxFontAscent = 0;
-    private int maxFontDescent = 0;
-    private int spacing = 0;
-
-    private ParaProfTrial trial = null;
-    private StatWindow window = null;
-    private boolean userEventWindow;
-    private Vector list = new Vector();
-
-    private Font monoFont = null;
-    private FontMetrics fmMonoFont = null;
-
-    private JPopupMenu popup = new JPopupMenu();
-    private Object clickedOnObject = null;
-
-    private int lastHeaderEndPosition = 0;
-
-    private int maxLinePixelWidth = 0;
-    private Searcher searcher;
-
-    private int charWidth = 0;
-    private int xOffset = 20;
+   
     
     public Searcher getSearcher() {
         return searcher;

@@ -6,7 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 
 import edu.uoregon.tau.dms.dss.DataSource;
 import edu.uoregon.tau.dms.dss.FileList;
@@ -16,11 +16,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.42 2005/05/18 19:14:37 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.43 2005/05/31 23:21:48 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.42 $
+ * @version $Revision: 1.43 $
  */
 public class ParaProf implements ActionListener {
 
@@ -46,14 +46,14 @@ public class ParaProf implements ActionListener {
     //System wide stuff.
     static String homeDirectory = null;
     static File paraProfHomeDirectory = null;
-    static int defaultNumberPrecision = 6;
+    public static int defaultNumberPrecision = 6;
     //static ParaProfLisp paraProfLisp = null;
-    static Preferences preferences = null;
+    public static Preferences preferences = null;
     static ColorChooser colorChooser;
 
     static ParaProfManagerWindow paraProfManager = null;
     static ApplicationManager applicationManager = new ApplicationManager();
-    static HelpWindow helpWindow = null;
+    public static HelpWindow helpWindow = null;
     static PreferencesWindow preferencesWindow;
     static Runtime runtime = null;
     static private int numWindowsOpen = 0;
@@ -117,12 +117,12 @@ public class ParaProf implements ActionListener {
                 + "or, in the case of multiple counters, directories named MULTI_* containing\n" + "profile data.\n\n");
     }
 
-    static void incrementNumWindows() {
+    public static void incrementNumWindows() {
         //        System.out.println ("incrementing");
         numWindowsOpen++;
     }
 
-    static void decrementNumWindows() {
+    public static void decrementNumWindows() {
         //        System.out.println ("decrementing");
         numWindowsOpen--;
         if (numWindowsOpen <= 0) {
@@ -250,7 +250,7 @@ public class ParaProf implements ActionListener {
 
         ParaProf.colorMap.setMap(ParaProf.preferences.getAssignedColors());
 
-        Vector trials = ParaProf.paraProfManager.getLoadedTrials();
+        List trials = ParaProf.paraProfManager.getLoadedTrials();
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();
             ParaProf.colorChooser.setColors(ppTrial, -1);
@@ -399,7 +399,7 @@ public class ParaProf implements ActionListener {
             try {
 
                 FileList fl = new FileList();
-                Vector v = fl.helperFindProfiles(".");
+                List v = fl.helperFindProfiles(".");
                 if (v.size() != 0) {
                     System.err.println("Error: profiles found in current directory, please remove first");
                     return;

@@ -1,60 +1,16 @@
 package edu.uoregon.tau.paraprof.enums;
 
 import edu.uoregon.tau.paraprof.*;
+
 /**
- * type-safe enum pattern
+ * type-safe enum pattern for type of sorting
+ *    
+ * TODO : nothing, this class is complete
+ *
+ * <P>CVS $Id: SortType.java,v 1.3 2005/05/31 23:21:50 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.3 $
  */
-
-//public abstract class SortType {
-//
-//    private final String name;
-//    
-//    private SortType(String name) { this.name = name; }
-//    
-//    public String toString() { return name; }
-//    
-//    
-//    public static final SortType MEAN = new SortType("mean") {
-//        int makeComparison(PPFunctionProfile a, PPFunctionProfile b, ValueType valueType) {
-//            return Double.compare(a.getComparisonValue(), b.getComparisonValue());
-//            
-////            return valueType.makeComparison(a.getMeanProfile(), b.getMeanProfile(), a.getDataSorter().getSelectedMetricID());
-//        }
-//    };
-//
-//    public static final SortType NCT = new SortType("nct") {
-//        int makeComparison(PPFunctionProfile a, PPFunctionProfile b, ValueType valueType) {
-//          if (a.getNodeID() != b.getNodeID())
-//              return a.getNodeID() - b.getNodeID();
-//          else if (a.getContextID() != b.getContextID())
-//              return a.getContextID() - b.getContextID();
-//          else
-//              return a.getThreadID() - b.getThreadID();
-//        }
-//    };
-//
-//
-//    public static final SortType NAME = new SortType("name") {
-//        int makeComparison(PPFunctionProfile a, PPFunctionProfile b, ValueType valueType) {
-//            return (a.getFunctionName()).compareTo(b.getFunctionName());
-//        }
-//    };
-//
-//    public static final SortType VALUE = new SortType("value") {
-//        int makeComparison(PPFunctionProfile a, PPFunctionProfile b, ValueType valueType) {
-//            return valueType.makeComparison(a.getFunctionProfile(), b.getFunctionProfile(), a.getDataSorter().getSelectedMetricID());
-//        }
-//    };
-//
-//    
-////    public static final SortType MEAN = new SortType("mean");
-////    public static final SortType NCT = new SortType("nct");
-////    public static final SortType VALUE = new SortType("value");
-////    
-//    abstract int makeComparison (PPFunctionProfile a, PPFunctionProfile b, ValueType valueType);
-//    
-//}
-
 public class SortType {
 
     private final String name;

@@ -3,26 +3,23 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
-import edu.uoregon.tau.dms.dss.DssIterator;
 import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.*;
-import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
-import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
-import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.24 2005/05/10 01:48:37 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.25 2005/05/31 23:21:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.24 $
+ * @version	$Revision: 1.25 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -46,10 +43,10 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private JCheckBoxMenuItem showMetaData = null;
     private JCheckBoxMenuItem showFindPanelBox;
 
-    private JScrollPane sp = null;
-    private CallPathTextWindowPanel panel = null;
+    private JScrollPane sp;
+    private CallPathTextWindowPanel panel;
 
-    private Vector list = new Vector();
+    private List list;
 
     private SearchPanel searchPanel;
 
@@ -162,7 +159,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         collapsedView.addActionListener(this);
         optionsMenu.add(collapsedView);
 
-        unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units);
+        unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         optionsMenu.add(unitsSubMenu);
         //End - Units submenu.
 
@@ -389,7 +386,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             if (windowType == 0 || windowType == 1) {
                 list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
             } else {
-                list = new Vector();
+                list = new ArrayList();
                 for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();)
                     list.add(it.next());
             }
@@ -397,7 +394,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             if (windowType == 0 || windowType == 1) {
                 list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
             } else {
-                list = new Vector();
+                list = new ArrayList();
                 for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();)
                     list.add(it.next());
                 Collections.sort(list);
@@ -406,12 +403,12 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     }
 
-    public Vector getData() {
+    public List getData() {
         return list;
     }
 
     public ListIterator getDataIterator() {
-        return new DssIterator(this.getData());
+        return list.listIterator();
     }
 
     public int getWindowType() {

@@ -3,8 +3,8 @@ package edu.uoregon.tau.paraprof.vis;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 
@@ -18,9 +18,9 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Axes.java,v 1.4 2005/05/06 01:19:11 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.5 2005/05/31 23:21:53 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class Axes implements Shape {
 
@@ -32,9 +32,9 @@ public class Axes implements Shape {
 
     private int xTickSkip, yTickSkip, zTickSkip;
     private int xLabelSkip, yLabelSkip, zLabelSkip;
-    private Vector xStrings;
-    private Vector yStrings;
-    private Vector zStrings;
+    private List xStrings;
+    private List yStrings;
+    private List zStrings;
 
     private boolean autoSkip = true;
     private boolean onEdge;
@@ -114,12 +114,12 @@ public class Axes implements Shape {
      * @param xlabel - label for the x axis
      * @param ylabel - label for the y axis
      * @param zlabel - label for the z axis
-     * @param xStrings - vector of strings for the x axis
-     * @param yStrings - vector of strings for the y axis
-     * @param zStrings - vector of strings for the z axis
+     * @param xStrings - List of strings for the x axis
+     * @param yStrings - List of strings for the y axis
+     * @param zStrings - List of strings for the z axis
      */
-    public void setStrings(String xlabel, String ylabel, String zlabel, Vector xStrings, Vector yStrings,
-            Vector zStrings) {
+    public void setStrings(String xlabel, String ylabel, String zlabel, List xStrings, List yStrings,
+            List zStrings) {
         this.xlabel = xlabel;
         this.ylabel = ylabel;
         this.zlabel = zlabel;
@@ -128,13 +128,13 @@ public class Axes implements Shape {
         this.zStrings = zStrings;
 
         if (this.xStrings == null)
-            this.xStrings = new Vector();
+            this.xStrings = new ArrayList();
 
         if (this.yStrings == null)
-            this.yStrings = new Vector();
+            this.yStrings = new ArrayList();
 
         if (this.zStrings == null)
-            this.zStrings = new Vector();
+            this.zStrings = new ArrayList();
 
         setAutoTickSkip();
         this.dirty = true;
@@ -593,7 +593,7 @@ public class Axes implements Shape {
 
     }
 
-    private void drawLabels(VisRenderer visRenderer, String label, Vector strings, float increment, int labelSkip, int tickSkip,
+    private void drawLabels(VisRenderer visRenderer, String label, List strings, float increment, int labelSkip, int tickSkip,
             boolean leftJustified, int selected) {
         // Draw the strings for an axis
 

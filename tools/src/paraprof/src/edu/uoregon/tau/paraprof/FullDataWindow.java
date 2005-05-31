@@ -11,9 +11,9 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -62,9 +62,7 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
     private boolean stackBars = true;
     private boolean displaySliders = false;
 
-
-    private Vector list = new Vector();
-    
+    private List list;
 
     public FullDataWindow(ParaProfTrial ppTrial) {
         //This window needs to maintain a reference to its trial.
@@ -91,8 +89,6 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
         int yPosition = ParaProf.paraProfManager.getLocation().y;
         setLocation(xPosition + 75, yPosition + 110);
 
-       
-
         //Setting up the layout system for the main window.
         contentPane = getContentPane();
         gbl = new GridBagLayout();
@@ -105,13 +101,11 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
         jScrollPane = new JScrollPane(panel);
 
         setupMenus();
-        
-        
+
         JScrollBar jScrollBar = jScrollPane.getVerticalScrollBar();
         jScrollBar.setUnitIncrement(35);
 
         this.setHeader();
-
 
         barLengthSlider.setPaintTicks(true);
         barLengthSlider.setMajorTickSpacing(400);
@@ -133,14 +127,11 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
 
     }
 
-    
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
 
         JMenu subMenu = null;
         JMenuItem menuItem = null;
-
-       
 
         //Options menu.
         optionsMenu = new JMenu("Options");
@@ -175,12 +166,11 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
         stackBarsCheckBox.addActionListener(this);
         optionsMenu.add(stackBarsCheckBox);
 
-        
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
         //mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
-        
+
         //mainMenu.add(ParaProfUtils.createThreadMenu(ppTrial, this, null));
         //mainMenu.add(ParaProfUtils.createFunctionMenu(ppTrial, this, null));
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
@@ -188,6 +178,7 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
 
         setJMenuBar(mainMenu);
     }
+
     public void actionPerformed(ActionEvent evt) {
 
         try {
@@ -196,43 +187,6 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
 
-                //		
-                //		else if(arg.equals("Save to XML File")){
-                //		    //Ask the user for a filename and location.
-                //		    JFileChooser fileChooser = new JFileChooser();
-                //		    fileChooser.setDialogTitle("Save XML File");
-                //		    //Set the directory.
-                //		    fileChooser.setCurrentDirectory(new
-                // File(System.getProperty("user.dir")));
-                //		    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                //		    int resultValue = fileChooser.showSaveDialog(this);
-                //		    if(resultValue == JFileChooser.APPROVE_OPTION){
-                //			System.out.println("Saving XML file ...");
-                //			//Get both the file.
-                //			File file = fileChooser.getSelectedFile();
-                //			XMLSupport xMLSupport = new XMLSupport(trial);
-                //			xMLSupport.writeXmlFiles(trial.getSelectedMetricID(),file);
-                //			System.out.println("Done saving XML file ...");
-                //		    }
-                //		}
-                //		else if(arg.equals("Save to txt File")){
-                //		    //Ask the user for a filename and location.
-                //		    JFileChooser fileChooser = new JFileChooser();
-                //		    fileChooser.setDialogTitle("Save txt File");
-                //		    //Set the directory.
-                //		    fileChooser.setCurrentDirectory(new
-                // File(System.getProperty("user.dir")));
-                //		    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                //		    int resultValue = fileChooser.showSaveDialog(this);
-                //		    if(resultValue == JFileChooser.APPROVE_OPTION){
-                //			System.out.println("Saving txt file ...");
-                //			//Get both the file.
-                //			File file = fileChooser.getSelectedFile();
-                //			UtilFncs.outputData(trial.getDataSource(),file,this);
-                //			System.out.println("Done saving txt file ...");
-                //		    }
-                //		}
-                
                 if (arg.equals("Sort By Name")) {
                     sortLocalData();
                     panel.repaint();
@@ -287,8 +241,6 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
             ParaProfUtils.handleException(e);
         }
     }
-
-    
 
     public void menuDeselected(MenuEvent evt) {
     }
@@ -418,7 +370,7 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
         list = dataSorter.getAllFunctionProfiles();
     }
 
-    public Vector getData() {
+    public List getData() {
         return list;
     }
 
@@ -467,7 +419,6 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
     public boolean getStackBars() {
         return this.stackBars;
     }
-
 
     public void help(boolean display) {
         ParaProf.helpWindow.show();

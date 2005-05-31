@@ -7,7 +7,7 @@ import java.awt.event.MouseEvent;
 import java.awt.print.*;
 import java.io.*;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 import javax.swing.*;
@@ -15,8 +15,10 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
+import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 
 public class ParaProfUtils {
 
@@ -253,8 +255,8 @@ public class ParaProfUtils {
                         ParaProf.preferencesWindow.showPreferencesWindow();
                     } else if (arg.equals("Save Image")) {
 
-                        if (panel instanceof ParaProfImageInterface) {
-                            ParaProfImageInterface ppImageInterface = (ParaProfImageInterface) panel;
+                        if (panel instanceof ImageExport) {
+                            ImageExport ppImageInterface = (ImageExport) panel;
                             ParaProfImageOutput.saveImage(ppImageInterface);
                         }
 
@@ -552,10 +554,14 @@ public class ParaProfUtils {
                         Object EventSrc = evt.getSource();
 
                         String arg = evt.getActionCommand();
-                        if (arg.equals("Show Mean Statistics Window")) {
+                        if (arg.equals("Show Mean Statistics Text Window")) {
                             StatWindow statWindow = new StatWindow(ppTrial, -1, -1, -1, false);
                             ppTrial.getSystemEvents().addObserver(statWindow);
                             statWindow.show();
+                        } else if (arg.equals("Show Mean Statistics Table")) {
+                            TreeTableWindow ttWindow = new TreeTableWindow(ppTrial, thread);
+                            ppTrial.getSystemEvents().addObserver(ttWindow);
+                            ttWindow.show();
                         } else if (arg.equals("Show Mean Call Graph")) {
                             CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppTrial.getDataSource().getMeanData());
                             ppTrial.getSystemEvents().addObserver(tmpRef);
@@ -573,7 +579,11 @@ public class ParaProfUtils {
 
             meanThreadPopup = new JPopupMenu();
 
-            JMenuItem jMenuItem = new JMenuItem("Show Mean Statistics Window");
+            JMenuItem jMenuItem = new JMenuItem("Show Mean Statistics Text Window");
+            jMenuItem.addActionListener(actionListener);
+            meanThreadPopup.add(jMenuItem);
+
+            jMenuItem = new JMenuItem("Show Mean Statistics Table");
             jMenuItem.addActionListener(actionListener);
             meanThreadPopup.add(jMenuItem);
 
@@ -594,11 +604,15 @@ public class ParaProfUtils {
                         Object EventSrc = evt.getSource();
 
                         String arg = evt.getActionCommand();
-                        if (arg.equals("Show Thread Statistics Window")) {
+                        if (arg.equals("Show Thread Statistics Text Window")) {
                             StatWindow statWindow = new StatWindow(ppTrial, thread.getNodeID(), thread.getContextID(),
                                     thread.getThreadID(), false);
                             ppTrial.getSystemEvents().addObserver(statWindow);
                             statWindow.show();
+                        } else if (arg.equals("Show Thread Statistics Table")) {
+                            TreeTableWindow ttWindow = new TreeTableWindow(ppTrial, thread);
+                            ppTrial.getSystemEvents().addObserver(ttWindow);
+                            ttWindow.show();
                         } else if (arg.equals("Show Thread Call Graph")) {
                             CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, thread);
                             ppTrial.getSystemEvents().addObserver(tmpRef);
@@ -624,7 +638,11 @@ public class ParaProfUtils {
 
             threadPopup = new JPopupMenu();
 
-            JMenuItem jMenuItem = new JMenuItem("Show Thread Statistics Window");
+            JMenuItem jMenuItem = new JMenuItem("Show Thread Statistics Text Window");
+            jMenuItem.addActionListener(actionListener);
+            threadPopup.add(jMenuItem);
+
+            jMenuItem = new JMenuItem("Show Thread Statistics Table");
             jMenuItem.addActionListener(actionListener);
             threadPopup.add(jMenuItem);
 
@@ -692,7 +710,7 @@ public class ParaProfUtils {
         return clips;
     }
 
-    public static JMenu createUnitsMenu(final UnitListener unitListener, int initialUnits) {
+    public static JMenu createUnitsMenu(final UnitListener unitListener, int initialUnits, boolean doHours) {
 
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -807,7 +825,7 @@ public class ParaProfUtils {
             functions[idx++] = function;
             p.writeUTF(function.getName());
 
-            Vector thisGroups = function.getGroups();
+            List thisGroups = function.getGroups();
             if (thisGroups == null) {
                 p.writeInt(0);
             } else {
@@ -829,70 +847,64 @@ public class ParaProfUtils {
             p.writeUTF(userEvent.getName());
         }
 
-        p.writeInt(dataSource.getTotalNumberOfThreads());
+        p.writeInt(dataSource.getAllThreads().size());
 
-        for (Iterator it = dataSource.getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
-                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+        for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
+            edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
 
-                    //System.out.println("writing " + thread.getNodeID() + "," + thread.getContextID() + "," + thread.getThreadID());
-                    p.writeInt(thread.getNodeID());
-                    p.writeInt(thread.getContextID());
-                    p.writeInt(thread.getThreadID());
+            //System.out.println("writing " + thread.getNodeID() + "," + thread.getContextID() + "," + thread.getThreadID());
+            p.writeInt(thread.getNodeID());
+            p.writeInt(thread.getContextID());
+            p.writeInt(thread.getThreadID());
 
-                    // count function profiles
-                    int count = 0;
-                    for (int i = 0; i < numFunctions; i++) {
-                        FunctionProfile fp = thread.getFunctionProfile(functions[i]);
-                        if (fp != null) {
-                            count++;
-                        }
+            // count function profiles
+            int count = 0;
+            for (int i = 0; i < numFunctions; i++) {
+                FunctionProfile fp = thread.getFunctionProfile(functions[i]);
+                if (fp != null) {
+                    count++;
+                }
+            }
+            p.writeInt(count);
+
+            // write out function profiles
+            for (int i = 0; i < numFunctions; i++) {
+                FunctionProfile fp = thread.getFunctionProfile(functions[i]);
+
+                if (fp != null) {
+                    p.writeInt(i); // which function
+                    p.writeDouble(fp.getNumCalls());
+                    p.writeDouble(fp.getNumSubr());
+
+                    for (int j = 0; j < numMetrics; j++) {
+                        p.writeDouble(fp.getExclusive(j));
+                        p.writeDouble(fp.getInclusive(j));
                     }
-                    p.writeInt(count);
+                }
+            }
 
-                    // write out function profiles
-                    for (int i = 0; i < numFunctions; i++) {
-                        FunctionProfile fp = thread.getFunctionProfile(functions[i]);
+            // count user event profiles
+            count = 0;
+            for (int i = 0; i < numUserEvents; i++) {
+                UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
+                if (uep != null) {
+                    count++;
+                }
+            }
 
-                        if (fp != null) {
-                            p.writeInt(i); // which function
-                            p.writeDouble(fp.getNumCalls());
-                            p.writeDouble(fp.getNumSubr());
+            p.writeInt(count); // number of user event profiles
 
-                            for (int j = 0; j < numMetrics; j++) {
-                                p.writeDouble(fp.getExclusive(j));
-                                p.writeDouble(fp.getInclusive(j));
-                            }
-                        }
-                    }
+            // write out user event profiles
+            for (int i = 0; i < numUserEvents; i++) {
+                UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
 
-                    // count user event profiles
-                    count = 0;
-                    for (int i = 0; i < numUserEvents; i++) {
-                        UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
-                        if (uep != null) {
-                            count++;
-                        }
-                    }
-
-                    p.writeInt(count); // number of user event profiles
-
-                    // write out user event profiles
-                    for (int i = 0; i < numUserEvents; i++) {
-                        UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
-
-                        if (uep != null) {
-                            p.writeInt(i);
-                            p.writeInt(uep.getUserEventNumberValue());
-                            p.writeDouble(uep.getUserEventMinValue());
-                            p.writeDouble(uep.getUserEventMaxValue());
-                            p.writeDouble(uep.getUserEventMeanValue());
-                            p.writeDouble(uep.getUserEventSumSquared());
-                        }
-                    }
+                if (uep != null) {
+                    p.writeInt(i);
+                    p.writeInt(uep.getUserEventNumberValue());
+                    p.writeDouble(uep.getUserEventMinValue());
+                    p.writeDouble(uep.getUserEventMaxValue());
+                    p.writeDouble(uep.getUserEventMeanValue());
+                    p.writeDouble(uep.getUserEventSumSquared());
                 }
             }
         }
@@ -953,84 +965,78 @@ public class ParaProfUtils {
         int numUserEvents = dataSource.getNumUserEvents();
         int numGroups = dataSource.getNumGroups();
 
-        for (Iterator it = dataSource.getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
-                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+        for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
+            edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
 
-                    File file = new File(root + "/profile." + thread.getNodeID() + "." + thread.getContextID() + "."
-                            + thread.getThreadID());
+            File file = new File(root + "/profile." + thread.getNodeID() + "." + thread.getContextID() + "."
+                    + thread.getThreadID());
 
-                    FileOutputStream out = new FileOutputStream(file);
-                    OutputStreamWriter outWriter = new OutputStreamWriter(out);
-                    BufferedWriter bw = new BufferedWriter(outWriter);
+            FileOutputStream out = new FileOutputStream(file);
+            OutputStreamWriter outWriter = new OutputStreamWriter(out);
+            BufferedWriter bw = new BufferedWriter(outWriter);
 
-                    // count function profiles
-                    int count = 0;
-                    for (int i = 0; i < numFunctions; i++) {
-                        FunctionProfile fp = thread.getFunctionProfile(functions[i]);
-                        if (fp != null) {
-                            count++;
-                        }
-                    }
-
-                    if (dataSource.getNumberOfMetrics() == 1 && dataSource.getMetricName(metricID).equals("Time")) {
-                        bw.write(count + " templated_functions\n");
-                    } else {
-                        bw.write(count + " templated_functions_MULTI_" + dataSource.getMetricName(metricID) + "\n");
-                    }
-                    bw.write("# Name Calls Subrs Excl Incl ProfileCalls\n");
-
-                    // write out function profiles
-                    for (int i = 0; i < numFunctions; i++) {
-                        FunctionProfile fp = thread.getFunctionProfile(functions[i]);
-
-                        if (fp != null) {
-                            bw.write('"' + functions[i].getName() + "\" ");
-                            bw.write((int) fp.getNumCalls() + " ");
-                            bw.write((int) fp.getNumSubr() + " ");
-                            bw.write(fp.getExclusive(metricID) + " ");
-                            bw.write(fp.getInclusive(metricID) + " ");
-                            bw.write("0 " + "GROUP=\"" + groupStrings[i] + "\"\n");
-                        }
-                    }
-
-                    bw.write("0 aggregates\n");
-
-                    // count user event profiles
-                    count = 0;
-                    for (int i = 0; i < numUserEvents; i++) {
-                        UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
-                        if (uep != null) {
-                            count++;
-                        }
-                    }
-
-                    if (count > 0) {
-                        bw.write(count + " userevents\n");
-                        bw.write("# eventname numevents max min mean sumsqr\n");
-
-                        // write out user event profiles
-                        for (int i = 0; i < numUserEvents; i++) {
-                            UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
-
-                            if (uep != null) {
-                                bw.write('"' + userEvents[i].getName() + "\" ");
-                                bw.write(uep.getUserEventNumberValue() + " ");
-                                bw.write(uep.getUserEventMaxValue() + " ");
-                                bw.write(uep.getUserEventMinValue() + " ");
-                                bw.write(uep.getUserEventMeanValue() + " ");
-                                bw.write(uep.getUserEventSumSquared() + "\n");
-                            }
-                        }
-                    }
-                    bw.close();
-                    outWriter.close();
-                    out.close();
+            // count function profiles
+            int count = 0;
+            for (int i = 0; i < numFunctions; i++) {
+                FunctionProfile fp = thread.getFunctionProfile(functions[i]);
+                if (fp != null) {
+                    count++;
                 }
             }
+
+            if (dataSource.getNumberOfMetrics() == 1 && dataSource.getMetricName(metricID).equals("Time")) {
+                bw.write(count + " templated_functions\n");
+            } else {
+                bw.write(count + " templated_functions_MULTI_" + dataSource.getMetricName(metricID) + "\n");
+            }
+            bw.write("# Name Calls Subrs Excl Incl ProfileCalls\n");
+
+            // write out function profiles
+            for (int i = 0; i < numFunctions; i++) {
+                FunctionProfile fp = thread.getFunctionProfile(functions[i]);
+
+                if (fp != null) {
+                    bw.write('"' + functions[i].getName() + "\" ");
+                    bw.write((int) fp.getNumCalls() + " ");
+                    bw.write((int) fp.getNumSubr() + " ");
+                    bw.write(fp.getExclusive(metricID) + " ");
+                    bw.write(fp.getInclusive(metricID) + " ");
+                    bw.write("0 " + "GROUP=\"" + groupStrings[i] + "\"\n");
+                }
+            }
+
+            bw.write("0 aggregates\n");
+
+            // count user event profiles
+            count = 0;
+            for (int i = 0; i < numUserEvents; i++) {
+                UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
+                if (uep != null) {
+                    count++;
+                }
+            }
+
+            if (count > 0) {
+                bw.write(count + " userevents\n");
+                bw.write("# eventname numevents max min mean sumsqr\n");
+
+                // write out user event profiles
+                for (int i = 0; i < numUserEvents; i++) {
+                    UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
+
+                    if (uep != null) {
+                        bw.write('"' + userEvents[i].getName() + "\" ");
+                        bw.write(uep.getUserEventNumberValue() + " ");
+                        bw.write(uep.getUserEventMaxValue() + " ");
+                        bw.write(uep.getUserEventMinValue() + " ");
+                        bw.write(uep.getUserEventMeanValue() + " ");
+                        bw.write(uep.getUserEventSumSquared() + "\n");
+                    }
+                }
+            }
+            bw.close();
+            outWriter.close();
+            out.close();
         }
 
     }
@@ -1060,7 +1066,8 @@ public class ParaProfUtils {
             Function function = (Function) it.next();
             functions[idx] = function;
 
-            Vector thisGroups = function.getGroups();
+            List thisGroups = function.getGroups();
+
             if (thisGroups == null) {
                 groupStrings[idx] = "";
             } else {
@@ -1068,7 +1075,7 @@ public class ParaProfUtils {
 
                 for (int i = 0; i < thisGroups.size(); i++) {
                     Group group = (Group) thisGroups.get(i);
-                    groupStrings[idx] = groupStrings[idx] + " " + group.getName();
+                    groupStrings[idx] = groupStrings[idx] + " | " + group.getName();
                 }
 
                 groupStrings[idx] = groupStrings[idx].trim();

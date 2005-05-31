@@ -269,12 +269,8 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     }
 
     //Override this function.
-    public Vector getMetrics() {
+    public List getMetrics() {
         return trial.getDataSource().getMetrics();
-    }
-
-    public DssIterator getMetricList() {
-        return new DssIterator(this.getMetrics());
     }
 
     public int getNumberOfMetrics() {

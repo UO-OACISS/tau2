@@ -1,30 +1,40 @@
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.print.*;
-import javax.swing.*;
-import java.awt.geom.*;
-import java.text.*;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.font.*;
-import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.paraprof.enums.*;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+
+import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.enums.ValueType;
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 
 /**
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.17 2005/05/07 02:36:52 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.18 2005/05/31 23:21:48 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.17 $
+ * @version	$Revision: 1.18 $
  * @see		FunctionDataWindow
  */
-public class FunctionDataWindowPanel extends JPanel implements MouseListener, Printable, ParaProfImageInterface {
+public class FunctionDataWindowPanel extends JPanel implements MouseListener, Printable, ImageExport {
 
     private ParaProfTrial ppTrial = null;
     private FunctionDataWindow window = null;
-    private Vector list = new Vector();
+    private List list = new ArrayList();
     private Function function = null;
 
     //Drawing information.
@@ -56,7 +66,7 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, true, false, false);
+            export((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
             window.closeThisWindow();
@@ -70,7 +80,7 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
             }
 
             ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
-            renderIt((Graphics2D) g, false, true, false);
+            export((Graphics2D) g, false, true, false);
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
@@ -79,7 +89,7 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
         }
     }
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         list = window.getData();
 
@@ -163,7 +173,7 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
 
         // Iterate through and draw each thread's values
         for (int i = startElement; i <= endElement; i++) {
-            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
+            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(i);
             //double value = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), window.isPercent());
 
             double value = ppFunctionProfile.getValue();
@@ -256,7 +266,7 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
             int index = (yCoord) / (ppTrial.getPreferencesWindow().getBarSpacing());
 
             if (list != null && index < list.size()) {
-                ppFunctionProfile = (PPFunctionProfile) list.elementAt(index);
+                ppFunctionProfile = (PPFunctionProfile) list.get(index);
 
                 if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
                     if (xCoord > barXCoord) { //barXCoord should have been set during the last render.

@@ -3,9 +3,8 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Vector;
+import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -21,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.12 2005/05/10 01:48:37 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.13 2005/05/31 23:21:48 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow, UnitListener {
@@ -40,7 +39,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     private JScrollPane sp = null;
     private HistogramWindowPanel panel = null;
 
-    private Vector data = null;
+    private List data = null;
 
     private int units = ParaProf.preferences.getUnits();
 
@@ -123,7 +122,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         JRadioButtonMenuItem button = null;
 
         // units submenu
-        unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units);
+        unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         optionsMenu.add(unitsSubMenu);
 
         //Set the value type options.
@@ -356,7 +355,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
     }
 
-    public Vector getData() {
+    public List getData() {
         return data;
     }
 

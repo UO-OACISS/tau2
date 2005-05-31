@@ -7,6 +7,7 @@ import java.awt.image.ImageObserver;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 
@@ -20,7 +21,8 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.vis.*;
 
-public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListener, Observer, Printable, ParaProfWindow, UnitListener {
+public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListener, Observer, Printable, ParaProfWindow,
+        UnitListener {
 
     private final int defaultToScatter = 4000;
 
@@ -34,7 +36,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     private ParaProfTrial ppTrial;
     private JMenu optionsMenu = null;
     private DataSorter dataSorter;
-    
+
     private ThreeDeeControlPanel controlPanel;
     private ThreeDeeSettings settings = new ThreeDeeSettings();
     private ThreeDeeSettings oldSettings;
@@ -50,10 +52,11 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     private Axes fullDataPlotAxes;
     private Axes scatterPlotAxes;
 
-    private Vector functionNames;
-    private Vector threadNames;
-    private Vector functions;
-    private Vector threads;
+    private List functionNames;
+    private List threadNames;
+    private List functions;
+    private List threads;
+    private List selectedFunctions = new ArrayList();
 
     private int units = ParaProf.preferences.getUnits();
 
@@ -190,28 +193,22 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             minScatterValues[f] = Float.MAX_VALUE;
         }
 
-        for (Iterator it = ppTrial.getDataSource().getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
-                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+        for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
 
-                    for (int f = 0; f < scatterFunctions.length; f++) {
-                        if (scatterFunctions[f] != null) {
-                            FunctionProfile functionProfile = thread.getFunctionProfile(scatterFunctions[f]);
+            for (int f = 0; f < scatterFunctions.length; f++) {
+                if (scatterFunctions[f] != null) {
+                    FunctionProfile functionProfile = thread.getFunctionProfile(scatterFunctions[f]);
 
-                            if (functionProfile != null) {
-                                values[threadIndex][f] = (float) scatterValueTypes[f].getValue(functionProfile,
-                                        scatterMetricIDs[f]);
-                                maxScatterValues[f] = Math.max(maxScatterValues[f], values[threadIndex][f]);
-                                minScatterValues[f] = Math.min(minScatterValues[f], values[threadIndex][f]);
-                            }
-                        }
+                    if (functionProfile != null) {
+                        values[threadIndex][f] = (float) scatterValueTypes[f].getValue(functionProfile,
+                                scatterMetricIDs[f]);
+                        maxScatterValues[f] = Math.max(maxScatterValues[f], values[threadIndex][f]);
+                        minScatterValues[f] = Math.min(minScatterValues[f], values[threadIndex][f]);
                     }
-                    threadIndex++;
                 }
             }
+            threadIndex++;
         }
 
         if (scatterPlotAxes == null) {
@@ -257,8 +254,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         int numFunctions = 0;
 
         // get the 'mean' thread's functions to sort by
-        Vector list = dataSorter.getFunctionProfiles(-1,-1,-1);
-        
+        List list = dataSorter.getFunctionProfiles(-1, -1, -1);
+
         numFunctions = list.size();
 
         float[][] heightValues = new float[numFunctions][numThreads];
@@ -266,25 +263,19 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         boolean addFunctionNames = false;
         if (functionNames == null) {
-            functionNames = new Vector();
-            functions = new Vector();
+            functionNames = new ArrayList();
+            functions = new ArrayList();
             addFunctionNames = true;
         }
 
         if (threadNames == null) {
-            threadNames = new Vector();
-            threads = new Vector();
+            threadNames = new ArrayList();
+            threads = new ArrayList();
 
-            for (Iterator it = ppTrial.getDataSource().getNodes(); it.hasNext();) {
-                Node node = (Node) it.next();
-                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                    Context context = (Context) it2.next();
-                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
-                        threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID());
-                        threads.add(thread);
-                    }
-                }
+            for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+                edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
+                threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID());
+                threads.add(thread);
             }
         }
 
@@ -294,40 +285,34 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         int funcIndex = 0;
         for (int i = 0; i < list.size(); i++) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(i);
-            Function function = ppFunctionProfile.getFunction(); 
-            
-        //for (Iterator funcIter = ppTrial.getDataSource().getFunctions(); funcIter.hasNext();) {
-          //  Function function = (Function) funcIter.next();
+            Function function = ppFunctionProfile.getFunction();
 
-//            if (!ppTrial.displayFunction(function)) {
-//                continue;
-//            }
+            //for (Iterator funcIter = ppTrial.getDataSource().getFunctions(); funcIter.hasNext();) {
+            //  Function function = (Function) funcIter.next();
+
+            //            if (!ppTrial.displayFunction(function)) {
+            //                continue;
+            //            }
 
             if (addFunctionNames) {
                 functionNames.add(ParaProfUtils.getFunctionName(function));
                 functions.add(function);
             }
             int threadIndex = 0;
-            for (Iterator it = ppTrial.getDataSource().getNodes(); it.hasNext();) {
-                Node node = (Node) it.next();
-                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                    Context context = (Context) it2.next();
-                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
-                        FunctionProfile functionProfile = thread.getFunctionProfile(function);
+            for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+                edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
+                FunctionProfile functionProfile = thread.getFunctionProfile(function);
 
-                        if (functionProfile != null) {
-                            heightValues[funcIndex][threadIndex] = (float) settings.getHeightValue().getValue(
-                                    functionProfile, settings.getHeightMetricID());
-                            colorValues[funcIndex][threadIndex] = (float) settings.getColorValue().getValue(
-                                    functionProfile, settings.getColorMetricID());
+                if (functionProfile != null) {
+                    heightValues[funcIndex][threadIndex] = (float) settings.getHeightValue().getValue(functionProfile,
+                            settings.getHeightMetricID());
+                    colorValues[funcIndex][threadIndex] = (float) settings.getColorValue().getValue(functionProfile,
+                            settings.getColorMetricID());
 
-                            maxHeightValue = Math.max(maxHeightValue, heightValues[funcIndex][threadIndex]);
-                            maxColorValue = Math.max(maxColorValue, colorValues[funcIndex][threadIndex]);
-                        }
-                        threadIndex++;
-                    }
+                    maxHeightValue = Math.max(maxHeightValue, heightValues[funcIndex][threadIndex]);
+                    maxColorValue = Math.max(maxColorValue, colorValues[funcIndex][threadIndex]);
                 }
+                threadIndex++;
             }
             funcIndex++;
         }
@@ -492,23 +477,22 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         optionsMenu = new JMenu("Options");
         optionsMenu.getPopupMenu().setLightWeightPopupEnabled(false);
 
-        JMenu unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units);
+        JMenu unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         unitsSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);
         optionsMenu.add(unitsSubMenu);
 
         // now add all the menus to the main menu
-        
+
         JMenu fileMenu = ParaProfUtils.createFileMenu(this, this, this);
         //JMenu trialMenu = ParaProfUtils.createTrialMenu(ppTrial, this);
         JMenu windowsMenu = ParaProfUtils.createWindowsMenu(ppTrial, this);
         JMenu helpMenu = ParaProfUtils.createHelpMenu(this, this);
-        
+
         fileMenu.getPopupMenu().setLightWeightPopupEnabled(false);
         //trialMenu.getPopupMenu().setLightWeightPopupEnabled(false);
         windowsMenu.getPopupMenu().setLightWeightPopupEnabled(false);
         helpMenu.getPopupMenu().setLightWeightPopupEnabled(false);
 
-        
         mainMenu.add(fileMenu);
         mainMenu.add(optionsMenu);
         //mainMenu.add(trialMenu);
@@ -522,7 +506,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         return units;
     }
 
-    private Vector selectedFunctions = new Vector();
 
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
@@ -595,7 +578,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         visRenderer.redraw();
         controlPanel.dataChanged();
     }
-    
+
     public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
@@ -671,7 +654,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                 return;
             }
 
-
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -698,11 +680,11 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         this.plot = plot;
     }
 
-    public Vector getFunctionNames() {
+    public List getFunctionNames() {
         return functionNames;
     }
 
-    public Vector getThreadNames() {
+    public List getThreadNames() {
         return threadNames;
     }
 
@@ -788,22 +770,24 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             ValueType[] scatterValueTypes = settings.getScatterValueTypes();
             int[] scatterMetricIDs = settings.getScatterMetricIDs();
 
-            Vector axisNames = new Vector();
+            List axisNames = new ArrayList();
             for (int f = 0; f < scatterFunctions.length; f++) {
                 if (scatterFunctions[f] != null) {
                     // e.g. "MPI_Recv()\n(Exclusive, Time)"
                     if (scatterValueTypes[f] == ValueType.NUMCALLS || scatterValueTypes[f] == ValueType.NUMSUBR) {
-                        axisNames.add(ParaProfUtils.getFunctionName(scatterFunctions[f]) + "\n(" + scatterValueTypes[f].toString() + ")");
+                        axisNames.add(ParaProfUtils.getFunctionName(scatterFunctions[f]) + "\n("
+                                + scatterValueTypes[f].toString() + ")");
                     } else {
-                        axisNames.add(ParaProfUtils.getFunctionName(scatterFunctions[f]) + "\n(" + scatterValueTypes[f].toString() + ", "
-                                + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
+                        axisNames.add(ParaProfUtils.getFunctionName(scatterFunctions[f]) + "\n("
+                                + scatterValueTypes[f].toString() + ", " + ppTrial.getMetricName(scatterMetricIDs[f])
+                                + ")");
                     }
                 } else {
                     axisNames.add("none");
                 }
             }
 
-            Vector[] axisStrings = new Vector[4];
+            List[] axisStrings = new ArrayList[4];
 
             for (int i = 0; i < 4; i++) {
                 if (minScatterValues[i] == Float.MAX_VALUE) {
@@ -814,7 +798,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
                 int units = scatterValueTypes[i].getUnits(this.units, ppMetric);
 
-                axisStrings[i] = new Vector();
+                axisStrings[i] = new ArrayList();
                 axisStrings[i].add(UtilFncs.getOutputString(units, minScatterValues[i], 6).trim());
                 axisStrings[i].add(UtilFncs.getOutputString(units,
                         minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .25, 6).trim());
@@ -837,7 +821,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         } else {
 
-            Vector zStrings = new Vector();
+            List zStrings = new ArrayList();
             zStrings.add("0");
 
             int units;

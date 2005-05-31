@@ -8,13 +8,13 @@ import edu.uoregon.tau.dms.dss.*;
  * This controls the adding of applications to the system.
  *  
  * 
- * <P>CVS $Id: ApplicationManager.java,v 1.5 2005/01/19 02:33:25 amorris Exp $</P>
+ * <P>CVS $Id: ApplicationManager.java,v 1.6 2005/05/31 23:21:47 amorris Exp $</P>
  * @author	Robert Bell
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class ApplicationManager extends Observable {
 
-    private Vector applications = new Vector();
+    private List applications = new ArrayList();
 
     public ParaProfApplication addApplication() {
         ParaProfApplication application = new ParaProfApplication();
@@ -27,12 +27,8 @@ public class ApplicationManager extends Observable {
         applications.remove(application);
     }
 
-    public Vector getApplications() {
+    public List getApplications() {
         return applications;
-    }
-
-    public DssIterator getApplicationList() {
-        return new DssIterator(applications);
     }
 
     public boolean isEmpty() {
@@ -43,7 +39,7 @@ public class ApplicationManager extends Observable {
     }
 
     public ParaProfApplication getApplication(int applicationID) {
-        return (ParaProfApplication) applications.elementAt(applicationID);
+        return (ParaProfApplication) applications.get(applicationID);
     }
 
     public ParaProfExperiment getExperiment(int applicationID, int experimentID) {
@@ -55,8 +51,8 @@ public class ApplicationManager extends Observable {
     }
 
     public boolean isApplicationPresent(String name) {
-        for (Enumeration e = applications.elements(); e.hasMoreElements();) {
-            ParaProfApplication application = (ParaProfApplication) e.nextElement();
+        for (Iterator it = applications.iterator(); it.hasNext();) {
+            ParaProfApplication application = (ParaProfApplication) it.next();
             if (name.compareTo(application.getName()) == 0)
                 return true;
         }

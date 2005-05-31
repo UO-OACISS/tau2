@@ -19,7 +19,7 @@ public class DerivedMetrics {
 
         try {
             boolean constant = false; // Indicates whether we are just applying a constant as an argument 
-                                      // for the second operand.
+            // for the second operand.
             double constantValue = 0.00;
             ParaProfTrial trialOpA = null;
             ParaProfTrial trialOpB = null;
@@ -61,19 +61,18 @@ public class DerivedMetrics {
                 operation = 3;
                 newMetricName = " / ";
             } else {
-                JOptionPane.showMessageDialog(ParaProf.paraProfManager,
-                        "Unsupported Operation, '" + inOperation + "'", "ParaProf Error",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(ParaProf.paraProfManager, "Unsupported Operation, '" + inOperation + "'",
+                        "ParaProf Error", JOptionPane.ERROR_MESSAGE);
 
                 //System.out.println("Wrong operation type");
             }
 
             if (constant)
-                newMetricName = ((ParaProfMetric) trialOpA.getMetrics().elementAt(opA)).getName()
-                        + newMetricName + constantValue;
+                newMetricName = ((ParaProfMetric) trialOpA.getMetrics().get(opA)).getName() + newMetricName
+                        + constantValue;
             else
-                newMetricName = ((ParaProfMetric) trialOpA.getMetrics().elementAt(opA)).getName()
-                        + newMetricName + ((ParaProfMetric) trialOpA.getMetrics().elementAt(opB)).getName();
+                newMetricName = ((ParaProfMetric) trialOpA.getMetrics().get(opA)).getName() + newMetricName
+                        + ((ParaProfMetric) trialOpA.getMetrics().get(opB)).getName();
 
             ParaProfMetric newMetric = trialOpA.addMetric();
             newMetric.setPpTrial(trialOpA);
@@ -118,51 +117,44 @@ public class DerivedMetrics {
             //of the latter.
             //######
 
-            for (Iterator it = trialOpA.getDataSource().getNodes(); it.hasNext();) {
-                Node node = (Node) it.next();
-                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                    Context context = (Context) it2.next();
-                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
-                        thread.incrementStorage();
-                        l = thread.getFunctionProfileIterator();
-                        while (l.hasNext()) {
-                            FunctionProfile functionProfile = (FunctionProfile) l.next();
-                            if (functionProfile != null) {
-                                Function function = functionProfile.getFunction();
-                                functionProfile.incrementStorage();
+            for (Iterator it = trialOpA.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+                edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
+                thread.incrementStorage();
+                l = thread.getFunctionProfileIterator();
+                while (l.hasNext()) {
+                    FunctionProfile functionProfile = (FunctionProfile) l.next();
+                    if (functionProfile != null) {
+                        Function function = functionProfile.getFunction();
+                        functionProfile.incrementStorage();
 
-                                double d1 = 0.0;
-                                double d2 = 0.0;
-                                double result = 0.0;
+                        double d1 = 0.0;
+                        double d2 = 0.0;
+                        double result = 0.0;
 
-                                d1 = functionProfile.getExclusive(opA);
-                                if (!constant) {
-                                    d2 = functionProfile.getExclusive(opB);
-                                    result = DerivedMetrics.apply(operation, d1, d2);
-                                } else
-                                    result = DerivedMetrics.apply(operation, d1, constantValue);
+                        d1 = functionProfile.getExclusive(opA);
+                        if (!constant) {
+                            d2 = functionProfile.getExclusive(opB);
+                            result = DerivedMetrics.apply(operation, d1, d2);
+                        } else
+                            result = DerivedMetrics.apply(operation, d1, constantValue);
 
-                                functionProfile.setExclusive(metric, result);
+                        functionProfile.setExclusive(metric, result);
 
+                        d1 = functionProfile.getInclusive(opA);
+                        if (!constant) {
+                            d2 = functionProfile.getInclusive(opB);
+                            result = DerivedMetrics.apply(operation, d1, d2);
+                        } else
+                            result = DerivedMetrics.apply(operation, d1, constantValue);
 
-                                d1 = functionProfile.getInclusive(opA);
-                                if (!constant) {
-                                    d2 = functionProfile.getInclusive(opB);
-                                    result = DerivedMetrics.apply(operation, d1, d2);
-                                } else
-                                    result = DerivedMetrics.apply(operation, d1, constantValue);
+                        functionProfile.setInclusive(metric, result);
 
-                                functionProfile.setInclusive(metric, result);
+                        //functionProfile.setInclusivePerCall(metric,
+                        //        functionProfile.getInclusive(metric) / functionProfile.getNumCalls());
 
-                                //functionProfile.setInclusivePerCall(metric,
-                                //        functionProfile.getInclusive(metric) / functionProfile.getNumCalls());
-
-                            }
-                        }
-                        thread.setThreadData(metric);
                     }
                 }
+                thread.setThreadData(metric);
             }
 
             //Done with this metric, compute the mean values.

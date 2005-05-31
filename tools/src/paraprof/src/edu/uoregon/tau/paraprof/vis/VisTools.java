@@ -4,6 +4,14 @@ import java.awt.Color;
 
 import net.java.games.jogl.GL;
 
+
+/**
+ * Various static tools for visualization
+ * 
+ * <P>CVS $Id: VisTools.java,v 1.2 2005/05/31 23:21:53 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ */
 public class VisTools {
 
     // no alpha for now

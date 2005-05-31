@@ -10,23 +10,31 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.print.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.geom.*;
-import java.text.*;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.font.*;
-import edu.uoregon.tau.dms.dss.*;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
+import java.util.*;
+import java.util.List;
 
-public class FullDataWindowPanel extends JPanel implements MouseListener, Printable, ParaProfImageInterface {
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+
+import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.Group;
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
+
+public class FullDataWindowPanel extends JPanel implements MouseListener, Printable, ImageExport {
 
     
     private ParaProfTrial ppTrial = null;
     private FullDataWindow window = null;
-    private Vector list = new Vector();
+    private List list = new Vector();
 
     //Drawing information.
     private int barHeight = -1;
@@ -208,6 +216,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
             }
         } catch (Exception e) {
             // do nothing, it's just a tooltip
+            System.err.println("you suck");
         }
 
         return null;
@@ -216,7 +225,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, true, false, false);
+            export((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
             window.closeThisWindow();
@@ -230,7 +239,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
             }
 
             ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
-            renderIt((Graphics2D) g, false, true, false);
+            export((Graphics2D) g, false, true, false);
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
@@ -239,7 +248,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
         }
     }
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         list = window.getData();
 
@@ -316,7 +325,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
         // Draw the thread bar
         if (list != null) {
             for (int i = startElement; i <= endElement; i++) {
-                ppThread = (PPThread) list.elementAt(i);
+                ppThread = (PPThread) list.get(i);
                 yCoord = yCoord + (barSpacing);
 
                 String barString;
@@ -345,7 +354,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
     private int drawStackedBar(Graphics2D g2D, FontMetrics fmFont, String text, PPThread ppThread, int barXCoord,
             int yCoord, int barHeight, boolean toScreen) {
 
-        DssIterator l = null;
+        ListIterator l = null;
         Group selectedGroup = ppTrial.getHighlightedGroup();
         boolean highlighted = false;
 
@@ -357,7 +366,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
         //Calculate the sum for this thread.
         double sum = 0.00;
 
-        l = (DssIterator) ppThread.getFunctionListIterator();
+        l = ppThread.getFunctionListIterator();
 
         while (l.hasNext()) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) l.next();
@@ -367,7 +376,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
             }
         }
 
-        l.reset();
+        l = ppThread.getFunctionListIterator();
         double valueSum = 0;
         int lengthDrawn = 0;
 
@@ -723,7 +732,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
                 return;
             }
 
-            ppThread = (PPThread) list.elementAt(index);
+            ppThread = (PPThread) list.get(index);
 
             if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) { // Right
                 // Click
@@ -752,7 +761,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
                     threadDataWindow.show();
                 } else {
                     //Find the appropriate PPFunctionProfile.
-                    DssIterator l = (DssIterator) ppThread.getFunctionListIterator();
+                    ListIterator l = ppThread.getFunctionListIterator();
                     while (l.hasNext()) {
                         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) l.next();
                         if (xCoord <= ppFunctionProfile.getXEnd() && xCoord >= ppFunctionProfile.getXBeg()) {

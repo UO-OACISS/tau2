@@ -1,16 +1,17 @@
 
 package edu.uoregon.tau.paraprof.vis;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Factory for creating simple plots
  *    
  * TODO: Implement other factory methods
  *
- * <P>CVS $Id: PlotFactory.java,v 1.3 2005/04/15 01:29:02 amorris Exp $</P>
+ * <P>CVS $Id: PlotFactory.java,v 1.4 2005/05/31 23:21:53 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class PlotFactory {
 
@@ -35,7 +36,7 @@ public class PlotFactory {
             }
         }
 
-        Vector[] axisStrings = new Vector[4];
+        List[] axisStrings = new ArrayList[4];
         
         for (int i = 0; i < 4; i++) {
             if (minScatterValues[i] == Float.MAX_VALUE) {
@@ -46,7 +47,7 @@ public class PlotFactory {
             }
 
 
-            axisStrings[i] = new Vector();
+            axisStrings[i] = new ArrayList();
             
             if (scatterPlot.getNormalized()) {
                 axisStrings[i].add(Float.toString(minScatterValues[i]));

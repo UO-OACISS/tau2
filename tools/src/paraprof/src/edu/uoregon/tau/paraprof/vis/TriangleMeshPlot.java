@@ -3,8 +3,9 @@ package edu.uoregon.tau.paraprof.vis;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Observable;
-import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -20,11 +21,10 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  * 
  * TODO: transparency controls.  Back to front drawing (utilize 'direction') for correct blending
  *
- * <P>CVS $Id: TriangleMeshPlot.java,v 1.4 2005/05/10 01:48:40 amorris Exp $</P>
+ * <P>CVS $Id: TriangleMeshPlot.java,v 1.5 2005/05/31 23:21:53 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
-
 public class TriangleMeshPlot implements Plot {
 
     protected Vec normals[][];
@@ -38,7 +38,7 @@ public class TriangleMeshPlot implements Plot {
     protected float xSize, ySize, zSize;
     protected boolean dirty = true;
 
-    private Vector displayLists;
+    private List displayLists;
 
     protected ColorScale colorScale;
     protected Axes axes;
@@ -282,9 +282,9 @@ public class TriangleMeshPlot implements Plot {
                 for (int i = 0; i < displayLists.size(); i++) {
                     gl.glDeleteLists(((Integer) displayLists.get(i)).intValue(), 1);
                 }
-                displayLists = new Vector();
+                displayLists = new ArrayList();
             } else {
-                displayLists = new Vector();
+                displayLists = new ArrayList();
             }
 
             Integer displayList = new Integer(gl.glGenLists(1));
@@ -388,9 +388,9 @@ public class TriangleMeshPlot implements Plot {
                 for (int i = 0; i < displayLists.size(); i++) {
                     gl.glDeleteLists(((Integer) displayLists.get(i)).intValue(), 1);
                 }
-                displayLists = new Vector();
+                displayLists = new ArrayList();
             } else {
-                displayLists = new Vector();
+                displayLists = new ArrayList();
             }
 
             Integer displayList = new Integer(gl.glGenLists(1));

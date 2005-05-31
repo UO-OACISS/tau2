@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.21 2005/05/18 19:14:37 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.22 2005/05/31 23:21:48 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.21 $
+ * @version	$Revision: 1.22 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -958,7 +958,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     for (int i = standard.getChildCount(); i > 0; i--) {
                         treeModel.removeNodeFromParent(((DefaultMutableTreeNode) standard.getChildAt(i - 1)));
                     }
-                    ListIterator l = ParaProf.applicationManager.getApplicationList();
+                    Iterator l = ParaProf.applicationManager.getApplications().iterator();
                     while (l.hasNext()) {
                         ParaProfApplication application = (ParaProfApplication) l.next();
                         DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
@@ -1134,7 +1134,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     for (int i = selectedNode.getChildCount(); i > 0; i--) {
                         treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                     }
-                    ListIterator l = ppTrial.getMetricList();
+                    Iterator l = ppTrial.getMetrics().iterator();
                     while (l.hasNext()) {
                         ParaProfMetric metric = (ParaProfMetric) l.next();
                         DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric, false);
@@ -1626,7 +1626,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
             if (!metaDataRetrieved) {
                 metaDataRetrieved = true;
-                for (Iterator it = ParaProf.applicationManager.getApplicationList(); it.hasNext();) {
+                for (Iterator it = ParaProf.applicationManager.getApplications().iterator(); it.hasNext();) {
                     ParaProfApplication ppApp = (ParaProfApplication) it.next();
                     if (!ppApp.dBApplication()) {
                         ppApp.reallocMetaData();

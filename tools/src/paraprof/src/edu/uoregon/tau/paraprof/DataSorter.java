@@ -3,19 +3,19 @@ package edu.uoregon.tau.paraprof;
 import java.util.*;
 import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.paraprof.enums.*;
+
 /**
  * DataSorter.java
  * This object manages data for the various windows giving them the capability to show only
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.9 2005/03/08 01:11:18 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.10 2005/05/31 23:21:47 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  */
 public class DataSorter {
 
-    
     private ParaProfTrial trial = null;
     private double maxExclusiveSum = 0;
     private double maxExclusives[];
@@ -25,22 +25,21 @@ public class DataSorter {
     private boolean showAsPercent;
     private SortType sortType = SortType.MEAN_VALUE;
     private ValueType valueType = ValueType.EXCLUSIVE;
-    private UserEventValueType userEventValueType= UserEventValueType.NUMSAMPLES;
-    
+    private UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
+
     public DataSorter(ParaProfTrial trial) {
         this.trial = trial;
         this.selectedMetricID = trial.getDefaultMetricID();
     }
 
-
     public UserEventValueType getUserEventValueType() {
         return userEventValueType;
     }
-    
+
     public void setUserEventValueType(UserEventValueType userEventValueType) {
         this.userEventValueType = userEventValueType;
     }
-    
+
     public boolean isTimeMetric() {
         String metricName = trial.getMetricName(this.getSelectedMetricID());
         metricName = metricName.toUpperCase();
@@ -58,68 +57,68 @@ public class DataSorter {
         //    return true;
         return trial.getMetric(this.getSelectedMetricID()).getDerivedMetric();
     }
-    
+
     public void setSelectedMetricID(int metric) {
         this.selectedMetricID = metric;
     }
-    
+
     public int getSelectedMetricID() {
         return selectedMetricID;
     }
-    
+
     public void setDescendingOrder(boolean descendingOrder) {
         this.descendingOrder = descendingOrder;
     }
+
     public boolean getDescendingOrder() {
         return this.descendingOrder;
     }
-    
+
     public void setShowAsPercent(boolean showAsPercent) {
         this.showAsPercent = showAsPercent;
     }
+
     public boolean getShowAsPercent() {
         return showAsPercent;
     }
-    
+
     public void setSortType(SortType sortType) {
         this.sortType = sortType;
     }
-    
+
     public SortType getSortType() {
         return this.sortType;
     }
-    
+
     public void setValueType(ValueType valueType) {
         this.valueType = valueType;
     }
-    
+
     public ValueType getValueType() {
         return this.valueType;
     }
-    
-    
-    public Vector getUserEventProfiles(int nodeID, int contextID, int threadID) {
+
+    public List getUserEventProfiles(int nodeID, int contextID, int threadID) {
 
         UserEventProfile userEventProfile = null;
-        Vector list = ((edu.uoregon.tau.dms.dss.Thread) trial.getDataSource().getThread(nodeID, contextID,
-                threadID)).getUserEventProfiles();
+        List list = ((edu.uoregon.tau.dms.dss.Thread) trial.getDataSource().getThread(nodeID, contextID, threadID)).getUserEventProfiles();
 
-        Vector newList = new Vector();
+        List newList = new ArrayList();
 
-        for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
-            userEventProfile = (UserEventProfile) e1.nextElement();
+        for (Iterator e1 = list.iterator(); e1.hasNext();) {
+            userEventProfile = (UserEventProfile) e1.next();
             if (userEventProfile != null) {
-                PPUserEventProfile ppUserEventProfile = new PPUserEventProfile(this, nodeID, contextID,
-                        threadID, userEventProfile);
-                newList.addElement(ppUserEventProfile);
+                PPUserEventProfile ppUserEventProfile = new PPUserEventProfile(this, nodeID, contextID, threadID,
+                        userEventProfile);
+                newList.add(ppUserEventProfile);
             }
         }
         Collections.sort(newList);
         return newList;
     }
 
-    public Vector getFunctionProfiles(int nodeID, int contextID, int threadID) {
-        Vector newList = null;
+    public List getFunctionProfiles(int nodeID, int contextID, int threadID) {
+        List newList = null;
 
         edu.uoregon.tau.dms.dss.Thread thread;
 
@@ -128,15 +127,15 @@ public class DataSorter {
         } else {
             thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
         }
-        Vector functionList = thread.getFunctionProfiles();
-        newList = new Vector();
+        List functionList = thread.getFunctionProfiles();
+        newList = new ArrayList();
 
-        for (Enumeration e1 = functionList.elements(); e1.hasMoreElements();) {
-            FunctionProfile functionProfile = (FunctionProfile) e1.nextElement();
+        for (int i = 0; i < functionList.size(); i++) {
+            FunctionProfile functionProfile = (FunctionProfile) functionList.get(i);
             if (functionProfile != null) {
                 if (trial.displayFunction(functionProfile.getFunction())) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                    newList.addElement(ppFunctionProfile);
+                    newList.add(ppFunctionProfile);
                 }
             }
         }
@@ -144,16 +143,15 @@ public class DataSorter {
         return newList;
     }
 
-    public Vector getAllFunctionProfiles() {
-        Vector newList = null;
-        Vector threads = new Vector();
+    public List getAllFunctionProfiles() {
+        List threads = new ArrayList();
 
         edu.uoregon.tau.dms.dss.Thread thread = trial.getDataSource().getMeanData();
 
         PPThread ppThread = new PPThread(thread, this.trial);
 
-        for (Enumeration e4 = thread.getFunctionProfiles().elements(); e4.hasMoreElements();) {
-            FunctionProfile functionProfile = (FunctionProfile) e4.nextElement();
+        for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
+            FunctionProfile functionProfile = (FunctionProfile) e4.next();
             if ((functionProfile != null) && (trial.displayFunction(functionProfile.getFunction()))) {
                 PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                 ppThread.addFunction(ppFunctionProfile);
@@ -167,60 +165,51 @@ public class DataSorter {
 
         maxExclusives = new double[trial.getDataSource().getNumFunctions()];
 
-        for (Iterator it = trial.getDataSource().getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
-                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+        for (Iterator it = trial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
 
-                    //Counts the number of ppFunctionProfiles that are actually added.
-                    //It is possible (because of selection criteria - groups for example) to filter
-                    //out all functions on a particular thread. The default at present is not to add.
+            //Counts the number of ppFunctionProfiles that are actually added.
+            //It is possible (because of selection criteria - groups for example) to filter
+            //out all functions on a particular thread. The default at present is not to add.
 
-                    int counter = 0; //Counts the number of PPFunctionProfile that are actually added.
-                    ppThread = new PPThread(thread, this.trial);
+            int counter = 0; //Counts the number of PPFunctionProfile that are actually added.
+            ppThread = new PPThread(thread, this.trial);
 
-                    double sum = 0.0;
+            double sum = 0.0;
 
-                    //Do not add thread to the context until we have verified counter is not zero (done after next loop).
-                    //Now enter the thread data loops for this thread.
-                    for (Enumeration e4 = thread.getFunctionProfiles().elements(); e4.hasMoreElements();) {
-                        FunctionProfile functionProfile = (FunctionProfile) e4.nextElement();
-                        if ((functionProfile != null) && (trial.displayFunction(functionProfile.getFunction()))) {
-                            PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread,
-                                    functionProfile);
-                            ppThread.addFunction(ppFunctionProfile);
-                            counter++;
+            //Do not add thread to the context until we have verified counter is not zero (done after next loop).
+            //Now enter the thread data loops for this thread.
+            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
+                FunctionProfile functionProfile = (FunctionProfile) e4.next();
+                if ((functionProfile != null) && (trial.displayFunction(functionProfile.getFunction()))) {
+                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                    ppThread.addFunction(ppFunctionProfile);
+                    counter++;
 
-                            sum += ppFunctionProfile.getExclusiveValue();
+                    sum += ppFunctionProfile.getExclusiveValue();
 
-                            maxExclusives[functionProfile.getFunction().getID()] = Math.max(
-                                    maxExclusives[functionProfile.getFunction().getID()],
-                                    ppFunctionProfile.getExclusiveValue());
-                        }
-                    }
-
-                    if (sum > maxExclusiveSum) {
-                        maxExclusiveSum = sum;
-                    }
-
-                    //Sort thread and add to context if required (see above for an explanation).
-                    if (counter != 0) {
-                        Collections.sort(ppThread.getFunctionList());
-                        threads.add(ppThread);
-                    }
+                    maxExclusives[functionProfile.getFunction().getID()] = Math.max(
+                            maxExclusives[functionProfile.getFunction().getID()], ppFunctionProfile.getExclusiveValue());
                 }
+            }
+
+            if (sum > maxExclusiveSum) {
+                maxExclusiveSum = sum;
+            }
+
+            //Sort thread and add to context if required (see above for an explanation).
+            if (counter != 0) {
+                Collections.sort(ppThread.getFunctionList());
+                threads.add(ppThread);
             }
         }
         return threads;
     }
 
-    public Vector getFunctionData(Function function, boolean includeMean) {
-        Vector newList = new Vector();
+    public List getFunctionData(Function function, boolean includeMean) {
+        List newList = new ArrayList();
 
         edu.uoregon.tau.dms.dss.Thread thread;
-
 
         if (includeMean) {
             thread = trial.getDataSource().getMeanData();
@@ -232,47 +221,35 @@ public class DataSorter {
             }
         }
 
-        for (Iterator it = trial.getDataSource().getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
-                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
-                    FunctionProfile functionProfile = thread.getFunctionProfile(function);
-                    if (functionProfile != null) {
-                        //Create a new thread data object.
-                        PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                        newList.add(ppFunctionProfile);
-                    }
-                }
+        for (Iterator it = trial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
+            FunctionProfile functionProfile = thread.getFunctionProfile(function);
+            if (functionProfile != null) {
+                //Create a new thread data object.
+                PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                newList.add(ppFunctionProfile);
             }
         }
         Collections.sort(newList);
         return newList;
     }
 
-    public Vector getUserEventData(UserEvent userEvent) {
-        Vector newList = new Vector();
+    public List getUserEventData(UserEvent userEvent) {
+        List newList = new ArrayList();
 
         UserEventProfile userEventProfile;
 
         PPUserEventProfile ppUserEventProfile;
 
-        for (Iterator it = trial.getDataSource().getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
-                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+        for (Iterator it = trial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
 
-                    userEventProfile = thread.getUserEventProfile(userEvent);
-                    if (userEventProfile != null) {
-                        //Create a new thread data object.
-                        ppUserEventProfile = new PPUserEventProfile(this, node.getNodeID(),
-                                context.getContextID(), thread.getThreadID(), userEventProfile);
-                        newList.add(ppUserEventProfile);
-                    }
-                }
+            userEventProfile = thread.getUserEventProfile(userEvent);
+            if (userEventProfile != null) {
+                //Create a new thread data object.
+                ppUserEventProfile = new PPUserEventProfile(this, thread.getNodeID(), thread.getContextID(),
+                        thread.getThreadID(), userEventProfile);
+                newList.add(ppUserEventProfile);
             }
         }
         Collections.sort(newList);
@@ -284,10 +261,8 @@ public class DataSorter {
         return maxExclusiveSum;
     }
 
-    
     public double[] getMaxExclusives() {
         return maxExclusives;
     }
-    
-   
+
 }

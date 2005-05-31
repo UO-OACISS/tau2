@@ -3,7 +3,7 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 
 import javax.swing.*;
 
@@ -18,9 +18,9 @@ import edu.uoregon.tau.paraprof.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.5 2005/05/10 01:48:39 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.6 2005/05/31 23:21:49 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -254,7 +254,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     }
 
     
-    private JPanel createSelectorPanel(int min, int max, final Vector names, final int index) {
+    private JPanel createSelectorPanel(int min, int max, final List names, final int index) {
 
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());

@@ -20,13 +20,15 @@ import javax.imageio.stream.ImageOutputStream;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
+
 public class ParaProfImageOutput {
 
     // do not allow instantiation
     private ParaProfImageOutput() {
     }
 
-    public static void saveImage(ParaProfImageInterface ref) throws IOException {
+    public static void saveImage(ImageExport ref) throws IOException {
 
         //Ask the user for a filename and location.
         JFileChooser fileChooser = new JFileChooser();
@@ -91,7 +93,7 @@ public class ParaProfImageOutput {
             Graphics2D g2D = bi.createGraphics();
 
             //Draw to this graphics object.
-            ref.renderIt(g2D, false, paraProfImageOptionsPanel.isFullScreen(),
+            ref.export(g2D, false, paraProfImageOptionsPanel.isFullScreen(),
                     paraProfImageOptionsPanel.isPrependHeader());
 
             d = ref.getImageSize(paraProfImageOptionsPanel.isFullScreen(),
@@ -107,7 +109,7 @@ public class ParaProfImageOutput {
             g2D.setColor(Color.black);
 
             //Draw to this graphics object.
-            ref.renderIt(g2D, false, paraProfImageOptionsPanel.isFullScreen(),
+            ref.export(g2D, false, paraProfImageOptionsPanel.isFullScreen(),
                     paraProfImageOptionsPanel.isPrependHeader());
 
             //Now write the image to file.

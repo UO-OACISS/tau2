@@ -15,7 +15,9 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  *
  * @author Alan Morris
  *
- * TODO ...
+ * <P>CVS $Id: ScatterPlot.java,v 1.4 2005/05/31 23:21:53 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.4 $
  */
 public class ScatterPlot implements Plot {
 

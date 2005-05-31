@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -19,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.21 2005/05/10 01:48:37 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.22 2005/05/31 23:21:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.21 $
+ * @version	$Revision: 1.22 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -48,7 +49,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     private FunctionDataWindowPanel panel = null;
     private JScrollPane sp = null;
 
-    private Vector list = new Vector();
+    private List list = new ArrayList();
 
     private double maxValue;
     private int units = ParaProf.preferences.getUnits();
@@ -201,7 +202,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         showValuesAsPercent.addActionListener(sortData);
         optionsMenu.add(showValuesAsPercent);
 
-        unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units);
+        unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         optionsMenu.add(unitsSubMenu);
 
         //Set the value type options.
@@ -409,7 +410,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         return maxValue;
     }
 
-    public Vector getData() {
+    public List getData() {
         return list;
     }
 

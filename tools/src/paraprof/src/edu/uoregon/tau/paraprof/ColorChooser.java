@@ -8,13 +8,17 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.colorchooser.*;
-import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.paraprof.enums.*;
+import java.awt.Color;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.Group;
+import edu.uoregon.tau.dms.dss.UserEvent;
+import edu.uoregon.tau.paraprof.enums.SortType;
 
 public class ColorChooser implements WindowListener {
 
@@ -235,7 +239,7 @@ public class ColorChooser implements WindowListener {
             DataSorter dataSorter = new DataSorter(ppTrial);
             dataSorter.setSortType(SortType.MEAN_VALUE);
             dataSorter.setDescendingOrder(true);
-            Vector list = dataSorter.getFunctionProfiles(-1, -1, -1);
+            List list = dataSorter.getFunctionProfiles(-1, -1, -1);
 
             for (int i = 0; i < list.size(); i++) {
                 Function func = ((PPFunctionProfile) list.get(i)).getFunction();

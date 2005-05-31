@@ -63,7 +63,7 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
     }
 
     public ListIterator getExperimentList() {
-        return new DssIterator(experiments);
+        return experiments.listIterator();
     }
 
     public ParaProfExperiment addExperiment() {

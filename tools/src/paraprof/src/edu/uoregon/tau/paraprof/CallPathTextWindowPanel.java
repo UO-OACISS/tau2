@@ -1,21 +1,28 @@
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.print.*;
-import javax.swing.*;
-import java.awt.geom.*;
-import edu.uoregon.tau.dms.dss.*;
 import java.awt.font.*;
-import java.text.*;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
+import java.util.*;
+import java.util.List;
+
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+
+import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.19 2005/05/10 01:48:37 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.20 2005/05/31 23:21:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.19 $
+ * @version	$Revision: 1.20 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -26,7 +33,7 @@ import java.text.*;
  *          3) (Alan) Actually, renderIt needs to be completely rewritten
  */
 public class CallPathTextWindowPanel extends JPanel implements MouseListener, Printable,
-        ParaProfImageInterface {
+        ImageExport {
 
     //Instance data.
     private int xPanelSize = 800;
@@ -90,7 +97,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, true, false, false);
+            export((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
             window.closeThisWindow();
@@ -104,7 +111,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
             }
 
             ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
-            renderIt((Graphics2D) g, false, true, false);
+            export((Graphics2D) g, false, true, false);
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
@@ -445,7 +452,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
         }
     }
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
         int yCoord = 0;
@@ -480,7 +487,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
             Iterator l2 = null;
             Iterator l3 = null;
             String s = null;
-            Vector functionProfiles = null;
+            List functionProfiles = null;
             PPFunctionProfile ppFunctionProfile = null;
             CallPathDrawObject callPathDrawObject = null;
             double d1 = 0.0;

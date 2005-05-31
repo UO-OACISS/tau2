@@ -242,7 +242,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         showValuesAsPercent.addActionListener(this);
         optionsMenu.add(showValuesAsPercent);
 
-        unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units);
+        unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         optionsMenu.add(unitsSubMenu);
 
         //Set the value type options.

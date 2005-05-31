@@ -1,15 +1,14 @@
-/*
- * Created on Mar 3, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package edu.uoregon.tau.paraprof.enums;
 
+
 /**
- * @author amorris
+ * type-safe enum pattern for callgraph options
+ *    
+ * TODO : nothing, this class is complete
  *
- * TODO ...
+ * <P>CVS $Id: CallGraphOption.java,v 1.3 2005/05/31 23:21:50 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.3 $
  */
 public class CallGraphOption {
 

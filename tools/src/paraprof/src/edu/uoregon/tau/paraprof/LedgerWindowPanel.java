@@ -9,22 +9,23 @@ import java.util.Vector;
 
 import javax.swing.*;
 
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 
 /**
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.9 2005/05/07 02:36:53 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.10 2005/05/31 23:21:48 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
 public class LedgerWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
-        ParaProfImageInterface {
+        ImageExport {
 
 
     private int xPanelSize = 300;
@@ -125,7 +126,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, true, false, false);
+            export((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
             window.closeThisWindow();
@@ -139,7 +140,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             }
 
             ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
-            renderIt((Graphics2D) g, false, true, false);
+            export((Graphics2D) g, false, true, false);
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
@@ -148,7 +149,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
         }
     }
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         list = window.getData();
 
         int xCoord = 0;

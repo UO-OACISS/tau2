@@ -10,16 +10,25 @@ import java.awt.event.MouseMotionListener;
 import java.awt.font.TextHitInfo;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
-import java.util.Vector;
-
+import java.util.List;
 import javax.swing.JPanel;
 
 import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
 import edu.uoregon.tau.paraprof.interfaces.Searchable;
 
+
+/**
+ * Searches text for ParaProf windows
+ *    
+ * TODO : ...
+ *
+ * <P>CVS $Id: Searcher.java,v 1.4 2005/05/31 23:21:49 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.4 $
+ */
 public class Searcher implements Searchable, MouseListener, MouseMotionListener, ClipboardOwner {
 
-    private Vector searchLines;
+    private List searchLines;
     private String searchString = "";
     private int searchLine;
     private int searchColumn;
@@ -79,11 +88,11 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
         return false;
     }
 
-    public void setSearchLines(Vector searchLines) {
+    public void setSearchLines(List searchLines) {
         this.searchLines = searchLines;
     }
 
-    public Vector getSearchLines() {
+    public List getSearchLines() {
         return searchLines;
     }
 

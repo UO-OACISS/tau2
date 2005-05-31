@@ -4,7 +4,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -19,9 +20,9 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  *    
  * TODO: Add FPS indication
  * 
- * <P>CVS $Id: VisRenderer.java,v 1.4 2005/05/06 01:19:11 amorris Exp $</P>
+ * <P>CVS $Id: VisRenderer.java,v 1.5 2005/05/31 23:21:53 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
@@ -78,7 +79,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private Color foreColor = Color.black;
     
     // the list of shapes to draw
-    private Vector shapes = new Vector();
+    private List shapes = new ArrayList();
 
     private float fps;
     private int framesRendered;
