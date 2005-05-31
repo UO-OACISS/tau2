@@ -31,7 +31,7 @@ public class Scalability {
 
 	public ScalabilityResults trials (Vector inTrials, String measurement, String function) {
 		ScalabilityResults results = new ScalabilityResults();
-		ListIterator trials = new DssIterator(inTrials);
+		ListIterator trials = inTrials.listIterator();
 
 		StringBuffer buf = new StringBuffer();
 		buf.append("select e.name, e.trial, t.node_count * ");

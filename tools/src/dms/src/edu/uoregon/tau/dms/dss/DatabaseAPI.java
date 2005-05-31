@@ -9,25 +9,25 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.16 2005/03/10 18:14:04 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.17 2005/05/31 23:21:01 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  */
 public class DatabaseAPI {
 
-    protected Application application = null;
-    protected Experiment experiment = null;
-    protected Trial trial = null;
-    protected Vector nodes = null;
-    protected Vector contexts = null;
-    protected Vector threads = null;
-    protected Vector intervalEvents = null;
-    protected Vector metrics = null;
-    protected Vector intervalEventData = null;
-    protected Vector atomicEvents = null;
-    protected Vector atomicEventData = null;
+    private Application application = null;
+    private Experiment experiment = null;
+    private Trial trial = null;
+    private Vector nodes = null;
+    private Vector contexts = null;
+    private Vector threads = null;
+    private Vector intervalEvents = null;
+    private List metrics = null;
+    private Vector intervalEventData = null;
+    private Vector atomicEvents = null;
+    private Vector atomicEventData = null;
 
     // from datasession
     private DB db = null;
@@ -51,7 +51,7 @@ public class DatabaseAPI {
 
         //Try getting the metric name.
         if ((this.metrics != null) && (metricID < this.metrics.size()))
-            return ((Metric) this.metrics.elementAt(metricID)).getName();
+            return ((Metric) this.metrics.get(metricID)).getName();
         else
             return null;
     }
@@ -113,7 +113,7 @@ public class DatabaseAPI {
     // returns Vector of ALL Application objects
     public ListIterator getApplicationList() {
         String whereClause = "";
-        return new DssIterator(Application.getApplicationList(db, whereClause));
+        return Application.getApplicationList(db, whereClause).listIterator();
     }
 
     // returns Vector of Experiment objects
@@ -122,7 +122,7 @@ public class DatabaseAPI {
         String whereClause = "";
         if (application != null)
             whereClause = "WHERE application = " + application.getID();
-        return new DssIterator(Experiment.getExperimentList(db, whereClause));
+        return Experiment.getExperimentList(db, whereClause).listIterator();
 
     }
 
@@ -134,7 +134,7 @@ public class DatabaseAPI {
         } else if (application != null) {
             whereClause.append("WHERE e.application = " + application.getID());
         }
-        return new DssIterator(Trial.getTrialList(db, whereClause.toString()));
+        return Trial.getTrialList(db, whereClause.toString()).listIterator();
     }
 
     // set the Application for this session
@@ -236,7 +236,7 @@ public class DatabaseAPI {
             fun = (IntervalEvent) en.nextElement();
             intervalEventHash.put(new Integer(fun.getID()), fun);
         }
-        return new DssIterator(intervalEvents);
+        return intervalEvents.listIterator();
     }
 
     // gets the mean & total data for a intervalEvent
@@ -246,10 +246,10 @@ public class DatabaseAPI {
         if (metrics != null && metrics.size() > 0) {
             buf.append(" AND ms.metric in (");
             Metric metric;
-            for (Enumeration en = metrics.elements(); en.hasMoreElements();) {
-                metric = (Metric) en.nextElement();
+            for (Iterator en = metrics.iterator(); en.hasNext();) {
+                metric = (Metric) en.next();
                 buf.append(metric.getID());
-                if (en.hasMoreElements())
+                if (en.hasNext())
                     buf.append(", ");
                 else
                     buf.append(") ");
@@ -283,7 +283,7 @@ public class DatabaseAPI {
             ue = (AtomicEvent) en.nextElement();
             atomicEventHash.put(new Integer(ue.getID()), ue);
         }
-        return new DssIterator(atomicEvents);
+        return atomicEvents.listIterator();
     }
 
     // sets the current intervalEvent
@@ -389,17 +389,17 @@ public class DatabaseAPI {
         if (metrics != null && metrics.size() > 0) {
             buf.append(" AND p.metric IN (");
             Metric metric;
-            for (Enumeration en = metrics.elements(); en.hasMoreElements();) {
-                metric = (Metric) en.nextElement();
+            for (Iterator en = metrics.iterator(); en.hasNext();) {
+                metric = (Metric) en.next();
                 buf.append(metric.getID());
-                if (en.hasMoreElements())
+                if (en.hasNext())
                     buf.append(", ");
                 else
                     buf.append(") ");
             }
         }
         intervalEventData = IntervalLocationProfile.getIntervalEventData(db, metricCount, buf.toString());
-        return new DssIterator(intervalEventData);
+        return intervalEventData.listIterator();
     }
 
     public ListIterator getAtomicEventData() {
@@ -474,7 +474,7 @@ public class DatabaseAPI {
         }
 
         atomicEventData = AtomicLocationProfile.getAtomicEventData(db, buf.toString());
-        return new DssIterator(atomicEventData);
+        return atomicEventData.listIterator();
     }
 
     public IntervalEvent getIntervalEvent(int id) {
@@ -544,8 +544,7 @@ public class DatabaseAPI {
     private int saveMetric(int trialID, Metric metric) throws SQLException {
         int newMetricID = 0;
         PreparedStatement stmt1 = null;
-        stmt1 = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-                + "metric (name, trial) VALUES (?, ?)");
+        stmt1 = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "metric (name, trial) VALUES (?, ?)");
         stmt1.setString(1, metric.getName());
         stmt1.setInt(2, trialID);
         stmt1.executeUpdate();
@@ -566,10 +565,10 @@ public class DatabaseAPI {
 
     private Hashtable saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) throws SQLException {
         Hashtable metricHash = new Hashtable();
-        Enumeration en = trial.getDataSource().getMetrics().elements();
+        Iterator en = trial.getDataSource().getMetrics().iterator();
         int i = 0;
-        while (en.hasMoreElements()) {
-            Metric metric = (Metric) en.nextElement();
+        while (en.hasNext()) {
+            Metric metric = (Metric) en.next();
             int newMetricID = 0;
             if (saveMetricIndex < 0 || saveMetricIndex == i) {
                 newMetricID = saveMetric(newTrialID, metric);
@@ -580,8 +579,7 @@ public class DatabaseAPI {
         return metricHash;
     }
 
-    private Hashtable saveIntervalEvents(int newTrialID, Hashtable newMetHash, int saveMetricIndex)
-            throws SQLException {
+    private Hashtable saveIntervalEvents(int newTrialID, Hashtable newMetHash, int saveMetricIndex) throws SQLException {
         //      System.out.print("Saving the intervalEvents: ");
         Hashtable newFunHash = new Hashtable();
         Enumeration en = intervalEvents.elements();
@@ -589,8 +587,7 @@ public class DatabaseAPI {
         int count = 0;
         while (en.hasMoreElements()) {
             intervalEvent = (IntervalEvent) en.nextElement();
-            int newIntervalEventID = intervalEvent.saveIntervalEvent(db, newTrialID, newMetHash,
-                    saveMetricIndex);
+            int newIntervalEventID = intervalEvent.saveIntervalEvent(db, newTrialID, newMetHash, saveMetricIndex);
             newFunHash.put(new Integer(intervalEvent.getID()), new Integer(newIntervalEventID));
             //System.out.print("\rSaving the intervalEvents: " + ++count + " records saved...");
             //DatabaseAPI.itemsDone++;
@@ -650,8 +647,7 @@ public class DatabaseAPI {
      * @param newMetHash
      * @return database index ID of the saved intervalEvent record
      */
-    public int saveIntervalEvent(IntervalEvent intervalEvent, int newTrialID, Hashtable newMetHash)
-            throws SQLException {
+    public int saveIntervalEvent(IntervalEvent intervalEvent, int newTrialID, Hashtable newMetHash) throws SQLException {
         return intervalEvent.saveIntervalEvent(db, newTrialID, newMetHash, -1);
     }
 
@@ -734,7 +730,7 @@ public class DatabaseAPI {
                 intervalEvent.setID(f.getID());
                 // intervalEvent.setTrialID(newTrialID);
                 // build the group name
-                Vector groups = f.getGroups();
+                List groups = f.getGroups();
                 StringBuffer buf = new StringBuffer();
                 if (groups != null) {
                     for (int i = 0; i < groups.size(); i++) {
@@ -785,63 +781,56 @@ public class DatabaseAPI {
             }
         }
 
-        for (Iterator it = trial.getDataSource().getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
-                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
-                    Vector intervalEvents = thread.getFunctionProfiles();
-                    Vector userevents = thread.getUserEventProfiles();
+        for (Iterator it = trial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
+            List intervalEvents = thread.getFunctionProfiles();
+            List userevents = thread.getUserEventProfiles();
 
-                    // create interval location profiles
-                    for (Enumeration e4 = intervalEvents.elements(); e4.hasMoreElements();) {
-                        FunctionProfile fp = (FunctionProfile) e4.nextElement();
-                        if (fp != null) {
-                            IntervalLocationProfile ilp = new IntervalLocationProfile(metricCount);
-                            ilp.setNode(thread.getNodeID());
-                            ilp.setContext(thread.getContextID());
-                            ilp.setThread(thread.getThreadID());
-                            ilp.setIntervalEventID(fp.getFunction().getID());
-                            ilp.setNumCalls(fp.getNumCalls());
-                            ilp.setNumSubroutines(fp.getNumSubr());
-                            for (int i = 0; i < metricCount; i++) {
-                                ilp.setInclusive(i, fp.getInclusive(i));
-                                ilp.setExclusive(i, fp.getExclusive(i));
-                                ilp.setInclusivePercentage(i, fp.getInclusivePercent(i));
-                                ilp.setExclusivePercentage(i, fp.getExclusivePercent(i));
-                                ilp.setInclusivePerCall(i, fp.getInclusivePerCall(i));
-                            }
-                            intervalEventData.add(ilp);
-                        }
+            // create interval location profiles
+            for (Iterator e4 = intervalEvents.iterator(); e4.hasNext();) {
+                FunctionProfile fp = (FunctionProfile) e4.next();
+                if (fp != null) {
+                    IntervalLocationProfile ilp = new IntervalLocationProfile(metricCount);
+                    ilp.setNode(thread.getNodeID());
+                    ilp.setContext(thread.getContextID());
+                    ilp.setThread(thread.getThreadID());
+                    ilp.setIntervalEventID(fp.getFunction().getID());
+                    ilp.setNumCalls(fp.getNumCalls());
+                    ilp.setNumSubroutines(fp.getNumSubr());
+                    for (int i = 0; i < metricCount; i++) {
+                        ilp.setInclusive(i, fp.getInclusive(i));
+                        ilp.setExclusive(i, fp.getExclusive(i));
+                        ilp.setInclusivePercentage(i, fp.getInclusivePercent(i));
+                        ilp.setExclusivePercentage(i, fp.getExclusivePercent(i));
+                        ilp.setInclusivePerCall(i, fp.getInclusivePerCall(i));
                     }
+                    intervalEventData.add(ilp);
+                }
+            }
 
-                    // create atomic events
-                    if (userevents != null) {
-                        for (Enumeration e4 = userevents.elements(); e4.hasMoreElements();) {
-                            UserEventProfile uep = (UserEventProfile) e4.nextElement();
-                            if (uep != null) {
+            // create atomic events
+            if (userevents != null) {
+                for (Iterator e4 = userevents.iterator(); e4.hasNext();) {
+                    UserEventProfile uep = (UserEventProfile) e4.next();
+                    if (uep != null) {
 
-                                AtomicLocationProfile udo = new AtomicLocationProfile();
-                                udo.setAtomicEventID(uep.getUserEvent().getID());
-                                udo.setNode(thread.getNodeID());
-                                udo.setContext(thread.getContextID());
-                                udo.setThread(thread.getThreadID());
-                                udo.setSampleCount(uep.getUserEventNumberValue());
-                                udo.setMaximumValue(uep.getUserEventMaxValue());
-                                udo.setMinimumValue(uep.getUserEventMinValue());
-                                udo.setMeanValue(uep.getUserEventMeanValue());
-                                udo.setSumSquared(uep.getUserEventSumSquared());
-                                atomicEventData.add(udo);
-                            }
-                        }
+                        AtomicLocationProfile udo = new AtomicLocationProfile();
+                        udo.setAtomicEventID(uep.getUserEvent().getID());
+                        udo.setNode(thread.getNodeID());
+                        udo.setContext(thread.getContextID());
+                        udo.setThread(thread.getThreadID());
+                        udo.setSampleCount(uep.getUserEventNumberValue());
+                        udo.setMaximumValue(uep.getUserEventMaxValue());
+                        udo.setMinimumValue(uep.getUserEventMinValue());
+                        udo.setMeanValue(uep.getUserEventMeanValue());
+                        udo.setSumSquared(uep.getUserEventSumSquared());
+                        atomicEventData.add(udo);
                     }
                 }
             }
         }
 
-        totalItems = intervalEvents.size() + intervalEventData.size() + atomicEvents.size()
-                + atomicEventData.size();
+        totalItems = intervalEvents.size() + intervalEventData.size() + atomicEvents.size() + atomicEventData.size();
 
         // Now upload to the database
 
@@ -950,7 +939,7 @@ public class DatabaseAPI {
             Function f = (Function) it.next();
 
             String group = null;
-            Vector groups = f.getGroups();
+            List groups = f.getGroups();
             StringBuffer allGroups = new StringBuffer();
             if (groups != null) {
                 for (int i = 0; i < groups.size(); i++) {
@@ -1095,23 +1084,17 @@ public class DatabaseAPI {
                 addBatchFunctionProfile(meanInsertStatement, meanData, metric.getID(), dbMetricID.intValue(),
                         function.getMeanProfile(), intervalEventID.intValue());
 
-                for (Iterator it = dataSource.getNodes(); it.hasNext();) {
-                    Node node = (Node) it.next();
-                    for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                        Context context = (Context) it2.next();
-                        for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                            edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+                for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
+                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
 
-                            FunctionProfile fp = thread.getFunctionProfile(function);
-                            if (fp != null) { // only if this thread calls this function
+                    FunctionProfile fp = thread.getFunctionProfile(function);
+                    if (fp != null) { // only if this thread calls this function
 
-                                if (this.cancelUpload)
-                                    return;
+                        if (this.cancelUpload)
+                            return;
 
-                                addBatchFunctionProfile(threadInsertStatement, thread, metric.getID(),
-                                        dbMetricID.intValue(), fp, intervalEventID.intValue());
-                            }
-                        }
+                        addBatchFunctionProfile(threadInsertStatement, thread, metric.getID(), dbMetricID.intValue(),
+                                fp, intervalEventID.intValue());
                     }
                 }
             }
@@ -1127,8 +1110,7 @@ public class DatabaseAPI {
 
     }
 
-    private void uploadUserEventProfiles(int trialID, DataSource dataSource, Map userEventMap)
-            throws SQLException {
+    private void uploadUserEventProfiles(int trialID, DataSource dataSource, Map userEventMap) throws SQLException {
 
         for (Iterator it = dataSource.getNodes(); it.hasNext();) {
             Node node = (Node) it.next();
@@ -1186,17 +1168,11 @@ public class DatabaseAPI {
             this.totalItems += numMetrics; // total
             this.totalItems += numMetrics; // mean
 
-            for (Iterator it = dataSource.getNodes(); it.hasNext();) {
-                Node node = (Node) it.next();
-                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                    Context context = (Context) it2.next();
-                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
-                        FunctionProfile fp = thread.getFunctionProfile(function);
-                        if (fp != null) { // only if this thread calls this function
-                            this.totalItems += numMetrics; // this profile
-                        }
-                    }
+            for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
+                edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
+                FunctionProfile fp = thread.getFunctionProfile(function);
+                if (fp != null) { // only if this thread calls this function
+                    this.totalItems += numMetrics; // this profile
                 }
             }
         }

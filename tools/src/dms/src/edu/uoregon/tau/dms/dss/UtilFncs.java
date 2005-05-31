@@ -6,14 +6,62 @@
 
 package edu.uoregon.tau.dms.dss;
 
+import java.io.File;
+import java.text.DecimalFormat;
 import java.util.*;
-import java.awt.*;
-import javax.swing.*;
-import java.io.*;
-import java.text.*;
 
 public class UtilFncs {
 
+    
+    public static class EmptyIterator implements ListIterator, Iterator {
+
+        public int nextIndex() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        public int previousIndex() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        public void remove() {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public boolean hasNext() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public boolean hasPrevious() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public Object next() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public Object previous() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public void add(Object o) {
+            // TODO Auto-generated method stub
+            
+        }
+
+        public void set(Object o) {
+            // TODO Auto-generated method stub
+            
+        }
+        
+    }
+    
     // left pad : pad string 's' up to length plen, but put the whitespace on
     // the left
     public static String lpad(String s, int plen) {
@@ -269,361 +317,13 @@ public class UtilFncs {
         return -1;
     }
 
-    //####################################
-    //Error handling.
-    //####################################
-    //public static boolean debug = false;
-
-//    public static void systemError(Object obj, Component component, String string) {
-//
-//        System.out.println("####################################");
-//        boolean quit = true; //Quit by default.
-//        if (obj != null) {
-//            if (obj instanceof Exception) {
-//                Exception exception = (Exception) obj;
-//
-//                if (UtilFncs.debug) {
-//                    System.out.println(exception.toString());
-//                    exception.printStackTrace();
-//                    System.out.println("\n");
-//                }
-//                exception.printStackTrace();
-//                System.out.println("An error was detected: " + string);
-//                System.out.println(ParaProfError.contactString);
-//            }
-//            if (obj instanceof ParaProfError) {
-//                ParaProfError paraProfError = (ParaProfError) obj;
-//
-//                if (paraProfError.exp != null) {
-//                    System.out.println(paraProfError.exp.toString());
-//                    paraProfError.exp.printStackTrace();
-//                    System.out.println("\n");
-//                }
-//
-//                if (UtilFncs.debug) {
-//                    if ((paraProfError.showPopup) && (paraProfError.popupString != null))
-//                        JOptionPane.showMessageDialog(paraProfError.component, "ParaProf Error",
-//                                paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
-//                    if (paraProfError.exp != null) {
-//                        System.out.println(paraProfError.exp.toString());
-//                        paraProfError.exp.printStackTrace();
-//                        System.out.println("\n");
-//                    }
-//                    if (paraProfError.location != null)
-//                        System.out.println("Location: " + paraProfError.location);
-//                    if (paraProfError.s0 != null)
-//                        System.out.println(paraProfError.s0);
-//                    if (paraProfError.s1 != null)
-//                        System.out.println(paraProfError.s1);
-//                    if (paraProfError.showContactString)
-//                        System.out.println(ParaProfError.contactString);
-//                } else {
-//                    if ((paraProfError.showPopup) && (paraProfError.popupString != null))
-//                        JOptionPane.showMessageDialog(paraProfError.component, paraProfError.popupString,
-//                                "ParaProf Error", JOptionPane.ERROR_MESSAGE);
-//                    if (paraProfError.location != null)
-//                        System.out.println("Location: " + paraProfError.location);
-//                    if (paraProfError.s0 != null)
-//                        System.out.println(paraProfError.s0);
-//                    if (paraProfError.s1 != null)
-//                        System.out.println(paraProfError.s1);
-//                    if (paraProfError.showContactString)
-//                        System.out.println(ParaProfError.contactString);
-//                }
-//                quit = paraProfError.quit;
-//            } else {
-//                System.out.println("An error has been detected: " + string);
-//            }
-//        } else {
-//            System.out.println("An error was detected at " + string);
-//        }
-//        System.out.println("####################################");
-//        if (quit)
-//            System.exit(0);
-//    }
-
-    //####################################
-    //End - Error handling.
-    //####################################
-
-    //####################################
-    //Test system state functionProfiles.
-    //These functionProfiles are used to test
-    //the current state of the system.
-    //####################################
-
-    //Print the passed in data session data out to a file or to the console.
-    //If the passed in File object is null, data is printed to the console.
-    // Component can be null.
-
-    //    public static void outputData(DataSource dataSource, File file, Component component) {
-    //        try {
-    //            boolean toFile = false;
-    //            PrintWriter out = null;
-    //            TrialData trialData = dataSource.getTrialData();
-    //            int numberOfMetrics = dataSource.getNumberOfMetrics();
-    //            StringBuffer output = new StringBuffer(1000);
-    //
-    //            if (file != null) {
-    //                out = new PrintWriter(new FileWriter(file));
-    //                toFile = true;
-    //            }
-    //
-    //            //######
-    //            //Metric data.
-    //            //######
-    //            if (toFile) {
-    //                out.println("<metrics>");
-    //                out.println("<numofmetrics>" + numberOfMetrics + "</numofmetrics>");
-    //            } else {
-    //                System.out.println("<metrics>");
-    //                System.out.println("<numofmetrics>" + numberOfMetrics + "</numofmetrics>");
-    //            }
-    //            for (int metric = 0; metric < numberOfMetrics; metric++) {
-    //                if (toFile)
-    //                    out.println(dataSource.getMetricName(metric));
-    //                else
-    //                    System.out.println(dataSource.getMetricName(metric));
-    //            }
-    //            if (toFile)
-    //                out.println("</metrics>");
-    //            else
-    //                System.out.println("</metrics>");
-    //            //######
-    //            //End - Metric data.
-    //            //######
-    //
-    //            //####################################
-    //            //Global Data.
-    //            //####################################
-    //
-    //            //######
-    //            //Function data.
-    //            //######
-    //            
-    //            Vector list = new Vector();
-    //            for (Iterator functionIterator = trialData.getFunctions(); functionIterator.hasNext();) {
-    //                list.add(functionIterator.next());
-    //            }
-    //
-    //            
-    //             //Name to ID map.
-    //            if (toFile) {
-    //                out.println("<funnameidmap>");
-    //                out.println("<numoffunctions>" + list.size() + "</numoffunctions>");
-    //            } else {
-    //                System.out.println("<funnameidmap>");
-    //                System.out.println("<numoffunctions>" + list.size() + "</numoffunctions>");
-    //            }
-    //            
-    //            for (Enumeration e = list.elements(); e.hasMoreElements();) {
-    //                Function f = (Function) e.nextElement();
-    //                if (toFile)
-    //                    out.println("\"" + f.getName() + "\""
-    //                            + f.getID());
-    //                else
-    //                    System.out.println("\"" + f.getName() + "\""
-    //                            + f.getID());
-    //            }
-    //            if (toFile)
-    //                out.println("</funnameidmap>");
-    //            else
-    //                System.out.println("</funnameidmap>");
-    //
-    //            if (toFile)
-    //                out.println("id mincl(..) mexcl(..) minclp(..) mexclp(..) museccall(..) mnoc mnos");
-    //            else
-    //                System.out.println("id mincl(..) mexcl(..) minclp(..) mexclp(..) museccall(..) mnoc mnos");
-    //            for (Enumeration e = list.elements(); e.hasMoreElements();) {
-    //                output.delete(0, output.length());
-    //                Function function = (Function) e.nextElement();
-    //                output.append(function.getID() + " ");
-    //                for (int metric = 0; metric < numberOfMetrics; metric++) {
-    //                    output.append(function.getMeanInclusiveValue(metric) + " ");
-    //                    output.append(function.getMeanExclusiveValue(metric) + " ");
-    //                    output.append(function.getMeanInclusivePercentValue(metric) + " ");
-    //                    output.append(function.getMeanExclusivePercentValue(metric) + " ");
-    //                    output.append(function.getMeanUserSecPerCall(metric) + " ");
-    //                }
-    //                output.append(function.getMeanNumberOfCalls() + " ");
-    //                output.append(function.getMeanNumberOfSubRoutines() + "");
-    //                if (toFile)
-    //                    out.println(output);
-    //                else
-    //                    System.out.println(output);
-    //            }
-    //            //######
-    //            //End - Function data.
-    //            //######
-    //
-    //            //######
-    //            //User event data.
-    //            //######
-    //            
-    //            
-    //            
-    //            
-    //
-    //            //list = trialData.getMapping(2);
-    //
-    //            list = null;
-    //            
-    //            
-    //            //Name to ID map.
-    //            if (toFile) {
-    //                out.println("<usereventnameidmap>");
-    //                out.println("<numofuserevents>" + list.size() + "</numofuserevents>");
-    //            } else {
-    //                System.out.println("<usereventnameidmap>");
-    //                System.out.println("<numofuserevents>" + list.size() + "</numofuserevents>");
-    //            }
-    //            for (Enumeration e = list.elements(); e.hasMoreElements();) {
-    //                Function function = (Function) e.nextElement();
-    //                if (toFile)
-    //                    out.println("\"" + function.getName() + "\""
-    //                            + function.getID());
-    //                else
-    //                    System.out.println("\"" + function.getName() + "\""
-    //                            + function.getID());
-    //            }
-    //            if (toFile)
-    //                out.println("</usereventnameidmap>");
-    //            else
-    //                System.out.println("</usereventnameidmap>");
-    //            //######
-    //            //End - User event data.
-    //            //######
-    //
-    //            //####################################
-    //            //End - Global Data.
-    //            //####################################
-    //
-    //            //######
-    //            //Thread data.
-    //            //######
-    //            if (toFile) {
-    //                out.println("<threaddata>");
-    //                out.println("funid incl(..) excl(..) inclp(..) exclp(..) useccall(..) mnoc mnos");
-    //                out.println("usereventid num min max mean");
-    //                out.println("<numofthreads>" + dataSource.getNCT().getTotalNumberOfThreads()
-    //                        + "</numofthreads>");
-    //            } else {
-    //                System.out.println("<threaddata>");
-    //                System.out.println("id incl(..) excl(..) inclp(..) exclp(..) useccall(..) noc nos");
-    //                System.out.println("usereventid num min max mean");
-    //                System.out.println("<numofthreads>" + dataSource.getNCT().getTotalNumberOfThreads()
-    //                        + "</numofthreads>");
-    //            }
-    //
-    //            String test = null;
-    //
-    //            for (Enumeration e1 = dataSource.getNCT().getNodes().elements(); e1.hasMoreElements();) {
-    //                Node node = (Node) e1.nextElement();
-    //                for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
-    //                    Context context = (Context) e2.nextElement();
-    //                    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
-    //                        Thread thread = (Thread) e3.nextElement();
-    //                        ListIterator l = null;
-    //                        if (toFile)
-    //                            out.println("<thread>" + thread.getNodeID() + ","
-    //                                    + thread.getContextID() + "," + thread.getThreadID()
-    //                                    + "</thread");
-    //                        else
-    //                            System.out.println("<thread>" + thread.getNodeID() + ","
-    //                                    + thread.getContextID() + "," + thread.getThreadID()
-    //                                    + "</thread");
-    //                        if (toFile)
-    //                            out.println("<functiondata>");
-    //                        else
-    //                            System.out.println("<functiondata>");
-    //                        l = thread.getFunctionListIterator();
-    //                        while (l.hasNext()) {
-    //                            output.delete(0, output.length());
-    //                            FunctionProfile functionProfile = (FunctionProfile) l.next();
-    //                            if (functionProfile != null) {
-    //                                output.append(functionProfile.getFunction().getID() + " ");
-    //                                for (int metric = 0; metric < numberOfMetrics; metric++) {
-    //                                    output.append(functionProfile.getInclusiveValue(metric) + " ");
-    //                                    output.append(functionProfile.getExclusiveValue(metric) + " ");
-    //                                    output.append(functionProfile.getInclusivePercentValue(metric)
-    //                                            + " ");
-    //                                    output.append(functionProfile.getExclusivePercentValue(metric)
-    //                                            + " ");
-    //                                    output.append(functionProfile.getInclusivePerCall(metric) + " ");
-    //                                }
-    //                                output.append(functionProfile.getNumberOfCalls() + " ");
-    //                                output.append(functionProfile.getNumberOfSubRoutines() + "");
-    //                                if (toFile)
-    //                                    out.println(output);
-    //                                else
-    //                                    System.out.println(output);
-    //                            }
-    //                        }
-    //                        if (toFile)
-    //                            out.println("</functiondata>");
-    //                        else
-    //                            System.out.println("</functiondata>");
-    //                        if (toFile)
-    //                            out.println("<usereventdata>");
-    //                        else
-    //                            System.out.println("<usereventdata>");
-    //                        l = thread.getUsereventListIterator();
-    //                        while (l.hasNext()) {
-    //                            output.delete(0, output.length());
-    //                            UserEventProfile uep = (UserEventProfile) l.next();
-    //                            if (uep != null) {
-    //                                output.append(uep.getUserEvent().getID() + " ");
-    //                                for (int metric = 0; metric < numberOfMetrics; metric++) {
-    //                                    output.append(uep.getUserEventNumberValue() + " ");
-    //                                    output.append(uep.getUserEventMinValue() + " ");
-    //                                    output.append(uep.getUserEventMaxValue() + " ");
-    //                                    output.append(uep.getUserEventMeanValue() + "");
-    //                                }
-    //                                if (toFile)
-    //                                    out.println(output);
-    //                                else
-    //                                    System.out.println(output);
-    //                            }
-    //                        }
-    //                        if (toFile)
-    //                            out.println("</usereventdata>");
-    //                        else
-    //                            System.out.println("</usereventdata>");
-    //                    }
-    //                }
-    //            }
-    //
-    //            if (toFile)
-    //                out.println("</threaddata>");
-    //            else
-    //                System.out.println("</threaddata>");
-    //            //######
-    //            //End - Thread data.
-    //            //######
-    //
-    //            //Flush output buffer and close file if required.
-    //            if (out != null) {
-    //                out.flush();
-    //                out.close();
-    //            }
-    //
-    //        } catch (Exception exception) {
-    //            UtilFncs.systemError(new ParaProfError("UF05",
-    //                    "File write error! Check console for details.",
-    //                    "An error occurred while trying to save txt file.", null, exception,
-    //                    component, null, null, true, false, false), null, null);
-    //        }
-    //    }
-    //    //####################################
-    //    //End - Test system state functionProfiles.
-    //    //####################################
-    //    
+   
 
     public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames)
             throws DataSourceException {
         DataSource dataSource = null;
 
-        Vector v = new Vector();
+        List v = new ArrayList();
         File filelist[];
         switch (fileType) {
         case 0: // TAU Profiles
@@ -672,8 +372,7 @@ public class UtilFncs {
             if (sourceFiles[0].isDirectory()) {
                 throw new DataSourceException("MpiP type: you must specify a file, not a directory");
             }
-            v.add(sourceFiles);
-            dataSource = new MpiPDataSource(v);
+            dataSource = new MpiPDataSource(sourceFiles[0]);
             break;
         case 4:
             v.add(sourceFiles);

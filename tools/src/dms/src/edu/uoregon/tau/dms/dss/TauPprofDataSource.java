@@ -1,6 +1,6 @@
 /*
  * Name: TauPprofDataSource.java 
- * Author: Robert Bell 
+ * Author: Robert Bell, Alan Morris
  * Description:
  */
 
@@ -18,6 +18,8 @@ public class TauPprofDataSource extends DataSource {
     private LineData functionDataLine1 = new LineData();
     private LineData functionDataLine2 = new LineData();
     private LineData usereventDataLine = new LineData();
+    protected boolean firstMetric;
+    protected boolean groupCheck = false;
 
     public TauPprofDataSource(Object initializeObject) {
         super();
@@ -70,15 +72,14 @@ public class TauPprofDataSource extends DataSource {
         //A loop counter.
         int bSDCounter = 0;
 
-        Vector v = null;
-        File[] files = null;
         //######
         //End - Frequently used items.
         //######
-        v = (Vector) initializeObject;
+        List v = (List) initializeObject;
         this.setFirstMetric(true);
-        for (Enumeration e = v.elements(); e.hasMoreElements();) {
-            files = (File[]) e.nextElement();
+        
+        for (Iterator e = v.iterator(); e.hasNext();) {
+            File files[] = (File[]) e.next();
             long time = System.currentTimeMillis();
 
             totalBytes = files[0].length();
@@ -121,8 +122,8 @@ public class TauPprofDataSource extends DataSource {
                         for (Iterator it3 = context.getThreads(); it3.hasNext();) {
                             thread = (Thread) it3.next();
                             thread.incrementStorage();
-                            for (Enumeration e6 = thread.getFunctionProfiles().elements(); e6.hasMoreElements();) {
-                                FunctionProfile ref = (FunctionProfile) e6.nextElement();
+                            for (Iterator e6 = thread.getFunctionProfiles().iterator(); e6.hasNext();) {
+                                FunctionProfile ref = (FunctionProfile) e6.next();
                                 //Only want to add an element if this function existed on this thread.
                                 //Check for this.
                                 if (ref != null)
@@ -423,8 +424,8 @@ public class TauPprofDataSource extends DataSource {
             //System.out.println("Time to process file (in milliseconds): " + time);
         }
 
-        for (Enumeration e = this.getThreads().elements(); e.hasMoreElements();) {
-            ((Thread) e.nextElement()).setThreadDataAllMetrics();
+        for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
+            ((Thread) it.next()).setThreadDataAllMetrics();
         }
         this.meanData.setThreadDataAllMetrics();
 
@@ -718,7 +719,6 @@ public class TauPprofDataSource extends DataSource {
     }
 
     
-    protected boolean firstMetric;
 
     protected void setFirstMetric(boolean firstMetric) {
         this.firstMetric = firstMetric;
@@ -728,7 +728,6 @@ public class TauPprofDataSource extends DataSource {
         return firstMetric;
     }
 
-    protected boolean groupCheck = false;
 
     protected void setGroupCheck(boolean groupCheck) {
         this.groupCheck = groupCheck;

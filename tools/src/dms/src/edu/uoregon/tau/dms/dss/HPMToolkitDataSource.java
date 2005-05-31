@@ -11,13 +11,44 @@ import java.util.*;
 
 public class HPMToolkitDataSource extends DataSource {
 
+
+    
+    private Object initializeObject;
+
+    //Frequently used items.
+    private int metric = 0;
+    private Function function = null;
+    private FunctionProfile functionProfile = null;
+    private Node node = null;
+    private Context context = null;
+    private edu.uoregon.tau.dms.dss.Thread thread = null;
+    private int nodeID = -1;
+    private int contextID = -1;
+    private int threadID = -1;
+    private int timeMetric = -1;
+    private String inputString = null;
+    private String s1 = null;
+    private String s2 = null;
+    private String tokenString;
+    private String groupNamesString = null;
+    private StringTokenizer genericTokenizer;
+    private BufferedReader br = null;
+    boolean initialized = false;
+    Hashtable eventNames = new Hashtable();
+
+    //Instance data.
+    private LineData header1 = new LineData();
+    private LineData header2 = new LineData();
+    private LineData header3 = new LineData();
+    private LineData header4 = new LineData();
+    private LineData header5 = new LineData();
+    
     public HPMToolkitDataSource(Object initializeObject) {
         super();
         this.setMetrics(new Vector());
         this.initializeObject = initializeObject;
     }
 
-    private Object initializeObject;
 
     public void cancelLoad() {
         return;
@@ -30,9 +61,9 @@ public class HPMToolkitDataSource extends DataSource {
     public void load() throws FileNotFoundException, IOException {
 
         boolean firstFile = true;
-        v = (Vector) initializeObject;
-        for (Enumeration e = v.elements(); e.hasMoreElements();) {
-            File files[] = (File[]) e.nextElement();
+        List v = (List) initializeObject;
+        for (Iterator e = v.iterator(); e.hasNext();) {
+            File files[] = (File[]) e.next();
             for (int i = 0; i < files.length; i++) {
                 long time = System.currentTimeMillis();
 
@@ -467,32 +498,4 @@ public class HPMToolkitDataSource extends DataSource {
     //End - Private Section.
     //####################################
 
-    //Frequently used items.
-    private int metric = 0;
-    private Function function = null;
-    private FunctionProfile functionProfile = null;
-    private Node node = null;
-    private Context context = null;
-    private edu.uoregon.tau.dms.dss.Thread thread = null;
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
-    private int timeMetric = -1;
-    private String inputString = null;
-    private String s1 = null;
-    private String s2 = null;
-    private String tokenString;
-    private String groupNamesString = null;
-    private StringTokenizer genericTokenizer;
-    private Vector v = null;
-    private BufferedReader br = null;
-    boolean initialized = false;
-    Hashtable eventNames = new Hashtable();
-
-    //Instance data.
-    private LineData header1 = new LineData();
-    private LineData header2 = new LineData();
-    private LineData header3 = new LineData();
-    private LineData header4 = new LineData();
-    private LineData header5 = new LineData();
 }

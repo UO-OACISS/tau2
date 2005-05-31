@@ -43,7 +43,7 @@ public class PSRunDataSource extends DataSource {
     public void load() throws DataSourceException {
         try {
             boolean firstFile = true;
-            v = (Vector) initializeObject;
+            v = (List) initializeObject;
             // create our XML parser
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
 
@@ -52,8 +52,8 @@ public class PSRunDataSource extends DataSource {
             xmlreader.setErrorHandler(handler);
 
             xmlreader.setEntityResolver(new NoOpEntityResolver());
-            for (Enumeration e = v.elements(); e.hasMoreElements();) {
-                files = (File[]) e.nextElement();
+            for (Iterator e = v.iterator(); e.hasNext();) {
+                File files[] = (File[]) e.next();
                 for (int i = 0; i < files.length; i++) {
                     long time = System.currentTimeMillis();
 
@@ -162,7 +162,7 @@ public class PSRunDataSource extends DataSource {
     private String tokenString;
     private String groupNamesString = null;
     private StringTokenizer genericTokenizer;
-    private Vector v = null;
+    private List v = null;
     private File[] files = null;
     private BufferedReader br = null;
     boolean initialized = false;

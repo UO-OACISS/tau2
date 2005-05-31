@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.15 2005/03/08 00:55:54 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.16 2005/05/31 23:21:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -18,6 +18,19 @@ import java.io.*;
  */
 public class Thread implements Comparable {
 
+    private int nodeID = -1;
+    private int contextID = -1;
+    private int threadID = -1;
+    private List functionProfiles = new ArrayList();
+    private Vector userEventProfiles = new Vector();
+    private double[] doubleList;
+    private double maxNumCalls = 0;
+    private double maxNumSubr = 0;
+    private boolean trimmed = false;
+    private boolean relationsBuilt = false;
+    private int numMetrics = 0;
+    private static final int METRIC_SIZE = 6;
+    
     public Thread(int nodeID, int contextID, int threadID) {
         this(nodeID, contextID, threadID, 1);
     }
@@ -59,10 +72,11 @@ public class Thread implements Comparable {
 
     public void addFunctionProfile(FunctionProfile fp) {
         int id = fp.getFunction().getID();
-        // increase the functionProfiles vector size if necessary
-        if (id >= functionProfiles.size()) {
-            functionProfiles.setSize(id + 1);
+        // increase the size of the functionProfiles list if necessary
+        while (id >= functionProfiles.size()) {
+            functionProfiles.add(null);
         }
+        
         functionProfiles.set(id, fp);
     }
 
@@ -81,12 +95,12 @@ public class Thread implements Comparable {
         return null;
     }
 
-    public Vector getFunctionProfiles() {
+    public List getFunctionProfiles() {
         return functionProfiles;
     }
 
     public Iterator getFunctionProfileIterator() {
-        return new DssIterator(functionProfiles);
+        return functionProfiles.iterator();
     }
 
     public UserEventProfile getUserEventProfile(UserEvent userEvent) {
@@ -95,12 +109,8 @@ public class Thread implements Comparable {
         return null;
     }
 
-    public Vector getUserEventProfiles() {
+    public List getUserEventProfiles() {
         return userEventProfiles;
-    }
-
-    public ListIterator getUsereventListIterator() {
-        return new DssIterator(userEventProfiles);
     }
 
     private void setMaxInclusive(int metric, double inDouble) {
@@ -279,16 +289,5 @@ public class Thread implements Comparable {
         }
     }
 
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
-    private Vector functionProfiles = new Vector();
-    private Vector userEventProfiles = new Vector();
-    private double[] doubleList;
-    private double maxNumCalls = 0;
-    private double maxNumSubr = 0;
-    private boolean trimmed = false;
-    private boolean relationsBuilt = false;
-    private int numMetrics = 0;
-    private static final int METRIC_SIZE = 6;
+    
 }

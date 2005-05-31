@@ -180,8 +180,8 @@ public class DBDataSource extends DataSource {
 
         }
 
-        for (Enumeration e = this.getThreads().elements(); e.hasMoreElements();) {
-            ((Thread) e.nextElement()).setThreadDataAllMetrics();
+        for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
+            ((Thread) it.next()).setThreadDataAllMetrics();
         }
         this.meanData.setThreadDataAllMetrics();
 

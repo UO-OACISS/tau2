@@ -21,7 +21,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.19 2005/03/10 18:14:05 amorris Exp $
+ * CVS $Id: Trial.java,v 1.20 2005/05/31 23:21:02 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -45,8 +45,6 @@ public class Trial implements Serializable {
     private Vector metrics;
     private String fields[];
 
-    
-    //    protected DataSession dataSession = null;
     protected DataSource dataSource = null;
 
 

@@ -1,12 +1,12 @@
 package edu.uoregon.tau.dms.loader;
 
-import edu.uoregon.tau.dms.dss.*;
 import jargs.gnu.CmdLineParser;
-import java.io.File;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.Vector;
+
 import java.io.*;
+import java.util.List;
+import java.util.Vector;
+
+import edu.uoregon.tau.dms.dss.*;
 
 public class LoadTrial {
 
@@ -112,7 +112,7 @@ public class LoadTrial {
         trial = null;
         this.fileType = fileType;
 
-        Vector v = null;
+        List v = null;
         File[] inFile = new File[1];
         File filelist[];
         switch (fileType) {
@@ -182,9 +182,7 @@ public class LoadTrial {
                 System.exit(-1);
             }
             inFile[0] = new File(sourceFiles[0]);
-            v = new Vector();
-            v.add(inFile);
-            dataSource = new MpiPDataSource(v);
+            dataSource = new MpiPDataSource(inFile[0]);
             break;
         case 4:
             v = new Vector();

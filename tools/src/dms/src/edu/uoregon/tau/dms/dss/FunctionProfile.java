@@ -6,9 +6,9 @@ import java.text.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.10 2005/05/10 01:48:36 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.11 2005/05/31 23:21:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		Function
  */
 public class FunctionProfile implements Comparable {
@@ -20,7 +20,7 @@ public class FunctionProfile implements Comparable {
     private double numSubr;
 
     // unused profile calls
-    //private Vector calls;
+    //private List calls;
 
     private Set childProfiles;
     private Set parentProfiles;
@@ -92,13 +92,8 @@ public class FunctionProfile implements Comparable {
         return numSubr;
     }
 
-    //    public void setInclusivePerCall(int metric, double value) {
-    //        this.insertDouble(metric, 4, value);
-    //    }
-
     public double getInclusivePerCall(int metric) {
         return this.getInclusive(metric) / this.getNumCalls();
-        //        return this.getDouble(metric, 4);
     }
 
     public double getExclusivePerCall(int metric) {
@@ -108,7 +103,7 @@ public class FunctionProfile implements Comparable {
     // unused profile calls
     //    public void addCall(double exclusive, double inclusive) {
     //        if (calls == null)
-    //            calls = new Vector();
+    //            calls = new ArrayList();
     //        double[] arr = new double[2];
     //        arr[0] = exclusive;
     //        arr[1] = inclusive;
@@ -132,9 +127,9 @@ public class FunctionProfile implements Comparable {
     // call path section
     public void addChildProfile(FunctionProfile child, FunctionProfile callpath) {
         // example:
-        // fullpath = a => b => c => d
-        // child = d
-        // we are c
+        // callpath: a => b => c => d
+        // child: d
+        // this: c
 
         if (childProfiles == null)
             childProfiles = new TreeSet();
@@ -155,6 +150,11 @@ public class FunctionProfile implements Comparable {
     }
 
     public void addParentProfile(FunctionProfile parent, FunctionProfile callpath) {
+        // example:
+        // callpath: a => b => c => d
+        // parent: c
+        // this: d
+
         if (parentProfiles == null)
             parentProfiles = new TreeSet();
         parentProfiles.add(parent);
@@ -176,24 +176,24 @@ public class FunctionProfile implements Comparable {
     public Iterator getChildProfiles() {
         if (childProfiles != null)
             return childProfiles.iterator();
-        return new DssIterator();
+        return new UtilFncs.EmptyIterator();
     }
 
     public Iterator getParentProfiles() {
         if (parentProfiles != null)
             return parentProfiles.iterator();
-        return new DssIterator();
+        return new UtilFncs.EmptyIterator();
     }
 
     public Iterator getParentProfileCallPathIterator(FunctionProfile parent) {
         if (parentProfileCallPathSets == null)
-            return new DssIterator();
+            return new UtilFncs.EmptyIterator();
         return ((Set) parentProfileCallPathSets.get(parent)).iterator();
     }
 
     public Iterator getChildProfileCallPathIterator(FunctionProfile child) {
         if (childProfileCallPathSets == null)
-            return new DssIterator();
+            return new UtilFncs.EmptyIterator();
         return ((Set) childProfileCallPathSets.get(child)).iterator();
     }
 

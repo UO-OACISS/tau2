@@ -8,9 +8,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.12 2005/05/10 01:48:36 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.13 2005/05/31 23:21:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		TrialData
  * @see		NCT
  */
@@ -21,14 +21,14 @@ public abstract class DataSource {
     private boolean groupNamesPresent = false;
 
     // data structures
-    private Vector metrics = null;
+    private List metrics = null;
     protected Thread meanData = null;
     protected Thread totalData = null;
     private Map nodes = new TreeMap();
-
     private Map functions = new TreeMap();
     private Map groups = new TreeMap();
     private Map userEvents = new TreeMap();
+    private List allThreads;
 
     // just a holder for the output of getMaxNCTNumbers(), makes subsequent calls instantaneous
     private int[] maxNCT = null;
@@ -132,11 +132,10 @@ public abstract class DataSource {
         return group;
     }
 
-    
     public int getNumGroups() {
         return groups.size();
     }
-    
+
     public Iterator getGroups() {
         return groups.values().iterator();
     }
@@ -187,24 +186,24 @@ public abstract class DataSource {
     }
 
     /**
-     * Set the Vector of Metrics for this DataSource.
+     * Set the List of Metrics for this DataSource.
      * 
      * @param metrics
-     *            Vector of Metrics
+     *            List of Metrics
      */
-    public void setMetrics(Vector metrics) {
+    public void setMetrics(List metrics) {
         this.metrics = metrics;
     }
 
     /**
-     * Adds a metric to the DataSource's metrics vector.
+     * Adds a metric to the DataSource's metrics list.
      * 
      * @param metric
      *            Metric to be added
      */
     public void addMetric(Metric metric) {
         if (this.metrics == null) {
-            this.metrics = new Vector();
+            this.metrics = new ArrayList();
         }
 
         metric.setID(this.getNumberOfMetrics());
@@ -212,7 +211,7 @@ public abstract class DataSource {
     }
 
     /**
-     * Adds a metric to the DataSource's metrics vector (given as a String).
+     * Adds a metric to the DataSource's metrics List (given as a String).
      * 
      * @param metric
      *            Name of metric to be added
@@ -233,11 +232,11 @@ public abstract class DataSource {
     }
 
     /**
-     * Get a the Vector of Metrics
+     * Get a the List of Metrics
      * 
-     * @return Vector of Metrics
+     * @return List of Metrics
      */
-    public Vector getMetrics() {
+    public List getMetrics() {
         return this.metrics;
     }
 
@@ -251,14 +250,14 @@ public abstract class DataSource {
      */
     public Metric getMetric(int metricID) {
         if ((this.metrics != null) && (metricID < this.metrics.size()))
-            return (Metric) this.metrics.elementAt(metricID);
+            return (Metric) this.metrics.get(metricID);
         else
             return null;
     }
 
     /**
      * Get the metric name corresponding to the given id. The DataSession object
-     * will maintain a reference to the Vector of metric values. To clear this
+     * will maintain a reference to the List of metric values. To clear this
      * reference, call setMetric(String) with null.
      * 
      * @param metricID
@@ -268,14 +267,14 @@ public abstract class DataSource {
      */
     public String getMetricName(int metricID) {
         if ((this.metrics != null) && (metricID < this.metrics.size()))
-            return ((Metric) this.metrics.elementAt(metricID)).getName();
+            return ((Metric) this.metrics.get(metricID)).getName();
         else
             return null;
     }
 
     /**
      * Get the number of metrics. The DataSession object will maintain a
-     * reference to the Vector of metric values. To clear this reference, call
+     * reference to the List of metric values. To clear this reference, call
      * setMetric(String) with null.
      * 
      * @return Returns the number of metrics as an int.
@@ -293,8 +292,8 @@ public abstract class DataSource {
      * the derived data
      */
     protected void generateDerivedData() {
-        for (Enumeration e = this.getThreads().elements(); e.hasMoreElements();) {
-            ((Thread) e.nextElement()).setThreadDataAllMetrics();
+        for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
+            ((Thread) it.next()).setThreadDataAllMetrics();
         }
         this.setMeanData(0, this.getNumberOfMetrics() - 1);
         this.meanData.setThreadDataAllMetrics();
@@ -354,15 +353,9 @@ public abstract class DataSource {
         // must always iterate through all metrics regardless to find the top level timers, I think???
         for (int i = 0; i < numMetrics; i++) {
 
-            for (Iterator it = this.getNodes(); it.hasNext();) {
-                Node node = (Node) it.next();
-                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                    Context context = (Context) it2.next();
-                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                        Thread thread = (Thread) it3.next();
-                        topLevelInclSum[i] += thread.getMaxInclusive(i);
-                    }
-                }
+            for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
+                Thread thread = (Thread) it.next();
+                topLevelInclSum[i] += thread.getMaxInclusive(i);
             }
         }
 
@@ -392,32 +385,27 @@ public abstract class DataSource {
                 inclSum[i] = 0;
             }
 
+            List allThreads = this.getAllThreads();
+
             // this must be stored somewhere else, but I'm going to compute it since I don't know where
-            int numThreads = 0;
+            int numThreads = allThreads.size();
 
-            for (Iterator it = this.getNodes(); it.hasNext();) {
-                Node node = (Node) it.next();
-                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                    Context context = (Context) it2.next();
-                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                        edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
-                        FunctionProfile functionProfile = thread.getFunctionProfile(function);
+            for (int i = 0; i < numThreads; i++) {
+                edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) allThreads.get(i);
+                FunctionProfile functionProfile = thread.getFunctionProfile(function);
 
-                        if (functionProfile != null) { // only if this function was called for this nct
+                if (functionProfile != null) { // only if this function was called for this nct
 
-                            for (int i = startMetric; i <= endMetric; i++) {
+                    for (int j = startMetric; j <= endMetric; j++) {
 
-                                exclSum[i] += functionProfile.getExclusive(i);
-                                inclSum[i] += functionProfile.getInclusive(i);
+                        exclSum[j] += functionProfile.getExclusive(j);
+                        inclSum[j] += functionProfile.getInclusive(j);
 
-                                // the same for every metric
-                                if (i == 0) {
-                                    callSum += functionProfile.getNumCalls();
-                                    subrSum += functionProfile.getNumSubr();
-                                }
-                            }
+                        // the same for every metric
+                        if (j == 0) {
+                            callSum += functionProfile.getNumCalls();
+                            subrSum += functionProfile.getNumSubr();
                         }
-                        numThreads++;
                     }
                 }
             }
@@ -437,15 +425,15 @@ public abstract class DataSource {
 
                 totalProfile.setExclusive(i, exclSum[i]);
                 totalProfile.setInclusive(i, inclSum[i]);
-//                if (totalProfile.getNumCalls() != 0)
-//                    totalProfile.setInclusivePerCall(i, inclSum[i] / totalProfile.getNumCalls());
+                //                if (totalProfile.getNumCalls() != 0)
+                //                    totalProfile.setInclusivePerCall(i, inclSum[i] / totalProfile.getNumCalls());
 
                 // mean data computed as above in comments
                 meanProfile.setExclusive(i, exclSum[i] / numThreads);
                 meanProfile.setInclusive(i, inclSum[i] / numThreads);
 
-//                if (meanProfile.getNumCalls() != 0)
-//                    meanProfile.setInclusivePerCall(i, inclSum[i] / numThreads / meanProfile.getNumCalls());
+                //                if (meanProfile.getNumCalls() != 0)
+                //                    meanProfile.setInclusivePerCall(i, inclSum[i] / numThreads / meanProfile.getNumCalls());
 
                 if (topLevelInclSum[i] != 0) {
                     totalProfile.setInclusivePercent(i, totalProfile.getInclusive(i) / topLevelInclSum[i] * 100);
@@ -500,9 +488,9 @@ public abstract class DataSource {
     }
 
     /**
-     * Returns the list of nodes in this object as a Vector.
+     * Returns the list of nodes in this object as an Iterator.
      *
-     * @return	A Vector of node objects.
+     * @return	An Iterator over node objects.
      */
     public Iterator getNodes() {
         return nodes.values().iterator();
@@ -559,48 +547,49 @@ public abstract class DataSource {
         return (this.getContext(nodeID, contextID)).getNumberOfThreads();
     }
 
-    public Vector getThreads() {
-        Vector vector = new Vector();
+    public List getThreads() {
+        List list = new ArrayList();
         for (Iterator it = this.getNodes(); it.hasNext();) {
             Node node = (Node) it.next();
             for (Iterator it2 = node.getContexts(); it2.hasNext();) {
                 Context context = (Context) it2.next();
                 for (Iterator it3 = context.getThreads(); it3.hasNext();) {
                     edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
-                    vector.add(thread);
+                    list.add(thread);
                 }
             }
         }
-        return vector;
+        return list;
     }
 
-    public Vector getThreads(int nodeID) {
-        Vector vector = new Vector();
-        Node node = this.getNode(nodeID);
-        for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-            Context context = (Context) it2.next();
-            for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
-                vector.add(thread);
-            }
-        }
-        return vector;
-    }
-
-    public Iterator getThreads(int nodeID, int contextID) {
-        Context context = this.getContext(nodeID, contextID);
-        if (context != null)
-            return context.getThreads();
-        return null;
-    }
-
+    
     public Thread getThread(int nodeID, int contextID, int threadID) {
-        Vector vector = null;
         Context context = this.getContext(nodeID, contextID);
         Thread thread = null;
         if (context != null)
             thread = context.getThread(threadID);
         return thread;
+    }
+
+    private void initAllThreadsList() {
+        allThreads = new ArrayList();
+        for (Iterator it = this.getNodes(); it.hasNext();) {
+            Node node = (Node) it.next();
+            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                Context context = (Context) it2.next();
+                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+                    allThreads.add(thread);
+                }
+            }
+        }
+    }
+
+    public List getAllThreads() {
+        if (allThreads == null) {
+            initAllThreadsList();
+        }
+        return allThreads;
     }
 
 }

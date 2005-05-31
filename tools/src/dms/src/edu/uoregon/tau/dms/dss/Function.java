@@ -1,27 +1,30 @@
 package edu.uoregon.tau.dms.dss;
 
-import java.util.*;
-import java.awt.*;
-import java.io.*;
-import java.text.*;
+import java.awt.Color;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.7 2005/05/18 19:12:46 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.8 2005/05/31 23:21:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		FunctionProfile
  */
+/**
+ * @author amorris
+ *
+ * TODO ...
+ */
 public class Function implements Serializable, Comparable {
-
-    private final static int METRIC_SIZE = 5;
 
     private String name = null;
     private String reversedName = null;
     private int id = -1;
-    private Vector groups = null;
+    private List groups = null;
     private boolean callPathFunction = false;
  
     // we hold on to the mean and total profiles for pass-through functions
@@ -46,6 +49,12 @@ public class Function implements Serializable, Comparable {
         return name;
     }
 
+    /**
+     * Retrieve the reversed (callpath) name
+     * If the function's name is "A => B => C", this will return "C <= B <= A"
+     * 
+     * @return      The reversed name
+     */
     public String getReversedName() {
         if (reversedName == null) {
             if (callPathFunction == false) {
@@ -68,9 +77,7 @@ public class Function implements Serializable, Comparable {
                         reversedName = reversedName + " <= ";
                     }
                 }
-
                 reversedName = reversedName + " <= " + s;
-
             }
         }
         
@@ -88,7 +95,7 @@ public class Function implements Serializable, Comparable {
         if (this.isGroupMember(group))
             return;
         if (groups == null)
-            groups = new Vector();
+            groups = new ArrayList();
 
         groups.add(group);
     }
@@ -99,7 +106,7 @@ public class Function implements Serializable, Comparable {
         return groups.contains(group);
     }
 
-    public Vector getGroups() {
+    public List getGroups() {
         return groups;
     }
 
@@ -223,9 +230,6 @@ public class Function implements Serializable, Comparable {
 
     public int compareTo(Object o) {
         return this.id - ((Function)o).getID();
-        //Integer thisInt = new Integer(this.id);
-        //return thisInt.compareTo(new Integer(((Function) inObject).getID()));
-        //return name.compareTo(((Function)inObject).getName());
     }
 
 }

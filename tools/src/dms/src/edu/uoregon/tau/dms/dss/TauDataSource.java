@@ -24,13 +24,15 @@ public class TauDataSource extends DataSource {
     private volatile int filesRead = 0;
     private LineData functionDataLine = new LineData();
     private LineData usereventDataLine = new LineData();
-
-    public TauDataSource(Object initializeObject) {
+    private boolean profileStatsPresent = false;
+    private boolean groupCheck = false;
+    private List dirs; // list of directories (e.g. MULTI__PAPI_FP_INS, MULTI__PAPI_L1_DCM)
+    
+    public TauDataSource(List dirs) {
         super();
-        this.initializeObject = initializeObject;
+        this.dirs = dirs;
     }
 
-    private Object initializeObject;
 
     public void cancelLoad() {
         abort = true;
@@ -47,11 +49,10 @@ public class TauDataSource extends DataSource {
     public void load() throws FileNotFoundException, IOException, DataSourceException {
         long time = System.currentTimeMillis();
 
-        Vector v = (Vector) initializeObject;
 
         // first count the files (for progressbar)
-        for (Enumeration e = v.elements(); e.hasMoreElements();) {
-            File[] files = (File[]) e.nextElement();
+        for (Iterator e = dirs.iterator(); e.hasNext();) {
+            File[] files = (File[]) e.next();
             for (int i = 0; i < files.length; i++) {
                 totalFiles++;
             }
@@ -86,15 +87,14 @@ public class TauDataSource extends DataSource {
         StringTokenizer genericTokenizer;
 
         // iterate through the vector of File arrays (each directory)
-        for (Enumeration e = v.elements(); e.hasMoreElements();) {
+        for (Iterator e = dirs.iterator(); e.hasNext();) {
+            File[] files = (File[]) e.next();
 
             //Reset metricNameProcessed flag.
             metricNameProcessed = false;
 
             //Only need to call addDefaultToVectors() if not the first run.
-            if (metric != 0) { // If this isn't the first metric, call i
-
-
+            if (metric != 0) { // If this isn't the first metric, call incrementStorage
                 for (Iterator it = this.getNodes(); it.hasNext();) {
                     Node node = (Node) it.next();
                     for (Iterator it2 = node.getContexts(); it2.hasNext();) {
@@ -102,8 +102,8 @@ public class TauDataSource extends DataSource {
                         for (Iterator it3 = context.getThreads(); it3.hasNext();) {
                             Thread thread = (Thread) it3.next();
                             thread.incrementStorage();
-                            for (Enumeration e6 = thread.getFunctionProfiles().elements(); e6.hasMoreElements();) {
-                                FunctionProfile fp = (FunctionProfile) e6.nextElement();
+                            for (Iterator e6 = thread.getFunctionProfiles().iterator(); e6.hasNext();) {
+                                FunctionProfile fp = (FunctionProfile) e6.next();
                                 if (fp != null)  // fp == null would mean this thread didn't call this function
                                     fp.incrementStorage();
                             }
@@ -113,7 +113,6 @@ public class TauDataSource extends DataSource {
 
             }
 
-            File[] files = (File[]) e.nextElement();
             for (int i = 0; i < files.length; i++) {
                 filesRead++;
 
@@ -211,7 +210,7 @@ public class TauDataSource extends DataSource {
 
 
                             if (metric == 0 && groupNames != null) {
-                                StringTokenizer st = new StringTokenizer(groupNames, " |");
+                                StringTokenizer st = new StringTokenizer(groupNames, "|");
                                 while (st.hasMoreTokens()) {
                                     String groupName = st.nextToken();
                                     if (groupName != null) {
@@ -219,7 +218,7 @@ public class TauDataSource extends DataSource {
                                         // then the addGroup function will just return the
                                         // already existing group id. See the TrialData
                                         // class for more details.
-                                        Group group = this.addGroup(groupName);
+                                        Group group = this.addGroup(groupName.trim());
                                         func.addGroup(group);
                                     }
                                 }
@@ -526,11 +525,7 @@ public class TauDataSource extends DataSource {
         return profileStatsPresent;
     }
 
-    private boolean profileStatsPresent = false;
-
-    
-
-    protected boolean groupCheck = false;
+   
 
     protected void setGroupCheck(boolean groupCheck) {
         this.groupCheck = groupCheck;
