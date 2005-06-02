@@ -1,5 +1,2 @@
-The current version of TAU's $(TAU_COMPILER) does not support invocation of
-opari. Opari needs to be explicitly invoked for each file. However, we 
-illustrate how this can be done in this example. Future versions of this tool 
-will feature support for automatically invoking opari from within the tool. 
-See the Makefile for details.  
+This example shows how TAU_COMPILER can be used to instrument a program using
+both Opari and PDT. 
