@@ -13,7 +13,7 @@
  
 TAUROOTDIR	= ../../..
 
-include $(TAUROOTDIR)/ia64/lib/Makefile.tau-icpc-pdt-openmp-opari
+include $(TAUROOTDIR)/include/Makefile
 
 F90		= $(TAU_COMPILER) $(TAU_F90) 
 
