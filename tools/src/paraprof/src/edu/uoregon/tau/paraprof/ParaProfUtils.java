@@ -1041,6 +1041,11 @@ public class ParaProfUtils {
 
     }
 
+    public static String createSafeMetricName(String name) {
+        String ret = name.replace('/', '\\');
+        return ret;
+    }
+
     public static void writeProfiles(DataSource dataSource, File directory) throws IOException {
 
         int numFunctions = dataSource.getNumFunctions();
@@ -1095,7 +1100,7 @@ public class ParaProfUtils {
             writeMetric(".", dataSource, 0, functions, groupStrings, userEvents);
         } else {
             for (int i = 0; i < numMetrics; i++) {
-                String name = "MULTI__" + dataSource.getMetricName(i);
+                String name = "MULTI__" + createSafeMetricName(dataSource.getMetricName(i));
                 boolean success = (new File(name).mkdir());
                 if (!success) {
                     System.err.println("Failed to create directory: " + name);
