@@ -469,8 +469,13 @@ public class TauDataSource extends DataSource {
         }
 
         if (getGroupNamesPresent()) {
+            try {
             str = getNameTokenizer.nextToken();
             return str;
+            } catch (NoSuchElementException e) {
+                // possibly GROUP=""
+                return null;
+            }
         }
         //If here, this profile file does not track the group names.
         return null;
