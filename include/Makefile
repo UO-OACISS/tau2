@@ -417,6 +417,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #USE_IBMXLC#TAU_CXXLIBS         = $(TAU_XLCLIBS) #ENDIF#
 #USE_DECCXX#TAU_CXXLIBS         = -lcxxstd -lcxx #ENDIF#
 #USE_INTELCXX#TAU_CXXLIBS_INTEL        = -lcprts -lPEPCF90 #ENDIF#
+#USE_INTELCXX#TAU_CXXLIBS_INTEL        = -lcprts #ENDIF#
 #INTELIFORT#TAU_CXXLIBS_INTEL        = -lcprts #ENDIF#
 #INTEL81FIX#TAU_CXXLIBS_INTEL        = -L$(TAUGCCLIBDIR) -lstdc++ $(TAU_GCCLIB) #ENDIF#
 #USE_INTELCXX#TAU_CXXLIBS        = $(TAU_CXXLIBS_INTEL) #ENDIF#
@@ -611,6 +612,8 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)"\
         -optTauInstr="$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_instrumentor" \
         -optNoMpi \
+	-optOpariDir="$(OPARIDIR)" -optOpariTool="$(TAU_OPARI_TOOL)" \
+	-optTauCC="$(TAU_CC)" \
         -optCompile="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
         -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"
 #############################################

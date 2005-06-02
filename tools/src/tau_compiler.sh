@@ -19,6 +19,7 @@ declare -i pdbFileSpecified=$FALSE
 
 declare -i isVerbose=$FALSE
 declare -i isDebug=$FALSE
+declare -i opari=$FALSE
 #Set isDebug=$TRUE for printing debug messages.
 
 declare -i errorStatus=$FALSE
@@ -53,6 +54,11 @@ printUsage () {
 	echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
 	echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
 	echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
+	echo -e "  -optTauCC=\"<cc>\"\t\tSpecifies the C compiler used by TAU"
+	echo -e "  -optOpariTool=\"<path/opari>\"\tSpecifies the location of the Opari tool"
+	echo -e "  -optOpariDir=\"<path>\"\tSpecifies the location of the Opari directory"
+	echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
+	echo -e "  -optOpariReset=\"\"\t\tResets options passed to the Opari tool"
 	echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking (default)"
 	echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking"
 	echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
@@ -196,6 +202,11 @@ for arg in "$@"
 				echoIfDebug "\tTau Instrumentor is: $optTauInstr"
 				;;
 
+			-optTauCC*)
+				optTauCC=${arg#"-optTauCC="}
+				echoIfDebug "\tTau C Compiler is: $optTauCC"
+				;;
+
 			-optPdtCOpts*)
 				#Assumption: This reads ${CFLAGS} 
 				optPdtCFlags="${arg#"-optPdtCOpts="} $optPdtCFlags"
@@ -294,6 +305,24 @@ for arg in "$@"
 				#removes *.inst.* and *.pdb
 				echoIfDebug "\tOption to remove *.inst.* and *.pdb files being passed"
 				needToCleanPdbInstFiles=$FALSE
+				;;
+			-optOpariDir*)
+				optOpariDir="${arg#"-optOpariDir="}"
+				echoIfDebug "\tOpari Dir used: $optOpariDir"
+				;;
+			-optOpariTool*)
+				optOpariTool="${arg#"-optOpariTool="}"
+				echoIfDebug "\tOpari Tool used: $optOpariTool"
+				opari=$TRUE
+				;;
+			-optOpariOpts*)
+				currentopt="${arg#"-optOpariOpts="}"
+				optOpariOpts="$currentopt $optOpariOpts"
+				echoIfDebug "\tOpari Opts used: $optOpariOpts"
+				;;
+			-optOpariReset*)
+				optOpariOpts="${arg#"-optOpariOpts="}"
+				echoIfDebug "\tOpari Tool used: $optOpariOpts"
 				;;
 
 
@@ -403,6 +432,12 @@ if [ $counterForOptions == 0 ]; then
 	printUsage $tempCounter
 fi
 
+if [ $opari == $TRUE ]; then
+	echoIfDebug "Opari is on!"
+else
+	echoIfDebug "Opari is off!"
+fi
+
 
 tempCounter=0
 while [ $tempCounter -lt $numFiles ]; do
@@ -412,6 +447,12 @@ while [ $tempCounter -lt $numFiles ]; do
 	base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//'`
 	suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 	#echoIfDebug "suffix here is -- $suf"
+	if [ $opari = $TRUE ]; then
+	  base=${base}.pomp
+	  cmdToExecute="${optOpariTool} -nosrc -table opari.tab.c ${arrFileName[$tempCounter]} $base$suf"
+	  evalWithDebugMessage "$cmdToExecute" "Parsing with Opari" 
+	  arrFileName[$tempCounter]=$base$suf
+	fi
 	newFile=${base}.inst${suf}
 	arrTau[$tempCounter]="${OUTPUTARGSFORTAU}${newFile}"
 	arrPdbForTau[$tempCounter]="${PDBARGSFORTAU}${newFile}"
@@ -456,7 +497,13 @@ if [ $numFiles == 0 ]; then
 		#Do not add -o, since the regular command has it already.
     fi	
 
-
+	if [ $opari == $TRUE ]; then
+	  evalWithDebugMessage "/bin/rm -f opari.rc" "Removing opari.rc"
+	  cmdCompileOpariTab="${optTauCC} -c ${optPdtCFlags} opari.tab.c"
+	  evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
+	  linkCmd="$linkCmd opari.tab.o"
+	fi
+	
 	evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
 
 	echoIfDebug "Looking for file: $passedOutputFile"
@@ -465,6 +512,9 @@ if [ $numFiles == 0 ]; then
 		printError "$CMD" "$linkCmd"
 	fi
 	gotoNextStep=$FALSE
+	if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
+	  evalWithDebugMessage "/bin/rm -f opari.tab.c opari.tab.o *.opari.inc" "Removing opari.tab.c opari.tab.o *.opari.inc"
+	fi
 fi
 
 
@@ -586,6 +636,11 @@ if [ $gotoNextStep == $TRUE ]; then
 			base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//'`
 			suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 			outputFile=${base##*/}.o	#strip it off the directory
+			# Remove the .pomp from the name of the output file. 
+			if [ $opari == $TRUE ]; then
+			  outputFile=`echo $outputFile | sed -e 's/\.pomp//'`
+			fi
+			
 				
 			#echoIfDebug "\n\nThe output file passed is $passedOutputFile"
 			#echoIfDebug "The output file generated locally is $outputFile"
@@ -668,9 +723,12 @@ fi
 if [ $needToCleanPdbInstFiles == $TRUE ]; then
 	tempCounter=0
 	while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
-		eval "rm ${arrTau[$tempCounter]##*/}"
+		eval "/bin/rm ${arrTau[$tempCounter]##*/}"
 		if [ $pdbFileSpecified == $FALSE ]; then
-		  eval "rm ${arrPdb[$tempCounter]##*/}"
+		  evalWithDebugMessage "/bin/rm -f ${arrPdb[$tempCounter]##*/}" "cleaning PDB file"
+		fi
+		if [ $opari == $TRUE ]; then
+		  evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
 		fi
 		tempCounter=tempCounter+1
 	done
