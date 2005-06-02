@@ -16,11 +16,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.43 2005/05/31 23:21:48 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.44 2005/06/02 17:02:48 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.43 $
+ * @version $Revision: 1.44 $
  */
 public class ParaProf implements ActionListener {
 
@@ -90,7 +90,7 @@ public class ParaProf implements ActionListener {
     }
 
     private static void usage() {
-        System.err.println("Usage: paraprof [-d] [-p] [-i] [-f <filetype>] <files/directory>\n\n"
+        System.err.println("Usage: paraprof [--pack <file>] [--dump] [-p] [-i] [-f <filetype>] <files/directory>\n\n"
                 + "try `paraprof --help` for more information");
     }
 
