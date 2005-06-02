@@ -10,6 +10,19 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class LoadTrial {
 
+    private File writeXml;
+    private String trialTime;
+    private String sourceFiles[];
+    private Application app;
+    private Experiment exp;
+    private boolean fixNames = false;
+    private int expID = 0;
+    public int trialID = 0;
+    private int fileType = 0;
+    private DataSource dataSource = null;
+    public String trialName = new String();
+    public String problemFile = new String();
+
     //    public static String USAGE = "usage: perfdmf_loadtrial {-f, --filetype}
     // file_type {-e,--experimentid} experiment_id\n [{-t, --trialid} trial_id]
     // [{-n,--name} trial_name] [{-i --fixnames}] <files>\n Where:\n file_type =
@@ -31,7 +44,7 @@ public class LoadTrial {
                 + "Optional Arguments:\n\n"
                 + "  -f, --filetype <filetype>      Specify type of performance data, options are:\n"
                 + "                                   profiles (default), pprof, dynaprof, mpip,\n"
-                + "                                   gprof, psrun, hpm\n"
+                + "                                   gprof, psrun, hpm, packed\n"
                 + "  -t, --trialid <number>         Specify trial ID\n"
                 + "  -i, --fixnames                 Use the fixnames option for gprof\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
@@ -46,18 +59,6 @@ public class LoadTrial {
                 + "    the trial the name \"HPM data 01\"\n");
     }
 
-    private File writeXml;
-    private String trialTime;
-    private String sourceFiles[];
-    private Application app;
-    private Experiment exp;
-    private boolean fixNames = false;
-    private int expID = 0;
-    public int trialID = 0;
-    private int fileType = 0;
-    private DataSource dataSource = null;
-    public String trialName = new String();
-    public String problemFile = new String();
 
     /*
      * This variable connects translator to DB in order to check whether the
@@ -109,118 +110,26 @@ public class LoadTrial {
 
     public void loadTrial(int fileType) {
 
+        
+        File[] files = new File[sourceFiles.length];
+        for (int i = 0; i < sourceFiles.length; i++) {
+            files[i] = new File(sourceFiles[i]);
+        }
+
+        
+        try {
+            dataSource = UtilFncs.initializeDataSource(files, fileType, fixNames);
+        } catch (DataSourceException e) {
+
+            if (files == null || files.length != 0) // We don't output an error message if paraprof was just invoked with no parameters.
+                e.printStackTrace();
+            return;
+        }
+
+        
         trial = null;
         this.fileType = fileType;
 
-        List v = null;
-        File[] inFile = new File[1];
-        File filelist[];
-        switch (fileType) {
-        case 0:
-            if (sourceFiles.length != 1) {
-                System.err.println("pprof type: you must specify exactly one file");
-                System.exit(-1);
-            }
-            if (isDirectory(sourceFiles[0])) {
-                System.err.println("pprof type: you must specify a file, not a directory");
-                System.exit(-1);
-            }
-            inFile[0] = new File(sourceFiles[0]);
-            v = new Vector();
-            v.add(inFile);
-            dataSource = new TauPprofDataSource(v);
-            break;
-        case 1:
-
-            FileList fl = new FileList();
-
-            if (sourceFiles.length < 1) {
-                v = fl.helperFindProfiles(System.getProperty("user.dir"));
-            } else {
-                if (isDirectory(sourceFiles[0])) {
-
-                    if (sourceFiles.length > 1) {
-                        System.err.println("profiles type: you can only specify one directory");
-                        System.exit(-1);
-                    }
-
-                    v = fl.helperFindProfiles(sourceFiles[0]);
-
-                } else {
-
-                    v = new Vector();
-                    filelist = new File[sourceFiles.length];
-                    for (int i = 0; i < sourceFiles.length; i++) {
-                        filelist[i] = new File(sourceFiles[i]);
-                    }
-                    v.add(filelist);
-                }
-
-            }
-
-            //fl = new FileList();
-            //v = fl.getFileList(new File(System.getProperty("user.dir")),
-            // null, fileType, "profile", false);
-            //v = helperFindFiles(".", "\\Aprofile\\..*\\..*\\..*\\z");
-
-            dataSource = new TauDataSource(v);
-            break;
-        case 2:
-            filelist = new File[sourceFiles.length];
-            for (int i = 0; i < sourceFiles.length; i++) {
-                filelist[i] = new File(sourceFiles[i]);
-            }
-            dataSource = new DynaprofDataSource(filelist);
-            break;
-        case 3:
-            if (sourceFiles.length != 1) {
-                System.err.println("MpiP type: you must specify exactly one file");
-                System.exit(-1);
-            }
-            if (isDirectory(sourceFiles[0])) {
-                System.err.println("MpiP type: you must specify a file, not a directory");
-                System.exit(-1);
-            }
-            inFile[0] = new File(sourceFiles[0]);
-            dataSource = new MpiPDataSource(inFile[0]);
-            break;
-        case 4:
-            v = new Vector();
-            filelist = new File[sourceFiles.length];
-            for (int i = 0; i < sourceFiles.length; i++) {
-                filelist[i] = new File(sourceFiles[i]);
-            }
-            v.add(filelist);
-            dataSource = new HPMToolkitDataSource(v);
-            break;
-        case 5:
-            filelist = new File[sourceFiles.length];
-            for (int i = 0; i < sourceFiles.length; i++) {
-                filelist[i] = new File(sourceFiles[i]);
-            }
-            dataSource = new GprofDataSource(filelist, fixNames);
-            break;
-        case 6:
-            v = new Vector();
-            filelist = new File[sourceFiles.length];
-            for (int i = 0; i < sourceFiles.length; i++) {
-                filelist[i] = new File(sourceFiles[i]);
-            }
-            v.add(filelist);
-            dataSource = new PSRunDataSource(v);
-            break;
-        /*
-         * case 101: if (fileExists()) { inFile[0] = new File (sourceFile); v =
-         * new Vector(); v.add(inFile); } else { fl = new FileList(); String[]
-         * sourcePath = extractSourcePath(); if (sourcePath[0] != null) v =
-         * fl.getFileList(new File(sourcePath[0]), null, fileType,
-         * sourcePath[1], false); else v = fl.getFileList(new
-         * File(System.getProperty("user.dir")), null, fileType, sourceFile,
-         * false); } dataSession = new SPPMDataSource(); break;
-         */
-        default:
-            break;
-        }
 
         trial = new Trial();
         trial.setDataSource(dataSource);
@@ -319,45 +228,6 @@ public class LoadTrial {
         return problemString.toString();
     }
 
-    private boolean isDirectory(String name) {
-        File f = new File(name);
-        return f.isDirectory();
-    }
-
-    private boolean fileExists() {
-        boolean rc = false;
-        try {
-            FileInputStream fileIn = new FileInputStream(sourceFiles[0]);
-            if (fileIn != null) {
-                InputStreamReader inReader = new InputStreamReader(fileIn);
-                if (inReader != null) {
-                    BufferedReader br = new BufferedReader(inReader);
-                    if (br != null) {
-                        rc = true;
-                        br.close();
-                    }
-                }
-            }
-        } catch (IOException e) {
-            // do nothing but return false
-        }
-        return rc;
-    }
-
-    private String[] extractSourcePath() {
-        //StringTokenizer st = new StringTokenizer(sourceFile, "/");
-        File inFile = new File(sourceFiles[0]);
-        String[] newPath = new String[2];
-        newPath[0] = new String(inFile.getParent());
-        if (newPath[0] != null) {
-            newPath[1] = new String(inFile.getName());
-        }
-        return newPath;
-    }
-
-    //******************************
-    //End - Helper functionProfiles for buildStatic data.
-    //******************************
 
     static public void main(String[] args) {
         // 	for (int i=0; i<args.length; i++) {
@@ -437,6 +307,9 @@ public class LoadTrial {
                 fileType = 5;
             } else if (fileTypeString.equals("psrun")) {
                 fileType = 6;
+            } else if (fileTypeString.equals("packed")) {
+                fileType = 7;
+
                 /*
                  * } else if (fileTypeString.equals("sppm")) { fileType = 101; }
                  * else if (fileTypeString.equals("xprof")) { fileType = 0; }
