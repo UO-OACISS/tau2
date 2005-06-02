@@ -4139,24 +4139,24 @@ fi
 case $machine in
     
     apple)
-	gunzip -c tools/src/contrib/apple/libjogl.jnilib.gz > $architecture/lib/libjogl.jnilib
+	gunzip -c tools/src/contrib/apple/libjogl.jnilib.gz > $tautoplevel/$architecture/lib/libjogl.jnilib
 	;;
     
     i386_linux)
-	gunzip -c tools/src/contrib/i386_linux/libjogl.so.gz > $architecture/lib/libjogl.so
+	gunzip -c tools/src/contrib/i386_linux/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
 	;;
     
     x86_64)
-	gunzip -c tools/src/contrib/i386_linux/libjogl.so.gz > $architecture/lib/libjogl.so
+	gunzip -c tools/src/contrib/i386_linux/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
 	;;
 
     ia64)
-	gunzip -c tools/src/contrib/ia64/libjogl.so.gz > $architecture/lib/libjogl.so
-	gunzip -c tools/src/contrib/ia64/jogl.jar.gz > $architecture/lib/jogl.jar
+	gunzip -c tools/src/contrib/ia64/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
+	gunzip -c tools/src/contrib/ia64/jogl.jar.gz > $tautoplevel/$architecture/lib/jogl.jar
 	;;
 
     solaris2)
-	gunzip -c tools/src/contrib/solaris2/libjogl.so.gz > $architecture/lib/libjogl.so
+	gunzip -c tools/src/contrib/solaris2/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
 	;;
     
     *)
