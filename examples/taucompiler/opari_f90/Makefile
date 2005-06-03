@@ -15,7 +15,7 @@ TAUROOTDIR	= ../../..
 
 include $(TAUROOTDIR)/include/Makefile
 
-F90		= $(TAU_COMPILER) $(TAU_F90) 
+F90		= $(TAU_COMPILER) -optReset="" $(TAU_F90) 
 
 CXX		= $(TAU_COMPILER) $(TAU_CXX) 
 
