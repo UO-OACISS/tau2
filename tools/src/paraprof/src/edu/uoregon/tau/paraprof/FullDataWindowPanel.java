@@ -216,7 +216,6 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
             }
         } catch (Exception e) {
             // do nothing, it's just a tooltip
-            System.err.println("you suck");
         }
 
         return null;
