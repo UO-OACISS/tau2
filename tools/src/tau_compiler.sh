@@ -141,6 +141,11 @@ echoIfDebug "The compiler being read is $CMD \n"
 
 
 ####################################################################
+# Initialize optOpariOpts 
+####################################################################
+optOpariOpts="-nosrc -table opari.tab.c"
+
+####################################################################
 #Parsing all the Tokens of the Command passed
 ####################################################################
 echoIfDebug "\nParsing all the arguments passed..."
@@ -434,6 +439,8 @@ fi
 
 if [ $opari == $TRUE ]; then
 	echoIfDebug "Opari is on!"
+	optPdtCxxFlags="$optPdtCxxFlags -D_OPENMP"
+	optPdtCFlags="$optPdtCFlags -D_OPENMP"
 else
 	echoIfDebug "Opari is off!"
 fi
@@ -449,7 +456,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	#echoIfDebug "suffix here is -- $suf"
 	if [ $opari = $TRUE ]; then
 	  base=${base}.pomp
-	  cmdToExecute="${optOpariTool} -nosrc -table opari.tab.c ${arrFileName[$tempCounter]} $base$suf"
+	  cmdToExecute="${optOpariTool} $optOpariOpts ${arrFileName[$tempCounter]} $base$suf"
 	  evalWithDebugMessage "$cmdToExecute" "Parsing with Opari" 
 	  arrFileName[$tempCounter]=$base$suf
 	fi
