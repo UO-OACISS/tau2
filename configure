@@ -233,14 +233,14 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc ]
       then
         c_compiler=$myarg
       else
         testxlc=`echo $myarg | sed -e 's/xlc//'`
         if [ "y$testxlc" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', and 'pgcc' "
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'fcc', 'pathcc', and 'pgcc' "
 #       exit 1
         else
           c_compiler=$myarg
