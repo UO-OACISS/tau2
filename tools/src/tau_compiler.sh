@@ -266,6 +266,7 @@ for arg in "$@"
 			-optCompile*)
 				optCompile="${arg#"-optCompile="} $optCompile"
 				echoIfDebug "\tCompiling Options are: $optCompile"
+				optIncludeDefs="${arg#"-optCompile="} $optIncludeDefs"
 				;;
 			-optReset*)
 				optCompile=${arg#"-optReset="}
@@ -366,6 +367,7 @@ for arg in "$@"
 			optPdtCxxFlags="$arg $optPdtCxxFlags"
 			optPdtF95="$arg $optPdtF95"
 			optCompile="$arg $optCompile"
+			optIncludeDefs="$arg $optIncludeDefs"
 			;;
 
 		-c)
@@ -506,7 +508,7 @@ if [ $numFiles == 0 ]; then
 
 	if [ $opari == $TRUE ]; then
 	  evalWithDebugMessage "/bin/rm -f opari.rc" "Removing opari.rc"
-	  cmdCompileOpariTab="${optTauCC} -c ${optCompile} opari.tab.c"
+	  cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} opari.tab.c"
 	  evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	  linkCmd="$linkCmd opari.tab.o"
 	fi
