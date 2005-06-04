@@ -3602,6 +3602,8 @@ else
   cp ${tauroot}/tools/src/dms/dms.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jatha.jar ${tauprefix}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/jgraph.jar ${tauprefix}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/jogl.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauprefix}/${architecture}/lib
   echo "TAU: installed ParaProf, DMS, and supporting jars in ${tauprefix}/${architecture}/lib"
 # Now we look at the installation of tau_compiler.sh 
