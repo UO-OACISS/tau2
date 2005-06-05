@@ -240,7 +240,7 @@ do
         testxlc=`echo $myarg | sed -e 's/xlc//'`
         if [ "y$testxlc" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'fcc', 'pathcc', and 'pgcc' "
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', and 'pgcc' "
 #       exit 1
         else
           c_compiler=$myarg
@@ -1590,6 +1590,12 @@ case $cxx_compiler in
       then 
         extradir=`which FCC | sed s/FCC/../`
         fixmakeargs="$fixmakeargs FUJITSU_FORTRAN"
+        fortran_compiler=yes
+      fi
+      if [ $machine = solaris2 -o $machine = solaris2-64 ] 
+      then
+        extradir=`which FCC | sed s/FCC/../`
+        fixmakeargs="$fixmakeargs FUJITSU_SOLARIS"
         fortran_compiler=yes
       fi
       ;;
