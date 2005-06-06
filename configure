@@ -3631,7 +3631,6 @@ else
 fi
 
 
-echo "TAU: installing TAU's PerfDMF database utilities in ${targetdir}/${architecture}/bin" 
 
 if [ ${tauprefix} = unknown ]
 then
@@ -3640,12 +3639,16 @@ else
   targetdir=${tauprefix}
 fi
 
+
 if [ $slog2 = yes ]
 then
   utils/slogconverter/tau2slog2.skel $jdkdir $targetdir $slog2dir $architecture > $targetdir/$architecture/bin/tau2slog2
   chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2
   echo "TAU: installed tau2slog2 in ${targetdir}/${architecture}/bin"
 fi
+
+
+echo "TAU: installing TAU's PerfDMF database utilities in ${targetdir}/${architecture}/bin" 
 
 cat ${tauroot}/tools/src/dms/bin/configure.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
