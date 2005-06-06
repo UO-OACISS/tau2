@@ -3541,7 +3541,6 @@ then
   cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/dms/dms.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauroot}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/jatha.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jgraph.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jogl.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jgraph-1.3.jar ${tauroot}/${architecture}/lib
@@ -3607,8 +3606,8 @@ else
   cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/dms/dms.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/jatha.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jgraph.jar ${tauprefix}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/jgraph-1.3.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jogl.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauprefix}/${architecture}/lib
   echo "TAU: installed ParaProf, DMS, and supporting jars in ${tauprefix}/${architecture}/lib"
@@ -3632,7 +3631,7 @@ else
 fi
 
 
-echo "TAU: installing TAU's PerfDMF database utilities" 
+echo "TAU: installing TAU's PerfDMF database utilities in ${targetdir}/${architecture}/bin" 
 
 if [ ${tauprefix} = unknown ]
 then
@@ -3652,43 +3651,36 @@ cat ${tauroot}/tools/src/dms/bin/configure.skel |
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_configure
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_configure
-echo "TAU: installed perfdmf_configure in ${targetdir}/${architecture}/bin"
 
 cat ${tauroot}/tools/src/dms/bin/loadapp.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_loadapp
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadapp
-echo "TAU: installed perfdmf_loadapp in ${targetdir}/${architecture}/bin"
 
 cat ${tauroot}/tools/src/dms/bin/createapp.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_createapp
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_createapp
-echo "TAU: installed perfdmf_createapp in ${targetdir}/${architecture}/bin"
 
 cat ${tauroot}/tools/src/dms/bin/loadexp.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_loadexp
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadexp
-echo "TAU: installed perfdmf_loadexp in ${targetdir}/${architecture}/bin"
 
 cat ${tauroot}/tools/src/dms/bin/createexp.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_createexp
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_createexp
-echo "TAU: installed perfdmf_createexp in ${targetdir}/${architecture}/bin"
 
 cat ${tauroot}/tools/src/dms/bin/loadschema.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_loadschema
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadschema
-echo "TAU: installed perfdmf_loadschema in ${targetdir}/${architecture}/bin"
 
 cat ${tauroot}/tools/src/dms/bin/loadtrial.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_loadtrial
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadtrial
-echo "TAU: installed perfdmf_loadtrial in ${targetdir}/${architecture}/bin"
 
 if [ ${tauprefix} = unknown ]
 then
