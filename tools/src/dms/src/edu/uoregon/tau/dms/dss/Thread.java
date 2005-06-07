@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.16 2005/05/31 23:21:02 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.17 2005/06/07 01:25:33 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -22,7 +22,7 @@ public class Thread implements Comparable {
     private int contextID = -1;
     private int threadID = -1;
     private List functionProfiles = new ArrayList();
-    private Vector userEventProfiles = new Vector();
+    private List userEventProfiles = new ArrayList();
     private double[] doubleList;
     private double maxNumCalls = 0;
     private double maxNumSubr = 0;
@@ -83,9 +83,11 @@ public class Thread implements Comparable {
     public void addUserEvent(UserEventProfile uep) {
         int id = uep.getUserEvent().getID();
         // increase the userEventProfiles vector size if necessary
-        if (id >= userEventProfiles.size()) {
-            userEventProfiles.setSize(id + 1);
+
+        while (id >= userEventProfiles.size()) {
+            userEventProfiles.add(null);
         }
+
         userEventProfiles.set(id, uep);
     }
 
@@ -105,7 +107,7 @@ public class Thread implements Comparable {
 
     public UserEventProfile getUserEventProfile(UserEvent userEvent) {
         if ((userEventProfiles != null) && (userEvent.getID() < userEventProfiles.size()))
-            return (UserEventProfile) userEventProfiles.elementAt(userEvent.getID());
+            return (UserEventProfile) userEventProfiles.get(userEvent.getID());
         return null;
     }
 
@@ -260,7 +262,7 @@ public class Thread implements Comparable {
 
                     // Note: Assumption is made that the max inclusive value is the value required to calculate
                     // percentage (ie, divide by). Thus, we are assuming that the sum of the exclusive
-                    // values is equal to the max inclusive value. This is a reasonable assuption. This also gets
+                    // values is equal to the max inclusive value. This is a reasonable assumption. This also gets
                     // us out of sticky situations when call path data is present (this skews attempts to calculate
                     // the total exclusive value unless checks are made to ensure that we do not include call path objects).
 

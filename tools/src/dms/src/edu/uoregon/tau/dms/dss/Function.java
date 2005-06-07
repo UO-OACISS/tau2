@@ -9,15 +9,10 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.8 2005/05/31 23:21:02 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.9 2005/06/07 01:25:33 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		FunctionProfile
- */
-/**
- * @author amorris
- *
- * TODO ...
  */
 public class Function implements Serializable, Comparable {
 
@@ -29,6 +24,7 @@ public class Function implements Serializable, Comparable {
  
     // we hold on to the mean and total profiles for pass-through functions
     private FunctionProfile meanProfile;
+    private FunctionProfile stddevProfile;
     private FunctionProfile totalProfile;
 
     // color settings
@@ -154,6 +150,15 @@ public class Function implements Serializable, Comparable {
     }
 
 
+    public void setStddevProfile(FunctionProfile fp) {
+        this.stddevProfile = fp;
+    }
+
+    public FunctionProfile getStddevProfile() {
+        return stddevProfile;
+    }
+
+    
     // mean section
     public void setMeanProfile(FunctionProfile fp) {
         this.meanProfile = fp;

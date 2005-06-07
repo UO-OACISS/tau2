@@ -394,6 +394,15 @@ public class UtilFncs {
             }
             dataSource = new PackedProfileDataSource(sourceFiles[0]);
             break;
+        case 8:
+            if (sourceFiles.length != 1) {
+                throw new DataSourceException("Cube type: you must specify exactly one file");
+            }
+            if (sourceFiles[0].isDirectory()) {
+                throw new DataSourceException("Cube type: you must specify a file, not a directory");
+            }
+            dataSource = new CubeDataSource(sourceFiles[0]);
+            break;
         default:
             break;
         }

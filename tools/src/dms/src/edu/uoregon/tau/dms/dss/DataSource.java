@@ -2,15 +2,16 @@ package edu.uoregon.tau.dms.dss;
 
 import java.util.*;
 import java.io.*;
+import java.math.BigDecimal;
 import java.sql.*;
 
 /**
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.13 2005/05/31 23:21:01 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.14 2005/06/07 01:25:32 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		TrialData
  * @see		NCT
  */
@@ -24,6 +25,7 @@ public abstract class DataSource {
     private List metrics = null;
     protected Thread meanData = null;
     protected Thread totalData = null;
+    protected Thread stddevData = null;
     private Map nodes = new TreeMap();
     private Map functions = new TreeMap();
     private Map groups = new TreeMap();
@@ -69,6 +71,11 @@ public abstract class DataSource {
 
     public boolean getUserEventsPresent() {
         return userEventsPresent;
+    }
+
+    
+    public Function addFunction(String name) {
+        return this.addFunction(name,this.getNumberOfMetrics());
     }
 
     public Function addFunction(String name, int numMetrics) {
@@ -292,11 +299,17 @@ public abstract class DataSource {
      * the derived data
      */
     protected void generateDerivedData() {
+        long time = System.currentTimeMillis();
+
         for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
             ((Thread) it.next()).setThreadDataAllMetrics();
         }
         this.setMeanData(0, this.getNumberOfMetrics() - 1);
         this.meanData.setThreadDataAllMetrics();
+
+        time = (System.currentTimeMillis()) - time;
+        System.out.println("Time to process (in milliseconds): " + time);
+
     }
 
     public void setMeanData(int startMetric, int endMetric) {
@@ -335,12 +348,10 @@ public abstract class DataSource {
 
         double[] exclSum = new double[numMetrics];
         double[] inclSum = new double[numMetrics];
-        double callSum = 0;
-        double subrSum = 0;
+        double[] exclSumSqr = new double[numMetrics];
+        double[] inclSumSqr = new double[numMetrics];
 
         double topLevelInclSum[] = new double[numMetrics];
-
-        Iterator l = this.getFunctions();
 
         if (meanData == null) {
             meanData = new Thread(-1, -1, -1, numMetrics);
@@ -350,16 +361,23 @@ public abstract class DataSource {
             totalData = new Thread(-2, -2, -2, numMetrics);
         }
 
-        // must always iterate through all metrics regardless to find the top level timers, I think???
-        for (int i = 0; i < numMetrics; i++) {
+        if (stddevData == null) {
+            stddevData = new Thread(-3, -3, -3, numMetrics);
+        }
 
-            for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
+
+        // make sure that the allThreads list is initialized;
+        this.initAllThreadsList();
+
+        // must always iterate through all metrics regardless to find the top level timers, I think???
+        for (int i = 0; i < numMetrics; i++) { // for each metric
+            for (Iterator it = allThreads.iterator(); it.hasNext();) { // for each thread
                 Thread thread = (Thread) it.next();
                 topLevelInclSum[i] += thread.getMaxInclusive(i);
             }
         }
 
-        while (l.hasNext()) { // for each function
+        for (Iterator l = this.getFunctions(); l.hasNext();) { // for each function
             Function function = (Function) l.next();
 
             // get/create the FunctionProfile for mean
@@ -378,33 +396,49 @@ public abstract class DataSource {
             }
             function.setTotalProfile(totalProfile);
 
-            callSum = 0;
-            subrSum = 0;
+            // get/create the FunctionProfile for stddev
+            FunctionProfile stddevProfile = stddevData.getFunctionProfile(function);
+            if (stddevProfile == null) {
+                stddevProfile = new FunctionProfile(function, numMetrics);
+                stddevData.addFunctionProfile(stddevProfile);
+            }
+            function.setStddevProfile(stddevProfile);
+
+            int numEvents = 0;
+            double callSum = 0;
+            double subrSum = 0;
+            double callSumSqr = 0;
+            double subrSumSqr = 0;
             for (int i = 0; i < numMetrics; i++) {
                 exclSum[i] = 0;
                 inclSum[i] = 0;
+                exclSumSqr[i] = 0;
+                inclSumSqr[i] = 0;
             }
 
-            List allThreads = this.getAllThreads();
 
             // this must be stored somewhere else, but I'm going to compute it since I don't know where
             int numThreads = allThreads.size();
 
-            for (int i = 0; i < numThreads; i++) {
+            for (int i = 0; i < numThreads; i++) { // for each thread
                 edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) allThreads.get(i);
                 FunctionProfile functionProfile = thread.getFunctionProfile(function);
 
                 if (functionProfile != null) { // only if this function was called for this nct
-
+                    numEvents++;
                     for (int j = startMetric; j <= endMetric; j++) {
 
                         exclSum[j] += functionProfile.getExclusive(j);
                         inclSum[j] += functionProfile.getInclusive(j);
+                        exclSumSqr[j] += functionProfile.getExclusive(j) * functionProfile.getExclusive(j);
+                        inclSumSqr[j] += functionProfile.getInclusive(j) * functionProfile.getInclusive(j);
 
                         // the same for every metric
                         if (j == 0) {
                             callSum += functionProfile.getNumCalls();
                             subrSum += functionProfile.getNumSubr();
+                            callSumSqr += functionProfile.getNumCalls() * functionProfile.getNumCalls();
+                            subrSumSqr += functionProfile.getNumSubr() * functionProfile.getNumSubr();
                         }
                     }
                 }
@@ -419,21 +453,51 @@ public abstract class DataSource {
                 // mean is just the total / numThreads
                 meanProfile.setNumCalls((double) callSum / numThreads);
                 meanProfile.setNumSubr((double) subrSum / numThreads);
+
+                double stdDev = 0;
+                if (numEvents > 1) {
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (numEvents - 1))
+                            - (meanProfile.getNumCalls() * meanProfile.getNumCalls())));
+                }
+                stddevProfile.setNumCalls(stdDev);
+
+                stdDev = 0;
+                if (numEvents > 1) {
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (numEvents - 1))
+                            - (meanProfile.getNumSubr() * meanProfile.getNumSubr())));
+                }
+                stddevProfile.setNumSubr(stdDev);
+
             }
 
             for (int i = startMetric; i <= endMetric; i++) {
 
                 totalProfile.setExclusive(i, exclSum[i]);
                 totalProfile.setInclusive(i, inclSum[i]);
-                //                if (totalProfile.getNumCalls() != 0)
-                //                    totalProfile.setInclusivePerCall(i, inclSum[i] / totalProfile.getNumCalls());
 
                 // mean data computed as above in comments
                 meanProfile.setExclusive(i, exclSum[i] / numThreads);
                 meanProfile.setInclusive(i, inclSum[i] / numThreads);
 
-                //                if (meanProfile.getNumCalls() != 0)
-                //                    meanProfile.setInclusivePerCall(i, inclSum[i] / numThreads / meanProfile.getNumCalls());
+                double stdDev = 0;
+                if (numEvents > 1) {
+
+                    // see http://cuwu.editthispage.com/stories/storyReader$13 for why I don't multiply by n/(n-1)
+                    
+                    //stdDev = java.lang.Math.sqrt(((double) numEvents / (numEvents - 1))
+                    //        * java.lang.Math.abs((exclSumSqr[i] / (numEvents))
+                    //                - (meanProfile.getExclusive(i) * meanProfile.getExclusive(i))));
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[i] / (numEvents))
+                            - (meanProfile.getExclusive(i) * meanProfile.getExclusive(i))));
+                }
+                stddevProfile.setExclusive(i, stdDev);
+
+                stdDev = 0;
+                if (numEvents > 1) {
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[i] / (numEvents - 1))
+                            - (meanProfile.getInclusive(i) * meanProfile.getInclusive(i))));
+                }
+                stddevProfile.setInclusive(i, stdDev);
 
                 if (topLevelInclSum[i] != 0) {
                     totalProfile.setInclusivePercent(i, totalProfile.getInclusive(i) / topLevelInclSum[i] * 100);
@@ -562,7 +626,6 @@ public abstract class DataSource {
         return list;
     }
 
-    
     public Thread getThread(int nodeID, int contextID, int threadID) {
         Context context = this.getContext(nodeID, contextID);
         Thread thread = null;
