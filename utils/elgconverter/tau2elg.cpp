@@ -60,6 +60,7 @@ double clockp = 0;
 unsigned int maxthreads = 0;
 unsigned int maxnodes = 0;
 int strings=0;
+int ecount = 0;
 
 /* FIX GlobalID so it takes into account numthreads */
 /* utilities */
@@ -102,6 +103,10 @@ int EnterState(void *userData, double time,
 	return 0;
 }
 
+int CountEnter(void *userData, double time, 
+		unsigned int nodeid, unsigned int tid, unsigned int stateid){ecount++; return 0;}
+int CountLeave(void *userData, double time, unsigned int nid, unsigned int tid){ecount++; return 0;}
+
 /***************************************************************************
  * Description: LeaveState is called at routine exit by trace input library
  * 		This is a callback routine which must be registered by the 
@@ -126,8 +131,8 @@ int ClockPeriod( void*  userData, double clkPeriod )
 {
 	dprintf("Clock period %g\n", clkPeriod);
 	if(clkPeriod==0)
-		clockp=0;
-	//	clockp = 1/(clkPeriod/1000000);
+		return 0;
+	clockp = 1000000/clkPeriod;//1/(clkPeriod/1000000);
 	return 0;
 }
 
@@ -314,7 +319,20 @@ int SendMessage( void *userData, double time,
 	//messageTag, messageSize, VTF3_SCLNONE);
 	return 0;
 }
-
+int CountSend(void *userData, double time, 
+		unsigned int sourceNodeToken,
+		unsigned int sourceThreadToken, 
+		unsigned int destinationNodeToken,
+		unsigned int destinationThreadToken,
+		unsigned int messageSize,
+		unsigned int messageTag){ecount++; return 0;}
+int CountRecv(void *userData, double time,
+		unsigned int sourceNodeToken,
+		unsigned int sourceThreadToken, 
+		unsigned int destinationNodeToken,
+		unsigned int destinationThreadToken,
+		unsigned int messageSize,
+		unsigned int messageTag){ecount++; return 0;}
 /***************************************************************************
  * Description: RecvMessage is called when a message is received by a process.
  * 		This is a callback routine which must be registered by the 
@@ -368,17 +386,17 @@ int main(int argc, char **argv)
 	if (argc < 3)
 	{
 		printf(
-	"Usage: %s <TAU trace> <edf file> <out file> [-a|-fa] [-nomessage]  [-v]\n", 
+	"Usage: %s <TAU trace> <edf file> <out file> [-nomessage]  [-v]\n", 
 		    argv[0]);
-	printf(" -a         : ASCII VTF3 file format\n");
-	printf(" -fa        : FAST ASCII VTF3 file format\n");
+	//printf(" -a         : ASCII VTF3 file format\n");
+	//printf(" -fa        : FAST ASCII VTF3 file format\n");
 	printf(
 	" -nomessage : Suppress printing of message information in the trace\n");
 	printf(" -v         : Verbose\n");
-	printf(" Default trace format of <out file> is VTF3 binary\n");
+	printf(" Default trace format of <out file> is Epilog binary\n");
 
 	printf(" e.g.,\n");
-	printf(" %s merged.trc tau.edf app.vpt.gz\n", argv[0]);
+	printf(" %s merged.trc tau.edf app.elg\n", argv[0]);
 	exit(1);
 	}
 	/***************************************************************************
@@ -448,15 +466,17 @@ int main(int argc, char **argv)
 	firstpass.DefClkPeriod = ClockPeriod;
 	firstpass.DefStateGroup = DefStateGroup;
 	firstpass.DefState = DefState;
-	firstpass.SendMessage = 0; /* Important to declare these as null! */
-	firstpass.RecvMessage = 0; /* Important to declare these as null! */
+	firstpass.SendMessage = CountSend; /* Important to declare these as null! */
+	firstpass.RecvMessage = CountRecv; /* Important to declare these as null! */
 	firstpass.DefUserEvent = 0;
 	firstpass.EventTrigger = 0; /* these events are ignored in the first pass */
-	firstpass.EnterState = 0;   /* these events are ignored in the first pass */
-	firstpass.LeaveState = 0;   /* these events are ignored in the first pass */
+	firstpass.EnterState = CountEnter;   /* these events are ignored in the first pass */
+	firstpass.LeaveState = CountLeave;   /* these events are ignored in the first pass */
 	/* Go through all trace records */
+	//int ecount = 0;
 	do{
 		recs_read = Ttf_ReadNumEvents(fh,firstpass, 1024);
+		//ecount+=recs_read;
 		#ifdef DEBUG 
 		if (recs_read != 0)
 			cout <<"Read "<<recs_read<<" records"<<endl;
@@ -473,7 +493,10 @@ int main(int argc, char **argv)
 	/* This is ok for single threaded programs. For multi-threaded programs
 	* we'll need to modify the way we describe the cpus/threads */
 	//VTF3_WriteDefsyscpunums(fcb, 1, &totalnidtids);
-	ElgOut_write_MACHINE(elgo, 0, numthreads.size(), ELG_NO_ID);
+	char *machinen="Generic";
+	ElgOut_write_STRING(elgo,strings,0,machinen);
+	ElgOut_write_MACHINE(elgo, 0, numthreads.size(), strings);//ELG_NO_ID
+	strings++;
 	ElgOut_write_MPI_COMM(elgo, 0, 0, NULL);
 	/* Then write out the thread names if it is multi-threaded */
 	if (multiThreaded)
@@ -491,9 +514,14 @@ int main(int argc, char **argv)
 		}
 		unsigned int *cpuidarray = new unsigned int[totalnidtids]; /* max */
 		/* next, we write the cpu name and a group name for node/threads */
+
 		for (i=0; i < nodes; i++)
 		{ 
-			ElgOut_write_NODE((ElgOut*)elgo, i, 0, threadnumarray[i], ELG_NO_ID, clockp);
+			char noden[512];
+			sprintf(noden,"NODE %d\0",i);
+			ElgOut_write_STRING(elgo,strings,0,noden);
+			ElgOut_write_NODE((ElgOut*)elgo, i, 0, threadnumarray[i], strings, clockp);
+			strings++;
 			
 			char name[32];
 			for (tid = 0; tid < threadnumarray[i]; tid++)
@@ -502,7 +530,7 @@ int main(int argc, char **argv)
 				int cpuid = GlobalId(i,tid);
 				cpuidarray[tid] = cpuid;
 				ElgOut_write_THREAD((ElgOut*)elgo, cpuid, 0, ELG_NO_ID);
-				ElgOut_write_LOCATION((ElgOut*)elgo, cpuid, 0, i, 0, tid);//2nd to last, formerly cpuid
+				ElgOut_write_LOCATION((ElgOut*)elgo, cpuid, 0, i, 0, tid);
 				//VTF3_WriteDefcpuname(fcb, cpuid, name);
 			}
 			sprintf(name, "Node %d", i);
@@ -517,12 +545,16 @@ int main(int argc, char **argv)
 	{
 		for(unsigned int i =0; i<numthreads.size();i++)
 		{
-			ElgOut_write_NODE((ElgOut*)elgo, i, 0, 1, ELG_NO_ID, clockp);
+			char noden[512];
+			sprintf(noden,"NODE %d\0",i);
+			ElgOut_write_STRING(elgo,strings,0,noden);
+			ElgOut_write_NODE((ElgOut*)elgo, i, 0, 1, strings, clockp);
+			strings++;
 			//ElgOut_write_THREAD((ElgOut*)elgo, i, i, ELG_NO_ID);
 			ElgOut_write_LOCATION((ElgOut*)elgo, i, 0, i, i, 0);
 		}	
 	}
-	ElgOut_write_NUM_EVENTS((ElgOut*)elgo,2);
+	ElgOut_write_NUM_EVENTS((ElgOut*)elgo,ecount);//2428324
 	ElgOut_write_LAST_DEF(elgo);
 	unsigned int *idarray = new unsigned int[totalnidtids];
 	for (i = 0; i < totalnidtids; i++)
