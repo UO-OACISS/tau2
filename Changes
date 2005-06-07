@@ -37,6 +37,9 @@ Version 2.14 changes (from 2.13):
 24. Added support for -MPITRACE option for Kojak [UTK].
 25. Paraprof has text table window now for callpath profiles [LLNL]. 
 26. Changes to TAU_COMPILER to support Opari in Kojak [UTK].
+27. Fixed bugs in tau2elg to support Kojak v 2.1 and 2.1.1 [FZJ].
+28. Fixed a bug in TAU_COMPILER (when opari is not used) [UTK]]. 
+29. Added support for cube (importer) in paraprof [UTK].
 
 Version 2.13 changes (from 2.12):
 1. Paraprof enhancements.
