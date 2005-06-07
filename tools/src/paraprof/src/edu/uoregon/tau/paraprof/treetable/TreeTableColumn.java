@@ -2,6 +2,8 @@ package edu.uoregon.tau.paraprof.treetable;
 
 import java.awt.*;
 import java.text.NumberFormat;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -16,9 +18,9 @@ import edu.uoregon.tau.paraprof.ParaProf;
 /**
  * Defines the columns of the treetable
  *
- * <P>CVS $Id: TreeTableColumn.java,v 1.1 2005/05/31 23:21:52 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableColumn.java,v 1.2 2005/06/07 01:26:35 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 abstract public class TreeTableColumn {
     protected TreeTableWindow window;
@@ -340,6 +342,38 @@ abstract public class TreeTableColumn {
             }
 
             return new Double(fp.getNumCalls());
+        }
+
+        public TableCellRenderer getCellRenderer() {
+            return new ParaProfCellRenderer(window);
+        }
+    }
+
+    
+    static class StdDevColumn extends TreeTableColumn {
+ 
+        private int metricID;
+        
+        public String toString() {
+            return "Std Dev";
+        }
+
+        public StdDevColumn(TreeTableWindow window, int metricID) {
+            super(window);
+            this.metricID = metricID;
+        }
+
+        public Object getValueFor(TreeTableNode node, boolean forSorting) {
+            FunctionProfile fp = node.getFunctionProfile();
+
+            if (fp == null) {
+                return null;
+            }
+
+            
+            Function f = fp.getFunction();
+            fp = f.getStddevProfile();
+            return new Double(fp.getExclusive(0));
         }
 
         public TableCellRenderer getCellRenderer() {

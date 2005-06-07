@@ -325,8 +325,8 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     }
 
     // return a vector of only those functions that are currently "displayed" (i.e. group masks, etc)
-    public Vector getDisplayedFunctions() {
-        Vector displayedFunctions = new Vector();
+    public List getDisplayedFunctions() {
+        List displayedFunctions = new ArrayList();
 
         for (Iterator it = this.getDataSource().getFunctions(); it.hasNext();) {
             Function function = (Function) it.next();

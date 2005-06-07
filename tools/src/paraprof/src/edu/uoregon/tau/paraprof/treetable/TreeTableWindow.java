@@ -14,6 +14,8 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.table.TableColumn;
 
+import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.FunctionProfile;
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
@@ -58,12 +60,51 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
             this.help(false);
         }
 
-        setupMenus();
 
+        setupMenus();
         setupData();
 
         ParaProf.incrementNumWindows();
     }
+
+//    private void computeStdDevs() {
+//        List functions = ppTrial.getDisplayedFunctions();
+//
+//        stddevs = new HashMap();
+//        for (int i = 0; i < functions.size(); i++) {
+//            Function function = (Function) functions.get(i);
+//            List stddevList = new ArrayList();
+//
+//            for (int j = 0; j < ppTrial.getNumberOfMetrics(); j++) {
+//
+//                double mean = function.getMeanExclusive(j);
+//                double sum = 0;
+//                int N = 0;
+//                for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+//                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
+//
+//                    FunctionProfile fp = thread.getFunctionProfile(function);
+//                    if (fp != null) {
+//                        double value = fp.getExclusive(j);
+//                        sum += (value - mean) * (value - mean);
+//                        N++;
+//                    }
+//                }
+//
+//                double stddev = 0;
+//                if (N > 1) {
+//
+//                    // biased
+//                    //stddev = Math.sqrt(sum / N);
+//                    
+//                    // unbiased
+//                    stddev = Math.sqrt(sum / (N-1));
+//                }
+//                stddevList.add(new Double(stddev));
+//            }
+//            stddevs.put(function, stddevList);
+//        }
+//    }
 
     private void setupData() {
 
@@ -102,6 +143,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
         columns.add(new NumCallsColumn(this));
         columns.add(new NumSubrColumn(this));
+        //columns.add(new StdDevColumn(this, 0));
 
         //columns.add(new MiniHistogramColumn(this));
 

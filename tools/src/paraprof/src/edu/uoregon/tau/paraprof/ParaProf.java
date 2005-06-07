@@ -16,11 +16,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.44 2005/06/02 17:02:48 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.45 2005/06/07 01:26:34 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.44 $
+ * @version $Revision: 1.45 $
  */
 public class ParaProf implements ActionListener {
 
@@ -60,7 +60,7 @@ public class ParaProf implements ActionListener {
     //End - System wide stuff.
 
     //Command line options related.
-    private static int fileType = 0; //0:profile, 1:pprof, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun
+    private static int fileType = 0; //0:profile, 1:pprof, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun, 7:ppk, 8:cube
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
     //End - Command line options related.
@@ -364,6 +364,8 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = 6;
             } else if (fileTypeString.equals("packed")) {
                 ParaProf.fileType = 7;
+            } else if (fileTypeString.equals("cube")) {
+                ParaProf.fileType = 8;
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();
