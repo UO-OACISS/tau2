@@ -19,8 +19,9 @@ declare -i pdbFileSpecified=$FALSE
 
 declare -i isVerbose=$FALSE
 declare -i isDebug=$FALSE
-declare -i opari=$FALSE
 #Set isDebug=$TRUE for printing debug messages.
+
+declare -i opari=$FALSE
 
 declare -i errorStatus=$FALSE
 declare -i gotoNextStep=$TRUE
@@ -319,7 +320,11 @@ for arg in "$@"
 			-optOpariTool*)
 				optOpariTool="${arg#"-optOpariTool="}"
 				echoIfDebug "\tOpari Tool used: $optOpariTool"
-				opari=$TRUE
+				if [ "x$optOpariTool" == "x" ] ; then
+				  opari=$FALSE
+				else
+				  opari=$TRUE
+				fi
 				;;
 			-optOpariOpts*)
 				currentopt="${arg#"-optOpariOpts="}"
