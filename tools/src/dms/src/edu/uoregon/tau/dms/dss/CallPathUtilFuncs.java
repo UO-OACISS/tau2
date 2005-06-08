@@ -107,8 +107,6 @@ public class CallPathUtilFuncs {
                     if (parent == null || child == null) {
                         System.err.println ("Warning: Callpath data not complete: " + parentName + " => " + childName);
                         continue;
-                        //System.out.println("Something has gone horribly wrong!");
-                        //return;
                     }
 
                     if (parent != null)

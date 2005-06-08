@@ -6,9 +6,9 @@ import java.text.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.11 2005/05/31 23:21:02 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.12 2005/06/08 01:53:57 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		Function
  */
 public class FunctionProfile implements Comparable {
@@ -93,10 +93,16 @@ public class FunctionProfile implements Comparable {
     }
 
     public double getInclusivePerCall(int metric) {
+        if (this.getNumCalls() == 0) {
+            return 0;
+        }
         return this.getInclusive(metric) / this.getNumCalls();
     }
 
     public double getExclusivePerCall(int metric) {
+        if (this.getNumCalls() == 0) {
+            return 0;
+        }
         return this.getExclusive(metric) / this.getNumCalls();
     }
 

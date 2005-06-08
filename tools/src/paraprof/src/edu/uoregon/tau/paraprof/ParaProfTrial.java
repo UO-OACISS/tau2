@@ -33,7 +33,7 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     private boolean loading = false;
 
     private SystemEvents systemEvents = new SystemEvents();
-    private FullDataWindow sMW = null;
+    private FullDataWindow fullDataWindow = null;
     private ColorChooser clrChooser = ParaProf.colorChooser;
     private PreferencesWindow preferencesWindow = ParaProf.preferencesWindow;
 
@@ -197,27 +197,27 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     //Functions that control the obtaining and the opening
     //and closing of the static main window for this trial.
     //####################################
-    public FullDataWindow getStaticMainWindow() {
-        return sMW;
+    public FullDataWindow getFullDataWindow() {
+        return fullDataWindow;
     }
 
     public void showMainWindow() {
-        if (sMW == null) {
-            sMW = new FullDataWindow(this);
+        if (fullDataWindow == null) {
+            fullDataWindow = new FullDataWindow(this);
             ParaProf.incrementNumWindows();
-            sMW.setVisible(true);
-            this.getSystemEvents().addObserver(sMW);
+            fullDataWindow.setVisible(true);
+            this.getSystemEvents().addObserver(fullDataWindow);
         } else {
             ParaProf.incrementNumWindows();
-            this.getSystemEvents().addObserver(sMW);
-            sMW.show();
+            this.getSystemEvents().addObserver(fullDataWindow);
+            fullDataWindow.show();
         }
     }
 
     public void closeStaticMainWindow() {
-        if (sMW != null) {
-            this.getSystemEvents().deleteObserver(sMW);
-            sMW.setVisible(false);
+        if (fullDataWindow != null) {
+            this.getSystemEvents().deleteObserver(fullDataWindow);
+            fullDataWindow.setVisible(false);
         }
     }
 
@@ -398,9 +398,32 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
             ppMetrics.add(ppMetric);
         }
 
+        
         // Now set the dataSource's metrics.
         trial.getDataSource().setMetrics(ppMetrics);
 
+        
+        // Set the default metric to the first time based metric (if it exists)
+        for (int i = 0; i < numberOfMetrics; i++) {
+            ParaProfMetric ppMetric = (ParaProfMetric) trial.getDataSource().getMetric(i);
+            if (ppMetric.isTimeMetric()) {
+                setDefaultMetricID(i);
+                break;
+            }
+        }
+        
+
+        // Set the default metric to the first metric named "Time" (if it exists)
+        for (int i = 0; i < numberOfMetrics; i++) {
+            ParaProfMetric ppMetric = (ParaProfMetric) trial.getDataSource().getMetric(i);
+            if (ppMetric.getName().equalsIgnoreCase("Time")) {
+                setDefaultMetricID(i);
+                break;
+            }
+        }
+
+        
+        
         // set the colors
         clrChooser.setColors(this, -1);
 

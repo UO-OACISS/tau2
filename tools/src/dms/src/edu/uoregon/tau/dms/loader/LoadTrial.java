@@ -44,7 +44,7 @@ public class LoadTrial {
                 + "Optional Arguments:\n\n"
                 + "  -f, --filetype <filetype>      Specify type of performance data, options are:\n"
                 + "                                   profiles (default), pprof, dynaprof, mpip,\n"
-                + "                                   gprof, psrun, hpm, packed\n"
+                + "                                   gprof, psrun, hpm, packed, cube\n"
                 + "  -t, --trialid <number>         Specify trial ID\n"
                 + "  -i, --fixnames                 Use the fixnames option for gprof\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
@@ -309,6 +309,8 @@ public class LoadTrial {
                 fileType = 6;
             } else if (fileTypeString.equals("packed")) {
                 fileType = 7;
+            } else if (fileTypeString.equals("cube")) {
+                fileType = 8;
 
                 /*
                  * } else if (fileTypeString.equals("sppm")) { fileType = 101; }

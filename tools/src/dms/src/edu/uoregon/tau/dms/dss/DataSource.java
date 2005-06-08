@@ -9,9 +9,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.14 2005/06/07 01:25:32 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.15 2005/06/08 01:53:56 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  * @see		TrialData
  * @see		NCT
  */
@@ -299,7 +299,7 @@ public abstract class DataSource {
      * the derived data
      */
     protected void generateDerivedData() {
-        long time = System.currentTimeMillis();
+        //long time = System.currentTimeMillis();
 
         for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
             ((Thread) it.next()).setThreadDataAllMetrics();
@@ -307,8 +307,8 @@ public abstract class DataSource {
         this.setMeanData(0, this.getNumberOfMetrics() - 1);
         this.meanData.setThreadDataAllMetrics();
 
-        time = (System.currentTimeMillis()) - time;
-        System.out.println("Time to process (in milliseconds): " + time);
+        //time = (System.currentTimeMillis()) - time;
+        //System.out.println("Time to process (in milliseconds): " + time);
 
     }
 

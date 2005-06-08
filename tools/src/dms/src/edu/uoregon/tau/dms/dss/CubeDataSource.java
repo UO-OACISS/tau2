@@ -19,13 +19,14 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeDataSource.java,v 1.1 2005/06/07 01:25:32 amorris Exp $</P>
+ * <P>CVS $Id: CubeDataSource.java,v 1.2 2005/06/08 01:53:56 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class CubeDataSource extends DataSource {
 
     private File file;
+    private volatile CubeXMLHandler handler = new CubeXMLHandler(this);
 
     /**
      * Constructor for CubeDataSource
@@ -38,14 +39,13 @@ public class CubeDataSource extends DataSource {
     
     
     
-    
     public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException {
         try {
+            long time = System.currentTimeMillis();
 
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
 
             
-            DefaultHandler handler = new CubeXMLHandler(this);
             xmlreader.setContentHandler(handler);
             xmlreader.setErrorHandler(handler);
 
@@ -56,17 +56,25 @@ public class CubeDataSource extends DataSource {
             if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
                 setCallPathDataPresent(true);
             }
+            
+            this.setGroupNamesPresent(true);
 
             this.generateDerivedData();
-            
+
+            time = (System.currentTimeMillis()) - time;
+            //System.out.println("Time to process (in milliseconds): " + time);
+
         } catch (SAXException e) {
             throw new DataSourceException(e);
         }
     }
 
     public int getProgress() {
-        // TODO Auto-generated method stub
-        return 0;
+        int value = 0;
+        if (handler != null) {
+            value = handler.getProgress();
+        }
+        return value;
     }
 
     public void cancelLoad() {

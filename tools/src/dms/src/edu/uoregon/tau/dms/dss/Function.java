@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.9 2005/06/07 01:25:33 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.10 2005/06/08 01:53:57 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		FunctionProfile
  */
 public class Function implements Serializable, Comparable {
@@ -21,7 +21,7 @@ public class Function implements Serializable, Comparable {
     private int id = -1;
     private List groups = null;
     private boolean callPathFunction = false;
- 
+
     // we hold on to the mean and total profiles for pass-through functions
     private FunctionProfile meanProfile;
     private FunctionProfile stddevProfile;
@@ -63,11 +63,11 @@ public class Function implements Serializable, Comparable {
 
                 while (location != -1) {
                     String childName = s.substring(location + 3, s.length());
-                    
+
                     childName = childName.trim();
                     reversedName = reversedName + childName;
                     s = s.substring(0, location);
-                    
+
                     location = s.lastIndexOf("=>");
                     if (location != -1) {
                         reversedName = reversedName + " <= ";
@@ -76,14 +76,13 @@ public class Function implements Serializable, Comparable {
                 reversedName = reversedName + " <= " + s;
             }
         }
-        
+
         return reversedName;
     }
-    
+
     public String toString() {
         return name;
     }
-
 
     // Group section
     public void addGroup(Group group) {
@@ -106,7 +105,6 @@ public class Function implements Serializable, Comparable {
         return groups;
     }
 
-
     /**
      * Set callpath status
      * 
@@ -123,6 +121,20 @@ public class Function implements Serializable, Comparable {
      */
     public boolean isCallPathFunction() {
         return callPathFunction;
+    }
+
+    boolean callpathFunction = false;
+    boolean callpathFunctionSet = false;
+
+    public boolean getCallPathFunction() {
+        if (!callpathFunctionSet) {
+
+            if (name.indexOf("=>") > 0) {
+                callpathFunction = true;
+            }
+            callpathFunctionSet = true;
+        }
+        return callpathFunction;
     }
 
     // color section
@@ -149,7 +161,6 @@ public class Function implements Serializable, Comparable {
         this.specificColor = specificColor;
     }
 
-
     public void setStddevProfile(FunctionProfile fp) {
         this.stddevProfile = fp;
     }
@@ -158,7 +169,6 @@ public class Function implements Serializable, Comparable {
         return stddevProfile;
     }
 
-    
     // mean section
     public void setMeanProfile(FunctionProfile fp) {
         this.meanProfile = fp;
@@ -234,7 +244,7 @@ public class Function implements Serializable, Comparable {
     }
 
     public int compareTo(Object o) {
-        return this.id - ((Function)o).getID();
+        return this.id - ((Function) o).getID();
     }
 
 }

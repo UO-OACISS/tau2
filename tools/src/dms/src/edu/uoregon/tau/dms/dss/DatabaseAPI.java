@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.17 2005/05/31 23:21:01 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.18 2005/06/08 01:53:56 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  */
 public class DatabaseAPI {
 
@@ -1034,7 +1034,15 @@ public class DatabaseAPI {
         this.itemsDone++;
 
         //stmt.addBatch();
+        try {
         stmt.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("exclusive: " + fp.getExclusive(metricID));
+            System.out.println("numcalls: " + fp.getNumCalls());
+            System.out.println("numsubr: " + fp.getNumSubr());
+            System.out.println("inclusivepercall: " + fp.getInclusivePerCall(metricID));
+            System.out.println("asdf");   
+        }
     }
 
     private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map functionMap, Map metricMap)

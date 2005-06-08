@@ -404,7 +404,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                         //Bring up an expanded data window for this user event and highlight it
                         trial.setHighlightedUserEvent(ppUserEventProfile.getUserEvent());
                         UserEventWindow tmpRef = new UserEventWindow(trial, ppUserEventProfile.getUserEvent(),
-                                trial.getStaticMainWindow().getDataSorter());
+                                trial.getFullDataWindow().getDataSorter());
                         trial.getSystemEvents().addObserver(tmpRef);
                         tmpRef.show();
                     }

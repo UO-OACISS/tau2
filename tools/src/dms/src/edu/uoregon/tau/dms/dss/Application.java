@@ -19,7 +19,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.15 2005/03/10 18:14:04 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.16 2005/06/08 01:53:56 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -107,8 +107,6 @@ public class Application implements Serializable {
                 int ctype = resultSet.getInt("DATA_TYPE");
                 String cname = resultSet.getString("COLUMN_NAME");
                 String typename = resultSet.getString("TYPE_NAME");
-
-                //System.out.println ("column: " + cname + ", type: " + ctype + ", typename: " + typename);
 
                 // only integer and string types (for now)
                 // don't do name and id, we already know about them
