@@ -1518,8 +1518,6 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Bsend_init()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
-  returnVal = PMPI_Bsend_init( buf, count, datatype, dest, tag, comm, request );
-
 #ifdef TAU_TRACK_MSG
 
   if (dest != MPI_PROC_NULL) {
@@ -1527,6 +1525,9 @@ MPI_Request * request;
     TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count*typesize3);
   }
 #endif /* TAU_TRACK_MSG */
+
+  returnVal = PMPI_Bsend_init( buf, count, datatype, dest, tag, comm, request );
+
   TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
@@ -1672,15 +1673,16 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Send_init()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
-  returnVal = PMPI_Send_init( buf, count, datatype, dest, tag, comm, request );
-
-
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( datatype, &typesize3 );
     TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize3);
   }
 #endif /* TAU_TRACK_MSG */
+
+  returnVal = PMPI_Send_init( buf, count, datatype, dest, tag, comm, request );
+
+
   TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
@@ -1741,15 +1743,16 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Ibsend()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
-  returnVal = PMPI_Ibsend( buf, count, datatype, dest, tag, comm, request );
-
-
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( datatype, &typesize );
     TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize);
   }
 #endif /* TAU_TRACK_MSG */
+
+  returnVal = PMPI_Ibsend( buf, count, datatype, dest, tag, comm, request );
+
+
   TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
@@ -1851,15 +1854,16 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Irsend()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
-  returnVal = PMPI_Irsend( buf, count, datatype, dest, tag, comm, request );
-
-
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( datatype, &typesize3 );
     TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize3);
   }
 #endif /* TAU_TRACK_MSG */
+
+  returnVal = PMPI_Irsend( buf, count, datatype, dest, tag, comm, request );
+
+
   TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
@@ -1922,15 +1926,16 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Issend()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
-  returnVal = PMPI_Issend( buf, count, datatype, dest, tag, comm, request );
-
-
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( datatype, &typesize3 );
     TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize3);
   }
 #endif /* TAU_TRACK_MSG */
+
+  returnVal = PMPI_Issend( buf, count, datatype, dest, tag, comm, request );
+
+
   TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
