@@ -14,12 +14,11 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.table.TableColumn;
 
-import edu.uoregon.tau.dms.dss.Function;
-import edu.uoregon.tau.dms.dss.FunctionProfile;
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
+import edu.uoregon.tau.paraprof.treetable.ColumnChooser.CheckBoxListItem;
 import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
 
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable,
@@ -37,11 +36,14 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     private final JMenuItem showInclExclMenuItem = new JCheckBoxMenuItem("Show Inclusive/Exclusive");
 
     private List columns;
+    private ColumnChooser columnChooser;
 
     public TreeTableWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread) {
 
         this.ppTrial = ppTrial;
         this.thread = thread;
+
+        columnChooser = new ColumnChooser(this, ppTrial);
 
         setSize(1000, 600);
         setLocation(300, 200);
@@ -60,51 +62,11 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
             this.help(false);
         }
 
-
         setupMenus();
         setupData();
 
         ParaProf.incrementNumWindows();
     }
-
-//    private void computeStdDevs() {
-//        List functions = ppTrial.getDisplayedFunctions();
-//
-//        stddevs = new HashMap();
-//        for (int i = 0; i < functions.size(); i++) {
-//            Function function = (Function) functions.get(i);
-//            List stddevList = new ArrayList();
-//
-//            for (int j = 0; j < ppTrial.getNumberOfMetrics(); j++) {
-//
-//                double mean = function.getMeanExclusive(j);
-//                double sum = 0;
-//                int N = 0;
-//                for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-//                    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
-//
-//                    FunctionProfile fp = thread.getFunctionProfile(function);
-//                    if (fp != null) {
-//                        double value = fp.getExclusive(j);
-//                        sum += (value - mean) * (value - mean);
-//                        N++;
-//                    }
-//                }
-//
-//                double stddev = 0;
-//                if (N > 1) {
-//
-//                    // biased
-//                    //stddev = Math.sqrt(sum / N);
-//                    
-//                    // unbiased
-//                    stddev = Math.sqrt(sum / (N-1));
-//                }
-//                stddevList.add(new Double(stddev));
-//            }
-//            stddevs.put(function, stddevList);
-//        }
-//    }
 
     private void setupData() {
 
@@ -132,17 +94,67 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
         columns = new ArrayList();
 
-        for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
-            if (showInclExclMenuItem.isSelected()) {
-                columns.add(new InclusiveColumn(this, i));
-                columns.add(new ExclusiveColumn(this, i));
-            } else {
-                columns.add(new RegularMetricColumn(this, i));
+        ListModel metricModel = columnChooser.getMetricModel();
+        ListModel valueModel = columnChooser.getValueModel();
+
+        for (int i = 0; i < metricModel.getSize() - 2; i++) { // -2 because the last two are calls and subr
+            CheckBoxListItem item = (CheckBoxListItem) metricModel.getElementAt(i);
+            if (item.getSelected()) {
+
+                for (int j = 0; j < valueModel.getSize(); j++) {
+                    CheckBoxListItem valueItem = (CheckBoxListItem) valueModel.getElementAt(j);
+                    if (valueItem.getSelected()) {
+                        String str = (String) valueItem.getUserObject();
+                        if (str.equals("Absolute Value")) {
+                            if (showInclExclMenuItem.isSelected()) {
+                                columns.add(new InclusiveColumn(this, i));
+                                columns.add(new ExclusiveColumn(this, i));
+                            } else {
+                                columns.add(new RegularMetricColumn(this, i));
+                            }
+                        } else if (str.equals("Percent Value")) {
+                            if (showInclExclMenuItem.isSelected()) {
+                                columns.add(new InclusivePercentColumn(this, i));
+                                columns.add(new ExclusivePercentColumn(this, i));
+                            } else {
+                                columns.add(new RegularPercentMetricColumn(this, i));
+                            }
+                        } else if (str.equals("Absolute Value Per Call")) {
+                            if (showInclExclMenuItem.isSelected()) {
+                                columns.add(new InclusivePerCallColumn(this, i));
+                                columns.add(new ExclusivePerCallColumn(this, i));
+                            } else {
+                                columns.add(new RegularPerCallMetricColumn(this, i));
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        columns.add(new NumCallsColumn(this));
-        columns.add(new NumSubrColumn(this));
+        CheckBoxListItem callitem = (CheckBoxListItem) metricModel.getElementAt(metricModel.getSize() - 2);
+        CheckBoxListItem subritem = (CheckBoxListItem) metricModel.getElementAt(metricModel.getSize() - 1);
+
+        if (callitem.getSelected()) {
+            columns.add(new NumCallsColumn(this));
+        }
+
+        if (subritem.getSelected()) {
+            columns.add(new NumSubrColumn(this));
+        }
+
+        //        for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
+        //            if (showInclExclMenuItem.isSelected()) {
+        //                columns.add(new InclusiveColumn(this, i));
+        //                columns.add(new ExclusiveColumn(this, i));
+        //            } else {
+        //                columns.add(new RegularMetricColumn(this, i));
+        //            }
+        //        }
+        //
+        //        columns.add(new NumCallsColumn(this));
+        //        columns.add(new NumSubrColumn(this));
+
         //columns.add(new StdDevColumn(this, 0));
 
         //columns.add(new MiniHistogramColumn(this));
@@ -210,6 +222,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
         showAsTreeMenuItem.addActionListener(actionListener);
         optionsMenu.add(showAsTreeMenuItem);
+        showAsTreeMenuItem.setSelected(true);
 
         showInclExclMenuItem.addActionListener(actionListener);
         optionsMenu.add(showInclExclMenuItem);
@@ -217,7 +230,16 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         JMenu unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, false);
         optionsMenu.add(unitsSubMenu);
 
-        showAsTreeMenuItem.setSelected(true);
+        JMenuItem menuItem = new JMenuItem("Choose Columns...");
+        menuItem.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                columnChooser.showDialog(TreeTableWindow.this, true);
+            }
+
+        });
+
+        optionsMenu.add(menuItem);
 
         if (!ppTrial.callPathDataPresent()) {
             showAsTreeMenuItem.setSelected(false);

@@ -1,9 +1,8 @@
 package edu.uoregon.tau.paraprof.treetable;
 
 import java.awt.*;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.List;
-import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -14,13 +13,14 @@ import edu.uoregon.tau.dms.dss.FunctionProfile;
 import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.ParaProf;
 
-
 /**
- * Defines the columns of the treetable
+ * Defines the columns of the treetable.
+ * 
+ * This is starting to get messy and should be rethought
  *
- * <P>CVS $Id: TreeTableColumn.java,v 1.2 2005/06/07 01:26:35 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableColumn.java,v 1.3 2005/06/09 00:34:16 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 abstract public class TreeTableColumn {
     protected TreeTableWindow window;
@@ -107,15 +107,17 @@ abstract public class TreeTableColumn {
             TreeTableColumn ttColumn = (TreeTableColumn) window.getColumns().get(column);
             Object result = ttColumn.getValueFor((TreeTableNode) value, false);
 
+            setHorizontalAlignment(JLabel.RIGHT);
+
             if (result instanceof Double) {
-                setHorizontalAlignment(JLabel.RIGHT);
+                //              setHorizontalAlignment(JLabel.RIGHT);
 
                 if (formatter == null) {
                     formatter = NumberFormat.getInstance();
                 }
                 setText((result == null) ? "" : formatter.format(result));
             } else {
-                setHorizontalAlignment(JLabel.LEFT);
+                //                setHorizontalAlignment(JLabel.LEFT);
                 setText((result == null) ? "" : result.toString());
             }
 
@@ -238,6 +240,163 @@ abstract public class TreeTableColumn {
 
     }
 
+    static class RegularPercentMetricColumn extends RegularMetricColumn {
+        private int metricID;
+
+        public RegularPercentMetricColumn(TreeTableWindow window, int metricID) {
+            super(window, metricID);
+            this.metricID = metricID;
+        }
+
+        public String toString() {
+            return window.getPPTrial().getMetricName(metricID) + " %";
+        }
+
+        public Object getValueFor(TreeTableNode node, boolean forSorting) {
+            FunctionProfile fp = node.getFunctionProfile();
+
+            if (fp == null) {
+                return null;
+            }
+
+            if (forSorting) {
+                if (node.getExpanded()) {
+                    return new Double(fp.getExclusivePerCall(metricID));
+                } else {
+                    return new Double(fp.getInclusivePerCall(metricID));
+                }
+            }
+
+            DecimalFormat dF = new DecimalFormat("##0.0");
+            if (node.getExpanded()) {
+                return dF.format(fp.getExclusivePercent(metricID)) + "%";
+            } else {
+                return dF.format(fp.getInclusivePercent(metricID)) + "%";
+            }
+        }
+
+        public TableCellRenderer getCellRenderer() {
+            return new RegularMetricCellRenderer(window);
+
+            //            return new ParaProfCellRenderer(window);
+        }
+
+        public int getMetricID() {
+            return metricID;
+        }
+
+    }
+
+    static class RegularPerCallMetricColumn extends RegularMetricColumn {
+        private int metricID;
+
+        public RegularPerCallMetricColumn(TreeTableWindow window, int metricID) {
+            super(window, metricID);
+            this.metricID = metricID;
+        }
+
+        public String toString() {
+            return window.getPPTrial().getMetricName(metricID) + " / Call";
+        }
+
+        public Object getValueFor(TreeTableNode node, boolean forSorting) {
+            FunctionProfile fp = node.getFunctionProfile();
+
+            if (fp == null) {
+                return null;
+            }
+
+            if (node.getExpanded()) {
+                return adjustForUnits(fp.getExclusivePerCall(metricID), metricID, forSorting);
+            } else {
+                return adjustForUnits(fp.getInclusivePerCall(metricID), metricID, forSorting);
+            }
+        }
+
+        public TableCellRenderer getCellRenderer() {
+            return new ParaProfCellRenderer(window);
+        }
+
+        public int getMetricID() {
+            return metricID;
+        }
+
+    }
+
+    static class InclusivePercentColumn extends TreeTableColumn {
+        private int metricID;
+
+        public InclusivePercentColumn(TreeTableWindow window, int metricID) {
+            super(window);
+            this.metricID = metricID;
+        }
+
+        public String toString() {
+            return "Inclusive " + window.getPPTrial().getMetricName(metricID) + " %";
+        }
+
+        public Object getValueFor(TreeTableNode node, boolean forSorting) {
+            FunctionProfile fp = node.getFunctionProfile();
+
+            if (fp == null) {
+                return null;
+            }
+
+            if (forSorting) {
+                return new Double(fp.getInclusivePercent(metricID));
+            }
+
+            DecimalFormat dF = new DecimalFormat("##0.0");
+            return dF.format(fp.getInclusivePercent(metricID)) + "%";
+        }
+
+        public TableCellRenderer getCellRenderer() {
+            return new ParaProfCellRenderer(window);
+        }
+
+        public int getMetricID() {
+            return metricID;
+        }
+
+    }
+
+    static class ExclusivePercentColumn extends TreeTableColumn {
+        private int metricID;
+
+        public ExclusivePercentColumn(TreeTableWindow window, int metricID) {
+            super(window);
+            this.metricID = metricID;
+        }
+
+        public String toString() {
+            return "Exclusive " + window.getPPTrial().getMetricName(metricID) + " %";
+        }
+
+        public Object getValueFor(TreeTableNode node, boolean forSorting) {
+            FunctionProfile fp = node.getFunctionProfile();
+
+            if (fp == null) {
+                return null;
+            }
+
+            if (forSorting) {
+                return new Double(fp.getExclusivePercent(metricID));
+            }
+
+            DecimalFormat dF = new DecimalFormat("##0.0");
+            return dF.format(fp.getExclusivePercent(metricID)) + "%";
+        }
+
+        public TableCellRenderer getCellRenderer() {
+            return new ParaProfCellRenderer(window);
+        }
+
+        public int getMetricID() {
+            return metricID;
+        }
+
+    }
+
     static class InclusiveColumn extends TreeTableColumn {
         private int metricID;
 
@@ -260,10 +419,32 @@ abstract public class TreeTableColumn {
             return adjustForUnits(fp.getInclusive(metricID), metricID, forSorting);
         }
 
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-                boolean hasFocus, int row, int column) {
-            // TODO Auto-generated method stub
-            return null;
+        public TableCellRenderer getCellRenderer() {
+            return new ParaProfCellRenderer(window);
+        }
+
+    }
+
+    static class InclusivePerCallColumn extends TreeTableColumn {
+        private int metricID;
+
+        public InclusivePerCallColumn(TreeTableWindow window, int metricID) {
+            super(window);
+            this.metricID = metricID;
+        }
+
+        public String toString() {
+            return "Inclusive " + window.getPPTrial().getMetricName(metricID) + " / Call";
+        }
+
+        public Object getValueFor(TreeTableNode node, boolean forSorting) {
+            FunctionProfile fp = node.getFunctionProfile();
+
+            if (fp == null) {
+                return null;
+            }
+
+            return adjustForUnits(fp.getInclusivePerCall(metricID), metricID, forSorting);
         }
 
         public TableCellRenderer getCellRenderer() {
@@ -292,6 +473,34 @@ abstract public class TreeTableColumn {
             }
 
             return adjustForUnits(fp.getExclusive(metricID), metricID, forSorting);
+        }
+
+        public TableCellRenderer getCellRenderer() {
+            return new ParaProfCellRenderer(window);
+        }
+
+    }
+
+    static class ExclusivePerCallColumn extends TreeTableColumn {
+        private int metricID;
+
+        public ExclusivePerCallColumn(TreeTableWindow window, int metricID) {
+            super(window);
+            this.metricID = metricID;
+        }
+
+        public String toString() {
+            return "Exclusive " + window.getPPTrial().getMetricName(metricID) + " / Call";
+        }
+
+        public Object getValueFor(TreeTableNode node, boolean forSorting) {
+            FunctionProfile fp = node.getFunctionProfile();
+
+            if (fp == null) {
+                return null;
+            }
+
+            return adjustForUnits(fp.getExclusivePerCall(metricID), metricID, forSorting);
         }
 
         public TableCellRenderer getCellRenderer() {
@@ -349,11 +558,10 @@ abstract public class TreeTableColumn {
         }
     }
 
-    
     static class StdDevColumn extends TreeTableColumn {
- 
+
         private int metricID;
-        
+
         public String toString() {
             return "Std Dev";
         }
@@ -370,7 +578,6 @@ abstract public class TreeTableColumn {
                 return null;
             }
 
-            
             Function f = fp.getFunction();
             fp = f.getStddevProfile();
             return new Double(fp.getExclusive(0));
@@ -410,42 +617,39 @@ abstract public class TreeTableColumn {
     //        }
     //
     //    }
-    
+
     static class MiniHistogramCellRenderer implements TableCellRenderer {
         private TreeTableWindow window;
-        
+
         public MiniHistogramCellRenderer(TreeTableWindow window) {
             this.window = window;
         }
-        
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-                int row, int column) {
-            
+
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                boolean hasFocus, int row, int column) {
+
             column = table.convertColumnIndexToModel(column) - 1;
             TreeTableNode node = (TreeTableNode) value;
 
             MiniHistogramColumn col = (MiniHistogramColumn) window.getColumns().get(column);
 
-            Function f = (Function)col.getValueFor(node, false);
-            
+            Function f = (Function) col.getValueFor(node, false);
+
             if (f == null) {
                 return new JLabel("");
             }
             return new MiniHistogram(window.getPPTrial(), f);
-            
-        }
 
+        }
 
     }
 
-    
     public static class MiniHistogramColumn extends TreeTableColumn {
 
         public MiniHistogramColumn(TreeTableWindow window) {
             super(window);
         }
 
-        
         public String toString() {
             return "Histogram";
         }
@@ -461,8 +665,6 @@ abstract public class TreeTableColumn {
             return new MiniHistogramCellRenderer(window);
         }
 
-       
     }
-
 
 }
