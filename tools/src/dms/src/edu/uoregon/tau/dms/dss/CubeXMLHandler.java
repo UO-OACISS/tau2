@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.2 2005/06/08 01:53:56 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.3 2005/06/09 00:33:00 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -27,7 +27,6 @@ public class CubeXMLHandler extends DefaultHandler {
     private String csiteID;
     private String cnodeID;
     private String callee;
-
     private String uom;
 
     private String rank;
@@ -35,9 +34,9 @@ public class CubeXMLHandler extends DefaultHandler {
 
     private Map metricMap = new HashMap(); // map cube metricId Strings to PerfDMF Metric classes
     private Map regionMap = new HashMap(); // map cube regionId Strings to Function names (Strings)
-    private Map csiteMap = new HashMap(); // map cube csiteId Strings to regionId Strings 
-    private Map cnodeMap = new HashMap(); // map cube cnodeId Strings to csiteId Strings
-    private Map uomMap = new HashMap(); // map cube metricId Strings to uom (unit of measure) Strings
+    private Map csiteMap = new HashMap();  // map cube csiteId Strings to regionId Strings 
+    private Map cnodeMap = new HashMap();  // map cube cnodeId Strings to csiteId Strings
+    private Map uomMap = new HashMap();    // map cube metricId Strings to uom (unit of measure) Strings
 
     private CubeDataSource cubeDataSource;
 
@@ -64,6 +63,10 @@ public class CubeXMLHandler extends DefaultHandler {
     private volatile int numMetrics = 1;
     private volatile int currentMetric = 0;
 
+    // these maps were added to speed up the lookup of flat and parent profiles
+    private Map parentMap = new HashMap(); // map functions to their parent functions ("A=>B=>C" -> "A=>B")
+    private Map flatMap = new HashMap(); // map functions to their flat functions ("A=>B=>C" -> "C")
+    
     private static class CubeProcess {
         public int rank;
         public List threads = new ArrayList();
@@ -101,6 +104,9 @@ public class CubeXMLHandler extends DefaultHandler {
         return (String) regionMap.get(csiteMap.get(callSiteID));
     }
 
+    /* (non-Javadoc)
+     * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
+     */
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         accumulator.setLength(0);
 
@@ -159,9 +165,10 @@ public class CubeXMLHandler extends DefaultHandler {
         name = (String) nameStack.pop();
     }
 
+    /* (non-Javadoc)
+     * @see org.xml.sax.ContentHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
+     */
     public void endElement(String uri, String localName, String qName) throws SAXException {
-
-        // after development is done here this should be changed to if/else if's at least
 
         if (localName.equalsIgnoreCase("process")) {
             cubeProcess.rank = Integer.parseInt(rank);
@@ -288,7 +295,7 @@ public class CubeXMLHandler extends DefaultHandler {
         }
     }
 
-    private Map flatMap = new HashMap(); // map functions to their flat functions ("A=>B=>C" -> "C")
+    
 
     // given A => B => C, this retrieves the FP for C
     private FunctionProfile getFlatFunctionProfile(Thread thread, Function function) {
@@ -314,8 +321,8 @@ public class CubeXMLHandler extends DefaultHandler {
 
     }
 
-    private Map parentMap = new HashMap(); // map functions to their parent functions ("A=>B=>C" -> "A=>B")
-
+    
+    // retrieve the parent profile on a given thread (A=>B for A=>B=>C)
     private FunctionProfile getParent(Thread thread, Function function) {
         if (!function.getCallPathFunction()) {
             return null;
@@ -332,6 +339,7 @@ public class CubeXMLHandler extends DefaultHandler {
         return parent;
     }
 
+    // recursively add a value to the inclusive amount (go up the tree)
     private void addToInclusive(Thread thread, FunctionProfile fp, double value) {
         // add to this fp
         fp.setInclusive(metric.getID(), value + fp.getInclusive(metric.getID()));
