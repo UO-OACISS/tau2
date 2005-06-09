@@ -10,8 +10,6 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-
-
 /**
  * Reader for cube data
  *
@@ -19,9 +17,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeDataSource.java,v 1.2 2005/06/08 01:53:56 amorris Exp $</P>
+ * <P>CVS $Id: CubeDataSource.java,v 1.3 2005/06/09 23:54:46 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class CubeDataSource extends DataSource {
 
@@ -37,8 +35,6 @@ public class CubeDataSource extends DataSource {
     }
 
     
-    
-    
     public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException {
         try {
             long time = System.currentTimeMillis();
@@ -48,8 +44,6 @@ public class CubeDataSource extends DataSource {
             
             xmlreader.setContentHandler(handler);
             xmlreader.setErrorHandler(handler);
-
-            // parse the next file
             xmlreader.parse(new InputSource(new FileInputStream(file)));
 
             

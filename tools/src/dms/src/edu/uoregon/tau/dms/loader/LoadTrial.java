@@ -23,13 +23,6 @@ public class LoadTrial {
     public String trialName = new String();
     public String problemFile = new String();
 
-    //    public static String USAGE = "usage: perfdmf_loadtrial {-f, --filetype}
-    // file_type {-e,--experimentid} experiment_id\n [{-t, --trialid} trial_id]
-    // [{-n,--name} trial_name] [{-i --fixnames}] <files>\n Where:\n file_type =
-    // profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, hpm\n\n
-    // (example: perfdmf_loadtrial -f profiles -e 12 profile.*)";
-    //private File readPprof;
-
     public static void usage() {
         System.err.println("Usage: perfdmf_loadtrial -e <experiment id> -n <name> [options] <files>\n\n"
                 + "try `perfdmf_loadtrial --help' for more information");
@@ -44,7 +37,7 @@ public class LoadTrial {
                 + "Optional Arguments:\n\n"
                 + "  -f, --filetype <filetype>      Specify type of performance data, options are:\n"
                 + "                                   profiles (default), pprof, dynaprof, mpip,\n"
-                + "                                   gprof, psrun, hpm, packed, cube\n"
+                + "                                   gprof, psrun, hpm, packed, cube, hpc\n"
                 + "  -t, --trialid <number>         Specify trial ID\n"
                 + "  -i, --fixnames                 Use the fixnames option for gprof\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
@@ -311,6 +304,8 @@ public class LoadTrial {
                 fileType = 7;
             } else if (fileTypeString.equals("cube")) {
                 fileType = 8;
+            } else if (fileTypeString.equals("hpc")) {
+                fileType = 9;
 
                 /*
                  * } else if (fileTypeString.equals("sppm")) { fileType = 101; }

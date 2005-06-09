@@ -403,6 +403,15 @@ public class UtilFncs {
             }
             dataSource = new CubeDataSource(sourceFiles[0]);
             break;
+        case 9:
+            if (sourceFiles.length != 1) {
+                throw new DataSourceException("HPCToolkit type: you must specify exactly one file");
+            }
+            if (sourceFiles[0].isDirectory()) {
+                throw new DataSourceException("HPCToolkit type: you must specify a file, not a directory");
+            }
+            dataSource = new HPCToolkitDataSource(sourceFiles[0]);
+            break;
         default:
             break;
         }

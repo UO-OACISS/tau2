@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.3 2005/06/09 00:33:00 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.4 2005/06/09 23:54:46 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -307,7 +307,6 @@ public class CubeXMLHandler extends DefaultHandler {
 
         if (childFunction == null) {
             String childName = function.getName().substring(function.getName().lastIndexOf("=>") + 2).trim();
-            childFunction = cubeDataSource.getFunction(childName);
             childFunction = cubeDataSource.addFunction(childName);
             childFunction.addGroup(defaultGroup);
             flatMap.put(function, childFunction);

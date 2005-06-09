@@ -29,7 +29,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
     //String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP",
     // "hpmtoolkit", "gprof", "psrun"};
     private String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit",
-            "Gprof", "PSRun", "ParaProf Packed Profile", "Cube" };
+            "Gprof", "PSRun", "ParaProf Packed Profile", "Cube", "HPCToolkit" };
     private JComboBox trialTypes = null;
     private File selectedFiles[];
     private JButton selectButton = null;
@@ -75,7 +75,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         });
 
         trialTypes = new JComboBox(trialTypeStrings);
-        trialTypes.setMaximumRowCount(10);
+        trialTypes.setMaximumRowCount(12);
         trialTypes.addActionListener(this);
 
         Container contentPane = getContentPane();

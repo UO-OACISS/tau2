@@ -16,11 +16,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.45 2005/06/07 01:26:34 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.46 2005/06/09 23:54:47 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.45 $
+ * @version $Revision: 1.46 $
  */
 public class ParaProf implements ActionListener {
 
@@ -99,7 +99,7 @@ public class ParaProf implements ActionListener {
                 + "Options:\n\n"
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
-                + "                                    gprof, psrun, hpm, packed\n"
+                + "                                    gprof, psrun, hpm, packed, cube, hpc\n"
                 + "\n"
                 + "  -h, --help                      Display this help message\n"
                 + "  -p                              Use `pprof` to compute derived data\n"
@@ -366,6 +366,8 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = 7;
             } else if (fileTypeString.equals("cube")) {
                 ParaProf.fileType = 8;
+            } else if (fileTypeString.equals("hpc")) {
+                ParaProf.fileType = 9;
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();
