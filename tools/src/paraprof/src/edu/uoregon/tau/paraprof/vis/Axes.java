@@ -3,24 +3,25 @@ package edu.uoregon.tau.paraprof.vis;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.swing.*;
 
 import net.java.games.jogl.GL;
 import net.java.games.jogl.GLDrawable;
-import net.java.games.jogl.util.GLUT;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
+import edu.uoregon.tau.paraprof.vis.GLUT.GLUT;
 
 /**
  * Draws axes with labels
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Axes.java,v 1.5 2005/05/31 23:21:53 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.6 2005/06/10 17:35:45 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class Axes implements Shape {
 
@@ -598,7 +599,7 @@ public class Axes implements Shape {
         // Draw the strings for an axis
 
         GL gl = visRenderer.getGLDrawable().getGL();
-        float maxPoint = 0;
+        double maxPoint = 0;
 
         setTextColor(visRenderer);
 
@@ -611,7 +612,7 @@ public class Axes implements Shape {
                 }
 
                 String string = (String) strings.get(i);
-                float width = glut.glutStrokeLength(font, string);
+                double width = glut.glutStrokeLengthf(font, string);
 
                 gl.glPushMatrix();
 
@@ -629,13 +630,14 @@ public class Axes implements Shape {
                 if (leftJustified) {
                     gl.glTranslatef(1.5f, 0.0f, 0.0f);
                     gl.glScalef(stringSize / 1000, stringSize / 1000, stringSize / 1000);
-                    maxPoint = Math.max(maxPoint, width);
                 } else {
                     gl.glTranslatef(-1.5f, 0.0f, 0.0f);
                     gl.glScalef(stringSize / 1000, stringSize / 1000, stringSize / 1000);
-                    gl.glTranslatef(-width, 0.0f, 0.0f);
-                    maxPoint = Math.max(maxPoint, width);
+                    gl.glTranslated(-width, 0.0, 0.0);
                 }
+                
+                // keep track of the widest width to determine where to draw the label for this axis
+                maxPoint = Math.max(maxPoint, width);
 
                 // the text seems to be about 100 in height, so move to the middle
                 gl.glTranslatef(0.0f, -50.0f, 0.0f);
@@ -720,6 +722,9 @@ public class Axes implements Shape {
         gl.glPopMatrix();
 
     }
+    
+    
+    
 
     private void renderStrokeString(GL gl, int font, String string) {
         // Center Our Text On The Screen
