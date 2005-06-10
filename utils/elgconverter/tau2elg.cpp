@@ -497,7 +497,11 @@ int main(int argc, char **argv)
 	ElgOut_write_STRING(elgo,strings,0,machinen);
 	ElgOut_write_MACHINE(elgo, 0, numthreads.size(), strings);//ELG_NO_ID
 	strings++;
-	ElgOut_write_MPI_COMM(elgo, 0, 0, NULL);
+	#ifdef ELG_MPI_WIN
+		ElgOut_write_MPI_COMM(elgo, 0,0, 0, NULL);
+	#else
+		ElgOut_write_MPI_COMM(elgo, 0, 0, NULL);
+	#endif
 	/* Then write out the thread names if it is multi-threaded */
 	if (multiThreaded)
 	{ /* create the thread ids */
