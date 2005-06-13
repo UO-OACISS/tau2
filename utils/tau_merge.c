@@ -525,7 +525,7 @@ int main(int argc, char *argv[])
       fprintf (stderr, "%s exists; override [y]? ", trcfile);
       if ( getchar() == 'n' ) exit (1);
     }
-    if ( (outfd = open (trcfile, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY|O_LARGEFILE, 0644)) < 0 )
+    if ( (outfd = open (trcfile, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY| LARGEFILE_OPTION, 0644)) < 0 )
     {
       perror (trcfile);
       exit (1);
@@ -610,7 +610,7 @@ int main(int argc, char *argv[])
     /* -- if file was closed during the search for barriers, re-open it ----- */
     if ( trcdes[i].fd = -1 )
     {
-      if ( (trcdes[i].fd = open (trcdes[i].name, O_RDONLY|O_BINARY|O_LARGEFILE)) < 0 )
+      if ( (trcdes[i].fd = open (trcdes[i].name, O_RDONLY|O_BINARY| LARGEFILE_OPTION)) < 0 )
       {
         perror (argv[i]);
         exit (1);
