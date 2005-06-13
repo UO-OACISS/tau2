@@ -911,7 +911,7 @@ int main (int argc, char *argv[])
   /* ------------------------------------------------------------------------ */
   /* -- open input trace                                                   -- */
   /* ------------------------------------------------------------------------ */
-  if ( (intrc.fd = open (inFile, O_RDONLY | O_BINARY)) < 0 )
+  if ( (intrc.fd = open (inFile, O_RDONLY | O_BINARY | O_LARGEFILE)) < 0 )
   {
     perror (inFile);
     exit (1);
@@ -1035,6 +1035,12 @@ int main (int argc, char *argv[])
       name[k-j+2] = '\0'; /* terminate name */
 
       strcpy(param, &linebuf[k+2]);
+
+      /* Fix 13/10 to 10 for event files generated with windows */
+/*       if (param[strlen(param)-2] == 13) { */
+/*  	param[strlen(param)-2] = 10; */
+/*  	param[strlen(param)-1] = 0; */
+/*       } */
 
 #ifdef DEBUG
       printf(" Got name=%s param=%s\n", name, param);
@@ -1414,7 +1420,7 @@ int main (int argc, char *argv[])
   /* ------------------------------------------------------------------------ */
   /* -- re-open input trace                                                -- */
   /* ------------------------------------------------------------------------ */
-  if ( (intrc.fd = open (inFile, O_RDONLY | O_BINARY)) < 0 )
+  if ( (intrc.fd = open (inFile, O_RDONLY | O_BINARY | O_LARGEFILE)) < 0 )
   {
     perror (inFile);
     exit (1);

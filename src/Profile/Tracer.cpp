@@ -32,6 +32,13 @@
 # include <Profile/Profiler.h>
 
 
+#ifdef TAU_LARGEFILE
+  #define LARGEFILE_OPTION O_LARGEFILE
+#else
+  #define LARGEFILE_OPTION 0
+#endif
+
+
 
 # define PCXX_EVENT_SRC 
 # include "Profile/pcxx_events.h"
@@ -230,7 +237,7 @@ int TraceEvInit(int tid)
 
     init_wrap_up ();
 
-    if ((TraceFd[tid] = open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY, 0600)) < 0)
+    if ((TraceFd[tid] = open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0600)) < 0)
     {
       fprintf (stderr, "TraceEvInit[open]: ");
       perror (tracefilename);

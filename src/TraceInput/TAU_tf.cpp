@@ -37,7 +37,7 @@ Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
   }
 
   /* Open the trace file */
-  if ( (tFile->Fid = open (filename, O_RDONLY | O_BINARY)) < 0 )
+  if ( (tFile->Fid = open (filename, O_RDONLY | O_BINARY | O_LARGEFILE)) < 0 )
   {
     perror (filename);
     return NULL;
@@ -583,6 +583,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.6 $   $Date: 2005/03/29 20:15:39 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.6 2005/03/29 20:15:39 amorris Exp $ 
+ * $Revision: 1.7 $   $Date: 2005/06/13 21:09:17 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.7 2005/06/13 21:09:17 amorris Exp $ 
  ***************************************************************************/

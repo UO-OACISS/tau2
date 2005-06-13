@@ -27,6 +27,14 @@
 #endif
 #include <stdlib.h> 
 #include <string.h>
+
+
+#ifdef TAU_LARGEFILE
+  #define LARGEFILE_OPTION O_LARGEFILE
+#else
+  #define LARGEFILE_OPTION 0
+#endif
+
    
 #include <map>
 #include <iostream>   
@@ -44,6 +52,6 @@ using namespace std;
 
 /********************************************************************************
  * $RCSfile: TAU_tf_headers.h,v $   $Author: amorris $
- * $Revision: 1.2 $   $Date: 2004/09/01 18:53:28 $
- * TAU_VERSION_ID: $Id: TAU_tf_headers.h,v 1.2 2004/09/01 18:53:28 amorris Exp $ 
+ * $Revision: 1.3 $   $Date: 2005/06/13 21:09:17 $
+ * TAU_VERSION_ID: $Id: TAU_tf_headers.h,v 1.3 2005/06/13 21:09:17 amorris Exp $ 
  *******************************************************************************/
