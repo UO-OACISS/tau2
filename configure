@@ -2522,6 +2522,28 @@ fi
 
 rm -f get_stdinc.C find_stdinc.awk
 
+#####################################################################
+cat << EOF > f1.cpp
+      #include <sys/types.h>
+      #include <sys/stat.h>
+      #include <fcntl.h>
+
+      int main(int argc, char** argv) {
+         int file = open ("asdf", O_LARGEFILE, 0600);
+      }
+EOF
+
+
+$echo "Checking if open takes O_LARGEFILE... ${nnl}"
+if $cxx_compiler $orig_useropt -c f1.cpp 1> /dev/null 2>&1 ; then
+    fixmakeargs="$fixmakeargs TAU_LARGEFILE"
+    echo "yes"
+else
+    echo "no"
+fi
+
+
+
 ######################################################################
 cat <<EOF > get_typeinfo1.C
 #include <typeinfo> 
@@ -3315,6 +3337,10 @@ if [ $intel = yes ]
     
 fi 
 
+
+
+
+
 # CHECK if Intel 8.0 compilers are available. 
 if [ $fortran_compiler = intel ]
 then
@@ -3834,7 +3860,7 @@ echo " "
 echo "TAU: installing tools in ${tauroot}/${architecture}/bin"
 for tool in $TAUTOOLS
 do
-  $echo "TAU: installing ${tool}... ${nnl}"
+#  $echo "TAU: installing ${tool}... ${nnl}"
   rm -f ${tauroot}/${architecture}/bin/$tool
   cat ${tauroot}/tools/tool.skel |
   sed -e 's,@TAUROOT@,'$tauroot',' -e 's,@ARCH@,'$architecture',' -e 's,@TOOL@,'$tool',' \
@@ -3842,7 +3868,7 @@ do
       -e 's,@WISHNAME@,'$wishname',' \
       > ${tauroot}/${architecture}/bin/${tool}
   chmod a+rx ${tauroot}/${architecture}/bin/${tool}
-  echo "done"
+#  echo "done"
 done
 else 
 echo " "
