@@ -2523,7 +2523,8 @@ fi
 rm -f get_stdinc.C find_stdinc.awk
 
 #####################################################################
-cat << EOF > f1.cpp
+cat << EOF > f1.c
+      #define  _LARGEFILE64_SOURCE    1 
       #include <sys/types.h>
       #include <sys/stat.h>
       #include <fcntl.h>
@@ -2535,7 +2536,7 @@ EOF
 
 
 $echo "Checking if open takes O_LARGEFILE... ${nnl}"
-if $cxx_compiler $orig_useropt -c f1.cpp 1> /dev/null 2>&1 ; then
+if $c_compiler $orig_useropt -c f1.c 1> /dev/null 2>&1 ; then
     fixmakeargs="$fixmakeargs TAU_LARGEFILE"
     echo "yes"
 else
