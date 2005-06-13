@@ -11,17 +11,17 @@ import javax.swing.*;
 
 import net.java.games.jogl.GL;
 import net.java.games.jogl.GLDrawable;
+import net.java.games.jogl.util.GLUT;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
-import edu.uoregon.tau.paraprof.vis.GLUT.GLUT;
 
 /**
  * Draws axes with labels
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Axes.java,v 1.6 2005/06/10 17:35:45 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.7 2005/06/13 21:23:35 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  */
 public class Axes implements Shape {
 
