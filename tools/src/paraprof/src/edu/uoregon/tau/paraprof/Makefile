@@ -25,7 +25,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
 	     ColorDefaultsWindow.java ColorMap.java ColorMapWindow.java PreferencesWindow.java \
 	     Searcher.java SearchPanel.java
 
-VIS_SOURCES = $(wildcard vis/*.java) ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java FunctionSelectorDialog.java $(wildcard vis/GLUT/*.java)
+VIS_SOURCES = $(wildcard vis/*.java) ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java FunctionSelectorDialog.java
 OTHER_SOURCES = $(wildcard enums/*.java) $(wildcard interfaces/*.java) $(wildcard treetable/*.java)
 
 NEW_SOURCES=$(BASE_SOURCES) $(VIS_SOURCES) $(OTHER_SOURCES) ParaProfImageOutput.java JVMDependent.java
