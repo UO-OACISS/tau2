@@ -2541,7 +2541,7 @@ if $cxx_compiler $orig_useropt -c f1.cpp 1> /dev/null 2>&1 ; then
 else
     echo "no"
 fi
-
+/bin/rm -f f1.o f1.cpp
 
 
 ######################################################################
