@@ -1228,15 +1228,16 @@ int readVTF::MyCPUGrpHandler(void *ccbvoid,
 	{
 		int curgroups = this_readVTF_obj->ngroups;
 		this_readVTF_obj->ngroups++;
-		
+
+		int i;
 		int  * temp = new int[this_readVTF_obj->ngroups];
-		for(int i = 0; i<curgroups; i++)
+		for(i = 0; i<curgroups; i++)
 		{
 			temp[i] = this_readVTF_obj->threadlist[i];
 		}
 		//delete[] this_readVTF_obj->threadlist;
 		this_readVTF_obj->threadlist = new int[this_readVTF_obj->ngroups];
-		for(int i = 0; i<curgroups; i++)
+		for(i = 0; i<curgroups; i++)
 		{
 			this_readVTF_obj->threadlist[i] = temp[i];
 		}
@@ -1360,14 +1361,15 @@ int readVTF::MyDefsampHandler(void * ccbvoid,
 		//(each metric type will be in its own folders/files under this name)
 		//Add the new metric's name to the resized array on top of the previously encountered names
 		string * temp = new string[this_readVTF_obj->globmets];
-		for(int i = 0; i<(this_readVTF_obj->globmets-1); i++)
+		int i;
+		for(i = 0; i<(this_readVTF_obj->globmets-1); i++)
 		{
 			temp[i] = this_readVTF_obj->sampnames[i];
 		}
 
 		delete[] this_readVTF_obj->sampnames;
 		this_readVTF_obj->sampnames = new string[this_readVTF_obj->globmets];
-		for(int i = 0; i<(this_readVTF_obj->globmets-1); i++)
+		for(i = 0; i<(this_readVTF_obj->globmets-1); i++)
 		{
 			this_readVTF_obj->sampnames[i] = temp[i];
 		}
