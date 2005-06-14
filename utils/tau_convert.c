@@ -27,6 +27,14 @@
   #define O_BINARY 0
 #endif
 
+
+#ifdef TAU_LARGEFILE
+  #define LARGEFILE_OPTION O_LARGEFILE
+#else
+  #define LARGEFILE_OPTION 0
+#endif
+
+
 # include <string.h>
 
 # define TRACING_ON
@@ -911,7 +919,7 @@ int main (int argc, char *argv[])
   /* ------------------------------------------------------------------------ */
   /* -- open input trace                                                   -- */
   /* ------------------------------------------------------------------------ */
-  if ( (intrc.fd = open (inFile, O_RDONLY | O_BINARY | O_LARGEFILE)) < 0 )
+  if ( (intrc.fd = open (inFile, O_RDONLY | O_BINARY | LARGEFILE_OPTION)) < 0 )
   {
     perror (inFile);
     exit (1);
@@ -1420,7 +1428,7 @@ int main (int argc, char *argv[])
   /* ------------------------------------------------------------------------ */
   /* -- re-open input trace                                                -- */
   /* ------------------------------------------------------------------------ */
-  if ( (intrc.fd = open (inFile, O_RDONLY | O_BINARY | O_LARGEFILE)) < 0 )
+  if ( (intrc.fd = open (inFile, O_RDONLY | O_BINARY | LARGEFILE_OPTION)) < 0 )
   {
     perror (inFile);
     exit (1);
