@@ -1234,9 +1234,14 @@ int main (int argc, char *argv[])
     fprintf (outfp, "#    number records: %ld\n", intrc.numrec);
     fprintf (outfp, "# number processors: %d\n", numproc);
     fprintf (outfp, "# max processor num: %d\n", intrc.numproc);
+
+#ifdef TAU_WINDOWS
+    fprintf (outfp, "#   first timestamp: %I64u\n", intrc.firsttime);
+    fprintf (outfp, "#    last timestamp: %I64u\n\n", intrc.lasttime);
+#else
     fprintf (outfp, "#   first timestamp: %llu\n", intrc.firsttime);
     fprintf (outfp, "#    last timestamp: %llu\n\n", intrc.lasttime);
-
+#endif
     fprintf (outfp, "#=NO= =======================EVENT==");
     fprintf (outfp, " ==TIME [us]= =NODE= =THRD= ==PARAMETER=\n");
   }
@@ -1820,13 +1825,24 @@ int main (int argc, char *argv[])
     else if ( outFormat == dump )
     {
       ptr = GetEventName (erec->ev, &hasParam);
-      if ( hasParam )
+      if ( hasParam ) {
+#ifdef TAU_WINDOWS
+        fprintf (outfp, "%5ld %30.30s %12I64u %6d %6d %12I64d\n",
+                 intrc.numrec, ptr, erec->ti, GetNodeId(erec), erec->tid, erec->par);
+#else
         fprintf (outfp, "%5ld %30.30s %12llu %6d %6d %12lld\n",
                  intrc.numrec, ptr, erec->ti, GetNodeId(erec), erec->tid, erec->par);
-      else
+#endif
+      } else {
+#ifdef TAU_WINDOWS
+        fprintf (outfp, "%5ld %30.30s %12I64u %6d %6d\n",
+                 intrc.numrec, ptr, erec->ti, GetNodeId(erec), erec->tid);
+#else
         fprintf (outfp, "%5ld %30.30s %12llu %6d %6d\n",
                  intrc.numrec, ptr, erec->ti, GetNodeId(erec), erec->tid);
+#endif
 	/* Changed 12lu to 12llu for unsigned long long time */
+      }
     }
 
     if ( (erec = get_next_rec (&intrc)) == NULL )
