@@ -40,11 +40,11 @@ all : win32 pprof tau_convert tau_merge tau_reduce libs
 
 java :
 	-md win32\java
-	-del $(TAU_PROFILE_OBJS)
+	-del $(TAU_PROFILE_OBJS) $(TAU_JAVA_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DJAVA /MT -I$(JDK)/include -I$(JDK)/include/win32" tau-profile.dll
-	-del $(TAU_CALLPATH_OBJS)
+	-del $(TAU_CALLPATH_OBJS) $(TAU_JAVA_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DTAU_CALLPATH -DJAVA /MT -I$(JDK)/include -I$(JDK)/include/win32" tau-callpath.dll
-	-del $(TAU_TRACE_OBJS)
+	-del $(TAU_TRACE_OBJS) $(TAU_JAVA_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DTRACING_ON -DJAVA /MT -I$(JDK)/include -I$(JDK)/include/win32" tau-trace.dll
 	-del win32\java\*.lib win32\java\*.exp
 
