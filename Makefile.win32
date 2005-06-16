@@ -76,7 +76,7 @@ libs :
 
 
 tau2vtf :
-	$(CC) $(CFLAGS) -DTRACING_ON -o win32\bin\tau2vtf utils\tau2vtf.cpp src\TraceInput\TAU_tf.cpp src\TraceInput\TAU_Cwrapper.cpp -Isrc\TraceInput -I$(VTF) /link $(VTF)\libvtf3.lib
+	$(CC) $(CFLAGS) -DTRACING_ON -o win32\bin\tau2vtf utils\tau2vtf.cpp src\TraceInput\TAU_tf.cpp src\TraceInput\TAU_Cwrapper.cpp -Isrc\TraceInput -I$(VTF) /link $(VTF)\win32\lib\libvtf3.lib
 
 
 tau2slog2 :
