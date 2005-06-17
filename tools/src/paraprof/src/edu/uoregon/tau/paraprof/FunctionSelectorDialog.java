@@ -18,9 +18,9 @@ import javax.swing.*;
  *   
  * TODO: nothing
  *
- * <P>CVS $Id: FunctionSelectorDialog.java,v 1.4 2005/05/06 01:00:01 amorris Exp $</P>
+ * <P>CVS $Id: FunctionSelectorDialog.java,v 1.5 2005/06/17 22:13:47 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class FunctionSelectorDialog extends JDialog {
 
@@ -28,7 +28,7 @@ public class FunctionSelectorDialog extends JDialog {
     private JList list;
     private boolean selected;
     private Object selectedObject;
-    
+    private boolean allowNone;
 
     // center the frame in the owner 
     private void center(JFrame owner) {
@@ -52,7 +52,7 @@ public class FunctionSelectorDialog extends JDialog {
         if (!selected)
             return false;
         
-        if (list.getSelectedIndex() == 0) {
+        if (list.getSelectedIndex() == 0 && allowNone) {
             selectedObject = null;
         } else {
             selectedObject = items.get(list.getSelectedIndex());
@@ -62,17 +62,22 @@ public class FunctionSelectorDialog extends JDialog {
     }
 
     
-    public FunctionSelectorDialog(JFrame owner, boolean modal, Iterator functions, Object initialSelection) {
+    public FunctionSelectorDialog(JFrame owner, boolean modal, Iterator functions, Object initialSelection, boolean allowNone) {
         
         super(owner, modal);
+        
+        this.allowNone = allowNone;
         this.setTitle("Select a Function");
         this.setSize(600,600);
       
         center(owner);
         int selectedIndex = 0;
         
-        items.add("   <none>");
-        int index = 1;
+        int index = 0;
+        if (allowNone) {
+            items.add("   <none>");
+            index++;
+        }
         for (Iterator it = functions; it.hasNext();) {
             Object object = it.next();
             if (object == initialSelection) {

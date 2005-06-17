@@ -4,11 +4,11 @@
  * It allows the user to change the meta data associated with a trial.
  *  
  * 
- * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.7 2005/03/10 18:14:37 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.8 2005/06/17 22:13:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		ParaProfManagerWindow
-  */
+ */
 
 package edu.uoregon.tau.paraprof;
 
@@ -20,8 +20,16 @@ import javax.swing.table.*;
 
 public class ParaProfManagerTableModel extends AbstractTableModel {
 
-    public ParaProfManagerTableModel(ParaProfManagerWindow paraProfManager, Object obj,
-            DefaultTreeModel defaultTreeModel) {
+    private int type = -1; //0-application table model,1-experiment table model,2-trial table model, 3-metric table model
+    private ParaProfApplication application = null;
+    private ParaProfExperiment experiment = null;
+    private ParaProfTrial ppTrial = null;
+    private ParaProfMetric metric = null;
+    private ParaProfManagerWindow paraProfManager = null;
+    private DefaultTreeModel defaultTreeModel = null;
+    private String[] columnNames = { "Field", "Value" };
+
+    public ParaProfManagerTableModel(ParaProfManagerWindow paraProfManager, Object obj, DefaultTreeModel defaultTreeModel) {
         super();
 
         if (obj instanceof ParaProfApplication) {
@@ -31,7 +39,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
             this.experiment = (ParaProfExperiment) obj;
             type = 1;
         } else if (obj instanceof ParaProfTrial) {
-            this.trial = (ParaProfTrial) obj;
+            this.ppTrial = (ParaProfTrial) obj;
             type = 2;
         } else {
             this.metric = (ParaProfMetric) obj;
@@ -53,7 +61,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
         case 1:
             return experiment.getNumFields() + 3; // +2 for name, id, and applicationID
         case 2:
-            return trial.getTrial().getNumFields() + 4;
+            return ppTrial.getTrial().getNumFields() + 4;
         case 3:
             return 5;
         default:
@@ -129,20 +137,20 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                     case (3):
                         return "Trial ID";
                     default:
-                        return trial.getTrial().getFieldName(r - 4);
+                        return ppTrial.getTrial().getFieldName(r - 4);
                     }
                 } else {
                     switch (r) {
                     case (0):
-                        return trial.getName();
+                        return ppTrial.getName();
                     case (1):
-                        return new Integer(trial.getTrial().getApplicationID());
+                        return new Integer(ppTrial.getTrial().getApplicationID());
                     case (2):
-                        return new Integer(trial.getTrial().getExperimentID());
+                        return new Integer(ppTrial.getTrial().getExperimentID());
                     case (3):
-                        return new Integer(trial.getTrial().getID());
+                        return new Integer(ppTrial.getTrial().getID());
                     default:
-                        return trial.getTrial().getField(r - 4);
+                        return ppTrial.getTrial().getField(r - 4);
                     }
                 }
             case 3: // metric metadata
@@ -211,7 +219,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                 if (r >= 1 && r <= 3) // id, experiment, application
                     return false;
 
-                return DBConnector.isWritableType(trial.getTrial().getFieldType(r - 4));
+                return DBConnector.isWritableType(ppTrial.getTrial().getFieldType(r - 4));
 
             case 3: // Metric
                 return false;
@@ -266,14 +274,14 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                     case 2:
                         switch (r) {
                         case (0):
-                            trial.getTrial().setName(tmpString);
-                            this.updateDB(trial);
+                            ppTrial.getTrial().setName(tmpString);
+                            this.updateDB(ppTrial);
                             break;
                         default:
-                            trial.getTrial().setField(r - 4, tmpString);
-                            this.updateDB(trial);
+                            ppTrial.getTrial().setField(r - 4, tmpString);
+                            this.updateDB(ppTrial);
                         }
-                        defaultTreeModel.nodeChanged(trial.getDMTN());
+                        defaultTreeModel.nodeChanged(ppTrial.getDMTN());
                         break;
                     }
                 }
@@ -307,11 +315,11 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                     }
                 }
             } else if (obj instanceof ParaProfTrial) {
-                ParaProfTrial trial = (ParaProfTrial) obj;
-                if (trial.dBTrial()) {
+                ParaProfTrial ppTrial = (ParaProfTrial) obj;
+                if (ppTrial.dBTrial()) {
                     DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
                     if (databaseAPI != null) {
-                        databaseAPI.saveTrial(trial.getTrial());
+                        databaseAPI.saveTrial(ppTrial.getTrial());
                         databaseAPI.terminate();
                     }
                 }
@@ -320,14 +328,5 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
             ParaProfUtils.handleException(e);
         }
     }
-
-    private int type = -1; //0-application table model,1-experiment table model,2-trial table model, 3-metric table model
-    private ParaProfApplication application = null;
-    private ParaProfExperiment experiment = null;
-    private ParaProfTrial trial = null;
-    private ParaProfMetric metric = null;
-    private ParaProfManagerWindow paraProfManager = null;
-    private DefaultTreeModel defaultTreeModel = null;
-    String[] columnNames = { "Field", "Value" };
 
 }

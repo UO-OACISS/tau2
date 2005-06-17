@@ -1,11 +1,10 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.print.*;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -120,83 +119,6 @@ public class ParaProfUtils {
         }
 
     }
-
-    //
-    //    public static JMenu createTrialMenu(final ParaProfTrial ppTrial, final JFrame owner) {
-    //
-    //        ActionListener actionListener = new ActionListener() {
-    //            public void actionPerformed(ActionEvent evt) {
-    //
-    //                try {
-    //                    Object EventSrc = evt.getSource();
-    //
-    //                    if (EventSrc instanceof JMenuItem) {
-    //                        String arg = evt.getActionCommand();
-    //
-    //                        if (arg.equals("Show 3D Window")) {
-    //
-    //                            if (JVMDependent.version.equals("1.3")) {
-    //                                JOptionPane.showMessageDialog(
-    //                                        owner,
-    //                                        "3D Visualization requires Java 1.4 or above\nPlease make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
-    //                                return;
-    //                            }
-    //
-    //                            //Gears.main(null);
-    //                            //(new Gears()).show();
-    //
-    //                            try {
-    //                                (new ThreeDeeWindow(ppTrial)).show();
-    //                                //(new ThreeDeeWindow()).show();
-    //                            } catch (UnsatisfiedLinkError e) {
-    //                                JOptionPane.showMessageDialog(
-    //                                        owner,
-    //                                        "Unable to load jogl library.  Possible reasons:\nlibjogl.so is not in your LD_LIBRARY_PATH.\nJogl is not built for this platform.\nOpenGL is not installed\n\nJogl is available at jogl.dev.java.net");
-    //                            } catch (UnsupportedClassVersionError e) {
-    //                                JOptionPane.showMessageDialog(owner,
-    //                                        "Unsupported class version.  Are you using Java 1.4 or above?");
-    //                            }
-    //                        } else if (arg.equals("Show Call Path Relations")) {
-    //                            CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, null, 2);
-    //                            ppTrial.getSystemEvents().addObserver(tmpRef);
-    //                            tmpRef.show();
-    //                        } else if (arg.equals("Show Mean Call Graph")) {
-    //                            CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppTrial.getDataSource().getMeanData());
-    //                            ppTrial.getSystemEvents().addObserver(tmpRef);
-    //                            tmpRef.show();
-    //                        } else if (arg.equals("Close All Sub-Windows")) {
-    //                            ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-    //                        }
-    //                    }
-    //                } catch (Exception e) {
-    //                    ParaProfUtils.handleException(e);
-    //                }
-    //            }
-    //
-    //        };
-    //
-    //        JMenu trialMenu = new JMenu("Trial");
-    //
-    //        JMenuItem menuItem;
-    //
-    //        menuItem = new JMenuItem("Show 3D Window");
-    //        menuItem.addActionListener(actionListener);
-    //        trialMenu.add(menuItem);
-    //
-    //        menuItem = new JMenuItem("Show Call Path Relations");
-    //        menuItem.addActionListener(actionListener);
-    //        trialMenu.add(menuItem);
-    //
-    //        menuItem = new JMenuItem("Show Mean Call Graph");
-    //        menuItem.addActionListener(actionListener);
-    //        trialMenu.add(menuItem);
-    //
-    //        menuItem = new JMenuItem("Close All Sub-Windows");
-    //        menuItem.addActionListener(actionListener);
-    //        trialMenu.add(menuItem);
-    //
-    //        return trialMenu;
-    //    }
 
     public static JMenu createHelpMenu(final JFrame owner, final ParaProfWindow ppWindow) {
 
@@ -349,6 +271,13 @@ public class ParaProfUtils {
 
     }
 
+    private static JMenuItem createMenuItem(String text, ActionListener actionListener, boolean enabled) {
+        JMenuItem menuItem = new JMenuItem(text);
+        menuItem.setEnabled(enabled);
+        menuItem.addActionListener(actionListener);
+        return menuItem;
+    }
+
     public static JMenu createWindowsMenu(final ParaProfTrial ppTrial, final JFrame owner) {
 
         ActionListener actionListener = new ActionListener() {
@@ -370,9 +299,8 @@ public class ParaProfUtils {
                     } else if (arg.equals("3D Visualization")) {
 
                         if (JVMDependent.version.equals("1.3")) {
-                            JOptionPane.showMessageDialog(
-                                    owner,
-                                    "3D Visualization requires Java 1.4 or above\nPlease make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
+                            JOptionPane.showMessageDialog(owner, "3D Visualization requires Java 1.4 or above\n"
+                                    + "Please make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
                             return;
                         }
 
@@ -383,16 +311,15 @@ public class ParaProfUtils {
                             (new ThreeDeeWindow(ppTrial)).show();
                             //(new ThreeDeeWindow()).show();
                         } catch (UnsatisfiedLinkError e) {
-                            JOptionPane.showMessageDialog(
-                                    owner,
-                                    "Unable to load jogl library.  Possible reasons:\nlibjogl.so is not in your LD_LIBRARY_PATH.\nJogl is not built for this platform.\nOpenGL is not installed\n\nJogl is available at jogl.dev.java.net");
+                            JOptionPane.showMessageDialog(owner, "Unable to load jogl library.  Possible reasons:\n"
+                                    + "libjogl.so is not in your LD_LIBRARY_PATH.\n"
+                                    + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
+                                    + "Jogl is available at jogl.dev.java.net");
                         } catch (UnsupportedClassVersionError e) {
-                            JOptionPane.showMessageDialog(owner,
-                                    "Unsupported class version.  Are you using Java 1.4 or above?");
+                            JOptionPane.showMessageDialog(owner, "Unsupported class version.  Are you using Java 1.4 or above?");
                         }
                     } else if (arg.equals("Call Path Relations")) {
-                        CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, null, 2);
-                        ppTrial.getSystemEvents().addObserver(tmpRef);
+                        CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, ppTrial.getDataSource().getMeanData(), 1);
                         tmpRef.show();
                     } else if (arg.equals("Close All Sub-Windows")) {
                         ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -422,6 +349,80 @@ public class ParaProfUtils {
         menuItem = new JMenuItem("Call Path Relations");
         menuItem.addActionListener(actionListener);
         windowsMenu.add(menuItem);
+
+        windowsMenu.add(new JSeparator());
+
+        ActionListener fActionListener = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true,
+                        ppTrial.getDataSource().getFunctions(), null, false);
+                if (fSelector.choose()) {
+                    Function selectedFunction = (Function) fSelector.getSelectedObject();
+
+                    Object EventSrc = evt.getSource();
+
+                    String arg = evt.getActionCommand();
+
+                    if (arg.equals("Bar Graph")) {
+                        FunctionDataWindow w = new FunctionDataWindow(ppTrial, selectedFunction);
+                        w.show();
+                    } else if (arg.equals("Histogram")) {
+                        HistogramWindow w = new HistogramWindow(ppTrial, selectedFunction);
+                        w.show();
+                    }
+                }
+            }
+        };
+
+        final JMenu functionWindows = new JMenu("Function");
+        functionWindows.add(createMenuItem("Bar Graph", fActionListener, true));
+        functionWindows.add(createMenuItem("Histogram", fActionListener, true));
+        windowsMenu.add(functionWindows);
+
+        ActionListener tActionListener = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                Object EventSrc = evt.getSource();
+                String arg = evt.getActionCommand();
+
+                List list = new ArrayList(ppTrial.getDataSource().getAllThreads());
+                if (ppTrial.getDataSource().getAllThreads().size() > 1  && arg.equals("User Event Statistics") == false) {
+                    list.add(0, ppTrial.getDataSource().getStdDevData());
+                    list.add(1, ppTrial.getDataSource().getMeanData());
+                }
+
+                FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true, list.iterator(), null, false);
+                fSelector.setTitle("Select a Thread");
+                if (fSelector.choose()) {
+                    edu.uoregon.tau.dms.dss.Thread selectedThread = (edu.uoregon.tau.dms.dss.Thread) fSelector.getSelectedObject();
+
+
+                    if (arg.equals("Bar Graph")) {
+                        ThreadDataWindow w = new ThreadDataWindow(ppTrial, selectedThread);
+                        w.setVisible(true);
+                    } else if (arg.equals("Statistics Text")) {
+                        (new StatWindow(ppTrial,selectedThread, false)).setVisible(true);
+                    } else if (arg.equals("Statistics Table")) {
+                        (new TreeTableWindow(ppTrial,selectedThread)).setVisible(true);
+                    } else if (arg.equals("Call Graph")) {
+                        (new CallGraphWindow(ppTrial,selectedThread)).setVisible(true);
+                    } else if (arg.equals("Call Path Relations")) {
+                        (new CallPathTextWindow(ppTrial,selectedThread,0)).setVisible(true);
+                    } else if (arg.equals("User Event Statistics")) {
+                        (new StatWindow(ppTrial,selectedThread, true)).setVisible(true);
+                    }
+                }
+            }
+        };
+
+        final JMenu threadWindows = new JMenu("Thread");
+        threadWindows.add(createMenuItem("Bar Graph", tActionListener, true));
+        threadWindows.add(createMenuItem("Statistics Text", tActionListener, true));
+        threadWindows.add(createMenuItem("Statistics Table", tActionListener, true));
+        threadWindows.add(createMenuItem("Call Graph", tActionListener, ppTrial.callPathDataPresent()));
+        threadWindows.add(createMenuItem("Call Path Relations", tActionListener, ppTrial.callPathDataPresent()));
+        threadWindows.add(createMenuItem("User Event Statistics", tActionListener, ppTrial.userEventsPresent()));
+
+        windowsMenu.add(threadWindows);
 
         windowsMenu.add(new JSeparator());
 
@@ -489,8 +490,7 @@ public class ParaProfUtils {
         g2.scale(scale, scale);
     }
 
-    public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function,
-            final JComponent owner) {
+    public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function, final JComponent owner) {
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
@@ -498,14 +498,11 @@ public class ParaProfUtils {
 
                     String arg = evt.getActionCommand();
 
-                    if (arg.equals("Show Function Details")) {
+                    if (arg.equals("Show Function Bar Graph")) {
                         FunctionDataWindow functionDataWindow = new FunctionDataWindow(ppTrial, function);
-                        ppTrial.getSystemEvents().addObserver(functionDataWindow);
                         functionDataWindow.show();
                     } else if (arg.equals("Show Function Histogram")) {
-
                         HistogramWindow hw = new HistogramWindow(ppTrial, function);
-                        ppTrial.getSystemEvents().addObserver(hw);
                         hw.show();
                     } else if (arg.equals("Assign Function Color")) {
                         ParaProf.colorMap.assignColor(owner, function);
@@ -524,7 +521,7 @@ public class ParaProfUtils {
         JPopupMenu functionPopup = new JPopupMenu();
 
         //Add items to the third popup menu.
-        JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
+        JMenuItem functionDetailsItem = new JMenuItem("Show Function Bar Graph");
         functionDetailsItem.addActionListener(actionListener);
         functionPopup.add(functionDetailsItem);
 
@@ -544,130 +541,107 @@ public class ParaProfUtils {
 
     }
 
-    public static void handleThreadClick(final ParaProfTrial ppTrial, final edu.uoregon.tau.dms.dss.Thread thread,
-            JPanel owner, MouseEvent evt) {
-        if (thread.getNodeID() == -1) { // mean
-            JPopupMenu meanThreadPopup = new JPopupMenu();
-            ActionListener actionListener = new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    try {
-                        Object EventSrc = evt.getSource();
-
-                        String arg = evt.getActionCommand();
-                        if (arg.equals("Show Mean Statistics Text Window")) {
-                            StatWindow statWindow = new StatWindow(ppTrial, -1, -1, -1, false);
-                            ppTrial.getSystemEvents().addObserver(statWindow);
-                            statWindow.show();
-                        } else if (arg.equals("Show Mean Statistics Table")) {
-                            TreeTableWindow ttWindow = new TreeTableWindow(ppTrial, thread);
-                            ppTrial.getSystemEvents().addObserver(ttWindow);
-                            ttWindow.show();
-                        } else if (arg.equals("Show Mean Call Graph")) {
-                            CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppTrial.getDataSource().getMeanData());
-                            ppTrial.getSystemEvents().addObserver(tmpRef);
-                            tmpRef.show();
-                        } else if (arg.equals("Show Mean Call Path Thread Relations")) {
-                            CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial, -1, -1, -1, null, 0);
-                            ppTrial.getSystemEvents().addObserver(callPathTextWindow);
-                            callPathTextWindow.show();
-                        }
-                    } catch (Exception e) {
-                        ParaProfUtils.handleException(e);
-                    }
-                }
-            };
-
-            meanThreadPopup = new JPopupMenu();
-
-            JMenuItem jMenuItem = new JMenuItem("Show Mean Statistics Text Window");
-            jMenuItem.addActionListener(actionListener);
-            meanThreadPopup.add(jMenuItem);
-
-            jMenuItem = new JMenuItem("Show Mean Statistics Table");
-            jMenuItem.addActionListener(actionListener);
-            meanThreadPopup.add(jMenuItem);
-
-            jMenuItem = new JMenuItem("Show Mean Call Path Thread Relations");
-            jMenuItem.addActionListener(actionListener);
-            meanThreadPopup.add(jMenuItem);
-
-            jMenuItem = new JMenuItem("Show Mean Call Graph");
-            jMenuItem.addActionListener(actionListener);
-            meanThreadPopup.add(jMenuItem);
-
-            meanThreadPopup.show(owner, evt.getX(), evt.getY());
-        } else {
-            JPopupMenu threadPopup = new JPopupMenu();
-            ActionListener actionListener = new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    try {
-                        Object EventSrc = evt.getSource();
-
-                        String arg = evt.getActionCommand();
-                        if (arg.equals("Show Thread Statistics Text Window")) {
-                            StatWindow statWindow = new StatWindow(ppTrial, thread.getNodeID(), thread.getContextID(),
-                                    thread.getThreadID(), false);
-                            ppTrial.getSystemEvents().addObserver(statWindow);
-                            statWindow.show();
-                        } else if (arg.equals("Show Thread Statistics Table")) {
-                            TreeTableWindow ttWindow = new TreeTableWindow(ppTrial, thread);
-                            ppTrial.getSystemEvents().addObserver(ttWindow);
-                            ttWindow.show();
-                        } else if (arg.equals("Show Thread Call Graph")) {
-                            CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, thread);
-                            ppTrial.getSystemEvents().addObserver(tmpRef);
-                            tmpRef.show();
-                        } else if (arg.equals("Show Call Path Thread Relations")) {
-                            CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial, thread.getNodeID(),
-                                    thread.getContextID(), thread.getThreadID(), null, 1);
-                            ppTrial.getSystemEvents().addObserver(callPathTextWindow);
-                            callPathTextWindow.show();
-                        } else if (arg.equals("Show User Event Statistics Window")) {
-                            StatWindow statWindow = new StatWindow(ppTrial, thread.getNodeID(), thread.getContextID(),
-                                    thread.getThreadID(), true);
-                            ppTrial.getSystemEvents().addObserver(statWindow);
-                            statWindow.show();
-                        }
-
-                    } catch (Exception e) {
-                        ParaProfUtils.handleException(e);
-                    }
-                }
-
-            };
-
-            threadPopup = new JPopupMenu();
-
-            JMenuItem jMenuItem = new JMenuItem("Show Thread Statistics Text Window");
-            jMenuItem.addActionListener(actionListener);
-            threadPopup.add(jMenuItem);
-
-            jMenuItem = new JMenuItem("Show Thread Statistics Table");
-            jMenuItem.addActionListener(actionListener);
-            threadPopup.add(jMenuItem);
-
-            if (ppTrial.userEventsPresent()) {
-
-                jMenuItem = new JMenuItem("Show User Event Statistics Window");
-                jMenuItem.addActionListener(actionListener);
-                threadPopup.add(jMenuItem);
+    public static JMenuItem createStatisticsMenuItem(String text, final ParaProfTrial ppTrial,
+            final edu.uoregon.tau.dms.dss.Thread thread, final boolean userEvent) {
+        JMenuItem jMenuItem = new JMenuItem(text);
+        jMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                StatWindow statWindow = new StatWindow(ppTrial, thread, userEvent);
+                statWindow.show();
             }
 
-            jMenuItem = new JMenuItem("Show Call Path Thread Relations");
-            jMenuItem.addActionListener(actionListener);
-            threadPopup.add(jMenuItem);
+        });
+        return jMenuItem;
+    }
 
-            jMenuItem = new JMenuItem("Show Thread Call Graph");
-            jMenuItem.addActionListener(actionListener);
-            threadPopup.add(jMenuItem);
+    public static JMenuItem createStatisticsTableMenuItem(String text, final ParaProfTrial ppTrial,
+            final edu.uoregon.tau.dms.dss.Thread thread) {
+        JMenuItem jMenuItem = new JMenuItem(text);
+        jMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                TreeTableWindow ttWindow = new TreeTableWindow(ppTrial, thread);
+                ttWindow.show();
+            }
 
+        });
+        return jMenuItem;
+    }
+
+    public static JMenuItem createCallGraphMenuItem(String text, final ParaProfTrial ppTrial,
+            final edu.uoregon.tau.dms.dss.Thread thread) {
+        JMenuItem jMenuItem = new JMenuItem(text);
+        jMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, thread);
+                tmpRef.show();
+            }
+
+        });
+        return jMenuItem;
+    }
+
+    public static JMenuItem createCallPathThreadRelationMenuItem(String text, final ParaProfTrial ppTrial,
+            final edu.uoregon.tau.dms.dss.Thread thread) {
+        JMenuItem jMenuItem = new JMenuItem(text);
+        jMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial, thread, 0);
+                callPathTextWindow.show();
+            }
+
+        });
+        return jMenuItem;
+    }
+
+    public static JMenuItem createThreadDataMenuItem(String text, final ParaProfTrial ppTrial,
+            final edu.uoregon.tau.dms.dss.Thread thread) {
+        JMenuItem jMenuItem = new JMenuItem(text);
+        jMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ThreadDataWindow w = new ThreadDataWindow(ppTrial, thread);
+                w.show();
+            }
+
+        });
+        return jMenuItem;
+    }
+
+    public static void handleThreadClick(final ParaProfTrial ppTrial, final edu.uoregon.tau.dms.dss.Thread thread, JPanel owner,
+            MouseEvent evt) {
+        if (thread.getNodeID() == -1) { // mean
+            JPopupMenu meanThreadPopup = new JPopupMenu();
+            meanThreadPopup.add(createThreadDataMenuItem("Show Mean Bar Graph", ppTrial, thread));
+            meanThreadPopup.add(createStatisticsMenuItem("Show Mean Statistics Text Window", ppTrial, thread, false));
+            meanThreadPopup.add(createStatisticsTableMenuItem("Show Mean Statistics Table", ppTrial, thread));
+            meanThreadPopup.add(createCallGraphMenuItem("Show Mean Call Graph", ppTrial, thread));
+            meanThreadPopup.add(createCallPathThreadRelationMenuItem("Show Mean Call Path Relations", ppTrial, thread));
+            meanThreadPopup.show(owner, evt.getX(), evt.getY());
+        } else if (thread.getNodeID() == -3) { // stddev
+            JPopupMenu threadPopup = new JPopupMenu();
+            threadPopup.add(createThreadDataMenuItem("Show Standard Deviation Bar Graph", ppTrial, thread));
+            threadPopup.add(createStatisticsMenuItem("Show Standard Deviation Statistics Text Window", ppTrial, thread, false));
+            threadPopup.add(createStatisticsTableMenuItem("Show Standard Deviation Statistics Table", ppTrial, thread));
+            threadPopup.add(createCallGraphMenuItem("Show Standard Deviation Call Graph", ppTrial, thread));
+            threadPopup.add(createCallPathThreadRelationMenuItem("Show Standard Deviation Call Path Thread Relations", ppTrial,
+                    thread));
+            threadPopup.show(owner, evt.getX(), evt.getY());
+        } else {
+            JPopupMenu threadPopup = new JPopupMenu();
+            threadPopup.add(createThreadDataMenuItem("Show Thread Bar Graph", ppTrial, thread));
+            threadPopup.add(createStatisticsMenuItem("Show Thread Statistics Text Window", ppTrial, thread, false));
+            threadPopup.add(createStatisticsTableMenuItem("Show Thread Statistics Table", ppTrial, thread));
+            threadPopup.add(createCallGraphMenuItem("Show Thread Call Graph", ppTrial, thread));
+            threadPopup.add(createCallPathThreadRelationMenuItem("Show Thread Call Path Relations", ppTrial, thread));
+            if (ppTrial.userEventsPresent()) {
+                threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, thread, true));
+            }
             threadPopup.show(owner, evt.getX(), evt.getY());
 
         }
     }
 
-    public static int[] computeClipping(Rectangle clipRect, Rectangle viewRect, boolean toScreen, boolean fullWindow,
-            int size, int barSpacing, int yCoord) {
+    public static int[] computeClipping(Rectangle clipRect, Rectangle viewRect, boolean toScreen, boolean fullWindow, int size,
+            int barSpacing, int yCoord) {
 
         int startElement, endElement;
         if (!fullWindow) {
@@ -1110,6 +1084,22 @@ public class ParaProfUtils {
             }
         }
 
+    }
+
+    public static boolean rightClick(MouseEvent evt) {
+        boolean rightClick = false;
+
+        // anything but left click
+        if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+            rightClick = true;
+        }
+
+        // control click for mac users
+        if ((evt.getModifiers() & InputEvent.CTRL_DOWN_MASK) == 1) {
+            rightClick = true;
+        }
+
+        return rightClick;
     }
 
     public static String getFunctionName(Function function) {

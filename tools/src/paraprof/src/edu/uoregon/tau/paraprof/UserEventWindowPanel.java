@@ -39,7 +39,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     private int textOffset = 60;
     private int maxXLength = 0;
     private boolean groupMember = false;
-    private ParaProfTrial trial = null;
+    private ParaProfTrial ppTrial = null;
     private UserEventWindow window = null;
     private List list = new ArrayList();
     private int xPanelSize = 0;
@@ -47,8 +47,8 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     private JPopupMenu popup = new JPopupMenu();
     private int lastHeaderEndPosition = 0;
 
-    public UserEventWindowPanel(ParaProfTrial trial, UserEvent userEvent, UserEventWindow uEWindow) {
-        this.trial = trial;
+    public UserEventWindowPanel(ParaProfTrial ppTrial, UserEvent userEvent, UserEventWindow uEWindow) {
+        this.ppTrial = ppTrial;
         this.window = uEWindow;
         this.userEvent = userEvent;
         barLength = baseBarLength;
@@ -109,15 +109,15 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 
         //To make sure the bar details are set, this
         //method must be called.
-        trial.getPreferencesWindow().setBarDetails(g2D);
+        ppTrial.getPreferencesWindow().setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
-        barSpacing = trial.getPreferencesWindow().getBarSpacing();
-        barHeight = trial.getPreferencesWindow().getBarHeight();
+        barSpacing = ppTrial.getPreferencesWindow().getBarSpacing();
+        barHeight = ppTrial.getPreferencesWindow().getBarHeight();
 
         //Obtain the font and its metrics.
-        Font font = new Font(trial.getPreferencesWindow().getParaProfFont(),
-                trial.getPreferencesWindow().getFontStyle(), barHeight);
+        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
+                ppTrial.getPreferencesWindow().getFontStyle(), barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
@@ -207,8 +207,8 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
             g2D.setColor(userEvent.getColor());
             g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 
-            if (userEvent == (trial.getHighlightedUserEvent())) {
-                g2D.setColor(trial.getColorChooser().getUserEventHighlightColor());
+            if (userEvent == (ppTrial.getHighlightedUserEvent())) {
+                g2D.setColor(ppTrial.getColorChooser().getUserEventHighlightColor());
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
                 g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
             } else {
@@ -216,8 +216,8 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
             }
         } else {
-            if (userEvent == (trial.getHighlightedUserEvent()))
-                g2D.setColor(trial.getColorChooser().getUserEventHighlightColor());
+            if (userEvent == (ppTrial.getHighlightedUserEvent()))
+                g2D.setColor(ppTrial.getColorChooser().getUserEventHighlightColor());
             else {
                 g2D.setColor(userEvent.getColor());
             }
@@ -252,11 +252,11 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
                     if (tmpCol != null) {
                         userEvent.setSpecificColor(tmpCol);
                         userEvent.setColorFlag(true);
-                        trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                        ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
                     }
                 } else if (arg.equals("Reset to Generic Color")) {
                     userEvent.setColorFlag(false);
-                    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                    ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
                 }
             }
         } catch (Exception e) {
@@ -269,7 +269,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         try {
             //For the moment, I am just showing the popup menu anywhere.
             //For a future release, there will be more here.
-            if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+            if (ParaProfUtils.rightClick(evt)) {
                 popup.show(this, evt.getX(), evt.getY());
             }
         } catch (Exception e) {
@@ -303,7 +303,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     private boolean resizePanel(FontMetrics fmFont, int barXCoord) {
         boolean resized = false;
         int newYPanelSize = ((window.getData().size()) + 2) * barSpacing + 10;
-        int[] nct = trial.getMaxNCTNumbers();
+        int[] nct = ppTrial.getMaxNCTNumbers();
         String nctString = "n,c,t " + nct[0] + "," + nct[1] + "," + nct[2];
         ;
         int newXPanelSize = barXCoord + 5 + (fmFont.stringWidth(nctString)) + 25;

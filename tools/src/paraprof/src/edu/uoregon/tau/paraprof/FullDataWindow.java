@@ -65,10 +65,9 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
     private List list;
 
     public FullDataWindow(ParaProfTrial ppTrial) {
-        //This window needs to maintain a reference to its trial.
         this.ppTrial = ppTrial;
+        ppTrial.getSystemEvents().addObserver(this);
 
-        //Window Stuff.
 
         setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
@@ -85,8 +84,8 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
             }
         });
 
-        int xPosition = ParaProf.paraProfManager.getLocation().x;
-        int yPosition = ParaProf.paraProfManager.getLocation().y;
+        int xPosition = ParaProf.paraProfManagerWindow.getLocation().x;
+        int yPosition = ParaProf.paraProfManagerWindow.getLocation().y;
         setLocation(xPosition + 75, yPosition + 110);
 
         //Setting up the layout system for the main window.

@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * HistogramWindowPanel
  * This is the panel for the HistogramWindow.
  *  
- * <P>CVS $Id: HistogramWindowPanel.java,v 1.11 2005/05/31 23:21:48 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindowPanel.java,v 1.12 2005/06/17 22:13:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		HistogramWindow
  */
 public class HistogramWindowPanel extends JPanel implements Printable, ImageExport {
@@ -234,7 +234,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ImageExpo
         xOffset = 0;
         for (int i = 0; i < 10; i++) {
             double height = ((10 - i)) * (double) maxInAnyBin / 10;
-            String heightString = UtilFncs.formatDouble(height, 4);
+            String heightString = UtilFncs.formatDouble(height, 4, true);
             int stringWidth = fontMetrics.stringWidth(heightString);
             xOffset = Math.max(xOffset, stringWidth);
         }
@@ -243,7 +243,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ImageExpo
         for (int i = 0; i < 10; i++) {
             double height = ((10 - i)) * (double) maxInAnyBin / 10;
 
-            String heightString = UtilFncs.formatDouble(height, 4);
+            String heightString = UtilFncs.formatDouble(height, 4, true);
             int stringWidth = fontMetrics.stringWidth(heightString);
 
             g2D.drawLine(xOffset - 5, yOffset + i * 40, xOffset, yOffset + i * 40);

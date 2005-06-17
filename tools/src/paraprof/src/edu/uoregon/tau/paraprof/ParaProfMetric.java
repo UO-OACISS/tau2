@@ -15,8 +15,8 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
     public ParaProfMetric() {
     }
 
-    public void setPpTrial(ParaProfTrial trial) {
-        this.ppTrial = trial;
+    public void setPpTrial(ParaProfTrial ppTrial) {
+        this.ppTrial = ppTrial;
     }
 
     public ParaProfTrial getParaProfTrial() {

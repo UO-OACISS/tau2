@@ -27,7 +27,7 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
      * @param model             The associated CallPathModel
      * @param alternateName     String to display for nodes with no associated FunctionProfile
      */
-    TreeTableNode(FunctionProfile functionProfile, CallPathModel model, String alternateName) {
+    public TreeTableNode(FunctionProfile functionProfile, CallPathModel model, String alternateName) {
         this.functionProfile = functionProfile;
         this.model = model;
         this.alternateName = alternateName;

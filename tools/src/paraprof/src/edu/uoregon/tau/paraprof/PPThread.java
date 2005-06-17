@@ -18,7 +18,6 @@ public class PPThread {
     private int miscYBeg;
     private int miscYEnd;
 
-    
     private ParaProfTrial ppTrial;
     private edu.uoregon.tau.dms.dss.Thread thread = null;
     private List functions = new ArrayList();
@@ -28,8 +27,10 @@ public class PPThread {
 
     private double maxExclusivePercent;
 
-    
     public PPThread(edu.uoregon.tau.dms.dss.Thread thread, ParaProfTrial ppTrial) {
+        if (thread == null) {
+            throw new ParaProfException("PPThread constructor called with null thread");
+        }
         this.ppTrial = ppTrial;
         this.thread = thread;
     }
@@ -37,7 +38,7 @@ public class PPThread {
     public edu.uoregon.tau.dms.dss.Thread getThread() {
         return thread;
     }
-    
+
     public int getNodeID() {
         return this.thread.getNodeID();
     }
@@ -48,6 +49,16 @@ public class PPThread {
 
     public int getThreadID() {
         return this.thread.getThreadID();
+    }
+
+    public String getName() {
+        if (this.getNodeID() == -1) {
+            return "mean";
+        } else if (this.getNodeID() == -3) {
+            return "std. dev.";
+        } else {
+            return "n,c,t " + (this.getNodeID()) + "," + (this.getContextID()) + "," + (this.getThreadID());
+        }
     }
 
     public void addFunction(PPFunctionProfile ppFunctionProfile) {
@@ -74,18 +85,10 @@ public class PPThread {
         return userevents.listIterator();
     }
 
-    
-    
-    
-    
-    
-    
     public double getMaxExclusivePercent() {
         return maxExclusivePercent;
     }
 
-
-    
     public Vector getSortedFunctionProfiles(DataSorter dataSorter, boolean getAll) {
         Vector newList = null;
 
@@ -93,14 +96,15 @@ public class PPThread {
         newList = new Vector();
 
         maxExclusivePercent = 0;
-        
+
         for (Iterator e1 = functionList.iterator(); e1.hasNext();) {
             FunctionProfile functionProfile = (FunctionProfile) e1.next();
             if (functionProfile != null) {
                 if (getAll || ppTrial.displayFunction(functionProfile.getFunction())) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(dataSorter, thread, functionProfile);
                     newList.addElement(ppFunctionProfile);
-                    maxExclusivePercent = Math.max(maxExclusivePercent, functionProfile.getExclusivePercent(ppTrial.getDefaultMetricID()));
+                    maxExclusivePercent = Math.max(maxExclusivePercent,
+                            functionProfile.getExclusivePercent(ppTrial.getDefaultMetricID()));
                 }
             }
         }
@@ -108,10 +112,6 @@ public class PPThread {
         return newList;
     }
 
-    
-    
-    
-    
     //Rest of the public functions
     public void setYDrawCoord(int yDrawCoord) {
         yDrawCoord = this.yDrawCoord;
@@ -144,5 +144,4 @@ public class PPThread {
         return miscYEnd;
     }
 
-   
 }

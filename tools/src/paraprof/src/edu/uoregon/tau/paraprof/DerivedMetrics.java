@@ -15,6 +15,19 @@ import java.util.*;
 
 public class DerivedMetrics {
 
+    
+    private static void incrementStorage (edu.uoregon.tau.dms.dss.Thread thread) {
+        thread.incrementStorage();
+
+        Iterator l = thread.getFunctionProfileIterator();
+        while (l.hasNext()) {
+            FunctionProfile functionProfile = (FunctionProfile) l.next();
+            if (functionProfile != null) {
+                functionProfile.incrementStorage();
+            }
+        }
+    }
+    
     public static ParaProfMetric applyOperation(ParaProfMetric operand1, Object operand2, String inOperation) {
 
         try {
@@ -40,7 +53,7 @@ public class DerivedMetrics {
 
             //We do not support metric from different trials yet. Check for this.
             if ((!constant) && (trialOpA != trialOpB)) {
-                JOptionPane.showMessageDialog(ParaProf.paraProfManager,
+                JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow,
                         "Sorry, please select metrics from the same trial!", "ParaProf Error",
                         JOptionPane.ERROR_MESSAGE);
                 return null;
@@ -61,7 +74,7 @@ public class DerivedMetrics {
                 operation = 3;
                 newMetricName = " / ";
             } else {
-                JOptionPane.showMessageDialog(ParaProf.paraProfManager, "Unsupported Operation, '" + inOperation + "'",
+                JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow, "Unsupported Operation, '" + inOperation + "'",
                         "ParaProf Error", JOptionPane.ERROR_MESSAGE);
 
                 //System.out.println("Wrong operation type");
@@ -83,31 +96,10 @@ public class DerivedMetrics {
 
             Iterator l = trialOpA.getDataSource().getFunctions();
 
-            edu.uoregon.tau.dms.dss.Thread meanThread;
-
-            meanThread = trialOpA.getDataSource().getMeanData();
-            meanThread.incrementStorage();
-
-            edu.uoregon.tau.dms.dss.Thread totalThread;
-
-            totalThread = trialOpA.getDataSource().getTotalData();
-            totalThread.incrementStorage();
-
-            l = meanThread.getFunctionProfileIterator();
-            while (l.hasNext()) {
-                FunctionProfile functionProfile = (FunctionProfile) l.next();
-                if (functionProfile != null) {
-                    functionProfile.incrementStorage();
-                }
-            }
-
-            l = totalThread.getFunctionProfileIterator();
-            while (l.hasNext()) {
-                FunctionProfile functionProfile = (FunctionProfile) l.next();
-                if (functionProfile != null) {
-                    functionProfile.incrementStorage();
-                }
-            }
+            
+            incrementStorage(trialOpA.getDataSource().getMeanData());
+            incrementStorage(trialOpA.getDataSource().getTotalData());
+            incrementStorage(trialOpA.getDataSource().getStdDevData());
 
             //######
             //Calculate the raw values.
@@ -162,11 +154,12 @@ public class DerivedMetrics {
 
             trialOpA.getDataSource().getMeanData().setThreadData(metric);
             trialOpA.getDataSource().getTotalData().setThreadData(metric);
+            trialOpA.getDataSource().getStdDevData().setThreadData(metric);
 
             return newMetric;
         } catch (NumberFormatException e) {
             //Display an error
-            JOptionPane.showMessageDialog(ParaProf.paraProfManager,
+            JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow,
                     "Did not recognize arguments! Note: DB apply not supported.", "Argument Error!",
                     JOptionPane.ERROR_MESSAGE);
             return null;

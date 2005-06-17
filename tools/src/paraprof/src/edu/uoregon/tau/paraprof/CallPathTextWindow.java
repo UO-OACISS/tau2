@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.interfaces.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.25 2005/05/31 23:21:47 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.26 2005/06/17 22:13:46 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.25 $
+ * @version	$Revision: 1.26 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -53,16 +53,15 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private int order = 0;
     private int units = ParaProf.preferences.getUnits();
 
-    public CallPathTextWindow(ParaProfTrial ppTrial, int nodeID, int contextID, int threadID, DataSorter dataSorter,
-            int windowType) {
-
+    private edu.uoregon.tau.dms.dss.Thread thread;
+    
+    public CallPathTextWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, int windowType) {
         this.ppTrial = ppTrial;
-        this.nodeID = nodeID;
-        this.contextID = contextID;
-        this.threadID = threadID;
+        ppTrial.getSystemEvents().addObserver(this);
         this.dataSorter = new DataSorter(ppTrial);
         this.windowType = windowType;
-
+        this.thread = thread;
+        
         setLocation(0, 0);
         setSize(800, 600);
 
@@ -70,13 +69,17 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
         //Now set the title.
         if (windowType == 0) {
-            this.setTitle("Mean Call Path Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        } else if (windowType == 1) {
-            this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                    + ppTrial.getTrialIdentifier(true));
-            //CallPathUtilFuncs.trimCallPathData(trial.getDataSource(), trial.getDataSource().getThread(nodeID, contextID, threadID));
-        } else
+            if (thread.getNodeID() == -1) {
+                this.setTitle("Mean Call Path Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            } else if (thread.getNodeID() == -3) {
+                this.setTitle("Standard Deviation Call Path Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            } else {
+                this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
+                        + ppTrial.getTrialIdentifier(true));
+            }
+        } else {
             this.setTitle("Call Path Data Relations - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        }
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -102,13 +105,12 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        edu.uoregon.tau.dms.dss.Thread thread = ppTrial.getDataSource().getThread(nodeID, contextID, threadID);
 
-        if (windowType == 0 || windowType == 2) {
-            thread = ppTrial.getDataSource().getMeanData();
+        if (windowType == 2) {
+            this.thread = ppTrial.getDataSource().getMeanData();
         }
 
-        panel = new CallPathTextWindowPanel(ppTrial, thread, this, windowType);
+        panel = new CallPathTextWindowPanel(ppTrial, this.thread, this, windowType);
         //The scroll panes into which the list shall be placed.
 
         setupMenus();
@@ -384,7 +386,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
         if (sortByName) {
             if (windowType == 0 || windowType == 1) {
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
+                list = dataSorter.getFunctionProfiles(thread);
             } else {
                 list = new ArrayList();
                 for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();)
@@ -392,7 +394,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             }
         } else {
             if (windowType == 0 || windowType == 1) {
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
+                list = dataSorter.getFunctionProfiles(thread);
             } else {
                 list = new ArrayList();
                 for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();)

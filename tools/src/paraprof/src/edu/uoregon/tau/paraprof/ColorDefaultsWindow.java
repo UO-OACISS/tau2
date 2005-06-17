@@ -172,7 +172,7 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
     
 
     private void updateTrials() {
-        Vector trials = ParaProf.paraProfManager.getLoadedTrials();
+        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
         
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();

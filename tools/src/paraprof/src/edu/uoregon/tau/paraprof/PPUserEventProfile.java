@@ -1,7 +1,7 @@
 /*
- * PPFunctionProfile.java
+ * PPUserEventProfile.java
  * 
- * Title: ParaProf Author: Robert Bell Description: The primary functionProfiles of
+ * Title: ParaProf Author: Robert Bell Description: The primary functions of
  * this class are: 1)Pass data calls onto the objects which contain function
  * userevent, mean, and other data. 2)Implement the Comparable interface to
  * allow it to be sorted. 3)Hold drawing information.
@@ -21,12 +21,31 @@ import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.paraprof.enums.*;
 
 public class PPUserEventProfile implements Comparable {
-    public PPUserEventProfile(DataSorter dataSorter, int nodeID, int contextID, int threadID,
-            UserEventProfile userEventProfile) {
 
-        this.nodeID = nodeID;
-        this.contextID = contextID;
-        this.threadID = threadID;
+    //Instance data.
+
+    private UserEventProfile userEventProfile;
+    private DataSorter dataSorter;
+    private UserEvent userEvent = null;
+
+    //Drawing coordinates for this thread data object.
+    private int xBeg = 0;
+    private int xEnd = 0;
+    private int yBeg = 0;
+    private int yEnd = 0;
+
+    private boolean statDrawnTo;
+
+    //Boolean indicating whether or not this object is highlighted.
+    private boolean highlighted = false;
+
+    private int sortType;
+
+    private edu.uoregon.tau.dms.dss.Thread thread;
+
+    public PPUserEventProfile(DataSorter dataSorter, edu.uoregon.tau.dms.dss.Thread thread,
+            UserEventProfile userEventProfile) {
+        this.thread = thread;
 
         this.dataSorter = dataSorter;
 
@@ -35,15 +54,15 @@ public class PPUserEventProfile implements Comparable {
     }
 
     public int getNodeID() {
-        return nodeID;
+        return thread.getNodeID();
     }
 
     public int getContextID() {
-        return contextID;
+        return thread.getContextID();
     }
 
     public int getThreadID() {
-        return threadID;
+        return thread.getThreadID();
     }
 
     public UserEvent getUserEvent() {
@@ -175,7 +194,7 @@ public class PPUserEventProfile implements Comparable {
         } else {
             throw new ParaProfException("Unexpected sort type: " + dataSorter.getSortType());
         }
-    } 
+    }
 
     /*
      * (0) name (2) exclusive (4) inclusive (6) number of calls (8) number of
@@ -297,30 +316,5 @@ public class PPUserEventProfile implements Comparable {
     public void setSortType(int sortType) {
         this.sortType = sortType;
     }
-
-    //Instance data.
-
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
-
-    UserEventProfile userEventProfile;
-
-    private DataSorter dataSorter;
-
-    UserEvent userEvent = null;
-
-    //Drawing coordinates for this thread data object.
-    int xBeg = 0;
-    int xEnd = 0;
-    int yBeg = 0;
-    int yEnd = 0;
-
-    boolean statDrawnTo;
-
-    //Boolean indicating whether or not this object is highlighted.
-    boolean highlighted = false;
-
-    int sortType;
 
 }

@@ -16,11 +16,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.46 2005/06/09 23:54:47 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.47 2005/06/17 22:13:47 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.46 $
+ * @version $Revision: 1.47 $
  */
 public class ParaProf implements ActionListener {
 
@@ -44,14 +44,13 @@ public class ParaProf implements ActionListener {
     static ColorMap colorMap = new ColorMap();
 
     //System wide stuff.
-    static String homeDirectory = null;
     static File paraProfHomeDirectory = null;
     public static int defaultNumberPrecision = 6;
     //static ParaProfLisp paraProfLisp = null;
     public static Preferences preferences = null;
     static ColorChooser colorChooser;
 
-    static ParaProfManagerWindow paraProfManager = null;
+    static ParaProfManagerWindow paraProfManagerWindow = null;
     static ApplicationManager applicationManager = new ApplicationManager();
     public static HelpWindow helpWindow = null;
     static PreferencesWindow preferencesWindow;
@@ -141,9 +140,9 @@ public class ParaProf implements ActionListener {
         experiment.setName("Default Exp");
 
         ParaProf.helpWindow = new HelpWindow();
-        ParaProf.paraProfManager = new ParaProfManagerWindow();
+        ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
 
-        paraProfManager.addTrial(app, experiment, sourceFiles, fileType, fixNames);
+        paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames);
     }
 
     public void startSystem() {
@@ -157,7 +156,8 @@ public class ParaProf implements ActionListener {
 
             //Establish the presence of a .ParaProf directory. This is located
             // by default in the user's home directory.
-            ParaProf.paraProfHomeDirectory = new File(homeDirectory + "/.ParaProf");
+
+            ParaProf.paraProfHomeDirectory = new File(System.getProperty("user.home") + "/.ParaProf");
             if (paraProfHomeDirectory.exists()) {
 
                 //Try and load a preference file ... ParaProfPreferences.dat
@@ -205,6 +205,8 @@ public class ParaProf implements ActionListener {
             }
 
             ParaProf.preferencesWindow = new PreferencesWindow(preferences);
+            
+            DataSource.setMeanIncludeNulls(!preferences.getComputeMeanWithoutNulls());
 
             //            javax.swing.SwingUtilities.invokeLater(new Runnable() {
             //              public void run() {
@@ -250,7 +252,7 @@ public class ParaProf implements ActionListener {
 
         ParaProf.colorMap.setMap(ParaProf.preferences.getAssignedColors());
 
-        List trials = ParaProf.paraProfManager.getLoadedTrials();
+        List trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();
             ParaProf.colorChooser.setColors(ppTrial, -1);
@@ -278,7 +280,7 @@ public class ParaProf implements ActionListener {
 
         ParaProf.colorChooser.setSavedColors();
         ParaProf.preferences.setAssignedColors(ParaProf.colorMap.getMap());
-        ParaProf.preferences.setManagerWindowPosition(ParaProf.paraProfManager.getLocation());
+        ParaProf.preferences.setManagerWindowPosition(ParaProf.paraProfManagerWindow.getLocation());
 
         //        System.out.println ("saving manager position = " + preferences.getManagerWindowPosition());
 
@@ -297,8 +299,7 @@ public class ParaProf implements ActionListener {
     // Main entry point
     static public void main(String[] args) {
 
-        ParaProf.homeDirectory = System.getProperty("user.home");
-
+     
         final ParaProf paraProf = new ParaProf();
 
         //######

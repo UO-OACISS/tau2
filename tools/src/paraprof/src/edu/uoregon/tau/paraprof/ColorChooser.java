@@ -239,7 +239,7 @@ public class ColorChooser implements WindowListener {
             DataSorter dataSorter = new DataSorter(ppTrial);
             dataSorter.setSortType(SortType.MEAN_VALUE);
             dataSorter.setDescendingOrder(true);
-            List list = dataSorter.getFunctionProfiles(-1, -1, -1);
+            List list = dataSorter.getFunctionProfiles(ppTrial.getDataSource().getMeanData());
 
             for (int i = 0; i < list.size(); i++) {
                 Function func = ((PPFunctionProfile) list.get(i)).getFunction();

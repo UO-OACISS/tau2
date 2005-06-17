@@ -110,7 +110,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
         progressBar.setValue(0);
         setDBUpload(true);
 
-        DatabaseAPI dbAPI = ParaProf.paraProfManager.getDatabaseAPI();
+        DatabaseAPI dbAPI = ParaProf.paraProfManagerWindow.getDatabaseAPI();
         ppTrial.setDatabaseAPI(dbAPI);
         if (dbAPI != null) {
             // this call will block until the entire thing is uploaded (could be a while)
@@ -144,7 +144,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
                     if (justDB) {
                         upload();
                         jTimer.stop();
-                        ParaProf.paraProfManager.populateTrialMetrics(ppTrial);
+                        ParaProf.paraProfManagerWindow.populateTrialMetrics(ppTrial);
                         finishLoad();
                         LoadTrialProgressWindow.this.dispose();
                     } else {
@@ -159,7 +159,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
                                 upload();
                             }
 
-                            ParaProf.paraProfManager.populateTrialMetrics(ppTrial);
+                            ParaProf.paraProfManagerWindow.populateTrialMetrics(ppTrial);
                             ppTrial.showMainWindow();
                         }
                         jTimer.stop();
@@ -225,7 +225,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
     public void finishDatabase(boolean success) {
 
         if (success && !aborted) {
-            ParaProf.paraProfManager.populateTrialMetrics(ppTrial);
+            ParaProf.paraProfManagerWindow.populateTrialMetrics(ppTrial);
             progressBar.setValue(100);
             ppTrial.showMainWindow();
         }

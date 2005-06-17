@@ -151,6 +151,7 @@ public class Preferences implements Serializable {
     private boolean showPathTitleInReverse = true;
     private int units = 0;
     private boolean reversedCallPaths = false;
+    private boolean computeMeanWithoutNulls = false;
     
     static final long serialVersionUID = 183442743456314793L;
 
@@ -184,6 +185,20 @@ public class Preferences implements Serializable {
 
     public void setReversedCallPaths(boolean reversedCallPaths) {
         this.reversedCallPaths = reversedCallPaths;
+    }
+
+    // this is reverse from everything else so that it can start out false
+    // this way people that already had preferences files won't get the new 
+    // behavior (they go to false if not found)
+    public boolean getComputeMeanWithoutNulls() {
+        return computeMeanWithoutNulls;
+    }
+
+    // this is reverse from everything else so that it can start out false
+    // this way people that already had preferences files won't get the new 
+    // behavior (they go to false if not found)
+    public void setComputeMeanWithoutNulls(boolean computeMeanWithoutNulls) {
+        this.computeMeanWithoutNulls = computeMeanWithoutNulls;
     }
     
 }

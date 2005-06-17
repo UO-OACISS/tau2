@@ -68,7 +68,7 @@ public class JTreeTable extends JTable implements MouseListener {
                     TreePath path = tree.getPathForLocation(evt.getX(), evt.getY());
                     if (path != null) {
                         TreeTableNode node = (TreeTableNode) path.getLastPathComponent();
-                        if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                        if (ParaProfUtils.rightClick(evt)) {
                             ParaProfUtils.createFunctionClickPopUp(node.getModel().getPPTrial(),
                                     node.getFunctionProfile().getFunction(), JTreeTable.this).show(JTreeTable.this,
                                     evt.getX(), evt.getY());

@@ -5,7 +5,6 @@
  * Title: ParaProf 
  * Author: Robert Bell 
  * Description: 
- * Things to do: 1)Add printing support.
  */
 
 package edu.uoregon.tau.paraprof;
@@ -31,7 +30,6 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 
 public class FullDataWindowPanel extends JPanel implements MouseListener, Printable, ImageExport {
 
-    
     private ParaProfTrial ppTrial = null;
     private FullDataWindow window = null;
     private List list = new Vector();
@@ -49,8 +47,6 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
     private int xPanelSize = 0;
     private int yPanelSize = 0;
 
-    
-    
     public FullDataWindowPanel(ParaProfTrial ppTrial, FullDataWindow window) {
         this.setToolTipText("ParaProf Full Data Window");
         setBackground(Color.white);
@@ -63,10 +59,18 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
         barLength = baseBarLength;
     }
 
-    public String getToolTipText(MouseEvent evt) {
+    private PPFunctionProfile getPPFunctionProfile(PPThread ppThread, int xCoord) {
+        for (Iterator it = ppThread.getFunctionListIterator(); it.hasNext();) {
+            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
+            if (xCoord <= ppFunctionProfile.getXEnd() && xCoord >= ppFunctionProfile.getXBeg()) {
+                return ppFunctionProfile;
+            }
+        }
+        return null;
+    }
 
+    public String getToolTipText(MouseEvent evt) {
         try {
-            //Get the location of the mouse.
             int xCoord = evt.getX();
             int yCoord = evt.getY();
 
@@ -74,146 +78,72 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
 
             int index = 0;
 
+            // Calculate which line the mouse is over
             if (ppTrial.getPreferencesWindow().getBarSpacing() != 0) {
-                //Calculate which PPFunctionProfile was clicked on.
                 index = (yCoord) / (ppTrial.getPreferencesWindow().getBarSpacing());
             }
 
-            if (index == 0) { // mean
-                if (xCoord < barXCoord) {
-                    if (ParaProf.helpWindow.isShowing()) {
-                        //Clear the window first.
-                        ParaProf.helpWindow.clearText();
+            if (index >= list.size()) { // past the bottom
+                return "";
+            }
 
-                        //Now send the help info.
-                        ParaProf.helpWindow.writeText("You are to the left of the mean bar.");
-                        ParaProf.helpWindow.writeText("");
-                        ParaProf.helpWindow.writeText("Using either the right or left mouse buttons, click once"
-                                + " to display more options about the"
-                                + " mean values for the functionProfiles in the system.");
+            if (xCoord < barXCoord) { // left of the bars
+                if (ParaProf.helpWindow.isShowing()) {
+                    ParaProf.helpWindow.clearText();
+                    if (index == 1 && list.size() > 1) {
+                        ParaProf.helpWindow.writeText("This line represents the mean statistics (over all threads).\n");
+                    } if (index == 0 && list.size() > 1) {
+                        ParaProf.helpWindow.writeText("This line represents the standard deviation of each function (over threads).\n");
+                    } else {
+                        ParaProf.helpWindow.writeText("n,c,t stands for: Node, Context and Thread.\n");
                     }
-                    //Return a string indicating that clicking before the
-                    // display bar
-                    //will cause thread data to be displayed.
-                    return "Left or right click for more options";
-                } else {
-                    ppThread = (PPThread) list.get(index);
-
-                    Iterator l = ppThread.getFunctionListIterator();
-                    while (l.hasNext()) {
-                        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) l.next();
-                        if (xCoord <= ppFunctionProfile.getXEnd() && xCoord >= ppFunctionProfile.getXBeg()) {
-                            if (ParaProf.helpWindow.isShowing()) {
-                                //Clear the window first.
-                                ParaProf.helpWindow.clearText();
-
-                                //Now send the help info.
-                                ParaProf.helpWindow.writeText("Your mouse is over the mean draw bar!");
-                                ParaProf.helpWindow.writeText("");
-                                ParaProf.helpWindow.writeText("Current function name is: "
-                                        + ppFunctionProfile.getFunctionName());
-                                ParaProf.helpWindow.writeText("");
-                                ParaProf.helpWindow.writeText("The mean draw bars give a visual representation of the"
-                                        + " mean values for the functionProfiles which have run in the system."
-                                        + "  The funtions are assigned a color from the current"
-                                        + " ParaProf color set.  The colors are cycled through when the"
-                                        + " number of funtions exceeds the number of available"
-                                        + " colors. In the preferences section, you can add more colors."
-                                        + "  Use the right and left mouse buttons " + "to give additional information.");
-                            }
-                            //Return the name of the function in the current
-                            // thread data object.
-                            return ppFunctionProfile.getFunctionName();
-                        }
-                    }
-                    //If in here, and at this position, it means that the mouse
-                    // is not over
-                    //a bar. However, we might be over the misc. function
-                    // section. Check for this.
-                    if (xCoord <= ppThread.getMiscXEnd() && xCoord >= ppThread.getMiscXBeg()) {
-                        //Output data to the help window if it is showing.
-                        if (ParaProf.helpWindow.isShowing()) {
-                            //Clear the window fisrt.
-                            ParaProf.helpWindow.clearText();
-
-                            //Now send the help info.
-                            ParaProf.helpWindow.writeText("Your mouse is over the misc. function section!");
-                            ParaProf.helpWindow.writeText("");
-                            ParaProf.helpWindow.writeText("These are functionProfiles which have a non zero value,"
-                                    + " but whose screen representation is less than a pixel.");
-                            ParaProf.helpWindow.writeText("");
-                            ParaProf.helpWindow.writeText("To view these functionProfiles, right or left click to the left of"
-                                    + " this bar to bring up windows which will show more detailed information.");
-                        }
-
-                        return "Misc function section ... see help window for details";
-                    }
+                    ParaProf.helpWindow.writeText("Right click to display options for viewing the data.");
+                    ParaProf.helpWindow.writeText("Left click to go directly to the Thread Data Window");
                 }
-            } else if (index < list.size()) {
+                return "Right click for options";
+            } else {
                 ppThread = (PPThread) list.get(index);
-                if (xCoord < barXCoord) {
+                PPFunctionProfile ppFunctionProfile = getPPFunctionProfile(ppThread, xCoord);
+                if (ppFunctionProfile != null) {
                     if (ParaProf.helpWindow.isShowing()) {
-                        //Clear the window fisrt.
                         ParaProf.helpWindow.clearText();
-
-                        //Now send the help info.
-                        ParaProf.helpWindow.writeText("n,c,t stands for: Node, Context and Thread.");
-                        ParaProf.helpWindow.writeText("");
-                        ParaProf.helpWindow.writeText("Using either the right or left mouse buttons, click once"
-                                + " to display more options for this" + " thread.");
-                    }
-
-                    //Return a string indicating that clicking before the
-                    // display bar
-                    //will cause thread data to be displayed.
-                    return "Left or right click for more options";
-                } else {
-                    Iterator l = (Iterator) ppThread.getFunctionListIterator();
-                    while (l.hasNext()) {
-                        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) l.next();
-                        if (xCoord <= ppFunctionProfile.getXEnd() && xCoord >= ppFunctionProfile.getXBeg()) {
-                            if (ParaProf.helpWindow.isShowing()) {
-                                ParaProf.helpWindow.clearText();
-                                ParaProf.helpWindow.writeText("Your mouse is over one of the thread draw bars!");
-                                ParaProf.helpWindow.writeText("");
-                                ParaProf.helpWindow.writeText("Current function name is: "
-                                        + ppFunctionProfile.getFunctionName());
-                                ParaProf.helpWindow.writeText("");
-                                ParaProf.helpWindow.writeText("The thread draw bars give a visual representation"
-                                        + " functionProfiles which have run on this thread."
-                                        + "  The funtions are assigned a color from the current"
-                                        + " color set.  The colors are cycled through when the"
-                                        + " number of functionProfiles exceeds the number of available" + " colors."
-                                        + "  Use the right and left mouse buttons " + "to give additional information.");
-                            }
-                            //Return the name of the function in the current
-                            // thread data object.
-                            return ppFunctionProfile.getFunctionName();
+                        ParaProf.helpWindow.writeText("Current function name is: " + ppFunctionProfile.getFunctionName() + "\n");
+                        if (index == 1 && list.size() > 1) {
+                            ParaProf.helpWindow.writeText("The mean draw bars give a visual representation of the"
+                                    + " mean values for the functions.\n");
+                        } else if (index == 0 && list.size() > 1) {
+                            ParaProf.helpWindow.writeText("The standard deviation draw bars give a visual representation of the"
+                                    + " relative deviations from mean for the functions.\n");
+                        } else {
+                            ParaProf.helpWindow.writeText("The thread draw bars give a visual representation"
+                                    + " functions which have run on this thread and what their relative values are.\n");
                         }
-                    }
-                    //If in here, and at this position, it means that the mouse
-                    // is not over a bar. However, we might be over the misc. function
-                    // section. Check for this.
-                    if (xCoord <= ppThread.getMiscXEnd() && xCoord >= ppThread.getMiscXBeg()) {
-                        //Output data to the help window if it is showing.
-                        if (ParaProf.helpWindow.isShowing()) {
-                            //Clear the window fisrt.
-                            ParaProf.helpWindow.clearText();
+                        ParaProf.helpWindow.writeText("Functions are assigned a color from the default color set unless specifically assigned a color.  "
+                                    + "The colors are cycled through when the number of functions exceeds the number of available colors.\n");
+                        ParaProf.helpWindow.writeText("Right click to display options for this function.");
+                        ParaProf.helpWindow.writeText("Left click to go directly to the Function Data Window.");
 
-                            //Now send the help info.
-                            ParaProf.helpWindow.writeText("Your mouse is over the misc. function section!");
-                            ParaProf.helpWindow.writeText("");
-                            ParaProf.helpWindow.writeText("These are functionProfiles which have a non zero value,"
-                                    + " but whose screen representation is less than a pixel.");
-                            ParaProf.helpWindow.writeText("");
-                            ParaProf.helpWindow.writeText("To view these functionProfiles, right or left click to the left of"
-                                    + " this bar to bring up windows which will show more detailed information.");
-                        }
-
-                        return "Misc function section ... see help window for details";
                     }
+                    //Return the name of the function
+                    return ppFunctionProfile.getFunctionName();
+                }
+                // If in here, and at this position, it means that the mouse
+                // is not over a bar. However, we might be over the misc. function
+                // section. Check for this.
+                if (xCoord <= ppThread.getMiscXEnd() && xCoord >= ppThread.getMiscXBeg()) {
+                    if (ParaProf.helpWindow.isShowing()) {
+                        ParaProf.helpWindow.clearText();
+                        ParaProf.helpWindow.writeText("Your mouse is over the misc. function section!\n");
+                        ParaProf.helpWindow.writeText("These are functions which have a non zero value,"
+                                + " but whose screen representation is less than a pixel.\n");
+                        ParaProf.helpWindow.writeText("To view these function, right or left click to the left of"
+                                + " this bar to bring up windows which will show more detailed information.");
+                    }
+
+                    return "Misc function section ... see help window for details";
                 }
             }
+
         } catch (Exception e) {
             // do nothing, it's just a tooltip
         }
@@ -263,8 +193,8 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
         barHeight = ppTrial.getPreferencesWindow().getBarHeight();
 
         //Create font.
-        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
-                ppTrial.getPreferencesWindow().getFontStyle(), barHeight);
+        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(), ppTrial.getPreferencesWindow().getFontStyle(),
+                barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
@@ -275,14 +205,13 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
         //End - Calculating the starting positions of drawing.
         //######
 
-        
         //determine which elements to draw (clipping)
-        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(), barSpacing, yCoord);
+        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(),
+                barSpacing, yCoord);
         int startElement = clips[0];
         int endElement = clips[1];
         yCoord = clips[2];
-        
-        
+
         //######
         //Draw the header if required.
         //######
@@ -327,13 +256,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
                 ppThread = (PPThread) list.get(i);
                 yCoord = yCoord + (barSpacing);
 
-                String barString;
-                if (i == 0) {
-                    barString = "mean";
-                } else {
-                    barString = "n,c,t " + (ppThread.getNodeID()) + "," + (ppThread.getContextID()) + ","
-                            + (ppThread.getThreadID());
-                }
+                String barString = ppThread.getName();
 
                 int width = drawBar(g2D, fmFont, barString, ppThread, barXCoord, yCoord, barHeight, toScreen);
 
@@ -350,8 +273,8 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
 
     }
 
-    private int drawStackedBar(Graphics2D g2D, FontMetrics fmFont, String text, PPThread ppThread, int barXCoord,
-            int yCoord, int barHeight, boolean toScreen) {
+    private int drawStackedBar(Graphics2D g2D, FontMetrics fmFont, String text, PPThread ppThread, int barXCoord, int yCoord,
+            int barHeight, boolean toScreen) {
 
         ListIterator l = null;
         Group selectedGroup = ppTrial.getHighlightedGroup();
@@ -396,8 +319,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
                 // in each thread instead of against the maximum
                 xLength = (int) ((value / sum) * barLength);
             } else {
-                xLength = (int) (((value + valueSum) / window.getDataSorter().getMaxExclusiveSum()) * barLength)
-                        - lengthDrawn;
+                xLength = (int) (((value + valueSum) / window.getDataSorter().getMaxExclusiveSum()) * barLength) - lengthDrawn;
             }
 
             if (xLength > 2) { // only draw if there is something to draw
@@ -422,8 +344,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
                         g2D.setColor(Color.black);
                         if (highlighted) {
                             //Manually draw in the lines for consistancy.
-                            g2D.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength,
-                                    (yCoord - barHeight));
+                            g2D.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
                             g2D.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
                             g2D.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
                             highlighted = false;
@@ -499,8 +420,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
             //int diffLength = (int)
             // ((diff/window.getSMWData().maxExclusiveSum)*barLength);
 
-            int diffLength = (int) (((diff + valueSum) / window.getDataSorter().getMaxExclusiveSum()) * barLength)
-                    - lengthDrawn;
+            int diffLength = (int) (((diff + valueSum) / window.getDataSorter().getMaxExclusiveSum()) * barLength) - lengthDrawn;
 
             g2D.setColor(ppTrial.getColorChooser().getMiscFunctionColor());
             g2D.fillRect(barXCoord, (yCoord - barHeight), diffLength, barHeight);
@@ -624,8 +544,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
 
                         //Set the draw coords.
                         if (toScreen)
-                            ppFunctionProfile.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight),
-                                    yCoord);
+                            ppFunctionProfile.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
 
                         //Update barXCoord.
                         barXCoord = (barXCoord + xLength);
@@ -648,8 +567,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
 
                         //Set the draw coords.
                         if (toScreen)
-                            ppFunctionProfile.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight),
-                                    yCoord);
+                            ppFunctionProfile.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
 
                         //Update barXCoord.
                         barXCoord = (barXCoord + xLength);
@@ -690,8 +608,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
             //int diffLength = (int)
             // ((diff/window.getSMWData().maxExclusiveSum)*barLength);
 
-            int diffLength = (int) (((diff + valueSum) / window.getDataSorter().getMaxExclusiveSum()) * barLength)
-                    - lengthDrawn;
+            int diffLength = (int) (((diff + valueSum) / window.getDataSorter().getMaxExclusiveSum()) * barLength) - lengthDrawn;
 
             g2D.setColor(ppTrial.getColorChooser().getMiscFunctionColor());
             g2D.fillRect(barXCoord, (yCoord - barHeight), diffLength, barHeight);
@@ -733,9 +650,9 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
 
             ppThread = (PPThread) list.get(index);
 
-            if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) { // Right
-                // Click
-
+            
+            
+            if (ParaProfUtils.rightClick(evt)) { // Bring up context menu
                 if (xCoord < barXCoord) { // user clicked on the N,C,T
                     ParaProfUtils.handleThreadClick(ppTrial, ppThread.getThread(), this, evt);
                 } else {
@@ -745,18 +662,16 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
                         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) l.next();
 
                         if (xCoord <= ppFunctionProfile.getXEnd() && xCoord >= ppFunctionProfile.getXBeg()) {
-                            JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(), this);
+                            JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(),
+                                    this);
                             popup.show(this, evt.getX(), evt.getY());
                         }
                     }
                 }
-            } else {
-                // Left Click
+            } else { // Left Click
 
                 if (xCoord < barXCoord) { // user clicked on N,C,T
-                    ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial, ppThread.getNodeID(),
-                            ppThread.getContextID(), ppThread.getThreadID());
-                    ppTrial.getSystemEvents().addObserver(threadDataWindow);
+                    ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial, ppThread.getThread());
                     threadDataWindow.show();
                 } else {
                     //Find the appropriate PPFunctionProfile.
@@ -769,7 +684,6 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
                             // function.
                             FunctionDataWindow functionDataWindow = new FunctionDataWindow(ppTrial,
                                     ppFunctionProfile.getFunction());
-                            ppTrial.getSystemEvents().addObserver(functionDataWindow);
                             functionDataWindow.show();
                             return;
                         }
@@ -803,7 +717,6 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
         d.setSize(d.getWidth(), d.getHeight() + lastHeaderEndPosition);
         return d;
     }
-
 
     public void setBarLength(int barLength) {
         this.barLength = Math.max(1, barLength);

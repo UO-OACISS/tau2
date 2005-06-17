@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.20 2005/05/31 23:21:47 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.21 2005/06/17 22:13:46 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.20 $
+ * @version	$Revision: 1.21 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -32,8 +32,7 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  *             system.
  *          3) (Alan) Actually, renderIt needs to be completely rewritten
  */
-public class CallPathTextWindowPanel extends JPanel implements MouseListener, Printable,
-        ImageExport {
+public class CallPathTextWindowPanel extends JPanel implements MouseListener, Printable, ImageExport {
 
     //Instance data.
     private int xPanelSize = 800;
@@ -75,11 +74,11 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
     private JPopupMenu popup;
 
-    public CallPathTextWindowPanel(ParaProfTrial trial, edu.uoregon.tau.dms.dss.Thread thread,
+    public CallPathTextWindowPanel(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread,
             CallPathTextWindow cPTWindow, int windowType) {
 
         this.thread = thread;
-        this.ppTrial = trial;
+        this.ppTrial = ppTrial;
         this.window = cPTWindow;
         this.windowType = windowType;
 
@@ -399,7 +398,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                             + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
                             + "      "
                             + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
-                            + "      " + callPathDrawObject.getNumberOfCalls();
+                            + "      " + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCalls(), 7, false);
 
                     line = UtilFncs.pad(line, 58) + callPathDrawObject.getName() + "[" + function.getID() + "]";
 
@@ -413,8 +412,9 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                             + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
                             + "      "
                             + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
-                            + "      " + callPathDrawObject.getNumberOfCallsFromCallPathObjects() + "/"
-                            + callPathDrawObject.getNumberOfCalls();
+                            + "      "
+                            + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCallsFromCallPathObjects(), 7, false)
+                            + "/" + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCalls(), 7, false);
 
                     line = UtilFncs.pad(line, 58) + callPathDrawObject.getName() + "[" + function.getID() + "]";
 
@@ -482,7 +482,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
         //TODO: rewrite this crap
 
-        if (windowType == 0 || windowType == 1) { // thread callpath data
+        if (windowType == 0) { // thread callpath data
             Iterator l1 = null;
             Iterator l2 = null;
             Iterator l3 = null;
@@ -551,20 +551,18 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                     revalidate();
                 this.calculatePanelSize = false;
 
-
             }
             //######
             //End - Set panel size.
             //######
 
-            
             // determine which elements to draw (clipping)
-            int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, drawObjects.size(), spacing, yCoord);
+            int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen,
+                    fullWindow, drawObjects.size(), spacing, yCoord);
             int startElement = clips[0];
             int endElement = clips[1];
             yCoord = clips[2];
 
-            
             g2D.setColor(Color.black);
             //######
             //Draw the header if required.
@@ -602,7 +600,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                             + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
                             + "      "
                             + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
-                            + "      " + callPathDrawObject.getNumberOfCalls();
+                            + "      " + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCalls(), 7, false);
                     g2D.drawString(stats, base, yCoord);
 
                     Function function = callPathDrawObject.getFunction();
@@ -619,8 +617,9 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                             + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
                             + "      "
                             + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
-                            + "      " + callPathDrawObject.getNumberOfCallsFromCallPathObjects() + "/"
-                            + callPathDrawObject.getNumberOfCalls();
+                            + "      "
+                            + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCallsFromCallPathObjects(), 7, false)
+                            + "/" + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCalls(), 7, false);
 
                     //g2D.drawString(stats, base, yCoord);
                     Function function = callPathDrawObject.getFunction();
@@ -641,7 +640,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                 yCoord = yCoord + spacing;
 
             }
-        } else if (windowType == 2) { // call path thread relations (no numbers)
+        } else if (windowType == 1) { // call path thread relations (no numbers)
             Iterator l1 = null;
             Iterator l2 = null;
             Iterator l3 = null;
@@ -693,13 +692,12 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                 if (sizeChange && toScreen)
                     revalidate();
 
-
                 this.calculatePanelSize = false;
             }
 
-            
             // determine which elements to draw (clipping)
-            int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, drawObjects.size(), spacing, yCoord);
+            int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen,
+                    fullWindow, drawObjects.size(), spacing, yCoord);
             int startElement = clips[0];
             int endElement = clips[1];
             yCoord = clips[2];
@@ -773,8 +771,6 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
         }
     }
 
-   
-
     public void mouseClicked(MouseEvent evt) {
         try {
             //Get the location of the mouse.
@@ -784,18 +780,17 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
             //Get the number of times clicked.
             int clickCount = evt.getClickCount();
 
-
             //Calculate which CallPathDrawObject was clicked on.
             int index = (yCoord - 1) / (ppTrial.getPreferencesWindow().getBarSpacing());
 
             if (index < drawObjects.size()) {
                 final CallPathDrawObject callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(index);
                 if (!callPathDrawObject.isSpacer()) {
-                    if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                    if (ParaProfUtils.rightClick(evt)) {
                         JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial,
                                 callPathDrawObject.getFunction(), this);
 
-                        JMenuItem menuItem = new JMenuItem("Find Function");
+                        JMenuItem menuItem = new JMenuItem("Goto Function");
                         menuItem.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent evt) {
                                 try {

@@ -26,8 +26,7 @@ import edu.uoregon.tau.dms.dss.UserEvent;
 import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 
-public class StatWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
-        ImageExport {
+public class StatWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ImageExport {
 
     //Instance data.
     private int xPanelSize = 800;
@@ -41,7 +40,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     private int maxFontDescent = 0;
     private int spacing = 0;
 
-    private ParaProfTrial trial = null;
+    private ParaProfTrial ppTrial = null;
     private StatWindow window = null;
     private boolean userEventWindow;
     private List list = new ArrayList();
@@ -59,9 +58,8 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
     private int charWidth = 0;
     private int xOffset = 20;
-    
-    public StatWindowPanel(ParaProfTrial pptrial, int nodeID, int contextID, int threadID, StatWindow window,
-            boolean userEventWindow) {
+
+    public StatWindowPanel(ParaProfTrial pptrial, StatWindow window, boolean userEventWindow) {
 
         setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
         setBackground(Color.white);
@@ -71,7 +69,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         addMouseListener(searcher);
         addMouseMotionListener(searcher);
 
-        trial = pptrial;
+        ppTrial = pptrial;
         this.window = window;
         this.userEventWindow = userEventWindow;
 
@@ -80,27 +78,13 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
         //Add items to the popup menu.
         if (userEventWindow) {
-            JMenuItem userEventDetailsItem = new JMenuItem("Show User Event Details");
+            JMenuItem userEventDetailsItem = new JMenuItem("Show User Event Bar Graph");
             userEventDetailsItem.addActionListener(this);
             popup.add(userEventDetailsItem);
 
             JMenuItem changeColorItem = new JMenuItem("Change User Event Color");
             changeColorItem.addActionListener(this);
             popup.add(changeColorItem);
-
-        } else {
-            JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
-            functionDetailsItem.addActionListener(this);
-            popup.add(functionDetailsItem);
-
-            JMenuItem jMenuItem = new JMenuItem("Show Function Histogram");
-            jMenuItem.addActionListener(this);
-            popup.add(jMenuItem);
-
-            JMenuItem changeColorItem = new JMenuItem("Change Function Color");
-            changeColorItem.addActionListener(this);
-            popup.add(changeColorItem);
-
         }
 
         JMenuItem maskColorItem = new JMenuItem("Reset to Generic Color");
@@ -167,10 +151,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                     statString = statString + "   " + nameString;
                 }
 
-
-
-                maxLinePixelWidth = Math.max(maxLinePixelWidth,
-                                charWidth * statString.length() + xOffset);
+                maxLinePixelWidth = Math.max(maxLinePixelWidth, charWidth * statString.length() + xOffset);
 
                 searchLines.add(statString);
             }
@@ -185,20 +166,20 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
         int highLightID = -1;
         if (userEventWindow) {
-            UserEvent userEvent = trial.getHighlightedUserEvent();
+            UserEvent userEvent = ppTrial.getHighlightedUserEvent();
             if (userEvent != null)
                 highLightID = userEvent.getID();
         } else {
-            Function function = trial.getHighlightedFunction();
+            Function function = ppTrial.getHighlightedFunction();
             if (function != null)
                 highLightID = function.getID();
         }
 
         if ((userEventWindow && ppUserEventProfile.getUserEvent().getID() == highLightID)
                 || (!userEventWindow && ppFunctionProfile.getFunction().getID() == highLightID)) {
-            g2D.setColor(trial.getColorChooser().getHighlightColor());
-        } else if (!userEventWindow && (ppFunctionProfile.isGroupMember(trial.getHighlightedGroup()))) {
-            g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
+            g2D.setColor(ppTrial.getColorChooser().getHighlightColor());
+        } else if (!userEventWindow && (ppFunctionProfile.isGroupMember(ppTrial.getHighlightedGroup()))) {
+            g2D.setColor(ppTrial.getColorChooser().getGroupHighlightColor());
         } else {
             g2D.setColor(Color.black);
         }
@@ -218,9 +199,9 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         //In this window, a Monospaced font has to be used. This will probably
         // not be the same font as the rest of ParaProf. As a result, some extra work will
         // have to be done to calculate spacing.
-        int fontSize = trial.getPreferencesWindow().getBarHeight();
-        spacing = trial.getPreferencesWindow().getBarSpacing();
-        monoFont = new Font("Monospaced", trial.getPreferencesWindow().getFontStyle(), fontSize);
+        int fontSize = ppTrial.getPreferencesWindow().getBarHeight();
+        spacing = ppTrial.getPreferencesWindow().getBarSpacing();
+        monoFont = new Font("Monospaced", ppTrial.getPreferencesWindow().getFontStyle(), fontSize);
         fmMonoFont = g2D.getFontMetrics(monoFont);
         maxFontAscent = fmMonoFont.getMaxAscent();
         maxFontDescent = fmMonoFont.getMaxDescent();
@@ -269,7 +250,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             headerString = StatWindowPanel.getUserEventStatStringHeading();
 
         } else {
-            if (trial.isTimeMetric())
+            if (ppTrial.isTimeMetric())
                 headerString = PPFunctionProfile.getStatStringHeading("Time");
             else
                 headerString = PPFunctionProfile.getStatStringHeading("Counts");
@@ -288,8 +269,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
         charWidth = fmMonoFont.stringWidth("A");
 
-        
-        
         setSearchLines(headerString, dashString);
 
         searcher.setG2d(g2D);
@@ -321,8 +300,9 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         //Set up some panel dimensions.
         newYPanelSize = yCoord + ((list.size() + 1) * spacing);
 
-//      determine which elements to draw (clipping)
-        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(), spacing, yCoord);
+        //      determine which elements to draw (clipping)
+        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow,
+                list.size(), spacing, yCoord);
         int startElement = clips[0];
         int endElement = clips[1];
         yCoord = clips[2];
@@ -355,7 +335,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             }
 
             String fullLine = statString + "   " + nameString;
-            searcher.drawHighlights(g2D, xOffset, yCoord, i+3);
+            searcher.drawHighlights(g2D, xOffset, yCoord, i + 3);
 
             setStatStringColor(g2D, ppUserEventProfile, ppFunctionProfile);
             (new TextLayout(statString, monoFont, frc)).draw(g2D, xOffset, yCoord);
@@ -384,28 +364,24 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        FunctionDataWindow tmpRef = new FunctionDataWindow(trial,
-                                ppFunctionProfile.getFunction());
-                        trial.getSystemEvents().addObserver(tmpRef);
+                        FunctionDataWindow tmpRef = new FunctionDataWindow(ppTrial, ppFunctionProfile.getFunction());
                         tmpRef.show();
                     }
                 } else if (arg.equals("Show Function Histogram")) {
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        HistogramWindow hw = new HistogramWindow(trial, ppFunctionProfile.getFunction());
-                        trial.getSystemEvents().addObserver(hw);
+                        HistogramWindow hw = new HistogramWindow(ppTrial, ppFunctionProfile.getFunction());
                         hw.show();
                     }
 
-                } else if (arg.equals("Show User Event Details")) {
+                } else if (arg.equals("Show User Event Bar Graph")) {
 
                     if (clickedOnObject instanceof PPUserEventProfile) {
                         ppUserEventProfile = (PPUserEventProfile) clickedOnObject;
                         //Bring up an expanded data window for this user event and highlight it
-                        trial.setHighlightedUserEvent(ppUserEventProfile.getUserEvent());
-                        UserEventWindow tmpRef = new UserEventWindow(trial, ppUserEventProfile.getUserEvent(),
-                                trial.getFullDataWindow().getDataSorter());
-                        trial.getSystemEvents().addObserver(tmpRef);
+                        ppTrial.setHighlightedUserEvent(ppUserEventProfile.getUserEvent());
+                        UserEventWindow tmpRef = new UserEventWindow(ppTrial, ppUserEventProfile.getUserEvent(),
+                                ppTrial.getFullDataWindow().getDataSorter());
                         tmpRef.show();
                     }
                 } else if (arg.equals("Change Function Color")) {
@@ -420,7 +396,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                             function.setSpecificColor(tmpCol);
                             function.setColorFlag(true);
 
-                            trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                            ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
                         }
                     }
                 } else if (arg.equals("Change User Event Color")) {
@@ -435,7 +411,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                         userEvent.setSpecificColor(tmpCol);
                         userEvent.setColorFlag(true);
 
-                        trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                        ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
                     }
                 } else if (arg.equals("Reset to Generic Color")) {
 
@@ -450,7 +426,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                         UserEvent ue = ((PPUserEventProfile) clickedOnObject).getUserEvent();
                         ue.setColorFlag(false);
                     }
-                    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                    ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
                 }
             }
         } catch (Exception e) {
@@ -468,7 +444,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             int xCoord = evt.getX();
             int yCoord = evt.getY();
 
-            int fontSize = trial.getPreferencesWindow().getBarHeight();
+            int fontSize = ppTrial.getPreferencesWindow().getBarHeight();
 
             //Get the number of times clicked.
             int clickCount = evt.getClickCount();
@@ -484,21 +460,23 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                         PPUserEventProfile ppUserEventProfile = null;
 
                         ppUserEventProfile = (PPUserEventProfile) list.get(tmpInt2);
-                        if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                        if (ParaProfUtils.rightClick(evt)) {
                             clickedOnObject = ppUserEventProfile;
                             popup.show(this, evt.getX(), evt.getY());
                         } else {
-                            trial.toggleHighlightedUserEvent(ppUserEventProfile.getUserEvent());
+                            ppTrial.toggleHighlightedUserEvent(ppUserEventProfile.getUserEvent());
                         }
 
                     } else {
                         PPFunctionProfile ppFunctionProfile = null;
                         ppFunctionProfile = (PPFunctionProfile) list.get(tmpInt2);
-                        if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
-                            clickedOnObject = ppFunctionProfile;
-                            popup.show(this, evt.getX(), evt.getY());
+                        if (ParaProfUtils.rightClick(evt)) {
+                            
+                            (ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(), this)).show(this, evt.getX(),
+                                    evt.getY());
+
                         } else {
-                            trial.toggleHighlightedFunction(ppFunctionProfile.getFunction());
+                            ppTrial.toggleHighlightedFunction(ppFunctionProfile.getFunction());
                         }
 
                     }
@@ -508,7 +486,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             ParaProfUtils.handleException(e);
         }
     }
-    
+
     public void resetStringSize() {
         maxLinePixelWidth = 0;
         searcher.setSearchLines(null);
@@ -540,8 +518,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         return new Dimension(xPanelSize, (yPanelSize + 10));
     }
 
-   
-    
     public Searcher getSearcher() {
         return searcher;
     }

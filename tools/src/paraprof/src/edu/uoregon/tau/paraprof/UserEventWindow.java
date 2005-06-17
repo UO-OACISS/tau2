@@ -25,12 +25,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 
 public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
 
-    
-    //Instance data.
-    private ParaProfTrial trial = null;
+    private ParaProfTrial ppTrial = null;
     private DataSorter dataSorter = null;
-
-    UserEvent userEvent = null;
+    private UserEvent userEvent = null;
 
     private JMenu optionsMenu = null;
 
@@ -41,22 +38,22 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     private JLabel barLengthLabel = new JLabel("Bar Width");
     private JSlider barLengthSlider = new JSlider(0, 2000, 250);
 
-    private Container contentPane = null;
     private GridBagLayout gbl = null;
     private GridBagConstraints gbc = null;
 
-    UserEventWindowPanel panel = null;
-    JScrollPane sp = null;
-    JLabel label = null;
+    private UserEventWindowPanel panel = null;
+    private JScrollPane sp = null;
 
     private List list = new ArrayList();
 
-    UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
+    private UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
     
 
-    public UserEventWindow(ParaProfTrial trial, UserEvent userEvent, DataSorter dataSorter) {
+    public UserEventWindow(ParaProfTrial ppTrial, UserEvent userEvent, DataSorter dataSorter) {
         this.userEvent = userEvent;
-        this.trial = trial;
+        this.ppTrial = ppTrial;
+        ppTrial.getSystemEvents().addObserver(this);
+
         this.dataSorter = dataSorter;
 
         int windowWidth = 650;
@@ -77,7 +74,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         setLocation(xPosition, yPosition);
 
         //Now set the title.
-        this.setTitle("User Event Window: " + trial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        this.setTitle("User Event Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -93,7 +90,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
         //Sort the local data.
         sortLocalData();
-        panel = new UserEventWindowPanel(trial, userEvent, this);
+        panel = new UserEventWindowPanel(ppTrial, userEvent, this);
         
         //####################################
         //Code to generate the menus.
@@ -162,7 +159,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
         //mainMenu.add(ParaProfUtils.createTrialMenu(trial, this));
-        mainMenu.add(ParaProfUtils.createWindowsMenu(trial, this));
+        mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
@@ -171,9 +168,8 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         //Create and add the components.
         //####################################
         //Setting up the layout system for the main window.
-        contentPane = getContentPane();
         gbl = new GridBagLayout();
-        contentPane.setLayout(gbl);
+        getContentPane().setLayout(gbl);
         gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
@@ -401,7 +397,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     public void closeThisWindow() {
         try {
             setVisible(false);
-            trial.getSystemEvents().deleteObserver(this);
+            ppTrial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
             // do nothing

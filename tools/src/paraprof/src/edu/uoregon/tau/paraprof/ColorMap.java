@@ -26,8 +26,8 @@ public class ColorMap extends Observable implements Serializable {
             colors.clear();
         } else {
             colors = map;
-            if (ParaProf.paraProfManager != null) {
-                Vector trials = ParaProf.paraProfManager.getLoadedTrials();
+            if (ParaProf.paraProfManagerWindow != null) {
+                Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
                 for (Iterator it = trials.iterator(); it.hasNext();) {
                     ParaProfTrial ppTrial = (ParaProfTrial) it.next();
                     ParaProf.colorChooser.setColors(ppTrial, -1);
@@ -93,7 +93,7 @@ public class ColorMap extends Observable implements Serializable {
     }
 
     public void reassignColors() {
-        Vector trials = ParaProf.paraProfManager.getLoadedTrials();
+        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();
             ParaProf.colorChooser.setColors(ppTrial, -1);

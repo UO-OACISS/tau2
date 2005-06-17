@@ -39,7 +39,7 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
 
         JMenu jMenu = new JMenu("Assign defaults from...");
 
-        Vector trials = ParaProf.paraProfManager.getLoadedTrials();
+        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
         int idx = 0;
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();
@@ -187,7 +187,7 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
                     ParaProf.exitParaProf(0);
                 } else {
 
-                    Vector trials = ParaProf.paraProfManager.getLoadedTrials();
+                    Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
 
                     int idx = Integer.parseInt(arg);
 

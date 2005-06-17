@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.22 2005/05/31 23:21:47 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.23 2005/06/17 22:13:46 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.22 $
+ * @version	$Revision: 1.23 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -54,8 +54,10 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     private double maxValue;
     private int units = ParaProf.preferences.getUnits();
 
-    public FunctionDataWindow(ParaProfTrial trial, Function function) {
-        this.ppTrial = trial;
+    public FunctionDataWindow(ParaProfTrial ppTrial, Function function) {
+        this.ppTrial = ppTrial;
+        ppTrial.getSystemEvents().addObserver(this);
+
 
         this.function = function;
         int windowWidth = 650;
@@ -63,7 +65,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
         //Now set the title.
-        this.setTitle("Function Data Window: " + trial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        this.setTitle("Function Data Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -73,8 +75,8 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         });
 
         // Set up the data sorter
-        dataSorter = new DataSorter(trial);
-        dataSorter.setSelectedMetricID(trial.getDefaultMetricID());
+        dataSorter = new DataSorter(ppTrial);
+        dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
         dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
 
         //Set the help window text if required.
@@ -89,7 +91,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         gbc.insets = new Insets(5, 5, 5, 5);
 
         //Panel and ScrollPane definition.
-        panel = new FunctionDataWindowPanel(trial, function, this);
+        panel = new FunctionDataWindowPanel(ppTrial, function, this);
         sp = new JScrollPane(panel);
         JScrollBar vScrollBar = sp.getVerticalScrollBar();
         vScrollBar.setUnitIncrement(35);
@@ -395,7 +397,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
         setHeader();
 
-        list = dataSorter.getFunctionData(function, true);
+        list = dataSorter.getFunctionData(function, true, true);
 
         maxValue = 0;
         for (Iterator it = list.iterator(); it.hasNext();) {

@@ -68,10 +68,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
     public ThreeDeeWindow(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
+        ppTrial.getSystemEvents().addObserver(this);
 
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setSortType(SortType.NAME);
-        ppTrial.getSystemEvents().addObserver(this);
 
         this.setTitle("ParaProf Visualizer: "
                 + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
@@ -254,7 +254,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         int numFunctions = 0;
 
         // get the 'mean' thread's functions to sort by
-        List list = dataSorter.getFunctionProfiles(-1, -1, -1);
+        List list = dataSorter.getFunctionProfiles(ppTrial.getDataSource().getMeanData());
 
         numFunctions = list.size();
 

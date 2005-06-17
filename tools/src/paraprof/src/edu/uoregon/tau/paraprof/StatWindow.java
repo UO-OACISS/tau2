@@ -55,17 +55,25 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     
     private SearchPanel searchPanel;
 
-    public StatWindow(ParaProfTrial ppTrial, int nodeID, int contextID, int threadID, boolean userEventWindow) {
+    private edu.uoregon.tau.dms.dss.Thread thread;
+    
+    
+    public StatWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, boolean userEventWindow) {
         this.ppTrial = ppTrial;
+        ppTrial.getSystemEvents().addObserver(this);
+
         this.dataSorter = new DataSorter(ppTrial);
-        this.nodeID = nodeID;
-        this.contextID = contextID;
-        this.threadID = threadID;
         this.userEventWindow = userEventWindow;
+        this.thread = thread;
 
         setLocation(new java.awt.Point(0, 0));
         setSize(new java.awt.Dimension(1000, 600));
 
+        nodeID = thread.getNodeID();
+        contextID = thread.getContextID();
+        threadID = thread.getThreadID();
+        
+        
         if (nodeID == -1 && userEventWindow) {
             // There is no User Event data for mean
             throw new ParaProfException("There is no User Event data for mean");
@@ -74,7 +82,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //Now set the title.
         if (nodeID == -1)
             this.setTitle("Mean Data Statistics: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        else {
+        else if (nodeID == -3) {
+            this.setTitle("Standard Deviation Statistics: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        } else {
             this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         }
@@ -231,7 +241,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //######
         //Panel and ScrollPane definition.
         //######
-        panel = new StatWindowPanel(ppTrial, nodeID, contextID, threadID, this, userEventWindow);
+        panel = new StatWindowPanel(ppTrial, this, userEventWindow);
         jScrollpane = new JScrollPane(panel);
 
         JScrollBar jScrollBar = jScrollpane.getVerticalScrollBar();
@@ -442,9 +452,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         dataSorter.setDescendingOrder(descendingOrder.isSelected());
 
         if (userEventWindow) {
-            list = dataSorter.getUserEventProfiles(nodeID, contextID, threadID);
+            list = dataSorter.getUserEventProfiles(thread);
         } else {
-            list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
+            list = dataSorter.getFunctionProfiles(thread);
         }
 
         panel.resetStringSize();

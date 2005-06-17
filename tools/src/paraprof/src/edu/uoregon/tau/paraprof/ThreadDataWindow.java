@@ -74,33 +74,29 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     // goes over 100.
     private boolean exclusivePercentOver100 = false;
 
-    public ThreadDataWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID) {
+    private edu.uoregon.tau.dms.dss.Thread thread;
 
-        this.ppTrial = trial;
-        dataSorter = new DataSorter(trial);
-        dataSorter.setSelectedMetricID(trial.getDefaultMetricID());
+    public ThreadDataWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread) {
+        this.ppTrial = ppTrial;
+        ppTrial.getSystemEvents().addObserver(this);
+
+        dataSorter = new DataSorter(ppTrial);
+        dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
         dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
-
-        if (nodeID == -1) { // if this is a 'mean' window
-            edu.uoregon.tau.dms.dss.Thread thread;
-            thread = trial.getDataSource().getMeanData();
-            ppThread = new PPThread(thread, trial);
-        } else {
-            edu.uoregon.tau.dms.dss.Thread thread;
-            thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
-            ppThread = new PPThread(thread, trial);
-        }
+        this.thread = thread;
+        
+        ppThread = new PPThread(thread, ppTrial);
 
         //setLocation(new java.awt.Point(300, 200));
         setSize(new java.awt.Dimension(700, 450));
 
         //Now set the title.
-        if (nodeID == -1)
+        if (thread.getNodeID() == -1)
             this.setTitle("Mean Data Window: "
-                    + trial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         else
-            this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                    + trial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle(ppThread.getName() + " - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -119,7 +115,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 0, 5);
 
-        panel = new ThreadDataWindowPanel(trial, nodeID, contextID, threadID, this);
+        panel = new ThreadDataWindowPanel(ppTrial, thread, this);
         this.addKeyListener(this);
 
         setupMenus();

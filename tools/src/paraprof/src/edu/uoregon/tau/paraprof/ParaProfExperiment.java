@@ -83,14 +83,14 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
         trials.add(ppTrial);
     }
 
-    public void removeTrial(ParaProfTrial trial) {
-        trials.remove(trial);
+    public void removeTrial(ParaProfTrial ppTrial) {
+        trials.remove(ppTrial);
     }
 
     public boolean isTrialPresent(String name) {
         for (Enumeration e = trials.elements(); e.hasMoreElements();) {
-            ParaProfTrial trial = (ParaProfTrial) e.nextElement();
-            if (name.equals(trial.toString()))
+            ParaProfTrial ppTrial = (ParaProfTrial) e.nextElement();
+            if (name.equals(ppTrial.toString()))
                 return true;
         }
         return false;

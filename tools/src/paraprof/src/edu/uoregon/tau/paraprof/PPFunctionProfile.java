@@ -239,8 +239,8 @@ public class PPFunctionProfile implements Comparable {
 
         tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getExclusive(metric), 14);
         tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 16);
-        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(), 12);
-        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(), 12);
+        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(), 12, true);
+        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(), 12, true);
         tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(metric), 19);
 
         //Everything should be added now except the function name.

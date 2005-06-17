@@ -18,9 +18,9 @@ import edu.uoregon.tau.paraprof.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.6 2005/05/31 23:21:49 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.7 2005/06/17 22:13:48 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -156,7 +156,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 try {
 
                     FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
-                            ppTrial.getDisplayedFunctions().iterator(), settings.getScatterFunctions()[index]);
+                            ppTrial.getDisplayedFunctions().iterator(), settings.getScatterFunctions()[index], true);
 
                     if (fSelector.choose()) {
                         Function selectedFunction = (Function) fSelector.getSelectedObject();

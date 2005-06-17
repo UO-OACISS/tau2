@@ -15,9 +15,9 @@ import edu.uoregon.tau.paraprof.ParaProfTrial;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.1 2005/05/31 23:21:51 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.2 2005/06/17 22:13:49 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -50,7 +50,7 @@ public class CallPathModel extends AbstractTreeTableModel {
         roots = new ArrayList();
         DataSorter dataSorter = new DataSorter(ppTrial);
         
-        List functionProfileList = dataSorter.getFunctionProfiles(thread.getNodeID(), thread.getContextID(), thread.getThreadID());
+        List functionProfileList = dataSorter.getFunctionProfiles(thread);
         
         //List functionProfileList = thread.getFunctionProfiles();
 
@@ -78,7 +78,7 @@ public class CallPathModel extends AbstractTreeTableModel {
                 TreeTableNode node;
 
                 FunctionProfile fp = null;
-                if (function == null) {
+                if (fp == null) {
                     node = new TreeTableNode(null, this, rootName);
 
                 } else {
@@ -150,9 +150,6 @@ public class CallPathModel extends AbstractTreeTableModel {
         TreeTableNode treeTableNode = (TreeTableNode) node;
 
         return treeTableNode;
-        //Object result = treeTableNode.getValueAt(column, treeTableNode.getExpanded(), false);
-        //System.out.println("returning " + result);
-        //return result;
     }
 
     /**

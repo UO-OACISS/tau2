@@ -44,6 +44,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     JCheckBox showValuesAsPercentBox = new JCheckBox("Show Values as Percent");
     JCheckBox showPathTitleInReverseBox = new JCheckBox("Show Path Title in Reverse");
     JCheckBox reverseCallPathsBox = new JCheckBox("Reverse Call Paths");
+    JCheckBox meanIncludeNullBox = new JCheckBox("<html>Compute mean by dividing by<br> total number of threads</html>");
     
     
     void setControls() {
@@ -88,8 +89,10 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             showValuesAsPercentBox.setSelected(preferences.getShowValuesAsPercent());
             showPathTitleInReverseBox.setSelected(preferences.getShowPathTitleInReverse());
             reverseCallPathsBox.setSelected(preferences.getReversedCallPaths());
+            meanIncludeNullBox.setSelected(!preferences.getComputeMeanWithoutNulls());
         }
 
+        //meanIncludeNullBox.setT
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -110,8 +113,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         //Window Stuff.
         setTitle("ParaProf Preferences");
 
-        int windowWidth = 550;
-        int windowHeight = 350;
+        int windowWidth = 500;
+        int windowHeight = 390;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
         //There is really no need to resize this window.
@@ -219,8 +222,10 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         settingsPanel.setLayout(new GridBagLayout());
         ParaProfUtils.addCompItem(settingsPanel, showPathTitleInReverseBox, gbc, 0, 2, 2, 1);
         ParaProfUtils.addCompItem(settingsPanel, reverseCallPathsBox, gbc, 0, 3, 2, 1);
+        ParaProfUtils.addCompItem(settingsPanel, meanIncludeNullBox, gbc, 0, 4, 2, 1);
         
         
+        gbc.fill = GridBagConstraints.BOTH;
         
         addCompItem(fontPanel, gbc, 0, 0, 1, 1);
         addCompItem(defaultsPanel, gbc, 0, 1, 1, 1);
@@ -327,6 +332,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setShowValuesAsPercent(showValuesAsPercentBox.isSelected());
         ParaProf.preferences.setShowPathTitleInReverse(showPathTitleInReverseBox.isSelected());
         ParaProf.preferences.setReversedCallPaths(reverseCallPathsBox.isSelected());
+        ParaProf.preferences.setComputeMeanWithoutNulls(!meanIncludeNullBox.isSelected());
     }
 
     public boolean areBarDetailsSet() {
@@ -485,6 +491,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     showValuesAsPercentBox.setSelected(true);
                     showPathTitleInReverseBox.setSelected(true);
                     reverseCallPathsBox.setSelected(false);
+                    meanIncludeNullBox.setSelected(true);
                     setControls();
                 }
 
@@ -500,8 +507,14 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             needDataEvent = true;
         }
         
+        if (meanIncludeNullBox.isSelected() == ParaProf.preferences.getComputeMeanWithoutNulls()) {
+            needDataEvent = true;
+            DataSource.setMeanIncludeNulls(meanIncludeNullBox.isSelected());
+            ParaProf.paraProfManagerWindow.recomputeStats();
+        }
+        
         setSavedPreferences();
-        Vector trials = ParaProf.paraProfManager.getLoadedTrials();
+        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();
             ppTrial.getSystemEvents().updateRegisteredObjects("prefEvent");

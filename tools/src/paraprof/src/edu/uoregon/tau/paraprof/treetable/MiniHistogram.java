@@ -35,7 +35,7 @@ public class MiniHistogram extends JComponent {
 
         DataSorter dataSorter = new DataSorter(ppTrial);
         
-        list = dataSorter.getFunctionData(function, false);
+        list = dataSorter.getFunctionData(function, false, false);
 
         processData();
         

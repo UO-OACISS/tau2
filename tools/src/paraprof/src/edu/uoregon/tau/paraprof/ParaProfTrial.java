@@ -206,11 +206,9 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
             fullDataWindow = new FullDataWindow(this);
             ParaProf.incrementNumWindows();
             fullDataWindow.setVisible(true);
-            this.getSystemEvents().addObserver(fullDataWindow);
         } else {
             ParaProf.incrementNumWindows();
-            this.getSystemEvents().addObserver(fullDataWindow);
-            fullDataWindow.show();
+            fullDataWindow.setVisible(true);
         }
     }
 
@@ -321,7 +319,7 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     }
 
     public void setMeanData(int metricID) {
-        trial.getDataSource().setMeanData(metricID, metricID);
+        trial.getDataSource().generateStatistics(metricID, metricID);
     }
 
     // return a vector of only those functions that are currently "displayed" (i.e. group masks, etc)

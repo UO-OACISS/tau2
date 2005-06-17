@@ -53,7 +53,9 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
     private int lastHeaderEndPosition = 0;
     private Searcher searcher;
 
-    public ThreadDataWindowPanel(ParaProfTrial trial, int nodeID, int contextID, int threadID, ThreadDataWindow tDWindow) {
+    
+    public ThreadDataWindowPanel(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, ThreadDataWindow tDWindow) {
+        this.thread = thread;
         setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
         setBackground(Color.white);
 
@@ -63,17 +65,12 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
 
         addMouseListener(this);
 
-        this.ppTrial = trial;
+        this.ppTrial = ppTrial;
         this.window = tDWindow;
         barLength = baseBarLength;
 
         setAutoscrolls(true);
 
-        if (nodeID == -1) {
-            thread = trial.getDataSource().getMeanData();
-        } else {
-            thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
-        }
 
         //Schedule a repaint of this panel.
         repaint();
@@ -336,7 +333,7 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
 
             if (list != null && index < list.size()) {
                 ppFunctionProfile = (PPFunctionProfile) list.elementAt(index);
-                if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) { // right click
+                if (ParaProfUtils.rightClick(evt)) {
 
                     JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(),
                             this);

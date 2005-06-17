@@ -32,9 +32,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.30 2005/05/31 23:21:47 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.31 2005/06/17 22:13:46 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.30 $
+ * @version	$Revision: 1.31 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ImageExport, Printable, ParaProfWindow {
@@ -165,7 +165,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 if (gc != null) {
                     Function f = ((Function) gc.getFunction());
 
-                    if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                    if (ParaProfUtils.rightClick(evt)) {
                         JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, f, this);
                         popup.show(this, evt.getX(), evt.getY());
                     } else {
@@ -263,28 +263,30 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     }
 
-    public CallGraphWindow(ParaProfTrial trial, edu.uoregon.tau.dms.dss.Thread thread) {
-        this.ppTrial = trial;
-        this.colorMetricID = trial.getDefaultMetricID();
-        this.widthMetricID = trial.getDefaultMetricID();
+    public CallGraphWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread) {
+        this.ppTrial = ppTrial;
+        ppTrial.getSystemEvents().addObserver(this);
+        this.colorMetricID = ppTrial.getDefaultMetricID();
+        this.widthMetricID = ppTrial.getDefaultMetricID();
 
-        if (thread.getNodeID() < 0)
-            this.meanWindow = true;
 
         this.thread = thread;
 
-        if (trial.callPathDataPresent())
-            CallPathUtilFuncs.buildThreadRelations(trial.getDataSource(), thread);
+        if (ppTrial.callPathDataPresent())
+            CallPathUtilFuncs.buildThreadRelations(ppTrial.getDataSource(), thread);
 
         functionProfileList = thread.getFunctionProfiles();
 
 
         //Now set the title.
-        if (meanWindow)
-            this.setTitle("Mean Call Graph - " + trial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        else
-            this.setTitle("Call Graph " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
-                    + thread.getThreadID() + " - " + trial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        if (thread.getNodeID() == -1) {
+            this.setTitle("Mean Call Graph - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        } else if (thread.getNodeID() == -3) {
+            this.setTitle("Standard Deviation Call Graph - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        } else {
+            this.setTitle("Call Graph for n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
+                    + thread.getThreadID() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        }
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -312,8 +314,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         this.getContentPane().setLayout(gbl);
 
         // obtain the font and its metrics
-        font = new Font(trial.getPreferencesWindow().getParaProfFont(),
-                trial.getPreferencesWindow().getFontStyle(), trial.getPreferencesWindow().getBarHeight());
+        font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
+                ppTrial.getPreferencesWindow().getFontStyle(), ppTrial.getPreferencesWindow().getBarHeight());
         FontMetrics fm = getFontMetrics(font);
 
         // set the box height to the font height + 5
@@ -737,11 +739,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         // now we should have a DAG, now find the roots
 
-        //System.out.println("Finding Roots");
+        // Find Roots
         List roots = findRoots(vertexMap);
 
-        //System.out.println("Assigning Levels");
-
+        // Assigning Levels
         for (int i = 0; i < functionProfileList.size(); i++) {
             FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
             if (fp == null)
@@ -758,8 +759,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         }
 
-        //System.out.println("Inserting Dummies");
-
+        // Insert Dummies
         for (int i = 0; i < functionProfileList.size(); i++) {
             FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
             if (fp == null)
@@ -789,7 +789,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         }
         levels = new ArrayList();
 
-        //System.out.println("Filling Levels");
+        // Fill Levels
 
         for (int i = 0; i < roots.size(); i++) {
             Vertex root = (Vertex) roots.get(i);
@@ -797,24 +797,18 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         }
 
         for (int i = 0; i < levels.size(); i++) {
-            //System.out.println("level " + i);
             List level = (List) levels.get(i);
             for (int j = 0; j < level.size(); j++) {
                 Vertex v = (Vertex) level.get(j);
-                //                if (v.function != null) {
-                //                    System.out.println("c" + j + ": " + v.function.getName());
-                //                } else {
-                //                    System.out.println("c" + j + ": dummy");
-                //                }
             }
         }
 
-        //    System.out.println("Ordering Levels");
+        // Order Levels
 
         runSugiyama(levels);
         assignPositions(levels);
 
-        //    System.out.println("Drawing Graph");
+        // Draw Graph
 
         // Construct Model and Graph
         model = new DefaultGraphModel();
@@ -899,7 +893,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 GraphCell dgc = null;
 
                 if (v.function != null) {
-                    //                    System.out.println("level " + i + ", column " + j + ": " + v.function.getName());
                     dgc = createGraphCell(v, v.position - (v.width / 2), MARGIN + i * VERTICAL_SPACING,
                             v.height, v.width, v.colorRatio, attributes);
 
@@ -1135,8 +1128,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
                 v.gridBaryCenter = sum / v.children.size();
 
-                //                    System.out.println("assigning barycenter of " + v.gridBaryCenter
-                //                          + ", to index " + i);
             } else {
                 // don't re-assign baryCenter if no parents (keep old value, based on children)
                 if (v.parents.size() == 0)
@@ -1979,8 +1970,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     private ParaProfTrial ppTrial = null;
     private edu.uoregon.tau.dms.dss.Thread thread;
-
-    private boolean meanWindow = false;
 
     private JMenu optionsMenu = null;
 

@@ -25,9 +25,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.18 2005/05/31 23:21:48 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.19 2005/06/17 22:13:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements MouseListener, Printable, ImageExport {
@@ -135,12 +135,11 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
         }
 
         // determine which elements to draw (clipping)
-        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(), barSpacing, yCoord);
+        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow,
+                list.size(), barSpacing, yCoord);
         int startElement = clips[0];
         int endElement = clips[1];
         yCoord = clips[2];
-
-     
 
         //Check for group membership.
         boolean groupMember = function.isGroupMember(ppTrial.getHighlightedGroup());
@@ -183,6 +182,8 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
             String barString;
             if (ppFunctionProfile.getNodeID() == -1) {
                 barString = "mean";
+            } else if (ppFunctionProfile.getNodeID() == -3) {
+                barString = "std. dev.";
             } else {
                 barString = "n,c,t " + (ppFunctionProfile.getNodeID()) + "," + (ppFunctionProfile.getContextID()) + ","
                         + (ppFunctionProfile.getThreadID());
@@ -268,7 +269,7 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
             if (list != null && index < list.size()) {
                 ppFunctionProfile = (PPFunctionProfile) list.get(index);
 
-                if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                if (ParaProfUtils.rightClick(evt)) {
                     if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
                         ParaProfUtils.handleThreadClick(ppTrial, ppFunctionProfile.getThread(), this, evt);
                     } else {
@@ -280,10 +281,7 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
                 }
 
                 if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
-
-                    ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial, ppFunctionProfile.getNodeID(),
-                            ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID());
-                    ppTrial.getSystemEvents().addObserver(threadDataWindow);
+                    ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial, ppFunctionProfile.getThread());
                     threadDataWindow.show();
                 } else {
                     ppTrial.toggleHighlightedFunction(function);

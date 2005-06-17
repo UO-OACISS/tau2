@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.13 2005/05/31 23:21:48 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.14 2005/06/17 22:13:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow, UnitListener {
@@ -52,6 +52,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     public HistogramWindow(ParaProfTrial ppTrial, Function function) {
         this.ppTrial = ppTrial;
+        ppTrial.getSystemEvents().addObserver(this);
+
         this.dataSorter = new DataSorter(ppTrial);
         this.function = function;
 
@@ -326,7 +328,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     private void sortLocalData() {
-        data = dataSorter.getFunctionData(function, false);
+        data = dataSorter.getFunctionData(function, false, false);
     }
 
     // This process is separated into two functions to provide the option of obtaining the current 
