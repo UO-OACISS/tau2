@@ -1,10 +1,10 @@
 #!/bin/@SHELL@
 TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
-LIBDIR=${TAUROOT}/${MACHINE}/lib
+GUI_LIBDIR=${TAUROOT}/${MACHINE}/lib
 
 # Set PATH to various jar's needed by the GUI
-MAIN_LIB=${LIBDIR}/jumpshot.jar
+MAIN_LIB=${GUI_LIBDIR}/jumpshot.jar
 
 
 if [ -z "${GUI_LIBDIR}" -o "${GUI_LIBDIR}" = "/lib" ]; then
