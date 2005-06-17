@@ -28,9 +28,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *       hpcquick.
  * 
  * 
- * <P>CVS $Id: HPCToolkitDataSource.java,v 1.1 2005/06/09 23:54:46 amorris Exp $</P>
+ * <P>CVS $Id: HPCToolkitDataSource.java,v 1.2 2005/06/17 22:10:22 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class HPCToolkitDataSource extends DataSource {
 
@@ -59,8 +59,7 @@ public class HPCToolkitDataSource extends DataSource {
                 setCallPathDataPresent(true);
             }
 
-            // now subract out children values from parents
-
+            // now subract out children inclusive values from parent exclusive values
             for (int i = 0; i < this.getNumberOfMetrics(); i++) {
                 Thread thread = this.getThread(0, 0, 0);
                 for (Iterator it = this.getFunctions(); it.hasNext();) {
@@ -74,7 +73,7 @@ public class HPCToolkitDataSource extends DataSource {
                         if (parent != null) {
                             double newValue = parent.getExclusive(i) - fp.getInclusive(i);
                             if (newValue < 0) {
-                                newValue = 0; // clamp the value to zero because this is a sample based approach
+                                newValue = 0; // clamp the value to zero because this is a sample based approach and will result in negative values
                             }
 
                             parent.setExclusive(i, newValue);
@@ -83,20 +82,17 @@ public class HPCToolkitDataSource extends DataSource {
                 }
             }
 
+            // Set flat profile data (D is combined from A=>D, B=>D, etc)
             Thread thread = this.getThread(0, 0, 0);
             for (Iterator it = this.getFunctions(); it.hasNext();) {
                 Function function = (Function) it.next();
-
                 FunctionProfile fp = thread.getFunctionProfile(function);
-
                 if (fp != null) {
-
                     FunctionProfile flat = getFlatFunctionProfile(thread, function);
                     if (flat != null) {
                         for (int i = 0; i < this.getNumberOfMetrics(); i++) {
-
-                            flat.setExclusive(i, fp.getExclusive(i));
-                            flat.setInclusive(i, fp.getInclusive(i));
+                            flat.setExclusive(i, flat.getExclusive(i) + fp.getExclusive(i));
+                            flat.setInclusive(i, flat.getInclusive(i) + fp.getInclusive(i));
                         }
                     }
                 }
@@ -109,20 +105,16 @@ public class HPCToolkitDataSource extends DataSource {
             throw new DataSourceException(e);
         }
 
-    } // retrieve the parent profile on a given thread (A=>B for A=>B=>C)
-
+    } 
+    
+    // retrieve the parent profile on a given thread (A=>B for A=>B=>C)
     private FunctionProfile getParent(Thread thread, Function function) {
         if (!function.getCallPathFunction()) {
             return null;
         }
-
-        //Function parentFunction = (Function) parentMap.get(function);
-        //if (parentFunction == null) {
         String functionName = function.getName();
         String parentName = functionName.substring(0, functionName.lastIndexOf("=>"));
         Function parentFunction = this.getFunction(parentName);
-        //   parentMap.put(function, parentFunction);
-        //}
         FunctionProfile parent = thread.getFunctionProfile(parentFunction);
         return parent;
     }
@@ -132,22 +124,14 @@ public class HPCToolkitDataSource extends DataSource {
         if (!function.getCallPathFunction()) {
             return null;
         }
-
-        //Function childFunction = (Function) flatMap.get(function);
-
-        //if (childFunction == null) {
         String childName = function.getName().substring(function.getName().lastIndexOf("=>") + 2).trim();
         Function childFunction = this.addFunction(childName);
-        //    childFunction.addGroup(defaultGroup);
-        //    flatMap.put(function, childFunction);
-        //}
         FunctionProfile childFP = thread.getFunctionProfile(childFunction);
         if (childFP == null) {
             childFP = new FunctionProfile(childFunction, this.getNumberOfMetrics());
             thread.addFunctionProfile(childFP);
         }
         return childFP;
-
     }
 
     public int getProgress() {

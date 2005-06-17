@@ -420,6 +420,8 @@ public class TauPprofDataSource extends DataSource {
 //
 //            meanData.setThreadDataAllMetrics();
 
+            this.generateDerivedData();
+            
             time = (System.currentTimeMillis()) - time;
             //System.out.println("Time to process file (in milliseconds): " + time);
         }

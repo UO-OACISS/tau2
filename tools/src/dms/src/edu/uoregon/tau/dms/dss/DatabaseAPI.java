@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.18 2005/06/08 01:53:56 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.19 2005/06/17 22:10:22 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  */
 public class DatabaseAPI {
 
@@ -683,14 +683,14 @@ public class DatabaseAPI {
     }
 
     /**
-     * Saves the ParaProfTrial object to the database
+     * Saves the Trial object to the database
      * 
      * @param trial
      * @param saveMetricIndex
      * @return the database index ID of the saved trial record
      */
 
-    public synchronized int saveParaProfTrial(Trial trial, int saveMetricIndex) throws DatabaseException {
+    public synchronized int saveTrial(Trial trial, int saveMetricIndex) throws DatabaseException {
         long start = System.currentTimeMillis();
 
         DataSource dataSource = trial.getDataSource();
@@ -747,6 +747,8 @@ public class DatabaseAPI {
                 // put the intervalEvent in the vector
                 intervalEvents.add(intervalEvent);
 
+                int numThreads = trial.getDataSource().getAllThreads().size();
+                
                 IntervalLocationProfile ilpTotal = new IntervalLocationProfile(metricCount);
                 IntervalLocationProfile ilpMean = new IntervalLocationProfile(metricCount);
                 for (int i = 0; i < metricCount; i++) {
@@ -757,13 +759,13 @@ public class DatabaseAPI {
                     ilpTotal.setExclusivePercentage(i, f.getTotalExclusivePercent(i));
                     ilpTotal.setExclusive(i, f.getTotalExclusive(i));
                     ilpTotal.setInclusivePerCall(i, f.getTotalInclusivePerCall(i));
-                    ilpMean.setNumCalls(f.getMeanNumCalls());
-                    ilpMean.setNumSubroutines(f.getMeanNumSubr());
-                    ilpMean.setInclusivePercentage(i, f.getMeanInclusivePercent(i));
-                    ilpMean.setInclusive(i, f.getMeanInclusive(i));
-                    ilpMean.setExclusivePercentage(i, f.getMeanExclusivePercent(i));
-                    ilpMean.setExclusive(i, f.getMeanExclusive(i));
-                    ilpMean.setInclusivePerCall(i, f.getMeanInclusivePerCall(i));
+                    ilpMean.setNumCalls(f.getTotalNumCalls() / numThreads);
+                    ilpMean.setNumSubroutines(f.getTotalNumSubr()/ numThreads);
+                    ilpMean.setInclusivePercentage(i, f.getTotalInclusivePercent(i));
+                    ilpMean.setInclusive(i, f.getTotalInclusive(i)/ numThreads);
+                    ilpMean.setExclusivePercentage(i, f.getTotalExclusivePercent(i));
+                    ilpMean.setExclusive(i, f.getTotalExclusive(i)/ numThreads);
+                    ilpMean.setInclusivePerCall(i, f.getTotalInclusivePerCall(i));
                 }
                 intervalEvent.setTotalSummary(ilpTotal);
                 intervalEvent.setMeanSummary(ilpMean);
@@ -1013,18 +1015,27 @@ public class DatabaseAPI {
     }
 
     private void addBatchFunctionProfile(PreparedStatement stmt, Thread thread, int metricID, int dbMetricID,
-            FunctionProfile fp, int intervalEventID) throws SQLException {
+            FunctionProfile fp, int intervalEventID, boolean createMean, int numThreads) throws SQLException {
 
         stmt.setInt(1, intervalEventID);
         stmt.setInt(2, dbMetricID);
         stmt.setDouble(3, fp.getInclusivePercent(metricID));
-        stmt.setDouble(4, fp.getInclusive(metricID));
-        stmt.setDouble(5, fp.getExclusivePercent(metricID));
-        stmt.setDouble(6, fp.getExclusive(metricID));
-        stmt.setDouble(7, fp.getNumCalls());
-        stmt.setDouble(8, fp.getNumSubr());
-        stmt.setDouble(9, fp.getInclusivePerCall(metricID));
 
+        if (createMean) {
+            stmt.setDouble(4, fp.getInclusive(metricID) / numThreads);
+            stmt.setDouble(5, fp.getExclusivePercent(metricID));
+            stmt.setDouble(6, fp.getExclusive(metricID) / numThreads);
+            stmt.setDouble(7, fp.getNumCalls() / numThreads);
+            stmt.setDouble(8, fp.getNumSubr() / numThreads);
+            stmt.setDouble(9, fp.getInclusivePerCall(metricID));
+        } else {
+            stmt.setDouble(4, fp.getInclusive(metricID));
+            stmt.setDouble(5, fp.getExclusivePercent(metricID));
+            stmt.setDouble(6, fp.getExclusive(metricID));
+            stmt.setDouble(7, fp.getNumCalls());
+            stmt.setDouble(8, fp.getNumSubr());
+            stmt.setDouble(9, fp.getInclusivePerCall(metricID));
+        }
         if (thread.getNodeID() >= 0) {
             stmt.setInt(10, thread.getNodeID());
             stmt.setInt(11, thread.getContextID());
@@ -1035,13 +1046,13 @@ public class DatabaseAPI {
 
         //stmt.addBatch();
         try {
-        stmt.executeUpdate();
+            stmt.executeUpdate();
         } catch (Exception e) {
             System.out.println("exclusive: " + fp.getExclusive(metricID));
             System.out.println("numcalls: " + fp.getNumCalls());
             System.out.println("numsubr: " + fp.getNumSubr());
             System.out.println("inclusivepercall: " + fp.getInclusivePerCall(metricID));
-            System.out.println("asdf");   
+            System.out.println("asdf");
         }
     }
 
@@ -1083,14 +1094,16 @@ public class DatabaseAPI {
                 Integer intervalEventID = (Integer) functionMap.get(function);
 
                 edu.uoregon.tau.dms.dss.Thread totalData = dataSource.getTotalData();
-
                 addBatchFunctionProfile(totalInsertStatement, totalData, metric.getID(), dbMetricID.intValue(),
-                        function.getTotalProfile(), intervalEventID.intValue());
+                        function.getTotalProfile(), intervalEventID.intValue(), false,
+                        dataSource.getAllThreads().size());
 
-                edu.uoregon.tau.dms.dss.Thread meanData = dataSource.getMeanData();
+                //edu.uoregon.tau.dms.dss.Thread meanData = dataSource.getMeanData();
+                //addBatchFunctionProfile(meanInsertStatement, meanData, metric.getID(), dbMetricID.intValue(),
+                //       function.getMeanProfile(), intervalEventID.intValue(), false, dataSource.getAllThreads().size());
 
-                addBatchFunctionProfile(meanInsertStatement, meanData, metric.getID(), dbMetricID.intValue(),
-                        function.getMeanProfile(), intervalEventID.intValue());
+                addBatchFunctionProfile(meanInsertStatement, totalData, metric.getID(), dbMetricID.intValue(),
+                        function.getTotalProfile(), intervalEventID.intValue(), true, dataSource.getAllThreads().size());
 
                 for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
                     edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it.next();
@@ -1102,7 +1115,7 @@ public class DatabaseAPI {
                             return;
 
                         addBatchFunctionProfile(threadInsertStatement, thread, metric.getID(), dbMetricID.intValue(),
-                                fp, intervalEventID.intValue());
+                                fp, intervalEventID.intValue(), false, dataSource.getAllThreads().size());
                     }
                 }
             }

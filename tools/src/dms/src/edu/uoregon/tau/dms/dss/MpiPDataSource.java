@@ -274,6 +274,10 @@ public class MpiPDataSource extends DataSource {
         //                System.out.println("Done processing data file!");
         //                System.out.println("Time to process file (in milliseconds): " + time);
 
+        if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
+            setCallPathDataPresent(true);
+        }
+
         this.generateDerivedData();
     }
 

@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.17 2005/06/07 01:25:33 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.18 2005/06/17 22:10:22 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.17 $
+ * @version	$Revision: 1.18 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -43,6 +43,16 @@ public class Thread implements Comparable {
         this.numMetrics = numMetrics;
     }
 
+    public String toString() {
+        if (nodeID == -1) {
+            return "Mean";
+        }
+        if (nodeID == -3) {
+            return "Standard Deviation";
+        }
+        return "n,c,t " + nodeID + "," + contextID + "," + threadID;
+    }
+    
     public int getNodeID() {
         return nodeID;
     }
@@ -201,10 +211,10 @@ public class Thread implements Comparable {
         return threadID - ((Thread) obj).getThreadID();
     }
 
-    public String toString() {
-        return this.getClass().getName() + ": " + this.getNodeID() + "," + this.getContextID() + ","
-                + this.getThreadID();
-    }
+//    public String toString() {
+//        return this.getClass().getName() + ": " + this.getNodeID() + "," + this.getContextID() + ","
+//                + this.getThreadID();
+//    }
 
     public void setThreadData(int metric) {
         setThreadValues(metric, metric);

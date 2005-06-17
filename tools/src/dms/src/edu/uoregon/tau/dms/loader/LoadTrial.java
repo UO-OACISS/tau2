@@ -159,7 +159,7 @@ public class LoadTrial {
         System.out.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
         try {
-            databaseAPI.saveParaProfTrial(trial, -1);
+            databaseAPI.saveTrial(trial, -1);
         } catch (DatabaseException e) {
             e.printStackTrace();
             Exception e2 = e.getException();
@@ -174,7 +174,7 @@ public class LoadTrial {
         // set some things in the trial
         trial.setID(this.trialID);
         try {
-            databaseAPI.saveParaProfTrial(trial, 0);
+            databaseAPI.saveTrial(trial, 0);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);

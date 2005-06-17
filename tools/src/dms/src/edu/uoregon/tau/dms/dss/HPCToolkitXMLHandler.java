@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * XML Handler for cube data
  *
  * 
- * <P>CVS $Id: HPCToolkitXMLHandler.java,v 1.1 2005/06/09 23:54:46 amorris Exp $</P>
+ * <P>CVS $Id: HPCToolkitXMLHandler.java,v 1.2 2005/06/17 22:10:22 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see HPCToolkitDataSource.java
  */
 public class HPCToolkitXMLHandler extends DefaultHandler {
@@ -23,7 +23,6 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
 
     private Function currentFunction;
     private int numMetrics = 0;
-    //private int numNodes = 0;
     
     private String currentFile;
     
@@ -93,26 +92,19 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
             f.addGroup(defaultGroup);
         }
 
-        
+        // create the flat profile now
         FunctionProfile flat = getFlatFunctionProfile(theThread, f);
 
     }
     
     
- // given A => B => C, this retrieves the FP for C
+    // given A => B => C, this retrieves the FP for C
     private FunctionProfile getFlatFunctionProfile(Thread thread, Function function) {
         if (!function.getCallPathFunction()) {
             return null;
         }
-
-        //Function childFunction = (Function) flatMap.get(function);
-
-        //if (childFunction == null) {
         String childName = function.getName().substring(function.getName().lastIndexOf("=>") + 2).trim();
         Function childFunction = dataSource.addFunction(childName);
-        //    childFunction.addGroup(defaultGroup);
-        //    flatMap.put(function, childFunction);
-        //}
 
         childFunction.addGroup(defaultGroup);
 

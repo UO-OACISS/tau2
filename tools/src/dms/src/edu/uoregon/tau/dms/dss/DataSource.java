@@ -9,14 +9,17 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.15 2005/06/08 01:53:56 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.16 2005/06/17 22:10:22 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		TrialData
  * @see		NCT
  */
 public abstract class DataSource {
 
+    
+    private static boolean meanIncludeNulls = true;
+    
     private boolean userEventsPresent = false;
     private boolean callPathDataPresent = false;
     private boolean groupNamesPresent = false;
@@ -45,6 +48,11 @@ public abstract class DataSource {
         return meanData;
     }
 
+    public Thread getStdDevData() {
+        return stddevData;
+    }
+
+    
     public Thread getTotalData() {
         return totalData;
     }
@@ -298,21 +306,22 @@ public abstract class DataSource {
      * After loading all data, this function should be called to generate all
      * the derived data
      */
-    protected void generateDerivedData() {
+    public void generateDerivedData() {
         //long time = System.currentTimeMillis();
 
         for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
             ((Thread) it.next()).setThreadDataAllMetrics();
         }
-        this.setMeanData(0, this.getNumberOfMetrics() - 1);
+        this.generateStatistics(0, this.getNumberOfMetrics() - 1);
         this.meanData.setThreadDataAllMetrics();
+        this.stddevData.setThreadDataAllMetrics();
 
         //time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + time);
 
     }
 
-    public void setMeanData(int startMetric, int endMetric) {
+    public void generateStatistics(int startMetric, int endMetric) {
 
         /*
          * Given, excl, incl, call, subr for each thread 
@@ -417,7 +426,6 @@ public abstract class DataSource {
             }
 
 
-            // this must be stored somewhere else, but I'm going to compute it since I don't know where
             int numThreads = allThreads.size();
 
             for (int i = 0; i < numThreads; i++) { // for each thread
@@ -444,6 +452,11 @@ public abstract class DataSource {
                 }
             }
 
+            if (!meanIncludeNulls) {
+                // uncomment this line to switch to the other method of mean/std. dev.
+                numThreads = numEvents;
+            }
+            
             // we don't want to set the calls and subroutines if we're just computing mean data for a derived metric!
             if (startMetric == 0) {
 
@@ -455,15 +468,15 @@ public abstract class DataSource {
                 meanProfile.setNumSubr((double) subrSum / numThreads);
 
                 double stdDev = 0;
-                if (numEvents > 1) {
-                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (numEvents - 1))
+                if (numThreads > 1) {
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (numThreads - 1))
                             - (meanProfile.getNumCalls() * meanProfile.getNumCalls())));
                 }
                 stddevProfile.setNumCalls(stdDev);
 
                 stdDev = 0;
-                if (numEvents > 1) {
-                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (numEvents - 1))
+                if (numThreads > 1) {
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (numThreads - 1))
                             - (meanProfile.getNumSubr() * meanProfile.getNumSubr())));
                 }
                 stddevProfile.setNumSubr(stdDev);
@@ -480,21 +493,21 @@ public abstract class DataSource {
                 meanProfile.setInclusive(i, inclSum[i] / numThreads);
 
                 double stdDev = 0;
-                if (numEvents > 1) {
+                if (numThreads > 1) {
 
                     // see http://cuwu.editthispage.com/stories/storyReader$13 for why I don't multiply by n/(n-1)
                     
-                    //stdDev = java.lang.Math.sqrt(((double) numEvents / (numEvents - 1))
-                    //        * java.lang.Math.abs((exclSumSqr[i] / (numEvents))
+                    //stdDev = java.lang.Math.sqrt(((double) numThreads / (numThreads - 1))
+                    //        * java.lang.Math.abs((exclSumSqr[i] / (numThreads))
                     //                - (meanProfile.getExclusive(i) * meanProfile.getExclusive(i))));
-                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[i] / (numEvents))
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[i] / (numThreads))
                             - (meanProfile.getExclusive(i) * meanProfile.getExclusive(i))));
                 }
                 stddevProfile.setExclusive(i, stdDev);
 
                 stdDev = 0;
-                if (numEvents > 1) {
-                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[i] / (numEvents - 1))
+                if (numThreads > 1) {
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[i] / (numThreads - 1))
                             - (meanProfile.getInclusive(i) * meanProfile.getInclusive(i))));
                 }
                 stddevProfile.setInclusive(i, stdDev);
@@ -504,6 +517,12 @@ public abstract class DataSource {
                     totalProfile.setExclusivePercent(i, totalProfile.getExclusive(i) / topLevelInclSum[i] * 100);
                     meanProfile.setInclusivePercent(i, totalProfile.getInclusivePercent(i));
                     meanProfile.setExclusivePercent(i, totalProfile.getExclusivePercent(i));
+                    if (meanProfile.getInclusive(i) != 0) {
+                        stddevProfile.setInclusivePercent(i, stddevProfile.getInclusive(i) / meanProfile.getInclusive(i) * 100);
+                    }
+                    if (meanProfile.getExclusive(i) != 0) {
+                        stddevProfile.setExclusivePercent(i, stddevProfile.getExclusive(i) / meanProfile.getExclusive(i) * 100);
+                    }
                 }
             }
         }
@@ -653,6 +672,18 @@ public abstract class DataSource {
             initAllThreadsList();
         }
         return allThreads;
+    }
+
+    /**
+     * Changes whether or not functions which do not call a particular function 
+     * are included as a 0 in the computation of statistics (mean, std. dev., etc)
+     * 
+     * This does not affect how trials uploaded to the database are handled
+     * 
+     * @param meanIncludeNulls true to include nulls as 0's the computation, false otherwise
+     */
+    public static void setMeanIncludeNulls(boolean meanIncludeNulls) {
+        DataSource.meanIncludeNulls = meanIncludeNulls;
     }
 
 }

@@ -189,6 +189,10 @@ public class DBDataSource extends DataSource {
             setCallPathDataPresent(true);
         }
 
+        // yep, I'm going to do it anyway, I have other stats to compute, we're just discarding the
+        // database values.
+        generateDerivedData();
+        
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process file (in milliseconds): " + time);
     }

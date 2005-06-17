@@ -117,7 +117,7 @@ public class UtilFncs {
     //    }
 
     // format a double for display within 'width' chars, kind of like C-printf's %G
-    public static String formatDouble(double d, int width) {
+    public static String formatDouble(double d, int width, boolean pad) {
 
         // first check if the regular toString is in exponential form
         boolean exp = false;
@@ -164,7 +164,11 @@ public class UtilFncs {
 
             str = dF.format(d);
             //System.out.println ("value: " + d + ", width: " + width + ", returning: '" + lpad(str,width) + "'");
-            return lpad(str, width);
+            if (pad) {
+                return lpad(str, width);
+            } else {
+                return str;
+            }
 
         }
 
@@ -177,7 +181,11 @@ public class UtilFncs {
         DecimalFormat dF = new DecimalFormat(formatString);
 
         str = dF.format(d);
-        return lpad(str, width);
+        if (pad) {
+            return lpad(str, width);
+        } else {
+            return str;
+        }
     }
 
     //This method is used in a number of windows to determine the actual output
@@ -191,11 +199,11 @@ public class UtilFncs {
     public static String getOutputString(int type, double d, int width) {
         switch (type) {
         case 0:
-            return (UtilFncs.formatDouble(d, width));
+            return (UtilFncs.formatDouble(d, width, true));
         case 1:
-            return (UtilFncs.formatDouble((d / 1000), width));
+            return (UtilFncs.formatDouble((d / 1000), width, true));
         case 2:
-            return (UtilFncs.formatDouble((d / 1000000), width));
+            return (UtilFncs.formatDouble((d / 1000000), width, true));
         case 3:
             int hr = 0;
             int min = 0;
@@ -211,7 +219,7 @@ public class UtilFncs {
             String hours = Integer.toString(hr);
             String mins = Integer.toString(min);
 
-            String secs = formatDouble(d / 1000000, 7);
+            String secs = formatDouble(d / 1000000, 7, true);
 
             // remove the whitespace
             int idx = 0;
