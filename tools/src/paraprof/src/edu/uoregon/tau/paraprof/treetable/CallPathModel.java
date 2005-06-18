@@ -15,9 +15,9 @@ import edu.uoregon.tau.paraprof.ParaProfTrial;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.2 2005/06/17 22:13:49 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.3 2005/06/18 01:20:31 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -77,12 +77,10 @@ public class CallPathModel extends AbstractTreeTableModel {
 
                 TreeTableNode node;
 
-                FunctionProfile fp = null;
-                if (fp == null) {
+                if (function == null) {
                     node = new TreeTableNode(null, this, rootName);
-
                 } else {
-                    fp = thread.getFunctionProfile(function);
+                    FunctionProfile fp = thread.getFunctionProfile(function);
                     node = new TreeTableNode(fp, this, null);
                 }
 

@@ -346,9 +346,9 @@ public class ParaProfUtils {
         menuItem.addActionListener(actionListener);
         windowsMenu.add(menuItem);
 
-        menuItem = new JMenuItem("Call Path Relations");
-        menuItem.addActionListener(actionListener);
-        windowsMenu.add(menuItem);
+        //menuItem = new JMenuItem("Call Path Relations");
+        //menuItem.addActionListener(actionListener);
+        //windowsMenu.add(menuItem);
 
         windowsMenu.add(new JSeparator());
 
