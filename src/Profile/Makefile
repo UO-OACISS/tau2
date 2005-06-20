@@ -41,7 +41,8 @@ CEXTRA =
 ##############################################
 
 ##############################################
-#PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
+#PGICC##PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
+#PGINOPRELINK##PRELINK_PHASE = #ENDIF#
 #############################################
 
 DEFINES = -DTAU_LIBRARY_SOURCE

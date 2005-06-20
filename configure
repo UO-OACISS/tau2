@@ -1573,7 +1573,7 @@ case $cxx_compiler in
    pgCC)
       echo "Default C++ compiler will be PGI pgCC C++ Compiler"
       pgi=yes
-      pgiflag=`pgCC -help | head -1 | grep 1.7 | wc -l`
+      pgiflag=`pgCC -help | head -1 | grep 1.7 | wc -l` 
 	
       if [ $pgiflag = 1 ] 
       then
@@ -2587,6 +2587,29 @@ EOF
 fi
 rm -f get_typeinfo1.C get_typeinfo2.C get_typeinfo*.o *.ti *.ii
 
+######################################################################
+if [ $cxx_compiler = pgCC ] 
+then
+  cat <<EOF > pgitest.C
+int foo(int x)
+{
+  return x;
+}
+EOF
+  if $cxx_compiler $orig_useropt -c pgitest.C 1> /dev/null 2>&1 
+  then 
+    if $cxx_compiler $orig_useropt --prelink_objects pgitest.o 1> /dev/null 2>&1 
+    then
+      echo "PGI compiler supports the --prelink_objects option"
+    else
+      echo "PGI compiler should not use --prelink_objects option for making libs"
+      fixmakeargs="$fixmakeargs PGINOPRELINK"
+    fi
+  else
+    echo "ERROR: Your PGI compiler is not working! Please check the license file"
+  fi 
+  rm -f pgitest.o pgitest.C libpgitest.a
+fi
 ######################################################################
 # If epilog is used, check and see if it supports v2.1's write interface
 if [ $epilog =  yes ]

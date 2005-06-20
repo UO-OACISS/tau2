@@ -579,7 +579,11 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PGICC) 
-	echo NOTE: Using --prelink_objects for PGI 3.0+ compiler
+	echo NOTE: May use --prelink_objects for PGI 3.0-5.4 compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PGINOPRELINK) 
+	echo NOTE: Disabling the use of --prelink_objects for PGI 6.0+ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      FUJITSU) 
