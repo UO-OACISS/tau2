@@ -354,6 +354,11 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     GPSHMEM)
+        echo NOTE: Using the TAU GPSHMEM/PGPSHMEM Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      shmemincargs=*)
         shmeminc=`echo $1 | sed -e 's/^shmemincargs=//' -e 's/#/ /g'`
 	echo "s@^TAU_SHMEM_INC=\(.*\)@TAU_SHMEM_INC=$shmeminc@g" >> $sedout

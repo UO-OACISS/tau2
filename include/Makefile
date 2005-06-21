@@ -606,10 +606,11 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTAU_trace
 #############################################
 #SHMEM#TAU_SHMEM_OBJS		     = TauShmemCray.o	  #ENDIF#
 #SP1#TAU_SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
+#GPSHMEM#TAU_SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
 
 TAU_SHMEM_INCLUDE	= $(TAU_SHMEM_INC)
 
-TAU_SHMEM_LIBS	= $(TAU_SHMEM_LIB)
+TAU_SHMEM_LIBS	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/ -lTauShmem$(TAU_OPTIONS) $(TAU_SHMEM_LIB)
 #############################################
 # TAU COMPILER SHELL SCRIPT OPTIONS
 TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
