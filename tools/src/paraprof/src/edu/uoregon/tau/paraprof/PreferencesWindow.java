@@ -44,31 +44,10 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     JCheckBox showValuesAsPercentBox = new JCheckBox("Show Values as Percent");
     JCheckBox showPathTitleInReverseBox = new JCheckBox("Show Path Title in Reverse");
     JCheckBox reverseCallPathsBox = new JCheckBox("Reverse Call Paths");
-    JCheckBox meanIncludeNullBox = new JCheckBox("<html>Compute mean by dividing by<br> total number of threads</html>");
+    JCheckBox meanIncludeNullBox = new JCheckBox("<html>Interpret threads that do not call a given function as a 0 value for statistics computation</html>");
     
     
-    void setControls() {
-        int tmpInt = fontComboBox.getItemCount();
-        int counter = 0;
-        //We should always have some fonts available, so this should be safe.
-        String tmpString = (String) fontComboBox.getItemAt(counter);
-        while ((counter < tmpInt) && (!(paraProfFont.equals(tmpString)))) {
-            counter++;
-            tmpString = (String) fontComboBox.getItemAt(counter);
-        }
 
-        if (counter == tmpInt) {
-            //The default font was not available. Indicate an error.
-            System.out.println("The default font was not found!  This is not a good thing as it is a default Java font!");
-        } else {
-            fontComboBox.setSelectedIndex(counter);
-        }
-
-        bold.setSelected((fontStyle == Font.BOLD) || (fontStyle == (Font.BOLD | Font.ITALIC)));
-        italic.setSelected((fontStyle == (Font.PLAIN | Font.ITALIC))
-                || (fontStyle == (Font.BOLD | Font.ITALIC)));
-        barHeightSlider.setValue(fontSize);
-    }
 
     public PreferencesWindow(Preferences preferences) {
         this.preferences = preferences;
@@ -80,6 +59,10 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         items[3] = "hr:mm:ss";
         unitsBox = new JComboBox(items); 
 
+        meanIncludeNullBox.setToolTipText("<html>There are two methods for computing the mean for a given function over all threads:<br>1. Add up the values for that function for each thread and divide by the total number of threads.<br>2. Add up the values for that function for each thread and divide by the number of threads that actually called that function.<br><br>This has the effect that if a particular function is only called by 2 threads:<br>The first method will show the mean value as 1/N where N is the total number of threads.<br>The second method will only divide by 2.<br><br>This option also affects standard deviation computation.");
+        reverseCallPathsBox.setToolTipText("<html>If this option is enabled, call path names will be shown in reverse<br>(e.g. \"C &lt;= B &lt;= A\" vs. \"A =&gt; B =&gt; C\")");
+        
+        
         if (preferences.getLoaded()) {
             // Set preferences based on saved values.
             paraProfFont = preferences.getParaProfFont();
@@ -113,8 +96,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         //Window Stuff.
         setTitle("ParaProf Preferences");
 
-        int windowWidth = 500;
-        int windowHeight = 390;
+        int windowWidth = 550;
+        int windowHeight = 400;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
         //There is really no need to resize this window.
@@ -197,10 +180,6 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         gbc.weighty = 0.25;
         ParaProfUtils.addCompItem(fontPanel, barHeightSlider, gbc, 1, 2, 1, 1);
 
-        
-        
-        
-        
 
 
 
@@ -263,6 +242,29 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
         setSavedPreferences();
 
+    }
+    
+    void setControls() {
+        int tmpInt = fontComboBox.getItemCount();
+        int counter = 0;
+        //We should always have some fonts available, so this should be safe.
+        String tmpString = (String) fontComboBox.getItemAt(counter);
+        while ((counter < tmpInt) && (!(paraProfFont.equals(tmpString)))) {
+            counter++;
+            tmpString = (String) fontComboBox.getItemAt(counter);
+        }
+
+        if (counter == tmpInt) {
+            //The default font was not available. Indicate an error.
+            System.out.println("The default font was not found!  This is not a good thing as it is a default Java font!");
+        } else {
+            fontComboBox.setSelectedIndex(counter);
+        }
+
+        bold.setSelected((fontStyle == Font.BOLD) || (fontStyle == (Font.BOLD | Font.ITALIC)));
+        italic.setSelected((fontStyle == (Font.PLAIN | Font.ITALIC))
+                || (fontStyle == (Font.BOLD | Font.ITALIC)));
+        barHeightSlider.setValue(fontSize);
     }
 
     private void setupMenus() {

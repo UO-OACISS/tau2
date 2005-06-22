@@ -1085,21 +1085,12 @@ public class ParaProfUtils {
         }
 
     }
-
+            
     public static boolean rightClick(MouseEvent evt) {
-        boolean rightClick = false;
-
-        // anything but left click
-        if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
-            rightClick = true;
+        if ((evt.getModifiers() & InputEvent.BUTTON3_MASK) != 0) {
+            return true;
         }
-
-        // control click for mac users
-        if ((evt.getModifiers() & InputEvent.CTRL_DOWN_MASK) == 1) {
-            rightClick = true;
-        }
-
-        return rightClick;
+        return false;
     }
 
     public static String getFunctionName(Function function) {

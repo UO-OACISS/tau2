@@ -8,6 +8,8 @@ import java.io.*;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.ToolTipManager;
+
 import edu.uoregon.tau.dms.dss.DataSource;
 import edu.uoregon.tau.dms.dss.FileList;
 import edu.uoregon.tau.dms.dss.UtilFncs;
@@ -16,11 +18,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.47 2005/06/17 22:13:47 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.48 2005/06/22 20:05:45 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.47 $
+ * @version $Revision: 1.48 $
  */
 public class ParaProf implements ActionListener {
 
@@ -302,11 +304,10 @@ public class ParaProf implements ActionListener {
      
         final ParaProf paraProf = new ParaProf();
 
-        //######
-        //Process command line arguments.
-        //ParaProf has numerous modes of operation. A number of these mode
-        //can be specified on the command line.
-        //######
+        // Set the tooltip delay to 20 seconds
+        ToolTipManager.sharedInstance().setDismissDelay(20000);
+        
+        // Process command line arguments
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
         CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
@@ -377,12 +378,6 @@ public class ParaProf implements ActionListener {
         }
 
         ParaProf.runtime = Runtime.getRuntime();
-
-        //        if (UtilFncs.debug) {
-        //            //Create and start the a timer, and then add paraprof to it.
-        //            javax.swing.Timer jTimer = new javax.swing.Timer(8000, paraProf);
-        //            jTimer.start();
-        //        }
 
         if (pack != null) {
             try {
