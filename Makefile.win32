@@ -58,21 +58,19 @@ tau-callpath.dll : $(TAU_CALLPATH_OBJS) $(TAU_JAVA_OBJS)
 tau-trace.dll : $(TAU_TRACE_OBJS) $(TAU_JAVA_OBJS)
 	link /dll /OUT:"win32\java\tau-trace.dll" $(TAU_TRACE_OBJS) $(TAU_JAVA_OBJS) $(JDK)/lib/jvm.lib
 
-
-
 libs : 
 	-del $(TAU_PROFILE_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON" tau-profile.lib
 	-del $(TAU_PROFILE_OBJS)
-	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON /MT" tau-profile-mt.lib
+	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON /MD" tau-profile-mt.lib
 	-del $(TAU_CALLPATH_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DTAU_CALLPATH" tau-callpath.lib
 	-del $(TAU_CALLPATH_OBJS)
-	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DTAU_CALLPATH /MT" tau-callpath-mt.lib
+	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DTAU_CALLPATH /MD" tau-callpath-mt.lib
 	-del $(TAU_TRACE_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DTRACING_ON" tau-trace.lib
 	-del $(TAU_TRACE_OBJS)
-	nmake /f Makefile.win32 "FLAGS = -DTRACING_ON /MT" tau-trace-mt.lib
+	nmake /f Makefile.win32 "FLAGS = -DTRACING_ON /MD" tau-trace-mt.lib
 
 
 tau2vtf :
@@ -111,23 +109,26 @@ tau_reduce : utils\tau_reduce.cpp utils\pprof_elem.cpp
 
 
 tau-profile.lib : $(TAU_PROFILE_OBJS)
-	lib /OUT:"win32\lib\tau-profile.lib" $(TAU_PROFILE_OBJS)
+	lib /OUT:"win32\lib\tau-profile-static.lib" $(TAU_PROFILE_OBJS)
 
 tau-profile-mt.lib : $(TAU_PROFILE_OBJS)
-	lib /OUT:"win32\lib\tau-profile-mt.lib" $(TAU_PROFILE_OBJS)
+	lib /OUT:"win32\lib\tau-profile-static-mt.lib" $(TAU_PROFILE_OBJS)
+	link /dll /def:exports.def /OUT:win32\lib\tau-profile.dll $(TAU_PROFILE_OBJS)
 
 
 tau-callpath.lib : $(TAU_CALLPATH_OBJS)
-	lib /OUT:"win32\lib\tau-callpath.lib" $(TAU_CALLPATH_OBJS)
+	lib /OUT:"win32\lib\tau-callpath-static.lib" $(TAU_CALLPATH_OBJS)
 
 tau-callpath-mt.lib : $(TAU_CALLPATH_OBJS)
-	lib /OUT:"win32\lib\tau-callpath-mt.lib" $(TAU_CALLPATH_OBJS)
+	lib /OUT:"win32\lib\tau-callpath-static-mt.lib" $(TAU_CALLPATH_OBJS)
+	link /dll /def:exports.def /OUT:win32\lib\tau-callpath.dll $(TAU_CALLPATH_OBJS)
 
 tau-trace.lib : $(TAU_TRACE_OBJS)
-	lib /OUT:"win32\lib\tau-trace.lib" $(TAU_TRACE_OBJS)
+	lib /OUT:"win32\lib\tau-trace-static.lib" $(TAU_TRACE_OBJS)
 
 tau-trace-mt.lib : $(TAU_TRACE_OBJS)
-	lib /OUT:"win32\lib\tau-trace-mt.lib" $(TAU_TRACE_OBJS)
+	lib /OUT:"win32\lib\tau-trace-static-mt.lib" $(TAU_TRACE_OBJS)
+	link /dll /def:exports.def /OUT:win32\lib\tau-trace.dll $(TAU_TRACE_OBJS)
 
 
 
