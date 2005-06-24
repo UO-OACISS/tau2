@@ -973,6 +973,28 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
  * should introduce a tab there. Hence, the need for the WRITE_TAB macro */
 
 
+
+
+int CPDB_GetSubstringCol(const char *haystack, const char *needle)
+{
+  char *res = strstr(haystack, needle);
+  int diff = 0;
+  if (res)
+  {
+    diff = res - haystack + 1 ;  /* columns start from 1, not 0 */
+#ifdef DEBUG 
+    printf("needle:%s\n", needle);
+    printf("haystack:%s\n", haystack);
+    printf("diff = %d\n", diff);
+#endif /* DEBUG */ 
+  }
+  return diff;
+}
+
+
+
+
+
 /* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
@@ -1145,11 +1167,27 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	  case EXIT:
 	  case RETURN:
 #ifdef DEBUG
-	        cout <<"RETURN/EXIT statement "<<endl;
-		cout <<"inbuf = "<<inbuf<<endl;
-	        cout <<"line ="<<(*it)->line<<" col = "<<(*it)->col<<endl;
+	    cout <<"RETURN/EXIT statement "<<endl;
+	    cout <<"inbuf = "<<inbuf<<endl;
+	    cout <<"line ="<<(*it)->line<<" col = "<<(*it)->col<<endl;
 #endif /* DEBUG */
 		/* Check to see if it is not a comment and has a "if" in the string */
+
+	    /* search for 'return', since preprocessing may have 
+	       moved it and given us a bogus column, if we can't find it
+	       revert back since this may be an exit and not a 'return'
+	    */
+	    int col;
+	    col = CPDB_GetSubstringCol(inbuf,"return");
+	    if (col == 0) {
+	      col =  CPDB_GetSubstringCol(inbuf,"RETURN");
+	    }
+	    
+	    if (col != 0) {
+	      (*it)->col = col;
+	    }
+
+
                 checkbuf = new char[strlen(inbuf)]; 
                 if (checkbuf == (char *) NULL) 
                 {
@@ -1604,9 +1642,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.64 $   $Date: 2004/09/01 14:00:54 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.64 2004/09/01 14:00:54 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.65 $   $Date: 2005/06/24 23:48:51 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.65 2005/06/24 23:48:51 amorris Exp $
  ***************************************************************************/
 
 
