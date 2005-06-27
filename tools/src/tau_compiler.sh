@@ -16,6 +16,7 @@ declare -i hasAnObjectOutputFile=$FALSE
 declare -i hasMpi=$TRUE
 declare -i needToCleanPdbInstFiles=$TRUE
 declare -i pdbFileSpecified=$FALSE
+declare -i optResetUsed=$FALSE
 
 declare -i isVerbose=$FALSE
 declare -i isDebug=$FALSE
@@ -268,10 +269,12 @@ for arg in "$@"
 				optCompile="${arg#"-optCompile="} $optCompile"
 				echoIfDebug "\tCompiling Options are: $optCompile"
 				optIncludeDefs="${arg#"-optCompile="} $optIncludeDefs"
+				echoIfDebug "\tFrom optCompile: $optCompile"
 				;;
 			-optReset*)
 				optCompile=${arg#"-optReset="}
 				echoIfDebug "\tCompiling Options are: $optCompile"
+				optResetUsed=$TRUE
 				;;
 			-optPDBFile*)
 				optPDBFile="${arg#"-optPDBFile="}"
@@ -363,6 +366,11 @@ for arg in "$@"
 			if [ $fortranParserDefined == $FALSE ]; then
 				#If it is not passed EXPLICITY, use the default f95parse.
 				pdtParserF="$optPdtDir""/f95parse"
+			fi
+			echoIfDebug "Using Fortran Parser"
+			if [ $optResetUsed == $FALSE ]; then
+			  optCompile="`echo $optCompile | sed -e 's/ -D[^ ]*//g'`"
+			  echoIfDebug "Resetting optCompile (removing -D* ): $optCompile"
 			fi
 			groupType=$group_f_F
 			;;
