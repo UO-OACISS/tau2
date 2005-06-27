@@ -41,6 +41,11 @@ Version 2.14 changes (from 2.13):
 28. Fixed a bug in TAU_COMPILER (when opari is not used) [UTK]]. 
 29. Added support for cube (importer) in paraprof [UTK].
 30. Added support for PGI v6.0 compilers.
+31. Added Jumpshot/Slog2 package to TAU [ANL].
+32. Added support for trace files > 2GB in TAU and VTF3 [TACC].
+33. TAU no longer needs merged pdb files from PDT's F95 parser [UTK].
+34. Enhancements in Paraprof to choose metrics for summary table, std. dev [LLNL].
+35. TAU_COMPILER does not need -optReset for IBM xlf90 to eliminate -D* flags.
 
 Version 2.13 changes (from 2.12):
 1. Paraprof enhancements.
