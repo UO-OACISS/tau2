@@ -2444,15 +2444,21 @@ then
     then
     #echo "Include dir found. adding -I$mpiinc to INC"
       shmemincargs="-I$shmeminc"
+      gpshmem=no
       if [ -r $shmeminc/gpshmem.h ] 
       then
         fixmakeargs="$fixmakeargs GPSHMEM"
+        gpshmem=yes
       fi
     fi
   fi
   if [ $shmemlibrary = no ]
   then 
     shmemlibrary=-lsma
+    if [ $gpshmem = yes ] 
+    then
+      shmemlibrary=-lgpshmem
+    fi
   fi
   if [ "x$shmemlib" != "x" ]
   then 
