@@ -13,3 +13,7 @@ This way, we can pass the libraries that -lgpshmem needs on the configure comman
 % mpirun -np 4 foxf77
 
 Please send any questions or suggestions to tau-team@cs.uoregon.edu.
+
+DISCLAIMER: The Fortran examples included in this directory tree were
+obtained from the GPSHMEM distribution and are covered by the license
+included in the accompanying LICENSE file. 
