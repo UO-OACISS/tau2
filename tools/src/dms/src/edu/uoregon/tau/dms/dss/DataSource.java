@@ -9,9 +9,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.16 2005/06/17 22:10:22 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.17 2005/06/29 22:59:30 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  * @see		TrialData
  * @see		NCT
  */
@@ -646,6 +646,12 @@ public abstract class DataSource {
     }
 
     public Thread getThread(int nodeID, int contextID, int threadID) {
+        if (nodeID == -1) {
+            return this.getMeanData();
+        } else if (nodeID == -3) {
+            return this.getStdDevData();
+        }
+        
         Context context = this.getContext(nodeID, contextID);
         Thread thread = null;
         if (context != null)

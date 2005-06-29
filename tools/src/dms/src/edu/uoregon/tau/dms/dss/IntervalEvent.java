@@ -24,7 +24,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: IntervalEvent.java,v 1.11 2005/01/20 00:19:24 amorris Exp $</P>
+ * <P>CVS $Id: IntervalEvent.java,v 1.12 2005/06/29 22:59:30 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -256,7 +256,7 @@ public class IntervalEvent {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
             else if (db.getDBType().compareTo("oracle") == 0)
                 tmpStr = "select " + db.getSchemaPrefix() + "interval_event_id_seq.currval FROM dual";
-            else
+            else // postgres
                 tmpStr = "select currval('interval_event_id_seq');";
             newIntervalEventID = Integer.parseInt(db.getDataItem(tmpStr));
         } else {
