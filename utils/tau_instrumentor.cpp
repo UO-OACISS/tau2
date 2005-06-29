@@ -535,7 +535,9 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
 	
 	      print_tau_profile_init(ostr, (pdbCRoutine *) (*it)->item);
 	      ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
+	      ostr <<"#ifndef TAU_SHMEM" <<endl; // set node 0
 	      ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
+	      ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
 	      ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
 	    }
 	    else 
@@ -613,7 +615,9 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
 
      print_tau_profile_init(ostr, (pdbCRoutine *) (i->item));
      ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
+     ostr <<"#ifndef TAU_SHMEM" <<endl; // set node 0
      ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
+     ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
      ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
   }
   else
@@ -1642,9 +1646,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.65 $   $Date: 2005/06/24 23:48:51 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.65 2005/06/24 23:48:51 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.66 $   $Date: 2005/06/29 18:15:06 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.66 2005/06/29 18:15:06 sameer Exp $
  ***************************************************************************/
 
 
