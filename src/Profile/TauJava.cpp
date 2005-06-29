@@ -88,9 +88,12 @@ extern "C" {
 
 // Give TAU some room for its data structures. 
 #if (!defined(TAU_WINDOWS))
-    if ((sbrk(1024*1024*4)) == (void *) -1) {
-      fprintf(stdout, "TAU>ERROR: sbrk failed\n");
-      CALL(ProfilerExit)(1);
+
+    if (sizeof(void*) < 8) {
+      if ((sbrk(1024*1024*4)) == (void *) -1) {
+	fprintf(stdout, "TAU>ERROR: sbrk failed\n");
+	CALL(ProfilerExit)(1);
+      }
     }
 #endif //TAU_WINDOWS
 
@@ -435,8 +438,8 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 
 
 /***************************************************************************
- * $RCSfile: TauJava.cpp,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 2005/01/20 01:21:06 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.26 2005/01/20 01:21:06 sameer Exp $
+ * $RCSfile: TauJava.cpp,v $   $Author: amorris $
+ * $Revision: 1.27 $   $Date: 2005/06/29 18:56:38 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.27 2005/06/29 18:56:38 amorris Exp $
  ***************************************************************************/
 
