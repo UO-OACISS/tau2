@@ -1,0 +1,15 @@
+These examples are provided by Adam Leko, UFL, UPC group. We'd like to thank
+him for creating the GPSHMEM/PGPSHMEM interface and the TAU wrappers for 
+GPSHMEM. To use GPSHMEM, please refer to instructions from:
+http://www.hcs.ufl.edu/~leko/pgpshmem/
+for patching the gpshmem package. Then build TAU with GPSHMEM. For e.g.,
+
+% configure -fortran=gnu -TRACE -shmemlib=/usr/local/packages/gpshmem-1.0/lib -shmeminc=/usr/local/packages/gpshmem-1.0/include -shmem -pdt=/usr/local/packages/pdtoolkit-3.3.1 -pdtcompdir=gcc -shmemlibrary='-lgpshmem -L/usr/local/packages/armci-1.1/lib/LINUX -L/usr/lib/gcc-lib/i386-pc-linux/3.2.3/ -lstdc++ -lgcc_s -larmci -L/opt/mpich-mpd/gnu/lib -lmpich'
+
+This way, we can pass the libraries that -lgpshmem needs on the configure command-line as these are system specific. By default, TAU will use -lgpshmem only. 
+
+% cd tau-2.x/examples/gpshmem/pdt_fortran
+% make
+% mpirun -np 4 foxf77
+
+Please send any questions or suggestions to tau-team@cs.uoregon.edu.
