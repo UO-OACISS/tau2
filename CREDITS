@@ -21,11 +21,15 @@ TAU Portable Profiling:
 -----------------------
 Sameer Shende, University of Oregon
 Alan Morris, University of Oregon
-Robert Michael Ansell-Bell, University of Oregon
+Wyatt Spear, University of Oregon
+Chris Hoge, University of Oregon
 Kevin Huck, University of Oregon
+Suravee Suthikulpani, University of Oregon
+Aroon Nataraj, University of Oregon
 Nicholas Trebon, University of Oregon
 Kai Li, University of Oregon
 Li Li, University of Oregon
+Robert Michael Ansell-Bell, University of Oregon
 Kathleen Lindlan, University of Oregon
 Ariya Lohavanichbutr, University of Oregon
 Peter Beckman, Los Alamos National Laboratory
@@ -58,6 +62,7 @@ James Crotinger
 Timothy Williams
 NAS Parallel Benchmarks Group for allowing us to use their code as an example
 of TAU instrumentation with Fortran and MPI (http://www.nas.nasa.gov/NAS/NPB/).
+UFL UPC Group (Adam Leko) for building the GPSHMEM/PGPSHMEM wrappers for TAU.
 
 The TAU project is directed by Prof. Allen D. Malony at the University of Orgeon.
 
