@@ -10,8 +10,10 @@ import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 
 import edu.uoregon.tau.paraprof.*;
@@ -21,8 +23,8 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.treetable.ColumnChooser.CheckBoxListItem;
 import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
 
-public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable,
-        UnitListener, ImageExport {
+public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
+        ImageExport {
 
     private CallPathModel model;
     private JTreeTable treeTable;
@@ -50,12 +52,10 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
         //Now set the title.
         if (thread.getNodeID() < 0)
-            this.setTitle("Mean Statistics - "
-                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("Mean Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         else
             this.setTitle("Thread Statistics: " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
-                    + thread.getThreadID() + " - "
-                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+                    + thread.getThreadID() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
         //Set the help window text if required.
         if (ParaProf.helpWindow.isVisible()) {
@@ -68,30 +68,45 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         ParaProf.incrementNumWindows();
     }
 
-    private void setupData() {
+    public void updateColumns() {
 
-        getContentPane().removeAll();
-        getContentPane().setLayout(new GridBagLayout());
+        //for (int i = 1; i < columns.size(); i++) {
+       //     treeTable.getColumnModel().removeColumn(treeTable.getColumnModel().getColumn(i));
+       // }
 
-        GridBagConstraints gbc = new GridBagConstraints();
+        setColumns();
+        
+        AbstractTableModel atm = (AbstractTableModel) treeTable.getModel();
+        atm.fireTableChanged(new TableModelEvent(atm,  TableModelEvent.HEADER_ROW));
+        
+        
+        //while (treeTable.getColumnCount() > 1) {
+        //    treeTable.getColumnModel().getColumn(0);
+        //}
 
-        if (showAsTreeMenuItem.isSelected() == false) {
-            showInclExclMenuItem.setEnabled(false);
-            showInclExclMenuItem.setSelected(true);
-        } else {
-            showInclExclMenuItem.setEnabled(true);
+        //treeTable.setAutoCreateColumnsFromModel(false);
+        
 
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.anchor = GridBagConstraints.NORTH;
-            gbc.weightx = 1.0;
-            gbc.weighty = 0.0;
-            addCompItem(new ColorBar(), gbc, 0, 0, 1, 1);
-        }
+//        if (scrollPane != null) {
+//            getContentPane().remove(scrollPane);
+//        }
+//        
+//        JTreeTable treeTable = createTreeTable(model);
+////      treeTable.setAutoCreateColumnsFromModel(true);
+//
+//        scrollPane = new JScrollPane(treeTable);
 
-        if (scrollPane != null) {
-            getContentPane().remove(scrollPane);
-        }
+        //for (int i = 0; i < columns.size(); i++) {
+//            treeTable.getColumnModel().addColumn(new TableColumn());
+       //     treeTable.setDefaultRenderer(columns.get(i).getClass(), ((TreeTableColumn) columns.get(i)).getCellRenderer());
+       // }
 
+        
+        
+     //   addScrollPane();
+    }
+
+    private void setColumns() {
         columns = new ArrayList();
 
         ListModel metricModel = columnChooser.getMetricModel();
@@ -142,30 +157,37 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         if (subritem.getSelected()) {
             columns.add(new NumSubrColumn(this));
         }
+    }
+    
+    
+    private void addComponents() {
 
-        //        for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
-        //            if (showInclExclMenuItem.isSelected()) {
-        //                columns.add(new InclusiveColumn(this, i));
-        //                columns.add(new ExclusiveColumn(this, i));
-        //            } else {
-        //                columns.add(new RegularMetricColumn(this, i));
-        //            }
-        //        }
-        //
-        //        columns.add(new NumCallsColumn(this));
-        //        columns.add(new NumSubrColumn(this));
+        getContentPane().removeAll();
+        getContentPane().setLayout(new GridBagLayout());
 
-        //columns.add(new StdDevColumn(this, 0));
+        GridBagConstraints gbc = new GridBagConstraints();
 
-        //columns.add(new MiniHistogramColumn(this));
+        if (showAsTreeMenuItem.isSelected() == false) {
+            showInclExclMenuItem.setEnabled(false);
+            showInclExclMenuItem.setSelected(true);
+        } else {
+            showInclExclMenuItem.setEnabled(true);
 
-        model = new CallPathModel(this, ppTrial, thread);
-        JTreeTable treeTable = createTreeTable(model);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.NORTH;
+            gbc.weightx = 1.0;
+            gbc.weighty = 0.0;
+            addCompItem(new ColorBar(), gbc, 0, 0, 1, 1);
+        }
+
+        if (scrollPane != null) {
+            getContentPane().remove(scrollPane);
+        }
+        
         scrollPane = new JScrollPane(treeTable);
 
         for (int i = 0; i < columns.size(); i++) {
-            treeTable.setDefaultRenderer(columns.get(i).getClass(),
-                    ((TreeTableColumn) columns.get(i)).getCellRenderer());
+            treeTable.setDefaultRenderer(columns.get(i).getClass(), ((TreeTableColumn) columns.get(i)).getCellRenderer());
         }
 
         gbc.fill = GridBagConstraints.BOTH;
@@ -175,6 +197,20 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         addCompItem(scrollPane, gbc, 0, 1, GridBagConstraints.REMAINDER, GridBagConstraints.REMAINDER);
 
         validate();
+    }
+
+    private void setupData() {
+
+
+        setColumns();
+
+        //columns.add(new StdDevColumn(this, 0));
+        //columns.add(new MiniHistogramColumn(this));
+
+        model = new CallPathModel(this, ppTrial, thread);
+        JTreeTable treeTable = createTreeTable(model);
+        addComponents();
+    
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {

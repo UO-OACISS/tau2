@@ -78,7 +78,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
         //Add items to the popup menu.
         if (userEventWindow) {
-            JMenuItem userEventDetailsItem = new JMenuItem("Show User Event Bar Graph");
+            JMenuItem userEventDetailsItem = new JMenuItem("Show User Event Bar Chart");
             userEventDetailsItem.addActionListener(this);
             popup.add(userEventDetailsItem);
 
@@ -374,7 +374,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                         hw.show();
                     }
 
-                } else if (arg.equals("Show User Event Bar Graph")) {
+                } else if (arg.equals("Show User Event Bar Chart")) {
 
                     if (clickedOnObject instanceof PPUserEventProfile) {
                         ppUserEventProfile = (PPUserEventProfile) clickedOnObject;

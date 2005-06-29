@@ -165,10 +165,6 @@ public class PPFunctionProfile implements Comparable {
                 return checkDescending(this.getThreadID() - other.getThreadID());
         } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
 
-            //            return checkDescending(Double.compare(valueType.getValue(this.meanProfile,
-            //                    dataSorter.getSelectedMetricID()), valueType.getValue(other.meanProfile,
-            //                    dataSorter.getSelectedMetricID())));
-
             return checkDescending(compareToHelper(valueType.getValue(this.meanProfile,
                     dataSorter.getSelectedMetricID()), valueType.getValue(other.meanProfile,
                     dataSorter.getSelectedMetricID()), this.meanProfile, other.meanProfile));
@@ -177,7 +173,6 @@ public class PPFunctionProfile implements Comparable {
             return checkDescending(compareToHelper(valueType.getValue(this.getFunctionProfile(),
                     dataSorter.getSelectedMetricID()), valueType.getValue(other.getFunctionProfile(),
                     dataSorter.getSelectedMetricID())));
-
         } else {
             throw new ParaProfException("Unexpected sort type: " + dataSorter.getSortType());
         }

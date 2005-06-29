@@ -10,26 +10,23 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.ClipboardOwner;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.font.*;
-import java.awt.geom.AffineTransform;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.*;
+import java.util.List;
 
-import javax.swing.*;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 
 import edu.uoregon.tau.dms.dss.Function;
 import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ImageExport;
-import edu.uoregon.tau.paraprof.interfaces.Searchable;
 
 public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExport, MouseListener {
 
@@ -48,7 +45,7 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
     private ParaProfTrial ppTrial = null;
     private ThreadDataWindow window = null;
     private edu.uoregon.tau.dms.dss.Thread thread = null;
-    private Vector list = new Vector();
+    private List list = new ArrayList();
 
     private int lastHeaderEndPosition = 0;
     private Searcher searcher;
@@ -111,7 +108,7 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
         if (searcher.getSearchLines() == null && list != null) {
             Vector searchLines = new Vector();
             for (int i = 0; i < list.size(); i++) {
-                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
+                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(i);
                 searchLines.add(ppFunctionProfile.getFunctionName());
             }
             searcher.setSearchLines(searchLines);
@@ -151,7 +148,7 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
 
         if (maxRightSideStringPixelWidth == 0) {
             for (int i = 0; i < list.size(); i++) {
-                ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
+                ppFunctionProfile = (PPFunctionProfile) list.get(i);
                 maxRightSideStringPixelWidth = Math.max(maxRightSideStringPixelWidth,
                         fmFont.stringWidth(ppFunctionProfile.getFunctionName() + 5));
             }
@@ -230,7 +227,7 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
 
         // Iterate through each function and draw it's bar
         for (int i = startElement; i <= endElement; i++) {
-            ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
+            ppFunctionProfile = (PPFunctionProfile) list.get(i);
 
             //value = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), window.isPercent());
             double value = ppFunctionProfile.getValue();
@@ -332,7 +329,7 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
             int index = (yCoord) / (ppTrial.getPreferencesWindow().getBarSpacing());
 
             if (list != null && index < list.size()) {
-                ppFunctionProfile = (PPFunctionProfile) list.elementAt(index);
+                ppFunctionProfile = (PPFunctionProfile) list.get(index);
                 if (ParaProfUtils.rightClick(evt)) {
 
                     JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(),
@@ -359,7 +356,7 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
     }
 
     //This method sets both xPanelSize and yPanelSize.
-    private boolean resizePanel(FontMetrics fmFont, int barXCoord, Vector list, int startElement, int endElement) {
+    private boolean resizePanel(FontMetrics fmFont, int barXCoord, List list, int startElement, int endElement) {
         boolean resized = false;
         int newXPanelSize = 0;
         int newYPanelSize = 0;
@@ -368,7 +365,7 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
         PPFunctionProfile ppFunctionProfile = null;
 
         for (int i = startElement; i <= endElement; i++) {
-            ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
+            ppFunctionProfile = (PPFunctionProfile) list.get(i);
             maxRightSideStringPixelWidth = Math.max(maxRightSideStringPixelWidth,
                     fmFont.stringWidth(ppFunctionProfile.getFunctionName() + 5));
         }

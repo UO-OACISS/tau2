@@ -363,7 +363,7 @@ public class ParaProfUtils {
 
                     String arg = evt.getActionCommand();
 
-                    if (arg.equals("Bar Graph")) {
+                    if (arg.equals("Bar Chart")) {
                         FunctionDataWindow w = new FunctionDataWindow(ppTrial, selectedFunction);
                         w.show();
                     } else if (arg.equals("Histogram")) {
@@ -375,7 +375,7 @@ public class ParaProfUtils {
         };
 
         final JMenu functionWindows = new JMenu("Function");
-        functionWindows.add(createMenuItem("Bar Graph", fActionListener, true));
+        functionWindows.add(createMenuItem("Bar Chart", fActionListener, true));
         functionWindows.add(createMenuItem("Histogram", fActionListener, true));
         windowsMenu.add(functionWindows);
 
@@ -396,7 +396,7 @@ public class ParaProfUtils {
                     edu.uoregon.tau.dms.dss.Thread selectedThread = (edu.uoregon.tau.dms.dss.Thread) fSelector.getSelectedObject();
 
 
-                    if (arg.equals("Bar Graph")) {
+                    if (arg.equals("Bar Chart")) {
                         ThreadDataWindow w = new ThreadDataWindow(ppTrial, selectedThread);
                         w.setVisible(true);
                     } else if (arg.equals("Statistics Text")) {
@@ -415,7 +415,7 @@ public class ParaProfUtils {
         };
 
         final JMenu threadWindows = new JMenu("Thread");
-        threadWindows.add(createMenuItem("Bar Graph", tActionListener, true));
+        threadWindows.add(createMenuItem("Bar Chart", tActionListener, true));
         threadWindows.add(createMenuItem("Statistics Text", tActionListener, true));
         threadWindows.add(createMenuItem("Statistics Table", tActionListener, true));
         threadWindows.add(createMenuItem("Call Graph", tActionListener, ppTrial.callPathDataPresent()));
@@ -498,7 +498,7 @@ public class ParaProfUtils {
 
                     String arg = evt.getActionCommand();
 
-                    if (arg.equals("Show Function Bar Graph")) {
+                    if (arg.equals("Show Function Bar Chart")) {
                         FunctionDataWindow functionDataWindow = new FunctionDataWindow(ppTrial, function);
                         functionDataWindow.show();
                     } else if (arg.equals("Show Function Histogram")) {
@@ -521,7 +521,7 @@ public class ParaProfUtils {
         JPopupMenu functionPopup = new JPopupMenu();
 
         //Add items to the third popup menu.
-        JMenuItem functionDetailsItem = new JMenuItem("Show Function Bar Graph");
+        JMenuItem functionDetailsItem = new JMenuItem("Show Function Bar Chart");
         functionDetailsItem.addActionListener(actionListener);
         functionPopup.add(functionDetailsItem);
 
@@ -610,7 +610,7 @@ public class ParaProfUtils {
             MouseEvent evt) {
         if (thread.getNodeID() == -1) { // mean
             JPopupMenu meanThreadPopup = new JPopupMenu();
-            meanThreadPopup.add(createThreadDataMenuItem("Show Mean Bar Graph", ppTrial, thread));
+            meanThreadPopup.add(createThreadDataMenuItem("Show Mean Bar Chart", ppTrial, thread));
             meanThreadPopup.add(createStatisticsMenuItem("Show Mean Statistics Text Window", ppTrial, thread, false));
             meanThreadPopup.add(createStatisticsTableMenuItem("Show Mean Statistics Table", ppTrial, thread));
             meanThreadPopup.add(createCallGraphMenuItem("Show Mean Call Graph", ppTrial, thread));
@@ -618,7 +618,7 @@ public class ParaProfUtils {
             meanThreadPopup.show(owner, evt.getX(), evt.getY());
         } else if (thread.getNodeID() == -3) { // stddev
             JPopupMenu threadPopup = new JPopupMenu();
-            threadPopup.add(createThreadDataMenuItem("Show Standard Deviation Bar Graph", ppTrial, thread));
+            threadPopup.add(createThreadDataMenuItem("Show Standard Deviation Bar Chart", ppTrial, thread));
             threadPopup.add(createStatisticsMenuItem("Show Standard Deviation Statistics Text Window", ppTrial, thread, false));
             threadPopup.add(createStatisticsTableMenuItem("Show Standard Deviation Statistics Table", ppTrial, thread));
             threadPopup.add(createCallGraphMenuItem("Show Standard Deviation Call Graph", ppTrial, thread));
@@ -627,7 +627,7 @@ public class ParaProfUtils {
             threadPopup.show(owner, evt.getX(), evt.getY());
         } else {
             JPopupMenu threadPopup = new JPopupMenu();
-            threadPopup.add(createThreadDataMenuItem("Show Thread Bar Graph", ppTrial, thread));
+            threadPopup.add(createThreadDataMenuItem("Show Thread Bar Chart", ppTrial, thread));
             threadPopup.add(createStatisticsMenuItem("Show Thread Statistics Text Window", ppTrial, thread, false));
             threadPopup.add(createStatisticsTableMenuItem("Show Thread Statistics Table", ppTrial, thread));
             threadPopup.add(createCallGraphMenuItem("Show Thread Call Graph", ppTrial, thread));

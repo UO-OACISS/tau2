@@ -15,9 +15,9 @@ import edu.uoregon.tau.paraprof.ParaProfTrial;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.3 2005/06/18 01:20:31 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.4 2005/06/29 23:01:38 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -49,16 +49,14 @@ public class CallPathModel extends AbstractTreeTableModel {
 
         roots = new ArrayList();
         DataSorter dataSorter = new DataSorter(ppTrial);
-        
+
+        // don't ask the thread directly, since we want group masking to work
         List functionProfileList = dataSorter.getFunctionProfiles(thread);
-        
-        //List functionProfileList = thread.getFunctionProfiles();
 
         Map rootNames = new HashMap();
 
         if (window.getTreeMode()) {
             for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
-                //FunctionProfile fp = (FunctionProfile) it.next();
                 PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next(); 
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
 
@@ -89,7 +87,6 @@ public class CallPathModel extends AbstractTreeTableModel {
 
         } else {
             for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
-                //FunctionProfile fp = (FunctionProfile) it.next();
                 PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next(); 
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
 
@@ -119,7 +116,7 @@ public class CallPathModel extends AbstractTreeTableModel {
                     // there are two ways to do this (cube brings up a window to ask you which way you 
                     // want to compute the max value for the color)
 
-                    //maxValue = Math.max(maxValue, fp.getInclusive(0));
+                    //maxValue[i] = Math.max(maxValue[i], fp.getInclusive(i));
                     maxValues[i] += treeTableNode.getFunctionProfile().getInclusive(i);
 
                 }
@@ -173,7 +170,6 @@ public class CallPathModel extends AbstractTreeTableModel {
     }
 
     public Object getChild(Object parent, int index) {
-        // TODO Auto-generated method stub
         if (parent == root) {
             return roots.get(index);
         }

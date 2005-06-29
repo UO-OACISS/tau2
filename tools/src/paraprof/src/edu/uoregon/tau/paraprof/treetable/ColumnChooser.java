@@ -128,7 +128,8 @@ public class ColumnChooser extends JFrame {
             public void actionPerformed(ActionEvent evt) {
                 try {
                     //selected = true;
-                    ttWindow.update(null,null);
+                    ttWindow.updateColumns();
+                    //ttWindow.update(null,null);
                     dispose();
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
