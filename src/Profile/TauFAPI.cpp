@@ -250,7 +250,9 @@ void tau_db_dump_prefix_(char *prefix)
 void tau_profile_init_()
 {
 #ifndef TAU_MPI
+#ifndef TAU_SHMEM
   Tau_set_node(0); 
+#endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
   return;
 }
@@ -645,7 +647,9 @@ void TAU_PROFILE_INIT()
 #endif /* CRAYKAI */
   // tau_profile_init_(argc, argv);
 #ifndef TAU_MPI
+#ifndef TAU_SHMEM
   Tau_set_node(0); 
+#endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
 }
 
@@ -896,7 +900,9 @@ void tau_profile_init(void)
 #endif /* HP_FORTRAN */
 
 #ifndef TAU_MPI
+#ifndef TAU_SHMEM
   Tau_set_node(0); 
+#endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
   
 }
@@ -1064,7 +1070,9 @@ void tau_profile_init__()
   //_main();
   // tau_profile_init_(argc, argv);
 #ifndef TAU_MPI
+#ifndef TAU_SHMEM
   Tau_set_node(0); 
+#endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
 }
 
@@ -1352,6 +1360,6 @@ void TAU_PHASE_STOP(void **profiler)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.41 $   $Date: 2005/05/17 23:52:16 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.41 2005/05/17 23:52:16 sameer Exp $ 
+ * $Revision: 1.42 $   $Date: 2005/06/29 18:10:21 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.42 2005/06/29 18:10:21 sameer Exp $ 
  ***************************************************************************/
