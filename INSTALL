@@ -90,6 +90,7 @@ Usage: configure [OPTIONS]
 -dyninst=<dir> ................... Specify location of DynInst Package.
 -vtf=<dir> ......... Specify location of VTF3 Trace Generation Package.
 -slog2=<dir> .......... Specify location of SLOG2 SDK/Jumpshot Package.
+-slog2 ......... Specify use of TAU internal SLOG2 SDK/Jumpshot Package
 -mpi .......................... Specify use of TAU MPI wrapper library.
 -mpiinc=<dir> ............. Specify location of MPI include dir and use
                            the TAU MPI Profiling and Tracing Interface.
@@ -304,6 +305,15 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    visualization software, a freely available trace visualizer from Argonne National
    Laboratories.
    [ Ref: http://www-unix.mcs.anl.gov/perfvis/download/index.htm#slog2sdk ]
+
+-slog2
+   Specifies the use of the SLOG2 trace generation package and the Jumpshot 
+   trace visualizer that is bundled with TAU. Jumpshot v4 and SLOG2 v1.2.5delta
+   are included in the TAU distribution. When the -slog2 flag is specified,
+   tau2slog2 and jumpshot tools are copied to the <tau>/<arch>/<bin> directory.
+   It is important to have a working javac and java (preferably v1.4+) in your
+   path. On linux systems, where /usr/bin/java may be a place holder, you'll
+   need to modify your path accordingly.
 
 -mpiinc=<dir>
    
