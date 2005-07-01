@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.19 2005/06/17 22:10:22 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.20 2005/07/01 19:13:33 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  */
 public class DatabaseAPI {
 
@@ -111,30 +111,30 @@ public class DatabaseAPI {
     }
 
     // returns Vector of ALL Application objects
-    public ListIterator getApplicationList() {
+    public List getApplicationList() {
         String whereClause = "";
-        return Application.getApplicationList(db, whereClause).listIterator();
+        return Application.getApplicationList(db, whereClause);
     }
 
     // returns Vector of Experiment objects
-    public ListIterator getExperimentList() throws DatabaseException {
+    public List getExperimentList() throws DatabaseException {
 
         String whereClause = "";
         if (application != null)
             whereClause = "WHERE application = " + application.getID();
-        return Experiment.getExperimentList(db, whereClause).listIterator();
+        return Experiment.getExperimentList(db, whereClause);
 
     }
 
     // returns Vector of Trial objects
-    public ListIterator getTrialList() {
+    public List getTrialList() {
         StringBuffer whereClause = new StringBuffer();
         if (experiment != null) {
             whereClause.append("WHERE t.experiment = " + experiment.getID());
         } else if (application != null) {
             whereClause.append("WHERE e.application = " + application.getID());
         }
-        return Trial.getTrialList(db, whereClause.toString()).listIterator();
+        return Trial.getTrialList(db, whereClause.toString());
     }
 
     // set the Application for this session
@@ -216,8 +216,8 @@ public class DatabaseAPI {
         return this.trial;
     }
 
-    // returns a ListIterator of IntervalEvents
-    public ListIterator getIntervalEvents() {
+    // returns a List of IntervalEvents
+    public List getIntervalEvents() {
         String whereClause = new String();
         if (trial != null) {
             whereClause = " WHERE trial = " + trial.getID();
@@ -236,7 +236,7 @@ public class DatabaseAPI {
             fun = (IntervalEvent) en.nextElement();
             intervalEventHash.put(new Integer(fun.getID()), fun);
         }
-        return intervalEvents.listIterator();
+        return intervalEvents;
     }
 
     // gets the mean & total data for a intervalEvent
@@ -265,8 +265,8 @@ public class DatabaseAPI {
         AtomicLocationProfile.getAtomicEventDetail(db, atomicEvent, buf.toString());
     }
 
-    // returns a ListIterator of AtomicEvents
-    public ListIterator getAtomicEvents() {
+    // returns a List of AtomicEvents
+    public List getAtomicEvents() {
         String whereClause = new String();
         if (trial != null) {
             whereClause = " WHERE t.id = " + trial.getID();
@@ -283,7 +283,7 @@ public class DatabaseAPI {
             ue = (AtomicEvent) en.nextElement();
             atomicEventHash.put(new Integer(ue.getID()), ue);
         }
-        return atomicEvents.listIterator();
+        return atomicEvents;
     }
 
     // sets the current intervalEvent
@@ -308,7 +308,7 @@ public class DatabaseAPI {
         return atomicEvent;
     }
 
-    public ListIterator getIntervalEventData() throws SQLException {
+    public List getIntervalEventData() throws SQLException {
         // check to make sure this is a meaningful request
         if (trial == null && intervalEvents == null) {
             System.out.println("Please select a trial or a set of intervalEvents before getting intervalEvent data.");
@@ -399,10 +399,10 @@ public class DatabaseAPI {
             }
         }
         intervalEventData = IntervalLocationProfile.getIntervalEventData(db, metricCount, buf.toString());
-        return intervalEventData.listIterator();
+        return intervalEventData;
     }
 
-    public ListIterator getAtomicEventData() {
+    public List getAtomicEventData() {
         // check to make sure this is a meaningful request
         if (trial == null && atomicEvents == null) {
             System.out.println("Please select a trial or a set of user events before getting user event data.");
@@ -474,7 +474,7 @@ public class DatabaseAPI {
         }
 
         atomicEventData = AtomicLocationProfile.getAtomicEventData(db, buf.toString());
-        return atomicEventData.listIterator();
+        return atomicEventData;
     }
 
     public IntervalEvent getIntervalEvent(int id) {
@@ -1289,7 +1289,7 @@ public class DatabaseAPI {
         tmpSession.setDB(this.db());
 
         tmpSession.setExperiment(experimentID);
-        ListIterator trials = tmpSession.getTrialList();
+        ListIterator trials = tmpSession.getTrialList().listIterator();
         while (trials.hasNext()) {
             Trial trial = (Trial) trials.next();
             Trial.deleteTrial(db, trial.getID());
@@ -1308,11 +1308,11 @@ public class DatabaseAPI {
         tmpSession.setDB(this.db());
 
         tmpSession.setApplication(applicationID);
-        ListIterator experiments = tmpSession.getExperimentList();
+        ListIterator experiments = tmpSession.getExperimentList().listIterator();
         while (experiments.hasNext()) {
             Experiment experiment = (Experiment) experiments.next();
             tmpSession.setExperiment(experiment.getID());
-            ListIterator trials = tmpSession.getTrialList();
+            ListIterator trials = tmpSession.getTrialList().listIterator();
             while (trials.hasNext()) {
                 Trial trial = (Trial) trials.next();
                 Trial.deleteTrial(db, trial.getID());

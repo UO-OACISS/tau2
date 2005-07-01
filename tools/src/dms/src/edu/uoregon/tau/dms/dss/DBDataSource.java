@@ -51,7 +51,7 @@ public class DBDataSource extends DataSource {
         }
 
         //Add the functionProfiles.
-        ListIterator l = databaseAPI.getIntervalEvents();
+        ListIterator l = databaseAPI.getIntervalEvents().listIterator();
 
         meanData = new Thread(-1, -1, -1, numberOfMetrics);
         totalData = new Thread(-2, -2, -2, numberOfMetrics);
@@ -103,7 +103,7 @@ public class DBDataSource extends DataSource {
             }
         }
 
-        l = databaseAPI.getIntervalEventData();
+        l = databaseAPI.getIntervalEventData().listIterator();
 
         while (l.hasNext()) {
             IntervalLocationProfile fdo = (IntervalLocationProfile) l.next();
@@ -139,14 +139,14 @@ public class DBDataSource extends DataSource {
             }
         }
 
-        l = databaseAPI.getAtomicEvents();
+        l = databaseAPI.getAtomicEvents().listIterator();
         while (l.hasNext()) {
             AtomicEvent ue = (AtomicEvent) l.next();
             this.addUserEvent(ue.getName());
             setUserEventsPresent(true);
         }
 
-        l = databaseAPI.getAtomicEventData();
+        l = databaseAPI.getAtomicEventData().listIterator();
         while (l.hasNext()) {
             AtomicLocationProfile alp = (AtomicLocationProfile) l.next();
 
