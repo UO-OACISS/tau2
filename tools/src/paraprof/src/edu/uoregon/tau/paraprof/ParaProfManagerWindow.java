@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.23 2005/06/17 22:13:47 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.24 2005/07/01 19:13:55 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.23 $
+ * @version	$Revision: 1.24 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -684,7 +684,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         if (databaseAPI != null) {
 
             boolean found = false;
-            ListIterator l = databaseAPI.getApplicationList();
+            ListIterator l = databaseAPI.getApplicationList().listIterator();
 
             while (l.hasNext()) {
                 ParaProfApplication dbApp = new ParaProfApplication((Application) l.next());
@@ -757,7 +757,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
         boolean found = false;
         databaseAPI.setApplication(dbApp);
-        ListIterator l = databaseAPI.getExperimentList();
+        ListIterator l = databaseAPI.getExperimentList().listIterator();
         while (l.hasNext()) {
             ParaProfExperiment dbExp = new ParaProfExperiment((Experiment) l.next());
 
@@ -962,7 +962,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     DatabaseAPI databaseAPI = this.getDatabaseAPI();
                     if (databaseAPI != null) {
 
-                        ListIterator l = databaseAPI.getApplicationList();
+                        ListIterator l = databaseAPI.getApplicationList().listIterator();
                         while (l.hasNext()) {
                             ParaProfApplication application = new ParaProfApplication((Application) l.next());
                             application.setDBApplication(true);
@@ -986,7 +986,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     DatabaseAPI databaseAPI = this.getDatabaseAPI();
                     if (databaseAPI != null) {
                         databaseAPI.setApplication(application.getID());
-                        ListIterator l = databaseAPI.getExperimentList();
+                        ListIterator l = databaseAPI.getExperimentList().listIterator();
                         while (l.hasNext()) {
                             ParaProfExperiment experiment = new ParaProfExperiment((Experiment) l.next());
                             experiment.setDBExperiment(true);
@@ -1023,7 +1023,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     DatabaseAPI databaseAPI = this.getDatabaseAPI();
                     if (databaseAPI != null) {
                         databaseAPI.setExperiment(experiment.getID());
-                        ListIterator l = databaseAPI.getTrialList();
+                        ListIterator l = databaseAPI.getTrialList().listIterator();
                         while (l.hasNext()) {
                             ParaProfTrial ppTrial = new ParaProfTrial((Trial) l.next());
                             ppTrial.setDBTrial(true);
