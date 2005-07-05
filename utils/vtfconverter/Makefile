@@ -24,7 +24,7 @@ include ../../include/Makefile
 CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
-CXX=$(CONFIG_CXX)
+CXX=$(CONFIG_CXX)  $(ABI) $(ISA)
 HEADERS=
 VTFDIR=
 LIBS=-L$(VTFDIR)/$(TAU_ARCH)/lib  -lvtf3 $(LEXTRA)
