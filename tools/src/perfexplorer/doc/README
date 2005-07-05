@@ -1,0 +1,79 @@
+The RSJava omegahat version installed is from:
+http://simon.urbanek.info/simon/yawe/research/other.html
+
+Build instructions for R on OS X:
+http://cran.us.r-project.org/
+(make sure to use the 'shared' options for configure.)
+./configure --with-blas='-framework vecLib' --with-lapack --with-aqua --enable-shared --enable-R-shlib
+
+After installing, in the /Library/Frameworks/R.framework/Versions/2.0.1/Resources/library/SJava/libs directory, make .dylib and .jnilib links to the .so file.
+
+todo:
+we should have non-modal dialogs, so comparisons can be made.
+
+need to replace all the intermingled Java & R code with an R function, and call it.
+
+memory - see ?Memory and ?clara in R (library(cluster))
+might not be able to do hclust on large data...
+
+Notes from board:
+
+bioconductor.org
+
+App Functionality:
+------------------
+* Select Trial
+* Select Metric (or not)
+* Do Hierarchical Clustering
+* Suggest Cluster #, centers > or use Bradley98 paper
+  Select Cluster Method (KM, KHM, GEM, FKM, H1, H2) - or implement own! 
+   - make it programmable and flexible
+* Select Dimension Reduction
+* Select Normalization
+* Graph Results to PNG
+* Save results to DBMS
+* Show Thumbnails
+  Do Factor Analysis on Clusters
+  Do Linear Regression Analysis
+
+For Charting:
+-------------
+Dimensions:
+	Experiment (machine, options, etc.)
+	Trial (nodes, contexts, threads, etc.)
+	Metric Name
+	Group Name
+	Event Name
+
+TODO LIST:
+-------------------------------------------------------------------------
+
+Data should be self-describing!
+How to save the process - the workflow?  Scripting approach?
+DONE - Need to add phase data, too!
+DONE - how to do "ideal" line?
+Analysis management, not experiment management.  How to make sense of the data you have collected?  What're the significant factors?
+
+Fix the hierarchical clustering
+DONE - Add PCA - should be easy.
+Add T^2 (Hotelling) test
+Add t-test
+	Use weka.experiment.PairedTTester
+PCA and Factor Analysis do dimension reduction...
+	DONE - Use weka.attributeSelection.PrincipalComponents
+	Need to make this an option for dimension reduction (replace
+	linear regression)
+Use weka.classifiers.functions.SimpleLinearRegression and LinearRegression?
+Use weka.filters.unsupervised.attribute.RandomProjection?
+Factor Analysis?
+F-Ratio?
+	weka.core.Statistics.FProbabilty()
+ChiSquared Test?
+	weka.attributeSelection.ChiSquaredAttributeEval
+
+DONE - Need to add virtual topology for Weka output.
+Need to add min/max to weka output.
+Need to fix hierarchical clustering for Weka.
+Need to make R/Weka interchangable.
+Need to replace the Weka PCA clusters with something "else"...
+

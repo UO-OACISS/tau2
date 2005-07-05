@@ -1,0 +1,127 @@
+/*
+ * Created on Mar 17, 2005
+ *
+ */
+package clustering;
+
+import weka.core.Instances;
+import weka.core.Instance;
+import weka.core.FastVector;
+import java.util.List;
+import java.util.ArrayList;
+import weka.core.Attribute;
+import java.util.Enumeration;
+
+/**
+ * @author khuck
+ *
+ */
+public class WekaRawData implements RawDataInterface {
+
+	Instances instances = null;
+	int vectors = 0;
+	int dimensions = 0;
+	
+	public WekaRawData (String name, List attributes, int vectors, int dimensions) {
+		this.vectors = vectors;
+		this.dimensions = dimensions;
+		FastVector fastAttributes = new FastVector(attributes.size());
+		for (int i = 0 ; i < attributes.size() ; i++) {
+			String attr = (String) attributes.get(i);
+			fastAttributes.addElement(new Attribute(attr));
+		}
+		instances = new Instances(name, fastAttributes, vectors);
+		
+		for (int i = 0 ; i < vectors ; i++) {
+			instances.add(new Instance(dimensions));
+		}
+		
+	}
+	
+	public WekaRawData (Instances instances) {
+		this.instances = instances;
+		this.vectors = instances.numInstances();
+		if (this.vectors > 0)
+			this.dimensions = instances.instance(0).numAttributes();
+	}
+	
+	/* (non-Javadoc)
+	 * @see clustering.RawDataInterface#addValue(int, int, double)
+	 */
+	public void addValue(int vectorIndex, int dimensionIndex, double value) {
+		Instance i = instances.instance(vectorIndex);
+		i.setValue(dimensionIndex, value);
+	}
+
+	/* (non-Javadoc)
+	 * @see clustering.RawDataInterface#getValue(int, int)
+	 */
+	public double getValue(int vectorIndex, int dimensionIndex) {
+		return instances.instance(vectorIndex).value(dimensionIndex);
+	}
+
+	/* (non-Javadoc)
+	 * @see clustering.RawDataInterface#getManhattanDistance(int, int)
+	 */
+	public double getManhattanDistance(int firstVector, int secondVector) {
+		assert firstVector >= 0 && firstVector < vectors : firstVector;
+		assert secondVector >= 0 && secondVector < vectors : secondVector;
+
+		double distance = 0.0;
+		for (int i = 0 ; i < dimensions ; i++ ) {
+			distance += Math.abs(instances.instance(firstVector).value(i) - 
+					instances.instance(secondVector).value(i));
+		}
+		return distance;
+	}
+
+	/* (non-Javadoc)
+	 * @see clustering.RawDataInterface#getCartesianDistance(int, int)
+	 */
+	public double getCartesianDistance(int firstVector, int secondVector) {
+		assert firstVector > 0 && firstVector < vectors : firstVector;
+		assert secondVector > 0 && secondVector < vectors : secondVector;
+		double distance = 0.0;
+		for (int i = 0 ; i < dimensions ; i++ ) {
+			double tmp = Math.abs(instances.instance(firstVector).value(i) - 
+					instances.instance(secondVector).value(i));
+			distance += tmp * tmp;
+		}
+		return Math.sqrt(distance);
+	}
+
+	/* (non-Javadoc)
+	 * @see clustering.RawDataInterface#getData()
+	 */
+	public Object getData() {
+		return instances;
+	}
+
+	/* (non-Javadoc)
+	 * @see clustering.RawDataInterface#getEventNames()
+	 */
+	public List getEventNames() {
+		Enumeration e = instances.enumerateAttributes();
+		List names = new ArrayList (instances.numDistinctValues(0));
+		while (e.hasMoreElements()) {
+			Attribute tmp = (Attribute) e.nextElement();
+			names.add(tmp.name());
+		}
+		return names;
+	}
+
+	/* (non-Javadoc)
+	 * @see clustering.RawDataInterface#numVectors()
+	 */
+	public int numVectors() {
+		return vectors;
+	}
+
+	/* (non-Javadoc)
+	 * @see clustering.RawDataInterface#numDimensions()
+	 */
+	public int numDimensions() {
+		return dimensions;
+	}
+
+}

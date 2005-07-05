@@ -1,0 +1,12 @@
+grant {
+    permission java.net.SocketPermission "*:1024-65535", "connect,accept";
+    permission java.net.SocketPermission "*:80", "connect";
+	permission java.io.FilePermission "data/perfdmf.cfg", "read";
+	permission java.io.FilePermission "/tmp/*", "read,write,delete";
+	permission java.lang.RuntimePermission "loadLibrary.SJava";
+	permission java.lang.RuntimePermission "loadLibrary.RInterpreter";
+	permission java.util.PropertyPermission "OMEGA_CONFIG_FILE", "read";
+	permission java.lang.RuntimePermission "createClassLoader";
+	permission java.util.PropertyPermission "*", "read,write";
+};
+
