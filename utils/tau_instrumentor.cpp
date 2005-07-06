@@ -1191,8 +1191,11 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	      (*it)->col = col;
 	    }
 
-
-                checkbuf = new char[strlen(inbuf)]; 
+	    if ((*it)->col > strlen(inbuf)) {
+	      perror("ERROR: column number beyond line");
+	      exit(-1);
+	    }
+                checkbuf = new char[strlen(inbuf)+1]; 
                 if (checkbuf == (char *) NULL) 
                 {
                   perror("ERROR: new returns NULL while creating checkbuf");
@@ -1646,9 +1649,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.66 $   $Date: 2005/06/29 18:15:06 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.66 2005/06/29 18:15:06 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.67 $   $Date: 2005/07/06 23:43:30 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.67 2005/07/06 23:43:30 amorris Exp $
  ***************************************************************************/
 
 
