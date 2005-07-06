@@ -109,6 +109,8 @@ public class JTreeTable extends JTable implements MouseListener {
             setRowHeight(18);
         }
 
+        setRowHeight(18);
+
     }
 
     public void forceRedraw() {
@@ -209,7 +211,6 @@ public class JTreeTable extends JTable implements MouseListener {
             // If not shaded, match the table's background
             c.setBackground(getBackground());
         }
-
         return c;
     }
 
@@ -261,8 +262,7 @@ public class JTreeTable extends JTable implements MouseListener {
          */
         public void updateUI() {
             super.updateUI();
-            // Make the tree's cell renderer use the table's cell selection
-            // colors. 
+            // Make the tree's cell renderer use the table's cell selection colors. 
             TreeCellRenderer tcr = getCellRenderer();
             if (tcr instanceof DefaultTreeCellRenderer) {
                 DefaultTreeCellRenderer dtcr = ((DefaultTreeCellRenderer) tcr);
@@ -322,7 +322,7 @@ public class JTreeTable extends JTable implements MouseListener {
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int r, int c) {
             return tree;
         }
-
+        
         /**
          * Overridden to return false, and if the event is a mouse event
          * it is forwarded to the tree.<p>
@@ -346,7 +346,12 @@ public class JTreeTable extends JTable implements MouseListener {
                 for (int counter = getColumnCount() - 1; counter >= 0; counter--) {
                     if (getColumnClass(counter) == TreeTableModel.class) {
                         MouseEvent me = (MouseEvent) e;
-                        MouseEvent newME = new MouseEvent(tree, me.getID(), me.getWhen(), me.getModifiers(), me.getX()
+                        MouseEvent newME = new MouseEvent(tree, MouseEvent.MOUSE_PRESSED, me.getWhen(), me.getModifiers(), me.getX()
+                                - getCellRect(0, counter, true).x, me.getY(), me.getClickCount(), me.isPopupTrigger());
+
+                        tree.dispatchEvent(newME);
+
+                        newME = new MouseEvent(tree, MouseEvent.MOUSE_RELEASED, me.getWhen(), me.getModifiers(), me.getX()
                                 - getCellRect(0, counter, true).x, me.getY(), me.getClickCount(), me.isPopupTrigger());
                         tree.dispatchEvent(newME);
                         break;
