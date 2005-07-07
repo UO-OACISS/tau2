@@ -2,6 +2,7 @@ package server;
 
 import java.rmi.*;
 import java.rmi.server.*;
+import java.util.StringTokenizer;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -15,6 +16,7 @@ import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.dms.database.*;
 import org.omegahat.R.Java.REvaluator;
 import org.omegahat.R.Java.ROmegahatInterpreter;
+import jargs.gnu.CmdLineParser;
 
 /**
  * The main PerfExplorer Server class.  This class is defined as a singleton,
@@ -23,7 +25,7 @@ import org.omegahat.R.Java.ROmegahatInterpreter;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.1 2005/07/05 22:29:54 amorris Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.2 2005/07/07 21:23:15 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -41,6 +43,7 @@ import org.omegahat.R.Java.ROmegahatInterpreter;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfExplorer {
+	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> {-p,--classpath}=<rmi_classpath> [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
 
 	private String configFile = null;
 	private DatabaseAPI session = null;
@@ -896,17 +899,17 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				statement.setInt(6, parent);
 			statement.execute();
 			statement.close();
-            String tmpStr = new String();
-            if (db.getDBType().compareTo("mysql") == 0) {
-                tmpStr = "select LAST_INSERT_ID();";
-            } else if (db.getDBType().compareTo("db2") == 0) {
-                tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial_view";
-            } else if (db.getDBType().compareTo("oracle") == 0) {
-                tmpStr = "SELECT " + db.getSchemaPrefix() + "trial_view_id_seq.currval FROM DUAL";
-            } else { // postgresql 
-                tmpStr = "select currval('trial_view_id_seq');";
-            }
-            viewID = Integer.parseInt(db.getDataItem(tmpStr));
+			String tmpStr = new String();
+			if (db.getDBType().compareTo("mysql") == 0) {
+				tmpStr = "select LAST_INSERT_ID();";
+			} else if (db.getDBType().compareTo("db2") == 0) {
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial_view";
+			} else if (db.getDBType().compareTo("oracle") == 0) {
+				tmpStr = "SELECT " + db.getSchemaPrefix() + "trial_view_id_seq.currval FROM DUAL";
+			} else { // postgresql 
+				tmpStr = "select currval('trial_view_id_seq');";
+			}
+			viewID = Integer.parseInt(db.getDataItem(tmpStr));
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select the columns from the database!";
 			System.out.println(error);
@@ -1108,8 +1111,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				names[count] = results.getString(2);
 				nameIndex.put(names[count], new Integer(count));
 				if ((results.getString(3) != null) &&
-				    (!(results.getString(3).trim().equalsIgnoreCase("NaN"))) &&
-				    (!(results.getString(3).trim().equals(""))))
+					(!(results.getString(3).trim().equalsIgnoreCase("NaN"))) &&
+					(!(results.getString(3).trim().equals(""))))
 					count++;
 			}
 			results.close();
@@ -1167,29 +1170,86 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param args
 	 */
 	public static void main (String[] args) {
+		CmdLineParser parser = new CmdLineParser();
+		CmdLineParser.Option helpOpt = parser.addBooleanOption('h',"help");
+		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
+		CmdLineParser.Option classpathOpt = parser.addStringOption('p',"classpath");
+		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
+			
+		try {   
+			parser.parse(args);
+		} catch (CmdLineParser.OptionException e) {
+			System.err.println(e.getMessage());
+			System.err.println(USAGE);
+			System.exit(-1);
+		}  
+
+		Boolean help = (Boolean) parser.getOptionValue(helpOpt);
+		String configFile = (String) parser.getOptionValue(configfileOpt);
+		String classpath = (String) parser.getOptionValue(classpathOpt);
+		String engine = (String) parser.getOptionValue(engineOpt);
+
 		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
-		String usage = "Usage: PerfExplorerServer server_port server_directory config_file analysis_engine\n  where analysis_engine = R or Weka";
-		if (args.length != 4) {
-			System.out.println(usage);
-			System.exit(0);
+
+		if (help != null && help.booleanValue()) {
+			System.err.println(USAGE);
+			System.exit(-1);
 		}
-		if (args[3].equalsIgnoreCase("R")) {
+
+		if (configFile == null) {
+			System.err.println("Please enter a valid config file.");
+			System.err.println(USAGE);
+			System.exit(-1);
+		}
+
+		if (engine == null) {
+			System.err.println("Please enter a valid engine type.");
+			System.err.println(USAGE);
+			System.exit(-1);
+		} else if (engine.equalsIgnoreCase("R")) {
 			analysisEngine = AnalysisTaskWrapper.RPROJECT_ENGINE;
-		} else if (args[3].equalsIgnoreCase("weka")) {
+		} else if (engine.equalsIgnoreCase("weka")) {
 			analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
 		} else {
-			System.out.println(usage);
-			System.exit(0);
+			System.err.println(USAGE);
+			System.exit(-1);
+		}
+
+		if (classpath == null) {
+			System.err.println("Please enter a valid RMI classpath.");
+			System.err.println(USAGE);
+			System.exit(-1);
 		}
 
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new RMISecurityManager());
 		}
-		String name = "//localhost/PerfExplorerServer";
+
+		String hostname = null;
+		String port = null;
+
+		// get the codebase system property
+		String codebase = System.getProperty("java.rmi.server.codebase");
+
+		// tokenize it to get the server hostname and port number
+		StringTokenizer token = new StringTokenizer(codebase, ":");
+		if (token.countTokens() != 3) {
+			port = "1099";
+			hostname = "//localhost/PerfExplorerServer";
+		} else {
+			// skip the first part -> http
+			token.nextToken();
+			// get the next part -> //hostname.domain.com
+			hostname = token.nextToken() + "/PerfExplorerServer";
+			// get this part -> the port number, but get rid of the
+			// trailing slash
+			port = token.nextToken().replaceAll("/", "");
+		}
+
 		try {
-			ClassFileServer fileServer = new ClassFileServer(Integer.parseInt(args[0]), args[1]);
-			RMIPerfExplorer server = new PerfExplorerServer(args[2], analysisEngine);
-			Naming.rebind(name, server);
+			ClassFileServer fileServer = new ClassFileServer(Integer.parseInt(port), classpath);
+			RMIPerfExplorer server = new PerfExplorerServer(configFile, analysisEngine);
+			Naming.rebind(hostname, server);
 			System.out.println("PerfExplorerServer bound");
 		} catch (Exception e) {
 			System.err.println("PerfExplorerServer exception: " +

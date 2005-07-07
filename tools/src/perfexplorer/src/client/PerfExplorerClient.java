@@ -1,18 +1,16 @@
 package client;
 
-import javax.swing.*;
-
 import server.AnalysisTaskWrapper;
-
+import jargs.gnu.CmdLineParser;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
 public class PerfExplorerClient extends JFrame {
+	private static String USAGE = "Usage: PerfExplorerClient {-n,--hostname}=<server_hostname> [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
 
 	private ActionListener listener = null;
-
 	private JSplitPane splitPane = null;
-
 	private static PerfExplorerClient mainFrame = null;
 
 	public static PerfExplorerClient getMainFrame() {
@@ -65,33 +63,71 @@ public class PerfExplorerClient extends JFrame {
 	}
 
 	public static void main (String[] args) {
+		CmdLineParser parser = new CmdLineParser();
+		CmdLineParser.Option helpOpt = parser.addBooleanOption('h',"help");
+		CmdLineParser.Option standaloneOpt = parser.addBooleanOption('s',"standalone");
+		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
+		CmdLineParser.Option hostnameOpt = parser.addStringOption('n',"hostname");
+		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
+
+        try {
+            parser.parse(args);
+        } catch (CmdLineParser.OptionException e) {
+            System.err.println(e.getMessage());
+            System.err.println(USAGE);
+            System.exit(-1);
+        }   
+        
+        Boolean help = (Boolean) parser.getOptionValue(helpOpt);
+		Boolean standalone = (Boolean) parser.getOptionValue(standaloneOpt);
+        String configFile = (String) parser.getOptionValue(configfileOpt);
+        String hostname = (String) parser.getOptionValue(hostnameOpt);
+        String engine = (String) parser.getOptionValue(engineOpt);
+
+		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
+
+        if (help != null && help.booleanValue()) {
+            System.err.println(USAGE);
+            System.exit(-1);
+        }
+
+		if (standalone == null) 
+			standalone = new Boolean(false);
+
+        if (standalone.booleanValue()) {
+        	if (configFile == null) {
+            	System.err.println("Please enter a valid config file.");
+            	System.err.println(USAGE);
+            	System.exit(-1);
+        	}
+        	if (engine == null) {
+            	System.err.println("Please enter a valid engine type.");
+            	System.err.println(USAGE);
+            	System.exit(-1);
+        	} else if (engine.equalsIgnoreCase("R")) {
+				analysisEngine = AnalysisTaskWrapper.RPROJECT_ENGINE;
+			} else if (engine.equalsIgnoreCase("weka")) {
+				analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
+			} else {
+            	System.err.println(USAGE);
+            	System.exit(-1);
+			}
+        } else {
+        	if (hostname == null) {
+            	System.err.println("Please enter a valid hostname.");
+            	System.err.println(USAGE);
+            	System.exit(-1);
+        	}
+        }
+
 	/*
 		try {
 			UIManager.setLookAndFeel(
 				UIManager.getCrossPlatformLookAndFeelClassName());
 		} catch (Exception e) { }
-		*/
+	*/
 
-		String usage = "Usage: PerfExplorerClient [--standalone config_file analysis_engine]\n  where analysis_engine = R or Weka";
-		
-		boolean standalone = false;
-		String configFile = null;
-		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
-		if (args.length > 1) {
-			if (args[1].equalsIgnoreCase("--standalone"))
-				standalone = true;
-			configFile = args[2];
-			if (args[3].equalsIgnoreCase("R")) {
-				analysisEngine = AnalysisTaskWrapper.RPROJECT_ENGINE;
-			} else if (args[3].equalsIgnoreCase("weka")) {
-				analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
-			} else {
-				System.out.println(usage);
-				System.exit(0);
-			}
-
-		}
-		JFrame frame = new PerfExplorerClient(args[0], standalone, configFile, analysisEngine);
+		JFrame frame = new PerfExplorerClient(hostname, standalone.booleanValue(), configFile, analysisEngine);
 		frame.pack();
 		frame.setVisible(true);
 	}

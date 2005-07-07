@@ -1,20 +1,18 @@
-
-
-
 # You need to fill in the following fields
-
-WEKA_JAR = /home/amorris/PerfExplorer/weka.jar
-
-OMEGAHAT_HOME = /home/amorris/PerfExplorer/SJava/inst
-R_HOME = /usr/lib/R
+# WEKA_JAR = /home/amorris/PerfExplorer/weka.jar
+WEKA_JAR = /Users/khuck/PerfExplorer/weka/weka-3-4-4/weka.jar
+# R_HOME = /usr/lib/R
+R_HOME = /Library/Frameworks/R.framework/Versions/2.0.1/Resources
+# OMEGAHAT_HOME = /home/amorris/PerfExplorer/SJava/inst
+OMEGAHAT_HOME = $(R_HOME)/library/SJava
 
 ##########################
 
 
 
-TAUROOT = /home/amorris/tau2
-CONFIG_ARCH = i386_linux
-CONFIGFILE = /home/amorris/.ParaProf/perfdmf.cfg
+TAUROOT = /Users/khuck/tau2
+CONFIG_ARCH = apple
+CONFIGFILE = /Users/khuck/.ParaProf/perfdmf.cfg
 OMEGAHAT_JARPATH = ${OMEGAHAT_HOME}/org/omegahat/Jars
 SERVER_HOSTNAME=utonium.cs.uoregon.edu
 # SERVER_HOSTNAME=localhost
@@ -33,9 +31,9 @@ CLIENT_DYLD_LIBRARY_PATH=${TAUROOT}/${CONFIG_ARCH}/lib
 SERVER_DYLD_LIBRARY_PATH=${OMEGAHAT_HOME}/libs:${R_HOME}/lib:${R_HOME}/bin:${R_HOME}/library/SJava/libs
 
 BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JOGL_JAR}:${PARAPROF_JAR}
-CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${PARAPROF_JAR}
+CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${PARAPROF_JAR}:${JARGS_JAR}
 CLUSTERING_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${WEKA_JAR}
-SERVER_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}
+SERVER_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}
 CLIENT_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${PARAPROF_JAR}
 SERVER_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}
 STANDALONE_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${JFREECHART_JAR}:${JCOMMON_JAR}:${WEKA_JAR}:${JOGL_JAR}:${PARAPROF_JAR}
@@ -53,7 +51,7 @@ CLIENT_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CLIENT_SO
 CLASSES = ${COMMON_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CLUSTERING_CLASSES}
 RMIC_CLASSES = classes/server/PerfExplorerServer_Skel.class
 
-default: all
+default: perfexplorer.jar
 
 ###
 ### THESE COMMANDS ARE FOR COMPILING
@@ -71,8 +69,9 @@ client: common clustering ${CLIENT_CLASSES}
 
 standalone: common clustering server client
 
-perfexplorer.jar: standalone
+perfexplorer.jar: ${RMIC_CLASSES}
 	jar -cvf perfexplorer.jar -C classes .
+	cp perfexplorer.jar ${TAUROOT}/${CONFIG_ARCH}/lib/.
 
 ${COMMON_CLASSES}: ${COMMON_SOURCES}
 	javac -source 1.4 -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
@@ -111,6 +110,7 @@ cleanclustering:
 	# rm -f ${CLUSTERING_CLASSES}
 
 clean: cleanclient cleanserver cleancommon cleanclustering
+	rm -f perfexplorer.jar
 	rm -rf PerfExplorer-0.1/*.jar PerfExplorer-0.1/java.policy
 	rm -f PerfExplorer-0.1.tgz
 
