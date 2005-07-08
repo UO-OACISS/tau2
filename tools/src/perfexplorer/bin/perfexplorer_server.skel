@@ -1,16 +1,8 @@
-#!/bin/sh
-# TAUROOT=@TAUROOT@
-# CONFIG_ARCH=@ARCH@
-# R_ROOT=@RROOT@
-# ANALYSIS_ENGINE=@ANALYSIS_ENGINE@
-# PORT_NUMBER=@PORT_NUMBER@
-# SERVER_HOSTNAME=@SERVER_HOSTNAME@
-TAUROOT=/Users/khuck/tau2
-CONFIG_ARCH=apple
-R_ROOT=/Library/Frameworks/R.framework/Versions/2.0.1/Resources
-ANALYSIS_ENGINE=weka
-PORT_NUMBER=2001
-SERVER_HOSTNAME=utonium.cs.uoregon.edu
+#!/bin/@TAUSHELL@
+TAUROOT=@TAUROOT@
+CONFIG_ARCH=@TAUARCH@
+R_ROOT=@RROOT@
+ANALYSIS_ENGINE=@ANALYSIS_ENGINE@
 
 # no need to edit below this line.
 # ----------------------------------------------------------------------------
@@ -39,7 +31,6 @@ echo "Starting server..."
 java -Xmx1800m \
 -classpath $PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:\
 $JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JARGS_JAR \
--Djava.rmi.server.codebase=http://$SERVER_HOSTNAME:$PORT_NUMBER/ \
 -Djava.security.policy=$TAUROOT/tools/src/perfexplorer/etc/java.policy \
 -Djava.library.path=${SERVER_DYLD_LIBRARY_PATH} \
 -Dsun.rmi.server.exceptionTrace=true \

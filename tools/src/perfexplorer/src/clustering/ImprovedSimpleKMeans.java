@@ -43,7 +43,7 @@ import weka.classifiers.rules.DecisionTable;
  *
  * @author Mark Hall (mhall@cs.waikato.ac.nz)
  * @author Eibe Frank (eibe@cs.waikato.ac.nz)
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see Clusterer
  * @see OptionHandler
  */
@@ -180,7 +180,7 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
 		else
       		instIndex = m_initialCenters[centerIndex++];
 		hk = new DecisionTable.hashKey(instances.instance(instIndex), 
-			instances.numAttributes());
+			instances.numAttributes(), true);
 		if (!initC.containsKey(hk)) {
 			m_ClusterCentroids.add(instances.instance(instIndex));
 			initC.put(hk, null);

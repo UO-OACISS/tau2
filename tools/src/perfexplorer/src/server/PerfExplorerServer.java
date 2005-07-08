@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.4 2005/07/08 00:52:41 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.5 2005/07/08 21:57:15 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1217,18 +1217,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new RMISecurityManager());
-		}
-
-		// get the codebase system property
-		String codebase = System.getProperty("java.rmi.server.codebase");
-
-		URL codebaseURL = null;
-		try {
-			codebaseURL = new URL(codebase);
-		}catch (MalformedURLException e) {
-			System.err.println("PerfExplorerServer exception: " +
-							   e.getMessage());
-			e.printStackTrace();
 		}
 
 		try {
