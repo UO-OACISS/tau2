@@ -17,6 +17,8 @@ import edu.uoregon.tau.dms.database.*;
 import org.omegahat.R.Java.REvaluator;
 import org.omegahat.R.Java.ROmegahatInterpreter;
 import jargs.gnu.CmdLineParser;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 /**
  * The main PerfExplorer Server class.  This class is defined as a singleton,
@@ -25,7 +27,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.2 2005/07/07 21:23:15 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.3 2005/07/08 00:01:15 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1225,34 +1227,77 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			System.setSecurityManager(new RMISecurityManager());
 		}
 
-		String hostname = null;
-		String port = null;
-
 		// get the codebase system property
 		String codebase = System.getProperty("java.rmi.server.codebase");
 
-		// tokenize it to get the server hostname and port number
-		StringTokenizer token = new StringTokenizer(codebase, ":");
-		if (token.countTokens() != 3) {
-			port = "1099";
-			hostname = "//localhost/PerfExplorerServer";
-		} else {
-			// skip the first part -> http
-			token.nextToken();
-			// get the next part -> //hostname.domain.com
-			hostname = token.nextToken() + "/PerfExplorerServer";
-			// get this part -> the port number, but get rid of the
-			// trailing slash
-			port = token.nextToken().replaceAll("/", "");
+		URL codebaseURL = null;
+		try {
+			codebaseURL = new URL(codebase);
+		}catch (MalformedURLException e) {
+			System.err.println("PerfExplorerServer exception: " +
+							   e.getMessage());
+			e.printStackTrace();
 		}
 
+		int port = 2001;
+		String tmpname = "//localhost/PerfExplorerServer";
+		if (codebase != null) {
+			port = codebaseURL.getPort();
+			tmpname = codebaseURL.getHost();
+		}
+		final String hostname = tmpname;
+
 		try {
-			ClassFileServer fileServer = new ClassFileServer(Integer.parseInt(port), classpath);
+			ClassFileServer fileServer = new ClassFileServer(port, classpath);
 			RMIPerfExplorer server = new PerfExplorerServer(configFile, analysisEngine);
 			Naming.rebind(hostname, server);
 			System.out.println("PerfExplorerServer bound");
+			Runtime.getRuntime().addShutdownHook(
+				new java.lang.Thread() {
+					public void run () {
+						try {
+							Naming.unbind(hostname);
+							System.out.println(
+							"Server has shut down successfully");
+						} catch (Exception e) {
+							System.out.println(
+							"Server could not unbind from registry - giving up");
+						}
+					}
+				}
+			);
+		} catch(RuntimeException e) {
+			System.out.println("Could not add a shutdown hook: " +
+			e.getMessage());
+		} catch (StubNotFoundException e) {
+			System.out.println("You forgot to generate the stubs with RMIC");
+		} catch (ConnectException e) {
+			System.out.println("Could not connect to registry. "+
+							   "Is it running and on the right port?");
+			System.out.println("Try running rmiregistry in the background.");
+			System.exit(-1);
+		} catch (ServerException e) {
+			System.out.println("Registry reports a problem: ");
+			System.out.println("Maybe the registry cannot find the stub.  " +
+							   "Did you set the classpath?  ");
+			System.out.println("You can avoid this if you start the " +
+							   "registry in the same folder ");
+			System.out.println("as the server's stub, or copy the stub " +
+							   "to the folder the registry ");
+			System.out.println("was started in.");
+			System.exit(-1);
+		} catch (ServerError e) {
+			System.out.println("Registry reports an error: ");
+			System.out.println("Maybe the registry cannot find the DayTime "+
+							   "interface.  Did you set the classpath?");
+			System.out.println("You can avoid this if you start the "+
+							   "registry in the same folder");
+			System.out.println("as the server's files, or copy the "+
+							   "interface to the folder the registry");
+			System.out.println("was started in.");
+			System.exit(-1);
 		} catch (Exception e) {
-			System.err.println("PerfExplorerServer exception: " +
+			System.err.println("Unhandled PerfExplorerServer exception: " +
 							   e.getMessage());
 			e.printStackTrace();
 		}

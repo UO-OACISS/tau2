@@ -5,9 +5,11 @@ import jargs.gnu.CmdLineParser;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 public class PerfExplorerClient extends JFrame {
-	private static String USAGE = "Usage: PerfExplorerClient {-n,--hostname}=<server_hostname> [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
+	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
 
 	private ActionListener listener = null;
 	private JSplitPane splitPane = null;
@@ -25,16 +27,16 @@ public class PerfExplorerClient extends JFrame {
 		PerfExplorerConnection.setAnalysisEngine(analysisEngine);
 		listener = new PerfExplorerActionListener(this);
 		// create a tree
-        PerfExplorerJTree tree = PerfExplorerJTree.getTree();
-        // Create a scroll pane for the tree
-        JScrollPane treeView = new JScrollPane(tree);
-        treeView.setPreferredSize(new Dimension(300, 400));
+		PerfExplorerJTree tree = PerfExplorerJTree.getTree();
+		// Create a scroll pane for the tree
+		JScrollPane treeView = new JScrollPane(tree);
+		treeView.setPreferredSize(new Dimension(300, 400));
 		// Create a tabbed pane
 		PerfExplorerJTabbedPane tabbedPane = PerfExplorerJTabbedPane.getPane();
 		// Create a split pane for the tree view and tabbed pane
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setLeftComponent(treeView);
-        splitPane.setRightComponent(tabbedPane);
+		splitPane.setLeftComponent(treeView);
+		splitPane.setRightComponent(tabbedPane);
 		// add the split pane to the main frame
 		getContentPane().add(splitPane, BorderLayout.CENTER);
 		setJMenuBar(new PerfExplorerMainJMenuBar(listener));
@@ -67,58 +69,68 @@ public class PerfExplorerClient extends JFrame {
 		CmdLineParser.Option helpOpt = parser.addBooleanOption('h',"help");
 		CmdLineParser.Option standaloneOpt = parser.addBooleanOption('s',"standalone");
 		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
-		CmdLineParser.Option hostnameOpt = parser.addStringOption('n',"hostname");
 		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
 
-        try {
-            parser.parse(args);
-        } catch (CmdLineParser.OptionException e) {
-            System.err.println(e.getMessage());
-            System.err.println(USAGE);
-            System.exit(-1);
-        }   
-        
-        Boolean help = (Boolean) parser.getOptionValue(helpOpt);
+		try {
+			parser.parse(args);
+		} catch (CmdLineParser.OptionException e) {
+			System.err.println(e.getMessage());
+			System.err.println(USAGE);
+			System.exit(-1);
+		}   
+		
+		Boolean help = (Boolean) parser.getOptionValue(helpOpt);
 		Boolean standalone = (Boolean) parser.getOptionValue(standaloneOpt);
-        String configFile = (String) parser.getOptionValue(configfileOpt);
-        String hostname = (String) parser.getOptionValue(hostnameOpt);
-        String engine = (String) parser.getOptionValue(engineOpt);
+		String configFile = (String) parser.getOptionValue(configfileOpt);
+		String engine = (String) parser.getOptionValue(engineOpt);
 
 		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
 
-        if (help != null && help.booleanValue()) {
-            System.err.println(USAGE);
-            System.exit(-1);
-        }
+		if (help != null && help.booleanValue()) {
+			System.err.println(USAGE);
+			System.exit(-1);
+		}
 
 		if (standalone == null) 
 			standalone = new Boolean(false);
 
-        if (standalone.booleanValue()) {
-        	if (configFile == null) {
-            	System.err.println("Please enter a valid config file.");
-            	System.err.println(USAGE);
-            	System.exit(-1);
-        	}
-        	if (engine == null) {
-            	System.err.println("Please enter a valid engine type.");
-            	System.err.println(USAGE);
-            	System.exit(-1);
-        	} else if (engine.equalsIgnoreCase("R")) {
+		if (standalone.booleanValue()) {
+			if (configFile == null) {
+				System.err.println("Please enter a valid config file.");
+				System.err.println(USAGE);
+				System.exit(-1);
+			}
+			if (engine == null) {
+				System.err.println("Please enter a valid engine type.");
+				System.err.println(USAGE);
+				System.exit(-1);
+			} else if (engine.equalsIgnoreCase("R")) {
 				analysisEngine = AnalysisTaskWrapper.RPROJECT_ENGINE;
 			} else if (engine.equalsIgnoreCase("weka")) {
 				analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
 			} else {
-            	System.err.println(USAGE);
-            	System.exit(-1);
+				System.err.println(USAGE);
+				System.exit(-1);
 			}
-        } else {
-        	if (hostname == null) {
-            	System.err.println("Please enter a valid hostname.");
-            	System.err.println(USAGE);
-            	System.exit(-1);
-        	}
-        }
+		}
+
+		String codebase = System.getProperty("java.rmi.server.codebase");
+
+		URL codebaseURL = null;
+		try {
+			codebaseURL = new URL(codebase);
+		}catch (MalformedURLException e) {
+			System.err.println("PerfExplorerServer exception: " +
+							   e.getMessage());
+			e.printStackTrace();
+		}
+
+		int port = 1099;
+		String hostname = "//localhost/PerfExplorerServer";
+		if (codebase != null) {
+			port = codebaseURL.getPort();
+			hostname = codebaseURL.getHost();
+		}
 
 	/*
 		try {

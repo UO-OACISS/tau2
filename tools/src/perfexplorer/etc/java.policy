@@ -8,5 +8,6 @@ grant {
 	permission java.util.PropertyPermission "OMEGA_CONFIG_FILE", "read";
 	permission java.lang.RuntimePermission "createClassLoader";
 	permission java.util.PropertyPermission "*", "read,write";
+	permission java.lang.RuntimePermission "shutdownHooks";
 };
 

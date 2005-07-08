@@ -1,0 +1,38 @@
+#!/bin/bash
+# export TAUROOT=@TAUROOT@
+# export CONFIG_ARCH=@ARCH@
+# export R_ROOT=@RROOT@
+# export OMEGAHAT_HOME=@OMEGAHATROOT@
+# export ANALYSIS_ENGINE=@ANALYSIS_ENGINE@
+export TAUROOT=/Users/khuck/tau2
+export CONFIG_ARCH=apple
+export R_ROOT=/Library/Frameworks/R.framework/Versions/2.0.1/Resources
+export OMEGAHAT_HOME=$R_ROOT/library/SJava
+export ANALYSIS_ENGINE=weka
+
+export CLIENT_DYLD_LIBRARY_PATH=${TAUROOT}/${CONFIG_ARCH}/lib
+export SERVER_DYLD_LIBRARY_PATH=${OMEGAHAT_HOME}/libs:${R_ROOT}/lib:${R_ROOT}/bin:${R_ROOT}/library/SJava/libs
+
+export CONFIGFILE=~/.ParaProf/perfdmf.cfg
+export JDBC_JAR=$TAUROOT/$CONFIG_ARCH/lib/postgresql.jar
+export SERVER_HOSTNAME=localhost
+export PERFDMF_JAR=$TAUROOT/$CONFIG_ARCH/lib/dms.jar
+export XMLSAX_JAR=$TAUROOT/$CONFIG_ARCH/lib/xerces.jar
+export JARGS_JAR=$TAUROOT/$CONFIG_ARCH/lib/jargs.jar
+export WEKA_JAR=$TAUROOT/$CONFIG_ARCH/lib/weka.jar
+export PERFEXPLORER_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfexplorer.jar
+export JFREECHART_JAR=$TAUROOT/$CONFIG_ARCH/lib/jfreechart-0.9.21.jar
+export JCOMMON_JAR=$TAUROOT/$CONFIG_ARCH/lib/jcommon-0.9.6.jar
+export JOGL_JAR=$TAUROOT/$CONFIG_ARCH/lib/jogl.jar
+export PARAPROF_JAR=$TAUROOT/$CONFIG_ARCH/lib/paraprof.jar
+export OMEGAHAT_JARS=$OMEGAHAT_HOME/Environment.jar:$OMEGAHAT_HOME/antlr.jar:$OMEGAHAT_HOME/jas.jar:$OMEGAHAT_HOME/jhall.jar
+
+export CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$XMLSAX_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$PARAPROF_JAR:$JARGS_JAR
+
+java -Xmx500m \
+-Djava.security.policy=java.policy \
+-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH}:${SERVER_DYLD_LIBRARY_PATH} \
+client.PerfExplorerClient \
+-n $SERVER_HOSTNAME -s -c $CONFIGFILE -e $ANALYSIS_ENGINE
+
+
