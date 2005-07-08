@@ -33,8 +33,7 @@ public class LoadTrial {
         System.err.println("Usage: perfdmf_loadtrial -e <experiment id> -n <name> [options] <files>\n\n"
                 + "Required Arguments:\n\n"
                 + "  -e, --experimentid <number>    Specify associated experiment ID for this trial\n"
-                + "  -n, --name <text>              Specify the name of the trial\n\n"
-                + "Optional Arguments:\n\n"
+                + "  -n, --name <text>              Specify the name of the trial\n\n" + "Optional Arguments:\n\n"
                 + "  -f, --filetype <filetype>      Specify type of performance data, options are:\n"
                 + "                                   profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                   gprof, psrun, hpm, packed, cube, hpc\n"
@@ -43,15 +42,14 @@ public class LoadTrial {
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
-                + "or, in the case of multiple counters, directories named MULTI_* containing\n"
-                + "profile data.\n\n" + "Examples:\n\n" + "  perfdmf_loadtrial -e 12 -n \"Batch 001\"\n"
+                + "or, in the case of multiple counters, directories named MULTI_* containing\n" + "profile data.\n\n"
+                + "Examples:\n\n" + "  perfdmf_loadtrial -e 12 -n \"Batch 001\"\n"
                 + "    This will load profile.* (or multiple counters directories MULTI_*) into\n"
                 + "    experiment 12 and give the trial the name \"Batch 001\"\n\n"
                 + "  perfdmf_loadtrial -e 12 -n \"HPM data 01\" perfhpm*\n"
                 + "    This will load perfhpm* files of type HPMToolkit into experiment 12 and give\n"
                 + "    the trial the name \"HPM data 01\"\n");
     }
-
 
     /*
      * This variable connects translator to DB in order to check whether the
@@ -103,13 +101,11 @@ public class LoadTrial {
 
     public void loadTrial(int fileType) {
 
-        
         File[] files = new File[sourceFiles.length];
         for (int i = 0; i < sourceFiles.length; i++) {
             files[i] = new File(sourceFiles[i]);
         }
 
-        
         try {
             dataSource = UtilFncs.initializeDataSource(files, fileType, fixNames);
         } catch (DataSourceException e) {
@@ -119,10 +115,8 @@ public class LoadTrial {
             return;
         }
 
-        
         trial = null;
         this.fileType = fileType;
-
 
         trial = new Trial();
         trial.setDataSource(dataSource);
@@ -134,10 +128,11 @@ public class LoadTrial {
             e.printStackTrace();
         }
 
-        if (trialID == 0)
+        if (trialID == 0) {
             saveTrial();
-        else
+        } else {
             appendToTrial();
+        }
 
     }
 
@@ -159,11 +154,12 @@ public class LoadTrial {
         System.out.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
         try {
-            databaseAPI.saveTrial(trial, -1);
+            //databaseAPI.saveTrial(trial, -1);
+            databaseAPI.uploadTrial(trial);
         } catch (DatabaseException e) {
             e.printStackTrace();
             Exception e2 = e.getException();
-            System.out.println ("from: ");
+            System.out.println("from: ");
             e2.printStackTrace();
             System.exit(-1);
         }
@@ -221,7 +217,6 @@ public class LoadTrial {
         return problemString.toString();
     }
 
-
     static public void main(String[] args) {
         // 	for (int i=0; i<args.length; i++) {
         // 	    System.out.println ("args[" + i + "]: " + args[i]);
@@ -271,10 +266,10 @@ public class LoadTrial {
             LoadTrial.usage();
             System.exit(-1);
 
-            // 	} else if (sourceFile == null) {
-            // 	    System.err.println("Please enter a valid source file.");
-            // 	    System.err.println(LoadTrial.USAGE);
-            // 	    System.exit(-1);
+//        } else if (sourceFiles == null) {
+//            System.err.println("Please enter a valid source file.");
+//            LoadTrial.usage();
+//            System.exit(-1);
         } else if (experimentID == null) {
             System.err.println("Error: Missing experiment id\n");
             LoadTrial.usage();
@@ -283,12 +278,12 @@ public class LoadTrial {
 
         String sourceFiles[] = parser.getRemainingArgs();
 
-        int fileType = 1;
+        int fileType = 0;
         String filePrefix = null;
         if (fileTypeString != null) {
-            if (fileTypeString.equals("pprof")) {
+            if (fileTypeString.equals("profiles")) {
                 fileType = 0;
-            } else if (fileTypeString.equals("profiles")) {
+            } else if (fileTypeString.equals("pprof")) {
                 fileType = 1;
             } else if (fileTypeString.equals("dynaprof")) {
                 fileType = 2;
@@ -306,14 +301,8 @@ public class LoadTrial {
                 fileType = 8;
             } else if (fileTypeString.equals("hpc")) {
                 fileType = 9;
-
-                /*
-                 * } else if (fileTypeString.equals("sppm")) { fileType = 101; }
-                 * else if (fileTypeString.equals("xprof")) { fileType = 0; }
-                 * else if (fileTypeString.equals("sddf")) { fileType = 0;
-                 */
             } else {
-                System.err.println("Error: unknown type '" + fileTypeString + "'\n");
+                System.err.println("Please enter a valid file type.");
                 LoadTrial.usage();
                 System.exit(-1);
             }
