@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.3 2005/07/08 00:01:15 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.4 2005/07/08 00:52:41 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -45,7 +45,7 @@ import java.net.MalformedURLException;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfExplorer {
-	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> {-p,--classpath}=<rmi_classpath> [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
+	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
 
 	private String configFile = null;
 	private DatabaseAPI session = null;
@@ -1175,7 +1175,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		CmdLineParser parser = new CmdLineParser();
 		CmdLineParser.Option helpOpt = parser.addBooleanOption('h',"help");
 		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
-		CmdLineParser.Option classpathOpt = parser.addStringOption('p',"classpath");
 		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
 			
 		try {   
@@ -1188,7 +1187,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 		Boolean help = (Boolean) parser.getOptionValue(helpOpt);
 		String configFile = (String) parser.getOptionValue(configfileOpt);
-		String classpath = (String) parser.getOptionValue(classpathOpt);
 		String engine = (String) parser.getOptionValue(engineOpt);
 
 		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
@@ -1217,12 +1215,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			System.exit(-1);
 		}
 
-		if (classpath == null) {
-			System.err.println("Please enter a valid RMI classpath.");
-			System.err.println(USAGE);
-			System.exit(-1);
-		}
-
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new RMISecurityManager());
 		}
@@ -1239,29 +1231,20 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			e.printStackTrace();
 		}
 
-		int port = 2001;
-		String tmpname = "//localhost/PerfExplorerServer";
-		if (codebase != null) {
-			port = codebaseURL.getPort();
-			tmpname = codebaseURL.getHost();
-		}
-		final String hostname = tmpname;
-
 		try {
-			ClassFileServer fileServer = new ClassFileServer(port, classpath);
 			RMIPerfExplorer server = new PerfExplorerServer(configFile, analysisEngine);
-			Naming.rebind(hostname, server);
-			System.out.println("PerfExplorerServer bound");
+			Naming.rebind("PerfExplorerServer", server);
+			System.out.println("PerfExplorerServer bound.");
 			Runtime.getRuntime().addShutdownHook(
 				new java.lang.Thread() {
 					public void run () {
 						try {
-							Naming.unbind(hostname);
+							Naming.unbind("PerfExplorerServer");
 							System.out.println(
-							"Server has shut down successfully");
+							"Server has shut down successfully.");
 						} catch (Exception e) {
 							System.out.println(
-							"Server could not unbind from registry - giving up");
+							"Server could not unbind from registry - giving up.");
 						}
 					}
 				}
@@ -1270,7 +1253,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			System.out.println("Could not add a shutdown hook: " +
 			e.getMessage());
 		} catch (StubNotFoundException e) {
-			System.out.println("You forgot to generate the stubs with RMIC");
+			System.out.println("You forgot to generate the stubs with RMIC.");
 		} catch (ConnectException e) {
 			System.out.println("Could not connect to registry. "+
 							   "Is it running and on the right port?");

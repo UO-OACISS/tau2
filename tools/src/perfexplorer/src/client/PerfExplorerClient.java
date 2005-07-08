@@ -19,9 +19,8 @@ public class PerfExplorerClient extends JFrame {
 		return mainFrame;
 	}
 
-	private PerfExplorerClient (String hostname, boolean standalone, String configFile, int analysisEngine) {
+	private PerfExplorerClient (boolean standalone, String configFile, int analysisEngine) {
 		super("PerfExplorer Client");
-		PerfExplorerConnection.setHostname(hostname);
 		PerfExplorerConnection.setStandalone(standalone);
 		PerfExplorerConnection.setConfigFile(configFile);
 		PerfExplorerConnection.setAnalysisEngine(analysisEngine);
@@ -114,23 +113,6 @@ public class PerfExplorerClient extends JFrame {
 			}
 		}
 
-		String codebase = System.getProperty("java.rmi.server.codebase");
-
-		URL codebaseURL = null;
-		try {
-			codebaseURL = new URL(codebase);
-		}catch (MalformedURLException e) {
-			System.err.println("PerfExplorerServer exception: " +
-							   e.getMessage());
-			e.printStackTrace();
-		}
-
-		int port = 1099;
-		String hostname = "//localhost/PerfExplorerServer";
-		if (codebase != null) {
-			port = codebaseURL.getPort();
-			hostname = codebaseURL.getHost();
-		}
 
 	/*
 		try {
@@ -139,7 +121,7 @@ public class PerfExplorerClient extends JFrame {
 		} catch (Exception e) { }
 	*/
 
-		JFrame frame = new PerfExplorerClient(hostname, standalone.booleanValue(), configFile, analysisEngine);
+		JFrame frame = new PerfExplorerClient(standalone.booleanValue(), configFile, analysisEngine);
 		frame.pack();
 		frame.setVisible(true);
 	}

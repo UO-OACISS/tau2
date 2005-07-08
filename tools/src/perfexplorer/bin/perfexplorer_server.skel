@@ -31,19 +31,20 @@ OMEGAHAT_JARS=$OMEGAHAT_HOME:$OMEGAHAT_JARPATH/Environment.jar:\
 $OMEGAHAT_JARPATH/antlr.jar:$OMEGAHAT_JARPATH/jas.jar:\
 $OMEGAHAT_JARPATH/jhall.jar
 
+CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JARGS_JAR \
 
+rmiregistry & 
 java -Xmx1800m \
 -classpath $PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:\
 $JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JARGS_JAR \
 -Djava.rmi.server.codebase=http://$SERVER_HOSTNAME:$PORT_NUMBER/ \
 -Djava.security.policy=$TAUROOT/tools/src/perfexplorer/etc/java.policy \
 -Djava.library.path=${SERVER_DYLD_LIBRARY_PATH} \
--Djava.rmi.server.logCalls=true \
 -Dsun.rmi.server.exceptionTrace=true \
--Dsun.rmi.loader.logLevel=BRIEF \
--Dsun.rmi.server.logLevel=BRIEF \
-server.PerfExplorerServer \
--p $TAUROOT/tools/src/perfexplorer/classes -c $CONFIGFILE -e weka
+server.PerfExplorerServer -c $CONFIGFILE -e weka
 
+#-Djava.rmi.server.logCalls=true \
+#-Dsun.rmi.loader.logLevel=BRIEF \
+#-Dsun.rmi.server.logLevel=BRIEF \
 
-
+killall rmiregistry

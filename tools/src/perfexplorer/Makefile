@@ -57,19 +57,19 @@ default: perfexplorer.jar
 ### THESE COMMANDS ARE FOR COMPILING
 ###
 
-all: common clustering server client perfexplorer.jar
+all: perfexplorer.jar
 
 common: ${COMMON_CLASSES}
 
-clustering: ${CLUSTERING_CLASSES}
+clustering: common ${CLUSTERING_CLASSES}
 
-server: common clustering ${SERVER_CLASSES} ${RMIC_CLASSES}
+server: clustering ${SERVER_CLASSES} ${RMIC_CLASSES}
 
-client: common clustering ${CLIENT_CLASSES}
+client: common ${CLIENT_CLASSES}
 
 standalone: common clustering server client
 
-perfexplorer.jar: ${RMIC_CLASSES}
+perfexplorer.jar: standalone
 	jar -cvf perfexplorer.jar -C classes .
 	cp perfexplorer.jar ${TAUROOT}/${CONFIG_ARCH}/lib/.
 
@@ -87,7 +87,7 @@ ${CLIENT_CLASSES}: ${CLIENT_SOURCES} ${SERVER_CLASSES}
 	cp src/client/resources/*.gif classes/client/.
 
 ${RMIC_CLASSES}: ${SERVER_CLASSES}
-	rmic -classpath ${SERVER_BUILD_CLASSPATH} -d classes server.PerfExplorerServer
+	rmic -v1.2 -classpath ${SERVER_BUILD_CLASSPATH} -d classes server.PerfExplorerServer
 
 ###
 ### THESE COMMANDS ARE FOR CLEANING

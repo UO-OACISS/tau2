@@ -10,7 +10,7 @@ public class PerfExplorerConnection {
 	private static PerfExplorerConnection theConnection = null;
 
 	private RMIPerfExplorer server = null;
-	private static String hostname = null;
+	private static String codebase = null;
 	private static boolean standalone = false;
 	private static String configFile = null;
 	private static int analysisEngine = 0;
@@ -23,7 +23,8 @@ public class PerfExplorerConnection {
 				System.setSecurityManager(new RMISecurityManager());
 			}
 			try {
-				String name = "//" + hostname + "/PerfExplorerServer";
+				String codebase = System.getProperty("java.rmi.server.codebase");
+				String name = codebase + "/PerfExplorerServer";
 				System.out.println("Connecting to " + name);
 				server = (RMIPerfExplorer)Naming.lookup(name);
 				System.out.println("Bound to " + name);
@@ -34,10 +35,6 @@ public class PerfExplorerConnection {
 				//System.exit(0);
 			}
 		}
-	}
-
-	public static void setHostname (String hostname) {
-		PerfExplorerConnection.hostname = hostname;
 	}
 
 	public static void setStandalone (boolean standalone) {
