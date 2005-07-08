@@ -3818,6 +3818,15 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
 chmod a+rx ${targetdir}/tools/src/dms/src/examples/testSave
 fi
 
+cat ${tauroot}/tools/src/perfexplorer/bin/configure.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir',' \
+-e 's,@SHELL@,'$taushell',' \
+-e 's,@ARCH@,'$architecture',' \
+-e 's,@TARGETDIR@,'$targetdir',' \
+ > ${tauroot}/tools/src/perfexplorer/configure
+chmod a+rx ${tauroot}/tools/src/perfexplorer/configure
+
+
 if [ ${tauprefix} = unknown ]
 then
   targetdir=${tauroot}
