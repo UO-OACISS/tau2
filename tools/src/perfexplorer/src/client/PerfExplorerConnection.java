@@ -23,9 +23,9 @@ public class PerfExplorerConnection {
 				System.setSecurityManager(new RMISecurityManager());
 			}
 			try {
-				String codebase = System.getProperty("java.rmi.server.codebase");
-				String name = codebase + "/PerfExplorerServer";
-				System.out.println("Connecting to " + name);
+				String hostname = System.getProperty("java.rmi.server.hostname");
+				String name = "PerfExplorerServer";
+				System.out.println("Connecting to rmi://" + hostname + "/" + name);
 				server = (RMIPerfExplorer)Naming.lookup(name);
 				System.out.println("Bound to " + name);
 			} catch (Exception e) {

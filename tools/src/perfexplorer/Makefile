@@ -67,7 +67,7 @@ server: clustering ${SERVER_CLASSES} ${RMIC_CLASSES}
 
 client: common ${CLIENT_CLASSES}
 
-standalone: common clustering server client
+standalone: server client
 
 perfexplorer.jar: standalone
 	jar -cvf perfexplorer.jar -C classes .

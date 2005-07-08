@@ -11,6 +11,7 @@ import common.RMIPerfExplorerModel;
 public class PerfExplorerActionListener implements ActionListener {
 
 	public final static String QUIT = "Quit PerfExplorer";
+	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
 	public final static String ABOUT = "About PerfExplorer";
 	public final static String SEARCH = "Search for help on...";
 	// clustering menu items
@@ -57,7 +58,8 @@ public class PerfExplorerActionListener implements ActionListener {
 			if(EventSrc instanceof JMenuItem) {
 				String arg = event.getActionCommand();
 				if(arg.equals(QUIT)) {
-					
+					System.exit(0);
+				} else if(arg.equals(QUIT_SERVER)) {
 					PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 					server.stopServer();
 					System.exit(0);

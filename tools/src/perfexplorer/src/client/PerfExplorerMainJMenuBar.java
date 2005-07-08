@@ -20,12 +20,20 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		fileMenu.setMnemonic(KeyEvent.VK_F);
 
 		//Add a menu item.
-		JMenuItem menuItem = new JMenuItem(
+		JMenuItem quitItem = new JMenuItem(
 				PerfExplorerActionListener.QUIT, KeyEvent.VK_Q);
-		menuItem.setAccelerator(KeyStroke.getKeyStroke(
+		quitItem.setAccelerator(KeyStroke.getKeyStroke(
 			KeyEvent.VK_Q, ActionEvent.ALT_MASK));
-		menuItem.addActionListener(listener);
-		fileMenu.add(menuItem);
+		quitItem.addActionListener(listener);
+		fileMenu.add(quitItem);
+
+		//Add a menu item.
+		JMenuItem quitServerItem = new JMenuItem(
+				PerfExplorerActionListener.QUIT_SERVER, KeyEvent.VK_Q);
+		quitServerItem.setAccelerator(KeyStroke.getKeyStroke(
+			KeyEvent.VK_Q, ActionEvent.SHIFT_MASK & ActionEvent.ALT_MASK));
+		quitServerItem.addActionListener(listener);
+		fileMenu.add(quitServerItem);
 
 		this.add(fileMenu);
 	}

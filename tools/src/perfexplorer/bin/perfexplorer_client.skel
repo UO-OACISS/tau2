@@ -24,9 +24,9 @@ PARAPROF_JAR=$TAUROOT/$CONFIG_ARCH/lib/paraprof.jar
 java -Xmx500m \
 -cp $PERFEXPLORER_JAR:$PERFDMF_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$JOGL_JAR:\
 $PARAPROF_JAR:$JARGS_JAR \
--Djava.rmi.server.codebase=rmi://$SERVER_HOSTNAME \
 -Djava.security.policy=$TAUROOT/tools/src/perfexplorer/etc/java.policy \
 -Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \
+-Djava.rmi.server.hostname=$SERVER_HOSTNAME \
 client.PerfExplorerClient
 
 

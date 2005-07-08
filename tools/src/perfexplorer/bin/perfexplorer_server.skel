@@ -33,7 +33,9 @@ $OMEGAHAT_JARPATH/jhall.jar
 
 CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JARGS_JAR \
 
+echo "Starting rmiregistry..."
 rmiregistry & 
+echo "Starting server..."
 java -Xmx1800m \
 -classpath $PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:\
 $JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JARGS_JAR \
@@ -43,8 +45,11 @@ $JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JARGS_JAR \
 -Dsun.rmi.server.exceptionTrace=true \
 server.PerfExplorerServer -c $CONFIGFILE -e weka
 
+# Add these options to the RMI server start call if you need some
+# additional debugging information...
 #-Djava.rmi.server.logCalls=true \
 #-Dsun.rmi.loader.logLevel=BRIEF \
 #-Dsun.rmi.server.logLevel=BRIEF \
 
+echo "Killing rmiregistry..."
 killall rmiregistry
