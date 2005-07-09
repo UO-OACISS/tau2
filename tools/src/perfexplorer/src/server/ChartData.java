@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.1 2005/07/05 22:29:53 amorris Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.2 2005/07/09 00:09:38 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -26,7 +26,6 @@ public class ChartData extends RMIChartData {
 	private String eventName = null;
 	private String groupByColumn = null;
 	
-	private DB db = null;
 	
 	/**
 	 * Constructor
@@ -40,7 +39,6 @@ public class ChartData extends RMIChartData {
 		this.metricName = model.getMetricName();
 		this.groupName = model.getGroupName();
 		this.eventName = model.getEventName();
-		this.db = PerfExplorerServer.getServer().getDB();
 	}
 
 	/**
@@ -117,6 +115,8 @@ public class ChartData extends RMIChartData {
 	 * @throws SQLException
 	 */
 	private PreparedStatement buildStatement () throws SQLException {
+	        DB db = PerfExplorerServer.getServer().getDB();
+
 		PreparedStatement statement = null;
 		StringBuffer buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
@@ -141,6 +141,7 @@ public class ChartData extends RMIChartData {
 			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name != 'TAU_CALLPATH' ");
 			buf.append("and ie.group_name != 'TAU_PHASENAME')) order by 1, 2");
+			
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == RELATIVE_EFFICIENCY) {
@@ -369,6 +370,8 @@ public class ChartData extends RMIChartData {
 	 * @return
 	 */
 	private boolean isLeafView () {
+	    DB db = PerfExplorerServer.getServer().getDB();
+
 		// check to see if the selected view is a leaf view.
 		PreparedStatement statement = null;
 		boolean returnValue = true;

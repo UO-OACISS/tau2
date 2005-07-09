@@ -7,253 +7,253 @@ import java.util.*;
 
 public class PerfExplorerConnection {
 
-	private static PerfExplorerConnection theConnection = null;
+    private static PerfExplorerConnection theConnection = null;
 
-	private RMIPerfExplorer server = null;
-	private static String codebase = null;
-	private static boolean standalone = false;
-	private static String configFile = null;
-	private static int analysisEngine = 0;
+    private RMIPerfExplorer server = null;
+    private static String codebase = null;
+    private static boolean standalone = false;
+    private static String configFile = null;
+    private static int analysisEngine = 0;
 
-	private PerfExplorerConnection () {
-		if (standalone) {
-			server = PerfExplorerServer.getServer(configFile, analysisEngine);
-		} else {
-			if (System.getSecurityManager() == null) {
-				System.setSecurityManager(new RMISecurityManager());
-			}
-			try {
-				String hostname = System.getProperty("java.rmi.server.hostname");
-				String name = "PerfExplorerServer";
-				System.out.println("Connecting to rmi://" + hostname + "/" + name);
-				server = (RMIPerfExplorer)Naming.lookup(name);
-				System.out.println("Bound to " + name);
-			} catch (Exception e) {
-				System.err.println("createServer Exception: " + e.getMessage());
-				e.printStackTrace();
-				server = null;
-				//System.exit(0);
-			}
-		}
-	}
-
-	public static void setStandalone (boolean standalone) {
-		PerfExplorerConnection.standalone = standalone;
-	}
-
-	public static void setConfigFile (String configFile) {
-		PerfExplorerConnection.configFile = configFile;
-	}
-	
-	public static void setAnalysisEngine(int analysisEngine) {
-		PerfExplorerConnection.analysisEngine = analysisEngine;
-	}
-
-	public static PerfExplorerConnection getConnection() {
-		if (theConnection == null) {
-			theConnection = new PerfExplorerConnection();
-		}
-		if (theConnection.server == null) {
-			return null;
-		}
-		return theConnection;
-	}
-
-	private void handleError (RemoteException e, String functionName) {
-		System.out.println("PerfExplorerConnection." + functionName + " Exception: ");
-		System.out.println(e.getMessage());
+    private PerfExplorerConnection () {
+	if (standalone) {
+	    server = PerfExplorerServer.getServer(configFile, analysisEngine);
+	} else {
+	    if (System.getSecurityManager() == null) {
+		System.setSecurityManager(new RMISecurityManager());
+	    }
+	    try {
+		//String hostname = System.getProperty("java.rmi.server.hostname");
+		String name = "PerfExplorerServer";
+		//System.out.println("Connecting to rmi://" + hostname + "/" + name);
+		server = (RMIPerfExplorer)Naming.lookup("//utonium.cs.uoregon.edu/" + name);
+		System.out.println("Bound to " + name);
+	    } catch (Exception e) {
+		System.err.println("createServer Exception: " + e.getMessage());
 		e.printStackTrace();
+		server = null;
+		//System.exit(0);
+	    }
 	}
+    }
 
-	public String sayHello() {
-		String tmpStr = null;
-		try {
-			tmpStr = server.sayHello();
-		} catch (RemoteException e) {
-			handleError(e, "sayHello()");
-		}
-		return tmpStr;
-	}
+    public static void setStandalone (boolean standalone) {
+	PerfExplorerConnection.standalone = standalone;
+    }
 
-	public ListIterator getApplicationList() {
-		ListIterator tmpIterator = null;
-		try {
-			tmpIterator = server.getApplicationList().listIterator();
-		} catch (RemoteException e) {
-			handleError(e, "getApplicationList()");
-		}
-		return tmpIterator;
-	}
+    public static void setConfigFile (String configFile) {
+	PerfExplorerConnection.configFile = configFile;
+    }
+	
+    public static void setAnalysisEngine(int analysisEngine) {
+	PerfExplorerConnection.analysisEngine = analysisEngine;
+    }
 
-	public ListIterator getExperimentList(int applicationID) {
-		ListIterator tmpIterator = null;
-		try {
-			tmpIterator =
-			server.getExperimentList(applicationID).listIterator();
-		} catch (RemoteException e) {
-			handleError(e, "getExperimentList(" + applicationID + ")");
-		}
-		return tmpIterator;
+    public static PerfExplorerConnection getConnection() {
+	if (theConnection == null) {
+	    theConnection = new PerfExplorerConnection();
 	}
+	if (theConnection.server == null) {
+	    return null;
+	}
+	return theConnection;
+    }
 
-	public ListIterator getTrialList(int experimentID) {
-		ListIterator tmpIterator = null;
-		try {
-			tmpIterator =
-			server.getTrialList(experimentID).listIterator();
-		} catch (RemoteException e) {
-			handleError(e, "getTrialList(" + experimentID + ")");
-		}
-		return tmpIterator;
-	}
+    private void handleError (RemoteException e, String functionName) {
+	System.out.println("PerfExplorerConnection." + functionName + " Exception: ");
+	System.out.println(e.getMessage());
+	e.printStackTrace();
+    }
 
-	public String requestAnalysis(RMIPerfExplorerModel model, boolean force) {
-		String tmpString = null;
-		try {
-			tmpString = server.requestAnalysis(model, force);
-		} catch (RemoteException e) {
-			handleError(e, "requestAnalysis(" + model.toString() + ")");
-		}
-		return tmpString;
+    public String sayHello() {
+	String tmpStr = null;
+	try {
+	    tmpStr = server.sayHello();
+	} catch (RemoteException e) {
+	    handleError(e, "sayHello()");
 	}
+	return tmpStr;
+    }
 
-	public RMIPerformanceResults getPerformanceResults(PerfExplorerModel model) {
-		RMIPerformanceResults results = null;
-		try {
-			results = server.getPerformanceResults(model);
-		} catch (RemoteException e) {
-			handleError(e, "getPerformanceResults(" + model.toString() + ")");
-		}
-		return results;
+    public ListIterator getApplicationList() {
+	ListIterator tmpIterator = null;
+	try {
+	    tmpIterator = server.getApplicationList().listIterator();
+	} catch (RemoteException e) {
+	    handleError(e, "getApplicationList()");
 	}
+	return tmpIterator;
+    }
 
-	public RMIPerformanceResults getCorrelationResults(PerfExplorerModel model) {
-		RMIPerformanceResults results = null;
-		try {
-			results = server.getCorrelationResults(model);
-		} catch (RemoteException e) {
-			handleError(e, "getCorrelationResults(" + model.toString() + ")");
-		}
-		return results;
+    public ListIterator getExperimentList(int applicationID) {
+	ListIterator tmpIterator = null;
+	try {
+	    tmpIterator =
+		server.getExperimentList(applicationID).listIterator();
+	} catch (RemoteException e) {
+	    handleError(e, "getExperimentList(" + applicationID + ")");
 	}
+	return tmpIterator;
+    }
 
-	public void stopServer() {
-		try {
-			server.stopServer();
-		} catch (RemoteException e) {
-			handleError(e, "stopServer()");
-		}
+    public ListIterator getTrialList(int experimentID) {
+	ListIterator tmpIterator = null;
+	try {
+	    tmpIterator =
+		server.getTrialList(experimentID).listIterator();
+	} catch (RemoteException e) {
+	    handleError(e, "getTrialList(" + experimentID + ")");
 	}
+	return tmpIterator;
+    }
 
-	public RMIChartData requestChartData(PerfExplorerModel model, int dataType) {
-		RMIChartData data = null;
-		try {
-			data = server.requestChartData(model, dataType);
-		} catch (RemoteException e) {
-			handleError(e, "requestChartData(" + model.toString() + ")");
-		}
-		return data;
+    public String requestAnalysis(RMIPerfExplorerModel model, boolean force) {
+	String tmpString = null;
+	try {
+	    tmpString = server.requestAnalysis(model, force);
+	} catch (RemoteException e) {
+	    handleError(e, "requestAnalysis(" + model.toString() + ")");
 	}
+	return tmpString;
+    }
 
-	public List getPotentialGroups(PerfExplorerModel model) {
-		List groups = null;
-		try {
-			groups = server.getPotentialGroups(model);
-		} catch (RemoteException e) {
-			handleError(e, "getPotentialGroups(" + model.toString() + ")");
-		}
-		return groups;
+    public RMIPerformanceResults getPerformanceResults(PerfExplorerModel model) {
+	RMIPerformanceResults results = null;
+	try {
+	    results = server.getPerformanceResults(model);
+	} catch (RemoteException e) {
+	    handleError(e, "getPerformanceResults(" + model.toString() + ")");
 	}
+	return results;
+    }
 
-	public List getPotentialMetrics(PerfExplorerModel model) {
-		List metrics = null;
-		try {
-			metrics = server.getPotentialMetrics(model);
-		} catch (RemoteException e) {
-			handleError(e, "getPotentialGroups(" + model.toString() + ")");
-		}
-		return metrics;
+    public RMIPerformanceResults getCorrelationResults(PerfExplorerModel model) {
+	RMIPerformanceResults results = null;
+	try {
+	    results = server.getCorrelationResults(model);
+	} catch (RemoteException e) {
+	    handleError(e, "getCorrelationResults(" + model.toString() + ")");
 	}
+	return results;
+    }
 
-	public List getPotentialEvents(PerfExplorerModel model) {
-		List events = null;
-		try {
-			events = server.getPotentialEvents(model);
-		} catch (RemoteException e) {
-			handleError(e, "getPotentialEvents(" + model.toString() + ")");
-		}
-		return events;
+    public void stopServer() {
+	try {
+	    server.stopServer();
+	} catch (RemoteException e) {
+	    handleError(e, "stopServer()");
 	}
+    }
 
-	public String[] getMetaData(String tableName) {
-		String[] columns = null;
-		try {
-			columns = server.getMetaData(tableName);
-		} catch (RemoteException e) {
-			handleError(e, "getMetaData(" + tableName + ")");
-		}
-		return columns;
+    public RMIChartData requestChartData(PerfExplorerModel model, int dataType) {
+	RMIChartData data = null;
+	try {
+	    data = server.requestChartData(model, dataType);
+	} catch (RemoteException e) {
+	    handleError(e, "requestChartData(" + model.toString() + ")");
 	}
+	return data;
+    }
 
-	public List getPossibleValues(String tableName, String columnName) {
-		List values = null;
-		try {
-			values = server.getPossibleValues(tableName, columnName);
-		} catch (RemoteException e) {
-			handleError(e, "getPossibleValues(" + tableName + ", " + columnName + ")");
-		}
-		return values;
+    public List getPotentialGroups(PerfExplorerModel model) {
+	List groups = null;
+	try {
+	    groups = server.getPotentialGroups(model);
+	} catch (RemoteException e) {
+	    handleError(e, "getPotentialGroups(" + model.toString() + ")");
 	}
+	return groups;
+    }
 
-	public int createNewView (String name, int parent, String tableName, String columnName, String oper, String value) {
-		int viewID = 0;
-		try {
-			viewID = server.createNewView(name, parent, tableName, columnName, oper, value);
-		} catch (RemoteException e) {
-			handleError(e, "createNewView(" + tableName + ", " + columnName + ", " + value + ")");
-		}
-		return viewID;
+    public List getPotentialMetrics(PerfExplorerModel model) {
+	List metrics = null;
+	try {
+	    metrics = server.getPotentialMetrics(model);
+	} catch (RemoteException e) {
+	    handleError(e, "getPotentialGroups(" + model.toString() + ")");
 	}
+	return metrics;
+    }
 
-	public List getViews(int parent) {
-		List views = null;
-		try {
-			views = server.getViews(parent);
-		} catch (RemoteException e) {
-			handleError(e, "getViews(" + parent + ")");
-		}
-		return views;
+    public List getPotentialEvents(PerfExplorerModel model) {
+	List events = null;
+	try {
+	    events = server.getPotentialEvents(model);
+	} catch (RemoteException e) {
+	    handleError(e, "getPotentialEvents(" + model.toString() + ")");
 	}
+	return events;
+    }
 
-	public ListIterator getTrialsForView(List views) {
-		ListIterator trials = null;
-		try {
-			trials = server.getTrialsForView(views).listIterator();
-		} catch (RemoteException e) {
-			handleError(e, "getTrialsForView(" + views + ")");
-		}
-		return trials;
+    public String[] getMetaData(String tableName) {
+	String[] columns = null;
+	try {
+	    columns = server.getMetaData(tableName);
+	} catch (RemoteException e) {
+	    handleError(e, "getMetaData(" + tableName + ")");
 	}
+	return columns;
+    }
 
-	public RMIVarianceData requestVariationAnalysis(PerfExplorerModel model) {
-		RMIVarianceData results = null;
-		try {
-			results = server.getVariationAnalysis(model);
-		} catch (RemoteException e) {
-			handleError(e, "getVariationAnalysis(" + model.toString() + ")");
-		}
-		return results;
+    public List getPossibleValues(String tableName, String columnName) {
+	List values = null;
+	try {
+	    values = server.getPossibleValues(tableName, columnName);
+	} catch (RemoteException e) {
+	    handleError(e, "getPossibleValues(" + tableName + ", " + columnName + ")");
 	}
+	return values;
+    }
 
-	public RMICubeData requestCubeData(PerfExplorerModel model) {
-		RMICubeData results = null;
-		try {
-			results = server.getCubeData(model);
-		} catch (RemoteException e) {
-			handleError(e, "getCubeData(" + model.toString() + ")");
-		}
-		return results;
+    public int createNewView (String name, int parent, String tableName, String columnName, String oper, String value) {
+	int viewID = 0;
+	try {
+	    viewID = server.createNewView(name, parent, tableName, columnName, oper, value);
+	} catch (RemoteException e) {
+	    handleError(e, "createNewView(" + tableName + ", " + columnName + ", " + value + ")");
 	}
+	return viewID;
+    }
+
+    public List getViews(int parent) {
+	List views = null;
+	try {
+	    views = server.getViews(parent);
+	} catch (RemoteException e) {
+	    handleError(e, "getViews(" + parent + ")");
+	}
+	return views;
+    }
+
+    public ListIterator getTrialsForView(List views) {
+	ListIterator trials = null;
+	try {
+	    trials = server.getTrialsForView(views).listIterator();
+	} catch (RemoteException e) {
+	    handleError(e, "getTrialsForView(" + views + ")");
+	}
+	return trials;
+    }
+
+    public RMIVarianceData requestVariationAnalysis(PerfExplorerModel model) {
+	RMIVarianceData results = null;
+	try {
+	    results = server.getVariationAnalysis(model);
+	} catch (RemoteException e) {
+	    handleError(e, "getVariationAnalysis(" + model.toString() + ")");
+	}
+	return results;
+    }
+
+    public RMICubeData requestCubeData(PerfExplorerModel model) {
+	RMICubeData results = null;
+	try {
+	    results = server.getCubeData(model);
+	} catch (RemoteException e) {
+	    handleError(e, "getCubeData(" + model.toString() + ")");
+	}
+	return results;
+    }
 
 
 }
