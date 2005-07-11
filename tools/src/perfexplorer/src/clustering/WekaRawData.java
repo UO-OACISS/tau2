@@ -64,8 +64,8 @@ public class WekaRawData implements RawDataInterface {
 	 * @see clustering.RawDataInterface#getManhattanDistance(int, int)
 	 */
 	public double getManhattanDistance(int firstVector, int secondVector) {
-		assert firstVector >= 0 && firstVector < vectors : firstVector;
-		assert secondVector >= 0 && secondVector < vectors : secondVector;
+		//assert firstVector >= 0 && firstVector < vectors : firstVector;
+		//assert secondVector >= 0 && secondVector < vectors : secondVector;
 
 		double distance = 0.0;
 		for (int i = 0 ; i < dimensions ; i++ ) {
@@ -79,8 +79,8 @@ public class WekaRawData implements RawDataInterface {
 	 * @see clustering.RawDataInterface#getCartesianDistance(int, int)
 	 */
 	public double getCartesianDistance(int firstVector, int secondVector) {
-		assert firstVector > 0 && firstVector < vectors : firstVector;
-		assert secondVector > 0 && secondVector < vectors : secondVector;
+		//assert firstVector > 0 && firstVector < vectors : firstVector;
+		//assert secondVector > 0 && secondVector < vectors : secondVector;
 		double distance = 0.0;
 		for (int i = 0 ; i < dimensions ; i++ ) {
 			double tmp = Math.abs(instances.instance(firstVector).value(i) - 

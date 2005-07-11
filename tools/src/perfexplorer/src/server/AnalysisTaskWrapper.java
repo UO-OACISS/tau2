@@ -34,7 +34,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.1 2005/07/05 22:29:53 amorris Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.2 2005/07/11 20:46:42 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -101,8 +101,8 @@ public class AnalysisTaskWrapper extends TimerTask {
 			case OCTAVE_ENGINE:
 				factory = OctaveAnalysisFactory.getFactory();
 				break;
-*/			default:
-				assert false : engine;
+*/			//default:
+				//assert false : engine;
 		}
 	}
 

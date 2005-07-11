@@ -49,33 +49,36 @@ default: perfexplorer.jar
 ### THESE COMMANDS ARE FOR COMPILING
 ###
 
-all: perfexplorer.jar
+# all: perfexplorer.jar
 
 common: ${COMMON_CLASSES}
 
-clustering: common ${CLUSTERING_CLASSES}
+clustering: ${CLUSTERING_CLASSES}
 
-server: clustering ${SERVER_CLASSES} ${RMIC_CLASSES}
+server: ${SERVER_CLASSES} ${RMIC_CLASSES}
 
-client: common ${CLIENT_CLASSES}
+client: ${CLIENT_CLASSES}
 
-standalone: server client
-
-perfexplorer.jar: standalone
+perfexplorer.jar: ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
 	jar -cvf perfexplorer.jar -C classes .
 	cp perfexplorer.jar ${TAUROOT}/${CONFIG_ARCH}/lib/.
 
+########################
+# for the javac command, specify -target 1.3 for older java versions,
+# otherwise specify -source 1.4 to enable assertions.
+########################
+
 ${COMMON_CLASSES}: ${COMMON_SOURCES}
-	javac -source 1.4 -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
+	javac -target 1.3 -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
 
 ${CLUSTERING_CLASSES}: ${CLUSTERING_SOURCES}
-	javac -source 1.4 -classpath ${CLUSTERING_BUILD_CLASSPATH} -d classes ${CLUSTERING_SOURCES}
+	javac -target 1.3 -classpath ${CLUSTERING_BUILD_CLASSPATH} -d classes ${CLUSTERING_SOURCES}
 
-${SERVER_CLASSES}: ${SERVER_SOURCES} ${COMMON_CLASSES}
-	javac -source 1.4 -classpath ${SERVER_BUILD_CLASSPATH} -d classes ${SERVER_SOURCES}
+${SERVER_CLASSES}: ${SERVER_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES}
+	javac -target 1.3 -classpath ${SERVER_BUILD_CLASSPATH} -d classes ${SERVER_SOURCES}
 
-${CLIENT_CLASSES}: ${CLIENT_SOURCES} ${SERVER_CLASSES}
-	javac -source 1.4 -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
+${CLIENT_CLASSES}: ${CLIENT_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES}
+	javac -target 1.3 -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
 	cp src/client/resources/*.gif classes/client/.
 
 ${RMIC_CLASSES}: ${SERVER_CLASSES}
@@ -147,6 +150,7 @@ install: perfexplorer.jar
 	scp PerfExplorer-0.1.tar ix.cs.uoregon.edu:public_html/PerfExplorer-0.1.tar
 
 webstart: perfexplorer.jar
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer perfexplorer.jar khuck
 	cp perfexplorer.jar /Library/WebServer/Documents/perfexplorer/.
 	cp ${PERFDMF_JAR} /Library/WebServer/Documents/perfexplorer/.
 	cp ${JARGS_JAR} /Library/WebServer/Documents/perfexplorer/.

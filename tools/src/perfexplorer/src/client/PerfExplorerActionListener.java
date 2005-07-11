@@ -60,8 +60,8 @@ public class PerfExplorerActionListener implements ActionListener {
 				if(arg.equals(QUIT)) {
 					System.exit(0);
 				} else if(arg.equals(QUIT_SERVER)) {
-					PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-					server.stopServer();
+					//PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+					//server.stopServer();
 					System.exit(0);
 			// help menu items
 				} else if (arg.equals(ABOUT)) {

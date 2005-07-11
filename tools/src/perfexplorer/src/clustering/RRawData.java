@@ -39,8 +39,8 @@ public class RRawData implements RawDataInterface {
 	 * @see clustering.RawDataInterface#addValue(int, int, double)
 	 */
 	public void addValue(int vectorIndex, int dimensionIndex, double value) {
-		assert vectorIndex > 0 && vectorIndex < vectors : vectorIndex;
-		assert dimensionIndex > 0 && dimensionIndex < dimensions : dimensionIndex;
+		//assert vectorIndex > 0 && vectorIndex < vectors : vectorIndex;
+		//assert dimensionIndex > 0 && dimensionIndex < dimensions : dimensionIndex;
 		data[vectorIndex][dimensionIndex] = value;
 	}
 
@@ -48,8 +48,8 @@ public class RRawData implements RawDataInterface {
 	 * @see clustering.RawDataInterface#getValue(int, int)
 	 */
 	public double getValue(int vectorIndex, int dimensionIndex) {
-		assert vectorIndex > 0 && vectorIndex < vectors : vectorIndex;
-		assert dimensionIndex > 0 && dimensionIndex < dimensions : dimensionIndex;
+		// assert vectorIndex > 0 && vectorIndex < vectors : vectorIndex;
+		// assert dimensionIndex > 0 && dimensionIndex < dimensions : dimensionIndex;
 		return data[vectorIndex][dimensionIndex];
 	}
 
@@ -57,8 +57,8 @@ public class RRawData implements RawDataInterface {
 	 * @see clustering.RawDataInterface#getCartesianDistance(int, int)
 	 */
 	public double getCartesianDistance(int firstVector, int secondVector)  {
-		assert firstVector > 0 && firstVector < vectors : firstVector;
-		assert secondVector > 0 && secondVector < vectors : secondVector;
+		// assert firstVector > 0 && firstVector < vectors : firstVector;
+		// assert secondVector > 0 && secondVector < vectors : secondVector;
 		double distance = 0.0;
 		for (int i = 0 ; i < dimensions ; i++ ) {
 			double tmp = Math.abs(data[firstVector][i] - data[secondVector][i]);
@@ -71,8 +71,8 @@ public class RRawData implements RawDataInterface {
 	 * @see clustering.RawDataInterface#getManhattanDistance(int, int)
 	 */
 	public double getManhattanDistance(int firstVector, int secondVector) {
-		assert firstVector > 0 && firstVector < vectors : firstVector;
-		assert secondVector > 0 && secondVector < vectors : secondVector;
+		// assert firstVector > 0 && firstVector < vectors : firstVector;
+		// assert secondVector > 0 && secondVector < vectors : secondVector;
 
 		double distance = 0.0;
 		for (int i = 0 ; i < dimensions ; i++ ) {

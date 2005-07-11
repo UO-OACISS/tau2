@@ -31,7 +31,7 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	 * @see clustering.PrincipalComponentsAnalysisInterface#doPCA()
 	 */
 	public void doPCA() throws ClusterException {
-		assert instances != null : instances;
+		//assert instances != null : instances;
 
 /*
 		getCorrelationCoefficients();
@@ -105,7 +105,7 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	 * @see clustering.PrincipalComponentsAnalysisInterface#getResults()
 	 */
 	public RawDataInterface getResults() {
-		assert components != null : components;
+		//assert components != null : components;
 		WekaRawData transformed = new WekaRawData(components);
 		return transformed;
 	}
