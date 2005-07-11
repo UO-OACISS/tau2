@@ -3755,68 +3755,20 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
  > ${targetdir}/${architecture}/bin/perfdmf_configure
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_configure
 
-cat ${tauroot}/tools/src/dms/bin/loadapp.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/bin/perfdmf_loadapp
-chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadapp
-
 cat ${tauroot}/tools/src/dms/bin/createapp.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_createapp
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_createapp
-
-cat ${tauroot}/tools/src/dms/bin/loadexp.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/bin/perfdmf_loadexp
-chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadexp
 
 cat ${tauroot}/tools/src/dms/bin/createexp.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_createexp
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_createexp
 
-cat ${tauroot}/tools/src/dms/bin/loadschema.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/bin/perfdmf_loadschema
-chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadschema
-
 cat ${tauroot}/tools/src/dms/bin/loadtrial.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_loadtrial
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadtrial
-
-if [ ${tauprefix} = unknown ]
-then
-cat ${tauroot}/tools/src/dms/src/examples/testBuild.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/tools/src/dms/src/examples/testBuild
-chmod a+rx ${targetdir}/tools/src/dms/src/examples/testBuild
-
-cat ${tauroot}/tools/src/dms/src/examples/testSimpleExample.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/tools/src/dms/src/examples/testSimpleExample
-chmod a+rx ${targetdir}/tools/src/dms/src/examples/testSimpleExample
-
-cat ${tauroot}/tools/src/dms/src/examples/testScalabilityExample.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/tools/src/dms/src/examples/testScalabilityExample
-chmod a+rx ${targetdir}/tools/src/dms/src/examples/testScalabilityExample
-
-cat ${tauroot}/tools/src/dms/src/examples/testCopy.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/tools/src/dms/src/examples/testCopy
-chmod a+rx ${targetdir}/tools/src/dms/src/examples/testCopy
-
-cat ${tauroot}/tools/src/dms/src/examples/testDelete.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/tools/src/dms/src/examples/testDelete
-chmod a+rx ${targetdir}/tools/src/dms/src/examples/testDelete
-
-cat ${tauroot}/tools/src/dms/src/examples/testSave.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/tools/src/dms/src/examples/testSave
-chmod a+rx ${targetdir}/tools/src/dms/src/examples/testSave
-fi
 
 cat ${tauroot}/tools/src/perfexplorer/bin/configure.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir',' \
