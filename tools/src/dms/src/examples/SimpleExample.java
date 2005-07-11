@@ -1,116 +1,134 @@
-package examples;
 
 import java.util.*;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.dms.analysis.*;
 
 public class SimpleExample {
 
-    public SimpleExample() {
-	super();
-    }
-
     /*** Beginning of main program. ***/
-
     public static void main(java.lang.String[] args) {
+	try {
 
-	// Create a PerfDMFSession object
-	DataSession session = new PerfDMFSession();
-	session.initialize(args[0]);
+	    if (args.length < 1) {
+		System.out.println ("Usage: SimpleExample perfdmf.cfg");
+		System.exit(-1);
+	    }
 
-	// select the application
-	Application myApp = session.setApplication(1);
-	if (myApp != null)
-	    System.out.println("Got application: " + myApp.getName() + ", version " + myApp.getVersion());
+	    DatabaseAPI dbAPI = new DatabaseAPI();
 
-	// select an experiment
-	Experiment myExp = session.setExperiment(1);
-	if (myExp != null)
-	    System.out.println("Got experiment: " + myExp.getID());
+	    // prompt for password if not given
+	    dbAPI.initialize(args[0],true);
 
-	// Get the list of trials
-	ListIterator trials;
-	trials = session.getTrialList();
-	Trial myTrial = null;
+	    System.out.println ("API loaded...");
 
-	while (trials.hasNext()) {
-	    myTrial = (Trial)trials.next();
-	    session.setTrial(myTrial);
-	    break;
+	    // Get the list of applications
+	    Iterator applications;
+	    applications = dbAPI.getApplicationList().iterator();
+	    Application app = null;
+
+	    // loop through all the applications, and print out some info
+	    while (applications.hasNext()) {
+		app = (Application) applications.next();
+		System.out.println ("Application ID = " + app.getID() + ", name = " + app.getName());
+	    }
+	    
+	    // the following code shows how to select applications -
+	    // use one of the following methods.  You don't have to 
+	    // do all of them, just one.
+	    //
+
+	    // select an application
+	    dbAPI.setApplication(app);
+	    // select an application, another way
+	    dbAPI.setApplication(app.getID());
+	    // select an application, yet another way
+	    dbAPI.setApplication(app.getName(), null);
+
+	    // Get the list of experiments
+	    Iterator experiments;
+	    experiments = dbAPI.getExperimentList().iterator();
+	    Experiment exp = null;
+
+	    while(experiments.hasNext()) {
+		exp = (Experiment) experiments.next();
+		System.out.println ("Experiment ID = " + exp.getID() + ", appid = " + exp.getApplicationID());
+	    }
+
+	    // select an experiment
+	    dbAPI.setExperiment(exp);
+	    // select an experiment, another way
+	    dbAPI.setExperiment(exp.getID());
+
+	    // Get the list of trials
+	    Iterator trials;
+	    trials = dbAPI.getTrialList().iterator();
+	    Trial trial = null;
+	    Vector tmpTrials = new Vector();
+
+	    while(trials.hasNext()) {
+		trial = (Trial) trials.next();
+		tmpTrials.addElement(trial);
+		System.out.println ("Trial ID = " + trial.getID() + ", Experiment ID = " + trial.getExperimentID() + ", appid = " + trial.getApplicationID());
+	    }
+	    
+	    // select a trial
+	    dbAPI.setTrial(trial.getID());
+	    // select a trial, another way
+	    dbAPI.setTrial(trial.getID());
+
+	    // get the metric count
+	    int metricCount = trial.getMetricCount();
+	    System.out.println ("Metric count: " + metricCount);
+
+	    // Get the list of functions
+	    Iterator functions;
+	    functions = dbAPI.getIntervalEvents().iterator();
+	    IntervalEvent function = null;
+
+	    while (functions.hasNext()) {
+		function = (IntervalEvent) functions.next();
+		System.out.println ("IntervalEvent Name = " + function.getName());
+	    }
+
+	    // select a function
+	    dbAPI.setIntervalEvent(function.getID());
+
+	    if (function != null) {
+		// select a function, another way
+		dbAPI.setIntervalEvent(function.getID());
+	    }
+
+	    // Get the list of user events
+	    Iterator userEvents;
+	    userEvents = dbAPI.getAtomicEvents().iterator();
+	    AtomicEvent userEvent = null;
+
+	    while (userEvents.hasNext()) {
+		userEvent = (AtomicEvent) userEvents.next();
+		System.out.println ("AtomicEvent Name = " + userEvent.getName());
+		AtomicLocationProfile means = userEvent.getMeanSummary();
+		AtomicLocationProfile totals = userEvent.getTotalSummary();
+		if (means.getMeanValue() != 0.0) {
+		    System.out.print ("AtomicEvent Mean Value: Average = " + means.getMeanValue());
+		    System.out.println (", Total = " + totals.getMeanValue());
+		} else {
+		    System.out.print ("AtomicEvent Sample Count: Average = " + means.getSampleCount());
+		    System.out.println (", Total = " + totals.getSampleCount());
+		}
+	    }
+	    
+	    // select a userEvent
+	    dbAPI.setAtomicEvent(userEvent.getID());
+	    // select a userEvent, another way
+	    if (userEvent != null)
+		dbAPI.setAtomicEvent(userEvent.getID());
+
+	    dbAPI.terminate();
+	    System.out.println ("Exiting.");
+
+	} catch (Exception e) {
+	    e.printStackTrace();
 	}
-
-	//session.setNode(0);
-	//session.setContext(0);
-	//session.setThread(0);
-	//session.setMetric("time");
-	session.setIntervalEvent(37);
-	IntervalEvent nullFun = null;
-	session.setIntervalEvent(nullFun);
-	session.setIntervalEvent(39);
-
-	ListIterator myIterator;
-	// Get the data
-	System.out.println("Getting function data...");
-	myIterator = session.getIntervalEventData();
-	System.out.println(" ...done.");
-	IntervalLocationProfile functionDataObject;
-	IntervalEvent function = null;
-	String name, group;
-	int functionIndexID, trial, node, context, thread;
-	double inclusivePercentage, inclusive, exclusive, exclusivePercentage, inclusivePerCall;
-
-	System.out.println ("Inclusive, Exclusive, Inc. Percent, Ex. Percent, Inc. Per. call:");
-	System.out.println ("Trial, Node, Context, Thread, Name, Group, Values:");
-	while (myIterator.hasNext()) {
-	    functionDataObject = (IntervalLocationProfile)(myIterator.next());
-	    functionIndexID = functionDataObject.getIntervalEventID();
-	    System.out.println("function ID:" + functionIndexID);
-	    function = session.getIntervalEvent(functionIndexID);
-	    name = function.getName();
-	    group = function.getGroup();
-	    trial = function.getTrialID();
-	    node = functionDataObject.getNode();
-	    context = functionDataObject.getContext();
-	    thread = functionDataObject.getThread();
-	    inclusivePercentage = functionDataObject.getInclusivePercentage();
-	    exclusivePercentage = functionDataObject.getExclusivePercentage();
-	    inclusive = functionDataObject.getInclusive();
-	    exclusive = functionDataObject.getExclusive();
-	    inclusivePerCall = functionDataObject.getInclusivePerCall();
-	    System.out.println (trial + ", " + node + ", " + context + ", " + thread + ", " + name + ", " + group + " = [" + inclusive + ", " + exclusive + ", " + inclusivePercentage + ", " + exclusivePercentage + ", " + inclusivePerCall +"]");
-	}
-
-	// get the user events
-	System.out.println("Getting userEvent data...");
-	myIterator = session.getAtomicEventData();
-	System.out.println(" ...done.");
-	AtomicLocationProfile userEventDataObject;
-	AtomicEvent userEvent = null;
-	int id;
-	double sampleCount, minimumValue, maximumValue, meanValue, sumSquared;
-
-	System.out.println ("UserEvents:");
-	System.out.println ("Trial, Node, Context, Thread, Name, Group, Count, Min, Max, Mean, SumSqr:");
-	while (myIterator.hasNext()) {
-	    userEventDataObject = (AtomicLocationProfile)(myIterator.next());
-	    id = userEventDataObject.getAtomicEventID();
-	    userEvent = session.getAtomicEvent(id);
-	    name = userEvent.getName();
-	    group = userEvent.getGroup();
-	    trial = userEvent.getTrialID();
-	    node = userEventDataObject.getNode();
-	    context = userEventDataObject.getContext();
-	    thread = userEventDataObject.getThread();
-	    sampleCount = userEventDataObject.getSampleCount();
-	    minimumValue = userEventDataObject.getMinimumValue();
-	    maximumValue = userEventDataObject.getMaximumValue();
-	    meanValue = userEventDataObject.getMeanValue();
-	    sumSquared = userEventDataObject.getSumSquared();
-	    System.out.println (trial + ", " + node + ", " + context + ", " + thread + ", " + name + ", " + group + " = [" + sampleCount + ", " + minimumValue + ", " + maximumValue + ", " + meanValue + ", " + sumSquared +"]");
-	}
-
-	// disconnect and exit.
-	session.terminate();
-	System.out.println ("Exiting.");
 	return;
     }
 }
