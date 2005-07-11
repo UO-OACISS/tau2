@@ -28,6 +28,15 @@ public class ParseConfig {
 	try{
 	    BufferedReader reader = new BufferedReader(new FileReader(configLoc));
 
+//        URL url = ParseConfig.class.getResource("/perfdmf.cfg");
+//        
+//        if (url == null) {
+//            throw new IOException("Couldn't get perfdmf.cfg from the jar");
+//        }
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+//        
+        
+        
 	    while ((inputString = reader.readLine())!= null){
 		
 		if (inputString.startsWith("#") || inputString.trim().equals(""))
