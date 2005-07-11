@@ -10,28 +10,28 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.24 2005/07/01 19:13:55 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.25 2005/07/11 22:59:52 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.24 $
+ * @version	$Revision: 1.25 $
  * @see		ParaProfManagerTableModel
  */
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.URI;
+import java.sql.SQLException;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 
-import com.sun.rsasign.i;
-
 import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.dms.database.*;
-import java.sql.SQLException;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener, TreeSelectionListener,
         TreeWillExpandListener {
@@ -1549,8 +1549,14 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     //        return null;
     //    }
 
+    
+   // private DatabaseAPI dbAPI = null;
+    
     public DatabaseAPI getDatabaseAPI() {
 
+        //if (dbAPI != null) {
+       //     return dbAPI;
+       // }
         try {
             //Check to see if the user has set configuration information.
             if (ParaProf.preferences.getDatabaseConfigurationFile() == null) {
@@ -1558,12 +1564,18 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         "DB Configuration Error!", JOptionPane.ERROR_MESSAGE);
                 return null;
             } else {//Test to see if configurataion file exists.
-                File file = new File(ParaProf.preferences.getDatabaseConfigurationFile());
-                if (!file.exists()) {
-                    JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
-                            "DB Configuration Error!", JOptionPane.ERROR_MESSAGE);
-                    return null;
-                }
+                
+                File file;
+               // if (ParaProf.JNLP) {
+                //    file = new File(new URI()ParaProf.class.getResource("/perfdmf.cfg")));
+                //} else {
+                    file = new File(ParaProf.preferences.getDatabaseConfigurationFile());
+               // }
+//                if (!file.exists()) {
+//                    JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
+//                            "DB Configuration Error!", JOptionPane.ERROR_MESSAGE);
+//                    return null;
+//                }
             }
             //Basic checks done, try to access the db.
             DatabaseAPI databaseAPI = new DatabaseAPI();
@@ -1591,6 +1603,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 }
             }
 
+         //   dbAPI = databaseAPI;
             return databaseAPI;
         } catch (Exception e) {
             //Try and determine what went wrong, and then popup the help window

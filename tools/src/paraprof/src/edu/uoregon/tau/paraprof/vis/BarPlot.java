@@ -3,8 +3,9 @@ package edu.uoregon.tau.paraprof.vis;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -13,16 +14,15 @@ import javax.swing.event.ChangeListener;
 import net.java.games.jogl.GL;
 import net.java.games.jogl.GLDrawable;
 import net.java.games.jogl.util.GLUT;
-import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 /**
  * Draws 3d bars
  *    
  * TODO: Distinguish between zero and not called?!?
  *
- * <P>CVS $Id: BarPlot.java,v 1.5 2005/05/31 23:21:53 amorris Exp $</P>
+ * <P>CVS $Id: BarPlot.java,v 1.6 2005/07/11 22:59:53 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class BarPlot implements Plot {
 
@@ -356,7 +356,7 @@ public class BarPlot implements Plot {
     }
 
     public void cleanUp() {
-        ParaProfUtils.vout(this, "Cleaning up!");
+        VisTools.vout(this, "Cleaning up!");
         // delete displaylists
         if (displayLists != null) {
             for (int i = 0; i < displayLists.size(); i++) {
@@ -497,14 +497,14 @@ public class BarPlot implements Plot {
 
             }
 
-            ParaProfUtils.vout(this, "Saved " + colorsSaved + " colors");
-            ParaProfUtils.vout(this, "Used " + colorsNotSaved + " colors");
-            ParaProfUtils.vout(this, "Saved " + numBoxesSaved + " boxes");
-            ParaProfUtils.vout(this, "Used " + numBoxesUsed + " boxes");
+            VisTools.vout(this, "Saved " + colorsSaved + " colors");
+            VisTools.vout(this, "Used " + colorsNotSaved + " colors");
+            VisTools.vout(this, "Saved " + numBoxesSaved + " boxes");
+            VisTools.vout(this, "Used " + numBoxesUsed + " boxes");
             gl.glEnd();
             gl.glPopMatrix();
             gl.glEndList();
-            ParaProfUtils.vout(this, "Created " + displayLists.size() + " display lists");
+            VisTools.vout(this, "Created " + displayLists.size() + " display lists");
         }
 
         for (int i = 0; i < displayLists.size(); i++) {
@@ -784,7 +784,7 @@ public class BarPlot implements Plot {
                     BarPlot.this.setBarSize(barSizeSlider.getValue() / 100.0f);
                     visRenderer.redraw();
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         });
@@ -796,7 +796,7 @@ public class BarPlot implements Plot {
                     BarPlot.this.setTranslucency(translucencySlider.getValue() / 100.0f);
                     visRenderer.redraw();
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         });
@@ -812,7 +812,7 @@ public class BarPlot implements Plot {
                             plotHeightSlider.getValue());
                     visRenderer.redraw();
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         };
@@ -828,7 +828,7 @@ public class BarPlot implements Plot {
                     visRenderer.redraw();
 
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         });

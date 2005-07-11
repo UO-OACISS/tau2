@@ -14,16 +14,15 @@ import javax.swing.event.ChangeListener;
 import net.java.games.jogl.GL;
 import net.java.games.jogl.GLDrawable;
 import net.java.games.jogl.util.GLUT;
-import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 /**
  * Draws a 3d triangle mesh
  * 
  * TODO: transparency controls.  Back to front drawing (utilize 'direction') for correct blending
  *
- * <P>CVS $Id: TriangleMeshPlot.java,v 1.5 2005/05/31 23:21:53 amorris Exp $</P>
+ * <P>CVS $Id: TriangleMeshPlot.java,v 1.6 2005/07/11 22:59:53 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class TriangleMeshPlot implements Plot {
 
@@ -368,7 +367,7 @@ public class TriangleMeshPlot implements Plot {
 
             gl.glEndList();
 
-            ParaProfUtils.vout(this, "Created " + displayLists.size() + " display lists");
+            VisTools.vout(this, "Created " + displayLists.size() + " display lists");
             dirty = false;
         }
 
@@ -476,7 +475,7 @@ public class TriangleMeshPlot implements Plot {
 
             gl.glEndList();
 
-            ParaProfUtils.vout(this, "Created " + displayLists.size() + " display lists");
+            VisTools.vout(this, "Created " + displayLists.size() + " display lists");
             dirty = false;
         }
 
@@ -849,7 +848,7 @@ public class TriangleMeshPlot implements Plot {
                     setTranslucency(translucencySlider.getValue() / 100.0f);
                     visRenderer.redraw();
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         });
@@ -873,7 +872,7 @@ public class TriangleMeshPlot implements Plot {
                     //        plotHeightSlider.getValue());
                     visRenderer.redraw();
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         };
@@ -890,7 +889,7 @@ public class TriangleMeshPlot implements Plot {
                     visRenderer.redraw();
 
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         });

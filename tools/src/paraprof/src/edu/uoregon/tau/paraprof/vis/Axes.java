@@ -12,16 +12,15 @@ import javax.swing.*;
 import net.java.games.jogl.GL;
 import net.java.games.jogl.GLDrawable;
 import net.java.games.jogl.util.GLUT;
-import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 /**
  * Draws axes with labels
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Axes.java,v 1.7 2005/06/13 21:23:35 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.8 2005/07/11 22:59:53 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  */
 public class Axes implements Shape {
 
@@ -222,7 +221,7 @@ public class Axes implements Shape {
                     visRenderer.redraw();
 
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         });
@@ -246,7 +245,7 @@ public class Axes implements Shape {
                     visRenderer.redraw();
 
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         };
@@ -275,20 +274,20 @@ public class Axes implements Shape {
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0.2;
         gbc.weighty = 0.2;
-        ParaProfUtils.addCompItem(axesPanel, enabledCheckBox, gbc, 0, 0, 1, 3);
+        VisTools.addCompItem(axesPanel, enabledCheckBox, gbc, 0, 0, 1, 3);
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.fill = GridBagConstraints.NONE;
-        ParaProfUtils.addCompItem(axesPanel, new JLabel("Orientation"), gbc, 1, 0, 2, 1);
+        VisTools.addCompItem(axesPanel, new JLabel("Orientation"), gbc, 1, 0, 2, 1);
 
         gbc.anchor = GridBagConstraints.EAST;
         gbc.fill = GridBagConstraints.NONE;
 
-        ParaProfUtils.addCompItem(axesPanel, nw, gbc, 1, 1, 1, 1);
-        ParaProfUtils.addCompItem(axesPanel, sw, gbc, 1, 2, 1, 1);
+        VisTools.addCompItem(axesPanel, nw, gbc, 1, 1, 1, 1);
+        VisTools.addCompItem(axesPanel, sw, gbc, 1, 2, 1, 1);
 
         gbc.anchor = GridBagConstraints.WEST;
-        ParaProfUtils.addCompItem(axesPanel, ne, gbc, 2, 1, 1, 1);
-        ParaProfUtils.addCompItem(axesPanel, se, gbc, 2, 2, 1, 1);
+        VisTools.addCompItem(axesPanel, ne, gbc, 2, 1, 1, 1);
+        VisTools.addCompItem(axesPanel, se, gbc, 2, 2, 1, 1);
 
         return axesPanel;
     }

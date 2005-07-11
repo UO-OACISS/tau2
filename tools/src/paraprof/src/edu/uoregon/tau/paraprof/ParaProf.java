@@ -5,6 +5,8 @@ import jargs.gnu.CmdLineParser;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.Iterator;
 import java.util.List;
 
@@ -18,11 +20,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.48 2005/06/22 20:05:45 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.49 2005/07/11 22:59:52 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.48 $
+ * @version $Revision: 1.49 $
  */
 public class ParaProf implements ActionListener {
 
@@ -67,7 +69,8 @@ public class ParaProf implements ActionListener {
     //End - Command line options related.
 
     private ParaProfTrial pptrial = null;
-
+    public static boolean JNLP = false;
+    
     public ParaProf() {
 
         try {
@@ -96,22 +99,17 @@ public class ParaProf implements ActionListener {
     }
 
     private static void outputHelp() {
-        System.err.println("Usage: paraprof [options] <files/directory> \n\n"
-                + "Options:\n\n"
+        System.err.println("Usage: paraprof [options] <files/directory> \n\n" + "Options:\n\n"
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
-                + "                                    gprof, psrun, hpm, packed, cube, hpc\n"
-                + "\n"
+                + "                                    gprof, psrun, hpm, packed, cube, hpc\n" + "\n"
                 + "  -h, --help                      Display this help message\n"
                 + "  -p                              Use `pprof` to compute derived data\n"
-                + "  -i, --fixnames                  Use the fixnames option for gprof\n"
-                + "\n"
+                + "  -i, --fixnames                  Use the fixnames option for gprof\n" + "\n"
                 + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
                 + "                                    (does not launch ParaProf GUI)\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
-                + "                                    (does not launch ParaProf GUI)\n"
-                + "\n"
-                + "Notes:\n"
+                + "                                    (does not launch ParaProf GUI)\n" + "\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -144,7 +142,11 @@ public class ParaProf implements ActionListener {
         ParaProf.helpWindow = new HelpWindow();
         ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
 
-        paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames);
+        try {
+            paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames);
+        } catch (java.security.AccessControlException ace) {
+            // running as Java Web Start without permission
+        }
     }
 
     public void startSystem() {
@@ -159,47 +161,70 @@ public class ParaProf implements ActionListener {
             //Establish the presence of a .ParaProf directory. This is located
             // by default in the user's home directory.
 
-            ParaProf.paraProfHomeDirectory = new File(System.getProperty("user.home") + "/.ParaProf");
-            if (paraProfHomeDirectory.exists()) {
-
-                //Try and load a preference file ... ParaProfPreferences.dat
-                try {
-                    FileInputStream savedPreferenceFIS = new FileInputStream(ParaProf.paraProfHomeDirectory.getPath()
-                            + "/ParaProf.conf");
-
-                    //If here, means that no exception was thrown, and there is a preference file present.
-                    //Create ObjectInputStream and try to read it in.
-                    ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
-                    ParaProf.preferences = (Preferences) inSavedPreferencesOIS.readObject();
-                    ParaProf.preferences.setLoaded(true);
-                    colorChooser = new ColorChooser(ParaProf.preferences);
-                } catch (Exception e) {
-                    if (e instanceof FileNotFoundException) {
-                        //System.out.println("No preference file present, using defaults!");
-                    } else {
-                        //Print some kind of error message, and quit the system.
-                        System.out.println("Error while trying to read the ParaProf preferences file, using defaults");
-                        //                        System.out.println("Please delete this file, or replace it with a valid one!");
-                        //                        System.out.println("Note: Deleting the file will cause ParaProf to restore the default preferences");
-                    }
+            try {
+                if (System.getProperty("jnlp.running") != null) {
+                    ParaProf.JNLP = true;
                 }
+            } catch (java.security.AccessControlException ace) {
+                ParaProf.JNLP = true;
+            }
 
-                ParaProf.colorMap.setMap(preferences.getAssignedColors());
-                ParaProf.preferences.setDatabasePassword(null);
+            if (ParaProf.JNLP == false) {
+                ParaProf.paraProfHomeDirectory = new File(System.getProperty("user.home") + "/.ParaProf");
+                if (paraProfHomeDirectory.exists()) {
 
-                //Try and find perfdmf.cfg.
-                File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
-                if (perfDMFcfg.exists()) {
-                    //System.out.println("Found db configuration file: "
-                    //        + ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
-                    ParaProf.preferences.setDatabaseConfigurationFile(ParaProf.paraProfHomeDirectory.getPath()
-                            + "/perfdmf.cfg");
-                } else
-                    System.out.println("Did not find db configuration file ... load manually");
+                    //Try and load a preference file ... ParaProfPreferences.dat
+                    try {
+                        FileInputStream savedPreferenceFIS = new FileInputStream(ParaProf.paraProfHomeDirectory.getPath()
+                                + "/ParaProf.conf");
+
+                        //If here, means that no exception was thrown, and there is a preference file present.
+                        //Create ObjectInputStream and try to read it in.
+                        ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
+                        ParaProf.preferences = (Preferences) inSavedPreferencesOIS.readObject();
+                        ParaProf.preferences.setLoaded(true);
+                        colorChooser = new ColorChooser(ParaProf.preferences);
+                    } catch (Exception e) {
+                        if (e instanceof FileNotFoundException) {
+                            //System.out.println("No preference file present, using defaults!");
+                        } else {
+                            //Print some kind of error message, and quit the system.
+                            System.out.println("Error while trying to read the ParaProf preferences file, using defaults");
+                            //                        System.out.println("Please delete this file, or replace it with a valid one!");
+                            //                        System.out.println("Note: Deleting the file will cause ParaProf to restore the default preferences");
+                        }
+                    }
+
+                    ParaProf.colorMap.setMap(preferences.getAssignedColors());
+                    ParaProf.preferences.setDatabasePassword(null);
+
+                    //Try and find perfdmf.cfg.
+                    File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
+                    if (perfDMFcfg.exists()) {
+                        //System.out.println("Found db configuration file: "
+                        //        + ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
+                        ParaProf.preferences.setDatabaseConfigurationFile(ParaProf.paraProfHomeDirectory.getPath()
+                                + "/perfdmf.cfg");
+                    } else {
+                        System.out.println("Did not find db configuration file ... load manually");
+                    }
+
+                } else {
+                    System.out.println("Did not find ParaProf home directory ... creating ...");
+                    paraProfHomeDirectory.mkdir();
+                    System.out.println("Done creating ParaProf home directory!");
+                }
             } else {
-                System.out.println("Did not find ParaProf home directory ... creating ...");
-                paraProfHomeDirectory.mkdir();
-                System.out.println("Done creating ParaProf home directory!");
+                // Java Web Start
+                //URL url = ParaProf.class.getResource("/perfdmf.cfg");
+                //throw new ParaProfException("URL = " + url);
+                
+                URL url = ParaProf.class.getResource("/perfdmf.cfg");
+                
+                String path = URLDecoder.decode(url.getPath());
+                
+                ParaProf.preferences.setDatabaseConfigurationFile(path);
+
             }
 
             if (colorChooser == null) {
@@ -207,13 +232,18 @@ public class ParaProf implements ActionListener {
             }
 
             ParaProf.preferencesWindow = new PreferencesWindow(preferences);
-            
+
             DataSource.setMeanIncludeNulls(!preferences.getComputeMeanWithoutNulls());
 
             //            javax.swing.SwingUtilities.invokeLater(new Runnable() {
             //              public void run() {
-            System.setProperty("sun.awt.exception.handler", XThrowableHandler.class.getName());
+            try {
+                System.setProperty("sun.awt.exception.handler", XThrowableHandler.class.getName());
+            } catch (java.security.AccessControlException ace) {
+                // running as Java Web Start without permission
+            }
             loadDefaultTrial();
+
             //            }
             //      });
 
@@ -273,7 +303,11 @@ public class ParaProf implements ActionListener {
         //   e.printStackTrace();
         //}
 
-        savePreferences(new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf"));
+        try {
+            savePreferences(new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf"));
+        } catch (Exception e) {
+            // we'll get an exception here if running under Java Web Start
+        }
 
         System.exit(exitValue);
     }
@@ -301,12 +335,11 @@ public class ParaProf implements ActionListener {
     // Main entry point
     static public void main(String[] args) {
 
-     
         final ParaProf paraProf = new ParaProf();
 
         // Set the tooltip delay to 20 seconds
         ToolTipManager.sharedInstance().setDismissDelay(20000);
-        
+
         // Process command line arguments
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
@@ -387,13 +420,12 @@ public class ParaProf implements ActionListener {
                 dataSource.load();
                 System.out.println("Packing data...");
                 ParaProfUtils.writePacked(dataSource, new File(pack));
-                
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
             System.exit(0);
         }
-
 
         if (unpack != null && unpack.booleanValue()) {
             try {
@@ -410,14 +442,13 @@ public class ParaProf implements ActionListener {
                 dataSource.load();
                 System.out.println("Creating TAU Profile data...");
                 ParaProfUtils.writeProfiles(dataSource, new File("."));
-                
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
             System.exit(0);
         }
 
-        
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 paraProf.startSystem();

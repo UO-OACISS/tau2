@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.interfaces.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.26 2005/06/17 22:13:46 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.27 2005/07/11 22:59:52 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.26 $
+ * @version	$Revision: 1.27 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -68,7 +68,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         addKeyListener(this);
 
         //Now set the title.
-        if (windowType == 0) {
+        //if (windowType == 0) {
             if (thread.getNodeID() == -1) {
                 this.setTitle("Mean Call Path Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
             } else if (thread.getNodeID() == -3) {
@@ -77,9 +77,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
                         + ppTrial.getTrialIdentifier(true));
             }
-        } else {
-            this.setTitle("Call Path Data Relations - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        }
+        //} else {
+        //    this.setTitle("Call Path Data Relations - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+       // }
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {

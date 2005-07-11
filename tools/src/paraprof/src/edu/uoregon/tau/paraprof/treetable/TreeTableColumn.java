@@ -18,9 +18,9 @@ import edu.uoregon.tau.paraprof.ParaProf;
  * 
  * This is starting to get messy and should be rethought
  *
- * <P>CVS $Id: TreeTableColumn.java,v 1.3 2005/06/09 00:34:16 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableColumn.java,v 1.4 2005/07/11 22:59:53 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 abstract public class TreeTableColumn {
     protected TreeTableWindow window;
@@ -588,35 +588,7 @@ abstract public class TreeTableColumn {
         }
     }
 
-    //    static class InclPerCallColumn extends TreeTableColumn {
-    //        private int metricID;
-    //        private ParaProfTrial ppTrial;
-    //
-    //        public InclPerCallColumn(ParaProfTrial ppTrial, int metricID) {
-    //            this.metricID = metricID;
-    //            this.ppTrial = ppTrial;
-    //        }
-    //
-    //        public String toString() {
-    //            return "Inclusive " + ppTrial.getMetricName(metricID) + " Per Call";
-    //        }
-    //
-    //    }
-    //
-    //    static class ExclPerCallColumn extends TreeTableColumn {
-    //        private int metricID;
-    //        private ParaProfTrial ppTrial;
-    //
-    //        public ExclPerCallColumn(ParaProfTrial ppTrial, int metricID) {
-    //            this.metricID = metricID;
-    //            this.ppTrial = ppTrial;
-    //        }
-    //
-    //        public String toString() {
-    //            return "Exclusive " + ppTrial.getMetricName(metricID) + " Per Call";
-    //        }
-    //
-    //    }
+   
 
     static class MiniHistogramCellRenderer implements TableCellRenderer {
         private TreeTableWindow window;

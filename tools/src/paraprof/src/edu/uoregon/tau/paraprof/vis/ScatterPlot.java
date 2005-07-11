@@ -8,16 +8,15 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.java.games.jogl.*;
-import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 /**
  * Draws a scatterplot along 4 axes
  *
  * @author Alan Morris
  *
- * <P>CVS $Id: ScatterPlot.java,v 1.4 2005/05/31 23:21:53 amorris Exp $</P>
+ * <P>CVS $Id: ScatterPlot.java,v 1.5 2005/07/11 22:59:53 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class ScatterPlot implements Plot {
 
@@ -151,7 +150,7 @@ public class ScatterPlot implements Plot {
                     ScatterPlot.this.setSphereSize(sphereSizeSlider.getValue() / 10.0f);
                     visRenderer.redraw();
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         });
@@ -162,15 +161,15 @@ public class ScatterPlot implements Plot {
                     ScatterPlot.this.setSphereDetail(sphereDetailSlider.getValue());
                     visRenderer.redraw();
                 } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+                    VisTools.handleException(e);
                 }
             }
         });
 
-        ParaProfUtils.addCompItem(panel, new JLabel("Point size"), gbc, 0, 0, 1, 1);
-        ParaProfUtils.addCompItem(panel, sphereSizeSlider, gbc, 1, 0, 1, 1);
-        ParaProfUtils.addCompItem(panel, new JLabel("Point detail"), gbc, 0, 1, 1, 1);
-        ParaProfUtils.addCompItem(panel, sphereDetailSlider, gbc, 1, 1, 1, 1);
+        VisTools.addCompItem(panel, new JLabel("Point size"), gbc, 0, 0, 1, 1);
+        VisTools.addCompItem(panel, sphereSizeSlider, gbc, 1, 0, 1, 1);
+        VisTools.addCompItem(panel, new JLabel("Point detail"), gbc, 0, 1, 1, 1);
+        VisTools.addCompItem(panel, sphereDetailSlider, gbc, 1, 1, 1, 1);
 
         return panel;
     }

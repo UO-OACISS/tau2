@@ -13,6 +13,15 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.ColorBar;
 import edu.uoregon.tau.paraprof.ParaProf;
 
+/**
+ * Represents a node in the TreeTable
+ *    
+ * TODO : ...
+ *
+ * <P>CVS $Id: TreeTableNode.java,v 1.3 2005/07/11 22:59:53 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.3 $
+ */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
     private FunctionProfile functionProfile;

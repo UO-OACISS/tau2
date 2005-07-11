@@ -67,6 +67,12 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     float maxScatterValues[];
 
     public ThreeDeeWindow(ParaProfTrial ppTrial) {
+        // set the VisTools exception handler
+        VisTools.setSwingExceptionHandler(new ExceptionHandler() {
+            public void handleException(Exception e) {
+                ParaProfUtils.handleException(e);
+            }
+        });
         this.ppTrial = ppTrial;
         ppTrial.getSystemEvents().addObserver(this);
 
@@ -406,14 +412,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             plot.setSelectedRow(newSettings.getSelections()[0]);
 
             if (newSettings.getVisType() == VisType.SCATTER_PLOT) {
-
                 visRenderer.setAim(settings.getScatterAim());
-                visRenderer.setEye(settings.getScatterEye());
-
             } else if (newSettings.getVisType() == VisType.TRIANGLE_MESH_PLOT
                     || newSettings.getVisType() == VisType.BAR_PLOT) {
                 visRenderer.setAim(settings.getRegularAim());
-                visRenderer.setEye(settings.getRegularEye());
             }
 
         } else {

@@ -10,7 +10,6 @@ import javax.swing.*;
 import net.java.games.jogl.GL;
 import net.java.games.jogl.GLDrawable;
 import net.java.games.jogl.util.GLUT;
-import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 /**
  * Draws a colorscale and also provides services to other vis components,
@@ -19,9 +18,9 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  *    
  * TODO: Provide control over font size perhaps?
  *
- * <P>CVS $Id: ColorScale.java,v 1.4 2005/05/06 01:19:11 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.5 2005/07/11 22:59:53 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class ColorScale extends Observable implements Shape {
 
@@ -140,7 +139,7 @@ public class ColorScale extends Observable implements Shape {
         gbc.weighty = 0.2;
 
         JCheckBox enabledCheckBox = new JCheckBox("Show ColorScale", true);
-        ParaProfUtils.addCompItem(controlPanel, enabledCheckBox, gbc, 0, 0, 1, 1);
+        VisTools.addCompItem(controlPanel, enabledCheckBox, gbc, 0, 0, 1, 1);
         enabledCheckBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 ColorScale.this.enabled = ((JCheckBox) evt.getSource()).isSelected();
@@ -149,7 +148,7 @@ public class ColorScale extends Observable implements Shape {
             }
         });
 
-        //        ParaProfUtils.addCompItem(controlPanel, new JLabel("ColorScale Selection"), gbc, 0, 1, 1, 1);
+        //        VisTools.addCompItem(controlPanel, new JLabel("ColorScale Selection"), gbc, 0, 1, 1, 1);
         ButtonGroup group = new ButtonGroup();
 
         final Map colorScaleMap = new HashMap();
@@ -174,7 +173,7 @@ public class ColorScale extends Observable implements Shape {
                 }
             });
 
-            ParaProfUtils.addCompItem(controlPanel, jrb, gbc, x, y, 1, 1);
+            VisTools.addCompItem(controlPanel, jrb, gbc, x, y, 1, 1);
 
             if (x == 0) {
                 x++;

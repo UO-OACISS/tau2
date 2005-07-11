@@ -677,6 +677,10 @@ public class ParaProfUtils {
             endElement = (size - 1);
         }
 
+        if (startElement < 0) {
+            startElement = 0;
+        }
+        
         int[] clips = new int[3];
         clips[0] = startElement;
         clips[1] = endElement;

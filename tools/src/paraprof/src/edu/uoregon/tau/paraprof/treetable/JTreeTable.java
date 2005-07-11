@@ -35,15 +35,17 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  * by using a JTree as a renderer (and editor) for the cells in a 
  * particular column in the JTable.  
  *
- * This file comes from :
+ * This file (originally) comes from :
  * 
  * http://java.sun.com/products/jfc/tsc/articles/treetable1/
- *
+ *  
+ * But has been heavily modified/fixed.
  *
  * @version 1.2 10/27/98
  *
  * @author Philip Milne
  * @author Scott Violet
+ * @author Alan Morris
  */
 public class JTreeTable extends JTable implements MouseListener {
     /** A subclass of JTree. */

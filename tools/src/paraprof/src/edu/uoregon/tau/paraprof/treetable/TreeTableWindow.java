@@ -23,6 +23,17 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.treetable.ColumnChooser.CheckBoxListItem;
 import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
 
+/**
+ * Displays callpath data in a Cube style tree/table.  Non-callpath data is also displayed as a flat tree.
+ * This is a replacement for the statistics text window.  It shows all that data and more, plus allows easy
+ * sorting by column, reordering of columns, and choosing of columns.
+ *    
+ * TODO : ...
+ *
+ * <P>CVS $Id: TreeTableWindow.java,v 1.5 2005/07/11 22:59:53 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.5 $
+ */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
 
@@ -44,20 +55,21 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
         this.ppTrial = ppTrial;
         this.thread = thread;
+        ppTrial.getSystemEvents().addObserver(this);
 
+        // create the column chooser.  Note: the column chooser holds the data on which columns are shown
         columnChooser = new ColumnChooser(this, ppTrial);
 
         setSize(1000, 600);
         setLocation(300, 200);
 
-        //Now set the title.
-        if (thread.getNodeID() < 0)
+        if (thread.getNodeID() < 0) {
             this.setTitle("Mean Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        else
+        } else {
             this.setTitle("Thread Statistics: " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
                     + thread.getThreadID() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        }
 
-        //Set the help window text if required.
         if (ParaProf.helpWindow.isVisible()) {
             this.help(false);
         }
@@ -70,42 +82,18 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     public void updateColumns() {
 
-        //for (int i = 1; i < columns.size(); i++) {
-       //     treeTable.getColumnModel().removeColumn(treeTable.getColumnModel().getColumn(i));
-       // }
-
         setColumns();
-        
+
         AbstractTableModel atm = (AbstractTableModel) treeTable.getModel();
-        atm.fireTableChanged(new TableModelEvent(atm,  TableModelEvent.HEADER_ROW));
-        
-        
-        //while (treeTable.getColumnCount() > 1) {
-        //    treeTable.getColumnModel().getColumn(0);
-        //}
+        atm.fireTableChanged(new TableModelEvent(atm, TableModelEvent.HEADER_ROW));
 
-        //treeTable.setAutoCreateColumnsFromModel(false);
-        
-
-//        if (scrollPane != null) {
-//            getContentPane().remove(scrollPane);
-//        }
-//        
-//        JTreeTable treeTable = createTreeTable(model);
-////      treeTable.setAutoCreateColumnsFromModel(true);
-//
-//        scrollPane = new JScrollPane(treeTable);
-
-        //for (int i = 0; i < columns.size(); i++) {
-//            treeTable.getColumnModel().addColumn(new TableColumn());
-       //     treeTable.setDefaultRenderer(columns.get(i).getClass(), ((TreeTableColumn) columns.get(i)).getCellRenderer());
-       // }
-
-        
-        
-     //   addScrollPane();
+        // reset the cell rendereres
+        for (int i = 0; i < columns.size(); i++) {
+            treeTable.setDefaultRenderer(columns.get(i).getClass(), ((TreeTableColumn) columns.get(i)).getCellRenderer());
+        }
     }
 
+    // get the chosen columns from the columnChooser and setup the 'columns' List
     private void setColumns() {
         columns = new ArrayList();
 
@@ -158,8 +146,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
             columns.add(new NumSubrColumn(this));
         }
     }
-    
-    
+
     private void addComponents() {
 
         getContentPane().removeAll();
@@ -183,7 +170,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         if (scrollPane != null) {
             getContentPane().remove(scrollPane);
         }
-        
+
         scrollPane = new JScrollPane(treeTable);
 
         for (int i = 0; i < columns.size(); i++) {
@@ -201,7 +188,6 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     private void setupData() {
 
-
         setColumns();
 
         //columns.add(new StdDevColumn(this, 0));
@@ -210,7 +196,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         model = new CallPathModel(this, ppTrial, thread);
         JTreeTable treeTable = createTreeTable(model);
         addComponents();
-    
+
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
@@ -224,7 +210,6 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     private void setupMenus() {
 
         JMenuBar mainMenu = new JMenuBar();
-
         JMenu optionsMenu = new JMenu("Options");
 
         ActionListener actionListener = new ActionListener() {
@@ -332,14 +317,18 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     }
 
     public void update(Observable o, Object arg) {
-        // TODO Auto-generated method stub
-        //System.err.println("update!");
         setupData();
     }
 
     public void help(boolean display) {
-        // TODO Auto-generated method stub
-
+        //Show the ParaProf help window.
+        ParaProf.helpWindow.clearText();
+        if (display)
+            ParaProf.helpWindow.show();
+        ParaProf.helpWindow.writeText("This is the Statistics Table.\n");
+        ParaProf.helpWindow.writeText("This window shows you function data across a given thread (or mean/std.dev.)\n");
+        ParaProf.helpWindow.writeText("If callpath data is present, it will be shown as a tree on the left.");
+        ParaProf.helpWindow.writeText("In this mode, the metric values will show Inclusive when the node is collapsed, and exclusive when the node is expanded.\n");
     }
 
     public void closeThisWindow() {
