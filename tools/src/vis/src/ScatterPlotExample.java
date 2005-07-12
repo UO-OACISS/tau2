@@ -6,16 +6,12 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import net.java.games.jogl.GLCanvas;
-import net.java.games.jogl.GLCapabilities;
-import net.java.games.jogl.GLDrawableFactory;
-
 /**
  * An example of the vis package's ScatterPlot. <p>
  * 
  * <pre>
  
- public class ScatterPlotExample {
+public class ScatterPlotExample {
 
     private static void createAndShowGUI() {
 
@@ -32,14 +28,15 @@ import net.java.games.jogl.GLDrawableFactory;
             values[i][3] = i; // value for the color axis
         }
 
-        // Create the JOGL canvas
-        GLCanvas canvas = GLDrawableFactory.getFactory().createGLCanvas(new GLCapabilities());
-        canvas.setSize(600, 600);
 
         // Create the visRenderer and register it with the canvas
         VisRenderer visRenderer = new VisRenderer();
-        canvas.addGLEventListener(visRenderer);
 
+        // Create the canvas
+        VisCanvas visCanvas = new VisCanvas(visRenderer);
+        visCanvas.getActualCanvas().setSize(600,600);
+
+        
         ColorScale colorScale = new ColorScale();
 
         // Create the scatterPlot
@@ -68,7 +65,7 @@ import net.java.games.jogl.GLDrawableFactory;
         // Add everything to a JPanel and add the panel to the frame
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
-        panel.add(canvas, new GridBagConstraints(0, 0, 1, 1, 0.9, 1.0, GridBagConstraints.WEST, 
+        panel.add(visCanvas.getActualCanvas(), new GridBagConstraints(0, 0, 1, 1, 0.9, 1.0, GridBagConstraints.WEST, 
                 GridBagConstraints.BOTH, new Insets(5, 5, 5, 5), 1, 1));
         panel.add(tabbedPane, new GridBagConstraints(1, 0, 1, 1, 0.1, 1.0, GridBagConstraints.EAST,
                 GridBagConstraints.HORIZONTAL, new Insets(5, 5, 5, 5), 1, 1));
@@ -91,9 +88,9 @@ import net.java.games.jogl.GLDrawableFactory;
   
  * </pre>
  *    
- * <P>CVS $Id: ScatterPlotExample.java,v 1.1 2005/07/12 18:02:16 amorris Exp $</P>
+ * <P>CVS $Id: ScatterPlotExample.java,v 1.2 2005/07/12 18:36:52 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  */
 public class ScatterPlotExample {
 
@@ -112,14 +109,15 @@ public class ScatterPlotExample {
             values[i][3] = i; // value for the color axis
         }
 
-        // Create the JOGL canvas
-        GLCanvas canvas = GLDrawableFactory.getFactory().createGLCanvas(new GLCapabilities());
-        canvas.setSize(600, 600);
 
         // Create the visRenderer and register it with the canvas
         VisRenderer visRenderer = new VisRenderer();
-        canvas.addGLEventListener(visRenderer);
 
+        // Create the canvas
+        VisCanvas visCanvas = new VisCanvas(visRenderer);
+        visCanvas.getActualCanvas().setSize(600,600);
+
+        
         ColorScale colorScale = new ColorScale();
 
         // Create the scatterPlot
@@ -148,7 +146,7 @@ public class ScatterPlotExample {
         // Add everything to a JPanel and add the panel to the frame
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
-        panel.add(canvas, new GridBagConstraints(0, 0, 1, 1, 0.9, 1.0, GridBagConstraints.WEST, 
+        panel.add(visCanvas.getActualCanvas(), new GridBagConstraints(0, 0, 1, 1, 0.9, 1.0, GridBagConstraints.WEST, 
                 GridBagConstraints.BOTH, new Insets(5, 5, 5, 5), 1, 1));
         panel.add(tabbedPane, new GridBagConstraints(1, 0, 1, 1, 0.1, 1.0, GridBagConstraints.EAST,
                 GridBagConstraints.HORIZONTAL, new Insets(5, 5, 5, 5), 1, 1));
