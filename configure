@@ -3618,6 +3618,7 @@ then
   echo "TAU: installed paraprof in ${tauroot}/${architecture}/bin"
   cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/dms/dms.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/vis/bin/vis.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jfreechart-0.9.21.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jcommon-0.9.6.jar ${tauroot}/${architecture}/lib
@@ -3686,6 +3687,7 @@ else
   echo "TAU: installed paraprof in ${tauprefix}/${architecture}/bin"
   cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/dms/dms.jar ${tauprefix}/${architecture}/lib
+  cp ${tauroot}/tools/src/vis/bin/vis.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jfreechart-0.9.21.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jcommon-0.9.6.jar ${tauprefix}/${architecture}/lib
