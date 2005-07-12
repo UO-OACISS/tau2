@@ -1,0 +1,67 @@
+package edu.uoregon.tau.vis;
+
+import java.awt.Canvas;
+
+import net.java.games.jogl.GLCanvas;
+import net.java.games.jogl.GLCapabilities;
+import net.java.games.jogl.GLDrawableFactory;
+
+/**
+ * This class is merely a wrapper over GLCanvas which allows users of the Vis
+ * package to build against vis alone (not jogl). 
+ *
+ * <P>CVS $Id: VisCanvas.java,v 1.1 2005/07/12 18:02:17 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.1 $
+ */
+public class VisCanvas {
+
+    private GLCanvas glCanvas;
+
+    
+    /**
+     * Creates a <tt>VisCanvas</tt> with the given <tt>VisRenderer</tt>.
+     * 
+     * @param visRenderer <tt>VisRenderer</tt> to use.
+     */
+    public VisCanvas(VisRenderer visRenderer) {
+     
+        GLCapabilities glCapabilities = new GLCapabilities();
+
+        //glCapabilities.setHardwareAccelerated(true);
+
+        glCanvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
+
+        glCanvas.setSize(200, 200);
+        glCanvas.addGLEventListener(visRenderer);
+        
+        // for testing
+        //canvas.addGLEventListener(new Gears.GearRenderer());
+
+    }
+    
+    /**
+     * Returns the actual GLCanvas.
+     * @return the actual GLCanvas.
+     */
+    public GLCanvas getActualCanvas() {
+        return glCanvas;
+    }
+
+    /**
+     * Returns the height of the <tt>Canvas</tt>.
+     * @return the height of the <tt>Canvas</tt>.
+     */
+    public int getHeight() {
+        return glCanvas.getHeight();
+    }
+    
+    /**
+     * Returns the width of the <tt>Canvas</tt>.
+     * @return the width of the <tt>Canvas</tt>.
+     */
+    public int getWidth() {
+        return glCanvas.getWidth();
+    }
+    
+}
