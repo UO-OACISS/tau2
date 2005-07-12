@@ -113,7 +113,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         visRenderer.addShape(colorScale);
         visCanvas = new VisCanvas(visRenderer);
 
-        visCanvas.getActualCanvas().addKeyListener(this);
+        visCanvas.addKeyListener(this);
 
         JPanel panel = new JPanel() {
             public Dimension getMinimumSize() {
