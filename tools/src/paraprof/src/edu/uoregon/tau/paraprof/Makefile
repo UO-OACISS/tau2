@@ -4,8 +4,8 @@
 #Makefile creates the ParaProf jar file.
 ##########################
 
-CONFIG_ARCH=@TAUARCH@
-TAUROOT=@TAUROOT@
+CONFIG_ARCH=default
+TAUROOT=
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java ParaProfTreeCellRenderer.java \
              HistogramWindow.java ParaProf.java ParaProfTrial.java FullDataWindowPanel.java \
@@ -25,7 +25,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
 	     ColorDefaultsWindow.java ColorMap.java ColorMapWindow.java PreferencesWindow.java \
 	     Searcher.java SearchPanel.java FunctionSelectorDialog.java
 
-VIS_SOURCES = $(wildcard vis/*.java) ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java  
+VIS_SOURCES = ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java  
 OTHER_SOURCES = $(wildcard enums/*.java) $(wildcard interfaces/*.java) $(wildcard treetable/*.java)
 
 NEW_SOURCES=$(BASE_SOURCES) $(VIS_SOURCES) $(OTHER_SOURCES) ParaProfImageOutput.java JVMDependent.java
@@ -47,7 +47,7 @@ $(TOOLS_SRC)/paraprof/bin/ParaProf.jar: $(NEW_SOURCES)
 	/bin/mv ParaProf.java ParaProf.java.orig
 	sed "s/XXXXX/$(NOW)/" ParaProf.java.orig > ParaProf.java
 	rm -f ./paraprof/*.class
-	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jogl.jar:$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar $(NEW_SOURCES)
+	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jogl.jar:$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/vis/bin/vis.jar $(NEW_SOURCES)
 	cp ./resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	cd classes; jar -cvf ParaProf.jar edu
 	mv ./classes/ParaProf.jar $(TOOLS_SRC)/paraprof/bin
