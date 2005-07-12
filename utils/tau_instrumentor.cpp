@@ -73,6 +73,8 @@ struct itemRef {
   int      col;
 };
 
+void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *i, pdbRoutine::callvec & c); /* in this file below */
+
 static bool locCmp(const itemRef* r1, const itemRef* r2) {
   if ( r1->line == r2->line )
   {
@@ -111,6 +113,10 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 	 (((*rit)->bodyBegin().line() != 0) && (*rit)->kind() != pdbItem::RO_EXT) && 
 	 (instrumentEntity((*rit)->fullName())) ) 
     {
+	/* See if the current routine calls exit() */
+	pdbRoutine::callvec c = (*rit)->callees(); 
+
+	processExitOrAbort(itemvec, *rit, c); 
 #ifdef DEBUG
         cout <<"Routine "<<(*rit)->fullName() <<" body Begin line "
              << (*rit)->bodyBegin().line() << " col "
@@ -170,6 +176,14 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 	// target helps identify if we need to put a CT(*this) in the type
 	// old: 
         //if ((((*te)->parentGroup()) == 0) && (tekind != pdbItem::TE_STATMEM)) 
+
+	      /* TEMPLATES DO NOT HAVE CALLEES ONLY ROUTINES DO */
+	/* See if the current template calls exit() */
+	      /*
+	pdbRoutine::callvec c = (*te)->callees(); 
+	processExitOrAbort(itemvec, *te, c); 
+	      */
+
         if ((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_STATMEM))
 	{ 
 	  // There's no parent class. No need to add CT(*this)
@@ -259,37 +273,8 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 
 	/* See if the current routine calls exit() */
 	pdbRoutine::callvec c = (*rit)->callees(); 
-	for (pdbRoutine::callvec::iterator cit = c.begin(); cit !=c.end(); cit++)
-	{ 
-	   const pdbRoutine *rr = (*cit)->call(); 
-#ifdef DEBUG 
-	   cout <<"Callee " << rr->name() << " location line " << (*cit)->line() << " col " << (*cit)->col() <<endl; 
-#endif /* DEBUG */
-	   if (strcmp(rr->name().c_str(), exit_keyword)== 0)
-	   {
-	     /* routine calls exit */
-#ifdef DEBUG
-             cout <<"Exit keyword matched"<<endl;
-#endif /* DEBUG */
-	     itemvec.push_back(new itemRef(*rit, EXIT, (*cit)->line(), 
-		(*cit)->col()));
-	   } 
-	   else if (using_exit_keyword)
-	   { /* also check for "exit" where it occurs */
-	     if (strcmp(rr->name().c_str(), "exit")== 0)
-	     {
-	       /* routine calls exit */
-	       itemvec.push_back(new itemRef(*rit, EXIT, (*cit)->line(), 
-		(*cit)->col()));
-	     }
-	   } /* using exit keyword */
 
-	   if (strcmp(rr->name().c_str(), "abort") == 0)
-	   { /* routine calls abort */
-	     itemvec.push_back(new itemRef(*rit, EXIT, (*cit)->line(), 
-		(*cit)->col()));
-	   }
-	}
+	processExitOrAbort(itemvec, *rit, c); 
     }
   }
   sort(itemvec.begin(), itemvec.end(), locCmp);
@@ -366,6 +351,43 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 const int INBUF_SIZE = 2048;
 
 /* -------------------------------------------------------------------------- */
+/* -- process exit or abort statement and generate a record for itemRef       */
+/* -------------------------------------------------------------------------- */
+void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *rit, pdbRoutine::callvec & c)
+{
+	for (pdbRoutine::callvec::iterator cit = c.begin(); cit !=c.end(); cit++)
+	{ 
+	   const pdbRoutine *rr = (*cit)->call(); 
+#ifdef DEBUG 
+	   cout <<"Callee " << rr->name() << " location line " << (*cit)->line() << " col " << (*cit)->col() <<endl; 
+#endif /* DEBUG */
+	   if (strcmp(rr->name().c_str(), exit_keyword)== 0)
+	   {
+	     /* routine calls exit */
+#ifdef DEBUG
+             cout <<"Exit keyword matched"<<endl;
+#endif /* DEBUG */
+	     itemvec.push_back(new itemRef(rit, EXIT, (*cit)->line(), 
+		(*cit)->col()));
+	   } 
+	   else if (using_exit_keyword)
+	   { /* also check for "exit" where it occurs */
+	     if (strcmp(rr->name().c_str(), "exit")== 0)
+	     {
+	       /* routine calls exit */
+	       itemvec.push_back(new itemRef(rit, EXIT, (*cit)->line(), 
+		(*cit)->col()));
+	     }
+	   } /* using exit keyword */
+
+	   if (strcmp(rr->name().c_str(), "abort") == 0)
+	   { /* routine calls abort */
+	     itemvec.push_back(new itemRef(rit, EXIT, (*cit)->line(), 
+		(*cit)->col()));
+	   }
+	}
+}	
+/* -------------------------------------------------------------------------- */
 /* -- Returns true is string is void else returns false --------------------- */
 /* -------------------------------------------------------------------------- */
 bool isVoidRoutine(itemRef * i)
@@ -437,6 +459,7 @@ void defineTauGroup(ofstream& ostr, string& group_name)
 /* -------------------------------------------------------------------------- */
 int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string &header_file)
 {
+  int inbufLength, k;
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
   // open outfile for instrumented version of source file
@@ -495,81 +518,114 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
       }
       else 
       { 
-	// we're at the desired line no. search for an open brace
-	int inbufLength = strlen(inbuf);
-
-	for(int i=0; i< inbufLength; i++)
-	{ 
-	  if ((inbuf[i] == '{') && (instrumented == false))
-	  {
+        switch((*it)->kind) {
+	  case ROUTINE: 
+          // we're at the desired line no. search for an open brace
+  	  inbufLength = strlen(inbuf);
+  
+  	  for(int i=0; i< inbufLength; i++)
+  	  { 
+  	    if ((inbuf[i] == '{') && (instrumented == false))
+  	    {
 #ifdef DEBUG
-	    cout <<"found the *first* { on the line inputLineNo=" <<inputLineNo<< endl;
+  	      cout <<"found the *first* { on the line inputLineNo=" <<inputLineNo<< endl;
 #endif 
-	    ostr << inbuf[i] <<endl; // write the open brace and '\n'
-	    // put in instrumentation for the routine HERE
-	    //ostr <<"/*** INSTRUMENTATION ***/\n"; 
+  	      ostr << inbuf[i] <<endl; // write the open brace and '\n'
+  	      // put in instrumentation for the routine HERE
+  	      //ostr <<"/*** INSTRUMENTATION ***/\n"; 
 #ifdef SPACES
-	    for (int space = 0; space < (*it)->col ; space++) ostr << " " ; 
-#endif
-	    // leave some leading spaces for formatting...
+  	      for (int space = 0; space < (*it)->col ; space++) ostr << " " ; 
+  #endif
+  	      // leave some leading spaces for formatting...
+  
+  	      ostr <<"  TAU_PROFILE(\"" << (*it)->item->fullName() ;
+  	      if (!((*it)->isTarget))
+  	      { // it is a template member. Help it by giving an additional ()
+  	      // if the item is a member function or a static member func give
+  	      // it a class name using CT
+  	        ostr <<"\", CT(*this), ";
+  	      } 
+   	      else // it is not a class member 
+  	      { 
+  	        ostr << "\", \" \", "; // null type arg to TAU_PROFILE 
+  	      }
+  
+  	      if (strcmp((*it)->item->name().c_str(), "main")==0) 
+  	      { /* it is main() */
+  	        ostr << "TAU_DEFAULT);" <<endl; // give an additional line 
+  #ifdef SPACES
+  	        for (int space = 0; space < (*it)->col ; space++) ostr << " " ; 
+  #endif 
+  	        // leave some leading spaces for formatting...
+  	
+  	        print_tau_profile_init(ostr, (pdbCRoutine *) (*it)->item);
+  	        ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
+  	        ostr <<"#ifndef TAU_SHMEM" <<endl; // set node 0
+  	        ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
+  	        ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
+  	        ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+  	      }
+  	      else 
+  	      {
+  	        ostr <<group_name<<");" <<endl; // give an additional line 
+  	      }
+  	      // if its a function, it already has a ()
+  	      instrumented = true;
+  	      lastInstrumentedLineNo = inputLineNo; 
+  	      // keep track of which line was instrumented last
+   	      // and then finish writing the rest of the line 
+  	      // this will be used for templates and instantiated functions
+  	    } // if open brace
+  	    else 
+  	    {  // if not open brace
+  	      // ok to write to ostr 
+  	      ostr << inbuf[i]; 
+  	      if (inbuf[i] == ';')
+  	      { // Hey! We've got a ; before seeing an open brace. That means 
+  	        // we're dealing with a template declaration. we can't instrument
+  	        // a declaration, only a definition. 
+  	        instrumented = true; 	
+  	        // by setting instrumented as true, it won't look for an open
+  	        // brace on this line 
+  	      }
+            } // if open brace 
+  	  } // for i loop
+  	  ostr <<endl;
+   	  // if we didn't find the open brace on the desired line, if its in the 
+  	  // next line go on with the while loop till we return instrumented 
+     	  // becomes true. 
+          break;
 
-	    ostr <<"  TAU_PROFILE(\"" << (*it)->item->fullName() ;
-	    if (!((*it)->isTarget))
-	    { // it is a template member. Help it by giving an additional ()
-	    // if the item is a member function or a static member func give
-	    // it a class name using CT
-	      ostr <<"\", CT(*this), ";
-	    } 
- 	    else // it is not a class member 
-	    { 
-	      ostr << "\", \" \", "; // null type arg to TAU_PROFILE 
-	    }
+	  case EXIT:
 
-	    if (strcmp((*it)->item->name().c_str(), "main")==0) 
-	    { /* it is main() */
-	      ostr << "TAU_DEFAULT);" <<endl; // give an additional line 
-#ifdef SPACES
-	      for (int space = 0; space < (*it)->col ; space++) ostr << " " ; 
-#endif 
-	      // leave some leading spaces for formatting...
-	
-	      print_tau_profile_init(ostr, (pdbCRoutine *) (*it)->item);
-	      ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
-	      ostr <<"#ifndef TAU_SHMEM" <<endl; // set node 0
-	      ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
-	      ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
-	      ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
-	    }
-	    else 
-	    {
-	      ostr <<group_name<<");" <<endl; // give an additional line 
-	    }
-	    // if its a function, it already has a ()
-	    instrumented = true;
-	    lastInstrumentedLineNo = inputLineNo; 
-	    // keep track of which line was instrumented last
- 	    // and then finish writing the rest of the line 
-	    // this will be used for templates and instantiated functions
-	  } // if open brace
-	  else 
-	  {  // if not open brace
-	    // ok to write to ostr 
-	    ostr << inbuf[i]; 
-	    if (inbuf[i] == ';')
-	    { // Hey! We've got a ; before seeing an open brace. That means 
-	      // we're dealing with a template declaration. we can't instrument
-	      // a declaration, only a definition. 
-	      instrumented = true; 	
-	      // by setting instrumented as true, it won't look for an open
-	      // brace on this line 
-	    }
-          } // if open brace 
-	} // for i loop
-	ostr <<endl;
- 	// if we didn't find the open brace on the desired line, if its in the 
-	// next line go on with the while loop till we return instrumented 
-   	// becomes true. 
-	
+#ifdef DEBUG 
+		cout <<"Exit" <<endl;
+		cout <<"using_exit_keyword = "<<using_exit_keyword<<endl;
+		cout <<"exit_keyword = "<<exit_keyword<<endl;
+		cout <<"infbuf[(*it)->col-1] = "<<inbuf[(*it)->col-1]<<endl;
+#endif /* DEBUG */
+		/* first flush out all characters till our column */
+		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
+		if ((strncmp(&inbuf[(*it)->col-1], "abort", strlen("abort")) == 0) 
+		  ||(strncmp(&inbuf[(*it)->col-1], "exit", strlen("exit")) == 0) 
+		  ||(using_exit_keyword && (strncmp(&inbuf[(*it)->col-1], 
+				exit_keyword, strlen(exit_keyword)) == 0) ))
+                {
+#ifdef DEBUG
+		  cout <<"WRITING EXIT RECORD "<<endl;
+#endif /* DEBUG */
+		  ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
+		  for (k = (*it)->col-1; inbuf[k] != ';' ; k++)
+		    ostr<<inbuf[k]; 
+		  ostr <<"; }";
+		  ostr <<endl;
+		  instrumented = true; 
+                }
+            break;
+
+	  default:
+	    break;
+        }
       } // else      
 
       memset(inbuf, INBUF_SIZE, 0); // reset to zero
@@ -678,6 +734,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
 /* -------------------------------------------------------------------------- */
 bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string& header_file) 
 { 
+  int inbufLength;
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
   // open outfile for instrumented version of source file
@@ -743,7 +800,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
         vector<itemRef *>::iterator it;
         for (it = lit; ((it != itemvec.end()) && ((*it)->line == (*lit)->line)); ++it) 
         { /* it/lit */
-          int inbufLength = strlen(inbuf);
+          inbufLength = strlen(inbuf);
 
 #ifdef DEBUG 
 	  cout <<"Line " <<(*it)->line <<" Col " <<(*it)->col <<endl;
@@ -1649,9 +1706,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.67 $   $Date: 2005/07/06 23:43:30 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.67 2005/07/06 23:43:30 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.68 $   $Date: 2005/07/12 13:12:01 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.68 2005/07/12 13:12:01 sameer Exp $
  ***************************************************************************/
 
 
