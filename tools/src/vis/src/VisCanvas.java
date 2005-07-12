@@ -1,6 +1,6 @@
 package edu.uoregon.tau.vis;
 
-import java.awt.Canvas;
+import java.awt.event.KeyListener;
 
 import net.java.games.jogl.GLCanvas;
 import net.java.games.jogl.GLCapabilities;
@@ -10,9 +10,9 @@ import net.java.games.jogl.GLDrawableFactory;
  * This class is merely a wrapper over GLCanvas which allows users of the Vis
  * package to build against vis alone (not jogl). 
  *
- * <P>CVS $Id: VisCanvas.java,v 1.1 2005/07/12 18:02:17 amorris Exp $</P>
+ * <P>CVS $Id: VisCanvas.java,v 1.2 2005/07/12 18:41:47 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class VisCanvas {
 
@@ -41,6 +41,15 @@ public class VisCanvas {
     }
     
     /**
+     * Adds a key listener to the underlying glCanvas.
+     * @param keyListener the key listener to add.
+     */
+    public void addKeyListener(KeyListener keyListener) {
+        glCanvas.addKeyListener(keyListener);
+    }
+    
+    
+    /**
      * Returns the actual GLCanvas.
      * @return the actual GLCanvas.
      */
@@ -63,5 +72,8 @@ public class VisCanvas {
     public int getWidth() {
         return glCanvas.getWidth();
     }
+    
+    
+    
     
 }
