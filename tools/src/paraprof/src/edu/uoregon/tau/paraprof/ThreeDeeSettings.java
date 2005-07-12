@@ -4,8 +4,8 @@ package edu.uoregon.tau.paraprof;
 import edu.uoregon.tau.dms.dss.Function;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
-import edu.uoregon.tau.paraprof.vis.Vec;
-import edu.uoregon.tau.paraprof.vis.Axes.Orientation;
+import edu.uoregon.tau.vis.Vec;
+import edu.uoregon.tau.vis.Axes.Orientation;
 
 
 /**
@@ -19,9 +19,9 @@ import edu.uoregon.tau.paraprof.vis.Axes.Orientation;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeSettings.java,v 1.2 2005/04/15 01:29:02 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeSettings.java,v 1.3 2005/07/12 18:07:02 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 public class ThreeDeeSettings implements Cloneable {
 

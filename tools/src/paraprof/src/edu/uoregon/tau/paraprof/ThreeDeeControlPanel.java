@@ -10,17 +10,17 @@ import javax.swing.*;
 import edu.uoregon.tau.dms.dss.Function;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
-import edu.uoregon.tau.paraprof.vis.Plot;
-import edu.uoregon.tau.paraprof.vis.VisRenderer;
+import edu.uoregon.tau.vis.Plot;
+import edu.uoregon.tau.vis.VisRenderer;
 
 /**
  * This is the control panel for the ThreeDeeWindow.
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.7 2005/06/17 22:13:48 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.8 2005/07/12 18:07:02 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 

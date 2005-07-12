@@ -11,7 +11,6 @@ import java.util.List;
 
 import javax.swing.*;
 
-import net.java.games.jogl.*;
 import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.dms.dss.Thread;
 import edu.uoregon.tau.paraprof.enums.SortType;
@@ -19,14 +18,14 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
-import edu.uoregon.tau.paraprof.vis.*;
+import edu.uoregon.tau.vis.*;
 
 public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListener, Observer, Printable, ParaProfWindow,
         UnitListener {
 
     private final int defaultToScatter = 4000;
 
-    private GLCanvas canvas;
+    private VisCanvas visCanvas;
     private VisRenderer visRenderer = new VisRenderer();
 
     private Plot plot;
@@ -43,8 +42,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     private javax.swing.Timer fpsTimer;
 
     private JSplitPane jSplitPane;
-
-    private Animator animator;
 
     private TriangleMeshPlot triangleMeshPlot;
     private BarPlot barPlot;
@@ -100,13 +97,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             this.show();
         }
 
-        GLCapabilities glCapabilities = new GLCapabilities();
-
-        //glCapabilities.setHardwareAccelerated(true);
-
-        canvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
-
-        canvas.setSize(200, 200);
 
         DataSource dataSource = ppTrial.getDataSource();
         int numThreads = dataSource.getNumThreads();
@@ -121,11 +111,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         visRenderer.addShape(plot);
         visRenderer.addShape(colorScale);
-        canvas.addGLEventListener(visRenderer);
+        visCanvas = new VisCanvas(visRenderer);
 
-        //canvas.addGLEventListener(new Gears.GearRenderer());
-
-        canvas.addKeyListener(this);
+        visCanvas.getActualCanvas().addKeyListener(this);
 
         JPanel panel = new JPanel() {
             public Dimension getMinimumSize() {
@@ -145,7 +133,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         gbc.gridy = 0;
         gbc.gridwidth = 1;
         gbc.gridheight = 1;
-        panel.add(canvas, gbc);
+        panel.add(visCanvas.getActualCanvas(), gbc);
         panel.setPreferredSize(new Dimension(5, 5));
 
         controlPanel = new ThreeDeeControlPanel(this, settings, ppTrial, visRenderer);
@@ -608,7 +596,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                 return NO_SUCH_PAGE;
             }
 
-            ParaProfUtils.scaleForPrint(g, pageFormat, canvas.getWidth(), canvas.getHeight());
+            ParaProfUtils.scaleForPrint(g, pageFormat, visCanvas.getWidth(), visCanvas.getHeight());
 
             BufferedImage screenShot = visRenderer.createScreenShot();
 
