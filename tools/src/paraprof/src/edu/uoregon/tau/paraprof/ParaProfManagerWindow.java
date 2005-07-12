@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.25 2005/07/11 22:59:52 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.26 2005/07/12 18:26:56 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.25 $
+ * @version	$Revision: 1.26 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -23,7 +23,6 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.URI;
 import java.sql.SQLException;
 import java.util.*;
 
