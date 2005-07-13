@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.2 2005/07/09 00:09:38 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.3 2005/07/13 19:16:17 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -98,6 +98,28 @@ public class ChartData extends RMIChartData {
 			} 
 			results.close();
 			statement.close();
+
+			// now that we got the main data, get the "other" data.
+			statement = buildOtherStatement();
+			if (statement != null) {
+				results = statement.executeQuery();
+				// TODO - this query assumes a scalability study...!
+				while (results.next() != false) {
+					groupingName = results.getString(1);
+					threadName = results.getString(2);
+					numThreads = results.getDouble(2);
+					value = results.getDouble(3);
+	
+					if (!currentExperiment.equals(groupingName)) {
+						experimentIndex++;
+						currentExperiment = groupingName;
+						addRow(groupingName);
+					}
+					addColumn(experimentIndex, numThreads, value);
+				} 
+				results.close();
+				statement.close();
+			}
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select the analysis settings from the database!";
 			System.out.println(error);
@@ -137,7 +159,8 @@ public class ChartData extends RMIChartData {
 				buf.append(model.getExperiment().getID() + " ");
 			}
 			buf.append(" and m.name = ? ");
-			buf.append("and ims.inclusive_percentage < 100.0 ");
+//			buf.append("and ims.inclusive_percentage < 100.0 ");
+			buf.append("and ims.exclusive_percentage > 1.0 ");
 			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name != 'TAU_CALLPATH' ");
 			buf.append("and ie.group_name != 'TAU_PHASENAME')) order by 1, 2");
@@ -251,6 +274,7 @@ public class ChartData extends RMIChartData {
 			}
 			buf.append(" and m.name = ? ");
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
+			buf.append("and ims.exclusive_percentage > 1.0 ");
 			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name != 'TAU_CALLPATH' ");
 			buf.append("and ie.group_name != 'TAU_PHASENAME')) order by 1, 2");
@@ -356,10 +380,74 @@ public class ChartData extends RMIChartData {
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		}
-		System.out.println(statement.toString());
+		//System.out.println(statement.toString());
 		return statement;
 	}
-	
+
+	private PreparedStatement buildOtherStatement () throws SQLException {
+	        DB db = PerfExplorerServer.getServer().getDB();
+
+		PreparedStatement statement = null;
+		StringBuffer buf = new StringBuffer();
+		Object object = model.getCurrentSelection();
+		if (dataType == FRACTION_OF_TOTAL) {
+			// The user wants to know the runtime breakdown by events of one 
+			// experiment as the number of threads of execution increases.
+			buf.append("select 'other', ");
+			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append("sum(ims.exclusive_percentage) from interval_mean_summary ims ");
+			buf.append("inner join interval_event ie ");
+			buf.append("on ims.interval_event = ie.id ");
+			buf.append("inner join trial t on ie.trial = t.id ");
+			buf.append("inner join metric m on m.id = ims.metric ");
+			if (object instanceof RMIView) {
+				buf.append(model.getViewSelectionPath(true, true));
+			} else {
+				buf.append("where t.experiment = ");
+				buf.append(model.getExperiment().getID() + " ");
+			}
+			buf.append(" and m.name = ? ");
+			buf.append("and ims.inclusive_percentage < 100.0 ");
+			buf.append("and ims.exclusive_percentage < 1.0 ");
+			buf.append("and (ie.group_name is null or (");
+			buf.append("ie.group_name != 'TAU_CALLPATH' ");
+			buf.append("and ie.group_name != 'TAU_PHASENAME')) group by 2 order by 1, 2");
+			
+			statement = db.prepareStatement(buf.toString());
+			statement.setString(1, metricName);
+
+		} else if (dataType == RELATIVE_EFFICIENCY_EVENTS) {
+			// The user wants to know the relative efficiency or speedup
+			// of all the events for one experiment, as the number of threads of 
+			// execution increases.
+			buf.append("select ");
+			buf.append(" 'other', ");
+			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append("ims.exclusive from interval_mean_summary ims ");
+			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+			buf.append("inner join trial t on ie.trial = t.id ");
+			buf.append("inner join metric m on m.id = ims.metric ");
+			if (object instanceof RMIView) {
+				buf.append(model.getViewSelectionPath(true, true));
+			} else {
+				buf.append("where t.experiment = ");
+				buf.append(model.getExperiment().getID() + " ");
+			}
+			buf.append(" and m.name = ? ");
+//			buf.append("and ims.inclusive_percentage < 100.0 ");
+			buf.append("and ims.exclusive_percentage < 1.0 ");
+			buf.append("and (ie.group_name is null or (");
+			buf.append("ie.group_name != 'TAU_CALLPATH' ");
+			buf.append("and ie.group_name != 'TAU_PHASENAME')) group by 2 order by 1, 2");
+			statement = db.prepareStatement(buf.toString());
+			statement.setString(1, metricName);
+
+		}
+		//if (statement != null)
+			//System.out.println(statement.toString());
+		return statement;
+	}
+		
 	/**
 	 * This method checks to see if the object selected in the view/subview
 	 * tree is a leaf node.  A leaf view will have no subviews, so by selecting

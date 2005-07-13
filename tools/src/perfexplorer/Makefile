@@ -7,6 +7,7 @@ CONFIG_ARCH = apple
 OMEGAHAT_HOME = $(R_HOME)/library/SJava
 CONFIGFILE = ${HOME}/.ParaProf/perfdmf.cfg
 OMEGAHAT_JARPATH = ${OMEGAHAT_HOME}/org/omegahat/Jars
+WEBSTART_DIR = /Library/WebServer/Documents/perfexplorer
 
 WEKA_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/weka.jar
 PERFDMF_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/dms.jar
@@ -151,23 +152,21 @@ install: perfexplorer.jar
 
 webstart: perfexplorer.jar
 	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer perfexplorer.jar khuck
-	cp perfexplorer.jar /Library/WebServer/Documents/perfexplorer/.
-	cp ${PERFDMF_JAR} /Library/WebServer/Documents/perfexplorer/.
-	cp ${JARGS_JAR} /Library/WebServer/Documents/perfexplorer/.
-	cp ${JDBC_JAR} /Library/WebServer/Documents/perfexplorer/.
-	cp ${JOGL_JAR} /Library/WebServer/Documents/perfexplorer/.
-	cp ${PARAPROF_JAR} /Library/WebServer/Documents/perfexplorer/.
-	cp ${JFREECHART_JAR} /Library/WebServer/Documents/perfexplorer/.
-	cp ${JCOMMON_JAR} /Library/WebServer/Documents/perfexplorer/.
-	cp ${WEKA_JAR} /Library/WebServer/Documents/perfexplorer/.
-	cp ${OMEGAHAT_JARPATH}/Environment.jar /Library/WebServer/Documents/perfexplorer/.
-	cp ${OMEGAHAT_JARPATH}/antlr.jar /Library/WebServer/Documents/perfexplorer/.
-	cp ${OMEGAHAT_JARPATH}/jas.jar /Library/WebServer/Documents/perfexplorer/.
-	cp ${OMEGAHAT_JARPATH}/jhall.jar /Library/WebServer/Documents/perfexplorer/.
-	cp ${JFREECHART_JAR} /Library/WebServer/Documents/perfexplorer/.
-	cp ${JCOMMON_JAR} /Library/WebServer/Documents/perfexplorer/.
-	cp etc/java.policy /Library/WebServer/Documents/perfexplorer/.
-	chmod 777 /Library/WebServer/Documents/perfexplorer/*.jar
+	cp perfexplorer.jar ${WEBSTART_DIR}
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${PERFDMF_JAR} khuck
+	cp ${PERFDMF_JAR} ${WEBSTART_DIR}
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JARGS_JAR} khuck
+	cp ${JARGS_JAR} ${WEBSTART_DIR}
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JOGL_JAR} khuck
+	cp ${JOGL_JAR} ${WEBSTART_DIR}
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${PARAPROF_JAR} khuck
+	cp ${PARAPROF_JAR} ${WEBSTART_DIR}
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JFREECHART_JAR} khuck
+	cp ${JFREECHART_JAR} ${WEBSTART_DIR}
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JCOMMON_JAR} khuck
+	cp ${JCOMMON_JAR} ${WEBSTART_DIR}
+	cp etc/java.policy ${WEBSTART_DIR}
+	chmod 755 ${WEBSTART_DIR}/*.jar
 
 ###
 ### END

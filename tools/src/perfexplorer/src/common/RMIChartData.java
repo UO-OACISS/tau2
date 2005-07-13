@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * This class represents the data to be used to create a scalability or
  * runtime breakdown chart.  
  *
- * <P>CVS $Id: RMIChartData.java,v 1.1 2005/07/05 22:29:52 amorris Exp $</P>
+ * <P>CVS $Id: RMIChartData.java,v 1.2 2005/07/13 19:16:17 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -70,6 +70,7 @@ public class RMIChartData implements Serializable {
 		values[0] = v1;
 		values[1] = v2;
 		row.add(values);
+		//System.out.println("Added: " + rowIndex + ", " + v1 + ", " + v2);
 	}
 
 	public int getRows() { return rows; }
