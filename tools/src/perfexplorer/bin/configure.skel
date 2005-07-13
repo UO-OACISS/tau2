@@ -148,7 +148,7 @@ if [ ! -r ${WEKA_JAR} ]; then
 	    if [ ! -r "$WGET" ]; then
 		echo ""
 		echo "Couldn't find wget, you'll have to manually download the Weka jar file."
-		echo "Please go here: http://www.cs.waikato.ac.nz/ml/weka/"
+		echo "Please go here: "
 		exit 1
 	    fi
 	    
@@ -158,17 +158,10 @@ if [ ! -r ${WEKA_JAR} ]; then
 		URL=`grep URL weka-redirect.html | sed s/URL=//`
 		FILE=`grep FILE weka-redirect.html | sed s/FILE=//`
 		DIR=`grep DIR weka-redirect.html | sed s/DIR=//`
+		/bin/rm -f weka-redirect.html
 		wget "$URL"
 		mv "$FILE" ${WEKA_ZIP_DIR}/.
 		cd ${WEKA_ZIP_DIR}/.
-
-	    UNZIP=`which unzip 2>/dev/null`
-	    if [ ! -r "$UNZIP" ]; then
-		echo ""
-		echo "Couldn't find unzip, you'll have to install the weka jar file manually.  After installing unzip, unzip the weka zip file, and put the weka.jar file in $WEKA_ZIP_DIR"
-		exit 1
-	    fi
-
 		unzip ${FILE}
 		/bin/rm -f weka-redirect.html
 		/bin/rm -f $FILE
@@ -192,6 +185,7 @@ fi
 # bye bye
 echo 
 echo "Configuration complete!"
+echo "   If you haven't already done so, "
 echo "   Please add " $tauroot/$architecture/bin " to your path"
 
 exit 0

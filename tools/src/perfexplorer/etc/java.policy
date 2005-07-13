@@ -5,6 +5,7 @@ grant {
 	permission java.io.FilePermission "/tmp/*", "read,write,delete";
 	permission java.lang.RuntimePermission "loadLibrary.SJava";
 	permission java.lang.RuntimePermission "loadLibrary.RInterpreter";
+	permission java.lang.RuntimePermission "loadLibrary.jogl";
 	permission java.util.PropertyPermission "OMEGA_CONFIG_FILE", "read";
 	permission java.lang.RuntimePermission "createClassLoader";
 	permission java.util.PropertyPermission "*", "read,write";

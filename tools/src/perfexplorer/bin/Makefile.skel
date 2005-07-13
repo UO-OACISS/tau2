@@ -15,7 +15,7 @@ XMLSAX_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
 JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
 JDBC_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/postgresql.jar
 JOGL_JAR =${TAUROOT}/${CONFIG_ARCH}/lib/jogl.jar
-PARAPROF_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/ParaProf.jar
+PARAPROF_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/vis.jar
 OMEGAHAT_JARS = ${OMEGAHAT_HOME}:${OMEGAHAT_JARPATH}/Environment.jar:${OMEGAHAT_JARPATH}/antlr.jar:${OMEGAHAT_JARPATH}/jas.jar:${OMEGAHAT_JARPATH}/jhall.jar
 JFREECHART_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jfreechart-0.9.21.jar
 JCOMMON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jcommon-0.9.6.jar
@@ -70,6 +70,7 @@ perfexplorer.jar: ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SE
 ########################
 
 ${COMMON_CLASSES}: ${COMMON_SOURCES}
+	mkdir -p classes
 	javac -target 1.3 -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
 
 ${CLUSTERING_CLASSES}: ${CLUSTERING_SOURCES}
@@ -105,6 +106,7 @@ clean: cleanclient cleanserver cleancommon cleanclustering
 	rm -f perfexplorer.jar
 	rm -rf PerfExplorer-0.1/*.jar PerfExplorer-0.1/java.policy
 	rm -f PerfExplorer-0.1.tgz
+	rm -rf classes
 
 remake: clean all
 

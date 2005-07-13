@@ -10,7 +10,7 @@ import javax.swing.JTabbedPane;
 import net.java.games.jogl.GLCanvas;
 import net.java.games.jogl.GLCapabilities;
 import net.java.games.jogl.GLDrawableFactory;
-import edu.uoregon.tau.paraprof.vis.*;
+import edu.uoregon.tau.vis.*;
 
 public class PerfExplorerCube {
 
@@ -27,27 +27,16 @@ public class PerfExplorerCube {
 
         // Create and set up the window.
         JFrame frame = new JFrame("ScatterPlotExample");
-        //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Create some values
-/*        float values[][] = new float[100][4];
-        for (int i = 0; i < 100; i++) {
-            values[i][0] = i*(float)Math.sin(i);  // value for the x axis
-            values[i][1] = i*(float)Math.cos(i);  // value for the y axis
-            values[i][2] = i * i;                 // value for the z axis
-            values[i][3] = i;                     // value for the color axis
-        }
-        */
-        
+		// get the data values
         float values[][] = data.getValues();
-
-        // Create the JOGL canvas
-        GLCanvas canvas = GLDrawableFactory.getFactory().createGLCanvas(new GLCapabilities());
-        canvas.setSize(600, 600);
 
         // Create the visRenderer and register it with the canvas
         VisRenderer visRenderer = new VisRenderer();
-        canvas.addGLEventListener(visRenderer);
+
+        // Create the JOGL canvas
+        VisCanvas canvas = new VisCanvas(visRenderer);
+        canvas.getActualCanvas().setSize(600, 600);
 
         ColorScale colorScale = new ColorScale();
 
@@ -77,7 +66,7 @@ public class PerfExplorerCube {
         // Add everything to a JPanel and add the panel to the frame
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
-        panel.add(canvas, new GridBagConstraints(0, 0, 1, 1, 0.9, 1.0, GridBagConstraints.WEST,
+        panel.add(canvas.getActualCanvas(), new GridBagConstraints(0, 0, 1, 1, 0.9, 1.0, GridBagConstraints.WEST,
                 GridBagConstraints.BOTH, new Insets(5, 5, 5, 5), 1, 1));
         panel.add(tabbedPane, new GridBagConstraints(1, 0, 1, 1, 0.1, 1.0, GridBagConstraints.EAST,
                 GridBagConstraints.HORIZONTAL, new Insets(5, 5, 5, 5), 1, 1));
