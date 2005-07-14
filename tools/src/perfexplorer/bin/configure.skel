@@ -180,6 +180,9 @@ if [ ! -r ${WEKA_JAR} ]; then
 fi
 
 
+# install the perfexplorer jar file
+
+cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar ${targetdir}/${architecture}/lib/.
 
 
 # bye bye
