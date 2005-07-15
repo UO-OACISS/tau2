@@ -1,7 +1,6 @@
 drop table analysis_result_data;
 drop table analysis_result;
 drop table analysis_settings;
-drop table trial_in_view;
 drop table trial_view;
 
 create table analysis_settings (
@@ -14,13 +13,13 @@ create table analysis_settings (
 	dimension_reduction	VARCHAR(256)	NOT NULL,
 	normalization		VARCHAR(256)	NOT NULL,
 	FOREIGN KEY (application) REFERENCES application(id) 
-		ON DELETE NO ACTION ON UPDATE NO ACTION,
+		ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY (experiment) REFERENCES experiment(id) 
-		ON DELETE NO ACTION ON UPDATE NO ACTION,
+		ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY (trial) REFERENCES trial(id) 
-		ON DELETE NO ACTION ON UPDATE NO ACTION,
+		ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY (metric) REFERENCES metric(id) 
-		ON DELETE NO ACTION ON UPDATE NO ACTION
+		ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 create table analysis_result (
@@ -42,11 +41,11 @@ CREATE TABLE analysis_result_data (
 	analysis_result		INTEGER				NOT NULL,
 	cluster_index		INTEGER				NULL,
     FOREIGN KEY(interval_event) REFERENCES interval_event(id) 
-		ON DELETE NO ACTION ON UPDATE NO ACTION,
+		ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY(metric) REFERENCES metric(id) 
-		ON DELETE NO ACTION ON UPDATE NO ACTION,
+		ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY(analysis_result) REFERENCES analysis_result(id) 
-		ON DELETE NO ACTION ON UPDATE NO ACTION
+		ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 create table trial_view (
@@ -58,14 +57,6 @@ create table trial_view (
 	operator			VARCHAR(32)		NOT NULL,
 	value				VARCHAR(256)	NOT NULL,
 	FOREIGN KEY (parent) REFERENCES trial_view(id) 
-		ON DELETE NO ACTION ON UPDATE NO ACTION
+		ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-create table trial_in_view (
-	trial				INTEGER,
-	trial_view			INTEGER,
-	FOREIGN KEY (trial) REFERENCES trial(id)
-		ON DELETE NO ACTION ON UPDATE NO ACTION,
-	FOREIGN KEY (trial_view) REFERENCES trial_view(id)
-		ON DELETE NO ACTION ON UPDATE NO ACTION
-);

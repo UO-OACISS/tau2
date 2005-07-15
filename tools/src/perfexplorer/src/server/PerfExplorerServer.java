@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.5 2005/07/08 21:57:15 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.6 2005/07/15 00:38:01 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1044,6 +1044,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("inner join interval_event ie ");
 			buf.append("on ilp.interval_event = ie.id ");
 			buf.append("where ie.trial = ? and ilp.metric = ? ");
+			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("group by ie.id, ie.name order by ie.name");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());
@@ -1097,6 +1098,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("inner join interval_event ");
 			buf.append("on interval_event = id ");
 			buf.append("where trial = ? and metric = ? ");
+			buf.append("and group_name not like '%TAU_CALLPATH%' ");
 			buf.append("group by 1, 2 order by 3 desc");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());

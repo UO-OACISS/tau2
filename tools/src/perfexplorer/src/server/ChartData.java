@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.4 2005/07/14 21:26:11 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.5 2005/07/15 00:38:01 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -423,7 +423,7 @@ public class ChartData extends RMIChartData {
 			buf.append("select ");
 			buf.append(" 'other', ");
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-			buf.append("ims.exclusive from interval_mean_summary ims ");
+			buf.append("sum(ims.exclusive) from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");

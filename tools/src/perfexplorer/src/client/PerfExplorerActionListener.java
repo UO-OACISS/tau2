@@ -78,13 +78,17 @@ public class PerfExplorerActionListener implements ActionListener {
 				} else if (arg.equals(NUM_CLUSTERS)) {
 					createClusterSizeWindow();
 				} else if (arg.equals(DO_CLUSTERING)) {
-					createDoClusteringWindow();
+					if (validAnalysisSelection())
+						createDoClusteringWindow();
 				} else if (arg.equals(DO_CORRELATION_ANALYSIS)) {
-					createDoCorrelationWindow();
+					if (validCorrelationSelection())
+						createDoCorrelationWindow();
 				} else if (arg.equals(DO_CORRELATION_CUBE)) {
-					PerfExplorerCube.doCorrelationCube();
+					if (valid3DSelection())
+						PerfExplorerCube.doCorrelationCube();
 				} else if (arg.equals(DO_VARIATION_ANALYSIS)) {
-					PerfExplorerVariation.doVariationAnalysis();
+					if (valid3DSelection())
+						PerfExplorerVariation.doVariationAnalysis();
 			// chart items
 				} else if (arg.equals(SET_GROUPNAME)) {
 					checkAndSetGroupName(true);
@@ -383,6 +387,32 @@ public class PerfExplorerActionListener implements ActionListener {
 		return reply;
 	}
 
+	private boolean validCorrelationSelection () {
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Object selection = theModel.getCurrentSelection();
+		// allow Experiments or Trials or 1 view
+		if (!(selection instanceof Trial) && !(selection instanceof Metric)) {
+			JOptionPane.showMessageDialog(mainFrame, "Please select a Trial or Metric.",
+				"Selection Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+		// check multi-selections, to make sure they are homogeneous
+		return true;
+	}
+
+	private boolean validAnalysisSelection () {
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Object selection = theModel.getCurrentSelection();
+		// allow Experiments or Trials or 1 view
+		if (!(selection instanceof Experiment) && !(selection instanceof Trial) && !(selection instanceof Application) && !(selection instanceof Metric)) {
+			JOptionPane.showMessageDialog(mainFrame, "Please select an Application, Experiment, Trial or Metric.",
+				"Selection Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+		// check multi-selections, to make sure they are homogeneous
+		return true;
+	}
+
 	private boolean validSelection (PerfExplorerModel theModel) {
 		Object selection = theModel.getCurrentSelection();
 		// allow Experiments or Trials or 1 view
@@ -392,6 +422,18 @@ public class PerfExplorerActionListener implements ActionListener {
 			return false;
 		}
 		// check multi-selections, to make sure they are homogeneous
+		return true;
+	}
+
+	private boolean valid3DSelection () {
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Object selection = theModel.getCurrentSelection();
+		// allow only Metrics
+		if ((selection == null) || !(selection instanceof Metric)) {
+			JOptionPane.showMessageDialog(mainFrame, "Please select a Metric.",
+				"Selection Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
 		return true;
 	}
 
