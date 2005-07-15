@@ -578,38 +578,16 @@ void _main();
 #endif /* CRAYKAI || HP_FORTRAN */
 void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
 {
-
-#ifdef DEBUG_PROF
-  printf("flen = %d\n", flen);
-#endif /* DEBUG_PROF */
- 
-
-  if (*ptr == 0)
+  if (*ptr == 0) 
   {  // remove garbage characters from the end of name
-    if (flen < 1024) fname[flen] = '\0';
-    else
-    {
-      for(int i=0; i<1024; i++)
-      {
-        if (!VALID_NAME_CHAR(fname[i]))
-        {
-          fname[i] = '\0';
-          break;
-        }
-      }
-    }
-
-#ifdef DEBUG_PROF
-    printf("Tau_get_profiler() \n");
-#endif /* DEBUG_PROF */
-    EXTRACT_GROUP(fname, flen, gr, gr_name)
-    *ptr = Tau_get_profiler(fname, (char *)" ", gr, gr_name);
+    char * localname = (char *) malloc((size_t)flen+1);
+    strncpy(localname, fname, flen);
+    localname[flen] = '\0';
+    
+    EXTRACT_GROUP(localname, flen, gr, gr_name)
+    *ptr = Tau_get_profiler(localname, (char *)" ", gr, gr_name);
+    free(localname); 
   }
-
-#ifdef DEBUG_PROF 
-  printf("get_profiler returns %lx\n", *ptr);
-#endif /* DEBUG_PROF */
-
   return;
 }
 
@@ -782,42 +760,19 @@ void TAU_REPORT_THREAD_STATISTICS(void)
 }
 
 //#if (defined (TAU_XLC) || defined(TAU_AIX) || defined(HP_FORTRAN))
-void tau_profile_timer(int **profiler, char *fname, int len)
+void tau_profile_timer(void **profiler, char *fname, int len)
 {
-  if (*profiler == 0)
-  {
-    // remove garbage characters from the end of name
-    if (len < 1024) {
-#ifndef HP_FORTRAN
-	fname[len] = '\0'; 
-#endif /* HP_FORTRAN */
-    }
-    else 	
-    {
-      for(int i=0; i<1024; i++)
-      {
-        if (!VALID_NAME_CHAR(fname[i]))
-        {
-          fname[i] = '\0';
-          break;
-        }
-      }
-    }
-#ifdef DEBUG_PROF
-    printf("len = %d\n", len);
-    printf("Tau_get_profiler() \n");
-#endif /* DEBUG_PROF */
-#ifdef HP_FORTRAN
-    char *name = (char *) malloc(len+1); 
-    strncpy(name, fname, len);
-    name[len]='\0';
-    EXTRACT_GROUP(name, len, gr, gr_name)
-    *profiler = (int *) Tau_get_profiler(name, (char *)" ", gr, gr_name);
-#else 
-    EXTRACT_GROUP(fname, len, gr, gr_name)
-    *profiler = (int *) Tau_get_profiler(fname, (char *)" ", gr, gr_name);
-#endif /* HP_FORTRAN */
+  if (*profiler == 0) 
+  {  // remove garbage characters from the end of name
+    char * localname = (char *) malloc((size_t)len+1);
+    strncpy(localname, fname, len);
+    localname[len] = '\0';
+    
+    EXTRACT_GROUP(localname, len, gr, gr_name)
+    *profiler = Tau_get_profiler(localname, (char *)" ", gr, gr_name);
+    free(localname); 
   }
+  return;
 }
 
 //////////////////////////////////////////////////////
@@ -1359,7 +1314,7 @@ void TAU_PHASE_STOP(void **profiler)
 } /* extern "C" */
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.42 $   $Date: 2005/06/29 18:10:21 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.42 2005/06/29 18:10:21 sameer Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.43 $   $Date: 2005/07/15 19:54:32 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.43 2005/07/15 19:54:32 amorris Exp $ 
  ***************************************************************************/
