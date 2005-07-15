@@ -11,7 +11,7 @@ import weka.core.Instances;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper around the RawDataInterface class.
  * 
- * <P>CVS $Id: PCAPlotDataset.java,v 1.1 2005/07/05 22:29:53 amorris Exp $</P>
+ * <P>CVS $Id: PCAPlotDataset.java,v 1.2 2005/07/15 20:56:44 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -48,8 +48,13 @@ public class PCAPlotDataset extends AbstractXYDataset {
 		 * of components.  Therefore, get the last and second-to-last
 		 * components.
 		 */
-		x = pca.numAttributes() - 1;
-		y = pca.numAttributes() - 2;
+		//System.out.println("numAttributes: " + pca.numAttributes());
+		if (pca.numAttributes() > 1) {
+			x = pca.numAttributes() - 1;
+			y = pca.numAttributes() - 2;
+		} else {
+			y = 0;
+		}
 		
 		for (int i = 0 ; i < k ; i++) 
 			this.clusters[i] = new Instances(pca, 0);
@@ -96,6 +101,7 @@ public class PCAPlotDataset extends AbstractXYDataset {
 	 * @see org.jfree.data.xy.XYDataset#getY(int, int)
 	 */
 	public Number getY(int arg0, int arg1) {
+		//System.out.println("Getting Y: " + arg0 + ", " + arg1 + ", " + y);
 		return new Double(clusters[arg0].instance(arg1).value(y));
 		//return new Double(data.getValue(arg1, y));
 	}

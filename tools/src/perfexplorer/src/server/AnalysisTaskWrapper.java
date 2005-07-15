@@ -34,7 +34,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.2 2005/07/11 20:46:42 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.3 2005/07/15 20:56:44 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -916,11 +916,17 @@ public class AnalysisTaskWrapper extends TimerTask {
 		File outfile = null;
 		if (chartType == PCA_SCATTERPLOT) {
 			int max = pcaData.numDimensions();
+			int x = max - 1;
+			int y = max - 2;
+			if (max < 2) {
+				x = 0;
+				y = 0;
+			}
 	        XYDataset data = new PCAPlotDataset(pcaData, rawData, clusterer);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
 	            "PCA Results",
-	            (String)(pcaData.getEventNames().get(max - 1)),
-	            (String)(pcaData.getEventNames().get(max - 2)),
+	            (String)(pcaData.getEventNames().get(x)),
+	            (String)(pcaData.getEventNames().get(y)),
 	            data,
 	            PlotOrientation.VERTICAL,
 	            true,

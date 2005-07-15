@@ -242,7 +242,8 @@ public class PerfExplorerActionListener implements ActionListener {
 							Object metric = metrics.get(i);
 							theModel.setCurrentSelection(metric);
 							// request some analysis!
-							status = server.requestAnalysis(theModel, true);
+							RMIPerfExplorerModel modelCopy = theModel.copy();
+							status = server.requestAnalysis(modelCopy, true);
 							if (!status.endsWith("Request accepted.")) {
 								JOptionPane.showMessageDialog(mainFrame, "Request Status: \n" + status,
 									"Request Status", JOptionPane.ERROR_MESSAGE);
@@ -251,7 +252,7 @@ public class PerfExplorerActionListener implements ActionListener {
 							}
 						}
 					}
-					// set the selection back to experiment
+                    // set the selection back to experiment
 					theModel.setCurrentSelection(experiment);
 				}
 				// set the selection back to application
@@ -277,7 +278,8 @@ public class PerfExplorerActionListener implements ActionListener {
 						Object metric = metrics.get(i);
 						theModel.setCurrentSelection(metric);
 						// request some analysis!
-						status = server.requestAnalysis(theModel, true);
+						RMIPerfExplorerModel modelCopy = theModel.copy();
+						status = server.requestAnalysis(modelCopy, true);
 						if (!status.endsWith("Request accepted.")) {
 							JOptionPane.showMessageDialog(mainFrame, "Request Status: \n" + status,
 								"Request Status", JOptionPane.ERROR_MESSAGE);
@@ -286,12 +288,12 @@ public class PerfExplorerActionListener implements ActionListener {
 						}
 					}
 				}
-				// set the selection back to experiment
-				theModel.setCurrentSelection(experiment);
 				if (status.endsWith("Request accepted.")) {
 					JOptionPane.showMessageDialog(mainFrame, "Request Status: \n" + status,
 						"Request Status", JOptionPane.PLAIN_MESSAGE);
 				}
+                // set the selection back to experiment
+				theModel.setCurrentSelection(experiment);
 			}
 		} else if (selection instanceof Trial) {
 		/*
