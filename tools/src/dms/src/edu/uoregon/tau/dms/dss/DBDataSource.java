@@ -196,7 +196,7 @@ public class DBDataSource extends DataSource {
         }
 
         time = (System.currentTimeMillis()) - time;
-        System.out.println("Time to download file (in milliseconds): " + time);
+//        System.out.println("Time to download file (in milliseconds): " + time);
 
         for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
             ((Thread) it.next()).setThreadDataAllMetrics();
