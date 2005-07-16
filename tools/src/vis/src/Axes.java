@@ -1,3 +1,9 @@
+/*
+ * Axes.java
+ *
+ * Copyright 2005                                                 
+ * Department of Computer and Information Science, University of Oregon
+ */
 package edu.uoregon.tau.vis;
 
 import java.awt.*;
@@ -14,11 +20,11 @@ import net.java.games.jogl.GLDrawable;
 import net.java.games.jogl.util.GLUT;
 
 /**
- * Draws axes with labels
+ * Draws axes with labels.
  *
- * <P>CVS $Id: Axes.java,v 1.1 2005/07/12 18:02:15 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.2 2005/07/16 00:21:07 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  */
 public class Axes implements Shape {
 

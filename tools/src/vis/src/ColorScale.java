@@ -1,3 +1,9 @@
+/*
+ * ColorScale.java
+ *
+ * Copyright 2005                                                 
+ * Department of Computer and Information Science, University of Oregon
+ */
 package edu.uoregon.tau.vis;
 
 import java.awt.*;
@@ -18,9 +24,9 @@ import net.java.games.jogl.util.GLUT;
  * allowing them to query values (0..1) and get colors in the current
  * color set. 
  *    
- * <P>CVS $Id: ColorScale.java,v 1.1 2005/07/12 18:02:16 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.2 2005/07/16 00:21:07 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  */
 
 /* TODO: Provide control over font size perhaps? */

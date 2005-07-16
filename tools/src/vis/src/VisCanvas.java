@@ -1,3 +1,9 @@
+/*
+ * VisCanvas.java
+ *
+ * Copyright 2005                                                 
+ * Department of Computer and Information Science, University of Oregon
+ */
 package edu.uoregon.tau.vis;
 
 import java.awt.Canvas;
@@ -11,9 +17,9 @@ import net.java.games.jogl.GLDrawableFactory;
  * This class is merely a wrapper over GLCanvas which allows users of the Vis
  * package to build against vis alone (not jogl). 
  *
- * <P>CVS $Id: VisCanvas.java,v 1.3 2005/07/12 18:44:00 amorris Exp $</P>
+ * <P>CVS $Id: VisCanvas.java,v 1.4 2005/07/16 00:21:08 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class VisCanvas {
 

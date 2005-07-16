@@ -1,3 +1,9 @@
+/*
+ * ExceptionHandler.java
+ *
+ * Copyright 2005                                                 
+ * Department of Computer and Information Science, University of Oregon
+ */
 package edu.uoregon.tau.vis;
 
 /**

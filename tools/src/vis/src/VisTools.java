@@ -1,15 +1,20 @@
+/*
+ * VisTools.java
+ *
+ * Copyright 2005                                                 
+ * Department of Computer and Information Science, University of Oregon
+ */
 package edu.uoregon.tau.vis;
 
 import java.awt.*;
-
 import net.java.games.jogl.GL;
 
 /**
- * Various static tools for the vis package
+ * Various utility methods for the vis package.
  * 
- * <P>CVS $Id: VisTools.java,v 1.1 2005/07/12 18:02:17 amorris Exp $</P>
+ * <P>CVS $Id: VisTools.java,v 1.2 2005/07/16 00:21:08 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class VisTools {
 
