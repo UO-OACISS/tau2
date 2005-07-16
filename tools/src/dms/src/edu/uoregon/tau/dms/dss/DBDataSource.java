@@ -74,8 +74,23 @@ public class DBDataSource extends DataSource {
             IntervalLocationProfile ilp = ie.getMeanSummary();
 
             if (ie.getGroup() != null) {
-                Group group = this.addGroup(ie.getGroup());
-                function.addGroup(group);
+                
+                String groupNames = ie.getGroup();
+                StringTokenizer st = new StringTokenizer(groupNames, "|");
+                while (st.hasMoreTokens()) {
+                    String groupName = st.nextToken();
+                    if (groupName != null) {
+                        // The potential new group is added here. If the group is already present,
+                        // then the addGroup function will just return the
+                        // already existing group id. See the TrialData
+                        // class for more details.
+                        Group group = this.addGroup(groupName.trim());
+                        function.addGroup(group);
+                    }
+                }
+                
+                //Group group = this.addGroup(ie.getGroup());
+                //function.addGroup(group);
                 this.setGroupNamesPresent(true);
             }
 
@@ -180,6 +195,9 @@ public class DBDataSource extends DataSource {
 
         }
 
+        time = (System.currentTimeMillis()) - time;
+        System.out.println("Time to download file (in milliseconds): " + time);
+
         for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
             ((Thread) it.next()).setThreadDataAllMetrics();
         }
@@ -193,7 +211,5 @@ public class DBDataSource extends DataSource {
         // database values.
         generateDerivedData();
         
-        time = (System.currentTimeMillis()) - time;
-        //System.out.println("Time to process file (in milliseconds): " + time);
     }
 }
