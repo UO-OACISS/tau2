@@ -34,7 +34,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.3 2005/07/15 20:56:44 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.4 2005/07/16 00:02:57 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -464,6 +464,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				//sql.append("on e.id = s.interval_event and s.metric = p.metric ");
 			}
 			sql.append("where e.trial = ?");
+			sql.append(" and e.group_name not like '%TAU_CALLPATH%' ");
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				sql.append(" and p.metric = ?");
 			}
@@ -499,6 +500,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				} else {
 					sql.append("where e.trial = ?");
 				}
+			sql.append(" and e.group_name not like '%TAU_CALLPATH%' ");
 				sql.append(" order by 1");
 				PerfExplorerServer.getServer().getControl().WAIT("getConstants");
 				statement = db.prepareStatement(sql.toString());
@@ -631,6 +633,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				sql.append(" and p.metric = ? ");
 			}
+			sql.append(" and e.group_name not like '%TAU_CALLPATH%' ");
 			sql.append(" order by 3,1,2 ");
 			statement = db.prepareStatement(sql.toString());
 			statement.setInt(1, modelData.getTrial().getID());

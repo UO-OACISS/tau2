@@ -1,4 +1,4 @@
-R_HOME = /Library/Frameworks/R.framework/Versions/2.0.1/Resources
+R_HOME = /Library/Frameworks/R.framework/Versions/2.0.0/Resources
 TAUROOT = /Users/khuck/tau2
 CONFIG_ARCH = apple
 
@@ -79,7 +79,7 @@ ${CLUSTERING_CLASSES}: ${CLUSTERING_SOURCES}
 ${SERVER_CLASSES}: ${SERVER_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES}
 	javac -target 1.3 -classpath ${SERVER_BUILD_CLASSPATH} -d classes ${SERVER_SOURCES}
 
-${CLIENT_CLASSES}: ${CLIENT_SOURCES} ${COMMON_CLASSES} 
+${CLIENT_CLASSES}: ${CLIENT_SOURCES} ${COMMON_CLASSES}
 	javac -target 1.3 -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
 	cp src/client/resources/*.gif classes/client/.
 
