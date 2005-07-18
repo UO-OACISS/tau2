@@ -1,0 +1,133 @@
+#!/bin/@TAUSHELL@
+TAUROOT=@TAUROOT@
+CONFIG_ARCH=@TAUARCH@
+R_ROOT=@RROOT@
+ANALYSIS_ENGINE=@ANALYSIS_ENGINE@
+SERVER_HOSTNAME=@SERVER_HOSTNAME@
+
+# Record all the arguments
+arguments=$*
+
+# set some defaults
+mode=standalone
+redirect=""
+
+CONFIGFILE=$HOME/.ParaProf/perfdmf.cfg
+OMEGAHAT_HOME=$R_ROOT/library/SJava
+OMEGAHAT_JARPATH=$OMEGAHAT_HOME/org/omegahat/Jars
+CLIENT_DYLD_LIBRARY_PATH=$TAUROOT/$CONFIG_ARCH/lib
+SERVER_DYLD_LIBRARY_PATH=$OMEGAHAT_HOME/libs:$R_ROOT/lib:$R_ROOT/bin:$R_ROOT/library/SJava/libs
+
+# PARSE COMMAND LINE SWITCHES
+###############################################################
+for arg in "$@";
+do
+  case $arg in
+
+  -server)
+  	mode=server
+    shift
+    ;;
+
+  -client)
+    mode=client
+    shift
+    ;;
+
+  -alone)
+    mode=standalone
+    shift
+    ;;
+
+  -help)
+    echo "PerfExplorer"
+    echo "***********************************************************************"
+    echo "Usage: perfexplorer [OPTIONS]"
+    echo "  where [OPTIONS] are:"
+    echo "[-alone] (default) ............................ run in standalone mode."
+    echo "[-server]  ................................... run in server-only mode."
+    echo "[-client]  ................................... run in client-only mode."
+    exit
+    ;;
+
+  '')
+    #echo "NULL switch!"
+    # Required for HP/Compaq Tru64 machines.
+    ;;
+
+  *)
+    echo "ERROR: Command line switch \`$arg' not recognized" 1>&2
+    exit 1
+    ;;
+  esac
+done
+
+#
+# get the jdbc jar file from the configuration file
+JDBC_JAR=`grep jdbc_db_jarfile $CONFIGFILE 2>/dev/null | sed s/jdbc_db_jarfile://`
+
+if [ "x$JDBC_JAR" != "x" ]; then
+    if [ ! -r $JDBC_JAR ]; then
+        echo ""
+        echo "Warning: JDBC driver '$JDBC_JAR' not found."
+        echo ""
+    fi
+fi
+
+PERFDMF_JAR=$TAUROOT/$CONFIG_ARCH/lib/dms.jar
+JARGS_JAR=$TAUROOT/$CONFIG_ARCH/lib/jargs.jar
+WEKA_JAR=$TAUROOT/$CONFIG_ARCH/lib/weka.jar
+PERFEXPLORER_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfexplorer.jar
+JFREECHART_JAR=$TAUROOT/$CONFIG_ARCH/lib/jfreechart-0.9.21.jar
+JCOMMON_JAR=$TAUROOT/$CONFIG_ARCH/lib/jcommon-0.9.6.jar
+JOGL_JAR=$TAUROOT/$CONFIG_ARCH/lib/jogl.jar
+VIS_JAR=$TAUROOT/$CONFIG_ARCH/lib/vis.jar
+OMEGAHAT_JARS=$OMEGAHAT_HOME:$OMEGAHAT_JARPATH/Environment.jar:$OMEGAHAT_JARPATH/antlr.jar:$OMEGAHAT_JARPATH/jas.jar:$OMEGAHAT_JARPATH/jhall.jar
+
+
+if [ $mode == "standalone" ] ; then
+	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR
+
+	java -Xmx500m \
+	-classpath $CLASSPATH \
+	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
+	client.PerfExplorerClient -s -c $CONFIGFILE -e $ANALYSIS_ENGINE
+fi
+
+if [ $mode == "server" ] ; then
+
+	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JARGS_JAR \
+
+	echo "Starting rmiregistry..."
+	rmiregistry & 
+	echo "Starting server..."
+
+	java -Xmx1800m \
+	-classpath $CLASSPATH \
+	-Djava.security.policy=$TAUROOT/tools/src/perfexplorer/etc/java.policy \
+	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
+	-Dsun.rmi.server.exceptionTrace=true \
+	server.PerfExplorerServer -c $CONFIGFILE -e weka
+
+	# Add these options to the RMI server start call if you need some
+	# additional debugging information...
+	#-Djava.rmi.server.logCalls=true \
+	#-Dsun.rmi.loader.logLevel=BRIEF \
+	#-Dsun.rmi.server.logLevel=BRIEF \
+
+	echo "Killing rmiregistry..."
+	killall rmiregistry
+fi
+
+if [ $mode == "client" ] ; then
+
+	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR \
+
+	java -Xmx500m \
+	-classpath $CLASSPATH \
+	-Djava.security.policy=$TAUROOT/tools/src/perfexplorer/etc/java.policy \
+	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \
+	-Djava.rmi.server.hostname=$SERVER_HOSTNAME \
+	client.PerfExplorerClient
+fi
+
