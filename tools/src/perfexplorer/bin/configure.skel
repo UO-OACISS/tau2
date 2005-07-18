@@ -91,31 +91,15 @@ echo
 
 echo "TAU: installing tools in $targetdir"
 
-cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer_client.skel | 
+cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel | 
 sed -e 's,@TAUROOT@,'$targetdir',' \
 -e 's,@TAUSHELL@,'$taushell',' \
 -e 's,@TAUARCH@,'$architecture',' \
+-e 's,@RROOT@,'$rroot',' \
+-e 's,@ANALYSIS_ENGINE@,'$engine',' \
 -e 's,@SERVER_HOSTNAME@,'$serverhostname',' \
- > ${targetdir}/${architecture}/bin/perfexplorer_client
-chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer_client
-
-cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer_server.skel | 
-sed -e 's,@TAUROOT@,'$targetdir',' \
--e 's,@TAUSHELL@,'$taushell',' \
--e 's,@TAUARCH@,'$architecture',' \
--e 's,@RROOT@,'$rroot',' \
--e 's,@ANALYSIS_ENGINE@,'$engine',' \
- > ${targetdir}/${architecture}/bin/perfexplorer_server
-chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer_server
-
-cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer_standalone.skel | 
-sed -e 's,@TAUROOT@,'$targetdir',' \
--e 's,@TAUSHELL@,'$taushell',' \
--e 's,@TAUARCH@,'$architecture',' \
--e 's,@RROOT@,'$rroot',' \
--e 's,@ANALYSIS_ENGINE@,'$engine',' \
- > ${targetdir}/${architecture}/bin/perfexplorer_standalone
-chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer_standalone
+ > ${targetdir}/${architecture}/bin/perfexplorer
+chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer
 
 cat ${tauroot}/tools/src/perfexplorer/bin/Makefile.skel | 
 sed -e 's,@TAUROOT@,'$targetdir',' \

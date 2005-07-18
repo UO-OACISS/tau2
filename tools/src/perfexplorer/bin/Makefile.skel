@@ -118,13 +118,13 @@ testserver: server
 	java -ea -cp ${SERVER_RUN_CLASSPATH} server.TestServer ${CONFIGFILE}
 
 runserver: perfexplorer.jar
-	perfexplorer_server
+	perfexplorer -server
 
 runclient: perfexplorer.jar
-	perfexplorer_client
+	perfexplorer -client
 
 runstandalone: perfexplorer.jar
-	perfexplorer_standalone
+	perfexplorer
 
 install: perfexplorer.jar
 	rm -rf PerfExplorer-0.1/*.jar PerfExplorer-0.1/java.policy
