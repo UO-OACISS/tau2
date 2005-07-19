@@ -2281,13 +2281,19 @@ then
       then
         mpiflibargs="$wrapperlib -lfmpi"
       fi 
+
       if [ -f $mpilib/libfmpich.a -o -f $mpilib/libfmpich.so ]
       then
         #echo "Fortran fmpich.* found"
         mpiflibargs="-L$mpilib -lfmpich $wrapperlib"
       else 
-        #echo "No Fortran interface found"
-        mpiflibargs="$mpiflibargs $wrapperlib -L$mpilib"
+	  if [ -f $mpilib/liblamf77mpi.a -o -f $mpilib/liblamf77mpi.so ] ; then
+              #echo "Fortran liblamf77mpi.* found"
+	      mpiflibargs="-L$mpilib -llamf77mpi $wrapperlib"
+	  else
+              #echo "No Fortran interface found"
+	      mpiflibargs="$mpiflibargs $wrapperlib -L$mpilib"
+	  fi
       fi
     fi
   
