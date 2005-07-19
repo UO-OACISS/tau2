@@ -4,6 +4,7 @@ import java.rmi.*;
 import common.*;
 import server.*;
 import java.util.*;
+import javax.swing.*;
 
 public class PerfExplorerConnection {
 
@@ -16,26 +17,30 @@ public class PerfExplorerConnection {
     private static int analysisEngine = 0;
 
     private PerfExplorerConnection () {
-	if (standalone) {
-	    server = PerfExplorerServer.getServer(configFile, analysisEngine);
-	} else {
-	    if (System.getSecurityManager() == null) {
-		System.setSecurityManager(new RMISecurityManager());
-	    }
-	    try {
-		//String hostname = System.getProperty("java.rmi.server.hostname");
-		String name = "PerfExplorerServer";
-		//System.out.println("Connecting to rmi://" + hostname + "/" + name);
-		server = (RMIPerfExplorer)Naming.lookup("//utonium.cs.uoregon.edu/" + name);
-		System.out.println("Bound to " + name);
-	    } catch (Exception e) {
-		System.err.println("createServer Exception: " + e.getMessage());
-		e.printStackTrace();
-		server = null;
-		//System.exit(0);
-	    }
-	}
+		makeConnection();
     }
+
+	private void makeConnection() {
+		if (standalone) {
+	    	server = PerfExplorerServer.getServer(configFile, analysisEngine);
+		} else {
+	    	if (System.getSecurityManager() == null) {
+				System.setSecurityManager(new RMISecurityManager());
+	    	}
+	    	try {
+				String hostname = System.getProperty("java.rmi.server.hostname");
+				String name = "PerfExplorerServer";
+				System.out.println("Connecting to rmi://" + hostname + "/" + name);
+				//server = (RMIPerfExplorer)Naming.lookup("//utonium.cs.uoregon.edu/" + name);
+				server = (RMIPerfExplorer)Naming.lookup("//" + hostname + "/" + name);
+				System.out.println("Bound to " + name);
+	    	} catch (Exception e) {
+				System.err.println("createServer Exception: " + e.getMessage());
+				e.printStackTrace();
+				server = null;
+	    	}
+		}
+	}
 
     public static void setStandalone (boolean standalone) {
 	PerfExplorerConnection.standalone = standalone;
@@ -60,9 +65,25 @@ public class PerfExplorerConnection {
     }
 
     private void handleError (RemoteException e, String functionName) {
-	System.out.println("PerfExplorerConnection." + functionName + " Exception: ");
-	System.out.println(e.getMessage());
-	e.printStackTrace();
+		System.out.println("PerfExplorerConnection." + functionName + " Exception: ");
+		System.out.println(e.getMessage());
+		e.printStackTrace();
+		JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), 
+			"An error occurred communicating with the server.", 
+			"Server Error", JOptionPane.ERROR_MESSAGE);
+		// try to reconnect
+		server = null;
+		makeConnection();
+		if (server == null) {
+			JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), 
+			"The connection could not be restored.\n" +
+			"Please check to make sure the server is running.", 
+			"Server Error", JOptionPane.ERROR_MESSAGE);
+		} else {
+			JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(),
+			"Connection restored - please try your request again.",
+			"Connection Restored", JOptionPane.INFORMATION_MESSAGE);
+		}
     }
 
     public String sayHello() {

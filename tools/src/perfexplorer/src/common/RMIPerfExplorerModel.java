@@ -8,7 +8,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.2 2005/07/15 00:38:01 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.3 2005/07/19 22:22:59 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -202,7 +202,25 @@ public class RMIPerfExplorerModel implements Serializable {
 	}
 
 	public String toString() {
-		if (currentSelection instanceof Metric) {
+		if (multiSelectionType == APPLICATION) {
+			return "Applications";
+		} else if (multiSelectionType == EXPERIMENT) {
+			String tmpStr = (application == null) ? "" : application.getName();
+			return tmpStr;
+		} else if (multiSelectionType == TRIAL) {
+			String tmpStr1 = (application == null) ? "" : application.getName();
+			String tmpStr2 = experiment.getName();
+			String tmpStr = tmpStr1 + ":" + tmpStr2;
+			return tmpStr;
+		} else if (multiSelectionType == METRIC) {
+			String tmpStr1 = (application == null) ? "" : application.getName();
+			String tmpStr2 = (experiment == null) ? "" : experiment.getName();
+			String tmpStr3 = trial.getName();
+			String tmpStr = tmpStr1 + ":" + tmpStr2 + ":" + tmpStr3;
+			return tmpStr;
+		} else if (multiSelectionType == VIEW) {
+			return "Custom View";
+		} else if (currentSelection instanceof Metric) {
 			Metric metric = (Metric)currentSelection;
 			String tmpStr1 = (application == null) ? "" : application.getName();
 			String tmpStr2 = (experiment == null) ? "" : experiment.getName();
@@ -210,28 +228,24 @@ public class RMIPerfExplorerModel implements Serializable {
 			String tmpStr4 = metric.getName();
 			String tmpStr = tmpStr1 + ":" + tmpStr2 + ":" + tmpStr3 + ":" + tmpStr4;
 			return tmpStr;
-		}
-		if (currentSelection instanceof Trial) {
+		} else if (currentSelection instanceof Trial) {
 			Trial trial = (Trial)currentSelection;
 			String tmpStr1 = (application == null) ? "" : application.getName();
 			String tmpStr2 = (experiment == null) ? "" : experiment.getName();
 			String tmpStr3 = trial.getName();
 			String tmpStr = tmpStr1 + ":" + tmpStr2 + ":" + tmpStr3;
 			return tmpStr;
-		}
-		if (currentSelection instanceof Experiment) {
+		} else if (currentSelection instanceof Experiment) {
 			Experiment experiment = (Experiment)currentSelection;
 			String tmpStr1 = (application == null) ? "" : application.getName();
 			String tmpStr2 = experiment.getName();
 			String tmpStr = tmpStr1 + ":" + tmpStr2;
 			return tmpStr;
-		}
-		if (currentSelection instanceof Application) {
+		} else if (currentSelection instanceof Application) {
 			Application application = (Application)currentSelection;
 			String tmpStr = application.getName();
 			return tmpStr;
-		}
-		if (currentSelection instanceof RMIView) {
+		} else if (currentSelection instanceof RMIView) {
 			RMIView view = (RMIView)currentSelection;
 			String tmpStr = view.getField("name");
 			return tmpStr;
