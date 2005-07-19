@@ -450,10 +450,14 @@ public class PerfExplorerActionListener implements ActionListener {
 			List metrics = server.getPotentialMetrics(theModel);
 			Object[] options = metrics.toArray();
 			if (options.length > 0) {
-				metric = (String)JOptionPane.showInputDialog (mainFrame,
-					"Please enter the metric of interest",
-					"Metric of interest", JOptionPane.PLAIN_MESSAGE,
-					null, options,options[0]);
+				if (options.length == 1) {
+					metric = (String)options[0];
+				} else {
+					metric = (String)JOptionPane.showInputDialog (mainFrame,
+						"Please enter the metric of interest",
+						"Metric of interest", JOptionPane.PLAIN_MESSAGE,
+						null, options,options[0]);
+				}
 				theModel.setMetricName(metric);
 			}
 		}
@@ -469,10 +473,14 @@ public class PerfExplorerActionListener implements ActionListener {
 			List metrics = server.getPotentialGroups(theModel);
 			Object[] options = metrics.toArray();
 			if (options.length > 0) {
-				group = (String)JOptionPane.showInputDialog (mainFrame,
-					"Please enter the group of interest",
-					"Group of interest", JOptionPane.PLAIN_MESSAGE,
-					null, options, options[0]);
+				if (options.length == 1) {
+					group = (String)options[0];
+				} else {
+					group = (String)JOptionPane.showInputDialog (mainFrame,
+						"Please enter the group of interest",
+						"Group of interest", JOptionPane.PLAIN_MESSAGE,
+						null, options, options[0]);
+				}
 				theModel.setGroupName(group);
 			}
 		}
@@ -488,10 +496,14 @@ public class PerfExplorerActionListener implements ActionListener {
 			List metrics = server.getPotentialEvents(theModel);
 			Object[] options = metrics.toArray();
 			if (options.length > 0) {
-				event = (String)JOptionPane.showInputDialog (mainFrame,
-					"Please enter the event of interest",
-					"Event of interest", JOptionPane.PLAIN_MESSAGE,
-					null, options, options[0]);
+				if (options.length == 1) {
+					event = (String)options[0];
+				} else {
+					event = (String)JOptionPane.showInputDialog (mainFrame,
+						"Please enter the event of interest",
+						"Event of interest", JOptionPane.PLAIN_MESSAGE,
+						null, options, options[0]);
+				}
 				theModel.setEventName(event);
 			}
 		}

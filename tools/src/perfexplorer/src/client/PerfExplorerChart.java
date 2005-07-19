@@ -36,8 +36,9 @@ public class PerfExplorerChart {
 			dataset.addSeries(s);
 		}
         JFreeChart chart = ChartFactory.createStackedXYAreaChart(
-            "Total Runtime Breakdown for " + 
-			PerfExplorerModel.getModel().toString(),  // chart title
+            "Total Runtime Breakdown for " +   // chart title
+			PerfExplorerModel.getModel().toString() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),
             "Number of Processors",          // domain axis label
             "Percentage of Total Runtime",     // range axis label
             dataset,                         // data
@@ -47,6 +48,8 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		ChartFrame frame = new ChartFrame("Total Runtime Breakdown", chart);
+		centerFrame(frame);
+
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -76,7 +79,9 @@ public class PerfExplorerChart {
 		}
 
         JFreeChart chart = ChartFactory.createXYLineChart(
-            "Relative Efficiency",  // chart title
+            "Relative Efficiency - " +  // chart title
+			PerfExplorerModel.getModel().toString() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),
             "Number of Processors",          // domain axis label
             "Value",     // range axis label
             dataset,                         // data
@@ -87,6 +92,7 @@ public class PerfExplorerChart {
         );
 		customizeChart(chart, rawData.getRows(), false);
 		ChartFrame frame = new ChartFrame("Relative Efficiency", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -117,7 +123,8 @@ public class PerfExplorerChart {
 
         JFreeChart chart = ChartFactory.createXYLineChart(
             "Relative Efficiency by Event for " +
-			PerfExplorerModel.getModel().toString(),  // chart title
+			PerfExplorerModel.getModel().toString() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),  // chart title
             "Number of Processors",          // domain axis label
             "Value",     // range axis label
             dataset,                         // data
@@ -128,6 +135,7 @@ public class PerfExplorerChart {
         );
 		customizeChart(chart, rawData.getRows(), false);
 		ChartFrame frame = new ChartFrame("Relative Efficiency by Event", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -158,7 +166,8 @@ public class PerfExplorerChart {
 
         JFreeChart chart = ChartFactory.createXYLineChart(
             "Relative Efficiency for " +
-			PerfExplorerModel.getModel().getEventName(),  // chart title
+			PerfExplorerModel.getModel().getEventName() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),  // chart title
             "Number of Processors",          // domain axis label
             "Value",     // range axis label
             dataset,                         // data
@@ -169,6 +178,7 @@ public class PerfExplorerChart {
         );
 		customizeChart(chart, rawData.getRows(), false);
 		ChartFrame frame = new ChartFrame("Relative Efficiency for Event", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -210,7 +220,9 @@ public class PerfExplorerChart {
         dataset.addSeries(s);
 
         JFreeChart chart = ChartFactory.createXYLineChart(
-            "Relative Speedup",  // chart title
+            "Relative Speedup - " +   // chart title
+			PerfExplorerModel.getModel().toString() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),
             "Number of Processors",          // domain axis label
             "Value",     // range axis label
             dataset,                         // data
@@ -221,6 +233,7 @@ public class PerfExplorerChart {
         );
 		customizeChart(chart, rawData.getRows(), true);
 		ChartFrame frame = new ChartFrame("Relative Speedup", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -261,7 +274,8 @@ public class PerfExplorerChart {
 
         JFreeChart chart = ChartFactory.createXYLineChart(
             "Relative Speedup by Event for " + 
-			PerfExplorerModel.getModel().toString(),  // chart title
+			PerfExplorerModel.getModel().toString() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),  // chart title
             "Number of Processors",          // domain axis label
             "Value",     // range axis label
             dataset,                         // data
@@ -272,6 +286,7 @@ public class PerfExplorerChart {
         );
 		customizeChart(chart, rawData.getRows(), true);
 		ChartFrame frame = new ChartFrame("Relative Speedup by Event", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -312,7 +327,8 @@ public class PerfExplorerChart {
 
         JFreeChart chart = ChartFactory.createXYLineChart(
             "Relative Speedup for " + 
-			PerfExplorerModel.getModel().getEventName(),  // chart title
+			PerfExplorerModel.getModel().getEventName() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),  // chart title
             "Number of Processors",          // domain axis label
             "Value",     // range axis label
             dataset,                         // data
@@ -323,6 +339,7 @@ public class PerfExplorerChart {
         );
 		customizeChart(chart, rawData.getRows(), true);
 		ChartFrame frame = new ChartFrame("Relative Speedup for Event", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -350,7 +367,8 @@ public class PerfExplorerChart {
 		}
 
         JFreeChart chart = ChartFactory.createXYLineChart(
-            "Timesteps Per Second (" + timesteps + " total timesteps)",  // chart title
+            "Timesteps Per Second (" + timesteps + " total timesteps):" +
+			PerfExplorerModel.getModel().getMetricName(),  // chart title
             "Number of Processors",          // domain axis label
             "Timesteps",     // range axis label
             dataset,                         // data
@@ -362,6 +380,7 @@ public class PerfExplorerChart {
 
 		customizeChart(chart, rawData.getRows(), false);
 		ChartFrame frame = new ChartFrame("Timesteps per Second", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -393,7 +412,9 @@ public class PerfExplorerChart {
 		}
 
         JFreeChart chart = ChartFactory.createXYLineChart(
-            "Communication Time / Total Runtime",  // chart title
+            "Communication Time / Total Runtime" +   // chart title
+			PerfExplorerModel.getModel().toString() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),
             "Number of Processors",          // domain axis label
             "Fraction",     // range axis label
             dataset,                         // data
@@ -405,6 +426,7 @@ public class PerfExplorerChart {
 
 		customizeChart(chart, rawData1.getRows(), false);
 		ChartFrame frame = new ChartFrame("Transpose Time / Total Runtime", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -435,7 +457,8 @@ public class PerfExplorerChart {
 
         JFreeChart chart = ChartFactory.createXYLineChart(
             "Relative Efficiency by Phase for " +
-			PerfExplorerModel.getModel().toString(),  // chart title
+			PerfExplorerModel.getModel().toString() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),  // chart title
             "Number of Processors",          // domain axis label
             "Value",     // range axis label
             dataset,                         // data
@@ -446,6 +469,7 @@ public class PerfExplorerChart {
         );
 		customizeChart(chart, rawData.getRows(), false);
 		ChartFrame frame = new ChartFrame("Relative Efficiency by Event", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -487,7 +511,8 @@ public class PerfExplorerChart {
 
         JFreeChart chart = ChartFactory.createXYLineChart(
             "Relative Speedup by Phase for " +
-			PerfExplorerModel.getModel().toString(),  // chart title
+			PerfExplorerModel.getModel().toString() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),  // chart title
             "Number of Processors",          // domain axis label
             "Value",     // range axis label
             dataset,                         // data
@@ -498,6 +523,7 @@ public class PerfExplorerChart {
         );
 		customizeChart(chart, rawData.getRows(), true);
 		ChartFrame frame = new ChartFrame("Relative Speedup by Event", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -524,7 +550,8 @@ public class PerfExplorerChart {
 
 		JFreeChart chart = ChartFactory.createStackedXYAreaChart(
             "Total Runtime Breakdown for " + 
-			PerfExplorerModel.getModel().toString(),  // chart title
+			PerfExplorerModel.getModel().toString() + ":" +
+			PerfExplorerModel.getModel().getMetricName(),  // chart title
             "Number of Processors",          // domain axis label
             "Percentage of Total Runtime",     // range axis label
             dataset,                         // data
@@ -534,6 +561,7 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		ChartFrame frame = new ChartFrame("Total Runtime Breakdown", chart);
+		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -572,5 +600,27 @@ public class PerfExplorerChart {
 		plot.setRenderer(renderer);
 
 	}
+
+	private static void centerFrame(ChartFrame frame) {
+        //Window Stuff.
+        int windowWidth = 700;
+        int windowHeight = 450;
+        
+        //Grab paraProfManager position and size.
+        Point parentPosition = PerfExplorerClient.getMainFrame().getLocationOnScreen();
+        Dimension parentSize = PerfExplorerClient.getMainFrame().getSize();
+        int parentWidth = parentSize.width;
+        int parentHeight = parentSize.height;
+        
+        //Set the window to come up in the center of the screen.
+        int xPosition = (parentWidth - windowWidth) / 2;
+        int yPosition = (parentHeight - windowHeight) / 2;
+
+        xPosition = (int) parentPosition.getX() + xPosition;
+        yPosition = (int) parentPosition.getY() + yPosition;
+
+        frame.setLocation(xPosition, yPosition);
+        frame.setSize(new java.awt.Dimension(windowWidth, windowHeight));
+ 	}
 
 }

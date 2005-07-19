@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.5 2005/07/15 00:38:01 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.6 2005/07/19 20:03:41 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -121,6 +121,7 @@ public class ChartData extends RMIChartData {
 				statement.close();
 			}
 		} catch (Exception e) {
+			System.out.println(statement.toString());
 			String error = "ERROR: Couldn't select the analysis settings from the database!";
 			System.out.println(error);
 			e.printStackTrace();
@@ -171,6 +172,7 @@ public class ChartData extends RMIChartData {
 			// The user wants to know the relative efficiency or speedup
 			// of one or more experiments, as the number of threads of 
 			// execution increases.
+			List selections = model.getMultiSelection();
 			buf.append("select ");
 			if (object instanceof RMIView) {
 				if (isLeafView()) {
@@ -179,7 +181,11 @@ public class ChartData extends RMIChartData {
 					buf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-				buf.append(" e.name, ");
+				//if (selections == null) {
+					//buf.append(" m.name, ");
+				//} else {
+					buf.append(" e.name, ");
+				//}
 			}
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
 			buf.append("ims.inclusive from interval_mean_summary ims ");
@@ -191,7 +197,6 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append("inner join experiment e on t.experiment = e.id ");
 				buf.append("where t.experiment in (");
-				List selections = model.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					buf.append (model.getExperiment().getID());
@@ -205,10 +210,17 @@ public class ChartData extends RMIChartData {
 				}
 				buf.append(")");
 			}
-			buf.append(" and m.name = ? and ims.inclusive_percentage = 100.0 ");
-			buf.append("order by 1, 2");
+			//if (selections == null) {
+				//buf.append(" and ims.inclusive_percentage = 100.0 ");
+			//} else {
+				buf.append(" and m.name = ? and ims.inclusive_percentage = 100.0 ");
+			buf.append(" and ie.group_name not like '%TAU_CALLPATH%' ");
+			//}
+			buf.append(" order by 1, 2");
 			statement = db.prepareStatement(buf.toString());
-			statement.setString(1, metricName);
+			//if (selections != null) {
+				statement.setString(1, metricName);
+			//}
 		} else if (dataType == TOTAL_FOR_GROUP) {
 			// The user wants to know the percentage of total runtime that
 			// comes from one group of events, such as communication or 
@@ -251,7 +263,7 @@ public class ChartData extends RMIChartData {
 			}
 			buf.append(" and m.name = ? ");
 //			buf.append(" and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ie.group_name = ? group by 1, 2, ie.group_name order by 1, 2");
+			buf.append(" and ie.group_name = ? group by 1, 2, ie.group_name order by 1, 2");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 			statement.setString(2, groupName);
@@ -380,7 +392,6 @@ public class ChartData extends RMIChartData {
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		}
-		//System.out.println(statement.toString());
 		return statement;
 	}
 

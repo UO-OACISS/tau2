@@ -26,7 +26,7 @@ public class PerfExplorerCube {
     private static void createAndShowGUI(RMICubeData data) {
 
         // Create and set up the window.
-        JFrame frame = new JFrame("ScatterPlotExample");
+        JFrame frame = new JFrame("Correlation of top 4 variant events");
 
 		// get the data values
         float values[][] = data.getValues();
@@ -70,6 +70,27 @@ public class PerfExplorerCube {
                 GridBagConstraints.BOTH, new Insets(5, 5, 5, 5), 1, 1));
         panel.add(tabbedPane, new GridBagConstraints(1, 0, 1, 1, 0.1, 1.0, GridBagConstraints.EAST,
                 GridBagConstraints.HORIZONTAL, new Insets(5, 5, 5, 5), 1, 1));
+
+        //Window Stuff.
+        int windowWidth = 760;
+        int windowHeight = 600;
+        
+        //Grab paraProfManager position and size.
+        Point parentPosition = PerfExplorerClient.getMainFrame().getLocationOnScreen();
+        Dimension parentSize = PerfExplorerClient.getMainFrame().getSize();
+        int parentWidth = parentSize.width;
+        int parentHeight = parentSize.height;
+        
+        //Set the window to come up in the center of the screen.
+        int xPosition = (parentWidth - windowWidth) / 2;
+        int yPosition = (parentHeight - windowHeight) / 2;
+
+        xPosition = (int) parentPosition.getX() + xPosition;
+        yPosition = (int) parentPosition.getY() + yPosition;
+
+        frame.setLocation(xPosition, yPosition);
+        frame.setSize(new java.awt.Dimension(windowWidth, windowHeight));
+
 
         frame.getContentPane().add(panel);
         frame.pack();

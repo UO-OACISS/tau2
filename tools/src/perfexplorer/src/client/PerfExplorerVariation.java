@@ -7,6 +7,8 @@
 package client;
 
 
+import java.awt.Point;
+import java.awt.Dimension;
 import javax.swing.JFrame;
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
@@ -26,25 +28,7 @@ public class PerfExplorerVariation {
 		// get the data
 		RMIVarianceData data = server.requestVariationAnalysis(
 			PerfExplorerModel.getModel());
-		
-		/*
-		System.out.print("name\t");
 	
-		for (int j = 0 ; j < data.getValueCount() ; j++) {
-			System.out.print(data.getValueName(j) + "\t");
-		}
-		System.out.println();
-		
-		for (int i = 0 ; i < data.getEventCount() ; i++) {
-			double[] values = data.getValues(i);
-			System.out.print(data.getEventName(i) + "\t");
-			for (int j = 0 ; j < values.length ; j++) {
-				System.out.print(values[j] + "\t");
-			}
-			System.out.println();
-		}
-		*/
-		
 		displayResults(data);
 	}
 
@@ -67,6 +51,27 @@ public class PerfExplorerVariation {
         // Make the table vertically scrollable
         JScrollPane scrollPane = new JScrollPane(table);
         
+        //Window Stuff.
+        int windowWidth = 800;
+        int windowHeight = 400;
+        
+        //Grab paraProfManager position and size.
+        Point parentPosition = PerfExplorerClient.getMainFrame().getLocationOnScreen();
+        Dimension parentSize = PerfExplorerClient.getMainFrame().getSize();
+        int parentWidth = parentSize.width;
+        int parentHeight = parentSize.height;
+        
+        //Set the window to come up in the center of the screen.
+        int xPosition = (parentWidth - windowWidth) / 2;
+        int yPosition = (parentHeight - windowHeight) / 2;
+
+        xPosition = (int) parentPosition.getX() + xPosition;
+        yPosition = (int) parentPosition.getY() + yPosition;
+
+        frame.setLocation(xPosition, yPosition);
+        frame.setSize(new java.awt.Dimension(windowWidth, windowHeight));
+        scrollPane.setPreferredSize(new java.awt.Dimension(windowWidth, windowHeight));
+
         frame.getContentPane().add(scrollPane);
         frame.pack();
         frame.setVisible(true);

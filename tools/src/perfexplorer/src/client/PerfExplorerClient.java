@@ -46,6 +46,39 @@ public class PerfExplorerClient extends JFrame {
 				System.exit(0);
 			}
 		});
+
+		// window stuff
+		int windowWidth = 800;
+		int windowHeight = 515;
+
+        //Grab the screen size.
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        Dimension screenDimension = tk.getScreenSize();
+        int screenHeight = screenDimension.height;
+        int screenWidth = screenDimension.width;
+
+        Point savedPosition = null; //ParaProf.preferences.getManagerWindowPosition();
+
+        if (savedPosition == null || (savedPosition.x + windowWidth) > screenWidth
+                || (savedPosition.y + windowHeight > screenHeight)) {
+
+            //Find the center position with respect to this window.
+            int xPosition = (screenWidth - windowWidth) / 2;
+            int yPosition = (screenHeight - windowHeight) / 2;
+
+            //Offset a little so that we do not interfere too much with
+            //the
+            //main window which comes up in the center of the screen.
+            if (xPosition > 50)
+                xPosition = xPosition - 50;
+            if (yPosition > 50)
+                yPosition = yPosition - 50;
+
+            this.setLocation(xPosition, yPosition);
+        } else {
+            this.setLocation(savedPosition);
+        }
+		mainFrame = this;
 	}
 
 	public void actionPerformed (ActionEvent event) {

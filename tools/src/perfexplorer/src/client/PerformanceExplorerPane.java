@@ -95,6 +95,26 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
         // Create and set up the window.
         JFrame frame = new JFrame(description);
 
+        //Window Stuff.
+        int windowWidth = 500;
+        int windowHeight = 500;
+        
+        //Grab paraProfManager position and size.
+        Point parentPosition = PerfExplorerClient.getMainFrame().getLocationOnScreen();
+        Dimension parentSize = PerfExplorerClient.getMainFrame().getSize();
+        int parentWidth = parentSize.width;
+        int parentHeight = parentSize.height;
+        
+        //Set the window to come up in the center of the screen.
+        int xPosition = (parentWidth - windowWidth) / 2;
+        int yPosition = (parentHeight - windowHeight) / 2;
+
+        xPosition = (int) parentPosition.getX() + xPosition;
+        yPosition = (int) parentPosition.getY() + yPosition;
+
+        frame.setLocation(xPosition, yPosition);
+        frame.setSize(new java.awt.Dimension(windowWidth, windowHeight));
+ 
         // Make the table vertically scrollable
         //JLabel label = new JLabel(icon);
         
@@ -102,7 +122,8 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
         pane.add(new ImageView(icon.getImage()));
 */        
         JPanel pane = new ImagePanel(icon.getImage());
-        pane.setSize(500,500);
+        pane.setPreferredSize(new java.awt.Dimension(windowWidth, windowHeight));
+        pane.setSize(windowWidth,windowHeight);
         frame.getContentPane().add(pane);
         frame.pack();
         frame.setVisible(true);
