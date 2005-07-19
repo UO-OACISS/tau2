@@ -2567,7 +2567,7 @@ if $c_compiler $orig_useropt -c f1.c 1> /dev/null 2>&1 ; then
 else
     echo "no"
 fi
-/bin/rm -f f1.o f1.cpp
+/bin/rm -f f1.o f1.c
 
 
 ######################################################################
