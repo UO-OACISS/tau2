@@ -30,7 +30,8 @@
 #define TAU_ALLOC_LOCAL(mtype, l, size) 
 #define TAU_DECL_ALLOC_LOCAL(mtype, l, size) MPI_Fint * l
 #define TAU_ASSIGN_VALUES(dest, src, size, func) dest = src 
-#define TAU_ASSIGN_STATUS(dest, src, size, func) dest = src
+#define TAU_ASSIGN_STATUS_F2C(dest, src, size, func) dest = src
+#define TAU_ASSIGN_STATUS_C2F(dest, src, size, func) dest = src
 #define TAU_FREE_LOCAL(l) 
 #else
 #define TAU_DECL_LOCAL(mtype, l) mtype *l
