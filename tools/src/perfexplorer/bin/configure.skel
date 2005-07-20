@@ -15,6 +15,8 @@ targetdir=@TARGETDIR@
 engine=weka
 rroot=/usr/lib/R
 serverhostname=localhost
+objectport=9999
+registryport=1099
 
 # PARSE COMMAND LINE SWITCHES
 ###############################################################
@@ -39,6 +41,18 @@ do
     shift
     ;;
 
+  -objectport=*)
+    myarg=`echo $arg | sed 's/-objectport=//'`
+    objectport=$myarg
+    shift
+    ;;
+
+  -registryport=*)
+    myarg=`echo $arg | sed 's/-registryport=//'`
+    registryport=$myarg
+    shift
+    ;;
+
   -server=*)
     myarg=`echo $arg | sed 's/-server=//'`
     serverhostname=$myarg
@@ -54,6 +68,8 @@ do
     echo "                                                      options [weka|R]."
     echo "-rroot=<dir> ....................... specify location of the R project."
     echo "-server=<hostname> ...... specify hostname for the perfexplorer server."
+    echo "-registryport=<number> ............. specify port for the rmi registry."
+    echo "-objectport=<number> ................ specify port for the rmi objects."
     exit
     ;;
 
@@ -98,6 +114,8 @@ sed -e 's,@TAUROOT@,'$targetdir',' \
 -e 's,@RROOT@,'$rroot',' \
 -e 's,@ANALYSIS_ENGINE@,'$engine',' \
 -e 's,@SERVER_HOSTNAME@,'$serverhostname',' \
+-e 's,@SERVER_OBJECT_PORT@,'$objectport',' \
+-e 's,@SERVER_RMIREGISTRY_PORT@,'$registryport',' \
  > ${targetdir}/${architecture}/bin/perfexplorer
 chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer
 

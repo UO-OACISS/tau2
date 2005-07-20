@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.6 2005/07/15 00:38:01 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.7 2005/07/20 22:46:57 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -45,7 +45,7 @@ import java.net.MalformedURLException;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfExplorer {
-	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
+	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>] [{-p,--port}=<port_number>]\n  where analysis_engine = R or Weka";
 
 	private String configFile = null;
 	private DatabaseAPI session = null;
@@ -57,6 +57,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private TimerThread timer = null;
 
 	private static PerfExplorerServer theServer = null;
+	private static int port = 9999;
 
 	/**
 	 * Static method to get the server instance reference.
@@ -80,7 +81,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public static PerfExplorerServer getServer (String configFile, int analysisEngine) {
 		try {
 			if (theServer == null)
-				theServer = new PerfExplorerServer (configFile, analysisEngine);
+				theServer = new PerfExplorerServer (configFile, analysisEngine, port);
 		} catch (Exception e) {
 			System.err.println("getServer exception: " + e.getMessage());
 			e.printStackTrace();
@@ -96,9 +97,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param configFile
 	 * @throws RemoteException
 	 */
-	private PerfExplorerServer(String configFile, int analysisEngine) throws RemoteException {
-		super();
+	private PerfExplorerServer(String configFile, int analysisEngine, int port) throws RemoteException {
+		super(port);
 		theServer = this;
+		this.port = port;
 		this.configFile = configFile;
 		this.requestQueue = new Queue();
 		try {
@@ -1178,6 +1180,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		CmdLineParser.Option helpOpt = parser.addBooleanOption('h',"help");
 		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
 		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
+		CmdLineParser.Option portOpt = parser.addIntegerOption('p',"port");
 			
 		try {   
 			parser.parse(args);
@@ -1190,6 +1193,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		Boolean help = (Boolean) parser.getOptionValue(helpOpt);
 		String configFile = (String) parser.getOptionValue(configfileOpt);
 		String engine = (String) parser.getOptionValue(engineOpt);
+		Integer port = (Integer) parser.getOptionValue(portOpt);
 
 		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
 
@@ -1222,7 +1226,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		}
 
 		try {
-			RMIPerfExplorer server = new PerfExplorerServer(configFile, analysisEngine);
+			RMIPerfExplorer server = new PerfExplorerServer(configFile,
+			analysisEngine, port.intValue());
 			Naming.rebind("PerfExplorerServer", server);
 			System.out.println("PerfExplorerServer bound.");
 			Runtime.getRuntime().addShutdownHook(

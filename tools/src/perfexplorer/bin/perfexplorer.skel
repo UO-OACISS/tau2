@@ -4,6 +4,8 @@ CONFIG_ARCH=@TAUARCH@
 R_ROOT=@RROOT@
 ANALYSIS_ENGINE=@ANALYSIS_ENGINE@
 SERVER_HOSTNAME=@SERVER_HOSTNAME@
+SERVER_OBJECT_PORT=@SERVER_OBJECT_PORT@
+SERVER_RMIREGISTRY_PORT=@SERVER_RMIREGISTRY_PORT@
 
 # Record all the arguments
 arguments=$*
@@ -99,7 +101,7 @@ if [ $mode == "server" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JARGS_JAR \
 
 	echo "Starting rmiregistry..."
-	rmiregistry & 
+	rmiregistry $SERVER_RMIREGISTRY_PORT & 
 	echo "Starting server..."
 
 	java -Xmx1800m \
@@ -107,7 +109,7 @@ if [ $mode == "server" ] ; then
 	-Djava.security.policy=$TAUROOT/tools/src/perfexplorer/etc/java.policy \
 	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
 	-Dsun.rmi.server.exceptionTrace=true \
-	server.PerfExplorerServer -c $CONFIGFILE -e weka
+	server.PerfExplorerServer -c $CONFIGFILE -e weka -p $SERVER_OBJECT_PORT
 
 	# Add these options to the RMI server start call if you need some
 	# additional debugging information...
