@@ -1,5 +1,6 @@
 package common;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -8,13 +9,13 @@ import java.util.ArrayList;
  * results from either correlation or some other type of background
  * analysis.
  *
- * <P>CVS $Id: RMIVarianceData.java,v 1.1 2005/07/05 22:29:52 amorris Exp $</P>
+ * <P>CVS $Id: RMIVarianceData.java,v 1.2 2005/07/20 22:46:17 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
  *
  */
-public class RMIVarianceData {
+public class RMIVarianceData implements Serializable {
 	
 	private List /*Strings*/ eventNames = null;
 	private List /*Strings*/ valueNames = null;
