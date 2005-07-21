@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.5 2005/07/11 22:59:53 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.6 2005/07/21 01:04:13 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -63,8 +63,10 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         setSize(1000, 600);
         setLocation(300, 200);
 
-        if (thread.getNodeID() < 0) {
+        if (thread.getNodeID() == -1) {
             this.setTitle("Mean Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        } else if (thread.getNodeID() == -3) {
+            this.setTitle("Std. Dev. Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {
             this.setTitle("Thread Statistics: " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
                     + thread.getThreadID() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
