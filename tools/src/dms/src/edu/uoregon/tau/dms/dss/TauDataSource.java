@@ -74,6 +74,7 @@ public class TauDataSource extends DataSource {
         UserEventProfile userEventProfile = null;
 
   
+        boolean foundValidFile = false;
         int nodeID = -1;
         int contextID = -1;
         int threadID = -1;
@@ -120,8 +121,14 @@ public class TauDataSource extends DataSource {
                     return;
 
                 int[] nct = this.getNCT(files[i].getName());
+                
+                if (nct == null && dirs.size() == 1 && files.length == 1) {
+                    throw new DataSourceException(files[i].getName() + ": This doesn't look like a TAU profile\nDid you mean do use the -f option to specify a file format?");
+                }
+                
                 if (nct != null) {
-
+                    foundValidFile = true;
+                    
                     FileInputStream fileIn = new FileInputStream(files[i]);
                     InputStreamReader inReader = new InputStreamReader(fileIn);
                     BufferedReader br = new BufferedReader(inReader);
@@ -147,7 +154,13 @@ public class TauDataSource extends DataSource {
 
                     // the first token is the number of functions
                     tokenString = genericTokenizer.nextToken();
-                    int numFunctions = Integer.parseInt(tokenString);
+
+                    int numFunctions;
+                    try {
+                        numFunctions = Integer.parseInt(tokenString);
+                    } catch (NumberFormatException nfe) {
+                        throw new DataSourceException(files[i].getName() + ": Couldn't read number of functions, bad TAU Profile?");
+                    }
 
                     if (metricNameProcessed == false) {
                         //Set the metric name.
@@ -315,6 +328,9 @@ public class TauDataSource extends DataSource {
         }
 
        
+        if (foundValidFile == false) {
+            throw new DataSourceException("Didn't find any valid files.\nAre you sure these are TAU profiles? (e.g. profile.*.*.*)");
+        }
 
         //time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + time);
