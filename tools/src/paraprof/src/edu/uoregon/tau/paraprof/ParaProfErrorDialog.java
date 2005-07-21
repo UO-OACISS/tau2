@@ -26,7 +26,7 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
                 pw.close();
                 errorString = sw.toString();
             } else {
-                JOptionPane.showMessageDialog(this, dse.getMessage());
+                JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow, dse.getMessage());
                 this.dispose();
                 return;
             }
