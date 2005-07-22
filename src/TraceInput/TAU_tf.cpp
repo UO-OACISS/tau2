@@ -340,17 +340,14 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
       if (eventDescr.Tag == TAU_MESSAGE_SEND_EVENT) 
       {
         /* send message */
-        /* In dynamic trace the format for par is
-           31 ..... 24 23 ......16 15..............0
-	   other       type          length
-	   So, mynode is the sender and its in GetNodeId(erec)
-	   SENDMSG <type> FROM <sender> TO <receiver> LEN <length>
-	*/
+        /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
+
 	/* extract the information from the parameter */
-	msgTag   = (parameter>>16) & 0x000000FF;
-	otherNid = (parameter>>24) & 0x000000FF;
-	msgLen   =  parameter & 0x0000FFFF;
-        
+	msgTag   = ((parameter>>16) & 0x000000FF) | (((parameter >> 48) & 0xFF) << 8);
+	otherNid = ((parameter>>24) & 0x000000FF) | (((parameter >> 56) & 0xFF) << 8);
+	msgLen   = parameter & 0x0000FFFF | (((parameter >> 32) & 0xFFFF) << 16);
+
+
 	/* If the application is multithreaded, insert call for matching sends/recvs here */
 	otherTid = 0;
 	if (*callbacks.SendMessage) 
@@ -363,16 +360,14 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
       { /* Check if it is a message receive operation */
         if (eventDescr.Tag == TAU_MESSAGE_RECV_EVENT)
 	{ 
-	/* In dynamic trace the format for par is
-	   31 ..... 24 23 ......16 15..............0
-	   other       type          length
-	   So, mynode is the receiver and its in GetNodeId(erec)
-	   RECVMSG <type> BY <receiver> FROM <sender> LEN <length>
-	*/
+
+        /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
+
 	/* extract the information from the parameter */
-	  msgTag   = (parameter>>16) & 0x000000FF;
-	  otherNid = (parameter>>24) & 0x000000FF ;
-	  msgLen   =  parameter & 0x0000FFFF;
+	  msgTag   = ((parameter>>16) & 0x000000FF) | (((parameter >> 48) & 0xFF) << 8);
+	  otherNid = ((parameter>>24) & 0x000000FF) | (((parameter >> 56) & 0xFF) << 8);
+	  msgLen   = parameter & 0x0000FFFF | (((parameter >> 32) & 0xFFFF) << 16);
+	  msgLen   = (((parameter >> 32) & 0xFFFF) );
 
 	  /* If the application is multithreaded, insert call for matching sends/recvs here */
 	  otherTid = 0;
@@ -583,6 +578,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.8 $   $Date: 2005/06/14 18:13:13 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.8 2005/06/14 18:13:13 amorris Exp $ 
+ * $Revision: 1.9 $   $Date: 2005/07/22 16:58:56 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.9 2005/07/22 16:58:56 amorris Exp $ 
  ***************************************************************************/
