@@ -571,8 +571,9 @@ int GetMatchingRecv(struct trcdescr trcdes, int msgtag,
    if (curr_ev->tag == RECV_EVENT)
    {
      /* possible match */
-     curr_tag = (curr_rec->par>>16) & 0x000000FF;
-     curr_len = curr_rec->par & 0x0000FFFF;
+
+     curr_tag = ((curr_rec->par>>16) & 0x000000FF) | (((curr_rec->par >> 48) & 0xFF) << 8);
+     curr_len =  curr_rec->par & 0x0000FFFF | ((curr_rec->par >> 32) << 16);
      curr_nid = curr_rec->nid;
 #ifdef DEBUG
      printf("Possible match... tag=%d, len=%d, nid=%d\n", curr_tag, curr_len, curr_nid);
@@ -654,8 +655,8 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
    if (curr_ev->tag == SEND_EVENT)
    {
      /* possible match */
-     curr_tag = (curr_rec->par>>16) & 0x000000FF;
-     curr_len = curr_rec->par & 0x0000FFFF;
+     curr_tag = ((curr_rec->par>>16) & 0x000000FF) | (((curr_rec->par >> 48) & 0xFF) << 8);
+     curr_len =  curr_rec->par & 0x0000FFFF | ((curr_rec->par >> 32) << 16);
      curr_nid = curr_rec->nid;
 #ifdef DEBUG
      printf("Possible match... tag=%d, len=%d, nid=%d\n", curr_tag, curr_len, curr_nid);
@@ -731,8 +732,8 @@ x_int64 GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
    if (curr_ev->tag == RECV_EVENT)
    {
      /* possible match */
-     curr_tag = (curr_rec->par>>16) & 0x000000FF;
-     curr_len = curr_rec->par & 0x0000FFFF;
+     curr_tag = ((curr_rec->par>>16) & 0x000000FF) | (((curr_rec->par >> 48) & 0xFF) << 8);
+     curr_len =  curr_rec->par & 0x0000FFFF | ((curr_rec->par >> 32) << 16);
      curr_nid = curr_rec->nid;
 #ifdef DEBUG
      printf("Possible match... tag=%d, len=%d, nid=%d\n", curr_tag, curr_len, curr_nid);
@@ -1550,10 +1551,11 @@ int main (int argc, char *argv[])
 	{
 	  if( (ev->tag == SEND_EVENT) && pvComm )
 	    {
-	      msgtag 	= (erec->par>>16) & 0x000000FF;
-	      myid 		= GetNodeId(erec) + 1;
-	      otherid 	= ((erec->par>>24) & 0x000000FF) + 1;
-	      msglen  	= erec->par & 0x0000FFFF;
+	      myid 	= GetNodeId(erec) + 1;
+
+	      msgtag 	= ((erec->par>>16) & 0x000000FF) | (((erec->par >> 48) & 0xFF) << 8);
+	      otherid 	= ((erec->par>>24) & 0x000000FF) | (((erec->par >> 56) & 0xFF) << 8) + 1;
+	      msglen  	= erec->par & 0x0000FFFF | ((erec->par >> 32) << 16);
 	      
 	      phRecv = GetMatchingRecvPRV(intrc, msgtag, GetNodeId(erec),
 					  otherid -1 , msglen, &other_tid, &other_nodeid);
@@ -1585,10 +1587,11 @@ int main (int argc, char *argv[])
 		 RECVMSG <type> BY <receiver> FROM <sender> LEN <length>
 	      */
 	      /* extract the information from the parameter */
-	      msgtag 	= (erec->par>>16) & 0x000000FF;
 	      myid 		= GetNodeId(erec)+1;
-	      otherid       = ((erec->par>>24) & 0x000000FF) + 1;
-	      msglen	= erec->par & 0x0000FFFF;
+
+	      msgtag 	= ((erec->par>>16) & 0x000000FF) | (((erec->par >> 48) & 0xFF) << 8);
+	      otherid 	= ((erec->par>>24) & 0x000000FF) | (((erec->par >> 56) & 0xFF) << 8) + 1;
+	      msglen  	= erec->par & 0x0000FFFF | ((erec->par >> 32) << 16);
 	      
 	      
 		  if (GetMatchingSend(intrc, msgtag, GetNodeId(erec),
@@ -1685,10 +1688,12 @@ int main (int argc, char *argv[])
 		SENDMSG <type> FROM <sender> TO <receiver> LEN <length>
 		*/
 		/* extract the information from the parameter */
-		msgtag 	= (erec->par>>16) & 0x000000FF;
-		myid 		= GetNodeId(erec) + 1;
-		otherid 	= ((erec->par>>24) & 0x000000FF) + 1;
-		msglen  	= erec->par & 0x0000FFFF;
+
+		myid 	= GetNodeId(erec) + 1;
+		msgtag 	= ((erec->par>>16) & 0x000000FF) | (((erec->par >> 48) & 0xFF) << 8);
+		otherid = ((erec->par>>24) & 0x000000FF) | (((erec->par >> 56) & 0xFF) << 8) + 1;
+		msglen 	= erec->par & 0x0000FFFF | ((erec->par >> 32) << 16);
+
 
 		if (threads)
 		  {
@@ -1737,10 +1742,11 @@ int main (int argc, char *argv[])
 		   RECVMSG <type> BY <receiver> FROM <sender> LEN <length>
 		*/
 		/* extract the information from the parameter */
-		msgtag 	= (erec->par>>16) & 0x000000FF;
-		myid 		= GetNodeId(erec)+1;
-		otherid       = ((erec->par>>24) & 0x000000FF) + 1;
-		msglen	= erec->par & 0x0000FFFF;
+
+		myid 	= GetNodeId(erec) + 1;
+		msgtag 	= ((erec->par>>16) & 0x000000FF) | (((erec->par >> 48) & 0xFF) << 8);
+		otherid = ((erec->par>>24) & 0x000000FF) | (((erec->par >> 56) & 0xFF) << 8) + 1;
+		msglen 	= erec->par & 0x0000FFFF | ((erec->par >> 32) << 16);
 
 		if (threads)
 		  {
