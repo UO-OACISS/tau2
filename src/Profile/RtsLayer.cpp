@@ -989,20 +989,43 @@ string RtsLayer::PrimaryGroup(const char *ProfileGroupName)
 void RtsLayer::TraceSendMsg(int type, int destination, int length)
 {
 #ifdef TRACING_ON 
-  long int parameter, othernode;
+  x_int64 parameter;
+  x_uint64 xother, xtype, xlength;
 
   if (RtsLayer::isEnabled(TAU_MESSAGE))
   {
-    parameter = 0L;
+    parameter = 0;
     /* for send, othernode is receiver or destination */
-    othernode = (long int) destination;
+    xtype = type;
+    xlength = length;
+    xother = destination;
+
+
     /* Format for parameter is
-       31 ..... 24 23 ......16 15..............0
+       63 ..... 56 55 ..... 48 47............. 32
+          other       type          length
+
+       These are the high order bits, below are the low order bits
+
+       31 ..... 24 23 ..... 16 15..............0
           other       type          length       
+
+       e.g.
+
+       xtype = 0xAABB;
+       xother = 0xCCDD;
+       xlength = 0xDEADBEEF;
+       result = 0xccaadeadddbbbeef
      */
   
-    parameter = (length & 0x0000FFFF) | ((type & 0x000000FF)  << 16) | 
-  	      (othernode << 24);
+     
+     parameter = ((xlength >> 16) << 32) | 
+       ((xtype >> 8 & 0xFF) << 48) |
+       ((xother >> 8 & 0xFF) << 56) |
+       (xlength & 0xFFFF) | 
+       ((xtype & 0xFF)  << 16) | 
+       ((xother & 0xFF) << 24);
+
     pcxx_Event(TAU_MESSAGE_SEND, parameter); 
 #ifdef DEBUG_PROF
     printf("Node %d TraceSendMsg, type %x dest %x len %x par %lx \n", 
@@ -1019,20 +1042,25 @@ void RtsLayer::TraceSendMsg(int type, int destination, int length)
 void RtsLayer::TraceRecvMsg(int type, int source, int length)
 {
 #ifdef TRACING_ON
-  long int parameter, othernode;
+  x_int64 parameter;
+  x_uint64 xother, xtype, xlength;
 
   if (RtsLayer::isEnabled(TAU_MESSAGE)) 
   {
-    parameter = 0L;
+    parameter = 0;
     /* for recv, othernode is sender or source*/
-    othernode = (long int) source;
-    /* Format for parameter is
-       31 ..... 24 23 ......16 15..............0
-          other       type          length       
-     */
-  
-    parameter = (length & 0x0000FFFF) | ((type & 0x000000FF)  << 16) | 
-  	      (othernode << 24);
+    xtype = type;
+    xlength = length;
+    xother = source;
+
+    // see TraceSendMsg for documentation
+     parameter = ((xlength >> 16) << 32) | 
+       ((xtype >> 8 & 0xFF) << 48) |
+       ((xother >> 8 & 0xFF) << 56) |
+       (xlength & 0xFFFF) | 
+       ((xtype & 0xFF)  << 16) | 
+       ((xother & 0xFF) << 24);
+
     pcxx_Event(TAU_MESSAGE_RECV, parameter); 
   
 #ifdef DEBUG_PROF
@@ -1251,6 +1279,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.64 $   $Date: 2005/05/20 20:30:36 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.64 2005/05/20 20:30:36 amorris Exp $ 
+ * $Revision: 1.65 $   $Date: 2005/07/22 16:48:42 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.65 2005/07/22 16:48:42 amorris Exp $ 
  ***************************************************************************/
