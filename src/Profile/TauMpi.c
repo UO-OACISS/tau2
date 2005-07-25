@@ -2007,12 +2007,18 @@ int tag;
 MPI_Comm comm;
 MPI_Status * status;
 {
+  MPI_Status local_status;
   int  returnVal;
   int size;
 
-  
   TAU_PROFILE_TIMER(tautimer, "MPI_Recv()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
+
+#ifdef TAU_TRACK_MSG
+  if (status == MPI_STATUS_IGNORE) {
+    status = &local_status;
+  }
+#endif /* TAU_TRACK_MSG */
   
   returnVal = PMPI_Recv( buf, count, datatype, source, tag, comm, status );
 
@@ -2154,6 +2160,7 @@ MPI_Status * status;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
+  MPI_Status local_status;
   int typesize1;
   int count;
 #endif /* TAU_TRACK_MSG */
@@ -2170,19 +2177,19 @@ MPI_Status * status;
                typesize1*sendcount, "MPI_Sendrecv" );
     */
   }
+
+  if (status == MPI_STATUS_IGNORE) {
+    status = &local_status;
+  }
 #endif /* TAU_TRACK_MSG */
   
+
   returnVal = PMPI_Sendrecv( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status );
 
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) { 
     PMPI_Get_count( status, MPI_BYTE, &count );
     TAU_TRACE_RECVMSG(status->MPI_TAG, translateRankToWorld(comm, status->MPI_SOURCE), count);
-    /*
-    prof_recv( dest, procid_0, recvtag, count,
-	       "MPI_Sendrecv" );
-    NOTE: shouldn't we look at the status to get the tag and source?
-    */
   } 
 #endif /* TAU_TRACK_MSG */
   TAU_PROFILE_STOP(tautimer); 
@@ -2203,6 +2210,7 @@ MPI_Status * status;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
+  MPI_Status local_status;
   int size1;
   int typesize2;
 #endif /* TAU_TRACK_MSG */
@@ -2219,6 +2227,10 @@ MPI_Status * status;
                typesize2*count, "MPI_Sendrecv_replace" );
     */
   }	
+
+  if (status == MPI_STATUS_IGNORE) {
+    status = &local_status;
+  }
 #endif /* TAU_TRACK_MSG */
   
   returnVal = PMPI_Sendrecv_replace( buf, count, datatype, dest, sendtag, source, recvtag, comm, status );
@@ -2346,6 +2358,7 @@ MPI_Status * status;
   int   returnVal;
 #ifdef TAU_TRACK_MSG
   MPI_Request saverequest;
+  MPI_Status local_status;
 #endif /* TAU_TRACK_MSG */
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Test()",  " ", TAU_MESSAGE); 
@@ -2353,6 +2366,9 @@ MPI_Status * status;
   
 #ifdef TAU_TRACK_MSG
   saverequest = *request;
+  if (status == MPI_STATUS_IGNORE) {
+    status = &local_status;
+  }
 #endif /* TAU_TRACK_MSG */
 
   returnVal = PMPI_Test( request, flag, status );
@@ -2374,6 +2390,7 @@ MPI_Status * array_of_statuses;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
+  int need_to_free = 0;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
 #endif /* TAU_TRACK_MSG */
@@ -2382,9 +2399,12 @@ MPI_Status * array_of_statuses;
   TAU_PROFILE_TIMER(tautimer, "MPI_Testall()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
 #ifdef TAU_TRACK_MSG
-  for (i = 0; i < count; i++)
-  {
+  for (i = 0; i < count; i++) {
     saverequest[i] = array_of_requests[i]; 
+  }
+  if (array_of_statuses == MPI_STATUSES_IGNORE) {
+    array_of_statuses = (MPI_Status*) malloc (sizeof(MPI_Status)*count);
+    need_to_free = 1;
   }
 #endif /* TAU_TRACK_MSG */
   
@@ -2395,6 +2415,9 @@ MPI_Status * array_of_statuses;
   { /* at least one completed */
     for(i=0; i < count; i++)
       TauProcessRecv(saverequest[i], &array_of_statuses[i], "MPI_Testall");
+  }
+  if (need_to_free) {
+    free(array_of_statuses);
   }
 #endif /* TAU_TRACK_MSG */
 
@@ -2412,6 +2435,7 @@ MPI_Status * status;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
+  MPI_Status local_status;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
 #endif /* TAU_TRACK_MSG */
@@ -2422,9 +2446,11 @@ MPI_Status * status;
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
-  for (i = 0; i < count; i++)
-  {
+  for (i = 0; i < count; i++) {
     saverequest[i] = array_of_requests[i]; 
+  }
+  if (status == MPI_STATUS_IGNORE) {
+    status = &local_status;
   }
 #endif /* TAU_TRACK_MSG */
   
@@ -2466,6 +2492,7 @@ MPI_Status * array_of_statuses;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
+  int need_to_free = 0;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
 #endif /* TAU_TRACK_MSG */
@@ -2474,9 +2501,12 @@ MPI_Status * array_of_statuses;
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
-  for (i = 0; i < incount; i++)
-  {
+  for (i = 0; i < incount; i++){
     saverequest[i] = array_of_requests[i]; 
+  }
+  if (array_of_statuses == MPI_STATUSES_IGNORE) {
+    array_of_statuses = (MPI_Status*) malloc (sizeof(MPI_Status)*incount);
+    need_to_free = 1;
   }
 #endif /* TAU_TRACK_MSG */
   
@@ -2487,6 +2517,9 @@ MPI_Status * array_of_statuses;
     TauProcessRecv( (saverequest [array_of_indices[i]]),
 			        &(array_of_statuses [array_of_indices[i]]),
 			        "MPI_Testsome" );
+  }
+  if (need_to_free) {
+    free(array_of_statuses);
   }
 #endif /* TAU_TRACK_MSG */
 
@@ -2729,7 +2762,11 @@ MPI_Status * status;
   int   returnVal;
 
 #ifdef TAU_TRACK_MSG
+  MPI_Status local_status;
   MPI_Request saverequest;
+  if (status == MPI_STATUS_IGNORE) {
+    status = &local_status;
+  }
 #endif /* TAU_TRACK_MSG */
 
 
@@ -2759,6 +2796,7 @@ MPI_Status * array_of_statuses;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
+  int need_to_free = 0;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
 #endif /* TAU_TRACK_MSG */
@@ -2768,18 +2806,25 @@ MPI_Status * array_of_statuses;
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
-  for (i = 0; i < count; i++)
-  {
+  for (i = 0; i < count; i++) {
     saverequest[i] = array_of_requests[i]; 
+  }
+
+  if (array_of_statuses == MPI_STATUSES_IGNORE) {
+    array_of_statuses = (MPI_Status*) malloc (sizeof(MPI_Status)*count);
+    need_to_free = 1;
   }
 #endif /* TAU_TRACK_MSG */
   
-
   returnVal = PMPI_Waitall( count, array_of_requests, array_of_statuses );
 
 #ifdef TAU_TRACK_MSG
   for(i=0; i < count; i++)
     TauProcessRecv(saverequest[i], &array_of_statuses[i], "MPI_Waitall");
+
+  if (need_to_free) {
+    free(array_of_statuses);
+  }
 #endif /* TAU_TRACK_MSG */
 
   TAU_PROFILE_STOP(tautimer); 
@@ -2795,6 +2840,7 @@ MPI_Status * status;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
+  MPI_Status local_status;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
 #endif /* TAU_TRACK_MSG */
@@ -2805,9 +2851,11 @@ MPI_Status * status;
   TAU_PROFILE_START(tautimer);
   
 #ifdef TAU_TRACK_MSG
-  for (i = 0; i < count; i++)
-  {
+  for (i = 0; i < count; i++){
     saverequest[i] = array_of_requests[i]; 
+  }
+  if (status == MPI_STATUS_IGNORE) {
+    status = &local_status;
   }
 #endif /* TAU_TRACK_MSG */
 
@@ -2833,20 +2881,23 @@ MPI_Status * array_of_statuses;
   int  returnVal;
 
 #ifdef TAU_TRACK_MSG
+  int need_to_free = 0;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
 #endif /* TAU_TRACK_MSG */
-
-  
 
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Waitsome()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
-  for (i = 0; i < incount; i++)
-  {
+  for (i = 0; i < incount; i++) {
     saverequest[i] = array_of_requests[i]; 
+  }
+
+  if (array_of_statuses == MPI_STATUSES_IGNORE) {
+    array_of_statuses = (MPI_Status*) malloc (sizeof(MPI_Status)*incount);
+    need_to_free = 1;
   }
 #endif /* TAU_TRACK_MSG */
   
@@ -2859,6 +2910,10 @@ MPI_Status * array_of_statuses;
 			        &(array_of_statuses [array_of_indices[i]]),
 			        "MPI_Waitsome" );
   }
+  if (need_to_free) {
+    free(array_of_statuses);
+  }
+
 #endif /* TAU_TRACK_MSG */
   TAU_PROFILE_STOP(tautimer); 
 
