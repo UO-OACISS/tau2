@@ -3652,6 +3652,9 @@ then
      cp ${tauroot}/tools/src/tau_compiler.sh ${tauroot}/${architecture}/bin
    fi
 
+   cp ${tauroot}/tools/src/tau_treemerge.pl ${tauroot}/${architecture}/bin
+
+
   echo "TAU: installed tau_compiler.sh in ${tauroot}/${architecture}/bin"
 else
   if [ ! -d ${tauprefix} ]
@@ -3719,6 +3722,7 @@ else
    fi
 
   echo "TAU: installed tau_compiler.sh in ${tauprefix}/${architecture}/bin"
+  cp ${tauroot}/tools/src/tau_treemerge.pl ${tauprefix}/${architecture}/bin
 fi
 
 
