@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.7 2005/07/20 22:46:57 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.8 2005/07/26 23:14:17 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -81,7 +81,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public static PerfExplorerServer getServer (String configFile, int analysisEngine) {
 		try {
 			if (theServer == null)
-				theServer = new PerfExplorerServer (configFile, analysisEngine, port);
+				theServer = new PerfExplorerServer (configFile, analysisEngine, 0);
 		} catch (Exception e) {
 			System.err.println("getServer exception: " + e.getMessage());
 			e.printStackTrace();
@@ -1095,7 +1095,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			DB db = this.getDB();
 			PreparedStatement statement = null;
 			StringBuffer buf = new StringBuffer();
-			buf.append("select id, name, stddev(exclusive) ");
+			//buf.append("select id, name, stddev(exclusive) ");
+			buf.append("select id, name, (stddev(exclusive)/ ");
+			buf.append("(max(exclusive)-min(exclusive)))* ");
+			buf.append("avg(exclusive_percentage) ");
 			buf.append("from interval_location_profile ");
 			buf.append("inner join interval_event ");
 			buf.append("on interval_event = id ");

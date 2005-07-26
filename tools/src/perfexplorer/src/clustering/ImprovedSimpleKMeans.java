@@ -43,7 +43,7 @@ import weka.classifiers.rules.DecisionTable;
  *
  * @author Mark Hall (mhall@cs.waikato.ac.nz)
  * @author Eibe Frank (eibe@cs.waikato.ac.nz)
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see Clusterer
  * @see OptionHandler
  */
@@ -648,6 +648,26 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
 
   public double getSquaredError() {
     return Utils.sum(m_squaredErrors);
+  }
+
+  public double getBetweenError() {
+	// get the mean of the centroids
+	Instance centroidMean = new
+	Instance(m_ClusterCentroids.numAttributes());
+	for (int x = 0 ; x < m_ClusterCentroids.numInstances() ; x++) {
+	Instance tmpInst = m_ClusterCentroids.instance(x);
+		for (int y = 0 ; y < tmpInst.numAttributes() ; y++) {
+			double tmp = centroidMean.value(y) + tmpInst.value(y);
+			centroidMean.setValue(y,tmp);
+		}
+	}
+	// get the squared error for the centroids
+	double betweenError = 0.0;
+	for (int x = 0 ; x < m_ClusterCentroids.numInstances() ; x++) {
+		betweenError += distance(centroidMean,
+		m_ClusterCentroids.instance(x));
+	}
+	return betweenError;
   }
 
   public int [] getClusterSizes() {

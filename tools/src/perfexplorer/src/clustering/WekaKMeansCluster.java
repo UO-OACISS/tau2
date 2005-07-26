@@ -5,14 +5,17 @@
 package clustering;
 
 import java.util.List;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.attributeSelection.PrincipalComponents;
+import weka.clusterers.ClusterEvaluation;
+import weka.clusterers.Clusterer;
 
 /**
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaKMeansCluster.java,v 1.2 2005/07/11 20:46:41 khuck Exp $</P>
+ * <P>CVS $Id: WekaKMeansCluster.java,v 1.3 2005/07/26 23:14:17 khuck Exp $</P>
  * @author khuck
  *
  */
@@ -86,6 +89,7 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 			kmeans.buildClusterer(localInstances);
 			this.clusterCentroids = kmeans.getClusterCentroids();
 			this.clusterStandardDeviations = kmeans.getClusterStandardDevs();
+			evaluateCluster();
 		} catch (Exception e) {
 		}
 	}
@@ -167,4 +171,21 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 		return instances.numInstances();
 	}
 
+	// this method is by Calinski & Harabasz(1974)
+	private void evaluateCluster() {
+		try {
+			double betweenError = kmeans.getBetweenError();
+			//System.out.println("Between Squared Error: " + betweenError);
+			double withinError = kmeans.getSquaredError();
+			//System.out.println("Within Squared Error: " + withinError);
+			//System.out.println("k-1: " + (k-1));
+			//System.out.println("n-k: " + (instances.numInstances()-k));
+			double maximizeMe = (betweenError * (k-1)) / 
+				(withinError * (instances.numInstances() - k));
+			//System.out.println("Maximize Me: " + maximizeMe);
+		} catch (Exception e) {
+			System.out.println ("EXCEPTION: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
 }
