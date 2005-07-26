@@ -367,7 +367,6 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 	  msgTag   = ((parameter>>16) & 0x000000FF) | (((parameter >> 48) & 0xFF) << 8);
 	  otherNid = ((parameter>>24) & 0x000000FF) | (((parameter >> 56) & 0xFF) << 8);
 	  msgLen   = parameter & 0x0000FFFF | (((parameter >> 32) & 0xFFFF) << 16);
-	  msgLen   = (((parameter >> 32) & 0xFFFF) );
 
 	  /* If the application is multithreaded, insert call for matching sends/recvs here */
 	  otherTid = 0;
@@ -578,6 +577,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.9 $   $Date: 2005/07/22 16:58:56 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.9 2005/07/22 16:58:56 amorris Exp $ 
+ * $Revision: 1.10 $   $Date: 2005/07/26 20:50:27 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.10 2005/07/26 20:50:27 amorris Exp $ 
  ***************************************************************************/
