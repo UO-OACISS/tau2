@@ -124,6 +124,12 @@ do
     shift
     ;;
 
+  -slog2=*)
+    slogdir=`echo $arg | sed -e 's/-slog2=//'`
+    slogopt=-slog2=$slogdir
+    shift
+    ;;
+
   -pdt=*)
     pdt=yes
     pdtdir=`echo $arg | sed -e 's/-pdt=//'`
@@ -182,6 +188,8 @@ do
     echo "-pdt_c++=<C++ Compiler>  "
     echo "-papi=<papidir>  "
     echo "-vtf=<vtfdir>  "
+    echo "-slog2=<dir> (for external slog2 dir)"
+    echo "-slog2 (for using slog2 bundled with TAU)"
     echo "-dyninst=<dyninstdir>  "
     echo "-mpiinc=<mpiincdir>  "
     echo "-mpilib=<mpilibdir>  "
