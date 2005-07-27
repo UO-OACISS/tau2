@@ -2764,15 +2764,17 @@ MPI_Status * status;
 #ifdef TAU_TRACK_MSG
   MPI_Status local_status;
   MPI_Request saverequest;
+#endif /* TAU_TRACK_MSG */
+
+  TAU_PROFILE_TIMER(tautimer, "MPI_Wait()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_START(tautimer);
+
+#ifdef TAU_TRACK_MSG
   if (status == MPI_STATUS_IGNORE) {
     status = &local_status;
   }
 #endif /* TAU_TRACK_MSG */
 
-
-  
-  TAU_PROFILE_TIMER(tautimer, "MPI_Wait()",  " ", TAU_MESSAGE); 
-  TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
   saverequest = *request;
