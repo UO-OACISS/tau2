@@ -18,9 +18,12 @@ pdtcxxopt=
 pdtcxxarg=
 vtf=no
 vtfopt=
+slogopt=
 useropt=no
 papi=no
 opari=no
+epilog=no
+epilogopt=
 mpilibrary=no
 tauprefix=unknown
 tauexecprefix=unknown
@@ -80,6 +83,13 @@ do
     shift
     ;;
 
+  -epilog=*)
+    epilog=yes
+    epilogdir=`echo $arg | sed -e 's/-epilog=//'`
+    epilogopt=-epilog=$epilogdir
+    shift
+    ;;
+
   -mpiinc=*)
     mpiinc=yes
     mpiincdir=`echo $arg | sed -e 's/-mpiinc=//' -e 's/ /#/g'`
@@ -106,6 +116,11 @@ do
 
   -nocomm)
     commopt=-nocomm
+    shift
+    ;;
+
+  -slog2)
+    slogopt=-slog2
     shift
     ;;
 
@@ -175,6 +190,7 @@ do
     echo "-tag=<unique name> "
     echo "-nocomm"
     echo "-opari=<oparidir>  "
+    echo "-epilog=<epilogdir>  "
     echo "-prefix=<dir>  "
     echo "-exec-prefix=<dir>  "
     shift
@@ -290,8 +306,8 @@ echo " " > wishver
     make clean; make install
 
 # Add TRACE
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $slogopt $epilogopt"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt  $slogopt $epilogopt<wishver
     make clean; make install
   
     if [ $papi = yes ]
@@ -301,8 +317,8 @@ echo " " > wishver
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
       make clean; make install
 # Add -TRACE -papi multiplecounters to it
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt -papi=$papidir -MULTIPLECOUNTERS"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
       make clean; make install
     fi
 
