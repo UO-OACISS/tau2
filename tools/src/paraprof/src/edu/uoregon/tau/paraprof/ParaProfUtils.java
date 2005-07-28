@@ -202,13 +202,15 @@ public class ParaProfUtils {
         JMenu fileMenu = new JMenu("File");
 
         JMenu subMenu = new JMenu("Save ...");
+        subMenu.getPopupMenu().setLightWeightPopupEnabled(false);
 
         JMenuItem menuItem = new JMenuItem("Save Image");
         menuItem.addActionListener(actionListener);
         subMenu.add(menuItem);
-
         fileMenu.add(subMenu);
 
+
+        
         menuItem = new JMenuItem("Preferences...");
         menuItem.addActionListener(actionListener);
         fileMenu.add(menuItem);
@@ -375,6 +377,8 @@ public class ParaProfUtils {
         };
 
         final JMenu functionWindows = new JMenu("Function");
+        functionWindows.getPopupMenu().setLightWeightPopupEnabled(false);
+
         functionWindows.add(createMenuItem("Bar Chart", fActionListener, true));
         functionWindows.add(createMenuItem("Histogram", fActionListener, true));
         windowsMenu.add(functionWindows);
@@ -415,6 +419,7 @@ public class ParaProfUtils {
         };
 
         final JMenu threadWindows = new JMenu("Thread");
+        threadWindows.getPopupMenu().setLightWeightPopupEnabled(false);
         threadWindows.add(createMenuItem("Bar Chart", tActionListener, true));
         threadWindows.add(createMenuItem("Statistics Text", tActionListener, true));
         threadWindows.add(createMenuItem("Statistics Table", tActionListener, true));
