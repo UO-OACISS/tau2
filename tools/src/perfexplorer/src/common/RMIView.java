@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * This class is the RMI class which contains the tree of views to be 
  * constructed in the PerfExplorerClient.
  *
- * <P>CVS $Id: RMIView.java,v 1.1 2005/07/05 22:29:53 amorris Exp $</P>
+ * <P>CVS $Id: RMIView.java,v 1.2 2005/07/28 18:34:33 amorris Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -100,6 +100,6 @@ public class RMIView implements Serializable {
 	}
 
 	public String toString() {
-		return getField("name");
+		return getField("NAME");
 	}
 }

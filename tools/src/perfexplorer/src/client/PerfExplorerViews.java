@@ -129,8 +129,8 @@ public class PerfExplorerViews {
 		Hashtable myViews = new Hashtable();
 		while (e.hasNext()) {
 			RMIView view = (RMIView) e.next();
-			options.add(view.getField("name"));
-			myViews.put(view.getField("name"), view.getField("id"));
+			options.add(view.getField("NAME"));
+			myViews.put(view.getField("NAME"), view.getField("ID"));
 		}
 		String viewName = (String)JOptionPane.showInputDialog (mainFrame, 
 			"Select a view on which to base this sub-view:", 

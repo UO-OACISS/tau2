@@ -61,7 +61,7 @@ public class PerfExplorerJTree extends JTree {
 		while (views.hasNext()) {
 			RMIView view = (RMIView) views.next();
 			DefaultMutableTreeNode node = new DefaultMutableTreeNode (view);
-			addViewNodes(node, view.getField("id"));
+			addViewNodes(node, view.getField("ID"));
 			parentNode.add(node);
 		}
 		if (viewVector.size() == 0) {

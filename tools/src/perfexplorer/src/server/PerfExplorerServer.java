@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.8 2005/07/26 23:14:17 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.9 2005/07/28 18:34:33 amorris Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -436,7 +436,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				statement = db.prepareStatement(buf.toString());
 				statement.setString(1, id);
 				//System.out.println(statement.toString());
-				results = statement.executeQuery();
+				//results = statement.executeQuery();
 				String clusterID = new String("");
 				List centroids = null;
 				List deviations = null;
@@ -595,8 +595,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 */
 	public int insertRequest (RMIPerfExplorerModel modelData) throws PerfExplorerException {
 		int analysisID = 0;
-		dbControl.WAIT("insertRequest");
 		// insert a record into the database for this analysis
+		dbControl.WAIT("insertRequest");
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
@@ -619,7 +619,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else if (db.getDBType().compareTo("db2") == 0) {
 		   	tmpStr = "select IDENTITY_VAL_LOCAL() FROM analysis_settings";
 			} else if (db.getDBType().compareTo("oracle") == 0) {
-		   	tmpStr = "SELECT analysis_settings_id_seq.currval FROM DUAL";
+		   	tmpStr = "SELECT as_id_seq.currval FROM DUAL";
 			} else { // postgresql 
 		   	tmpStr = "select currval('analysis_settings_id_seq');";
 			}
@@ -662,7 +662,14 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		dbControl.WAIT("getPotentialGroups");
 		try {
 			DB db = this.getDB();
-			StringBuffer buf = new StringBuffer("select distinct ie.group_name ");
+            StringBuffer buf;
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf = new StringBuffer("select distinct dbms_lob.substr(ie.group_name) ");
+            } else {
+                buf = new StringBuffer("select distinct ie.group_name ");
+            }
+
+            
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
@@ -714,7 +721,15 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		dbControl.WAIT("getPotentialMetrics");
 		try {
 			DB db = this.getDB();
-			StringBuffer buf = new StringBuffer("select distinct m.name");
+			StringBuffer buf;
+            
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf= new StringBuffer("select distinct dbms_lob.substr(m.name)");
+            } else {
+                buf= new StringBuffer("select distinct m.name");
+            }
+
+            
 			buf.append(" from metric m inner join trial t on m.trial = t.id");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
@@ -766,7 +781,14 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		dbControl.WAIT("getPotentialEvents");
 		try {
 			DB db = this.getDB();
-			StringBuffer buf = new StringBuffer("select distinct ie.name ");
+            StringBuffer buf;
+            
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf = new StringBuffer("select distinct dbms_lob.substr(ie.name) ");
+            } else {
+                buf = new StringBuffer("select distinct ie.name ");
+            }
+
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
@@ -850,7 +872,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DB db = this.getDB();
 			StringBuffer buf = new StringBuffer("select distinct ");
-			buf.append(columnName);
+            
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("dbms_lob.substr(" + columnName + ")");
+            } else {
+                buf.append(columnName);
+            }
+
 			buf.append(" from ");
 			buf.append(tableName);
 			PreparedStatement statement = db.prepareStatement(buf.toString());
@@ -909,7 +937,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else if (db.getDBType().compareTo("db2") == 0) {
 				tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial_view";
 			} else if (db.getDBType().compareTo("oracle") == 0) {
-				tmpStr = "SELECT " + db.getSchemaPrefix() + "trial_view_id_seq.currval FROM DUAL";
+				tmpStr = "SELECT " + db.getSchemaPrefix() + "tv_id_seq.currval FROM DUAL";
 			} else { // postgresql 
 				tmpStr = "select currval('trial_view_id_seq');";
 			}
@@ -1001,17 +1029,33 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					whereClause.append (" AND ");
 				}
 				RMIView view = (RMIView) views.get(i);
-				if (view.getField("table_name").equalsIgnoreCase("Application")) {
-					whereClause.append (" a.");
-				} else if (view.getField("table_name").equalsIgnoreCase("Experiment")) {
-					whereClause.append (" e.");
-				} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
-					whereClause.append (" t.");
-				}
-				whereClause.append (view.getField("column_name"));
-				whereClause.append (" " + view.getField("operator") + " '");
-				whereClause.append (view.getField("value"));
-				whereClause.append ("' ");
+
+                if (db.getDBType().compareTo("oracle") == 0) {
+                    if (view.getField("TABLE_NAME").equalsIgnoreCase("Application")) {
+                        whereClause.append (" dbms_lob.substr(a.");
+                    } else if (view.getField("TABLE_NAME").equalsIgnoreCase("Experiment")) {
+                        whereClause.append (" dbms_lob.substr(e.");
+                    } else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
+                        whereClause.append (" dbms_lob.substr(t.");
+                    }
+                    whereClause.append (view.getField("COLUMN_NAME"));
+                    whereClause.append (") " + view.getField("OPERATOR") + " '");
+                    whereClause.append (view.getField("VALUE"));
+                    whereClause.append ("' ");
+                } else {
+                    if (view.getField("TABLE_NAME").equalsIgnoreCase("Application")) {
+                        whereClause.append (" a.");
+                    } else if (view.getField("TABLE_NAME").equalsIgnoreCase("Experiment")) {
+                        whereClause.append (" e.");
+                    } else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
+                        whereClause.append (" t.");
+                    }
+                    whereClause.append (view.getField("COLUMN_NAME"));
+                    whereClause.append (" " + view.getField("OPERATOR") + " '");
+                    whereClause.append (view.getField("VALUE"));
+                    whereClause.append ("' ");
+                }
+
 			}
 			// System.out.println(whereClause.toString());
 			trials = Trial.getTrialList(db, whereClause.toString());
@@ -1035,18 +1079,36 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			PreparedStatement statement = null;
 			StringBuffer buf = new StringBuffer();
 			buf.append("select ie.name, ");
-			buf.append("avg(ilp.exclusive), ");
-			buf.append("avg(ilp.exclusive_percentage), ");
-			buf.append("avg(ilp.call), ");
-			buf.append("avg(ilp.exclusive / ilp.call), ");
-			buf.append("max(ilp.exclusive), ");
-			buf.append("min(ilp.exclusive), ");
-			buf.append("stddev(ilp.exclusive) ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("avg(ilp.excl), ");
+                buf.append("avg(ilp.exclusive_percentage), ");
+                buf.append("avg(ilp.call), ");
+                buf.append("avg(ilp.excl / ilp.call), ");
+                buf.append("max(ilp.excl), ");
+                buf.append("min(ilp.excl), ");
+                buf.append("stddev(ilp.excl) ");
+            } else {
+                buf.append("avg(ilp.exclusive), ");
+                buf.append("avg(ilp.exclusive_percentage), ");
+                buf.append("avg(ilp.call), ");
+                buf.append("avg(ilp.exclusive / ilp.call), ");
+                buf.append("max(ilp.exclusive), ");
+                buf.append("min(ilp.exclusive), ");
+                buf.append("stddev(ilp.exclusive) ");
+            }
+
 			buf.append("from interval_location_profile ilp ");
 			buf.append("inner join interval_event ie ");
 			buf.append("on ilp.interval_event = ie.id ");
 			buf.append("where ie.trial = ? and ilp.metric = ? ");
-			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("and dbms_lob.substr(ie.group_name) not like '%TAU_CALLPATH%' ");
+            } else {
+                buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
+            }
+
 			buf.append("group by ie.id, ie.name order by ie.name");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());

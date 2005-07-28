@@ -1,15 +1,13 @@
 package client;
 
-import common.RMICubeData;
-
 import java.awt.*;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import net.java.games.jogl.GLCanvas;
-import net.java.games.jogl.GLCapabilities;
-import net.java.games.jogl.GLDrawableFactory;
+import common.RMICubeData;
+
 import edu.uoregon.tau.vis.*;
 
 public class PerfExplorerCube {

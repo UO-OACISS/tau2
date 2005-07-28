@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.6 2005/07/19 20:03:41 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.7 2005/07/28 18:34:33 amorris Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -146,7 +146,13 @@ public class ChartData extends RMIChartData {
 		if (dataType == FRACTION_OF_TOTAL) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
-			buf.append("select ie.name, ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("select dbms_lob.substr(ie.name), ");
+            } else {
+                buf.append("select ie.name, ");
+            }
+
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
 			buf.append("ims.exclusive_percentage from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie ");
@@ -159,12 +165,25 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-			buf.append(" and m.name = ? ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(" and dbms_lob.substr(m.name) = ? ");
+            } else {
+                buf.append(" and m.name = ? ");
+            }
+
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
 			buf.append("and ims.exclusive_percentage > 1.0 ");
 			buf.append("and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name != 'TAU_PHASENAME')) order by 1, 2");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("dbms_lob.substr(ie.group_name) not like '%TAU_CALLPATH%' ");
+                buf.append("and dbms_lob.substr(ie.group_name) != 'TAU_PHASENAME')) order by 1, 2");
+            } else {
+                buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+                buf.append("and ie.group_name != 'TAU_PHASENAME')) order by 1, 2");
+            }
+
 			
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -184,7 +203,12 @@ public class ChartData extends RMIChartData {
 				//if (selections == null) {
 					//buf.append(" m.name, ");
 				//} else {
-					buf.append(" e.name, ");
+                if (db.getDBType().compareTo("oracle") == 0) {
+                    buf.append(" dbms_lob.substr(e.name), ");
+                } else {
+                    buf.append(" e.name, ");
+                }
+
 				//}
 			}
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
@@ -213,7 +237,13 @@ public class ChartData extends RMIChartData {
 			//if (selections == null) {
 				//buf.append(" and ims.inclusive_percentage = 100.0 ");
 			//} else {
-				buf.append(" and m.name = ? and ims.inclusive_percentage = 100.0 ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(" and dbms_lob.substr(m.name) = ? and ims.inclusive_percentage = 100.0 ");
+            } else {
+                buf.append(" and m.name = ? and ims.inclusive_percentage = 100.0 ");
+            }
+
 			buf.append(" and ie.group_name not like '%TAU_CALLPATH%' ");
 			//}
 			buf.append(" order by 1, 2");
@@ -235,10 +265,20 @@ public class ChartData extends RMIChartData {
 					buf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-				buf.append(" e.name, ");
+                if (db.getDBType().compareTo("oracle") == 0) {
+                    buf.append(" dbms_lob.substr(e.name), ");
+                } else {
+                    buf.append(" e.name, ");
+                }
 			}
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-			buf.append("sum(ims.exclusive) from interval_mean_summary ims ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("sum(ims.excl) from interval_mean_summary ims ");
+            } else {
+                buf.append("sum(ims.exclusive) from interval_mean_summary ims ");
+            }
+
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.trial = t.id ");
@@ -261,9 +301,21 @@ public class ChartData extends RMIChartData {
 				}
 				buf.append(") ");
 			}
-			buf.append(" and m.name = ? ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(" and dbms_lob.substr(m.name) = ? ");
+            } else {
+                buf.append(" and m.name = ? ");
+            }
+
 //			buf.append(" and ims.inclusive_percentage < 100.0 ");
-			buf.append(" and ie.group_name = ? group by 1, 2, ie.group_name order by 1, 2");
+            
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(" and dbms_lob.substr(ie.group_name) = ? group by dbms_lob.substr(e.name), (t.node_count * t.contexts_per_node * t.threads_per_context), dbms_lob.substr(ie.group_name) order by 1, 2");
+            } else {
+                buf.append(" and ie.group_name = ? group by 1, 2, ie.group_name order by 1, 2");
+            }
+
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 			statement.setString(2, groupName);
@@ -272,9 +324,19 @@ public class ChartData extends RMIChartData {
 			// of all the events for one experiment, as the number of threads of 
 			// execution increases.
 			buf.append("select ");
-			buf.append(" ie.name, ");
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(" dbms_lob.substr(ie.name), ");
+            } else {
+                buf.append(" ie.name, ");
+            }
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-			buf.append("ims.exclusive from interval_mean_summary ims ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("ims.excl from interval_mean_summary ims ");
+            } else {
+                buf.append("ims.exclusive from interval_mean_summary ims ");
+            }
+
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
@@ -284,12 +346,24 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-			buf.append(" and m.name = ? ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(" and dbms_lob.substr(m.name) = ? ");
+            } else {
+                buf.append(" and m.name = ? ");
+            }
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
 			buf.append("and ims.exclusive_percentage > 1.0 ");
 			buf.append("and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name != 'TAU_PHASENAME')) order by 1, 2");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("dbms_lob.substr(ie.group_name) not like '%TAU_CALLPATH%' ");
+                buf.append("and dbms_lob.substr(ie.group_name) != 'TAU_PHASENAME')) order by 1, 2");
+            } else {
+                buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+                buf.append("and ie.group_name != 'TAU_PHASENAME')) order by 1, 2");
+            }
+
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == RELATIVE_EFFICIENCY_ONE_EVENT) {
@@ -304,7 +378,11 @@ public class ChartData extends RMIChartData {
 					buf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-				buf.append(" e.name, ");
+                if (db.getDBType().compareTo("oracle") == 0) {
+                    buf.append(" dbms_lob.substr(e.name), ");
+                } else {
+                    buf.append(" e.name, ");
+                }
 			}
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
 			buf.append("inclusive from interval_mean_summary ims ");
@@ -330,8 +408,14 @@ public class ChartData extends RMIChartData {
 				}
 				buf.append(") ");
 			}
-			buf.append(" and m.name = ? ");
-			buf.append("and ie.name = ? order by 1, 2");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(" and dbms_lob.substr(m.name) = ? ");
+                buf.append("and dbms_lob.substr(ie.name) = ? order by 1, 2");
+            } else {
+                buf.append(" and m.name = ? ");
+                buf.append("and ie.name = ? order by 1, 2");
+            }
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 			statement.setString(2, eventName);
@@ -347,16 +431,32 @@ public class ChartData extends RMIChartData {
 					buf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-				buf.append(" ie.name, ");
+                
+                if (db.getDBType().compareTo("oracle") == 0) {
+                    buf.append(" dbms_lob.substr(ie.name), ");
+                } else {
+                    buf.append(" ie.name, ");
+                }
+
 			}
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
 			buf.append("ims.inclusive from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.trial = t.id ");
-			buf.append("where t.experiment = ? and m.name = ? ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("where t.experiment = ? and dbms_lob.substr(m.name) = ? ");
+            } else {
+                buf.append("where t.experiment = ? and m.name = ? ");
+            }
+
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ie.group_name = 'TAU_PHASENAME' order by 1, 2");
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("and dbms_lob.substr(ie.group_name) = 'TAU_PHASENAME' order by 1, 2");
+            } else {
+                buf.append("and ie.group_name = 'TAU_PHASENAME' order by 1, 2");
+            }
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt (1, model.getExperiment().getID());
 			statement.setString(2, metricName);
@@ -372,7 +472,11 @@ public class ChartData extends RMIChartData {
 					buf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-				buf.append(" ie.name, ");
+                if (db.getDBType().compareTo("oracle") == 0) {
+                    buf.append(" dbms_lob.substr(ie.name), ");
+                } else {
+                    buf.append(" ie.name, ");
+                }
 			}
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
 			buf.append("ims.inclusive_percentage from interval_mean_summary ims ");
@@ -386,9 +490,22 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-			buf.append(" and m.name = ? ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(" and dbms_lob.substr(m.name) = ? ");
+            } else {
+                buf.append(" and m.name = ? ");
+            }
+
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ie.group_name = 'TAU_PHASENAME' order by 1, 2");
+
+            
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("and dbms_lob.substr(ie.group_name) = 'TAU_PHASENAME' order by 1, 2");
+            } else {
+                buf.append("and ie.group_name = 'TAU_PHASENAME' order by 1, 2");
+            }
+
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		}
@@ -417,12 +534,25 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-			buf.append(" and m.name = ? ");
+            
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(" and dbms_lob.substr(m.name) = ? ");
+            } else {
+                buf.append(" and m.name = ? ");
+            }
+
 			buf.append("and ims.inclusive_percentage < 100.0 ");
 			buf.append("and ims.exclusive_percentage < 1.0 ");
 			buf.append("and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name != 'TAU_PHASENAME')) group by 2 order by 1, 2");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("dbms_lob.substr(ie.group_name) not like '%TAU_CALLPATH%' ");
+                buf.append("and dbms_lob.substr(ie.group_name) != 'TAU_PHASENAME')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1, 2");
+            } else {
+                buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+                buf.append("and ie.group_name != 'TAU_PHASENAME')) group by 2 order by 1, 2");
+            }
+
 			
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -434,7 +564,13 @@ public class ChartData extends RMIChartData {
 			buf.append("select ");
 			buf.append(" 'other', ");
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-			buf.append("sum(ims.exclusive) from interval_mean_summary ims ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("sum(ims.excl) from interval_mean_summary ims ");
+            } else {
+                buf.append("sum(ims.exclusive) from interval_mean_summary ims ");
+            }
+
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
@@ -444,13 +580,26 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-			buf.append(" and m.name = ? ");
+            
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(" and dbms_lob.substr(m.name) = ? ");
+            } else {
+                buf.append(" and m.name = ? ");
+            }
+
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
 			buf.append("and ims.exclusive_percentage < 1.0 ");
 			buf.append("and (ie.group_name is null or (");
-			buf.append("ie.group_name != 'TAU_CALLPATH' ");
-			buf.append("and ie.group_name != 'TAU_PHASENAME')) group by 2 order by 1, 2");
-			statement = db.prepareStatement(buf.toString());
+			
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("dbms_lob.substr(ie.group_name) != 'TAU_CALLPATH' ");
+                buf.append("and dbms_lob.substr(ie.group_name) != 'TAU_PHASENAME')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1, 2");
+            } else {
+                buf.append("ie.group_name != 'TAU_CALLPATH' ");
+                buf.append("and ie.group_name != 'TAU_PHASENAME')) group by 2 order by 1, 2");
+            }
+
+            statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 
 		}

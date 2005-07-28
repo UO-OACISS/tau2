@@ -34,7 +34,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.4 2005/07/16 00:02:57 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.5 2005/07/28 18:34:33 amorris Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -247,7 +247,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			buf.append(" (analysis_settings, description, thumbnail_size, thumbnail, image_size, image, result_type) values (?, ?, ?, ?, ?, ?, ?)");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, analysisID);
-			statement.setString(2, new String(""));
+			statement.setString(2, new String("analysis_result"));
        		FileInputStream inStream = new FileInputStream(thumbnail);
        		statement.setInt(3,(int)outfile.length());
        		statement.setBinaryStream(4,inStream,(int)thumbnail.length());
@@ -265,9 +265,9 @@ public class AnalysisTaskWrapper extends TimerTask {
 			} else if (db.getDBType().compareTo("db2") == 0) {
 		   	tmpStr = "select IDENTITY_VAL_LOCAL() FROM analysis_result";
 			} else if (db.getDBType().compareTo("oracle") == 0) {
-		   	tmpStr = "SELECT analysis_result_id_seq.currval FROM DUAL";
+		   	tmpStr = "SELECT ar_id_seq.currval FROM DUAL";
 			} else { // postgresql 
-		   	tmpStr = "select currval('analysis_result_id_seq');";
+		   	tmpStr = "select currval('ar_id_seq');";
 			}
 			int analysisResultID = Integer.parseInt(db.getDataItem(tmpStr));
 			
@@ -450,7 +450,13 @@ public class AnalysisTaskWrapper extends TimerTask {
 			PreparedStatement statement = null;
 			// First, get the total number of rows we are expecting
 			StringBuffer sql = new StringBuffer();
-			sql.append("select count(p.exclusive) ");
+
+            if (db.getDBType().compareTo("oracle") == 0) {
+                sql.append("select count(p.excl) ");
+            } else {
+                sql.append("select count(p.exclusive) ");
+            }
+
 			sql.append("from interval_event e ");
 			sql.append("left outer join interval_location_profile p ");
 			sql.append("on e.id = p.interval_event ");
@@ -614,7 +620,13 @@ public class AnalysisTaskWrapper extends TimerTask {
 				sql.append(contexts * threads);
 				sql.append(") + (p.context*");
 				sql.append(threads);
-				sql.append(") + p.thread as thread, p.metric as metric, p.exclusive ");
+                
+                if (db.getDBType().compareTo("oracle") == 0) {
+                    sql.append(") + p.thread as thread, p.metric as metric, p.excl ");
+                } else {
+                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive ");
+                }
+
 				sql.append("from interval_event e ");
 				sql.append("inner join interval_mean_summary s ");
 				sql.append("on e.id = s.interval_event and s.exclusive_percentage > ");
@@ -625,7 +637,13 @@ public class AnalysisTaskWrapper extends TimerTask {
 			} else {
 				sql.append("select e.id, (p.node*" + (contexts * threads) + "");
 				sql.append(") + (p.context*" + threads + "");
-				sql.append(") + p.thread as thread, p.metric as metric, p.exclusive ");
+                
+                if (db.getDBType().compareTo("oracle") == 0) {
+                    sql.append(") + p.thread as thread, p.metric as metric, p.excl ");
+                } else {
+                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive ");
+                }
+
 				sql.append("from interval_event e ");
 				sql.append("left outer join interval_location_profile p ");
 				sql.append("on e.id = p.interval_event where e.trial = ? ");
