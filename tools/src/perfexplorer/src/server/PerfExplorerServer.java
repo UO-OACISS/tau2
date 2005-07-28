@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.9 2005/07/28 18:34:33 amorris Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.10 2005/07/28 22:14:45 amorris Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1078,9 +1078,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			DB db = this.getDB();
 			PreparedStatement statement = null;
 			StringBuffer buf = new StringBuffer();
-			buf.append("select ie.name, ");
 
             if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("select dbms_lob.substr(ie.name), ");
                 buf.append("avg(ilp.excl), ");
                 buf.append("avg(ilp.exclusive_percentage), ");
                 buf.append("avg(ilp.call), ");
@@ -1089,6 +1089,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
                 buf.append("min(ilp.excl), ");
                 buf.append("stddev(ilp.excl) ");
             } else {
+                buf.append("select ie.name, ");
                 buf.append("avg(ilp.exclusive), ");
                 buf.append("avg(ilp.exclusive_percentage), ");
                 buf.append("avg(ilp.call), ");
@@ -1105,11 +1106,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
             if (db.getDBType().compareTo("oracle") == 0) {
                 buf.append("and dbms_lob.substr(ie.group_name) not like '%TAU_CALLPATH%' ");
+                buf.append("group by ie.id, dbms_lob.substr(ie.name) order by dbms_lob.substr(ie.name)");
             } else {
                 buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
+                buf.append("group by ie.id, ie.name order by ie.name");
             }
 
-			buf.append("group by ie.id, ie.name order by ie.name");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());
 			Metric metric = (Metric)model.getCurrentSelection();
