@@ -34,7 +34,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.5 2005/07/28 18:34:33 amorris Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.6 2005/07/28 19:33:19 amorris Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -267,7 +267,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			} else if (db.getDBType().compareTo("oracle") == 0) {
 		   	tmpStr = "SELECT ar_id_seq.currval FROM DUAL";
 			} else { // postgresql 
-		   	tmpStr = "select currval('ar_id_seq');";
+		   	tmpStr = "select currval('analysis_result_id_seq');";
 			}
 			int analysisResultID = Integer.parseInt(db.getDataItem(tmpStr));
 			
