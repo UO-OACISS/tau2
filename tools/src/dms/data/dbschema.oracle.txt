@@ -9,14 +9,14 @@ INSERT INTO version values('2.13.7')
 
 CREATE TABLE application (
     id                      NUMBER PRIMARY KEY,
-    name                    CLOB,
-    version		    CLOB,
-    description             CLOB, 
-    language                CLOB,
-    paradigm                CLOB,
-    usage_text              CLOB,
-    execution_options       CLOB,
-    userdata                CLOB
+    name                    VARCHAR2(4000),
+    version		    VARCHAR2(4000),
+    description             VARCHAR2(4000), 
+    language                VARCHAR2(4000),
+    paradigm                VARCHAR2(4000),
+    usage_text              VARCHAR2(4000),
+    execution_options       VARCHAR2(4000),
+    userdata                VARCHAR2(4000)
 )
 /
 
@@ -40,31 +40,31 @@ create trigger application_id_seq_trigger
 CREATE TABLE experiment (
     id                      NUMBER PRIMARY KEY,
     application             INT NOT NULL,
-    name                    CLOB,
-    system_name             CLOB,
-    system_machine_type     CLOB,
-    system_arch             CLOB,
-    system_os               CLOB,
-    system_memory_size      CLOB,
-    system_processor_amt    CLOB,
-    system_l1_cache_size    CLOB,
-    system_l2_cache_size    CLOB,
-    system_userdata         CLOB,
-    compiler_cpp_name       CLOB,
-    compiler_cpp_version    CLOB,
-    compiler_cc_name        CLOB,
-    compiler_cc_version     CLOB,
-    compiler_java_dirpath   CLOB,
-    compiler_java_version   CLOB,
-    compiler_userdata       CLOB,
-    configure_prefix        CLOB,
-    configure_arch          CLOB,
-    configure_cpp           CLOB,
-    configure_cc            CLOB,
-    configure_jdk           CLOB,
-    configure_profile       CLOB,
-    configure_userdata      CLOB,
-    userdata                CLOB,
+    name                    VARCHAR2(4000),
+    system_name             VARCHAR2(4000),
+    system_machine_type     VARCHAR2(4000),
+    system_arch             VARCHAR2(4000),
+    system_os               VARCHAR2(4000),
+    system_memory_size      VARCHAR2(4000),
+    system_processor_amt    VARCHAR2(4000),
+    system_l1_cache_size    VARCHAR2(4000),
+    system_l2_cache_size    VARCHAR2(4000),
+    system_userdata         VARCHAR2(4000),
+    compiler_cpp_name       VARCHAR2(4000),
+    compiler_cpp_version    VARCHAR2(4000),
+    compiler_cc_name        VARCHAR2(4000),
+    compiler_cc_version     VARCHAR2(4000),
+    compiler_java_dirpath   VARCHAR2(4000),
+    compiler_java_version   VARCHAR2(4000),
+    compiler_userdata       VARCHAR2(4000),
+    configure_prefix        VARCHAR2(4000),
+    configure_arch          VARCHAR2(4000),
+    configure_cpp           VARCHAR2(4000),
+    configure_cc            VARCHAR2(4000),
+    configure_jdk           VARCHAR2(4000),
+    configure_profile       VARCHAR2(4000),
+    configure_userdata      VARCHAR2(4000),
+    userdata                VARCHAR2(4000),
     FOREIGN KEY(application) REFERENCES application(id) 
 )
 /
@@ -88,14 +88,14 @@ create trigger experiment_id_seq_trigger
 
 CREATE TABLE trial (
     id                      NUMBER NOT NULL PRIMARY KEY,
-    name                    CLOB,
+    name                    VARCHAR2(4000),
     experiment              INT         NOT NULL,
     time                    TIMESTAMP,
-    problem_definition      CLOB,
+    problem_definition      VARCHAR2(4000),
     node_count              INT,
     contexts_per_node       INT,
     threads_per_context     INT,
-    userdata                CLOB,
+    userdata                VARCHAR2(4000),
     FOREIGN KEY(experiment) REFERENCES experiment(id)
 )
 /
@@ -121,7 +121,7 @@ CREATE TRIGGER trial_id_seq_trigger
 
 CREATE TABLE metric (
     id                      NUMBER      NOT NULL PRIMARY KEY,
-    name                    CLOB        NOT NULL,
+    name                    VARCHAR2(4000)        NOT NULL,
     trial                   INT 	NOT NULL,
     FOREIGN KEY(trial) REFERENCES trial(id)
 )
@@ -147,9 +147,9 @@ CREATE TRIGGER metric_id_seq_trigger
 CREATE TABLE interval_event (
     id                      NUMBER NOT NULL PRIMARY KEY,
     trial                   INT         NOT NULL,
-    name                    CLOB        NOT NULL,
-    group_name              CLOB,
-    source_file		    CLOB,
+    name                    VARCHAR2(4000)        NOT NULL,
+    group_name              VARCHAR2(4000),
+    source_file		    VARCHAR2(4000),
     line_number		    INT,
     line_number_end	    INT,
     FOREIGN KEY(trial) REFERENCES trial(id)
@@ -175,9 +175,9 @@ CREATE TRIGGER interval_event_id_seq_trigger
 CREATE TABLE atomic_event (
     id                      NUMBER      NOT NULL PRIMARY KEY,
     trial                   INT         NOT NULL,
-    name                    CLOB        NOT NULL,
-    group_name              CLOB,
-    source_file		    CLOB,
+    name                    VARCHAR2(4000)        NOT NULL,
+    group_name              VARCHAR2(4000),
+    source_file		    VARCHAR2(4000),
     line_number		    INT,
     FOREIGN KEY(trial) REFERENCES trial(id)
 )
