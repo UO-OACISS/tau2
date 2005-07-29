@@ -133,6 +133,17 @@ static int evno;
 static int numEvent;
 static int numUsedEvent;
 
+
+void decodeParameter(x_uint64 xpar,  int *otherNid, int *msgLen, int *msgTag, int *comm) {
+  /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
+  *msgTag   = ((xpar>>16) & 0x000000FF) | (((xpar >> 48) & 0xFF) << 8);
+  *otherNid = ((xpar>>24) & 0x000000FF) | (((xpar >> 56) & 0xFF) << 8);
+  *msgLen   = xpar & 0x0000FFFF | (xpar << 22 >> 54 << 16);
+  *comm     = xpar << 16 >> 58;
+}
+
+
+
 int GetNodeId(PCXX_EV *rec);
 static void InitEvent (int numev)
 {
@@ -236,8 +247,7 @@ static void AddEventDynamic (int id, char *name, char *p, char *state, int tag)
   else
     newev->param = "";
   if ( state[0] != '-' )
-  {
-    newev->state = (char *) malloc (strlen(state) + 1);
+  {    newev->state = (char *) malloc (strlen(state) + 1);
     strcpy (newev->state, state);
   }
   else
@@ -539,7 +549,7 @@ int GetMatchingRecv(struct trcdescr trcdes, int msgtag,
   off_t last_position;
   PCXX_EV *curr_rec;
   EVDESCR *curr_ev;
-  int curr_tag, curr_len, curr_nid;
+  int curr_tag, curr_len, curr_nid, dummy, comm;
   trcdes.buffer    = tmpbuffer;
 #ifdef DEBUG
   printf("GetMatchingRecv: SEND, tag=%d, len=%d, myid=%d, otherid=%d\n",
@@ -572,8 +582,7 @@ int GetMatchingRecv(struct trcdescr trcdes, int msgtag,
    {
      /* possible match */
 
-     curr_tag = ((curr_rec->par>>16) & 0x000000FF) | (((curr_rec->par >> 48) & 0xFF) << 8);
-     curr_len =  curr_rec->par & 0x0000FFFF | ((curr_rec->par >> 32) << 16);
+     decodeParameter(curr_rec->par, &dummy, &curr_len, &curr_tag, &comm);
      curr_nid = curr_rec->nid;
 #ifdef DEBUG
      printf("Possible match... tag=%d, len=%d, nid=%d\n", curr_tag, curr_len, curr_nid);
@@ -616,7 +625,7 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
   off_t last_position;
   PCXX_EV *curr_rec;
   EVDESCR *curr_ev;
-  int curr_tag, curr_len, curr_nid;
+  int curr_tag, curr_len, curr_nid, dummy, comm;
   struct trcrecv rcvdes;
 
   rcvdes.buffer    = tmpbuffer;
@@ -655,8 +664,7 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
    if (curr_ev->tag == SEND_EVENT)
    {
      /* possible match */
-     curr_tag = ((curr_rec->par>>16) & 0x000000FF) | (((curr_rec->par >> 48) & 0xFF) << 8);
-     curr_len =  curr_rec->par & 0x0000FFFF | ((curr_rec->par >> 32) << 16);
+     decodeParameter(curr_rec->par, &dummy, &curr_len, &curr_tag, &comm);
      curr_nid = curr_rec->nid;
 #ifdef DEBUG
      printf("Possible match... tag=%d, len=%d, nid=%d\n", curr_tag, curr_len, curr_nid);
@@ -700,7 +708,7 @@ x_int64 GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
   off_t last_position;
   PCXX_EV *curr_rec;
   EVDESCR *curr_ev;
-  int curr_tag, curr_len, curr_nid;
+  int curr_tag, curr_len, curr_nid, dummy, comm;
   trcdes.buffer    = tmpbuffer;
 #ifdef DEBUG
   printf("GetMatchingRecv: SEND, tag=%d, len=%d, myid=%d, otherid=%d\n",
@@ -732,8 +740,7 @@ x_int64 GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
    if (curr_ev->tag == RECV_EVENT)
    {
      /* possible match */
-     curr_tag = ((curr_rec->par>>16) & 0x000000FF) | (((curr_rec->par >> 48) & 0xFF) << 8);
-     curr_len =  curr_rec->par & 0x0000FFFF | ((curr_rec->par >> 32) << 16);
+     decodeParameter(curr_rec->par, &dummy, &curr_len, &curr_tag, &comm);
      curr_nid = curr_rec->nid;
 #ifdef DEBUG
      printf("Possible match... tag=%d, len=%d, nid=%d\n", curr_tag, curr_len, curr_nid);
@@ -781,7 +788,7 @@ int main (int argc, char *argv[])
   int nodeId, totalnodes = 0;
   int num;
   int tag;
-  int myid, otherid, msglen, msgtag;
+  int myid, otherid, msglen, msgtag, comm;
   int other_tid, other_nodeid; /* for threaded programs */
   int hasParam;
   int fileIdx;
@@ -1553,9 +1560,8 @@ int main (int argc, char *argv[])
 	    {
 	      myid 	= GetNodeId(erec) + 1;
 
-	      msgtag 	= ((erec->par>>16) & 0x000000FF) | (((erec->par >> 48) & 0xFF) << 8);
-	      otherid 	= ((erec->par>>24) & 0x000000FF) | (((erec->par >> 56) & 0xFF) << 8) + 1;
-	      msglen  	= erec->par & 0x0000FFFF | ((erec->par >> 32) << 16);
+	      decodeParameter(erec->par, &otherid, &msglen, &msgtag, &comm);
+	      otherid = otherid+1;
 	      
 	      phRecv = GetMatchingRecvPRV(intrc, msgtag, GetNodeId(erec),
 					  otherid -1 , msglen, &other_tid, &other_nodeid);
@@ -1589,9 +1595,8 @@ int main (int argc, char *argv[])
 	      /* extract the information from the parameter */
 	      myid 		= GetNodeId(erec)+1;
 
-	      msgtag 	= ((erec->par>>16) & 0x000000FF) | (((erec->par >> 48) & 0xFF) << 8);
-	      otherid 	= ((erec->par>>24) & 0x000000FF) | (((erec->par >> 56) & 0xFF) << 8) + 1;
-	      msglen  	= erec->par & 0x0000FFFF | ((erec->par >> 32) << 16);
+	      decodeParameter(erec->par, &otherid, &msglen, &msgtag, &comm);
+	      otherid = otherid+1;
 	      
 	      
 		  if (GetMatchingSend(intrc, msgtag, GetNodeId(erec),
@@ -1690,9 +1695,9 @@ int main (int argc, char *argv[])
 		/* extract the information from the parameter */
 
 		myid 	= GetNodeId(erec) + 1;
-		msgtag 	= ((erec->par>>16) & 0x000000FF) | (((erec->par >> 48) & 0xFF) << 8);
-		otherid = ((erec->par>>24) & 0x000000FF) | (((erec->par >> 56) & 0xFF) << 8) + 1;
-		msglen 	= erec->par & 0x0000FFFF | ((erec->par >> 32) << 16);
+
+		decodeParameter(erec->par, &otherid, &msglen, &msgtag, &comm);
+		otherid = otherid+1;
 
 
 		if (threads)
@@ -1744,9 +1749,9 @@ int main (int argc, char *argv[])
 		/* extract the information from the parameter */
 
 		myid 	= GetNodeId(erec) + 1;
-		msgtag 	= ((erec->par>>16) & 0x000000FF) | (((erec->par >> 48) & 0xFF) << 8);
-		otherid = ((erec->par>>24) & 0x000000FF) | (((erec->par >> 56) & 0xFF) << 8) + 1;
-		msglen 	= erec->par & 0x0000FFFF | ((erec->par >> 32) << 16);
+
+		decodeParameter(erec->par, &otherid, &msglen, &msgtag, &comm);
+		otherid = otherid+1;
 
 		if (threads)
 		  {
