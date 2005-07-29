@@ -999,7 +999,7 @@ void RtsLayer::TraceSendMsg(int type, int destination, int length)
     xtype = type;
     xlength = length;
     xother = destination;
-    xcomm = 62;
+    xcomm = 0;
 
     /* Format for parameter is
        63 ..... 56 55 ..... 48 47............. 32
@@ -1062,7 +1062,7 @@ void RtsLayer::TraceRecvMsg(int type, int source, int length)
     xtype = type;
     xlength = length;
     xother = source;
-    xcomm = 62;
+    xcomm = 0;
 
     // see TraceSendMsg for documentation
 
@@ -1293,6 +1293,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.66 $   $Date: 2005/07/29 19:01:26 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.66 2005/07/29 19:01:26 amorris Exp $ 
+ * $Revision: 1.67 $   $Date: 2005/07/29 21:44:05 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.67 2005/07/29 21:44:05 amorris Exp $ 
  ***************************************************************************/
