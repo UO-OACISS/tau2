@@ -342,11 +342,17 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
         /* send message */
         /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
 
-	/* extract the information from the parameter */
-	msgTag   = ((parameter>>16) & 0x000000FF) | (((parameter >> 48) & 0xFF) << 8);
-	otherNid = ((parameter>>24) & 0x000000FF) | (((parameter >> 56) & 0xFF) << 8);
-	msgLen   = parameter & 0x0000FFFF | (((parameter >> 32) & 0xFFFF) << 16);
+	x_uint64 xpar = parameter;
 
+	/* extract the information from the parameter */
+	msgTag   = ((xpar>>16) & 0x000000FF) | (((xpar >> 48) & 0xFF) << 8);
+	otherNid = ((xpar>>24) & 0x000000FF) | (((xpar >> 56) & 0xFF) << 8);
+	msgLen   = xpar & 0x0000FFFF | (xpar << 22 >> 54 << 16);
+	unsigned int comm = xpar << 16 >> 58;
+
+// 	printf ("sent tag = %d\n", msgTag);
+// 	printf ("sent comm = %d\n", comm);
+// 	printf ("sent msgLen = %d\n", msgLen);
 
 	/* If the application is multithreaded, insert call for matching sends/recvs here */
 	otherTid = 0;
@@ -363,10 +369,14 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 
         /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
 
-	/* extract the information from the parameter */
-	  msgTag   = ((parameter>>16) & 0x000000FF) | (((parameter >> 48) & 0xFF) << 8);
-	  otherNid = ((parameter>>24) & 0x000000FF) | (((parameter >> 56) & 0xFF) << 8);
-	  msgLen   = parameter & 0x0000FFFF | (((parameter >> 32) & 0xFFFF) << 16);
+	  x_uint64 xpar = parameter;
+
+	  /* extract the information from the parameter */
+	  msgTag   = ((xpar>>16) & 0x000000FF) | (((xpar >> 48) & 0xFF) << 8);
+	  otherNid = ((xpar>>24) & 0x000000FF) | (((xpar >> 56) & 0xFF) << 8);
+	  msgLen   = xpar & 0x0000FFFF | (xpar << 22 >> 54 << 16);
+	  unsigned int comm = xpar << 16 >> 58;
+
 
 	  /* If the application is multithreaded, insert call for matching sends/recvs here */
 	  otherTid = 0;
@@ -577,6 +587,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.10 $   $Date: 2005/07/26 20:50:27 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.10 2005/07/26 20:50:27 amorris Exp $ 
+ * $Revision: 1.11 $   $Date: 2005/07/29 19:02:11 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.11 2005/07/29 19:02:11 amorris Exp $ 
  ***************************************************************************/
