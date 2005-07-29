@@ -990,7 +990,7 @@ void RtsLayer::TraceSendMsg(int type, int destination, int length)
 {
 #ifdef TRACING_ON 
   x_int64 parameter;
-  x_uint64 xother, xtype, xlength;
+  x_uint64 xother, xtype, xlength, xcomm;
 
   if (RtsLayer::isEnabled(TAU_MESSAGE))
   {
@@ -999,7 +999,7 @@ void RtsLayer::TraceSendMsg(int type, int destination, int length)
     xtype = type;
     xlength = length;
     xother = destination;
-
+    xcomm = 62;
 
     /* Format for parameter is
        63 ..... 56 55 ..... 48 47............. 32
@@ -1015,16 +1015,25 @@ void RtsLayer::TraceSendMsg(int type, int destination, int length)
        xtype = 0xAABB;
        xother = 0xCCDD;
        xlength = 0xDEADBEEF;
-       result = 0xccaadeadddbbbeef
-     */
-  
-     
+       result = 0xccaaDEADdddbbBEEF
+
      parameter = ((xlength >> 16) << 32) | 
        ((xtype >> 8 & 0xFF) << 48) |
        ((xother >> 8 & 0xFF) << 56) |
        (xlength & 0xFFFF) | 
        ((xtype & 0xFF)  << 16) | 
        ((xother & 0xFF) << 24);
+
+     */
+
+    parameter = (xlength >> 16 << 54 >> 22) |
+      ((xtype >> 8 & 0xFF) << 48) |
+      ((xother >> 8 & 0xFF) << 56) |
+      (xlength & 0xFFFF) | 
+      ((xtype & 0xFF)  << 16) | 
+      ((xother & 0xFF) << 24) |
+      (xcomm << 58 >> 16);
+
 
     pcxx_Event(TAU_MESSAGE_SEND, parameter); 
 #ifdef DEBUG_PROF
@@ -1043,7 +1052,8 @@ void RtsLayer::TraceRecvMsg(int type, int source, int length)
 {
 #ifdef TRACING_ON
   x_int64 parameter;
-  x_uint64 xother, xtype, xlength;
+  x_uint64 xother, xtype, xlength, xcomm;
+
 
   if (RtsLayer::isEnabled(TAU_MESSAGE)) 
   {
@@ -1052,14 +1062,18 @@ void RtsLayer::TraceRecvMsg(int type, int source, int length)
     xtype = type;
     xlength = length;
     xother = source;
+    xcomm = 62;
 
     // see TraceSendMsg for documentation
-     parameter = ((xlength >> 16) << 32) | 
-       ((xtype >> 8 & 0xFF) << 48) |
-       ((xother >> 8 & 0xFF) << 56) |
-       (xlength & 0xFFFF) | 
-       ((xtype & 0xFF)  << 16) | 
-       ((xother & 0xFF) << 24);
+
+    parameter = (xlength >> 16 << 54 >> 22) |
+      ((xtype >> 8 & 0xFF) << 48) |
+      ((xother >> 8 & 0xFF) << 56) |
+      (xlength & 0xFFFF) | 
+      ((xtype & 0xFF)  << 16) | 
+      ((xother & 0xFF) << 24) |
+      (xcomm << 58 >> 16);
+
 
     pcxx_Event(TAU_MESSAGE_RECV, parameter); 
   
@@ -1279,6 +1293,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.65 $   $Date: 2005/07/22 16:48:42 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.65 2005/07/22 16:48:42 amorris Exp $ 
+ * $Revision: 1.66 $   $Date: 2005/07/29 19:01:26 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.66 2005/07/29 19:01:26 amorris Exp $ 
  ***************************************************************************/
