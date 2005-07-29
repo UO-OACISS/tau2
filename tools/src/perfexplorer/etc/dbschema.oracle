@@ -61,11 +61,11 @@ CREATE TRIGGER ar_id_seq_trigger
 CREATE TABLE trial_view (
 	id				NUMBER PRIMARY KEY,
 	parent				INT			NULL,
-	name				CLOB	NOT NULL,
-	table_name			CLOB	NOT NULL,
-	column_name			CLOB	NOT NULL,
-	operator			CLOB	NOT NULL,
-	value				CLOB	NOT NULL,
+	name				VARCHAR2(4000)	NOT NULL,
+	table_name			VARCHAR2(4000)	NOT NULL,
+	column_name			VARCHAR2(4000)	NOT NULL,
+	operator			VARCHAR2(4000)	NOT NULL,
+	value				VARCHAR2(4000)	NOT NULL,
 	FOREIGN KEY (parent) REFERENCES trial_view(id) ON DELETE CASCADE
 )
 /
