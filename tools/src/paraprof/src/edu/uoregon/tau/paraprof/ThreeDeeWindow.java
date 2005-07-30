@@ -71,7 +71,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             }
         });
         this.ppTrial = ppTrial;
-        ppTrial.getSystemEvents().addObserver(this);
 
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setSortType(SortType.NAME);
@@ -164,6 +163,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         ParaProf.incrementNumWindows();
+        ppTrial.getSystemEvents().addObserver(this);
 
     }
 
