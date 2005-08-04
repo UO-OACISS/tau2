@@ -1248,6 +1248,11 @@ if [ $profile = yes ]
     fixmakeargs="$fixmakeargs PROFILE"
 fi
 
+if [ $java = yes ]
+  then
+    tauoptions="${tauoptions}-jdk"
+fi
+
 if [ $profilecalls = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILECALLS"
