@@ -314,8 +314,14 @@ echo " " > wishver
     make clean; make install
 
 # Add TRACE
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $slogopt $epilogopt"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt  $slogopt $epilogopt<wishver
+    if [ $epilog = yes ]
+    then
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $slogopt $epilogopt"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt  $slogopt $epilogopt<wishver
+      make clean; make install
+    fi
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $slogopt"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt  $slogopt <wishver
     make clean; make install
   
     if [ $papi = yes ]
