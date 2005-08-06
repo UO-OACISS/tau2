@@ -8,7 +8,7 @@ makedepend_specified=no
 if [ $# = 0 ]
 then
   echo "Usage $0 [-tau_makefile=<tau_stub_makefile>] [-tau_options=<tau_compiler_opts>] <opts> <file>"
-  echo "If -makefile option is not used, "
+  echo "If -tau_makefile option is not used, "
   echo "TAU uses the file specified in TAU_MAKEFILE environment variable"
   echo "e.g., "
   echo "% tau_cxx.sh -tau_makefile=/usr/local/tau-2.x/ia64/lib/Makefile.tau-mpi-pdt  -tau_options=-optVerbose -c foo.cpp"
