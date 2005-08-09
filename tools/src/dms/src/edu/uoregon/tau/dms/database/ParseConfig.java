@@ -19,97 +19,132 @@ public class ParseConfig {
     private String dbSchema;
     private String xmlSAXParser;
 
-    public ParseConfig(String configLoc){
-		
-	String inputString;
-	String name;
-	String value;
+    public ParseConfig(String configLoc) {
 
-	try{
-	    BufferedReader reader = new BufferedReader(new FileReader(configLoc));
+        String inputString;
+        String name;
+        String value;
 
-//        URL url = ParseConfig.class.getResource("/perfdmf.cfg");
-//        
-//        if (url == null) {
-//            throw new IOException("Couldn't get perfdmf.cfg from the jar");
-//        }
-//        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-//        
-        
-        
-	    while ((inputString = reader.readLine())!= null){
-		
-		if (inputString.startsWith("#") || inputString.trim().equals(""))
-		    continue;
-		else{
-		    name = getNameToken(inputString).toLowerCase();
-		    value = getValueToken(inputString);
-		    if (name.equals("perfdmf_home")) perfdmfHome = value; 
-		    else if (name.equals("jdbc_db_jarfile")) jdbcJarFile = value; 
-		    else if (name.equals("jdbc_db_driver")) jdbcDriver = value;  
-		    else if (name.equals("jdbc_db_type")) dbType = value; 
-		    else if (name.equals("db_hostname")) dbHost = value; 
-		    else if (name.equals("db_portnum")) dbPort = value; 
-		    else if (name.equals("db_dbname")) dbName = value; 
-		    else if (name.equals("db_schemaprefix")) dbSchemaPrefix = value; 
-		    else if (name.equals("db_username")) dbUserName = value; 
-		    else if (name.equals("db_password")) dbPasswd = value; 
-		    else if (name.equals("db_schemafile")) dbSchema = value; 
-		    else if (name.equals("xml_sax_parser")) xmlSAXParser = value; 
-		    else {
-			System.out.println(name+" is not a valid configuration item."); System.exit(-1);
-		    }
-		}
-	    }
-	} catch(Exception e){
-		e.printStackTrace();
-		System.exit(0);
-	}
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(configLoc));
+
+            //        URL url = ParseConfig.class.getResource("/perfdmf.cfg");
+            //        
+            //        if (url == null) {
+            //            throw new IOException("Couldn't get perfdmf.cfg from the jar");
+            //        }
+            //        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+            //        
+
+            while ((inputString = reader.readLine()) != null) {
+
+                if (inputString.startsWith("#") || inputString.trim().equals(""))
+                    continue;
+                else {
+                    name = getNameToken(inputString).toLowerCase();
+                    value = getValueToken(inputString);
+                    if (name.equals("perfdmf_home"))
+                        perfdmfHome = value;
+                    else if (name.equals("jdbc_db_jarfile"))
+                        jdbcJarFile = value;
+                    else if (name.equals("jdbc_db_driver"))
+                        jdbcDriver = value;
+                    else if (name.equals("jdbc_db_type"))
+                        dbType = value;
+                    else if (name.equals("db_hostname"))
+                        dbHost = value;
+                    else if (name.equals("db_portnum"))
+                        dbPort = value;
+                    else if (name.equals("db_dbname"))
+                        dbName = value;
+                    else if (name.equals("db_schemaprefix"))
+                        dbSchemaPrefix = value;
+                    else if (name.equals("db_username"))
+                        dbUserName = value;
+                    else if (name.equals("db_password"))
+                        dbPasswd = value;
+                    else if (name.equals("db_schemafile"))
+                        dbSchema = value;
+                    else if (name.equals("xml_sax_parser"))
+                        xmlSAXParser = value;
+                    else {
+                        System.out.println(name + " is not a valid configuration item.");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public String getNameToken(String aLine){
-	int i = aLine.indexOf(":");
-	if (i>0)
-	    return aLine.substring(0,i).trim();
-	else{     
-	    System.out.println(aLine);
-	    System.out.println("This is an abnormal term. The correct form is name:value.");
-	    return null;
-	}
-	
+    public String getNameToken(String aLine) {
+        int i = aLine.indexOf(":");
+        if (i > 0)
+            return aLine.substring(0, i).trim();
+        else {
+            System.out.println(aLine);
+            System.out.println("This is an abnormal term. The correct form is name:value.");
+            return null;
+        }
+
     }
 
-    public String getValueToken(String aLine){
-	int i = aLine.indexOf(":");
-	if (i>0)
-	    return aLine.substring(i+1).trim();
-	else{     
-	    System.out.println("This is an abnormal term. The correct form is name:value.");
-	    return null;
-	}
+    public String getValueToken(String aLine) {
+        int i = aLine.indexOf(":");
+        if (i > 0)
+            return aLine.substring(i + 1).trim();
+        else {
+            System.out.println("This is an abnormal term. The correct form is name:value.");
+            return null;
+        }
     }
 
-    public String getPerfDMFHome(){ return perfdmfHome; }
-    
-    public String getJDBCJarFile(){ return jdbcJarFile; }
+    public String getPerfDMFHome() {
+        return perfdmfHome;
+    }
 
-    public String getJDBCDriver(){ return jdbcDriver; }
+    public String getJDBCJarFile() {
+        return jdbcJarFile;
+    }
 
-    public String getDBType(){ return dbType; }
+    public String getJDBCDriver() {
+        return jdbcDriver;
+    }
 
-    public String getDBHost(){ return dbHost; }
+    public String getDBType() {
+        return dbType;
+    }
 
-    public String getDBPort(){ return dbPort; }
+    public String getDBHost() {
+        return dbHost;
+    }
 
-    public String getDBName(){ return dbName; }
+    public String getDBPort() {
+        return dbPort;
+    }
 
-    public String getDBSchemaPrefix() { return dbSchemaPrefix; }
-    public String getDBUserName(){ return dbUserName; }
+    public String getDBName() {
+        return dbName;
+    }
 
-    public String getDBPasswd(){ return dbPasswd; }
+    public String getDBSchemaPrefix() {
+        return dbSchemaPrefix;
+    }
 
-    public String getDBSchema(){ return dbSchema; }
+    public String getDBUserName() {
+        return dbUserName;
+    }
 
-    public String getXMLSAXParser(){ return xmlSAXParser; }
-    
+    public String getDBPasswd() {
+        return dbPasswd;
+    }
+
+    public String getDBSchema() {
+        return dbSchema;
+    }
+
+    public String getXMLSAXParser() {
+        return xmlSAXParser;
+    }
+
 }
