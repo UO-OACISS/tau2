@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="edu.uoregon.tau.taujava"
+   name="Taujava Plug-in"
+   version="1.0.0"
+   provider-name=""
+   class="edu.uoregon.tau.taujava.TaujavaPlugin">
+
+   <runtime>
+      <library name="taujava.jar">
+         <export name="*"/>
+      </library>
+   </runtime>
+
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.eclipse.text"/>
+      <import plugin="org.eclipse.debug.core"/>
+      <import plugin="org.eclipse.debug.ui"/>
+      <import plugin="org.eclipse.jdt.launching"/>
+   </requires>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            objectClass="org.eclipse.jdt.core.ICompilationUnit"
+            nameFilter="*.java"
+            id="edu.uoregon.tau.taujava.contribution1">
+         <menu
+               label="Tau"
+               path="additions"
+               id="edu.uoregon.tau.taujava.menu1">
+            <separator name="group1"/>
+         </menu>
+         <action
+               enablesFor="1"
+               label="Instrument Java"
+               class="edu.uoregon.tau.taujava.popup.actions.InstrumentJava"
+               menubarPath="edu.uoregon.tau.taujava.menu1/group1"
+               id="edu.uoregon.tau.taujava.instrumentJavaFile"/>
+      </objectContribution>
+      <objectContribution
+            objectClass="org.eclipse.jdt.core.IPackageFragment"
+            nameFilter="*"
+            id="edu.uoregon.tau.taujava.contribution1">
+         <menu
+               label="Tau"
+               path="additions"
+               id="edu.uoregon.tau.taujava.menu1">
+            <separator name="group1"/>
+         </menu>
+         <action
+               enablesFor="1"
+               label="Instrument Package"
+               class="edu.uoregon.tau.taujava.popup.actions.InstrumentJava"
+               menubarPath="edu.uoregon.tau.taujava.menu1/group1"
+               id="edu.uoregon.tau.taujava.instrumentJavaPackage"/>
+      </objectContribution>
+      <objectContribution
+            objectClass="org.eclipse.jdt.core.IJavaProject"
+            nameFilter="*"
+            id="edu.uoregon.tau.taujava.contribution1">
+         <menu
+               label="Tau"
+               path="additions"
+               id="edu.uoregon.tau.taujava.menu1">
+            <separator name="group1"/>
+         </menu>
+         <action
+               enablesFor="1"
+               label="Instrument Project"
+               class="edu.uoregon.tau.taujava.popup.actions.InstrumentJava"
+               menubarPath="edu.uoregon.tau.taujava.menu1/group1"
+               id="edu.uoregon.tau.taujava.instrumentJavaProject"/>
+      </objectContribution>
+      <objectContribution
+            objectClass="org.eclipse.jdt.core.ICompilationUnit"
+            nameFilter="*.java"
+            id="edu.uoregon.tau.taujava.contribution1">
+         <menu
+               label="Tau"
+               path="additions"
+               id="edu.uoregon.tau.taujava.menu1">
+            <separator name="group1"/>
+         </menu>
+         <action
+               enablesFor="1"
+               label="Uninstrument Java"
+               class="edu.uoregon.tau.taujava.popup.actions.UninstrumentJava"
+               menubarPath="edu.uoregon.tau.taujava.menu1/group1"
+               id="edu.uoregon.tau.taujava.UninstrumentJava"/>
+      </objectContribution>
+      <objectContribution
+            id="edu.uoregon.tau.taujava.contribution1"
+            nameFilter="*"
+            objectClass="org.eclipse.jdt.core.IPackageFragment">
+         <menu
+               id="edu.uoregon.tau.taujava.menu1"
+               label="Tau"
+               path="additions">
+            <separator name="group1"/>
+         </menu>
+         <action
+               class="edu.uoregon.tau.taujava.popup.actions.UninstrumentJava"
+               enablesFor="1"
+               id="edu.uoregon.tau.taujava.UninstrumentPackage"
+               label="Uninstrument Package"
+               menubarPath="edu.uoregon.tau.taujava.menu1/group1"/>
+      </objectContribution>
+      <objectContribution
+            id="edu.uoregon.tau.taujava.contribution1"
+            nameFilter="*"
+            objectClass="org.eclipse.jdt.core.IJavaProject">
+         <menu
+               id="edu.uoregon.tau.taujava.menu1"
+               label="Tau"
+               path="additions">
+            <separator name="group1"/>
+         </menu>
+         <action
+               class="edu.uoregon.tau.taujava.popup.actions.UninstrumentJava"
+               enablesFor="1"
+               id="edu.uoregon.tau.taujava.UninstrumentProject"
+               label="Uninstrument Project"
+               menubarPath="edu.uoregon.tau.taujava.menu1/group1"/>
+      </objectContribution>
+      <objectContribution
+            objectClass="org.eclipse.jdt.core.ICompilationUnit"
+            nameFilter="*.java"
+            id="edu.uoregon.tau.taujava.contribution1">
+         <menu
+               label="Tau"
+               path="additions"
+               id="edu.uoregon.tau.taujava.menu1">
+            <separator name="group1"/>
+         </menu>
+         <action
+               enablesFor="1"
+               label="Run Tau-Instrumented Java"
+               class="edu.uoregon.tau.taujava.popup.actions.RunTauJava"
+               menubarPath="edu.uoregon.tau.taujava.menu1/group1"
+               id="edu.uoregon.tau.taujava.newAction"/>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="edu.uoregon.tau.taujava.preferences.TauJavaPrefs"
+            name="TauJava Preferences"
+            id="edu.uoregon.tau.taujava.preferences.TauJavaPrefs"/>
+   </extension>
+
+</plugin>
