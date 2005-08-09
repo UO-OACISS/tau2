@@ -1,9 +1,11 @@
-
 #include <iostream>
 #include <stdlib.h>
 #include <mpi.h>
 
 #include <math.h>
+
+// This example is adapted from "Using MPI, second edition" 
+// by Gropp, Lusk, and Skellum
 
 void initialize( int argc, char* argv[] )
 {
