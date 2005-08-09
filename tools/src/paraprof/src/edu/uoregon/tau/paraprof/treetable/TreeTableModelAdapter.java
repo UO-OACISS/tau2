@@ -37,7 +37,7 @@ public class TreeTableModelAdapter extends AbstractTableModel implements SortTab
     private JTree tree;
     private AbstractTreeTableModel treeTableModel;
     private JTreeTable jTreeTable;
-    
+
     public TreeTableModelAdapter(AbstractTreeTableModel treeTableModel, JTreeTable jTreeTable) {
         this.tree = jTreeTable.getTree();
         this.jTreeTable = jTreeTable;
@@ -122,22 +122,22 @@ public class TreeTableModelAdapter extends AbstractTableModel implements SortTab
         Enumeration expanded = tree.getExpandedDescendants(getRootPath());
 
         Vector paths = new Vector();
-        while (expanded.hasMoreElements()) {
-            paths.add(expanded.nextElement());
+        if (expanded != null) {
+            while (expanded.hasMoreElements()) {
+                paths.add(expanded.nextElement());
+            }
         }
 
         return paths;
     }
 
-
-    
     /***
      * Restores the given open paths on the treeModel.
      * @param paths a Vector of TreePaths which are going to be opened.
      */
     public void restoreExpandedPaths(Vector paths) {
         Enumeration e = paths.elements();
-        while(e.hasMoreElements()) {
+        while (e.hasMoreElements()) {
             TreePath path = (TreePath) e.nextElement();
             tree.expandPath(path);
         }
@@ -169,8 +169,7 @@ public class TreeTableModelAdapter extends AbstractTableModel implements SortTab
             public void run() {
                 Vector pathState = getExpandedPaths();
 
-                treeTableModel.fireTreeStructureChanged(this, ((TreeTableNode) treeTableModel.getRoot()).getPath(),
-                        null, null);
+                treeTableModel.fireTreeStructureChanged(this, ((TreeTableNode) treeTableModel.getRoot()).getPath(), null, null);
 
                 restoreExpandedPaths(pathState);
 
