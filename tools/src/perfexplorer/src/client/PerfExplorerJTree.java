@@ -160,15 +160,18 @@ public class PerfExplorerJTree extends JTree {
 
 	public static void addMetricNodes (DefaultMutableTreeNode node, Trial trial) {
 		// get the metrics
-		Enumeration metrics = trial.getMetrics().elements();
-		Metric metric = null;
-		DefaultMutableTreeNode metricNode = null;
-		// loop through all the metrics, and print out some info
-		while(metrics.hasMoreElements())
-		{
-			metric = (Metric) metrics.nextElement();
-			metricNode = new DefaultMutableTreeNode (metric);
-			node.add(metricNode);
+		List metricVector = trial.getMetrics();
+		if (metricVector != null) {
+			ListIterator metrics = metricVector.listIterator();
+			Metric metric = null;
+			DefaultMutableTreeNode metricNode = null;
+			// loop through all the metrics, and print out some info
+			while(metrics.hasNext())
+			{
+				metric = (Metric) metrics.next();
+				metricNode = new DefaultMutableTreeNode (metric);
+				node.add(metricNode);
+			}
 		}
 	}
 }
