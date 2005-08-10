@@ -21,7 +21,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.20 2005/05/31 23:21:02 amorris Exp $
+ * CVS $Id: Trial.java,v 1.21 2005/08/10 21:45:46 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -450,6 +450,8 @@ public class Trial implements Serializable {
             buf.append(" order by t.id ");
 
             Vector trials = new Vector();
+
+            //System.out.println(buf);
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
                 Trial trial = new Trial();
