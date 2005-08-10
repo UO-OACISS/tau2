@@ -139,18 +139,9 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 	  cout <<" STATIC "<< (*rit)->fullName() <<endl;
 #endif /* DEBUG */
 	}
-	if ((((*rit)->parentGroup()) == 0) || (*rit)->isStatic())
-	{ // If it is a static function or if 
-	  // there's no parent class. No need to add CT(*this)
-          itemvec.push_back(new itemRef(*rit, true, 
+        itemvec.push_back(new itemRef(*rit, true, 
 	    (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
-	}
-	else
-	{
-          itemvec.push_back(new itemRef(*rit, false, 
-            (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
-	  // false puts CT(*this)
-	}
+        /* parameter is always true: no need to add CT(*this) for non templates */
 #ifdef DEBUG
       cout << (*rit)->fullName() <<endl;
 #endif
@@ -1707,8 +1698,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.68 $   $Date: 2005/07/12 13:12:01 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.68 2005/07/12 13:12:01 sameer Exp $
+ * $Revision: 1.69 $   $Date: 2005/08/10 21:15:17 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.69 2005/08/10 21:15:17 sameer Exp $
  ***************************************************************************/
 
 
