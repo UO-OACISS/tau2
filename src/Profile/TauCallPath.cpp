@@ -256,7 +256,11 @@ void Profiler::CallPathStart(int tid)
         string *callpathname = TauFormulateNameString(this);
         DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
 
+#ifdef TAU_PROFILEPHASE
+	string grname = string("TAU_CALLPATH | TAU_PHASE | ") + string(ThisFunction->GetAllGroups());
+#else /* TAU_PROFILEPHASE */
 	string grname = string("TAU_CALLPATH | ") + string(ThisFunction->GetAllGroups());
+#endif /* TAU_PROFILEPHASE */
   	CallPathFunction = new FunctionInfo(*callpathname, " ", 
 	  ThisFunction->GetProfileGroup(), (const char*) grname.c_str(), true );
 	TheCallPathMap().insert(map<TAU_CALLPATH_MAP_TYPE>::value_type(comparison, CallPathFunction));
@@ -325,7 +329,7 @@ void Profiler::CallPathStop(double TotalTime, int tid)
 }
   
 /***************************************************************************
- * $RCSfile: TauCallPath.cpp,v $   $Author: amorris $
- * $Revision: 1.18 $   $Date: 2005/05/20 20:42:29 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.18 2005/05/20 20:42:29 amorris Exp $ 
+ * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
+ * $Revision: 1.19 $   $Date: 2005/08/10 00:28:25 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.19 2005/08/10 00:28:25 sameer Exp $ 
  ***************************************************************************/
