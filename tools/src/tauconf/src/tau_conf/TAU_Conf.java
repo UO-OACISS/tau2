@@ -309,14 +309,32 @@ public class TAU_Conf extends javax.swing.JFrame {
         fortranCombo.setBounds(300, 130, 90, 24);
 
         defccTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        defccTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                defccTextFieldActionPerformed(evt);
+            }
+        });
+
         compilerPanel.add(defccTextField);
         defccTextField.setBounds(300, 40, 200, 19);
 
         defcppTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        defcppTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                defcppTextFieldActionPerformed(evt);
+            }
+        });
+
         compilerPanel.add(defcppTextField);
         defcppTextField.setBounds(300, 100, 200, 19);
 
         deffortranTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        deffortranTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deffortranTextFieldActionPerformed(evt);
+            }
+        });
+
         compilerPanel.add(deffortranTextField);
         deffortranTextField.setBounds(300, 160, 200, 19);
 
@@ -421,6 +439,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         pdtcppCombo.setBounds(300, 50, 90, 24);
 
         pdtdirField.setPreferredSize(new java.awt.Dimension(200, 19));
+        pdtdirField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pdtdirFieldActionPerformed(evt);
+            }
+        });
+
         pdtPanel.add(pdtdirField);
         pdtdirField.setBounds(300, 10, 200, 19);
 
@@ -446,6 +470,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         defpdtCheckBox.setBounds(10, 80, 280, 23);
 
         defpdtTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        defpdtTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                defpdtTextFieldActionPerformed(evt);
+            }
+        });
+
         pdtPanel.add(defpdtTextField);
         defpdtTextField.setBounds(300, 80, 200, 19);
 
@@ -491,6 +521,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         papiCheckBox.setBounds(10, 10, 290, 23);
 
         papiTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        papiTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                papiTextFieldActionPerformed(evt);
+            }
+        });
+
         papiPanel.add(papiTextField);
         papiTextField.setBounds(300, 10, 200, 19);
 
@@ -620,6 +656,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         mpiincCheckBox.setBounds(10, 40, 290, 23);
 
         mpiincTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        mpiincTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mpiincTextFieldActionPerformed(evt);
+            }
+        });
+
         mpiPanel.add(mpiincTextField);
         mpiincTextField.setBounds(300, 40, 200, 19);
 
@@ -635,6 +677,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         mpilibCheckBox.setBounds(10, 70, 290, 23);
 
         mpilibTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        mpilibTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mpilibTextFieldActionPerformed(evt);
+            }
+        });
+
         mpiPanel.add(mpilibTextField);
         mpilibTextField.setBounds(300, 70, 200, 19);
 
@@ -650,6 +698,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         altmpiCheckBox.setBounds(10, 100, 290, 23);
 
         altmpiTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        altmpiTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                altmpiTextFieldActionPerformed(evt);
+            }
+        });
+
         mpiPanel.add(altmpiTextField);
         altmpiTextField.setBounds(300, 100, 200, 19);
 
@@ -665,6 +719,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         tagCheckBox.setBounds(10, 130, 290, 23);
 
         tagTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        tagTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tagTextFieldActionPerformed(evt);
+            }
+        });
+
         mpiPanel.add(tagTextField);
         tagTextField.setBounds(300, 130, 200, 19);
 
@@ -833,6 +893,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         shmemincCheckBox.setBounds(10, 40, 290, 23);
 
         shmemincTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        shmemincTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                shmemincTextFieldActionPerformed(evt);
+            }
+        });
+
         shmemPanel.add(shmemincTextField);
         shmemincTextField.setBounds(300, 40, 200, 19);
 
@@ -848,6 +914,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         shmemlibCheckBox.setBounds(10, 70, 290, 23);
 
         shmemlibTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        shmemlibTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                shmemlibTextFieldActionPerformed(evt);
+            }
+        });
+
         shmemPanel.add(shmemlibTextField);
         shmemlibTextField.setBounds(300, 70, 200, 19);
 
@@ -863,6 +935,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         altshmemCheckBox.setBounds(10, 100, 290, 23);
 
         altshmemTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        altshmemTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                altshmemTextFieldActionPerformed(evt);
+            }
+        });
+
         shmemPanel.add(altshmemTextField);
         altshmemTextField.setBounds(300, 100, 200, 19);
 
@@ -1099,6 +1177,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         epilogCheckBox.setBounds(10, 40, 290, 23);
 
         epilogTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        epilogTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                epilogTextFieldActionPerformed(evt);
+            }
+        });
+
         tracePanel.add(epilogTextField);
         epilogTextField.setBounds(300, 40, 200, 19);
 
@@ -1125,6 +1209,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         slog2exCheckBox.setBounds(20, 90, 280, 23);
 
         slog2TextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        slog2TextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                slog2TextFieldActionPerformed(evt);
+            }
+        });
+
         tracePanel.add(slog2TextField);
         slog2TextField.setBounds(300, 90, 200, 19);
 
@@ -1140,6 +1230,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         vtfCheckBox.setBounds(10, 120, 290, 23);
 
         vtfTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        vtfTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                vtfTextFieldActionPerformed(evt);
+            }
+        });
+
         tracePanel.add(vtfTextField);
         vtfTextField.setBounds(300, 120, 200, 19);
 
@@ -1320,6 +1416,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         opariCheckBox.setBounds(10, 40, 290, 23);
 
         opariTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        opariTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                opariTextFieldActionPerformed(evt);
+            }
+        });
+
         ompPanel.add(opariTextField);
         opariTextField.setBounds(300, 40, 200, 19);
 
@@ -1421,6 +1523,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         charmCheckBox.setBounds(10, 10, 290, 23);
 
         charmTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        charmTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                charmTextFieldActionPerformed(evt);
+            }
+        });
+
         charmPanel.add(charmTextField);
         charmTextField.setBounds(300, 10, 200, 19);
 
@@ -1464,6 +1572,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         tulipCheckBox.setBounds(10, 10, 290, 23);
 
         tulipTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        tulipTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tulipTextFieldActionPerformed(evt);
+            }
+        });
+
         tulipthreadsPanel.add(tulipTextField);
         tulipTextField.setBounds(300, 10, 200, 19);
 
@@ -1594,6 +1708,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         dyninstCheckBox.setBounds(10, 10, 280, 23);
 
         dyninstTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        dyninstTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dyninstTextFieldActionPerformed(evt);
+            }
+        });
+
         dyninstPanel.add(dyninstTextField);
         dyninstTextField.setBounds(300, 10, 200, 19);
 
@@ -1637,6 +1757,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         pclCheckBox.setBounds(10, 10, 280, 23);
 
         pclTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        pclTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pclTextFieldActionPerformed(evt);
+            }
+        });
+
         pclPanel.add(pclTextField);
         pclTextField.setBounds(300, 10, 200, 19);
 
@@ -1861,8 +1987,14 @@ public class TAU_Conf extends javax.swing.JFrame {
         usepythonCheckbox.setBounds(10, 10, 290, 23);
 
         pythonincField.setPreferredSize(new java.awt.Dimension(200, 19));
+        pythonincField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pythonincFieldActionPerformed(evt);
+            }
+        });
+
         pythonPanel.add(pythonincField);
-        pythonincField.setBounds(300, 40, 200, 19);
+        pythonincField.setBounds(300, 10, 200, 19);
 
         pythonlibCheckBox.setText("Python Libraries [-pythonlib=]:");
         pythonlibCheckBox.setToolTipText("Specify location of Python lib directory");
@@ -1876,8 +2008,14 @@ public class TAU_Conf extends javax.swing.JFrame {
         pythonlibCheckBox.setBounds(10, 40, 290, 23);
 
         pythonlibField.setPreferredSize(new java.awt.Dimension(200, 19));
+        pythonlibField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pythonlibFieldActionPerformed(evt);
+            }
+        });
+
         pythonPanel.add(pythonlibField);
-        pythonlibField.setBounds(300, 10, 200, 19);
+        pythonlibField.setBounds(300, 40, 200, 19);
 
         pythonincButton.setText("Browse");
         pythonincButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1941,6 +2079,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         usejdkCheckBox.setBounds(10, 30, 280, 23);
 
         jdkField.setPreferredSize(new java.awt.Dimension(200, 19));
+        jdkField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jdkFieldActionPerformed(evt);
+            }
+        });
+
         jdkPanel.add(jdkField);
         jdkField.setBounds(300, 30, 200, 19);
 
@@ -2011,6 +2155,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         installdirCheckBox.setBounds(10, 10, 290, 23);
 
         installdirField.setPreferredSize(new java.awt.Dimension(200, 19));
+        installdirField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                installdirFieldActionPerformed(evt);
+            }
+        });
+
         dirarcPanel.add(installdirField);
         installdirField.setBounds(300, 10, 200, 19);
 
@@ -2026,6 +2176,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         archdirCheckBox.setBounds(10, 40, 290, 23);
 
         archdirField.setPreferredSize(new java.awt.Dimension(200, 19));
+        archdirField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                archdirFieldActionPerformed(evt);
+            }
+        });
+
         dirarcPanel.add(archdirField);
         archdirField.setBounds(300, 40, 200, 19);
 
@@ -2055,6 +2211,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         useroptCheckBox.setBounds(10, 100, 280, 23);
 
         useroptField.setPreferredSize(new java.awt.Dimension(200, 19));
+        useroptField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                useroptFieldActionPerformed(evt);
+            }
+        });
+
         dirarcPanel.add(useroptField);
         useroptField.setBounds(300, 100, 200, 19);
 
@@ -2243,6 +2405,516 @@ public class TAU_Conf extends javax.swing.JFrame {
     }
     // </editor-fold>
 
+    private void useroptFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.useroptCheckBox.isSelected()){
+	    
+	    String id=" -useropt=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+useroptField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void archdirFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.archdirCheckBox.isSelected()){
+	    
+	    String id=" -exec-prefix=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+archdirField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void installdirFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.installdirCheckBox.isSelected()){
+	    
+	    String id=" -prefix=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+installdirField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void jdkFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.usejdkCheckBox.isSelected()){
+	    
+	    String id=" -jdk=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+jdkField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void pythonincFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.usepythonCheckbox.isSelected()){
+	    
+	    String id=" -pythoninc=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+pythonincField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void pythonlibFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.pythonlibCheckBox.isSelected()){
+	    
+	    String id=" -pythonlib=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+pythonlibField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void dyninstTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.dyninstCheckBox.isSelected()){
+	    
+	    String id=" -dyninst=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+dyninstTextField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void pclTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.pclCheckBox.isSelected()){
+	    
+	    String id=" -pcl=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+pclTextField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void tulipTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.tulipCheckBox.isSelected()){
+	    
+	    String id=" -tulipthread=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+tulipTextField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void charmTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.charmCheckBox.isSelected()){
+	    
+	    String id=" -charm=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+charmTextField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void opariTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.opariCheckBox.isSelected()){
+	    
+	    String id=" -opari=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+opariTextField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void vtfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.vtfCheckBox.isSelected()){
+	    
+	    String id=" -vtf=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+vtfTextField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void slog2TextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.slog2CheckBox.isSelected()){
+	    
+	    String id=" -slog2=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+slog2TextField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void epilogTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.epilogCheckBox.isSelected()){
+	    
+	    String id=" -epilog=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+epilogTextField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void altshmemTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.altshmemCheckBox.isSelected()){
+	    
+	    String id=" -shmemlibrary=";
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    
+	    configureline = begin+altshmemTextField.getText()+end;
+
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void shmemlibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.shmemlibCheckBox.isSelected()){
+	    
+	    String id=" -shmemlib=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+shmemlibTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void shmemincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.shmemincCheckBox.isSelected()){
+	    
+	    String id=" -shmeminc=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+shmemincTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void tagTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.tagCheckBox.isSelected()){
+	    
+	    String id=" -tag=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+tagTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void altmpiTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.altmpiCheckBox.isSelected()){
+	    
+	    String id=" -mpilibrary=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+altmpiTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void mpilibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.mpilibCheckBox.isSelected()){
+	    
+	    String id=" -mpilib=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+mpilibTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void mpiincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.mpiincCheckBox.isSelected()){
+	    
+	    String id=" -mpiinc=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+mpiincTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void papiTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.papiCheckBox.isSelected()){
+	    
+	    String id=" -papi=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+papiTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void defpdtTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.defpdtCheckBox.isSelected()){
+	    
+	    String id=" -pdt_c++=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+defpdtTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void pdtdirFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.pdtCheckBox.isSelected()){
+	    
+	    String id=" -pdt=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+pdtdirField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void deffortranTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.deffortranCheckBox.isSelected()){
+	    
+	    String id=" -fortran=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+deffortranTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void defcppTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.defcppCheckBox.isSelected()){
+	    
+	    String id=" -c++=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+defcppTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
+    private void defccTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+	if(this.defccCheckBox.isSelected()){
+	    
+	    String id=" -cc=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+defccTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }
+
 
     
 private void updateITCommand(){
@@ -2280,49 +2952,75 @@ private void updateITCommand(){
 }    
     
     
-    private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {
+    private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {                                           
     System.exit(0);
-    }
+    }                                          
 
-    private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {
+    private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {                                            
 // TODO add your handling code here:
-    }
+    }                                           
 
-    private void instButtonActionPerformed(java.awt.event.ActionEvent evt) {
+    private void instButtonActionPerformed(java.awt.event.ActionEvent evt) {                                           
+	instButton.setEnabled(false);
 	try {
-	Process conf = Runtime.getRuntime().exec(instline);
-	/*int ret = conf.waitFor();
-	
-	//conf.
+	     Runtime rt = Runtime.getRuntime();
+            Process proc = rt.exec(instline);
+            InputStream stdin = proc.getInputStream();
+            InputStreamReader isr = new InputStreamReader(stdin);
+            BufferedReader br = new BufferedReader(isr);
+            String line = null;
+           // System.out.println("<ERROR>");
+	    
+            while ( (line = br.readLine()) != null)
+                System.out.println(line);
+	    
+            //System.out.println("</ERROR>");
+            int ret = proc.waitFor();
+	    br.close();
+            //System.out.println("Process exitValue: " + exitVal);
 	
 	if(ret==0)
 	{JOptionPane.showMessageDialog(null,"Installation Successful", "Success!", JOptionPane.INFORMATION_MESSAGE);}
 	else
 	{
 	    JOptionPane.showMessageDialog(null,"Installation Error.  Returned: "+ret, "Error!", JOptionPane.ERROR_MESSAGE);
-	}*/
+	}
 	
 	} catch (Exception e) {
 	e.printStackTrace();}
-    }
+	instButton.setEnabled(true);
+    }                                          
 
-    private void makejButtonActionPerformed(java.awt.event.ActionEvent evt) {
+    private void makejButtonActionPerformed(java.awt.event.ActionEvent evt) {                                            
+	makejButton.setEnabled(false);
 	try {
-	Process conf = Runtime.getRuntime().exec("make clean install");
-	/*int ret = conf.waitFor();
-	
-	//conf.
+	     Runtime rt = Runtime.getRuntime();
+            Process proc = rt.exec("make clean install");
+            InputStream stdin = proc.getInputStream();
+            InputStreamReader isr = new InputStreamReader(stdin);
+            BufferedReader br = new BufferedReader(isr);
+            String line = null;
+           // System.out.println("<ERROR>");
+	    
+            while ( (line = br.readLine()) != null)
+                System.out.println(line);
+	    
+            //System.out.println("</ERROR>");
+            int ret = proc.waitFor();
+	    br.close();
+            //System.out.println("Process exitValue: " + exitVal);
 	
 	if(ret==0)
 	{JOptionPane.showMessageDialog(null,"Installation Successful", "Success!", JOptionPane.INFORMATION_MESSAGE);}
 	else
 	{
 	    JOptionPane.showMessageDialog(null,"Installation Error.  Returned: "+ret, "Error!", JOptionPane.ERROR_MESSAGE);
-	}*/
+	}
 	
 	} catch (Exception e) {
 	e.printStackTrace();}
-    }
+	makejButton.setEnabled(true);
+    }                                           
 
     private void noexQjButtonActionPerformed(java.awt.event.ActionEvent evt) {                                             
 	JOptionPane.showMessageDialog(null,
@@ -2858,9 +3556,24 @@ JOptionPane.showMessageDialog(null,"This is the default option; it specifies sum
     }                                               
 
     private void confButtonActionPerformed(java.awt.event.ActionEvent evt) {                                           
+	confButton.setEnabled(false);
 	try {
-	Process conf = Runtime.getRuntime().exec(configureline);
-	int ret = conf.waitFor();
+	     Runtime rt = Runtime.getRuntime();
+            Process proc = rt.exec(configureline);
+            InputStream stdin = proc.getInputStream();
+            InputStreamReader isr = new InputStreamReader(stdin);
+            BufferedReader br = new BufferedReader(isr);
+            String line = null;
+           // System.out.println("<ERROR>");
+	    
+            while ( (line = br.readLine()) != null)
+                System.out.println(line);
+	    
+            //System.out.println("</ERROR>");
+            int ret = proc.waitFor();
+	    br.close();
+            //System.out.println("Process exitValue: " + exitVal);
+	
 	if(ret==0)
 	{JOptionPane.showMessageDialog(null,"Configuration Successful", "Success!", JOptionPane.INFORMATION_MESSAGE);}
 	else
@@ -2870,6 +3583,7 @@ JOptionPane.showMessageDialog(null,"This is the default option; it specifies sum
 	
 	} catch (Exception e) {
 	e.printStackTrace();}
+	confButton.setEnabled(true);
     }                                          
 
     private void deffortranCheckBoxItemStateChanged(java.awt.event.ItemEvent evt) {                                                    
