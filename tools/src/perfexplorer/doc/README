@@ -1,79 +1,180 @@
-The RSJava omegahat version installed is from:
-http://simon.urbanek.info/simon/yawe/research/other.html
 
-Build instructions for R on OS X:
-http://cran.us.r-project.org/
-(make sure to use the 'shared' options for configure.)
-./configure --with-blas='-framework vecLib' --with-lapack --with-aqua --enable-shared --enable-R-shlib
 
-After installing, in the /Library/Frameworks/R.framework/Versions/2.0.1/Resources/library/SJava/libs directory, make .dylib and .jnilib links to the .so file.
 
-todo:
-we should have non-modal dialogs, so comparisons can be made.
 
-need to replace all the intermingled Java & R code with an R function, and call it.
 
-memory - see ?Memory and ?clara in R (library(cluster))
-might not be able to do hclust on large data...
+                -----------------------------------------------------------------------------------------------------------
 
-Notes from board:
 
-bioconductor.org
 
-App Functionality:
-------------------
-* Select Trial
-* Select Metric (or not)
-* Do Hierarchical Clustering
-* Suggest Cluster #, centers > or use Bradley98 paper
-  Select Cluster Method (KM, KHM, GEM, FKM, H1, H2) - or implement own! 
-   - make it programmable and flexible
-* Select Dimension Reduction
-* Select Normalization
-* Graph Results to PNG
-* Save results to DBMS
-* Show Thumbnails
-  Do Factor Analysis on Clusters
-  Do Linear Regression Analysis
 
-For Charting:
--------------
-Dimensions:
-	Experiment (machine, options, etc.)
-	Trial (nodes, contexts, threads, etc.)
-	Metric Name
-	Group Name
-	Event Name
+                                                     Introduction
 
-TODO LIST:
--------------------------------------------------------------------------
 
-Data should be self-describing!
-How to save the process - the workflow?  Scripting approach?
-DONE - Need to add phase data, too!
-DONE - how to do "ideal" line?
-Analysis management, not experiment management.  How to make sense of the data you have collected?  What're the significant factors?
 
-Fix the hierarchical clustering
-DONE - Add PCA - should be easy.
-Add T^2 (Hotelling) test
-Add t-test
-	Use weka.experiment.PairedTTester
-PCA and Factor Analysis do dimension reduction...
-	DONE - Use weka.attributeSelection.PrincipalComponents
-	Need to make this an option for dimension reduction (replace
-	linear regression)
-Use weka.classifiers.functions.SimpleLinearRegression and LinearRegression?
-Use weka.filters.unsupervised.attribute.RandomProjection?
-Factor Analysis?
-F-Ratio?
-	weka.core.Statistics.FProbabilty()
-ChiSquared Test?
-	weka.attributeSelection.ChiSquaredAttributeEval
 
-DONE - Need to add virtual topology for Weka output.
-Need to add min/max to weka output.
-Need to fix hierarchical clustering for Weka.
-Need to make R/Weka interchangable.
-Need to replace the Weka PCA clusters with something "else"...
+
+                Table       of  Contents
+
+
+                           1.Introduction ...........................................................................1
+                           2.Installation............................................................................1
+                           3.Using  PerfExplorer ....................................................................1
+
+
+
+
+                1.   Introduction
+
+                           PerfExplorer isaframework  forparallelperformance data mining and knowledge discovery. The frame-
+
+                           work architectureenablesthe development and integrationofdata mining operationsthatwillbe applied
+                           to large-scalparallelperformance profiles.
+
+                           The overallgoal ofthe PerfExplorerprojectis tocreatea softwareto integratsophisticateddatamining
+                           techniques intheanalysisof large-scalparallelperformance data.
+
+
+                           PerfExplorer supports clusteringsummarization, association,regression,and correlationCluster ana-
+                           lysisisthe processof organizingdata pointsintologicallysimilargroupings,calledclusters.Summariz-
+                           ation isthe process of describingthe similaritiewithin, and dissimilaritiebetween, the discovered
+                           clustersAssociation isthe processof findingrelationshipsinthe data.One  suchmethod  of association
+
+                           isregressionanalysis,theprocess of findingindependent and dependent correlatedvariablesinthedata.
+                           In addition,comparative  analysisextends these operationsto compare  resultsfrom differentexperi-
+                           ments, forinstance,aspartof a parametricstudy.
+
+
+                2.   Installation
+
+
+                           PerfExplorer uses PerfDMF   databases so ifyou have  not alreadyyou  willneed  toinstallPerfDMF
+                           [../perfdmf/index.htm.]To configure PerfExplorer move  tothe tools/src/perfexplorer/          dir-
+                           ectoryin you TAU  distributionType:
+
+
+
+                           %>./configure
+
+                           Next add [path   to   tau]/tau2/apple/bin       to your path.Now  type:
+
+
+                           %>make
+
+
+
+
+                3.   Using          PerfExplorer
+
+
+                           To run PerfExplorertype:
+
+
+                           %>perfexplorer
+
+                           When   PerfExplorerloads you will see on theleftwindow   alltheexperiments  thatwhere loaded into
+                           PerfDMF.  You  can selectwhich  performance data you are interestedby navigatingthe treestructure.
+
+                           PerfExplorer willallow you to run analysisoperationson  theseexperiments. Also the clusteanalysis
+                           resultsarevisibleon the rightsideof the window. Various types of comparative analysisare available
+
+                -----------------------------------------------------------------------------------------------------------
+                                                                     1
+
+
+
+
+
+
+
+
+
+
+
+                                                                Introduction
+
+                -----------------------------------------------------------------------------------------------------------
+
+                           from the dropdown  menu  selected.
+
+
+                           To  runan analysis operation,firsselectthe metric ofinterestform the experiments on the leftThen
+                           perform the operation by selectingitfrom  the Analysis    menu. If you would  likeyou can  setthe
+                           clustering      method,    dimension     reduction,      normalization       method    and   the
+                           number    of  clusters    from the same menu.
+
+
+                           The  options under the Charts menu  provide analysisover an entire trialTo view  these chartsfirst
+                           choose a metricof interestby selectina triaform  thetreeon the leftThen choose the Set   Metric
+                           of  Interest    or Set  Event    of  Interest    form theCharts   menu. Now   you can view achart
+                           by selectingitfrom theCharts   menu.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                -----------------------------------------------------------------------------------------------------------
+                                                                     2
+
+
+
+
+
+
+
 
