@@ -1,2 +1,2 @@
 #!/bin/sh
-java -jar ./tools/src/tauconf/TAU_Conf.jar &
+java -cp ./tools/src/tauconf/bin/TAU_Conf.jar tau_conf/TAU_Conf
