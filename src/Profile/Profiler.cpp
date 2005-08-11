@@ -701,6 +701,10 @@ void Profiler::Stop(int tid)
 	    << this<<endl;);
 
         if (ParentProfiler == (Profiler *) NULL) {
+#ifdef TAU_PROFILEPHASE
+	  ThisFunction->AllGroups.append(" | TAU_PHASE"); 
+#endif /* TAU_PROFILEPHASE */
+
 	  // For Dyninst. tcf gets called after main and all the data structures may not be accessible
 	  // after main exits. Still needed on Linux - we use TauProgramTermination()
 	  if (strcmp(ThisFunction->GetName(), "_fini") == 0) TheSafeToDumpData() = 0;
@@ -2871,9 +2875,9 @@ void Profiler::SetDepthLimit(int value)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.115 $   $Date: 2005/05/27 22:23:02 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.115 2005/05/27 22:23:02 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.116 $   $Date: 2005/08/11 02:10:41 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.116 2005/08/11 02:10:41 sameer Exp $ 
  ***************************************************************************/
 
 	

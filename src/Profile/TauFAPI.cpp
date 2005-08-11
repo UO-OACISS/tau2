@@ -79,6 +79,7 @@ void Tau_track_memory_headroom(void);
 void Tau_track_memory_headroom_here(void); 
 void Tau_enable_tracking_memory_headroom(void);
 void Tau_disable_tracking_memory_headroom(void);
+void Tau_mark_group_as_phase(void **ptr);
 
 
 
@@ -186,13 +187,24 @@ void tau_profile_timer_(void **ptr, char *infname, int slen)
 
 void tau_phase_create_static_(void **ptr, char *infname, int slen)
 {
+  bool firsttime = false;
+  if (*ptr == 0) 
+    firsttime = true;
+  /* is it in here for the first time? */
+
   tau_profile_timer_(ptr, infname, slen);
+
+  /* we know the FunctionInfo pointer in ptr. If its here the first time 
+     set the group name to be | TAU_PHASE */
+  if (firsttime)
+    Tau_mark_group_as_phase(ptr);
 }
 
 void tau_phase_create_dynamic_(void **ptr, char *infname, int slen)
 {
   *ptr = 0;  /* reset it each time so it creates a new timer */
   tau_profile_timer_(ptr, infname, slen);
+  Tau_mark_group_as_phase(ptr);
 }
 
 void tau_profile_timer_dynamic_(void **ptr, char *infname, int slen)
@@ -1310,11 +1322,10 @@ void TAU_PHASE_STOP(void **profiler)
   tau_phase_stop_(profiler);
 }
 
-
 } /* extern "C" */
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.43 $   $Date: 2005/07/15 19:54:32 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.43 2005/07/15 19:54:32 amorris Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.44 $   $Date: 2005/08/11 02:10:42 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.44 2005/08/11 02:10:42 sameer Exp $ 
  ***************************************************************************/

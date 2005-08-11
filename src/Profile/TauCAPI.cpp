@@ -656,10 +656,39 @@ extern "C" void Tau_global_stop(void)
   TAU_GLOBAL_TIMER_STOP();
 } 
 
+///////////////////////////////////////////////////////////////////////////
+extern "C" char * Tau_phase_enable(const char *group)
+{
+  char *newgroup = new char[strlen(group)+16];
+  sprintf(newgroup, "%s | TAU_PHASE", group);
+  return newgroup;
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" char * Tau_phase_enable_once(const char *group, void **ptr)
+{
+  /* We don't want to parse the group name string every time this is invoked.
+     we compare a pointer and if necessary, perform the string operations  
+     on the group name (adding  | TAU_PHASE to it). */
+  if (*ptr == 0) {
+    return Tau_phase_enable(group);
+  }
+  else
+    return (char *) NULL;
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_mark_group_as_phase(void **ptr)
+{
+  FunctionInfo *fptr = (FunctionInfo *) *ptr;
+  char *newgroup = Tau_phase_enable(fptr->GetAllGroups()); 
+  fptr->SetPrimaryGroupName(newgroup); 
+
+}
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.50 $   $Date: 2005/05/17 23:52:16 $
- * VERSION: $Id: TauCAPI.cpp,v 1.50 2005/05/17 23:52:16 sameer Exp $
+ * $Revision: 1.51 $   $Date: 2005/08/11 02:10:42 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.51 2005/08/11 02:10:42 sameer Exp $
  ***************************************************************************/
 
