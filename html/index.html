@@ -4,7 +4,7 @@
 <BODY BGCOLOR="#FFFFFF" LINK="#0000ff" VLINK="#ff0000" ALINK="#ff0000" TEXT="#000000">
 
 <CENTER>
-<A HREF="http://www.acl.lanl.gov/tau"><IMG SRC="images/tau.gif" BORDER=0 HBORDER=0></A>
+<A HREF="http://www.cs.uoregon.edu/research/tau"><IMG SRC="images/tau.gif" BORDER=0 HBORDER=0></A>
 <P>
 Powered by DOE2000 and ASCI
 </P>
@@ -19,70 +19,12 @@ environment for parallel C++ applications.
 
 <H2> Documentation </H2>
 <UL>
-<LI> <A HREF="http://www.acl.lanl.gov/tau"> TAU website (Docs, Tutorials) </A>
+<LI> <A HREF="http://www.cs.uoregon.edu/research/tau"> TAU website (Docs, Tutorials) </A>
 <LI> <A HREF="../README"> What is TAU? </A>
 <LI> <A HREF="../INSTALL"> Installation Procedure for all platforms </A>
 <LI> <A HREF="../README.JAVA"> Special instructions for JAVA users</A>
-<LI> <A HREF="../Windows-Readme.txt"> Special instructions for Microsoft Windows users</A>
+<LI> <A HREF="../README.WINDOWS.txt"> Special instructions for Microsoft Windows users</A>
 <LI> <A HREF="http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/docs/usersguide.pdf"> TAU Users Guide </A> 
-
-</UL>
-
-<H2> Installation Instructions For POOMA Users </H2>
-<UL> 
-<LI> <H3>Step One: Configure <A HREF="http://www.acl.lanl.gov/pdtoolkit">PDT</A> </H3>
-<PRE>
-<code>
-[FOR SGI]
-% cd /usr/local/packages/pdtoolkit-1.1
-% ./configure -arch=IRIX64 -KCC
-[FOR LINUX PCs]
-% ./configure -KCC
-</LI>
-<LI> <H3>Step Two: Configure <A HREF="http://www.acl.lanl.gov/tau">TAU</A> </H3>
-<PRE>
-<code>
-% cd /usr/local/packages/tau-2.7
-[FOR SGI]
-% ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0.1 -smarts -SGITIMERS -pdt=/usr/local/packages/pdtoolkit-1.1 
-[FOR LINUX PCs]
-% ./configure -arch=linux -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0.1 -smarts -pdt=/usr/local/packages/pdtoolkit-1.1 
-% make install
-</PRE>
-</code>
-<LI> <H3>Step Three: Configure <A HREF="http://www.acl.lanl.gov/smarts">SMARTS</A></H3>
-<PRE>
-<code>
-% cd /usr/local/packages/smarts-1.0.1
-[FOR SGI]
-% configure --with-arch=iris4d --prefix /usr/local/packages/smarts-1.0.1 --with-taudir=/usr/local/packages/tau-2.7 --enable-64bit --enable-profile 
-[FOR LINUX PCs]
-% configure --with-arch=i386-linux --prefix /usr/local/packages/smarts-1.0.1 --with-taudir=/usr/local/packages/tau-2.7 --enable-profile 
-% make
-% make install
-</code>
-</PRE>
-<LI> <H3>Step Four: Configure <A HREF="http://www.acl.lanl.gov/pooma">Pooma II</A></H3>
-<PRE>
-<code>
-% setenv TAUDIR     /usr/local/packages/tau-2.7
-% setenv PDTDIR     /usr/local/packages/pdtoolkit-1.1
-% setenv SMARTSDIR  /usr/local/packages/smarts-1.0.1
-[FOR SGI]
-% ./configure --arch SGI64KCC --suite PP --parallel --profile --opt -ex
-[FOR LINUX PCs]
-% ./configure --arch LINUXKCC --suite PP --parallel --profile --opt -ex
-% setenv POOMASUITE PP
-% make
-% cd examples/Solvers/SimpleJacobi
-% make
-% cd $POOMASUITE
-% ./SimpleJacobi
-% pprof
-% racy
-</code>
-
-</PRE>
 
 </UL>
 </BODY>
