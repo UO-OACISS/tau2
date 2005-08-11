@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.12 2005/08/11 17:58:58 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.13 2005/08/11 22:04:14 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1070,6 +1070,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("where ie.trial = ? and ilp.metric = ? ");
 
 			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and group_name != 'TAU_PHASENAME' ");
 			buf.append("group by ie.id, ie.name order by ie.name");
 
 			statement = db.prepareStatement(buf.toString());
@@ -1080,14 +1081,23 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
 				data.addEventName(results.getString(1));
-				double[] values = new double[7];
+				double[] values = new double[8];
 				values[0]= results.getDouble(2);
 				values[1]= results.getDouble(3);
 				values[2]= results.getDouble(4);
 				values[3]= results.getDouble(5);
 				values[4]= results.getDouble(6);
 				values[5]= results.getDouble(7);
-				values[6]= results.getDouble(8);
+				String tmp= results.getString(8);
+				if (tmp==null || tmp.trim().equalsIgnoreCase("nan") ||
+					tmp.trim().equals("0")) {
+					values[6] = 0.0;
+					values[7] = 0.0;
+				} else {
+					values[6]= results.getDouble(8);
+					// (stddev / range) * percentage
+					values[7]= (values[6] / (values[4]-values[5])) * (values[1]);
+				}
 				data.addValues(values);
 			}
 			data.addValueName("name");
@@ -1098,6 +1108,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			data.addValueName("max");
 			data.addValueName("min");
 			data.addValueName("stddev");
+			data.addValueName("(stddev/range)*%");
 			results.close();
 			statement.close();
 		} catch (Exception e) {
@@ -1119,36 +1130,59 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			DB db = this.getDB();
 			PreparedStatement statement = null;
 			StringBuffer buf = new StringBuffer();
-			//buf.append("select id, name, stddev(exclusive) ");
 			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("select id, name, stddev(excl), ");
-				buf.append("(max(excl)-min(excl)), ");
-				buf.append("avg(exclusive_percentage) ");
+				buf.append("select id, stddev(excl) ");
 			} else {
-				buf.append("select id, name, (stddev(exclusive)/ ");
-				buf.append("(max(exclusive)-min(exclusive)))* ");
-				buf.append("avg(exclusive_percentage) ");
+				buf.append("select id, stddev(exclusive) ");
 			}
 			buf.append("from interval_location_profile ");
 			buf.append("inner join interval_event ");
 			buf.append("on interval_event = id ");
 			buf.append("where trial = ? and metric = ? ");
-			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("and group_name not like '%TAU_CALLPATH%' ");
-				buf.append("group by interval_event.id, name ");
-				buf.append("order by (3/4)*5 desc");
-				//System.out.println(buf.toString());
-			} else {
-				buf.append("and group_name not like '%TAU_CALLPATH%' ");
-				buf.append("group by 1, 2 ");
-				buf.append("order by 3 desc");
-			}
+			buf.append("and group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and group_name != 'TAU_PHASENAME' ");
+			buf.append("group by interval_event.id ");
+
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());
 			Metric metric = (Metric)model.getCurrentSelection();
 			statement.setInt(2, metric.getID());
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
+			StringBuffer idString = new StringBuffer();
+			boolean gotOne = false;
+			while (results.next() != false) {
+				if ((results.getString(2) != null) &&
+					(!(results.getString(2).trim().equalsIgnoreCase("NaN"))) &&
+					(!(results.getString(2).trim().equals("0"))) &&
+					(!(results.getString(2).trim().equals("")))) {
+					if (gotOne)
+						idString.append(",");
+					idString.append(results.getString(1));
+					gotOne = true;
+				}
+			}
+			results.close();
+			statement.close();
+
+			buf = new StringBuffer();
+			if (db.getDBType().compareTo("oracle") == 0) {
+				buf.append("select id, name, stddev(excl)/ ");
+				buf.append("(max(excl)-min(excl))) * ");
+			} else {
+				buf.append("select id, name, (stddev(exclusive)/ ");
+				buf.append("(max(exclusive)-min(exclusive)))* ");
+			}
+			buf.append("avg(exclusive_percentage) ");
+			buf.append("from interval_location_profile ");
+			buf.append("inner join interval_event ");
+			buf.append("on interval_event = id ");
+			buf.append("where id in (" + idString.toString() + ") ");
+			buf.append("group by interval_event.id, name ");
+			buf.append("order by 3 desc");
+			statement = db.prepareStatement(buf.toString());
+			//System.out.println(statement.toString());
+			results = statement.executeQuery();
 			int count = 0;
 			int ids[] = new int[4];
 			String names[] = new String[4];
