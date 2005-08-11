@@ -1,6 +1,6 @@
 
-CONFIG_ARCH=i386_linux
-TAUROOT=/home/amorris/tau2
+CONFIG_ARCH=apple
+TAUROOT=/Users/scottb/tau2
 TOOLS_SRC=$(TAUROOT)/tools/src
 
 

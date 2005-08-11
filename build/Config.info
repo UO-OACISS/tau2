@@ -12,3 +12,18 @@ default: cxx         = g++
 default: cc          = gcc
 default: useropt     = -g
 default: stdincludes = -I/usr/include -I/usr/include/CC
+apple: cxx         = g++
+apple: cc          = gcc
+apple: useropt     = 
+apple: stdincludes = -I/usr/lib/gcc/powerpc-apple-darwin8/4.0.0/include -I
+
+apple: cxx         = g++
+apple: cc          = gcc
+apple: useropt     = 
+apple: stdincludes = -I/usr/lib/gcc/powerpc-apple-darwin8/4.0.0/include -I
+
+apple: cxx         = g++
+apple: cc          = gcc
+apple: useropt     = 
+apple: stdincludes = -I/usr/lib/gcc/powerpc-apple-darwin8/4.0.0/include -I
+

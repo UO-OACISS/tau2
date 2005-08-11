@@ -9,4 +9,4 @@
 #
 # This file records the arguments that were passed to FixMakefile
 #
-arch=default c_compiler=gcc cxx_compiler=g++ pcxxopt=-g useropt=-g
+arch=apple c_compiler=gcc cxx_compiler=g++ useropt= extradir= extradircxx= tauroot=/Users/scottb/tau2 PROFILE APPLECXX mpiincargs= mpilibargs= mpiflibargs= mpilib= STDCXXLIB GNU taugcclibdir=/usr/lib/gcc/powerpc-apple-darwin8/4.0.0/ tauprefix=/Users/scottb/tau2 PDT pdtdir=/Users/scottb/pdtoolkit-3.4/ tauoptions=-pdt TCLTK

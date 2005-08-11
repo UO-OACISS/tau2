@@ -20,11 +20,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.49 2005/07/11 22:59:52 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.50 2005/08/11 17:41:59 scottb Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.49 $
+ * @version $Revision: 1.50 $
  */
 public class ParaProf implements ActionListener {
 
@@ -43,7 +43,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Built on XXXXX";
+    private final static String VERSION = "Built on Tue Aug  2 12:09:06 PDT 2005";
 
     static ColorMap colorMap = new ColorMap();
 

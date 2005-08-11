@@ -1,5 +1,5 @@
-R_HOME = /Library/Frameworks/R.framework/Versions/2.0.1/Resources
-TAUROOT = /Users/khuck/tau2
+R_HOME = /usr/lib/R
+TAUROOT = /Users/scottb/tau2
 CONFIG_ARCH = apple
 
 ##########################

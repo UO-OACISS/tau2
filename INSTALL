@@ -698,7 +698,7 @@ Usage: installtau [OPTIONS]
    If you see windows that don't look right (in size), this may be the cause
    of the problem as well. You need a trusted ssh connection for Java's Swing. 
 
-5. Performance Database: PerfDMF
+5. Performance Database: PerfDMF and PerfExplorer
 
    Performance Data Management Framework (PerfDMF) is a tool related to the 
    TAU framework.  The PerfDMF database is designed to store and provide 
@@ -712,6 +712,12 @@ Usage: installtau [OPTIONS]
    For further information, please refer to tools/src/dms/doc/README.perfdmf
    file for installation and usage instructions. 
 
+	PerfExplorer is a framework for parallel performance data mining and
+	knowledge discovery. The framework architecture enables the development
+	and integration of data mining operations that will be applied to
+	large-scale parallel performance profiles. For further information, please 
+	refer to tools/src/perfexplorer/doc/README file for installation and usage 
+	instructions. 
 
 6. TAU System Requirements :
    -------------------------

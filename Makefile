@@ -14,12 +14,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=default
+CONFIG_ARCH=apple
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=-g
-TAUROOT=
+USER_OPT=
+TAUROOT=/Users/scottb/tau2
 #######################################################################
  
 include include/Makefile
@@ -31,7 +31,7 @@ TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
 LSX = .a
 #############################################
-#PDT#PDTEXAMPLE = examples/autoinstrument examples/reduce #ENDIF#
+PDTEXAMPLE = examples/autoinstrument examples/reduce #ENDIF##PDT#
 #MPI#MPIEXAMPLES = examples/pi examples/NPB2.3 #ENDIF#
 
 # Pete Beckman  (3/16/95)

@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=
+TAUROOT=/Users/scottb/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -132,16 +132,16 @@ TAU_DISABLE   = libTauDisable$(LSX)
 ##############################################
 TAU_SHLIBX		= .so 		  
 #HP#TAU_SHLIBX		= .sl			#ENDIF#
-#APPLECXX#TAU_APPLE_SHLIBX  = .dylib		#ENDIF#
+TAU_APPLE_SHLIBX  = .dylib		#ENDIF##APPLECXX#
 #PYTHON#TAU_APPLE_SHLIBX    = .so		#ENDIF#
-#APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)	#ENDIF#
-#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)	#ENDIF##APPLECXX#
+AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
-#APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
+TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF##APPLECXX#
 #PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
-#APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)     #ENDIF#
+AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)     #ENDIF##APPLECXX#
 #SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
 #USE_IBMXLC#AR_SHFLAGS          = -G 		#ENDIF#
 #USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
@@ -149,7 +149,7 @@ TAU_SHLIBX		= .so
 #ACC#AR_SHFLAGS  		= -b 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
-#APPLECXX#TAU_SHLIB = $(INSTALLDEST)/libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX) #ENDIF#
+TAU_SHLIB = $(INSTALLDEST)/libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX) #ENDIF##APPLECXX#
 #HITACHI#TAU_SHLIB	= #ENDIF#
 #CRAYX1CC#TAU_SHLIB	= #ENDIF#
 #CRAYCC#TAU_SHLIB = #ENDIF#
@@ -175,7 +175,7 @@ TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
 ##############################################
 TAU_DSO         = $(TAU_SHLIB)
 TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
-#APPLECXX#TAU_SHLIB_INSTALL= $(TAU_DSO) #ENDIF#
+TAU_SHLIB_INSTALL= $(TAU_DSO) #ENDIF##APPLECXX#
 
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER)
