@@ -89,7 +89,6 @@ public class TAU_Conf extends javax.swing.JFrame {
         mpitraceCheckBox = new javax.swing.JCheckBox();
         mpiincButton = new javax.swing.JButton();
         mpilibButton = new javax.swing.JButton();
-        altmpiButton = new javax.swing.JButton();
         mpiQjButton = new javax.swing.JButton();
         mpiincQjButton = new javax.swing.JButton();
         mpilibQjButton = new javax.swing.JButton();
@@ -107,7 +106,6 @@ public class TAU_Conf extends javax.swing.JFrame {
         altshmemTextField = new javax.swing.JTextField();
         shmemincButton = new javax.swing.JButton();
         shmemlibButton = new javax.swing.JButton();
-        altshmemButton = new javax.swing.JButton();
         shmemQjButton = new javax.swing.JButton();
         shmemincQjButton = new javax.swing.JButton();
         shmemlibQjButton = new javax.swing.JButton();
@@ -206,7 +204,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         museQjButton = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         pythonPanel = new javax.swing.JPanel();
-        usepythonCheckbox = new javax.swing.JCheckBox();
+        usepythonCheckBox = new javax.swing.JCheckBox();
         pythonincField = new javax.swing.JTextField();
         pythonlibCheckBox = new javax.swing.JCheckBox();
         pythonlibField = new javax.swing.JTextField();
@@ -214,6 +212,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pythonlibButton = new javax.swing.JButton();
         pythonincQjButton = new javax.swing.JButton();
         pythonlibQjButton = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
         jdkPanel = new javax.swing.JPanel();
         usejdkCheckBox = new javax.swing.JCheckBox();
         jdkField = new javax.swing.JTextField();
@@ -268,11 +267,11 @@ public class TAU_Conf extends javax.swing.JFrame {
         compilerPanel.setBorder(new javax.swing.border.EtchedBorder());
         cccompLabel.setText("C Compiler [-cc=]:");
         compilerPanel.add(cccompLabel);
-        cccompLabel.setBounds(10, 10, 280, 15);
+        cccompLabel.setBounds(10, 70, 280, 15);
 
         cppcompLabel.setText("C++ Compiler [-c++=]:");
         compilerPanel.add(cppcompLabel);
-        cppcompLabel.setBounds(10, 70, 280, 15);
+        cppcompLabel.setBounds(10, 10, 280, 15);
 
         fortrancompLabel.setText("Fortran Compiler [-fortran=]:");
         compilerPanel.add(fortrancompLabel);
@@ -286,7 +285,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         compilerPanel.add(ccCombo);
-        ccCombo.setBounds(300, 10, 90, 24);
+        ccCombo.setBounds(300, 70, 90, 24);
 
         cppCombo.setToolTipText("Specifies the name of the C++ compiler");
         cppCombo.addActionListener(new java.awt.event.ActionListener() {
@@ -296,7 +295,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         compilerPanel.add(cppCombo);
-        cppCombo.setBounds(300, 70, 90, 24);
+        cppCombo.setBounds(300, 10, 90, 24);
 
         fortranCombo.setToolTipText("Specifies the name of the Fortran compiler");
         fortranCombo.addActionListener(new java.awt.event.ActionListener() {
@@ -316,7 +315,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         compilerPanel.add(defccTextField);
-        defccTextField.setBounds(300, 40, 200, 19);
+        defccTextField.setBounds(300, 100, 200, 19);
 
         defcppTextField.setPreferredSize(new java.awt.Dimension(200, 19));
         defcppTextField.addActionListener(new java.awt.event.ActionListener() {
@@ -326,7 +325,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         compilerPanel.add(defcppTextField);
-        defcppTextField.setBounds(300, 100, 200, 19);
+        defcppTextField.setBounds(300, 40, 200, 19);
 
         deffortranTextField.setPreferredSize(new java.awt.Dimension(200, 19));
         deffortranTextField.addActionListener(new java.awt.event.ActionListener() {
@@ -347,7 +346,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         compilerPanel.add(defccCheckBox);
-        defccCheckBox.setBounds(10, 40, 280, 23);
+        defccCheckBox.setBounds(10, 90, 280, 23);
 
         defcppCheckBox.setText("User Defined");
         defcppCheckBox.setToolTipText("Specify an alternate C++ compiler (e.g. *xlC*)");
@@ -358,7 +357,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         compilerPanel.add(defcppCheckBox);
-        defcppCheckBox.setBounds(10, 100, 280, 23);
+        defcppCheckBox.setBounds(10, 30, 280, 23);
 
         deffortranCheckBox.setText("User Defined");
         deffortranCheckBox.setToolTipText("Specify an alternate Fortran compiler");
@@ -369,7 +368,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         compilerPanel.add(deffortranCheckBox);
-        deffortranCheckBox.setBounds(10, 160, 280, 23);
+        deffortranCheckBox.setBounds(10, 150, 280, 23);
 
         cQjButton.setText("?");
         cQjButton.setToolTipText("More Info");
@@ -381,7 +380,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         compilerPanel.add(cQjButton);
-        cQjButton.setBounds(600, 10, 20, 20);
+        cQjButton.setBounds(600, 70, 20, 20);
 
         cppQjButton.setText("?");
         cppQjButton.setToolTipText("More Info");
@@ -393,7 +392,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         compilerPanel.add(cppQjButton);
-        cppQjButton.setBounds(600, 70, 20, 20);
+        cppQjButton.setBounds(600, 10, 20, 20);
 
         fortQjButton.setText("?");
         fortQjButton.setToolTipText("More Info");
@@ -770,16 +769,6 @@ public class TAU_Conf extends javax.swing.JFrame {
         mpiPanel.add(mpilibButton);
         mpilibButton.setBounds(510, 70, 80, 25);
 
-        altmpiButton.setText("Browse");
-        altmpiButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                altmpiButtonActionPerformed(evt);
-            }
-        });
-
-        mpiPanel.add(altmpiButton);
-        altmpiButton.setBounds(510, 100, 80, 25);
-
         mpiQjButton.setText("?");
         mpiQjButton.setToolTipText("More Info");
         mpiQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -963,16 +952,6 @@ public class TAU_Conf extends javax.swing.JFrame {
 
         shmemPanel.add(shmemlibButton);
         shmemlibButton.setBounds(510, 70, 80, 25);
-
-        altshmemButton.setText("Browse");
-        altshmemButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                altshmemButtonActionPerformed(evt);
-            }
-        });
-
-        shmemPanel.add(altshmemButton);
-        altshmemButton.setBounds(510, 100, 80, 25);
 
         shmemQjButton.setText("?");
         shmemQjButton.setToolTipText("More Info");
@@ -1975,16 +1954,16 @@ public class TAU_Conf extends javax.swing.JFrame {
         pythonPanel.setLayout(null);
 
         pythonPanel.setBorder(new javax.swing.border.EtchedBorder());
-        usepythonCheckbox.setText("Use Python [-pythoninc=]:");
-        usepythonCheckbox.setToolTipText("Specify location of Python include directory");
-        usepythonCheckbox.addChangeListener(new javax.swing.event.ChangeListener() {
+        usepythonCheckBox.setText("Use Python [-pythoninc=]:");
+        usepythonCheckBox.setToolTipText("Specify location of Python include directory");
+        usepythonCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                usepythonCheckboxStateChanged(evt);
+                usepythonCheckBoxStateChanged(evt);
             }
         });
 
-        pythonPanel.add(usepythonCheckbox);
-        usepythonCheckbox.setBounds(10, 10, 290, 23);
+        pythonPanel.add(usepythonCheckBox);
+        usepythonCheckBox.setBounds(10, 30, 290, 23);
 
         pythonincField.setPreferredSize(new java.awt.Dimension(200, 19));
         pythonincField.addActionListener(new java.awt.event.ActionListener() {
@@ -1994,7 +1973,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         pythonPanel.add(pythonincField);
-        pythonincField.setBounds(300, 10, 200, 19);
+        pythonincField.setBounds(300, 30, 200, 19);
 
         pythonlibCheckBox.setText("Python Libraries [-pythonlib=]:");
         pythonlibCheckBox.setToolTipText("Specify location of Python lib directory");
@@ -2005,7 +1984,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         pythonPanel.add(pythonlibCheckBox);
-        pythonlibCheckBox.setBounds(10, 40, 290, 23);
+        pythonlibCheckBox.setBounds(10, 60, 290, 23);
 
         pythonlibField.setPreferredSize(new java.awt.Dimension(200, 19));
         pythonlibField.addActionListener(new java.awt.event.ActionListener() {
@@ -2015,7 +1994,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         pythonPanel.add(pythonlibField);
-        pythonlibField.setBounds(300, 40, 200, 19);
+        pythonlibField.setBounds(300, 60, 200, 19);
 
         pythonincButton.setText("Browse");
         pythonincButton.addActionListener(new java.awt.event.ActionListener() {
@@ -2025,7 +2004,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         pythonPanel.add(pythonincButton);
-        pythonincButton.setBounds(510, 10, 80, 25);
+        pythonincButton.setBounds(510, 30, 80, 25);
 
         pythonlibButton.setText("Browse");
         pythonlibButton.addActionListener(new java.awt.event.ActionListener() {
@@ -2035,7 +2014,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         pythonPanel.add(pythonlibButton);
-        pythonlibButton.setBounds(510, 40, 80, 25);
+        pythonlibButton.setBounds(510, 60, 80, 25);
 
         pythonincQjButton.setText("?");
         pythonincQjButton.setToolTipText("More Info");
@@ -2047,7 +2026,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         pythonPanel.add(pythonincQjButton);
-        pythonincQjButton.setBounds(600, 10, 20, 20);
+        pythonincQjButton.setBounds(600, 30, 20, 20);
 
         pythonlibQjButton.setText("?");
         pythonlibQjButton.setToolTipText("More Info");
@@ -2059,10 +2038,14 @@ public class TAU_Conf extends javax.swing.JFrame {
         });
 
         pythonPanel.add(pythonlibQjButton);
-        pythonlibQjButton.setBounds(600, 40, 20, 20);
+        pythonlibQjButton.setBounds(600, 60, 20, 20);
+
+        jLabel3.setText("For use only when measuring the performance of python programs.");
+        pythonPanel.add(jLabel3);
+        jLabel3.setBounds(10, 10, 590, 15);
 
         jPanel1.add(pythonPanel);
-        pythonPanel.setBounds(10, 10, 630, 70);
+        pythonPanel.setBounds(10, 10, 630, 90);
 
         jdkPanel.setLayout(null);
 
@@ -2109,9 +2092,9 @@ public class TAU_Conf extends javax.swing.JFrame {
         jdkPanel.add(jdkButton);
         jdkButton.setBounds(510, 30, 80, 25);
 
-        jLabel1.setText("For use with JVMPI Only!");
+        jLabel1.setText("For use only when measuring the performance of Java programs with JVMPI.");
         jdkPanel.add(jLabel1);
-        jLabel1.setBounds(10, 10, 280, 15);
+        jLabel1.setBounds(10, 10, 580, 15);
 
         jdkQjButton.setText("?");
         jdkQjButton.setToolTipText("More Info");
@@ -2138,7 +2121,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         javatQjButton.setBounds(600, 60, 20, 20);
 
         jPanel1.add(jdkPanel);
-        jdkPanel.setBounds(10, 90, 630, 90);
+        jdkPanel.setBounds(10, 110, 630, 90);
 
         dirarcPanel.setLayout(null);
 
@@ -2312,12 +2295,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         noexQjButton.setBounds(600, 130, 20, 20);
 
         jPanel1.add(dirarcPanel);
-        dirarcPanel.setBounds(10, 190, 630, 160);
+        dirarcPanel.setBounds(10, 210, 630, 160);
 
         tabPane.addTab("Misc", jPanel1);
 
         getContentPane().add(tabPane);
-        tabPane.setBounds(10, 10, 650, 480);
+        tabPane.setBounds(10, 10, 660, 480);
 
         commandPanel.setLayout(null);
 
@@ -2333,7 +2316,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         commandPanel.add(confButton);
         confButton.setBounds(10, 50, 150, 25);
 
-        confjScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+        confjScrollPane.setHorizontalScrollBarPolicy(javax.swing.JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         confjScrollPane.setAutoscrolls(true);
         confjScrollPane.setPreferredSize(new java.awt.Dimension(600, 35));
         confjScrollPane.setRequestFocusEnabled(false);
@@ -2354,7 +2337,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         commandPanel.add(makejButton);
         makejButton.setBounds(170, 50, 150, 25);
 
-        instjScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+        instjScrollPane.setHorizontalScrollBarPolicy(javax.swing.JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         instjScrollPane.setAutoscrolls(true);
         instjScrollPane.setPreferredSize(new java.awt.Dimension(600, 35));
         instjScrollPane.setRequestFocusEnabled(false);
@@ -2401,11 +2384,11 @@ public class TAU_Conf extends javax.swing.JFrame {
         exitButton.setBounds(510, 680, 150, 25);
 
         java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        setBounds((screenSize.width-677)/2, (screenSize.height-746)/2, 677, 746);
+        setBounds((screenSize.width-693)/2, (screenSize.height-747)/2, 693, 747);
     }
     // </editor-fold>
 
-    private void useroptFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void useroptFieldActionPerformed(java.awt.event.ActionEvent evt) {                                             
 	if(this.useroptCheckBox.isSelected()){
 	    
 	    String id=" -useropt=";
@@ -2421,9 +2404,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                            
 
-    private void archdirFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void archdirFieldActionPerformed(java.awt.event.ActionEvent evt) {                                             
 	if(this.archdirCheckBox.isSelected()){
 	    
 	    String id=" -exec-prefix=";
@@ -2439,9 +2422,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                            
 
-    private void installdirFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void installdirFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                
 	if(this.installdirCheckBox.isSelected()){
 	    
 	    String id=" -prefix=";
@@ -2457,9 +2440,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                               
 
-    private void jdkFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void jdkFieldActionPerformed(java.awt.event.ActionEvent evt) {                                         
 	if(this.usejdkCheckBox.isSelected()){
 	    
 	    String id=" -jdk=";
@@ -2475,10 +2458,10 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                        
 
-    private void pythonincFieldActionPerformed(java.awt.event.ActionEvent evt) {
-	if(this.usepythonCheckbox.isSelected()){
+    private void pythonincFieldActionPerformed(java.awt.event.ActionEvent evt) {                                               
+	if(this.usepythonCheckBox.isSelected()){
 	    
 	    String id=" -pythoninc=";
 	    int start = configureline.indexOf(id);
@@ -2493,9 +2476,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                              
 
-    private void pythonlibFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void pythonlibFieldActionPerformed(java.awt.event.ActionEvent evt) {                                               
 	if(this.pythonlibCheckBox.isSelected()){
 	    
 	    String id=" -pythonlib=";
@@ -2511,9 +2494,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                              
 
-    private void dyninstTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void dyninstTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                 
 	if(this.dyninstCheckBox.isSelected()){
 	    
 	    String id=" -dyninst=";
@@ -2529,9 +2512,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                                
 
-    private void pclTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void pclTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                             
 	if(this.pclCheckBox.isSelected()){
 	    
 	    String id=" -pcl=";
@@ -2547,9 +2530,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                            
 
-    private void tulipTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void tulipTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                               
 	if(this.tulipCheckBox.isSelected()){
 	    
 	    String id=" -tulipthread=";
@@ -2565,9 +2548,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                              
 
-    private void charmTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void charmTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                               
 	if(this.charmCheckBox.isSelected()){
 	    
 	    String id=" -charm=";
@@ -2583,9 +2566,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                              
 
-    private void opariTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void opariTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                               
 	if(this.opariCheckBox.isSelected()){
 	    
 	    String id=" -opari=";
@@ -2601,9 +2584,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                              
 
-    private void vtfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void vtfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                             
 	if(this.vtfCheckBox.isSelected()){
 	    
 	    String id=" -vtf=";
@@ -2619,9 +2602,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                            
 
-    private void slog2TextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void slog2TextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                               
 	if(this.slog2CheckBox.isSelected()){
 	    
 	    String id=" -slog2=";
@@ -2637,9 +2620,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                              
 
-    private void epilogTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void epilogTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                
 	if(this.epilogCheckBox.isSelected()){
 	    
 	    String id=" -epilog=";
@@ -2655,9 +2638,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                               
 
-    private void altshmemTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void altshmemTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                  
 	if(this.altshmemCheckBox.isSelected()){
 	    
 	    String id=" -shmemlibrary=";
@@ -2673,9 +2656,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                                 
 
-    private void shmemlibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void shmemlibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                  
 	if(this.shmemlibCheckBox.isSelected()){
 	    
 	    String id=" -shmemlib=";
@@ -2693,9 +2676,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                                 
 
-    private void shmemincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void shmemincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                  
 	if(this.shmemincCheckBox.isSelected()){
 	    
 	    String id=" -shmeminc=";
@@ -2713,9 +2696,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                                 
 
-    private void tagTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void tagTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                             
 	if(this.tagCheckBox.isSelected()){
 	    
 	    String id=" -tag=";
@@ -2733,9 +2716,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                            
 
-    private void altmpiTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void altmpiTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                
 	if(this.altmpiCheckBox.isSelected()){
 	    
 	    String id=" -mpilibrary=";
@@ -2753,9 +2736,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                               
 
-    private void mpilibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void mpilibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                
 	if(this.mpilibCheckBox.isSelected()){
 	    
 	    String id=" -mpilib=";
@@ -2773,9 +2756,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                               
 
-    private void mpiincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void mpiincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                
 	if(this.mpiincCheckBox.isSelected()){
 	    
 	    String id=" -mpiinc=";
@@ -2793,9 +2776,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                               
 
-    private void papiTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void papiTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                              
 	if(this.papiCheckBox.isSelected()){
 	    
 	    String id=" -papi=";
@@ -2813,9 +2796,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                             
 
-    private void defpdtTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void defpdtTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                
 	if(this.defpdtCheckBox.isSelected()){
 	    
 	    String id=" -pdt_c++=";
@@ -2833,9 +2816,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                               
 
-    private void pdtdirFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void pdtdirFieldActionPerformed(java.awt.event.ActionEvent evt) {                                            
 	if(this.pdtCheckBox.isSelected()){
 	    
 	    String id=" -pdt=";
@@ -2853,9 +2836,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                           
 
-    private void deffortranTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void deffortranTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                    
 	if(this.deffortranCheckBox.isSelected()){
 	    
 	    String id=" -fortran=";
@@ -2873,9 +2856,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                                   
 
-    private void defcppTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void defcppTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                                
 	if(this.defcppCheckBox.isSelected()){
 	    
 	    String id=" -c++=";
@@ -2893,9 +2876,9 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                               
 
-    private void defccTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+    private void defccTextFieldActionPerformed(java.awt.event.ActionEvent evt) {                                               
 	if(this.defccCheckBox.isSelected()){
 	    
 	    String id=" -cc=";
@@ -2913,7 +2896,7 @@ public class TAU_Conf extends javax.swing.JFrame {
 		    //configureline.substring(stop);
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
-    }
+    }                                              
 
 
     
@@ -2957,7 +2940,8 @@ private void updateITCommand(){
     }                                          
 
     private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {                                            
-// TODO add your handling code here:
+	//System.out.println(this.);
+	
     }                                           
 
     private void instButtonActionPerformed(java.awt.event.ActionEvent evt) {                                           
@@ -3984,9 +3968,9 @@ String entry=" -JAVACPUTIME ";
 	}
     }                                               
 
-    private void usepythonCheckboxStateChanged(javax.swing.event.ChangeEvent evt) {                                               
+    private void usepythonCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                               
 	String entry =" -pythoninc=";
-	if(usepythonCheckbox.isSelected()){
+	if(usepythonCheckBox.isSelected()){
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
 		configureline+=pythonincField.getText()+" ";
@@ -4104,6 +4088,11 @@ String entry=" -JAVACPUTIME ";
     private void charmCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                           
 	String entry =" -charm=";
 	if(charmCheckBox.isSelected()){
+        if(ompCheckBox.isSelected()||pthreadsCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
+        {
+           charmCheckBox.setSelected(false);
+           return;
+        }             
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
 		configureline+=charmTextField.getText()+" ";
@@ -4129,7 +4118,11 @@ String entry=" -JAVACPUTIME ";
     private void smartCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                           
 String entry=" -smart ";
 	if(smartCheckBox.isSelected()){
-
+        if(ompCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||pthreadsCheckBox.isSelected())
+        {
+           smartCheckBox.setSelected(false);
+           return;
+        } 
     	    if(!tulipCheckBox.isSelected()){
 		tulipCheckBox.doClick();
 	    }    
@@ -4157,6 +4150,12 @@ String entry=" -smart ";
     private void tulipCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                           
 String entry=" -tulipthread=";
 	if(tulipCheckBox.isSelected()){
+        if(ompCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||pthreadsCheckBox.isSelected())
+        {
+           tulipCheckBox.setSelected(false);
+           return;
+        }    
+    
     
     if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
@@ -4186,6 +4185,13 @@ String entry=" -tulipthread=";
     private void sprocCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                           
 String entry=" -sproc ";
 	if(sprocCheckBox.isSelected()){
+    
+        if(pthreadsCheckBox.isSelected()||charmCheckBox.isSelected()||ompCheckBox.isSelected()||tulipCheckBox.isSelected())
+        {
+           sprocCheckBox.setSelected(false);
+           return;
+        }
+    
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
 	    }
@@ -4210,6 +4216,12 @@ String entry=" -sproc ";
 String entry=" -opari_construct ";
 	if(opariconstructCheckBox.isSelected()){
 
+        if(pthreadsCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
+        {
+           opariconstructCheckBox.setSelected(false);
+           return;
+        }
+    
     	    if(!opariCheckBox.isSelected()){
 		opariCheckBox.doClick();
 	    }    
@@ -4227,6 +4239,12 @@ String entry=" -opari_construct ";
     private void opariregionCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                                 
 String entry=" -opari_region ";
 	if(opariregionCheckBox.isSelected()){
+    
+        if(pthreadsCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
+        {
+           opariregionCheckBox.setSelected(false);
+           return;
+        }
     
     	    if(!opariCheckBox.isSelected()){
 		opariCheckBox.doClick();
@@ -4255,6 +4273,11 @@ String entry=" -opari_region ";
     private void opariCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                           
 String entry=" -opari=";
 	if(opariCheckBox.isSelected()){
+        if(pthreadsCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
+        {
+           opariCheckBox.setSelected(false);
+           return;
+        }
     
 	    if(!ompCheckBox.isSelected()){
 		ompCheckBox.doClick();
@@ -4287,6 +4310,13 @@ String entry=" -opari=";
     private void ompCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                         
 String entry=" -openmp ";
 	if(ompCheckBox.isSelected()){
+    
+        if(pthreadsCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
+        {
+           ompCheckBox.setSelected(false);
+           return;
+        }
+    
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
 	    }
@@ -4306,25 +4336,23 @@ String entry=" -openmp ";
     private void pthreadsCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                              
 String entry=" -pthread ";
 	if(pthreadsCheckBox.isSelected()){
+    
+        if(ompCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
+        {
+           pthreadsCheckBox.setSelected(false);
+           return;
+        }
+    
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
 	    }
+            
 	} else{
 	    if(configureline.indexOf(entry)>-1)
 		configureline = configureline.replaceFirst(entry,"");
 	}
 	commandTextArea.setText(configureline); updateITCommand();
     }                                             
-
-    private void altshmemButtonActionPerformed(java.awt.event.ActionEvent evt) {                                               
-	int returnVal = jFileChooser1.showOpenDialog(null);
-	
-	if (returnVal == JFileChooser.APPROVE_OPTION) {
-	    File file = jFileChooser1.getSelectedFile();
-	    String filename = file.getAbsolutePath();
-	    altshmemTextField.setText(filename);
-	}
-    }                                              
 
     private void altshmemCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                              
 	String entry =" -shmemlibrary=";
@@ -4484,16 +4512,6 @@ String entry=" -nocomm ";
 	
 	commandTextArea.setText(configureline); updateITCommand();
     }                                        
-
-    private void altmpiButtonActionPerformed(java.awt.event.ActionEvent evt) {                                             
-	int returnVal = jFileChooser1.showOpenDialog(null);
-	
-	if (returnVal == JFileChooser.APPROVE_OPTION) {
-	    File file = jFileChooser1.getSelectedFile();
-	    String filename = file.getAbsolutePath();
-	    altmpiTextField.setText(filename);
-	}
-    }                                            
 
     private void altmpiCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                            
 	String entry =" -mpilibrary=";
@@ -5251,11 +5269,9 @@ if(pclCheckBox.isSelected()){
     }
     
     // Variables declaration - do not modify
-    private javax.swing.JButton altmpiButton;
     private javax.swing.JCheckBox altmpiCheckBox;
     private javax.swing.JButton altmpiQjButton;
     private javax.swing.JTextField altmpiTextField;
-    private javax.swing.JButton altshmemButton;
     private javax.swing.JCheckBox altshmemCheckBox;
     private javax.swing.JButton altshmemQjButton;
     private javax.swing.JTextField altshmemTextField;
@@ -5327,6 +5343,7 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JFileChooser jFileChooser1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JButton javatQjButton;
@@ -5460,7 +5477,7 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JPanel tulipthreadsPanel;
     private javax.swing.JCheckBox usejavatimersCheckBox;
     private javax.swing.JCheckBox usejdkCheckBox;
-    private javax.swing.JCheckBox usepythonCheckbox;
+    private javax.swing.JCheckBox usepythonCheckBox;
     private javax.swing.JCheckBox useroptCheckBox;
     private javax.swing.JTextField useroptField;
     private javax.swing.JButton useroptQjButton;
