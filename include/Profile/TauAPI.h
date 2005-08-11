@@ -40,6 +40,7 @@ extern "C" void Tau_start_timer(void * function_info, int phase );
 extern "C" void Tau_stop_timer(void * function_info); 
 extern "C" void Tau_create_top_level_timer_if_necessary(void);
 extern "C" void Tau_stop_top_level_timer_if_necessary(void);
+extern "C" char * Tau_phase_enable(const char *group);
 
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
 
@@ -54,7 +55,8 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE(name, type, group) \
         static TauGroup_t tau_group = group; \
-        static FunctionInfo tauFInfo(name, type, tau_group, #group); \
+	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
+        static FunctionInfo tauFInfo(name, type, tau_group, TauGroupNameUsed); \
         Profiler tauFProf(&tauFInfo, tau_group); \
 	tauFProf.SetPhase(1);
 #else /* TAU_PROFILEPHASE */
@@ -72,11 +74,13 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE_CREATE_STATIC(var, name, type, group) \
         static TauGroup_t var##tau_group = group; \
-	static FunctionInfo *var##finfo = new FunctionInfo(name, type, var##tau_group, #group);
+	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
+	static FunctionInfo *var##finfo = new FunctionInfo(name, type, var##tau_group, TauGroupNameUsed##var);
 
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) \
         TauGroup_t var##tau_group = group; \
-	FunctionInfo *var##finfo = new FunctionInfo(name, type, var##tau_group, #group); 
+	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
+	FunctionInfo *var##finfo = new FunctionInfo(name, type, var##tau_group,  TauGroupNameUsed##var); 
 
 #define TAU_PHASE_START(var) if (var##tau_group & RtsLayer::TheProfileMask()) \
                                 Tau_start_timer(var##finfo, 1);
@@ -107,7 +111,8 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_PHASE(name, type, group) \
 	static TauGroup_t tau_group = group; \
 	static FunctionInfo *tauFInfo = NULL; \
-        tauCreateFI(&tauFInfo, name, type, tau_group, #group); \
+	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
+        tauCreateFI(&tauFInfo, name, type, tau_group, TauGroupNameUsed); \
 	Profiler tauFProf(tauFInfo, tau_group); \
 	tauFProf.SetPhase(1);
 #else
@@ -129,12 +134,14 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_PHASE_CREATE_STATIC(var, name, type, group) \
 	static TauGroup_t var##tau_group = group; \
 	static FunctionInfo *var##finfo = NULL; \
-        tauCreateFI(&var##finfo, name, type, var##tau_group, #group); 
+	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
+        tauCreateFI(&var##finfo, name, type, var##tau_group, TauGroupNameUsed##var); 
 
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) \
 	TauGroup_t var##tau_group = group; \
 	FunctionInfo *var##finfo = NULL; \
-        tauCreateFI(&var##finfo, name, type, var##tau_group, #group); 
+	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
+        tauCreateFI(&var##finfo, name, type, var##tau_group, TauGroupNameUsed##var); 
 
 #else
 #define TAU_PHASE_CREATE_STATIC TAU_PROFILE_TIMER
@@ -203,7 +210,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #ifdef TAU_PROFILEPHASE
 #define TAU_GLOBAL_PHASE(timer, name, type, group) FunctionInfo& timer() { \
 	static FunctionInfo *timer##fi = NULL; \
-        tauCreateFI(&timer##fi, name, type, group, #group); \
+        tauCreateFI(&timer##fi, name, type, group, Tau_enable_phase(#group)); \
 	return *timer##fi; }
 
 #define TAU_GLOBAL_PHASE_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
@@ -412,6 +419,6 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.51 $   $Date: 2005/05/17 19:32:10 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.51 2005/05/17 19:32:10 sameer Exp $ 
+ * $Revision: 1.52 $   $Date: 2005/08/11 02:12:10 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.52 2005/08/11 02:12:10 sameer Exp $ 
  ***************************************************************************/

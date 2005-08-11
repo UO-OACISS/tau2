@@ -148,8 +148,8 @@ extern "C" {
 #define TAU_DISABLE_TRACKING_MUSE_EVENTS()	Tau_disable_tracking_muse_events()
 #define TAU_TRACK_MUSE_EVENTS()			Tau_track_muse_events()		
 #define TAU_SET_INTERRUPT_INTERVAL(value)	Tau_set_interrupt_interval(value)
-#define TAU_PHASE_CREATE_STATIC(var, name, type, group) static void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, #group)
-#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, #group)
+#define TAU_PHASE_CREATE_STATIC(var, name, type, group) static void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, Tau_phase_enable_once(#group, &var##finfo))
+#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, Tau_phase_enable_once(#group, &var##finfo))
 #define TAU_PROFILE_TIMER_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, #group)
 #define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1)
 #define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo)
@@ -244,6 +244,7 @@ extern void Tau_set_interrupt_interval(int value);
 extern void Tau_enable_instrumentation(void);
 extern void Tau_disable_instrumentation(void);
 extern void Tau_global_stop(void);
+extern char * Tau_phase_enable_once(const char *group, void **ptr);
 
 
 
@@ -354,7 +355,7 @@ extern void Tau_global_stop(void);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.39 $   $Date: 2005/05/17 23:51:24 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.39 2005/05/17 23:51:24 sameer Exp $
+ * $Revision: 1.40 $   $Date: 2005/08/11 02:12:10 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.40 2005/08/11 02:12:10 sameer Exp $
  ***************************************************************************/
 
