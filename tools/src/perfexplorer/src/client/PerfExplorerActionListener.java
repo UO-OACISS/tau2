@@ -10,6 +10,7 @@ import common.RMIPerfExplorerModel;
 
 public class PerfExplorerActionListener implements ActionListener {
 
+	private static final String VERSION = "Built on Thu Aug 11 10:48:27 PDT 2005";
 	public final static String QUIT = "Quit PerfExplorer";
 	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
 	public final static String ABOUT = "About PerfExplorer";
@@ -18,11 +19,11 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String CLUSTERING_METHOD = "Select Clustering Method";
 	public final static String DIMENSION_REDUCTION = "Select Dimension Reduction";
 	public final static String NORMALIZATION = "Select Normalization Method";
-	public final static String NUM_CLUSTERS = "Set Number of Clusters";
+	public final static String NUM_CLUSTERS = "Set Maximum Number of Clusters";
 	public final static String DO_CLUSTERING = "Do Clustering";
 	public final static String DO_CORRELATION_ANALYSIS = "Do Correlation Analysis";
 	public final static String DO_CORRELATION_CUBE = "Do 3D Correlation Cube";
-	public final static String DO_VARIATION_ANALYSIS = "Do Variation Analysis";
+	public final static String DO_VARIATION_ANALYSIS = "Show Data Summary";
 	// chart menu items
 	public final static String SET_GROUPNAME = "Set Group Name";
 	public final static String SET_METRICNAME = "Set Metric of Interest";
@@ -154,14 +155,24 @@ public class PerfExplorerActionListener implements ActionListener {
 		} 
 	}
 
+    public static String getVersionString() {
+		return new String(VERSION);
+	}
+
 	public void createAboutWindow() {
-		JOptionPane.showMessageDialog(mainFrame, "PerfExplorer Client",
+		long memUsage = (Runtime.getRuntime().totalMemory() -
+			Runtime.getRuntime().freeMemory()) / 1024;
+
+		String message = new String("PerfExplorer 1.0\n" +
+					getVersionString() + "\nJVM Heap Size: " + memUsage
+					+ "kb\n");
+		JOptionPane.showMessageDialog(mainFrame, message, 
 			"About PerfExplorer", JOptionPane.PLAIN_MESSAGE);
 	}
 
 	public void createHelpWindow() {
 		JOptionPane.showMessageDialog(mainFrame, 
-			"If this were a real application, you would get some help here...",
+			"Help not implemented.\nFor the most up-to-date documentation, please see\n<html><a href='http://www.cs.uoregon.edu/research/tau/'>http://www.cs.uoregon.edu/research/tau/</a></html>",
 			"PerfExplorer Help", JOptionPane.PLAIN_MESSAGE);
 	}
 

@@ -1,6 +1,7 @@
 package client;
 
 import server.AnalysisTaskWrapper;
+import common.PerfExplorerOutput;
 import jargs.gnu.CmdLineParser;
 import javax.swing.*;
 import java.awt.*;
@@ -19,8 +20,10 @@ public class PerfExplorerClient extends JFrame {
 		return mainFrame;
 	}
 
-	private PerfExplorerClient (boolean standalone, String configFile, int analysisEngine) {
+	private PerfExplorerClient (boolean standalone, String configFile,
+	int analysisEngine, boolean quiet) {
 		super("PerfExplorer Client");
+		PerfExplorerOutput.initialize(quiet);
 		PerfExplorerConnection.setStandalone(standalone);
 		PerfExplorerConnection.setConfigFile(configFile);
 		PerfExplorerConnection.setAnalysisEngine(analysisEngine);
@@ -102,6 +105,7 @@ public class PerfExplorerClient extends JFrame {
 		CmdLineParser.Option standaloneOpt = parser.addBooleanOption('s',"standalone");
 		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
 		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
+		CmdLineParser.Option quietOpt = parser.addBooleanOption('q',"quiet");
 
 		try {
 			parser.parse(args);
@@ -115,6 +119,7 @@ public class PerfExplorerClient extends JFrame {
 		Boolean standalone = (Boolean) parser.getOptionValue(standaloneOpt);
 		String configFile = (String) parser.getOptionValue(configfileOpt);
 		String engine = (String) parser.getOptionValue(engineOpt);
+		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
 
 		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
 
@@ -122,6 +127,9 @@ public class PerfExplorerClient extends JFrame {
 			System.err.println(USAGE);
 			System.exit(-1);
 		}
+
+		if (quiet == null) 
+			quiet = new Boolean(false);
 
 		if (standalone == null) 
 			standalone = new Boolean(false);
@@ -154,7 +162,8 @@ public class PerfExplorerClient extends JFrame {
 		} catch (Exception e) { }
 	*/
 
-		JFrame frame = new PerfExplorerClient(standalone.booleanValue(), configFile, analysisEngine);
+		JFrame frame = new PerfExplorerClient(standalone.booleanValue(),
+			configFile, analysisEngine, quiet.booleanValue());
 		frame.pack();
 		frame.setVisible(true);
 	}

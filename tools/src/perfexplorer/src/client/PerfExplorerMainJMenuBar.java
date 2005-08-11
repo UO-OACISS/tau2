@@ -11,6 +11,7 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		createAnalysisMenu(listener);
 		createViewMenu(listener);
 		createChartMenu(listener);
+		createVisualizationMenu(listener);
 		createHelpMenu(listener);
 	}
 
@@ -21,17 +22,17 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 
 		//Add a menu item.
 		JMenuItem quitItem = new JMenuItem(
-				PerfExplorerActionListener.QUIT, KeyEvent.VK_Q);
+				PerfExplorerActionListener.QUIT);
 		quitItem.setAccelerator(KeyStroke.getKeyStroke(
-			KeyEvent.VK_Q, ActionEvent.ALT_MASK));
+			KeyEvent.VK_Q, ActionEvent.SHIFT_MASK & ActionEvent.ALT_MASK));
 		quitItem.addActionListener(listener);
 		fileMenu.add(quitItem);
 
 		//Add a menu item.
 		JMenuItem quitServerItem = new JMenuItem(
-				PerfExplorerActionListener.QUIT_SERVER, KeyEvent.VK_Q);
+				PerfExplorerActionListener.QUIT_SERVER);
 		quitServerItem.setAccelerator(KeyStroke.getKeyStroke(
-			KeyEvent.VK_Q, ActionEvent.SHIFT_MASK & ActionEvent.ALT_MASK));
+			KeyEvent.VK_Q, ActionEvent.ALT_MASK));
 		quitServerItem.addActionListener(listener);
 		fileMenu.add(quitServerItem);
 
@@ -60,6 +61,26 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		this.add(helpMenu);
 	}
 
+	private void createVisualizationMenu(ActionListener listener) {
+		//Help Menu
+		JMenu visualizationMenu = new JMenu("Visualization");
+		visualizationMenu.setMnemonic(KeyEvent.VK_Z);
+
+		//Add a menu item.
+		JMenuItem cubeItem = new JMenuItem(
+				PerfExplorerActionListener.DO_CORRELATION_CUBE);
+		cubeItem.addActionListener(listener);
+		visualizationMenu.add(cubeItem);
+
+		//Add a menu item.
+		JMenuItem varianceItem = new JMenuItem(
+				PerfExplorerActionListener.DO_VARIATION_ANALYSIS);
+		varianceItem.addActionListener(listener);
+		visualizationMenu.add(varianceItem);
+
+		this.add(visualizationMenu);
+	}
+
 	private void createAnalysisMenu(ActionListener listener) {
 		//Analysis menu.
 		JMenu analysisMenu = new JMenu("Analysis");
@@ -72,6 +93,7 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		clusteringItem.setAccelerator(KeyStroke.getKeyStroke(
 				KeyEvent.VK_M, ActionEvent.ALT_MASK));
 		clusteringItem.addActionListener(listener);
+		clusteringItem.setEnabled(false);
 		analysisMenu.add(clusteringItem);
 
 		//Add a menu item.
@@ -90,6 +112,7 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		normalizationItem.setAccelerator(KeyStroke.getKeyStroke(
 				KeyEvent.VK_N, ActionEvent.ALT_MASK));
 		normalizationItem.addActionListener(listener);
+		normalizationItem.setEnabled(false);
 		analysisMenu.add(normalizationItem);
 
 		//Add a menu item.
@@ -121,22 +144,6 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		correlateItem.addActionListener(listener);
 		analysisMenu.add(correlateItem);
 
-		//Add a menu item.
-		JMenuItem cubeItem = new JMenuItem(
-				PerfExplorerActionListener.DO_CORRELATION_CUBE,
-				null);
-		//correlateItem.setAccelerator(KeyStroke.getKeyStroke(
-				//KeyEvent.VK_C, ActionEvent.ALT_MASK));
-		cubeItem.addActionListener(listener);
-		analysisMenu.add(cubeItem);
-
-		//Add a menu item.
-		JMenuItem varianceItem = new JMenuItem(
-				PerfExplorerActionListener.DO_VARIATION_ANALYSIS,
-				null);
-		varianceItem.addActionListener(listener);
-		analysisMenu.add(varianceItem);
-
 		this.add(analysisMenu);
 
 
@@ -149,97 +156,97 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 
 		//Add a menu item.
 		JMenuItem groupNameItem = new JMenuItem(
-			PerfExplorerActionListener.SET_GROUPNAME, KeyEvent.VK_G);
+			PerfExplorerActionListener.SET_GROUPNAME);
 		groupNameItem.addActionListener(listener);
 		chartMenu.add(groupNameItem);
 
 		//Add a menu item.
 		JMenuItem metricNameItem = new JMenuItem(
-			PerfExplorerActionListener.SET_METRICNAME, KeyEvent.VK_M);
+			PerfExplorerActionListener.SET_METRICNAME);
 		metricNameItem.addActionListener(listener);
 		chartMenu.add(metricNameItem);
 
 		//Add a menu item.
 		JMenuItem eventNameItem = new JMenuItem(
-			PerfExplorerActionListener.SET_EVENTNAME, KeyEvent.VK_E);
+			PerfExplorerActionListener.SET_EVENTNAME);
 		eventNameItem.addActionListener(listener);
 		chartMenu.add(eventNameItem);
 
 		//Add a menu item.
 		JMenuItem timestepItem = new JMenuItem(
-			PerfExplorerActionListener.SET_TIMESTEPS, KeyEvent.VK_P);
+			PerfExplorerActionListener.SET_TIMESTEPS);
 		timestepItem.addActionListener(listener);
 		chartMenu.add(timestepItem);
 
 		//Add a menu item.
 		JMenuItem timesteps = new JMenuItem(
-			PerfExplorerActionListener.TIMESTEPS_CHART, KeyEvent.VK_T);
+			PerfExplorerActionListener.TIMESTEPS_CHART);
 		timesteps.addActionListener(listener);
 		chartMenu.add(timesteps);
 
 		//Add a menu item.
 		JMenuItem efficiency = new JMenuItem(
-			PerfExplorerActionListener.EFFICIENCY_CHART, KeyEvent.VK_R);
+			PerfExplorerActionListener.EFFICIENCY_CHART);
 		efficiency.addActionListener(listener);
 		chartMenu.add(efficiency);
 
 		//Add a menu item.
 		JMenuItem efficiencyEvents = new JMenuItem(
-			PerfExplorerActionListener.EFFICIENCY_EVENTS_CHART, KeyEvent.VK_F);
+			PerfExplorerActionListener.EFFICIENCY_EVENTS_CHART);
 		efficiencyEvents.addActionListener(listener);
 		chartMenu.add(efficiencyEvents);
 
 		//Add a menu item.
 		JMenuItem efficiencyOneEvent = new JMenuItem(
-			PerfExplorerActionListener.EFFICIENCY_ONE_EVENT_CHART, KeyEvent.VK_F);
+			PerfExplorerActionListener.EFFICIENCY_ONE_EVENT_CHART);
 		efficiencyOneEvent.addActionListener(listener);
 		chartMenu.add(efficiencyOneEvent);
 
 		//Add a menu item.
 		JMenuItem speedup = new JMenuItem(
-			PerfExplorerActionListener.SPEEDUP_CHART, KeyEvent.VK_S);
+			PerfExplorerActionListener.SPEEDUP_CHART);
 		speedup.addActionListener(listener);
 		chartMenu.add(speedup);
 
 		//Add a menu item.
 		JMenuItem speedupEvents = new JMenuItem(
-			PerfExplorerActionListener.SPEEDUP_EVENTS_CHART, KeyEvent.VK_S);
+			PerfExplorerActionListener.SPEEDUP_EVENTS_CHART);
 		speedupEvents.addActionListener(listener);
 		chartMenu.add(speedupEvents);
 
 		//Add a menu item.
 		JMenuItem speedupOneEvent = new JMenuItem(
-			PerfExplorerActionListener.SPEEDUP_ONE_EVENT_CHART, KeyEvent.VK_S);
+			PerfExplorerActionListener.SPEEDUP_ONE_EVENT_CHART);
 		speedupOneEvent.addActionListener(listener);
 		chartMenu.add(speedupOneEvent);
 
 		//Add a menu item.
 		JMenuItem transpose = new JMenuItem(
-			PerfExplorerActionListener.COMMUNICATION_CHART, KeyEvent.VK_C);
+			PerfExplorerActionListener.COMMUNICATION_CHART);
 		transpose.addActionListener(listener);
 		chartMenu.add(transpose);
 
 		//Add a menu item.
 		JMenuItem fraction = new JMenuItem(
-			PerfExplorerActionListener.FRACTION_CHART, KeyEvent.VK_B);
+			PerfExplorerActionListener.FRACTION_CHART);
 		fraction.addActionListener(listener);
 		chartMenu.add(fraction);
 
 		//Add a menu item.
 		JMenuItem efficiencyPhase = new JMenuItem(
-			PerfExplorerActionListener.EFFICIENCY_PHASE_CHART, KeyEvent.VK_B);
+			PerfExplorerActionListener.EFFICIENCY_PHASE_CHART);
 		efficiencyPhase.addActionListener(listener);
 		chartMenu.add(efficiencyPhase);
 
 		//Add a menu item.
 		JMenuItem speedupPhase = new JMenuItem(
-			PerfExplorerActionListener.SPEEDUP_PHASE_CHART, KeyEvent.VK_B);
+			PerfExplorerActionListener.SPEEDUP_PHASE_CHART);
 		speedupPhase.addActionListener(listener);
 		chartMenu.add(speedupPhase);
 
 		//Add a menu item.
 		JMenuItem fractionPhases = new JMenuItem(
-			PerfExplorerActionListener.FRACTION_PHASE_CHART, KeyEvent.VK_B);
+			PerfExplorerActionListener.FRACTION_PHASE_CHART);
 		fractionPhases.addActionListener(listener);
 		chartMenu.add(fractionPhases);
 

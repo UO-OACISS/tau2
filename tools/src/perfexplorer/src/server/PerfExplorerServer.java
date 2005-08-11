@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.11 2005/08/10 22:24:30 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.12 2005/08/11 17:58:58 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -81,7 +81,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public static PerfExplorerServer getServer (String configFile, int analysisEngine) {
 		try {
 			if (theServer == null)
-				theServer = new PerfExplorerServer (configFile, analysisEngine, 0);
+				theServer = new PerfExplorerServer (configFile, analysisEngine, 0, false);
 		} catch (Exception e) {
 			System.err.println("getServer exception: " + e.getMessage());
 			e.printStackTrace();
@@ -97,8 +97,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param configFile
 	 * @throws RemoteException
 	 */
-	private PerfExplorerServer(String configFile, int analysisEngine, int port) throws RemoteException {
+	private PerfExplorerServer(String configFile, int analysisEngine,
+	int port, boolean quiet) throws RemoteException {
 		super(port);
+		PerfExplorerOutput.initialize(quiet);
 		theServer = this;
 		this.port = port;
 		this.configFile = configFile;
@@ -1224,6 +1226,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
 		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
 		CmdLineParser.Option portOpt = parser.addIntegerOption('p',"port");
+		CmdLineParser.Option quietOpt = parser.addBooleanOption('q',"quiet");
 			
 		try {   
 			parser.parse(args);
@@ -1237,6 +1240,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		String configFile = (String) parser.getOptionValue(configfileOpt);
 		String engine = (String) parser.getOptionValue(engineOpt);
 		Integer port = (Integer) parser.getOptionValue(portOpt);
+		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
 
 		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
 
@@ -1270,7 +1274,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 		try {
 			RMIPerfExplorer server = new PerfExplorerServer(configFile,
-			analysisEngine, port.intValue());
+			analysisEngine, port.intValue(), quiet.booleanValue());
 			Naming.rebind("PerfExplorerServer", server);
 			System.out.println("PerfExplorerServer bound.");
 			Runtime.getRuntime().addShutdownHook(
