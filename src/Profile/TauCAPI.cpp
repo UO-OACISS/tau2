@@ -659,9 +659,13 @@ extern "C" void Tau_global_stop(void)
 ///////////////////////////////////////////////////////////////////////////
 extern "C" char * Tau_phase_enable(const char *group)
 {
+#ifdef TAU_PROFILEPHASE
   char *newgroup = new char[strlen(group)+16];
   sprintf(newgroup, "%s | TAU_PHASE", group);
   return newgroup;
+#else /* TAU_PROFILEPHASE */
+  return (char *) group;
+#endif /* TAU_PROFILEPHASE */
 } 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -688,7 +692,7 @@ extern "C" void Tau_mark_group_as_phase(void **ptr)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.51 $   $Date: 2005/08/11 02:10:42 $
- * VERSION: $Id: TauCAPI.cpp,v 1.51 2005/08/11 02:10:42 sameer Exp $
+ * $Revision: 1.52 $   $Date: 2005/08/11 02:23:45 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.52 2005/08/11 02:23:45 sameer Exp $
  ***************************************************************************/
 
