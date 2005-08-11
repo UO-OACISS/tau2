@@ -7,9 +7,9 @@ LIBS            = $(TAU_TRACE_INPUT_LIB)
 ##############################################
 TAU_SHLIBX              = .so             
 #HP#TAU_SHLIBX          = .sl                   #ENDIF#
-TAU_APPLE_SHLIBX  = .dylib            #ENDIF##APPLECXX#
+#APPLECXX#TAU_APPLE_SHLIBX  = .dylib            #ENDIF#
 #PYTHON#TAU_APPLE_SHLIBX    = .so               #ENDIF#
-TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)   #ENDIF##APPLECXX#
+#APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)   #ENDIF#
 ##############################################
 
 

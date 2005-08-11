@@ -5,11 +5,11 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=apple
+CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=
+USER_OPT=-g
 #######################################################################
  
 ############# Standard Defines ##############

@@ -13,7 +13,7 @@
  
 TAUROOTDIR	= ../..
 
-include $(TAUROOTDIR)/apple/lib/Makefile.tau-pdt
+include $(TAUROOTDIR)/include/Makefile
 
 CXX		= $(TAU_CXX)
 

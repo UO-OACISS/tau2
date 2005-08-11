@@ -19,12 +19,12 @@
 #****************************************************************************
 
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=apple
+CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=
-TAUROOT=/Users/scottb/tau2
+USER_OPT=-g
+TAUROOT=
 XFORMSROOT=/local/apps/xforms/FORMS
 #######################################################################
  

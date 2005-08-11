@@ -1,6 +1,6 @@
 
-CONFIG_ARCH=apple
-TAUROOT=/Users/scottb/tau2
+CONFIG_ARCH=default
+TAUROOT=
 TOOLS_SRC=$(TAUROOT)/tools/src
 
 

@@ -4,8 +4,8 @@
 #Makefile creates the ParaProf jar file.
 ##########################
 
-CONFIG_ARCH=apple
-TAUROOT=/Users/scottb/tau2
+CONFIG_ARCH=default
+TAUROOT=
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java ParaProfTreeCellRenderer.java \
              HistogramWindow.java ParaProf.java ParaProfTrial.java FullDataWindowPanel.java \
