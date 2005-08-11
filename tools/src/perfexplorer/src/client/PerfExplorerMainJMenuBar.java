@@ -88,39 +88,27 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 
 		//Add a menu item.
 		JMenuItem clusteringItem = new JMenuItem(
-				PerfExplorerActionListener.CLUSTERING_METHOD,
-				KeyEvent.VK_M);
-		clusteringItem.setAccelerator(KeyStroke.getKeyStroke(
-				KeyEvent.VK_M, ActionEvent.ALT_MASK));
+				PerfExplorerActionListener.CLUSTERING_METHOD);
 		clusteringItem.addActionListener(listener);
 		clusteringItem.setEnabled(false);
 		analysisMenu.add(clusteringItem);
 
 		//Add a menu item.
 		JMenuItem dimensionItem = new JMenuItem(
-				PerfExplorerActionListener.DIMENSION_REDUCTION,
-				KeyEvent.VK_D);
-		dimensionItem.setAccelerator(KeyStroke.getKeyStroke(
-				KeyEvent.VK_D, ActionEvent.ALT_MASK));
+				PerfExplorerActionListener.DIMENSION_REDUCTION);
 		dimensionItem.addActionListener(listener);
 		analysisMenu.add(dimensionItem);
 
 		//Add a menu item.
 		JMenuItem normalizationItem = new JMenuItem(
-				PerfExplorerActionListener.NORMALIZATION,
-				KeyEvent.VK_N);
-		normalizationItem.setAccelerator(KeyStroke.getKeyStroke(
-				KeyEvent.VK_N, ActionEvent.ALT_MASK));
+				PerfExplorerActionListener.NORMALIZATION);
 		normalizationItem.addActionListener(listener);
 		normalizationItem.setEnabled(false);
 		analysisMenu.add(normalizationItem);
 
 		//Add a menu item.
 		JMenuItem numClustersItem = new JMenuItem(
-				PerfExplorerActionListener.NUM_CLUSTERS,
-				KeyEvent.VK_S);
-		numClustersItem.setAccelerator(KeyStroke.getKeyStroke(
-				KeyEvent.VK_S, ActionEvent.ALT_MASK));
+				PerfExplorerActionListener.NUM_CLUSTERS);
 		numClustersItem.addActionListener(listener);
 		analysisMenu.add(numClustersItem);
 
@@ -128,19 +116,13 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 
 		//Add a menu item.
 		JMenuItem doItem = new JMenuItem(
-				PerfExplorerActionListener.DO_CLUSTERING,
-				KeyEvent.VK_C);
-		doItem.setAccelerator(KeyStroke.getKeyStroke(
-				KeyEvent.VK_C, ActionEvent.ALT_MASK));
+				PerfExplorerActionListener.DO_CLUSTERING);
 		doItem.addActionListener(listener);
 		analysisMenu.add(doItem);
 
 		//Add a menu item.
 		JMenuItem correlateItem = new JMenuItem(
-				PerfExplorerActionListener.DO_CORRELATION_ANALYSIS,
-				KeyEvent.VK_C);
-		correlateItem.setAccelerator(KeyStroke.getKeyStroke(
-				KeyEvent.VK_C, ActionEvent.ALT_MASK));
+				PerfExplorerActionListener.DO_CORRELATION_ANALYSIS);
 		correlateItem.addActionListener(listener);
 		analysisMenu.add(correlateItem);
 

@@ -202,7 +202,7 @@ public class PerfExplorerActionListener implements ActionListener {
 			reply = (String)JOptionPane.showInputDialog (mainFrame,
 				"Only select events with exclusive time % greater than X:\n(where 0 <= X < 100)",
 				"Minimum Percentage", JOptionPane.PLAIN_MESSAGE);
-			if (reply != null)
+			if (reply != null && !reply.equals(""))
 				PerfExplorerModel.getModel().setXPercent(reply);
 		}
 	}
@@ -224,7 +224,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		String reply = (String)JOptionPane.showInputDialog (mainFrame,
 			"Enter the max number of clusters (<= " + PerfExplorerModel.MAX_CLUSTERS + "):",
 			"Max Clusters", JOptionPane.PLAIN_MESSAGE);
-		if (reply != null)
+		if (reply != null && !reply.equals(""))
 			PerfExplorerModel.getModel().setNumberOfClusters(reply);
 	}
 

@@ -8,7 +8,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.4 2005/07/28 18:34:33 amorris Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.5 2005/08/11 20:47:14 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -22,9 +22,9 @@ public class RMIPerfExplorerModel implements Serializable {
 	public final static String FUZZY_K_MEANS = "Fuzzy K Means";
 	public final static String CORRELATION_ANALYSIS = "Correlation Analysis";
 	// constants for dimension reduction
-	public final static String LINEAR_PROJECTION = "Random Linear Projection";
+	public final static String LINEAR_PROJECTION = "Random Linear Projection (disabled)";
 	public final static String OVER_X_PERCENT = "Over X Percent";
-	public final static String REGRESSION = "Regression Analysis";
+	public final static String REGRESSION = "PCA (disabled)";
 	public final static String NONE = "none";
 	public final static String PERCENTAGE_OF_TOTAL = "Percentage of Total";
 	public final static String RANGE_OF_TOTAL = "Range of Total";
@@ -92,7 +92,8 @@ public class RMIPerfExplorerModel implements Serializable {
 	}
 
 	public static Object[] getDimensionReductions() {
-		Object[] options = {LINEAR_PROJECTION, REGRESSION, OVER_X_PERCENT, NONE};
+		//Object[] options = {LINEAR_PROJECTION, REGRESSION, OVER_X_PERCENT, NONE};
+		Object[] options = {OVER_X_PERCENT, NONE};
 		return options;
 	}
 
