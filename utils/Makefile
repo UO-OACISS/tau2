@@ -157,7 +157,7 @@ tau_convert: 	tau_convert.c
 		$(CXX) $(CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRA)
 
 tau2vtf: 	tau2vtf.o
-		$(CXX) tau2vtf.o -o tau2vtf -lm $(LEXTRA) -L$(VTFDIR)/$(TAU_ARCH)/lib -lvtf3 $(TAU_TRACE_INPUT_LIB)
+		$(CXX) $(CFLAGS) tau2vtf.o -o tau2vtf -lm $(LEXTRA) -L$(VTFDIR)/$(TAU_ARCH)/lib -lvtf3 $(TAU_TRACE_INPUT_LIB)
 
 tau2vtf.o:	tau2vtf.cpp
 		$(CXX) $(CFLAGS)  tau2vtf.cpp -c -I$(VTFDIR)/include 
