@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.8 2005/08/10 22:24:29 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.9 2005/08/11 23:19:37 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -261,7 +261,7 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join metric m on m.trial = t.id ");
 			buf.append("inner join experiment e on t.experiment = e.id ");
 			if (object instanceof RMIView) {
-				buf.append(model.getViewSelectionPath(true, true));
+				buf.append(model.getViewSelectionPath(true, false));
 			} else {
 				buf.append("where t.experiment in (");
 				List selections = model.getMultiSelection();
@@ -283,10 +283,20 @@ public class ChartData extends RMIChartData {
 
 //			buf.append(" and ims.inclusive_percentage < 100.0 ");
 			
-			buf.append(" and ie.group_name = ? group by e.name, ");
+			buf.append(" and ie.group_name = ? group by ");
+			if (object instanceof RMIView) {
+				if (isLeafView()) {
+					buf.append(" " + model.getViewSelectionString() + ", ");
+				} else {
+					buf.append(" " + groupByColumn + ", ");
+				}
+			} else {
+				buf.append(" e.name, ");
+			}
 			buf.append("(t.node_count * t.contexts_per_node * ");
 			buf.append("t.threads_per_context), ie.group_name order by 1, 2");
 
+			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 			statement.setString(2, groupName);
@@ -497,6 +507,7 @@ public class ChartData extends RMIChartData {
 			buf.append("ie.group_name != 'TAU_CALLPATH' ");
 			buf.append("and ie.group_name != 'TAU_PHASENAME')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1");
 
+			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 

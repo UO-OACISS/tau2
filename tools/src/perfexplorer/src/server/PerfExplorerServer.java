@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.13 2005/08/11 22:04:14 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.14 2005/08/11 23:19:37 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -741,8 +741,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				}
 				buf.append(")");
 			}
+			//System.out.println(buf.toString());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
-			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
 				metrics.add(results.getString(1));
@@ -1167,7 +1167,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 			buf = new StringBuffer();
 			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("select id, name, stddev(excl)/ ");
+				buf.append("select id, name, (stddev(excl)/ ");
 				buf.append("(max(excl)-min(excl))) * ");
 			} else {
 				buf.append("select id, name, (stddev(exclusive)/ ");
@@ -1181,6 +1181,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("group by interval_event.id, name ");
 			buf.append("order by 3 desc");
 			statement = db.prepareStatement(buf.toString());
+			//System.out.println(buf.toString());
 			//System.out.println(statement.toString());
 			results = statement.executeQuery();
 			int count = 0;
