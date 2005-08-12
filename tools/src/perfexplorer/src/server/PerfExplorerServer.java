@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.15 2005/08/12 00:00:52 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.16 2005/08/12 00:23:01 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -859,7 +859,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			StringBuffer buf = new StringBuffer("select distinct ");
 			buf.append(columnName);
 			buf.append(" from ");
-			buf.append(tableName);
+			buf.append(tableName.toLowerCase());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
@@ -1070,7 +1070,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("where ie.trial = ? and ilp.metric = ? ");
 
 			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and group_name != 'TAU_PHASE' ");
+			buf.append("and group_name not like '%TAU_PHASE%' ");
 			buf.append("group by ie.id, ie.name order by ie.name");
 
 			statement = db.prepareStatement(buf.toString());
@@ -1140,7 +1140,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("on interval_event = id ");
 			buf.append("where trial = ? and metric = ? ");
 			buf.append("and group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and group_name != 'TAU_PHASE' ");
+			buf.append("and group_name not like '%TAU_PHASE%' ");
 			buf.append("group by interval_event.id ");
 
 			statement = db.prepareStatement(buf.toString());
