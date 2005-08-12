@@ -258,7 +258,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         getContentPane().setLayout(null);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("TAU_Conf");
+        setTitle("tau_setup");
         setResizable(false);
         installationPanel.setLayout(null);
 
@@ -2316,7 +2316,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         commandPanel.add(confButton);
         confButton.setBounds(10, 50, 150, 25);
 
-        confjScrollPane.setHorizontalScrollBarPolicy(javax.swing.JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        confjScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         confjScrollPane.setAutoscrolls(true);
         confjScrollPane.setPreferredSize(new java.awt.Dimension(600, 35));
         confjScrollPane.setRequestFocusEnabled(false);
@@ -2337,7 +2337,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         commandPanel.add(makejButton);
         makejButton.setBounds(170, 50, 150, 25);
 
-        instjScrollPane.setHorizontalScrollBarPolicy(javax.swing.JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        instjScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         instjScrollPane.setAutoscrolls(true);
         instjScrollPane.setPreferredSize(new java.awt.Dimension(600, 35));
         instjScrollPane.setRequestFocusEnabled(false);
@@ -2940,8 +2940,197 @@ private void updateITCommand(){
     }                                          
 
     private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {                                            
-	//System.out.println(this.);
+        if(this.defcppCheckBox.isSelected())    
+            this.defcppCheckBox.setSelected(false);
+            
+        if(this.cppCombo.getSelectedIndex()!=0)
+                this.cppCombo.setSelectedIndex(0);
+        
+        if(this.defccCheckBox.isSelected())    
+            this.defccCheckBox.setSelected(false);
+            
+        if(this.ccCombo.getSelectedIndex()!=0)
+            this.ccCombo.setSelectedIndex(0);
+      
+        if(this.deffortranCheckBox.isSelected())    
+            this.deffortranCheckBox.setSelected(false);
+            
+        if(this.fortranCombo.getSelectedIndex()!=0)
+                this.fortranCombo.setSelectedIndex(0);        
+        
+        if(pdtCheckBox.isSelected())    
+            pdtCheckBox.setSelected(false);
+            
+        if(pdtcppCombo.getSelectedIndex()!=0)
+                pdtcppCombo.setSelectedIndex(0); 
+       
+        if(defpdtCheckBox.isSelected())    
+            defpdtCheckBox.setSelected(false);
+
+        if(papiwallCheckBox.isSelected())    
+            papiwallCheckBox.setSelected(false);        
+
+        if(papivirtCheckBox.isSelected())
+            papivirtCheckBox.setSelected(false);
+
+        if(papiCheckBox.isSelected())    
+            papiCheckBox.setSelected(false);
+
+        if(multiplecountCheckBox.isSelected())    
+            multiplecountCheckBox.setSelected(false);        
+
+	if(mpiCheckBox.isSelected())
+            mpiCheckBox.setSelected(false);
 	
+	if(mpiincCheckBox.isSelected())    
+            mpiincCheckBox.setSelected(false);
+	
+	if(mpilibCheckBox.isSelected())    
+            mpilibCheckBox.setSelected(false);
+
+	if(altmpiCheckBox.isSelected())    
+            altmpiCheckBox.setSelected(false);
+	
+	if(tagCheckBox.isSelected())    
+            tagCheckBox.setSelected(false);
+	
+	if(nocomCheckBox.isSelected())    
+            nocomCheckBox.setSelected(false);
+	
+	if(mpitraceCheckBox.isSelected())    
+            mpitraceCheckBox.setSelected(false);
+	
+	if(shmemCheckBox.isSelected())    
+            shmemCheckBox.setSelected(false);
+	
+	if(shmemincCheckBox.isSelected())    
+            shmemincCheckBox.setSelected(false);
+	
+	if(shmemlibCheckBox.isSelected())    
+            shmemlibCheckBox.setSelected(false);
+	
+	if(altshmemCheckBox.isSelected())    
+            altshmemCheckBox.setSelected(false);
+	
+	if(profphaseCheckBox.isSelected())    
+            profphaseCheckBox.setSelected(false);
+	
+	if(depthlimitCheckBox.isSelected())    
+            depthlimitCheckBox.setSelected(false);
+	
+	if(!profileCheckBox.isSelected())
+            profileCheckBox.setSelected(true);
+	
+	if(profcallpathCheckBox.isSelected())
+            profcallpathCheckBox.setSelected(false);
+	
+	if(compensateCheckBox.isSelected())
+            compensateCheckBox.setSelected(false);
+	
+	if(profmemoryCheckBox.isSelected())
+            profmemoryCheckBox.setSelected(false);
+	
+	if(profheadroomCheckBox.isSelected())
+            profheadroomCheckBox.setSelected(false);
+	
+	if(epilogCheckBox.isSelected())
+            epilogCheckBox.setSelected(false);
+	
+	if(slog2CheckBox.isSelected())
+            slog2CheckBox.setSelected(false);
+	
+	if(slog2exCheckBox.isSelected())
+            slog2exCheckBox.setSelected(false);
+	
+	if(vtfCheckBox.isSelected())
+            vtfCheckBox.setSelected(false);
+	
+	if(traceCheckBox.isSelected())
+            traceCheckBox.setSelected(false);
+	
+	if(pthreadsCheckBox.isSelected())
+            pthreadsCheckBox.setSelected(false);
+	
+	if(opariregionCheckBox.isSelected())
+            opariregionCheckBox.setSelected(false);
+	
+	if(opariconstructCheckBox.isSelected())
+            opariconstructCheckBox.setSelected(false);
+	
+	if(opariCheckBox.isSelected())
+            opariCheckBox.setSelected(false);
+	
+	if(ompCheckBox.isSelected())
+            ompCheckBox.setSelected(false);
+	
+	if(charmCheckBox.isSelected())
+            sprocCheckBox.setSelected(false);
+	
+	if(sprocCheckBox.isSelected())
+            sprocCheckBox.setSelected(false);
+	
+	if(tulipCheckBox.isSelected())
+            tulipCheckBox.setSelected(false);
+	
+	if(smartCheckBox.isSelected())
+            smartCheckBox.setSelected(false);
+	
+	if(pclCheckBox.isSelected())
+            pclCheckBox.setSelected(false);
+	
+	if(dyninstCheckBox.isSelected())
+            dyninstCheckBox.setSelected(false);
+	
+	if(museeventCheckBox.isSelected())
+            museeventCheckBox.setSelected(false);
+	
+	if(musemultCheckBox.isSelected())
+            musemultCheckBox.setSelected(false);
+	
+	if(museCheckBox.isSelected())
+            museCheckBox.setSelected(false);
+	
+	if(cputimeCheckBox.isSelected())
+            cputimeCheckBox.setSelected(false);
+	
+	if(craytimeCheckBox.isSelected())
+            craytimeCheckBox.setSelected(false);
+	
+	if(sgitimeCheckBox.isSelected())
+            sgitimeCheckBox.setSelected(false);
+	
+	if(linuxtimeCheckBox.isSelected())
+            linuxtimeCheckBox.setSelected(false);
+	
+	if(usepythonCheckBox.isSelected())
+            usepythonCheckBox.setSelected(false);
+	
+	if(pythonlibCheckBox.isSelected())
+            pythonlibCheckBox.setSelected(false);
+	
+	if(usejdkCheckBox.isSelected())
+            usejdkCheckBox.setSelected(false);
+	
+	if(usejavatimersCheckBox.isSelected())
+            usejavatimersCheckBox.setSelected(false);
+	
+	if(installdirCheckBox.isSelected())
+            installdirCheckBox.setSelected(false);
+	
+	if(archdirCheckBox.isSelected())
+            archdirCheckBox.setSelected(false);
+	
+	 if(archCombo.getSelectedIndex()!=0)
+                archCombo.setSelectedIndex(0);
+	
+	if(useroptCheckBox.isSelected())
+            useroptCheckBox.setSelected(false);
+	
+	if(noexceptCheckBox.isSelected())
+            noexceptCheckBox.setSelected(false);
+	
+	configureline="./configure";
+	commandTextArea.setText(configureline); updateITCommand();
     }                                           
 
     private void instButtonActionPerformed(java.awt.event.ActionEvent evt) {                                           
