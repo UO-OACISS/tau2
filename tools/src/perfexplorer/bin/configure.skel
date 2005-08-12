@@ -155,8 +155,7 @@ if [ ! -r ${WEKA_JAR} ]; then
 	    fi
 	    
 		/bin/rm -f weka-redirect.html
-		#wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html
-		wget http://utonium.cs.uoregon.edu/weka-redirect.html
+		wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html
 		URL=`grep URL weka-redirect.html | sed s/URL=//`
 		FILE=`grep FILE weka-redirect.html | sed s/FILE=//`
 		DIR=`grep DIR weka-redirect.html | sed s/DIR=//`
