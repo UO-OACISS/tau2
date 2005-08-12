@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.9 2005/08/11 23:19:37 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.10 2005/08/12 00:00:52 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -171,7 +171,7 @@ public class ChartData extends RMIChartData {
 			buf.append("and (ie.group_name is null or (");
 
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name != 'TAU_PHASENAME')) order by 1, 2");
+			buf.append("and ie.group_name != 'TAU_PHASE')) order by 1, 2");
 
 			
 			statement = db.prepareStatement(buf.toString());
@@ -329,7 +329,7 @@ public class ChartData extends RMIChartData {
 			buf.append("and ims.exclusive_percentage > 1.0 ");
 			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name != 'TAU_PHASENAME')) order by 1, 2");
+			buf.append("and ie.group_name != 'TAU_PHASE')) order by 1, 2");
 
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -401,7 +401,7 @@ public class ChartData extends RMIChartData {
 			buf.append("where t.experiment = ? and m.name = ? ");
 
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ie.group_name = 'TAU_PHASENAME' order by 1, 2");
+			buf.append("and ie.group_name = 'TAU_PHASE' order by 1, 2");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt (1, model.getExperiment().getID());
 			statement.setString(2, metricName);
@@ -437,7 +437,7 @@ public class ChartData extends RMIChartData {
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
 
 			
-			buf.append("and ie.group_name = 'TAU_PHASENAME' order by 1, 2");
+			buf.append("and ie.group_name = 'TAU_PHASE' order by 1, 2");
 
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -472,7 +472,7 @@ public class ChartData extends RMIChartData {
 			buf.append("and ims.exclusive_percentage < 1.0 ");
 			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name != 'TAU_PHASENAME')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1");
+			buf.append("and ie.group_name != 'TAU_PHASE')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1");
 			
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -505,7 +505,7 @@ public class ChartData extends RMIChartData {
 			buf.append("and ims.exclusive_percentage < 1.0 ");
 			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name != 'TAU_CALLPATH' ");
-			buf.append("and ie.group_name != 'TAU_PHASENAME')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1");
+			buf.append("and ie.group_name != 'TAU_PHASE')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1");
 
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
