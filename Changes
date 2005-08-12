@@ -46,6 +46,14 @@ Version 2.14 changes (from 2.13):
 33. TAU no longer needs merged pdb files from PDT's F95 parser [UTK].
 34. Enhancements in Paraprof to choose metrics for summary table, std. dev [LLNL].
 35. TAU_COMPILER does not need -optReset for IBM xlf90 to eliminate -D* flags.
+36. TAU scripts (tau_[cxx,cc,f90].sh) for use on commandline [UFL]. 
+37. TAU Java Eclipse plugin [LANL]. 
+38. Updated documentation.
+39. Added PerfExplorer performance data mining and knowledge discovery framework [LLNL].
+40. Enhancements in MPI libraries for scalability [LLNL]. 
+41. Phase based profiling allows you to identify phases in paraprof.
+42. Added tau_setup GUI for TAU installations [LANL].
+
 
 Version 2.13 changes (from 2.12):
 1. Paraprof enhancements.
