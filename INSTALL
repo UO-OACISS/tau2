@@ -1,6 +1,6 @@
 *****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/paracomp/tau    **
+**			http://www.cs.uoregon.edu/research/tau             **
 *****************************************************************************
 **    Copyright 1997-2005				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -20,7 +20,7 @@
  *    For a tutorial on using TAU, open html/index.html in your    *
  *        web browser.                                             *
  *    For more information, including updates and new releases,    *
- *        see http://www.cs.uoregon.edu/research/paracomp/tau      *
+ *        see http://www.cs.uoregon.edu/research/tau               *
  *    For help, reporting bugs, and making suggestions, please     *
  *        send e-mail to tau-bugs@cs.uoregon.edu                   *
  *******************************************************************/
@@ -51,7 +51,10 @@ NOTE: It is highly recommended that you select the *minimal* set of options
 that satisfies the instrumentation and measurement parameters that you need. 
 Multiple configurations can be created by using configure several times 
 using a different set of options each time. Commonly used configurations are 
-typically installed using the 'installtau' tool described below.
+typically installed using the 'installtau' tool described below. 
+
+NOTE: tau_setup is a Java based GUI tool for installing TAU on your system.
+*****
 
 % ./configure -help 
 
@@ -251,7 +254,7 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    then TAU can be configured with the same option by specifying 
    -pdt=<dir> -pdtcompdir=<opt>. 
 
-   [ Ref: http://www.acl.lanl.gov/pdtoolkit ]
+   [ Ref: http://www.cs.uoregon.edu/research/pdtoolkit ]
    
 -pcl=<directory>
   
@@ -622,11 +625,11 @@ Usage: installtau [OPTIONS]
    instrumentor - tau_instrumentor,  based on the Program Database Toolkit, or 
    manually using the instrumentation API (Application Programmers Interface). 
    The API is explained in detail in the documentation available at
-   http://www.acl.lanl.gov/tau download page and can be seen in the examples 
-   directory. This process involves identifying functions and associating each 
-   function with one or more TAU profile groups. This enables selectively 
-   profiling groups of functions. By default all instrumented functions that 
-   are invoked are profiled.
+   http://www.cs.uoregon.edu/research/tau download page and can be 
+   seen in the examples directory. This process involves identifying 
+   functions and associating each function with one or more TAU profile 
+   groups. This enables selectively profiling groups of functions. By 
+   default all instrumented functions that are invoked are profiled.
    
    % cd examples/instrument
    % ./simple
@@ -634,7 +637,7 @@ Usage: installtau [OPTIONS]
    % paraprof
 
    To use tau_instrumentor, the C++ source code instrumentor: 
-   a. Install pdtoolkit. [ Ref: http://www.acl.lanl.gov/pdtoolkit ] 
+   a. Install pdtoolkit. [ Ref: http://www.cs.uoregon.edu/research/pdtoolkit ]
       % ./configure -arch=IRIX64 -KCC
 
    b. Install TAU using the -pdt configuration option.
@@ -827,7 +830,7 @@ III) Software Requirements :
      source code instrumentation and using CPU time instead of (the default) 
      wallclock time.
      [ For KCC you'll need % module load KCC]
-     Download PDT (Program Database Toolkit) from http://www.acl.lanl.gov/pdtoolkit
+     Download PDT (Program Database Toolkit) from http://www.cs.uoregon.edu/research/pdtoolkit ]
      
      % cd pdtoolkit-1.x
      % configure 
