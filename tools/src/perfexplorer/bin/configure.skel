@@ -28,7 +28,7 @@ do
     myarg=`echo $arg | sed 's/-engine=//'`
     if [ $myarg = weka -o $myarg = R ]
       then
-        c_compiler=$myarg
+        engine=$myarg
       else
         echo "WARNING: valid options for engine are 'weka' and 'R' "
     fi
