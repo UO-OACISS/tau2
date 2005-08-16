@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.11 2005/08/12 00:23:01 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.12 2005/08/16 22:31:36 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -120,6 +120,17 @@ public class ChartData extends RMIChartData {
 				} 
 				results.close();
 				statement.close();
+				if (dataType == RELATIVE_EFFICIENCY_EVENTS) {
+					DB db = PerfExplorerServer.getServer().getDB();
+					if (db.getDBType().compareTo("oracle") == 0) {
+						statement = db.prepareStatement("truncate table working_table");
+						statement.execute();
+						statement.close();
+					}
+					statement = db.prepareStatement("drop table working_table");
+					statement.execute();
+					statement.close();
+				}
 			}
 		} catch (Exception e) {
 			System.out.println(statement.toString());
@@ -304,16 +315,25 @@ public class ChartData extends RMIChartData {
 			// The user wants to know the relative efficiency or speedup
 			// of all the events for one experiment, as the number of threads of 
 			// execution increases.
-			buf.append("select ");
-			buf.append(" ie.name, ");
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-
 			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("ims.excl from interval_mean_summary ims ");
+				buf.append("create global temporary table working_table (name varchar2(4000)) ");
 			} else {
-				buf.append("ims.exclusive from interval_mean_summary ims ");
+				buf.append("create temporary table working_table (name text) ");
+			}
+			try {
+				statement = db.prepareStatement(buf.toString());
+				statement.execute();
+				statement.close();
+			} catch (Exception e) {
+				System.out.println(statement.toString());
+				String error = "ERROR: Couldn't select the analysis settings from the database!";
+				System.out.println(error);
+				e.printStackTrace();
 			}
 
+			buf = new StringBuffer();
+			buf.append("insert into working_table (select distinct ");
+			buf.append("ie.name from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
@@ -323,14 +343,46 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-
 			buf.append(" and m.name = ? ");
-//			buf.append("and ims.inclusive_percentage < 100.0 ");
 			buf.append("and ims.exclusive_percentage > 1.0 ");
 			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) order by 1, 2");
+			buf.append("and ie.group_name not like '%TAU_PHASE%'))) ");
 
+			try {
+				statement = db.prepareStatement(buf.toString());
+				statement.setString(1, metricName);
+				statement.execute();
+				statement.close();
+			} catch (Exception e) {
+				System.out.println(statement.toString());
+				String error = "ERROR: Couldn't select the analysis settings from the database!";
+				System.out.println(error);
+				e.printStackTrace();
+			}
+
+			buf = new StringBuffer();
+			buf.append("select distinct ");
+			buf.append("ie.name, ");
+			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+
+			if (db.getDBType().compareTo("oracle") == 0) {
+				buf.append("ims.excl from interval_mean_summary ims ");
+			} else {
+				buf.append("ims.exclusive from interval_mean_summary ims ");
+			}
+			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+			buf.append("inner join trial t on ie.trial = t.id ");
+			buf.append("inner join metric m on m.id = ims.metric ");
+			buf.append("inner join working_table w on w.name = ie.name ");
+			if (object instanceof RMIView) {
+				buf.append(model.getViewSelectionPath(true, true));
+			} else {
+				buf.append("where t.experiment = ");
+				buf.append(model.getExperiment().getID() + " ");
+			}
+
+			buf.append(" and m.name = ? order by 1, 2 ");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == RELATIVE_EFFICIENCY_ONE_EVENT) {
@@ -481,6 +533,25 @@ public class ChartData extends RMIChartData {
 			// The user wants to know the relative efficiency or speedup
 			// of all the events for one experiment, as the number of threads of 
 			// execution increases.
+			/*
+			buf.append("insert into (select distinct ");
+			buf.append("ie.name from interval_mean_summary ims ");
+			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+			buf.append("inner join trial t on ie.trial = t.id ");
+			buf.append("inner join metric m on m.id = ims.metric ");
+			if (object instanceof RMIView) {
+				buf.append(model.getViewSelectionPath(true, true));
+			} else {
+				buf.append("where t.experiment = ");
+				buf.append(model.getExperiment().getID() + " ");
+			}
+			buf.append(" and m.name = ? ");
+			buf.append("and ims.exclusive_percentage > 1.0 ");
+			buf.append("and (ie.group_name is null or (");
+			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PHASE%'));");
+			*/
+
 			buf.append("select ");
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
 
@@ -493,6 +564,7 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
+			buf.append("left outer join working_table w on w.name = ie.name ");
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true));
 			} else {
@@ -501,11 +573,9 @@ public class ChartData extends RMIChartData {
 			}
 			
 			buf.append(" and m.name = ? ");
-//			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ims.exclusive_percentage < 1.0 ");
-			buf.append("and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1");
+			buf.append("and w.name is null ");
+			buf.append("group by (t.node_count * t.contexts_per_node ");
+			buf.append("* t.threads_per_context) order by 1 ");
 
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());

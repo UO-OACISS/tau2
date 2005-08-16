@@ -1,8 +1,11 @@
 R_HOME = /Library/Frameworks/R.framework/Versions/2.0.1/Resources
 TAUROOT = /Users/khuck/tau2
 CONFIG_ARCH = apple
+JAVA_JVM_VERSION = 1.4
 
 ##########################
+
+NOW = $(shell date)
 
 OMEGAHAT_HOME = $(R_HOME)/library/SJava
 CONFIGFILE = ${HOME}/.ParaProf/perfdmf.cfg
@@ -81,7 +84,10 @@ ${SERVER_CLASSES}: ${SERVER_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES}
 	javac -target 1.3 -classpath ${SERVER_BUILD_CLASSPATH} -d classes ${SERVER_SOURCES}
 
 ${CLIENT_CLASSES}: ${CLIENT_SOURCES} ${COMMON_CLASSES} ${SERVER_CLASSES}
+	/bin/mv src/client/PerfExplorerActionListener.java src/client/PerfExplorerActionListener.java.orig
+	sed "s/XXXXX/$(NOW)/" src/client/PerfExplorerActionListener.java.orig > src/client/PerfExplorerActionListener.java
 	javac -target 1.3 -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
+	/bin/mv src/client/PerfExplorerActionListener.java.orig src/client/PerfExplorerActionListener.java
 	cp src/client/resources/*.gif classes/client/.
 
 ${RMIC_CLASSES}: ${SERVER_CLASSES}
