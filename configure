@@ -3441,18 +3441,15 @@ EOF
         echo "Intel v8.0 compilers used"
       else
         $cxx_compiler -c -cxxlib-icc f1.cpp 1>/dev/null 2>&1
-        if  ifort f1.o f2.o -o foo -lcprts 1>/dev/null 2>&1
+        $cxx_compiler -c f1.cpp
+        taugcclibdir=`g++ -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
+        taugcclib=`g++ -print-libgcc-file-name `
+        taugcclib2dir=`which g++ | sed s/g++/../`         
+        if ifort f1.o f2.o -o foo -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1
         then
-          $cxx_compiler -c f1.cpp
-          taugcclibdir=`g++ -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
-          taugcclib=`g++ -print-libgcc-file-name `
-          taugcclib2dir=`which g++ | sed s/g++/../`         
-          if ifort f1.o f2.o -o foo -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1
-          then
-      #      echo "Confirmed  - links with gcc libs"
-            echo "Intel v8.1+ compilers used"
-            fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir INTEL81FIX" 
-          fi
+      #    echo "Confirmed  - links with gcc libs"
+          echo "Intel v8.1+ compilers used"
+          fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir INTEL81FIX" 
         fi
       fi
       /bin/rm -f f1.o f2.o f1.cpp f2.f foo
