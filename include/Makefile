@@ -417,6 +417,8 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SOL2#TAU_CXXLIBS               = -lCstd -lCrun #ENDIF#
 #FUJITSU_SOLARIS#TAU_CXXLIBS               = -lstd -lstdm #ENDIF#
 #PPC64#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
+#IBMXLCAPPLE#TAU_FORLIBDIR =lib       #ENDIF#
+#IBMXLCAPPLE#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #BGL#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/blrts_dev_lib -L$(EXTRADIRCXX)/blrts_lib -libmc++ -L/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/lib -lstdc++      #ENDIF#
 #SP1#TAU_XLCLIBS         = -lC            #ENDIF#
 #USE_IBMXLC#TAU_CXXLIBS         = $(TAU_XLCLIBS) #ENDIF#
@@ -426,7 +428,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #INTELIFORT#TAU_CXXLIBS_INTEL        = -lcprts #ENDIF#
 #INTEL81FIX#TAU_CXXLIBS_INTEL        = -L$(TAUGCCLIBDIR) -lstdc++ $(TAU_GCCLIB) #ENDIF#
 #USE_INTELCXX#TAU_CXXLIBS        = $(TAU_CXXLIBS_INTEL) #ENDIF#
-#APPLECXX#TAU_CXXLIBS 		= -lstdc++ #ENDIF#
+#APPLECXX#TAU_CXXLIBS 		= -lstdc++ -L$(TAUGCCLIBDIR) -lgcc_s -lSystemStubs #ENDIF#
 
 # EXTERNAL PACKAGES: EPILOG
 #EPILOG#TAU_LINKER_OPT3 	=  -L$(EPILOGDIR)/lib -L$(EPILOGDIR)/src -lelg $(TAU_HITACHI_EXTRA) #ENDIF#
