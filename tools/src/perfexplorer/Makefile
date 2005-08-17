@@ -1,9 +1,12 @@
-R_HOME = /Library/Frameworks/R.framework/Versions/2.0.1/Resources
+R_HOME = /Library/Frameworks/R.framework/Versions/2.0.0/Resources
 TAUROOT = /Users/khuck/tau2
 CONFIG_ARCH = apple
 JAVA_JVM_VERSION = 1.4
 
 ##########################
+JAVA_JVM_VERSION=1.4
+
+NOW = $(shell date)
 
 NOW = $(shell date)
 

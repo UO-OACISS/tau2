@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.17 2005/08/16 22:31:36 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.18 2005/08/17 21:28:50 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -720,8 +720,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DB db = this.getDB();
 			StringBuffer buf;
-			buf= new StringBuffer("select distinct m.name");
-			buf.append(" from metric m inner join trial t on m.trial = t.id");
+			buf= new StringBuffer("select distinct count(m.name), m.name ");
+			buf.append(" from metric m inner join trial t on m.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true));
@@ -741,12 +741,19 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				}
 				buf.append(")");
 			}
+			buf.append(" group by m.name order by count(m.name) desc");
 			//System.out.println(buf.toString());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
+			// only get the metrics that are in all trials.
+			int trialCount = 0;
 			while (results.next() != false) {
-				metrics.add(results.getString(1));
+				if (trialCount == 0)
+					trialCount = results.getInt(1);
+				if (results.getInt(1) == trialCount)
+					metrics.add(results.getString(2));
 			}
+			results.close();
 			statement.close();
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select the metrics from the database!";

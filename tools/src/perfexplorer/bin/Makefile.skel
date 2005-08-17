@@ -3,7 +3,7 @@ TAUROOT = @TAUROOT@
 CONFIG_ARCH = @TAUARCH@
 
 ##########################
-
+JAVA_JVM_VERSION=1.4
 NOW = $(shell date)
 
 OMEGAHAT_HOME = $(R_HOME)/library/SJava
