@@ -426,6 +426,15 @@ for arg in "$@"
 			#-o is added later
 			;;
 
+		-o*)
+			hasAnOutputFile=$TRUE
+			passedOutputFile="${arg#"-o"}"
+			echoIfDebug "\tHas an output file = $passedOutputFile"
+			#With compilation, a new output file is created and is written with -o
+			#options, so no need to append it to argsRemaining. WIth
+			#others it is simply added to the command.
+			#-o is added later
+			;;
 
 		$CMD)
 			;;
