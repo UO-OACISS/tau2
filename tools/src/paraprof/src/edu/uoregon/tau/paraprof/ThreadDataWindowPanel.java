@@ -50,7 +50,6 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
     private int lastHeaderEndPosition = 0;
     private Searcher searcher;
 
-    
     public ThreadDataWindowPanel(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, ThreadDataWindow tDWindow) {
         this.thread = thread;
         setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -67,7 +66,6 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
         barLength = baseBarLength;
 
         setAutoscrolls(true);
-
 
         //Schedule a repaint of this panel.
         repaint();
@@ -139,8 +137,8 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
         searcher.setLineHeight(barSpacing);
 
         //Obtain the font and its metrics.
-        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
-                ppTrial.getPreferencesWindow().getFontStyle(), barHeight);
+        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(), ppTrial.getPreferencesWindow().getFontStyle(),
+                barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
@@ -162,6 +160,8 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
         double maxValue = window.getDataSorter().getValueType().getThreadMaxValue(window.getPPThread().getThread(),
                 window.getDataSorter().getSelectedMetricID());
 
+        maxValue = window.getMaxValue();
+
         // this is crap, this is not the correct way to determine the largest string, the largest
         // value item is not necessarily the longest as a string (variable width font)
         if (window.isPercent()) {
@@ -176,12 +176,11 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
         //End - Set max values.
         //######
 
-
         int yCoord = 0;
 
         //determine which elements to draw (clipping)
-        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow,
-                list.size(), barSpacing, yCoord);
+        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(),
+                barSpacing, yCoord);
         int startElement = clips[0];
         int endElement = clips[1];
         yCoord = clips[2];
@@ -333,7 +332,7 @@ public class ThreadDataWindowPanel extends JPanel implements Printable, ImageExp
                 if (ParaProfUtils.rightClick(evt)) {
 
                     JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(),
-                            this);
+                            ppFunctionProfile.getThread(), this);
                     popup.show(this, evt.getX(), evt.getY());
                     return;
                 } else { // not right click

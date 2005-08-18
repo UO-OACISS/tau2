@@ -100,7 +100,11 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public double getExclusiveValue() {
-        return functionProfile.getExclusive(dataSorter.getSelectedMetricID());
+        if (functionProfile.getFunction().isPhase()) {
+            return functionProfile.getInclusive(dataSorter.getSelectedMetricID());
+        } else {
+            return functionProfile.getExclusive(dataSorter.getSelectedMetricID());
+        }
     }
 
     public double getInclusivePercentValue() {
@@ -165,14 +169,13 @@ public class PPFunctionProfile implements Comparable {
                 return checkDescending(this.getThreadID() - other.getThreadID());
         } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
 
-            return checkDescending(compareToHelper(valueType.getValue(this.meanProfile,
-                    dataSorter.getSelectedMetricID()), valueType.getValue(other.meanProfile,
-                    dataSorter.getSelectedMetricID()), this.meanProfile, other.meanProfile));
+            return checkDescending(compareToHelper(valueType.getValue(this.meanProfile, dataSorter.getSelectedMetricID()),
+                    valueType.getValue(other.meanProfile, dataSorter.getSelectedMetricID()), this.meanProfile, other.meanProfile));
 
         } else if (dataSorter.getSortType() == SortType.VALUE) {
-            return checkDescending(compareToHelper(valueType.getValue(this.getFunctionProfile(),
-                    dataSorter.getSelectedMetricID()), valueType.getValue(other.getFunctionProfile(),
-                    dataSorter.getSelectedMetricID())));
+            return checkDescending(compareToHelper(
+                    valueType.getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID()), valueType.getValue(
+                            other.getFunctionProfile(), dataSorter.getSelectedMetricID())));
         } else {
             throw new ParaProfException("Unexpected sort type: " + dataSorter.getSortType());
         }
@@ -190,15 +193,16 @@ public class PPFunctionProfile implements Comparable {
 
     private int compareToHelper(double d1, double d2, FunctionProfile f1, FunctionProfile f2) {
         double result = d1 - d2;
-        if (result < 0.00)
+        if (result < 0.00) {
             return -1;
-        else if (result == 0.00) {
+        } else if (result == 0.00) {
             // this is here to make sure that things get sorted the same for mean and other threads
             // in the case of callpath profiles, multiple functionProfiles may have the same values
             // we need them in the same order for everyone
             return f1.getFunction().compareTo(f2.getFunction());
-        } else
+        } else {
             return 1;
+        }
     }
 
     public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd) {
@@ -248,9 +252,8 @@ public class PPFunctionProfile implements Comparable {
         //        return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad(metricType, 16)
         //        + UtilFncs.lpad("Total " + metricType, 18) + UtilFncs.lpad("#Calls", 14)
         //        + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
-        return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad("Exclusive", 16)
-                + UtilFncs.lpad("Inclusive", 18) + UtilFncs.lpad("#Calls", 14) + UtilFncs.lpad("#Child Calls", 14)
-                + UtilFncs.lpad("Inclusive/Call", 21) + "   ";
+        return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad("Exclusive", 16) + UtilFncs.lpad("Inclusive", 18)
+                + UtilFncs.lpad("#Calls", 14) + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Inclusive/Call", 21) + "   ";
     }
 
     public String toString() {

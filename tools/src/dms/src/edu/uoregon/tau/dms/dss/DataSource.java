@@ -5,25 +5,28 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.sql.*;
 
+
 /**
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.17 2005/06/29 22:59:30 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.18 2005/08/18 01:03:37 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.17 $
+ * @version	$Revision: 1.18 $
  * @see		TrialData
  * @see		NCT
  */
 public abstract class DataSource {
 
-    
     private static boolean meanIncludeNulls = true;
-    
+
     private boolean userEventsPresent = false;
     private boolean callPathDataPresent = false;
     private boolean groupNamesPresent = false;
-
+    private boolean phasesPresent = false;
+    private Function topLevelPhase;
+    
+    
     // data structures
     private List metrics = null;
     protected Thread meanData = null;
@@ -52,7 +55,6 @@ public abstract class DataSource {
         return stddevData;
     }
 
-    
     public Thread getTotalData() {
         return totalData;
     }
@@ -81,9 +83,8 @@ public abstract class DataSource {
         return userEventsPresent;
     }
 
-    
     public Function addFunction(String name) {
-        return this.addFunction(name,this.getNumberOfMetrics());
+        return this.addFunction(name, this.getNumberOfMetrics());
     }
 
     public Function addFunction(String name, int numMetrics) {
@@ -136,6 +137,10 @@ public abstract class DataSource {
         return userEvents.values().iterator();
     }
 
+    public Group getGroup(String name) {
+        return (Group) groups.get(name);
+    }
+    
     public Group addGroup(String name) {
         Object obj = groups.get(name);
 
@@ -314,6 +319,7 @@ public abstract class DataSource {
         }
         this.generateStatistics(0, this.getNumberOfMetrics() - 1);
         this.meanData.setThreadDataAllMetrics();
+        this.totalData.setThreadDataAllMetrics();
         this.stddevData.setThreadDataAllMetrics();
 
         //time = (System.currentTimeMillis()) - time;
@@ -374,7 +380,6 @@ public abstract class DataSource {
             stddevData = new Thread(-3, -3, -3, numMetrics);
         }
 
-
         // make sure that the allThreads list is initialized;
         this.initAllThreadsList();
 
@@ -425,7 +430,6 @@ public abstract class DataSource {
                 inclSumSqr[i] = 0;
             }
 
-
             int numThreads = allThreads.size();
 
             for (int i = 0; i < numThreads; i++) { // for each thread
@@ -452,11 +456,10 @@ public abstract class DataSource {
                 }
             }
 
-            if (!meanIncludeNulls) {
-                // uncomment this line to switch to the other method of mean/std. dev.
+            if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
                 numThreads = numEvents;
             }
-            
+
             // we don't want to set the calls and subroutines if we're just computing mean data for a derived metric!
             if (startMetric == 0) {
 
@@ -496,7 +499,7 @@ public abstract class DataSource {
                 if (numThreads > 1) {
 
                     // see http://cuwu.editthispage.com/stories/storyReader$13 for why I don't multiply by n/(n-1)
-                    
+
                     //stdDev = java.lang.Math.sqrt(((double) numThreads / (numThreads - 1))
                     //        * java.lang.Math.abs((exclSumSqr[i] / (numThreads))
                     //                - (meanProfile.getExclusive(i) * meanProfile.getExclusive(i))));
@@ -651,7 +654,7 @@ public abstract class DataSource {
         } else if (nodeID == -3) {
             return this.getStdDevData();
         }
-        
+
         Context context = this.getContext(nodeID, contextID);
         Thread thread = null;
         if (context != null)
@@ -690,6 +693,88 @@ public abstract class DataSource {
      */
     public static void setMeanIncludeNulls(boolean meanIncludeNulls) {
         DataSource.meanIncludeNulls = meanIncludeNulls;
+    }
+
+    protected void checkForPhases() {
+        
+        Group tau_phase = this.getGroup("TAU_PHASE");
+        
+        ArrayList phases = new ArrayList();
+        if (tau_phase != null) {
+            phasesPresent = true;
+            
+            for (Iterator it = this.getFunctions(); it.hasNext();) {
+                Function function = (Function) it.next();
+                
+                if (function.isGroupMember(tau_phase)) {
+                    phases.add(function);
+                    function.setPhase(true);
+                    function.setActualPhase(function);
+                }
+                
+
+//                System.out.println("Temporary: Remove this line when Sameer updates the measurement system groups");
+//                phases.add(function);
+
+            }   
+
+            for (Iterator it = this.getFunctions(); it.hasNext();) {
+                Function function = (Function) it.next();
+                
+              int location = function.getName().indexOf("=>");
+              
+              if (location > 0) {
+                  String phaseRoot = function.getName().substring(0, location).trim();
+                  String phaseChild = function.getName().substring(location+2).trim();
+
+                  Function f = this.getFunction(phaseChild);
+                  if (f.isPhase()) {
+                      function.setPhase(true);
+                      function.setActualPhase(f);
+                  }
+                  
+                  function.setParentPhase(this.getFunction(phaseRoot));
+              }
+            }   
+
+    
+        }
+    }
+    
+    protected void finishPhaseAnalysis() {
+  
+        Group tau_phase = this.getGroup("TAU_PHASE");
+        ArrayList phases = new ArrayList();
+        if (phasesPresent) {
+            phasesPresent = true;
+            
+            for (Iterator it = this.getFunctions(); it.hasNext();) {
+                Function function = (Function) it.next();
+                if (function.isGroupMember(tau_phase)) {
+                    phases.add(function);
+                }
+            }   
+            
+            // there must be at least one
+            if (phases.size() == 0) {
+                throw new RuntimeException("Error: TAU_PHASE found, but no phases!");
+            }
+            topLevelPhase = (Function)phases.get(0);
+            for (Iterator it = phases.iterator(); it.hasNext();) {
+                Function function = (Function) it.next();
+                if (function.getMeanInclusive(0) > topLevelPhase.getMeanInclusive(0)) {
+                    topLevelPhase = function;
+                }
+            }
+        }
+    }
+
+    public boolean getPhasesPresent() {
+        return phasesPresent;
+    }
+
+    public Function getTopLevelPhase() {
+        return topLevelPhase;
     }
 
 }

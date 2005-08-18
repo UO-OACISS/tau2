@@ -20,6 +20,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 
+import edu.uoregon.tau.dms.dss.Function;
 import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -31,31 +32,32 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
     private int groupLedgerIndex;
 
     //Instance data.
-    private ParaProfTrial ppTrial = null;
+    private ParaProfTrial ppTrial;
+    private Function phase;
 
     //Create a file chooser to allow the user to select files for loading data.
     private JFileChooser fileChooser = new JFileChooser();
 
     //References for some of the components for this frame.
-    private FullDataWindowPanel panel = null;
-    private DataSorter dataSorter = null;
+    private FullDataWindowPanel panel;
+    private DataSorter dataSorter;
 
-    private JMenu optionsMenu = null;
-    private JCheckBoxMenuItem nameCheckBox = null;
-    private JCheckBoxMenuItem normalizeCheckBox = null;
-    private JCheckBoxMenuItem stackBarsCheckBox = null;
-    private JCheckBoxMenuItem orderByMeanCheckBox = null;
-    private JCheckBoxMenuItem orderCheckBox = null;
-    private JCheckBoxMenuItem slidersCheckBox = null;
-    private JCheckBoxMenuItem pathTitleCheckBox = null;
-    private JCheckBoxMenuItem metaDataCheckBox = null;
+    private JMenu optionsMenu;
+    private JCheckBoxMenuItem nameCheckBox;
+    private JCheckBoxMenuItem normalizeCheckBox;
+    private JCheckBoxMenuItem stackBarsCheckBox;
+    private JCheckBoxMenuItem orderByMeanCheckBox;
+    private JCheckBoxMenuItem orderCheckBox;
+    private JCheckBoxMenuItem slidersCheckBox;
+    private JCheckBoxMenuItem pathTitleCheckBox;
+    private JCheckBoxMenuItem metaDataCheckBox;
 
     private JLabel barLengthLabel = new JLabel("Bar Width");
     private JSlider barLengthSlider = new JSlider(0, 2000, 500);
 
-    private Container contentPane = null;
-    private GridBagLayout gbl = null;
-    private GridBagConstraints gbc = null;
+    private Container contentPane;
+    private GridBagLayout gbl;
+    private GridBagConstraints gbc;
     private JScrollPane jScrollPane;
 
     private boolean normalizeBars = true;
@@ -64,18 +66,23 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
 
     private List list;
 
-    public FullDataWindow(ParaProfTrial ppTrial) {
+    private boolean mShown = false;
+
+    
+    public FullDataWindow(ParaProfTrial ppTrial, Function phase) {
         this.ppTrial = ppTrial;
+        this.phase = phase;
         ppTrial.getSystemEvents().addObserver(this);
 
-
-        setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-
+        if (phase == null) {
+            setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        } else {
+            setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + " Phase: " + phase.getName());
+        }
         int windowWidth = 750;
         int windowHeight = 400;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
-        dataSorter = new DataSorter(ppTrial);
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -119,6 +126,7 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
         addCompItem(jScrollPane, gbc, 0, 0, 1, 1);
 
         dataSorter = new DataSorter(ppTrial);
+        dataSorter.setPhase(phase);
 
         sortLocalData();
 
@@ -373,7 +381,6 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
         return list;
     }
 
-    private boolean mShown = false;
 
     public void addNotify() {
         super.addNotify();
@@ -421,6 +428,10 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
 
     public void help(boolean display) {
         ParaProf.helpWindow.show();
+    }
+
+    public Function getPhase() {
+        return phase;
     }
 
 }

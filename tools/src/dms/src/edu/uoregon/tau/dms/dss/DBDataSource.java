@@ -195,6 +195,9 @@ public class DBDataSource extends DataSource {
 
         }
 
+        
+        checkForPhases();
+
         time = (System.currentTimeMillis()) - time;
 //        System.out.println("Time to download file (in milliseconds): " + time);
 
@@ -210,6 +213,9 @@ public class DBDataSource extends DataSource {
         // yep, I'm going to do it anyway, I have other stats to compute, we're just discarding the
         // database values.
         generateDerivedData();
+
         
+        finishPhaseAnalysis();
+
     }
 }

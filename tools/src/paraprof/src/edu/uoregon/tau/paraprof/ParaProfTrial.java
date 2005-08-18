@@ -16,6 +16,7 @@ package edu.uoregon.tau.paraprof;
 
 import java.util.*;
 import javax.swing.tree.*;
+
 import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProfTrial implements ParaProfTreeNodeUserObject {
@@ -203,7 +204,7 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
 
     public void showMainWindow() {
         if (fullDataWindow == null) {
-            fullDataWindow = new FullDataWindow(this);
+            fullDataWindow = new FullDataWindow(this, trial.getDataSource().getTopLevelPhase());
             ParaProf.incrementNumWindows();
             fullDataWindow.setVisible(true);
         } else {

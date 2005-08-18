@@ -18,9 +18,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.16 2005/06/17 22:13:47 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.17 2005/08/18 01:04:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -29,7 +29,8 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
     public static final int FUNCTION_LEDGER = 0;
     public static final int GROUP_LEDGER = 1;
     public static final int USEREVENT_LEDGER = 2;
-    private int windowType = -1; //0:function, 1:group, 2:userevent.
+    public static final int PHASE_LEDGER = 3;
+    private int windowType = -1; //0:function, 1:group, 2:userevent, 3:phase
 
     private ParaProfTrial ppTrial = null;
     private JScrollPane sp = null;
@@ -59,13 +60,16 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
         //Now set the title.
         switch (windowType) {
         case FUNCTION_LEDGER:
-            this.setTitle("Function Ledger Window: " + ppTrial.getTrialIdentifier(true));
+            this.setTitle("Function Ledger: " + ppTrial.getTrialIdentifier(true));
             break;
         case GROUP_LEDGER:
-            this.setTitle("Group Ledger Window: " + ppTrial.getTrialIdentifier(true));
+            this.setTitle("Group Ledger: " + ppTrial.getTrialIdentifier(true));
             break;
         case USEREVENT_LEDGER:
-            this.setTitle("User Event Window: " + ppTrial.getTrialIdentifier(true));
+            this.setTitle("User Event Ledger: " + ppTrial.getTrialIdentifier(true));
+            break;
+        case PHASE_LEDGER:
+            this.setTitle("Phase Ledger: " + ppTrial.getTrialIdentifier(true));
             break;
         default:
             throw new ParaProfException("Invalid Ledger Window Type: " + windowType);
@@ -163,6 +167,14 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
         } else if (this.windowType == USEREVENT_LEDGER) {
             for (Iterator it = ppTrial.getDataSource().getUserEvents(); it.hasNext();) {
                 list.addElement(new LedgerDataElement((UserEvent) it.next()));
+            }
+        } else if (this.windowType == PHASE_LEDGER) {
+            Group group = ppTrial.getDataSource().getGroup("TAU_PHASE");
+            for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
+                Function function = (Function) it.next();
+                if (function.isGroupMember(group)) {
+                    list.addElement(new LedgerDataElement(function));
+                }
             }
         }
     }

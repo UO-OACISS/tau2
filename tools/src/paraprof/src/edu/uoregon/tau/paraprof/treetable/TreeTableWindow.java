@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.6 2005/07/21 01:04:13 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.7 2005/08/18 01:04:04 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -282,7 +282,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     private JTreeTable createTreeTable(AbstractTreeTableModel model) {
         //        treeTable = new JTreeTable(model, showAsTreeMenuItem.isSelected());
-        treeTable = new JTreeTable(model, true);
+        treeTable = new JTreeTable(model, true, this);
 
         treeTable.getTree().addTreeExpansionListener(this);
         treeTable.getTree().setCellRenderer(new TreePortionCellRenderer());
@@ -400,6 +400,10 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         } else {
             return treeTable.getSize();
         }
+    }
+
+    public edu.uoregon.tau.dms.dss.Thread getThread() {
+        return thread;
     }
 
 }

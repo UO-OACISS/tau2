@@ -43,7 +43,6 @@ public class ConnectionManager {
         initialize(this.getPassword(prompt));
     }
 
-
     public void initialize(String password) {
         perfdmfUser = parser.getDBUserName();
         perfdmfPass = password;

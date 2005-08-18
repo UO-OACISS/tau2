@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.21 2005/06/17 22:13:46 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.22 2005/08/18 01:04:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.21 $
+ * @version	$Revision: 1.22 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -788,7 +788,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                 if (!callPathDrawObject.isSpacer()) {
                     if (ParaProfUtils.rightClick(evt)) {
                         JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial,
-                                callPathDrawObject.getFunction(), this);
+                                callPathDrawObject.getFunction(), thread, this);
 
                         JMenuItem menuItem = new JMenuItem("Goto Function");
                         menuItem.addActionListener(new ActionListener() {

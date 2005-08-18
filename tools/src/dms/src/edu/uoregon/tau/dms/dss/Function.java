@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.10 2005/06/08 01:53:57 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.11 2005/08/18 01:03:37 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		FunctionProfile
  */
 public class Function implements Serializable, Comparable {
@@ -21,6 +21,13 @@ public class Function implements Serializable, Comparable {
     private int id = -1;
     private List groups = null;
     private boolean callPathFunction = false;
+    private boolean phase = false;
+    private Function actualPhase;
+    private Function parentPhase;
+    //private boolean phaseSet = false;
+
+    boolean callpathFunction = false;
+    boolean callpathFunctionSet = false;
 
     // we hold on to the mean and total profiles for pass-through functions
     private FunctionProfile meanProfile;
@@ -105,6 +112,25 @@ public class Function implements Serializable, Comparable {
         return groups;
     }
 
+    public boolean isPhaseMember(Function phase) {
+        if (phase == null) {
+            return true;
+        }
+
+        if (getCallPathFunction() != true) {
+            return false;
+        }
+
+        int location = name.indexOf("=>");
+        String phaseRoot = name.substring(0, location).trim();
+
+        if (phaseRoot.compareTo(phase.getName()) == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Set callpath status
      * 
@@ -123,9 +149,6 @@ public class Function implements Serializable, Comparable {
         return callPathFunction;
     }
 
-    boolean callpathFunction = false;
-    boolean callpathFunctionSet = false;
-
     public boolean getCallPathFunction() {
         if (!callpathFunctionSet) {
 
@@ -137,6 +160,51 @@ public class Function implements Serializable, Comparable {
         return callpathFunction;
     }
 
+//    public boolean isPhase() {
+//        if (!phaseSet) {
+//            for (int i = 0; i < groups.size(); i++) {
+//                if (((Group) groups.get(i)).getName().compareTo("TAU_PHASE") == 0) {
+//                    phase = true;
+//                }
+//            }
+//            phaseSet = true;
+//        }
+//        return phase;
+//    }
+
+    
+//    private String getRightSide() {
+//        if (!getCallPathFunction()) {
+//            return null;
+//        } 
+//
+//        
+//        int location = name.indexOf("=>");
+//        String phaseRoot = name.substring(0, location).trim();
+//        String phaseChild = name.substring(location).trim();
+//        
+//        return phaseChild;
+//    }
+//    
+//    public boolean isPhase() {
+//        if (!phaseSet) {
+//
+//            if (name.indexOf("=>") > 0) {
+//                callpathFunction = true;
+//            }
+//
+//            for (int i = 0; i < groups.size(); i++) {
+//                if (((Group) groups.get(i)).getName().compareTo("TAU_PHASE") == 0) {
+//                    phase = true;
+//                }
+//            }
+//            phaseSet = true;
+//        }
+//        return phase;
+//    }
+    
+    
+    
     // color section
     public void setColor(Color color) {
         this.color = color;
@@ -245,6 +313,30 @@ public class Function implements Serializable, Comparable {
 
     public int compareTo(Object o) {
         return this.id - ((Function) o).getID();
+    }
+
+    public boolean isPhase() {
+        return phase;
+    }
+
+    public void setPhase(boolean phase) {
+        this.phase = phase;
+    }
+
+    public Function getActualPhase() {
+        return actualPhase;
+    }
+
+    public void setActualPhase(Function actualPhase) {
+        this.actualPhase = actualPhase;
+    }
+
+    public Function getParentPhase() {
+        return parentPhase;
+    }
+
+    public void setParentPhase(Function parentPhase) {
+        this.parentPhase = parentPhase;
     }
 
 }

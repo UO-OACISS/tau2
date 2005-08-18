@@ -15,49 +15,55 @@ import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
+import edu.uoregon.tau.dms.dss.Thread;
+
+
 
 /**
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.23 2005/06/17 22:13:46 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.24 2005/08/18 01:04:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.23 $
+ * @version	$Revision: 1.24 $
  * @see		FunctionDataWindowPanel
  */
-public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
-        ChangeListener, ParaProfWindow, UnitListener {
+public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
+        UnitListener {
 
+    private ParaProfTrial ppTrial;
+    private DataSorter dataSorter;
 
-    private ParaProfTrial ppTrial = null;
-    private DataSorter dataSorter = null;
+    private Function function;
 
-    private Function function = null;
+    private JMenu optionsMenu;
+    private JMenu unitsSubMenu;
 
-    private JMenu optionsMenu = null;
-    private JMenu unitsSubMenu = null;
-
-    private JCheckBoxMenuItem sortByNCTCheckbox = null;
-    private JCheckBoxMenuItem descendingOrderCheckBox = null;
-    private JCheckBoxMenuItem showValuesAsPercent = null;
-    private JCheckBoxMenuItem showPathTitleInReverse = null;
-    private JCheckBoxMenuItem showMetaData = null;
+    private JCheckBoxMenuItem sortByNCTCheckbox;
+    private JCheckBoxMenuItem descendingOrderCheckBox;
+    private JCheckBoxMenuItem showValuesAsPercent;
+    private JCheckBoxMenuItem showPathTitleInReverse;
+    private JCheckBoxMenuItem showMetaData;
 
     private JLabel barLengthLabel = new JLabel("Bar Width");
     private JSlider barLengthSlider = new JSlider(0, 2000, 250);
 
-    private FunctionDataWindowPanel panel = null;
-    private JScrollPane sp = null;
+    private FunctionDataWindowPanel panel;
+    private JScrollPane sp;
 
     private List list = new ArrayList();
 
     private double maxValue;
     private int units = ParaProf.preferences.getUnits();
 
+    
+    // Phase support
+    private Thread phaseThread;
+    private boolean phaseDisplay;
+    
     public FunctionDataWindow(ParaProfTrial ppTrial, Function function) {
         this.ppTrial = ppTrial;
         ppTrial.getSystemEvents().addObserver(this);
-
 
         this.function = function;
         int windowWidth = 650;
@@ -84,7 +90,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             this.help(false);
         }
 
-
         //Setting up the layout system for the main window.
         getContentPane().setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -98,11 +103,9 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
         setupMenus();
 
-        
         this.setHeader();
 
         sortLocalData();
-
 
         barLengthSlider.setPaintTicks(true);
         barLengthSlider.setMajorTickSpacing(400);
@@ -118,6 +121,17 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         gbc.weighty = 100;
         addCompItem(sp, gbc, 0, 0, 1, 1);
         ParaProf.incrementNumWindows();
+    }
+
+    
+    public void changeToPhaseDisplay(Thread thread) {
+        phaseThread = thread;
+        phaseDisplay = true;
+        sortLocalData();
+        
+        //Now set the title.
+        this.setTitle(ParaProfUtils.getThreadIdentifier(thread) + " - Function Data: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+
     }
     
     private Component createMetricMenu(final ValueType valueType, boolean enabled, ButtonGroup group) {
@@ -167,8 +181,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-        
-
         optionsMenu = new JMenu("Options");
 
         JCheckBoxMenuItem box = null;
@@ -184,7 +196,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         optionsMenu.add(showMetaData);
 
         optionsMenu.add(new JSeparator());
-        
+
         ActionListener sortData = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 sortLocalData();
@@ -210,13 +222,15 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         //Set the value type options.
         subMenu = new JMenu("Select Metric...");
         group = new ButtonGroup();
-        
+
         subMenu.add(createMetricMenu(ValueType.EXCLUSIVE, dataSorter.getValueType() == ValueType.EXCLUSIVE
                 || dataSorter.getValueType() == ValueType.EXCLUSIVE_PERCENT, group));
         subMenu.add(createMetricMenu(ValueType.INCLUSIVE, dataSorter.getValueType() == ValueType.INCLUSIVE
                 || dataSorter.getValueType() == ValueType.INCLUSIVE_PERCENT, group));
-        subMenu.add(createMetricMenu(ValueType.INCLUSIVE_PER_CALL, dataSorter.getValueType() == ValueType.INCLUSIVE_PER_CALL, group));
-        subMenu.add(createMetricMenu(ValueType.EXCLUSIVE_PER_CALL, dataSorter.getValueType() == ValueType.EXCLUSIVE_PER_CALL, group));
+        subMenu.add(createMetricMenu(ValueType.INCLUSIVE_PER_CALL, dataSorter.getValueType() == ValueType.INCLUSIVE_PER_CALL,
+                group));
+        subMenu.add(createMetricMenu(ValueType.EXCLUSIVE_PER_CALL, dataSorter.getValueType() == ValueType.EXCLUSIVE_PER_CALL,
+                group));
 
         button = new JRadioButtonMenuItem("Number of Calls", dataSorter.getValueType() == ValueType.NUMCALLS);
         button.addActionListener(new ActionListener() {
@@ -229,8 +243,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         group.add(button);
         subMenu.add(button);
 
-        button = new JRadioButtonMenuItem("Number of Child Calls",
-                dataSorter.getValueType() == ValueType.NUMSUBR);
+        button = new JRadioButtonMenuItem("Number of Child Calls", dataSorter.getValueType() == ValueType.NUMSUBR);
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 dataSorter.setValueType(ValueType.NUMSUBR);
@@ -244,8 +257,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         optionsMenu.add(subMenu);
         optionsMenu.addMenuListener(this);
 
-      
-
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
@@ -255,8 +266,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
         setJMenuBar(mainMenu);
     }
-
-    
 
     public void actionPerformed(ActionEvent evt) {
         try {
@@ -291,8 +300,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     public void menuSelected(MenuEvent evt) {
         try {
 
-            if (dataSorter.getValueType() == ValueType.EXCLUSIVE
-                    || dataSorter.getValueType() == ValueType.INCLUSIVE
+            if (dataSorter.getValueType() == ValueType.EXCLUSIVE || dataSorter.getValueType() == ValueType.INCLUSIVE
                     || dataSorter.getValueType() == ValueType.EXCLUSIVE_PERCENT
                     || dataSorter.getValueType() == ValueType.INCLUSIVE_PERCENT) {
                 showValuesAsPercent.setEnabled(true);
@@ -373,6 +381,8 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
     public void sortLocalData() {
 
+        
+        
         if (sortByNCTCheckbox.isSelected()) {
             dataSorter.setSortType(SortType.NCT);
         } else {
@@ -397,8 +407,12 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
         setHeader();
 
-        list = dataSorter.getFunctionData(function, true, true);
-
+        if (phaseDisplay) {
+            list = dataSorter.getFunctionAcrossPhases(function, phaseThread);
+        } else {
+            list = dataSorter.getFunctionData(function, true, true);
+        }
+        
         maxValue = 0;
         for (Iterator it = list.iterator(); it.hasNext();) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
@@ -466,24 +480,20 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     public String getHeaderString() {
         if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
                 || showValuesAsPercent.isSelected())
-            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n"
-                    + "Name: " + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n";
+            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Name: "
+                    + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n";
         else
-            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n"
-                    + "Name: " + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n"
-                    + "Units: "
-                    + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric())
-                    + "\n";
+            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Name: "
+                    + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n"
+                    + "Units: " + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
     }
-
 
     private void showWidthSlider(boolean displaySliders) {
         GridBagConstraints gbc = new GridBagConstraints();
         if (displaySliders) {
             getContentPane().remove(sp);
 
-
-            gbc.insets = new Insets(5,5,5,5);
+            gbc.insets = new Insets(5, 5, 5, 5);
             gbc.fill = GridBagConstraints.NONE;
             gbc.anchor = GridBagConstraints.EAST;
             gbc.weightx = 0.10;
@@ -496,7 +506,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             gbc.weighty = 0.01;
             addCompItem(barLengthSlider, gbc, 1, 0, 1, 1);
 
-            gbc.insets = new Insets(0,0,0,0);
+            gbc.insets = new Insets(0, 0, 0, 0);
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1.0;
@@ -547,4 +557,10 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         this.setHeader();
         panel.repaint();
     }
+
+
+    public boolean getPhaseDisplay() {
+        return phaseDisplay;
+    }
+
 }

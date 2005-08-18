@@ -54,6 +54,8 @@ public class PPThread {
     public String getName() {
         if (this.getNodeID() == -1) {
             return "mean";
+        } else if (this.getNodeID() == -2) {
+            return "total";
         } else if (this.getNodeID() == -3) {
             return "std. dev.";
         } else {
@@ -100,7 +102,7 @@ public class PPThread {
         for (Iterator e1 = functionList.iterator(); e1.hasNext();) {
             FunctionProfile functionProfile = (FunctionProfile) e1.next();
             if (functionProfile != null) {
-                if (getAll || ppTrial.displayFunction(functionProfile.getFunction())) {
+                if (getAll || ppTrial.displayFunction(functionProfile.getFunction()) && functionProfile.getFunction().isPhaseMember(dataSorter.getPhase())) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(dataSorter, thread, functionProfile);
                     newList.addElement(ppFunctionProfile);
                     maxExclusivePercent = Math.max(maxExclusivePercent,

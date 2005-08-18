@@ -54,7 +54,7 @@ public class JTreeTable extends JTable implements MouseListener {
     private int sortedColumnIndex = 0;
     private boolean sortedColumnAscending;
 
-    public JTreeTable(final AbstractTreeTableModel treeTableModel, boolean showHandles) {
+    public JTreeTable(final AbstractTreeTableModel treeTableModel, boolean showHandles, final TreeTableWindow window) {
         super();
 
         // Create the tree. It will be used as a renderer and editor. 
@@ -72,7 +72,7 @@ public class JTreeTable extends JTable implements MouseListener {
                         TreeTableNode node = (TreeTableNode) path.getLastPathComponent();
                         if (ParaProfUtils.rightClick(evt)) {
                             ParaProfUtils.createFunctionClickPopUp(node.getModel().getPPTrial(),
-                                    node.getFunctionProfile().getFunction(), JTreeTable.this).show(JTreeTable.this,
+                                    node.getFunctionProfile().getFunction(), window.getThread(), JTreeTable.this).show(JTreeTable.this,
                                     evt.getX(), evt.getY());
                         }
                     }

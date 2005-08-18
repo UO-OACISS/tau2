@@ -16,11 +16,11 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.13 2005/06/29 23:01:38 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.14 2005/08/18 01:04:02 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -42,6 +42,25 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
     private boolean widthSet = false;
     private int windowType = -1;
+
+    public LedgerWindowPanel(ParaProfTrial ppTrial, LedgerWindow window, int windowType) {
+
+        setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
+        setBackground(Color.white);
+
+        this.ppTrial = ppTrial;
+        this.window = window;
+        this.windowType = windowType;
+
+        //Add this object as a mouse listener.
+        addMouseListener(this);
+
+        setupMenus();
+
+        //Schedule a repaint of this panel.
+        this.repaint();
+
+    }
 
     public void setupMenus() {
         JMenuItem jMenuItem = null;
@@ -84,25 +103,6 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
             break;
         }
-
-    }
-
-    public LedgerWindowPanel(ParaProfTrial ppTrial, LedgerWindow window, int windowType) {
-
-        setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
-        setBackground(Color.white);
-
-        this.ppTrial = ppTrial;
-        this.window = window;
-        this.windowType = windowType;
-
-        //Add this object as a mouse listener.
-        addMouseListener(this);
-
-        setupMenus();
-
-        //Schedule a repaint of this panel.
-        this.repaint();
 
     }
 
@@ -326,9 +326,9 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                             // not left click (middle and right)
                             clickedOnObject = lde;
 
-                            if (windowType == LedgerWindow.FUNCTION_LEDGER) {
-                                (ParaProfUtils.createFunctionClickPopUp(ppTrial, lde.getFunction(), this)).show(this, evt.getX(),
-                                        evt.getY());
+                            if (windowType == LedgerWindow.FUNCTION_LEDGER || windowType == LedgerWindow.PHASE_LEDGER) {
+                                (ParaProfUtils.createFunctionClickPopUp(ppTrial, lde.getFunction(),
+                                        ppTrial.getDataSource().getTotalData(), this)).show(this, evt.getX(), evt.getY());
                             } else {
                                 popup.show(this, evt.getX(), evt.getY());
                             }

@@ -20,20 +20,16 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Vector;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
 
+import edu.uoregon.tau.dms.dss.Function;
 import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.*;
-import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
-import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
-import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 
 public class ThreadDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener,
         KeyListener, SearchableOwner, ScrollBarController, ParaProfWindow, UnitListener {
@@ -41,6 +37,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     private PPThread ppThread;
     private ParaProfTrial ppTrial = null;
     private DataSorter dataSorter = null;
+    private Function phase;
 
     private JMenu optionsMenu = null;
     private JMenu unitsSubMenu = null;
@@ -69,6 +66,8 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 
     private SearchPanel searchPanel;
 
+    private double maxValue;
+    
     // for derived metrics the exclusive could be higher than the inclusive, so the percent
     // will be higher than 100.  This may confuse users so we disable showing percentages if one
     // goes over 100.
@@ -76,11 +75,13 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 
     private edu.uoregon.tau.dms.dss.Thread thread;
 
-    public ThreadDataWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread) {
+    public ThreadDataWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, Function phase) {
         this.ppTrial = ppTrial;
+        this.phase = phase;
         ppTrial.getSystemEvents().addObserver(this);
 
         dataSorter = new DataSorter(ppTrial);
+        dataSorter.setPhase(phase);
         dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
         dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
         this.thread = thread;
@@ -90,14 +91,21 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         //setLocation(new java.awt.Point(300, 200));
         setSize(new java.awt.Dimension(700, 450));
 
-        //Now set the title.
-        if (thread.getNodeID() == -1)
-            this.setTitle("Mean Data Window: "
-                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        else
-            this.setTitle(ppThread.getName() + " - "
-                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
+        String phaseString = "";
+        if (phase != null) {
+            phaseString = " Phase: " + phase.getName();
+        }
+        
+        if (thread.getNodeID() == -1) {
+            this.setTitle("Mean Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
+        } else if (thread.getNodeID() == -3) {
+            this.setTitle("Standard Deviation Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())+ phaseString);
+        } else {
+            this.setTitle(ppThread.getName() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())+ phaseString);
+        }
+
+        
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -525,6 +533,16 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             percent = false;
         }
 
+        
+        
+        
+        maxValue = 0;
+        for (Iterator it = list.iterator(); it.hasNext();) {
+            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
+            double value = ppFunctionProfile.getValue();
+            maxValue = Math.max(maxValue, value);
+        }
+        
         panel.resetStringSize();
 
     }
@@ -705,5 +723,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         this.units = units;
         this.setHeader();
         panel.repaint();
+    }
+
+    public double getMaxValue() {
+        return maxValue;
     }
 }

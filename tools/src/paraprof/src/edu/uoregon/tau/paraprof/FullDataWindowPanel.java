@@ -24,6 +24,8 @@ import java.util.List;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
+import com.sun.rsasign.e;
+
 import edu.uoregon.tau.dms.dss.Function;
 import edu.uoregon.tau.dms.dss.Group;
 import edu.uoregon.tau.paraprof.interfaces.ImageExport;
@@ -84,7 +86,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
             }
 
             if (index >= list.size()) { // past the bottom
-                return "";
+                return null;
             }
 
             if (xCoord < barXCoord) { // left of the bars
@@ -124,8 +126,17 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
                         ParaProf.helpWindow.writeText("Left click to go directly to the Function Data Window.");
 
                     }
-                    //Return the name of the function
-                    return ppFunctionProfile.getFunctionName();
+
+                    
+                    if (ppTrial.getDataSource().getPhasesPresent()) {
+      
+//                        return "Other Patches";
+                        String name = ppFunctionProfile.getFunctionName();
+                        return name.substring(name.indexOf("=>")+2).trim();
+                    } else {
+                        //Return the name of the function
+                        return ppFunctionProfile.getFunctionName();
+                    }
                 }
                 // If in here, and at this position, it means that the mouse
                 // is not over a bar. However, we might be over the misc. function
@@ -245,12 +256,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
 
         int maxBarWidth = 0;
 
-        // Draw the mean bar
-        //   yCoord = yCoord + (barSpacing); //Still need to update the yCoord
-        // even if the mean bar is not
-        // drawn.
-
-        // Draw the thread bar
+        // Draw the thread bars
         if (list != null) {
             for (int i = startElement; i <= endElement; i++) {
                 ppThread = (PPThread) list.get(i);
@@ -383,11 +389,12 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
 
             } else {
 
-                //Still want to set the draw coords for this function, were it
-                // to be non zero.
+                //Still want to set the draw coords for this function, were it to be non zero.
                 //This aids in mouse click and tool tip events.
-                if (toScreen)
-                    ppFunctionProfile.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+                if (toScreen) {
+                    //ppFunctionProfile.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+                    ppFunctionProfile.setDrawCoords(-5000, -5000, -5000, -5000);
+                }
             }
 
         }
@@ -578,8 +585,10 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
                     //Still want to set the draw coords for this function, were
                     // it to be none zero.
                     //This aids in mouse click and tool tip events.
-                    if (toScreen)
-                        ppFunctionProfile.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+                    if (toScreen) {
+                        //ppFunctionProfile.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+                        ppFunctionProfile.setDrawCoords(-5000, -5000, -5000, -5000);
+                    }
                 }
 
                 // skip some space
@@ -654,7 +663,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
             
             if (ParaProfUtils.rightClick(evt)) { // Bring up context menu
                 if (xCoord < barXCoord) { // user clicked on the N,C,T
-                    ParaProfUtils.handleThreadClick(ppTrial, ppThread.getThread(), this, evt);
+                    ParaProfUtils.handleThreadClick(ppTrial, window.getPhase(), ppThread.getThread(), this, evt);
                 } else {
 
                     Iterator l = ppThread.getFunctionListIterator();
@@ -663,7 +672,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
 
                         if (xCoord <= ppFunctionProfile.getXEnd() && xCoord >= ppFunctionProfile.getXBeg()) {
                             JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(),
-                                    this);
+                                    ppThread.getThread(), this);
                             popup.show(this, evt.getX(), evt.getY());
                         }
                     }
@@ -671,7 +680,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
             } else { // Left Click
 
                 if (xCoord < barXCoord) { // user clicked on N,C,T
-                    ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial, ppThread.getThread());
+                    ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial, ppThread.getThread(), window.getPhase());
                     threadDataWindow.show();
                 } else {
                     //Find the appropriate PPFunctionProfile.
@@ -726,7 +735,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
     //This method sets both xPanelSize and yPanelSize.
     private boolean resizePanel(FontMetrics fmFont, int width) {
         boolean resized = false;
-        int newYPanelSize = (((window.getData()).size()) + 1) * barSpacing + 10;
+        int newYPanelSize = (((window.getData()).size())) * barSpacing + 10;
         int newXPanelSize = width;
         if ((newYPanelSize != yPanelSize) || (newXPanelSize != xPanelSize)) {
             yPanelSize = newYPanelSize;

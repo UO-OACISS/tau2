@@ -3,6 +3,7 @@ package edu.uoregon.tau.paraprof;
 import java.util.*;
 
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.dms.dss.Thread;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -13,9 +14,9 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.11 2005/06/17 22:13:46 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.12 2005/08/18 01:04:02 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  */
 public class DataSorter {
 
@@ -30,9 +31,15 @@ public class DataSorter {
     private ValueType valueType = ValueType.EXCLUSIVE;
     private UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
 
+    private Function phase;
+
     public DataSorter(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
         this.selectedMetricID = ppTrial.getDefaultMetricID();
+    }
+
+    public void setPhase(Function phase) {
+        this.phase = phase;
     }
 
     public UserEventValueType getUserEventValueType() {
@@ -46,10 +53,11 @@ public class DataSorter {
     public boolean isTimeMetric() {
         String metricName = ppTrial.getMetricName(this.getSelectedMetricID());
         metricName = metricName.toUpperCase();
-        if (metricName.indexOf("TIME") == -1)
+        if (metricName.indexOf("TIME") == -1) {
             return false;
-        else
+        } else {
             return true;
+        }
     }
 
     public boolean isDerivedMetric() {
@@ -128,7 +136,7 @@ public class DataSorter {
         for (int i = 0; i < functionList.size(); i++) {
             FunctionProfile functionProfile = (FunctionProfile) functionList.get(i);
             if (functionProfile != null) {
-                if (ppTrial.displayFunction(functionProfile.getFunction())) {
+                if (ppTrial.displayFunction(functionProfile.getFunction()) && functionProfile.getFunction().isPhaseMember(phase)) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                     newList.add(ppFunctionProfile);
                 }
@@ -149,7 +157,8 @@ public class DataSorter {
             ppThread = new PPThread(thread, this.ppTrial);
             for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
                 FunctionProfile functionProfile = (FunctionProfile) e4.next();
-                if ((functionProfile != null) && (ppTrial.displayFunction(functionProfile.getFunction()))) {
+                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
+                        && functionProfile.getFunction().isPhaseMember(phase)) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                     ppThread.addFunction(ppFunctionProfile);
                 }
@@ -161,13 +170,28 @@ public class DataSorter {
             ppThread = new PPThread(thread, this.ppTrial);
             for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
                 FunctionProfile functionProfile = (FunctionProfile) e4.next();
-                if ((functionProfile != null) && (ppTrial.displayFunction(functionProfile.getFunction()))) {
+                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
+                        && functionProfile.getFunction().isPhaseMember(phase)) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                     ppThread.addFunction(ppFunctionProfile);
                 }
             }
             Collections.sort(ppThread.getFunctionList());
             threads.add(ppThread);
+
+            thread = ppTrial.getDataSource().getTotalData();
+            ppThread = new PPThread(thread, this.ppTrial);
+            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
+                FunctionProfile functionProfile = (FunctionProfile) e4.next();
+                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
+                        && functionProfile.getFunction().isPhaseMember(phase)) {
+                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                    ppThread.addFunction(ppFunctionProfile);
+                }
+            }
+            Collections.sort(ppThread.getFunctionList());
+            threads.add(ppThread);
+
         }
 
         // reset this in case we are switching metrics
@@ -191,7 +215,8 @@ public class DataSorter {
             //Now enter the thread data loops for this thread.
             for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
                 FunctionProfile functionProfile = (FunctionProfile) e4.next();
-                if ((functionProfile != null) && (ppTrial.displayFunction(functionProfile.getFunction()))) {
+                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
+                        && functionProfile.getFunction().isPhaseMember(phase)) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                     ppThread.addFunction(ppFunctionProfile);
                     counter++;
@@ -213,6 +238,13 @@ public class DataSorter {
                 threads.add(ppThread);
             }
         }
+
+        if (ppTrial.getDataSource().getAllThreads().size() > 1 && threads.size() == 4) {
+            threads.remove(0);
+            threads.remove(0);
+            threads.remove(0);
+        }
+
         return threads;
     }
 
@@ -240,6 +272,15 @@ public class DataSorter {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                     newList.add(ppFunctionProfile);
                 }
+
+                thread = ppTrial.getDataSource().getTotalData();
+                functionProfile = thread.getFunctionProfile(function);
+                if (functionProfile != null) {
+                    //Create a new thread data object.
+                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                    newList.add(ppFunctionProfile);
+                }
+
             }
         }
         for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
@@ -249,6 +290,32 @@ public class DataSorter {
                 //Create a new thread data object.
                 PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                 newList.add(ppFunctionProfile);
+            }
+        }
+        Collections.sort(newList);
+        return newList;
+    }
+
+    public List getFunctionAcrossPhases(Function function, Thread thread) {
+        List newList = new ArrayList();
+
+        String functionName = function.getName();
+        if (function.isCallPathFunction()) {
+            functionName = functionName.substring(functionName.indexOf("=>")+2).trim();
+        }
+        
+        for (Iterator it = thread.getFunctionProfileIterator(); it.hasNext();) {
+            FunctionProfile functionProfile = (FunctionProfile) it.next();
+            if (functionProfile != null) {
+
+                if (functionProfile.isCallPathFunction()) {
+                    String name = functionProfile.getName();
+                    name = name.substring(name.indexOf("=>")+2).trim();
+                    if (functionName.compareTo(name) == 0) {
+                        PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                        newList.add(ppFunctionProfile);
+                    }
+                }
             }
         }
         Collections.sort(newList);
@@ -283,6 +350,10 @@ public class DataSorter {
 
     public double[] getMaxExclusives() {
         return maxExclusives;
+    }
+
+    public Function getPhase() {
+        return phase;
     }
 
 }

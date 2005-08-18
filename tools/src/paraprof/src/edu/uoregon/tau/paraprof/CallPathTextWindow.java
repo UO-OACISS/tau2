@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.interfaces.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.28 2005/08/10 21:48:04 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.29 2005/08/18 01:04:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.28 $
+ * @version	$Revision: 1.29 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -72,7 +72,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 this.setTitle("Standard Deviation Call Path Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
             } else {
                 this.setTitle("Call Path Data " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + "," + thread.getThreadID() + " - "
-                        + ppTrial.getTrialIdentifier(true));
+                        + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
             }
         //} else {
         //    this.setTitle("Call Path Data Relations - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));

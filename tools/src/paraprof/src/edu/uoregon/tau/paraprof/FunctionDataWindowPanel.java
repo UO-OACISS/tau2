@@ -25,9 +25,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.19 2005/06/17 22:13:47 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.20 2005/08/18 01:04:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.19 $
+ * @version	$Revision: 1.20 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements MouseListener, Printable, ImageExport {
@@ -97,8 +97,7 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
         int yCoord = 0;
         barXCoord = barLength + textOffset;
 
-        //To make sure the bar details are set, this
-        //method must be called.
+        //To make sure the bar details are set, this method must be called.
         ppTrial.getPreferencesWindow().setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
@@ -106,14 +105,12 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
         barHeight = ppTrial.getPreferencesWindow().getBarHeight();
 
         //Obtain the font and its metrics.
-        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
-                ppTrial.getPreferencesWindow().getFontStyle(), barHeight);
+        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(), ppTrial.getPreferencesWindow().getFontStyle(),
+                barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
-        //Get the max value for this function
-
-        //        double maxValue = ParaProfUtils.getMaxValue(function, window.getValueType(), window.isPercent(), ppTrial);
+        // Get the max value for the window
         double maxValue = window.getMaxValue();
 
         // too bad these next few lines are bullshit 
@@ -122,8 +119,7 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
             stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0, maxValue, 6) + "%");
             barXCoord = barXCoord + stringWidth;
         } else {
-            stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(window.units(), maxValue,
-                    ParaProf.defaultNumberPrecision));
+            stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(window.units(), maxValue, ParaProf.defaultNumberPrecision));
             barXCoord = barXCoord + stringWidth;
         }
 
@@ -135,16 +131,16 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
         }
 
         // determine which elements to draw (clipping)
-        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow,
-                list.size(), barSpacing, yCoord);
+        int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(),
+                barSpacing, yCoord);
         int startElement = clips[0];
         int endElement = clips[1];
         yCoord = clips[2];
 
-        //Check for group membership.
+        // Check for group membership.
         boolean groupMember = function.isGroupMember(ppTrial.getHighlightedGroup());
 
-        //Draw the header if required.
+        // Draw the header if required.
         if (drawHeader) {
             FontRenderContext frc = g2D.getFontRenderContext();
             Insets insets = this.getInsets();
@@ -180,13 +176,20 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
             yCoord = yCoord + (barSpacing);
 
             String barString;
-            if (ppFunctionProfile.getNodeID() == -1) {
-                barString = "mean";
-            } else if (ppFunctionProfile.getNodeID() == -3) {
-                barString = "std. dev.";
+
+            if (window.getPhaseDisplay()) {
+                barString = ParaProfUtils.getLeftSide(ppFunctionProfile.getFunctionName());
             } else {
-                barString = "n,c,t " + (ppFunctionProfile.getNodeID()) + "," + (ppFunctionProfile.getContextID()) + ","
-                        + (ppFunctionProfile.getThreadID());
+                if (ppFunctionProfile.getNodeID() == -1) {
+                    barString = "mean";
+                } else if (ppFunctionProfile.getNodeID() == -2) {
+                    barString = "total";
+                } else if (ppFunctionProfile.getNodeID() == -3) {
+                    barString = "std. dev.";
+                } else {
+                    barString = "n,c,t " + (ppFunctionProfile.getNodeID()) + "," + (ppFunctionProfile.getContextID()) + ","
+                            + (ppFunctionProfile.getThreadID());
+                }
             }
 
             drawBar(g2D, fmFont, value, maxValue, barString, barXCoord, yCoord, barHeight, groupMember);
@@ -232,9 +235,9 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
             g2D.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
         }
 
-        //Draw the value next to the bar.
+        // Draw the value next to the bar.
         g2D.setColor(Color.black);
-        //Do not want to put a percent sign after the bar if we are not
+        // Do not want to put a percent sign after the bar if we are not
         // exclusive or inclusive.
 
         if (window.getDataSorter().getValueType() == ValueType.EXCLUSIVE_PERCENT
@@ -271,17 +274,19 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
 
                 if (ParaProfUtils.rightClick(evt)) {
                     if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
-                        ParaProfUtils.handleThreadClick(ppTrial, ppFunctionProfile.getThread(), this, evt);
+                        ParaProfUtils.handleThreadClick(ppTrial, function.getParentPhase(), ppFunctionProfile.getThread(), this,
+                                evt);
                     } else {
-                        JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial,
-                                ppFunctionProfile.getFunction(), this);
+                        JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(),
+                                ppFunctionProfile.getThread(), this);
                         popup.show(this, evt.getX(), evt.getY());
                     }
                     return;
                 }
 
                 if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
-                    ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial, ppFunctionProfile.getThread());
+                    ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial, ppFunctionProfile.getThread(),
+                            function.getParentPhase());
                     threadDataWindow.show();
                 } else {
                     ppTrial.toggleHighlightedFunction(function);
@@ -306,10 +311,11 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
 
     public Dimension getImageSize(boolean fullScreen, boolean header) {
         Dimension d = null;
-        if (fullScreen)
+        if (fullScreen) {
             d = this.getSize();
-        else
+        } else {
             d = window.getSize();
+        }
 
         if (header) {
             d.setSize(d.getWidth(), d.getHeight() + lastHeaderEndPosition);

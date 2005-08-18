@@ -472,7 +472,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                         ppFunctionProfile = (PPFunctionProfile) list.get(tmpInt2);
                         if (ParaProfUtils.rightClick(evt)) {
                             
-                            (ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(), this)).show(this, evt.getX(),
+                            (ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(), ppFunctionProfile.getThread(), this)).show(this, evt.getX(),
                                     evt.getY());
 
                         } else {
