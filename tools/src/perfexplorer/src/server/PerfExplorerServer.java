@@ -27,7 +27,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.18 2005/08/17 21:28:50 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.19 2005/08/18 21:37:07 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1290,6 +1290,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			System.err.println(USAGE);
 			System.exit(-1);
 		}
+
+		if (quiet == null) 
+			quiet = new Boolean(false);
 
 		if (configFile == null) {
 			System.err.println("Please enter a valid config file.");
