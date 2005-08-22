@@ -83,7 +83,7 @@ void Tau_mark_group_as_phase(void **ptr);
 
 
 
-#define EXTRACT_GROUP(n, l, gr, gr_name) TauGroup_t gr; char *gr_name = (char *) malloc(l+1); tau_extract_groupinfo(n, gr, gr_name); 
+#define EXTRACT_GROUP(n, l, gr, gr_name) TauGroup_t gr; char *gr_name = NULL; tau_extract_groupinfo(n, gr, gr_name); 
 
 /*****************************************************************************
 * The following routines are called by the Fortran program and they in turn
@@ -93,19 +93,18 @@ void Tau_mark_group_as_phase(void **ptr);
 void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
 {
 
-  char * fname = (char *) malloc((size_t) slen+1);
-  strncpy(fname, infname, slen);
-  fname[slen] = '\0';  
-  
+  if (*ptr == 0) {
+    char * fname = (char *) malloc((size_t) slen+1);
+    strncpy(fname, infname, slen);
+    fname[slen] = '\0';  
+    
 #ifdef DEBUG_PROF
-  printf("Inside tau_profile_timer_group_ fname=%s\n", fname);
+    printf("Inside tau_profile_timer_group_ fname=%s\n", fname);
 #endif /* DEBUG_PROF */
-  
-  if (*ptr == 0) 
-  {
+    
     *ptr = Tau_get_profiler(fname, (char *)" ", *group, fname);
   }
-
+  
 #ifdef DEBUG_PROF 
   printf("get_profiler returns %lx\n", *ptr);
 #endif /* DEBUG_PROF */
@@ -160,7 +159,7 @@ void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name)
 }
 
 
-void tau_profile_timer_(void **ptr, char *infname, int slen)
+void tau_profile_timer_(void **ptr, char *fname, int flen)
 {
   
 
@@ -168,14 +167,26 @@ void tau_profile_timer_(void **ptr, char *infname, int slen)
   printf("Inside tau_profile_timer_ fname=%s\n", infname);
 #endif /* DEBUG_PROF */
   if (*ptr == 0) 
-  {  // remove garbage characters from the end of name
-    char * fname = (char *) malloc((size_t)slen+1);
-    strncpy(fname, infname, slen);
-    fname[slen] = '\0';
-    
-    EXTRACT_GROUP(fname, slen, gr, gr_name)
-    *ptr = Tau_get_profiler(fname, (char *)" ", gr, gr_name);
-    free(fname); 
+  {
+    // make a copy so that we can null terminate it
+    char *localname = (char *) malloc((size_t)flen+1);
+    // hold on to the original pointer to free it since EXTRACT_GROUP
+    // might change fname
+    char *tmp = localname;
+    strncpy(localname, fname, flen);
+    localname[flen] = '\0';
+
+    // check for unprintable characters
+    for(int i=0; i<strlen(localname); i++) {
+      if (!VALID_NAME_CHAR(localname[i])) { 
+        localname[i] = '\0';
+        break;
+      }
+    }
+
+    EXTRACT_GROUP(localname, flen, gr, gr_name)
+    *ptr = Tau_get_profiler(localname, (char *)" ", gr, gr_name);
+    free(tmp); 
   }
 
 #ifdef DEBUG_PROF 
@@ -590,15 +601,8 @@ void _main();
 #endif /* CRAYKAI || HP_FORTRAN */
 void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
 {
-  if (*ptr == 0) 
-  {  // remove garbage characters from the end of name
-    char * localname = (char *) malloc((size_t)flen+1);
-    strncpy(localname, fname, flen);
-    localname[flen] = '\0';
-    
-    EXTRACT_GROUP(localname, flen, gr, gr_name)
-    *ptr = Tau_get_profiler(localname, (char *)" ", gr, gr_name);
-    free(localname); 
+  if (*ptr == 0) {
+    tau_profile_timer_(ptr, fname, flen);
   }
   return;
 }
@@ -772,17 +776,10 @@ void TAU_REPORT_THREAD_STATISTICS(void)
 }
 
 //#if (defined (TAU_XLC) || defined(TAU_AIX) || defined(HP_FORTRAN))
-void tau_profile_timer(void **profiler, char *fname, int len)
+void tau_profile_timer(void **ptr, char *fname, int flen)
 {
-  if (*profiler == 0) 
-  {  // remove garbage characters from the end of name
-    char * localname = (char *) malloc((size_t)len+1);
-    strncpy(localname, fname, len);
-    localname[len] = '\0';
-    
-    EXTRACT_GROUP(localname, len, gr, gr_name)
-    *profiler = Tau_get_profiler(localname, (char *)" ", gr, gr_name);
-    free(localname); 
+  if (*ptr == 0) {
+    tau_profile_timer_(ptr, fname, flen);
   }
   return;
 }
@@ -973,35 +970,9 @@ void tau_context_event(int **ptr, double *data)
 
 void tau_profile_timer__(void **ptr, char *fname, int flen)
 {
-  if (*ptr == 0) 
-  {  // remove garbage characters from the end of name
-    char * newname=new char[flen+1] ;
-    for (int j =0; j < flen; j++)
-      newname[j] = fname[j];
-
-    newname[flen] = '\0';
-
-
-    for(int i=0; i<strlen(newname); i++)
-    {
-      if (!VALID_NAME_CHAR(newname[i]))
-      { 
-        newname[i] = '\0';
-        break;
-      }
-    }
-
-#ifdef DEBUG_PROF
-    printf("Tau_get_profiler() \n");
-#endif /* DEBUG_PROF */
-    EXTRACT_GROUP(newname, flen, gr, gr_name)
-    *ptr = Tau_get_profiler(newname, " ", gr, gr_name);
+  if (*ptr == 0) {
+    tau_profile_timer_(ptr, fname, flen);
   }
-
-#ifdef DEBUG_PROF 
-  printf("get_profiler returns %x\n", *ptr);
-#endif /* DEBUG_PROF */
-
   return;
 }
 
@@ -1325,7 +1296,7 @@ void TAU_PHASE_STOP(void **profiler)
 } /* extern "C" */
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.44 $   $Date: 2005/08/11 02:10:42 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.44 2005/08/11 02:10:42 sameer Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.45 $   $Date: 2005/08/22 17:02:05 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.45 2005/08/22 17:02:05 amorris Exp $ 
  ***************************************************************************/
