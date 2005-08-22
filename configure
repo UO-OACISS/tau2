@@ -2289,8 +2289,14 @@ then
 
       if [ -f $mpilib/libfmpich.a -o -f $mpilib/libfmpich.so ]
       then
-        #echo "Fortran fmpich.* found"
-        mpiflibargs="-L$mpilib -lfmpich $wrapperlib"
+          #echo "Fortran fmpich.* found"
+	  if [ $mpi2 = "yes" ] ; then
+	      #mpich2, must not use -lfmpich
+	      mpiflibargs="-L$mpilib $wrapperlib"
+	  else 
+	      #mpich1, must use -lfmpich
+	      mpiflibargs="-L$mpilib -lfmpich $wrapperlib"
+	  fi
       else 
 	  if [ -f $mpilib/liblamf77mpi.a -o -f $mpilib/liblamf77mpi.so ] ; then
               #echo "Fortran liblamf77mpi.* found"
