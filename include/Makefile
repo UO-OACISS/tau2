@@ -366,6 +366,7 @@ TAU_GCCLIB	= -lgcc_s
 #IBM_FORTRAN#TAU_FORLIBDIR=lib #ENDIF#
 #BGL#TAU_FORLIBDIR=blrts_dev_lib #ENDIF#
 #PPC64#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath -lxl #ENDIF#
+#BGL#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -L$(EXTRADIR)/blrts_lib -lxlf90 -lxlfmath -lxl #ENDIF#
 
 #IBMXLFAPPLE#TAU_FORTRANLIBS	       = -L$(EXTRADIR)/lib -lxlf90 -lxlfmath -lxl      #ENDIF#
 
