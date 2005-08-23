@@ -18,6 +18,8 @@
 #ifndef _TAU_TF_DECL_H_
 #define _TAU_TF_DECL_H_
 
+#include "Profile/tau_types.h"
+
 /* general declarations */
 # ifndef TRUE
 #   define FALSE  0
@@ -34,7 +36,7 @@
 
 /* TAU trace library related declarations */
 typedef struct Ttf_EventDescr {
-  long int  Eid; /* event id */
+  int  Eid; /* event id */
   char *Group; /* state as in TAU_VIZ */
   char *EventName; /* name as in "foo" */
   int  Tag; /* -7 for send etc. */
@@ -50,6 +52,55 @@ struct Ttf_ltstr
 };
 
 
+#define FORMAT_NATIVE  0   // as a fallback
+#define FORMAT_32      1
+#define FORMAT_64      2
+#define FORMAT_32_SWAP 3
+#define FORMAT_64_SWAP 4
+
+
+/* for 32 bit platforms */
+typedef struct {
+  x_int32            ev;    /* -- event id        -- */
+  x_uint16           nid;   /* -- node id         -- */
+  x_uint16           tid;   /* -- thread id       -- */
+  x_int64            par;   /* -- event parameter -- */
+  x_uint64           ti;    /* -- time [us]?      -- */
+} PCXX_EV32;
+
+/* for 64 bit platforms */
+typedef struct {
+  x_int64            ev;    /* -- event id        -- */
+  x_uint16           nid;   /* -- node id         -- */
+  x_uint16           tid;   /* -- thread id       -- */
+  x_uint32           padding; /*  space wasted for 8-byte aligning the next item */ 
+  x_int64            par;   /* -- event parameter -- */
+  x_uint64           ti;    /* -- time [us]?      -- */
+} PCXX_EV64;
+
+
+typedef PCXX_EV PCXX_EV_NATIVE;
+
+
+
+#define swap16(A)  ((((x_uint16)(A) & 0xff00) >> 8) | \
+                   (((x_uint16)(A) & 0x00ff) << 8))
+#define swap32(A)  ((((x_uint32)(A) & 0xff000000) >> 24) | \
+                   (((x_uint32)(A) & 0x00ff0000) >> 8)  | \
+                   (((x_uint32)(A) & 0x0000ff00) << 8)  | \
+                   (((x_uint32)(A) & 0x000000ff) << 24))
+#define swap64(A)  ((((x_uint64)(A) & 0xff00000000000000ull) >> 56) | \
+                    (((x_uint64)(A) & 0x00ff000000000000ull) >> 40) | \
+                    (((x_uint64)(A) & 0x0000ff0000000000ull) >> 24) | \
+                    (((x_uint64)(A) & 0x000000ff00000000ull) >> 8) | \
+                    (((x_uint64)(A) & 0x00000000ff000000ull) << 8) | \
+                    (((x_uint64)(A) & 0x0000000000ff0000ull) << 24)  | \
+                    (((x_uint64)(A) & 0x000000000000ff00ull) << 40)  | \
+                    (((x_uint64)(A) & 0x00000000000000ffull) << 56))
+  
+
+
+
 typedef map< pair<int, int>, int, less < pair<int, int> > > NidTidMapT;
 typedef map< long int , Ttf_EventDescrT, less <long int> > EventIdMapT;
 typedef map< const char *, int, Ttf_ltstr > GroupIdMapT;
@@ -62,6 +113,9 @@ typedef struct Ttf_file
   GroupIdMapT	*GroupIdMap;
   int 		ClkInitialized;
   double        FirstTimestamp;
+
+  int           format;    // see above
+  int           eventSize; // sizeof() the corresponding format struct
 } Ttf_fileT;
 
 int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb);
@@ -70,7 +124,7 @@ int isEventIDRegistered(Ttf_fileT *tFile, long int eid);
 #endif /* _TAU_TF_DECL_H_ */
 
 /***************************************************************************
- * $RCSfile: TAU_tf_decl.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2003/11/13 00:09:30 $
- * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.1 2003/11/13 00:09:30 sameer Exp $ 
+ * $RCSfile: TAU_tf_decl.h,v $   $Author: amorris $
+ * $Revision: 1.2 $   $Date: 2005/08/23 21:11:09 $
+ * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.2 2005/08/23 21:11:09 amorris Exp $ 
  ***************************************************************************/

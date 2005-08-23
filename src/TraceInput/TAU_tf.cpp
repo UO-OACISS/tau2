@@ -20,9 +20,239 @@
 #define TAU_MESSAGE_SEND_EVENT -7
 #define TAU_MESSAGE_RECV_EVENT -8
 
+
+void convertEvent(Ttf_fileT *tFile, void *event, int index) {
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+  case FORMAT_32:
+  case FORMAT_64:
+    return;
+
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    event32[index].ev = swap32(event32[index].ev);
+    event32[index].nid = swap16(event32[index].nid);
+    event32[index].tid = swap16(event32[index].tid);
+    event32[index].par = swap64(event32[index].par);
+    event32[index].ti = swap64(event32[index].ti);
+    return;
+
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    event64[index].ev = swap64(event64[index].ev);
+    event64[index].nid = swap16(event64[index].nid);
+    event64[index].tid = swap16(event64[index].tid);
+    event64[index].par = swap64(event64[index].par);
+    event64[index].ti = swap64(event64[index].ti);
+
+    //    printf ("event.ti = %llu\n", swap64(event64->ti));
+    return;
+  }
+
+  return;
+}
+
+
+#define EVENT_EV  0;
+#define EVENT_NID 1;
+#define EVENT_TID 2;
+#define EVENT_PAR 3;
+#define EVENT_TI  4;
+
+int event_GetEv(Ttf_fileT *tFile, void *event, int index) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    return nativeEvent[index].ev;
+    
+  case FORMAT_32:
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    return event32[index].ev;
+
+  case FORMAT_64:
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    return event64[index].ev;
+  }
+  return 0;
+}
+
+uint64_t event_GetTi(Ttf_fileT *tFile, void *event, int index) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    return nativeEvent[index].ti;
+    
+  case FORMAT_32:
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    return event32[index].ti;
+
+  case FORMAT_64:
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    return event64[index].ti;
+  }
+  return 0;
+}
+
+int event_GetNid(Ttf_fileT *tFile, void *event, int index) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    return nativeEvent[index].nid;
+    
+  case FORMAT_32:
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    return event32[index].nid;
+
+  case FORMAT_64:
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    return event64[index].nid;
+  }
+  return 0;
+}
+
+int event_GetTid(Ttf_fileT *tFile, void *event, int index) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    return nativeEvent[index].tid;
+    
+  case FORMAT_32:
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    return event32[index].tid;
+
+  case FORMAT_64:
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    return event64[index].tid;
+  }
+  return 0;
+}
+
+
+int64_t event_GetPar(Ttf_fileT *tFile, void *event, int index) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    return nativeEvent[index].par;
+    
+  case FORMAT_32:
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    return event32[index].par;
+
+  case FORMAT_64:
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    return event64[index].par;
+  }
+  return 0;
+}
+
+ 
+
+/* determine the format of a trace file */
+void determineFormat(Ttf_fileT *tFile) {
+  int bytesRead;
+  bool formatFound = false;
+  PCXX_EV32 event32;
+  PCXX_EV64 event64;
+
+  // 32 bit regular
+  bytesRead = read(tFile->Fid, &event32, sizeof(PCXX_EV32));
+  lseek(tFile->Fid, 0, SEEK_SET);
+  if (event32.par == 3) {
+    tFile->format = FORMAT_32;
+    tFile->eventSize = sizeof(PCXX_EV32);
+    formatFound = true;
+    printf ("32 regular!\n");
+  }
+
+  // 32 bit swapped
+  bytesRead = read(tFile->Fid, &event32, sizeof(PCXX_EV32));
+  lseek(tFile->Fid, 0, SEEK_SET);
+  if (swap64(event32.par) == 3) {
+    if (formatFound == true) { // shouldn't happen, if it does, go to native
+      tFile->format = FORMAT_NATIVE;
+      tFile->eventSize = sizeof(PCXX_EV_NATIVE);
+      return;
+    }
+    tFile->format = FORMAT_32_SWAP;
+    tFile->eventSize = sizeof(PCXX_EV32);
+    formatFound = true;
+    printf ("32 swapped!\n");
+  }
+
+  // 64 bit regular
+  bytesRead = read(tFile->Fid, &event64, sizeof(PCXX_EV64));
+  lseek(tFile->Fid, 0, SEEK_SET);
+  if (event64.par == 3) {
+    if (formatFound == true) { // shouldn't happen, if it does, go to native
+      tFile->format = FORMAT_NATIVE;
+      tFile->eventSize = sizeof(PCXX_EV_NATIVE);
+      return;
+    }
+    tFile->format = FORMAT_64;
+    tFile->eventSize = sizeof(PCXX_EV64);
+    formatFound = true;
+    printf ("64 regular!\n");
+  }
+
+  // 64 bit swapped
+  bytesRead = read(tFile->Fid, &event64, sizeof(PCXX_EV64));
+  lseek(tFile->Fid, 0, SEEK_SET);
+  if (swap64(event64.par) == 3) {
+    if (formatFound == true) { // shouldn't happen, if it does, go to native
+      tFile->format = FORMAT_NATIVE;
+      tFile->eventSize = sizeof(PCXX_EV_NATIVE);
+      return;
+    }
+    tFile->format = FORMAT_64_SWAP;
+    tFile->eventSize = sizeof(PCXX_EV64);
+    formatFound = true;
+    printf ("64 swapped!\n");
+  }
+
+
+  if (formatFound == false) {
+    printf ("couldn't determine format!\n");
+    tFile->format = FORMAT_NATIVE;
+    tFile->eventSize = sizeof(PCXX_EV_NATIVE);
+  }
+}
+
+
 /* Open the trace file and return a pointer to the Ttf_fileT struct that
  * contains the file id and the maps */
-
 Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
 {
   Ttf_fileT *tFile;
@@ -87,6 +317,10 @@ Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
   /* initialize the first timestamp for the trace */
   tFile->FirstTimestamp = 0.0;
 
+
+  /* determine the format */
+  determineFormat (tFile);
+
   /* return file handle */
   return (Ttf_FileHandleT) tFile;
 }
@@ -128,10 +362,10 @@ int  Ttf_AbsSeek( Ttf_FileHandleT handle, int eventPosition )
   off_t position;
   if (eventPosition > 0)
   { /* start from the top, to the absolute position */
-    position = lseek(tFile->Fid, eventPosition*sizeof(PCXX_EV), SEEK_SET);
+    position = lseek(tFile->Fid, eventPosition*tFile->eventSize, SEEK_SET);
     if (position)
     { /* success */
-      return position/sizeof(PCXX_EV);
+      return position/tFile->eventSize;
     } 
     else
     { /* failure */
@@ -140,11 +374,11 @@ int  Ttf_AbsSeek( Ttf_FileHandleT handle, int eventPosition )
   } 
   else 
   { /* start from the tail of the event stream */
-    position = lseek(tFile->Fid, eventPosition*sizeof(PCXX_EV), SEEK_END);
+    position = lseek(tFile->Fid, eventPosition*tFile->eventSize, SEEK_END);
     if (position)
     {
       /* success, return the position */
-      return position/sizeof(PCXX_EV);
+      return position/tFile->eventSize;
     }
     else
     {
@@ -162,11 +396,11 @@ int Ttf_RelSeek( Ttf_FileHandleT handle, int plusMinusNumEvents )
   off_t position;
 
   /* seek relative to the current position */
-  position = lseek(tFile->Fid, plusMinusNumEvents*sizeof(PCXX_EV), SEEK_CUR);
+  position = lseek(tFile->Fid, plusMinusNumEvents*tFile->eventSize, SEEK_CUR);
   if (position)
   {
     /* success */
-    return position/sizeof(PCXX_EV);
+    return position/tFile->eventSize;
   }
   else
   {
@@ -182,7 +416,10 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 		int numberOfEvents )
 {
   Ttf_fileT *tFile = (Ttf_fileT *) fileHandle;
-  PCXX_EV traceBuffer[TAU_BUFSIZE];
+
+
+  void *traceBuffer = (void*) malloc (TAU_BUFSIZE*tFile->eventSize);
+
   long bytesRead, recordsRead, recordsToRead, i;
   int otherTid, otherNid, msgLen, msgTag;
 
@@ -210,8 +447,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 #endif /* DEBUG */
 
     currentPosition = lseek(tFile->Fid, 0, SEEK_SET);
-    if (currentPosition == -1)
-    {
+    if (currentPosition == -1) {
       perror("lseek failed in Ttf_ReadNumEvents");
     }
 #ifdef DEBUG
@@ -219,9 +455,8 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 #endif /* DEBUG */
 
     /* read just one record to get the first timestamp */
-    while ((bytesRead = read(tFile->Fid, traceBuffer, sizeof(PCXX_EV))) !=
-		    sizeof(PCXX_EV))
-    {
+    while ((bytesRead = read(tFile->Fid, traceBuffer, tFile->eventSize)) !=
+		    tFile->eventSize) {
       /* retry! The file may not have any data in it. Wait till it has some */
       currentPosition = lseek(tFile->Fid, 0, SEEK_SET);
 #ifdef DEBUG
@@ -234,7 +469,13 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
      * tFile->FirstTimestamp = traceBuffer[0].ti;
      * */
 
-    tFile->FirstTimestamp = traceBuffer[0].ti;
+    convertEvent(tFile, traceBuffer, 0);
+
+    tFile->FirstTimestamp = event_GetTi(tFile,traceBuffer,0);
+
+#ifdef DEBUG
+    printf ("got initial timestamp of %G\n", tFile->FirstTimestamp);
+#endif /* DEBUG */
 
     /* now return the trace file to its original position */
     currentPosition = lseek(tFile->Fid, originalPosition, SEEK_SET);
@@ -243,16 +484,19 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 #endif /* DEBUG */
 
   }
+
+  printf ("reading records!\n");
+
   /* Read n records and go through each event record */
-  if ((bytesRead = read(tFile->Fid, traceBuffer, recordsToRead*sizeof(PCXX_EV)))
-		  != (long)(numberOfEvents * sizeof(PCXX_EV)) )
+  if ((bytesRead = read(tFile->Fid, traceBuffer, recordsToRead*tFile->eventSize))
+		  != (long)(numberOfEvents * tFile->eventSize) )
   {
     /* Check if data read is inconsistent with the size of trace record */
-    if ((bytesRead % sizeof(PCXX_EV)) != 0)
+    if ((bytesRead % tFile->eventSize) != 0)
     {
 #ifdef DEBUG
       printf("ERROR reading trace data, bytes read = %d, rec size=%d, recs to read = %d\n", 
-		      bytesRead, sizeof(PCXX_EV), recordsToRead);
+		      bytesRead, tFile->eventSize, recordsToRead);
       printf("READ Error: inconsistent trace file. \n");
       printf("Bytes read are not integer multiples of the trace record size.\n");
       printf("Rewinding %d bytes... \n", bytesRead);
@@ -263,19 +507,20 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
     }
   }
   /* the number of records read */
-  recordsRead = bytesRead/sizeof(PCXX_EV); 
+  recordsRead = bytesRead/tFile->eventSize; 
 
   /* See if the events are all present */
   for (i = 0; i < recordsRead; i++)
   {
-    if (!isEventIDRegistered(tFile, traceBuffer[i].ev))
+    convertEvent(tFile, traceBuffer, i);
+    if (!isEventIDRegistered(tFile, event_GetEv(tFile, traceBuffer, i)))
     {
       /* if event id is not found in the event id map, read the EDF file */
       if (!refreshTables(tFile, callbacks))
       { /* error */
 	return -1;
       }
-      if (!isEventIDRegistered(tFile, traceBuffer[i].ev))
+      if (!isEventIDRegistered(tFile, event_GetEv(tFile, traceBuffer, i)))
       { /* even after reading the edf file, if we don't find the event id, 
 	   then there's an error */
 	return -1;
@@ -285,8 +530,12 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
     }
     /* event is OK. Examine each event and invoke callbacks for Entry/Exit/Node*/
     /* first check nodeid, threadid */
-    int nid = traceBuffer[i].nid;
-    int tid = traceBuffer[i].tid;
+    //int nid = traceBuffer[i].nid;
+    //int tid = traceBuffer[i].tid;
+
+    int nid = event_GetNid(tFile, traceBuffer, i);
+    int tid = event_GetTid(tFile, traceBuffer, i);
+
     NidTidMapT::iterator nit = tFile->NidTidMap->find(
       pair<int, int>(nid,tid));
     if (nit == tFile->NidTidMap->end())
@@ -305,10 +554,14 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
       (*(tFile->NidTidMap))[pair<int,int>(nid,tid)] = 1;
     }
     /* check the event to see if it is entry or exit */
-    double ts = (double) (traceBuffer[i].ti - tFile->FirstTimestamp);
-    long long parameter = traceBuffer[i].par;
+
+//     double ts = (double) (traceBuffer[i].ti - tFile->FirstTimestamp);
+//     long long parameter = traceBuffer[i].par;
+
+    double ts = (double) (event_GetTi(tFile, traceBuffer, i) - tFile->FirstTimestamp);
+    long long parameter = event_GetPar(tFile, traceBuffer, i);
     /* Get param entry from EventIdMap */
-    Ttf_EventDescrT eventDescr = (*tFile->EventIdMap)[traceBuffer[i].ev];
+    Ttf_EventDescrT eventDescr = (*tFile->EventIdMap)[event_GetEv(tFile, traceBuffer, i)];
     if ((eventDescr.Param != NULL) && (strcmp(eventDescr.Param,"EntryExit\n")==0))
     { /* entry/exit event */
 #ifdef DEBUG
@@ -318,7 +571,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
       { /* entry event, invoke the callback routine */
 	if (*callbacks.EnterState)
 	  (*callbacks.EnterState)(callbacks.UserData, ts, nid, tid,
-				   traceBuffer[i].ev);
+				  event_GetEv(tFile, traceBuffer, i));
       }
       else
       { if (parameter == -1)
@@ -335,12 +588,13 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
       { /* User defined event */
 	 if (*callbacks.EventTrigger)
 	   (*callbacks.EventTrigger)(callbacks.UserData, ts, nid, tid, 
-				     traceBuffer[i].ev, traceBuffer[i].par);
+				     event_GetEv(tFile, traceBuffer, i), event_GetPar(tFile, traceBuffer, i));
       }
       if (eventDescr.Tag == TAU_MESSAGE_SEND_EVENT) 
       {
         /* send message */
         /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
+
 
 	x_uint64 xpar = parameter;
 
@@ -354,6 +608,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 // 	printf ("sent comm = %d\n", comm);
 // 	printf ("sent msgLen = %d\n", msgLen);
 
+
 	/* If the application is multithreaded, insert call for matching sends/recvs here */
 	otherTid = 0;
 	if (*callbacks.SendMessage) 
@@ -364,7 +619,8 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
       }
       else
       { /* Check if it is a message receive operation */
-        if (eventDescr.Tag == TAU_MESSAGE_RECV_EVENT)
+
+	if (eventDescr.Tag == TAU_MESSAGE_RECV_EVENT)
 	{ 
 
         /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
@@ -587,6 +843,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.11 $   $Date: 2005/07/29 19:02:11 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.11 2005/07/29 19:02:11 amorris Exp $ 
+ * $Revision: 1.12 $   $Date: 2005/08/23 21:11:09 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.12 2005/08/23 21:11:09 amorris Exp $ 
  ***************************************************************************/
