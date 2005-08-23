@@ -40,6 +40,13 @@
 #define TAU_DB_DUMP()
 #define TAU_DB_PURGE()
 
+
+#define TAU_REGISTER_CONTEXT_EVENT(event, name)
+#define TAU_CONTEXT_EVENT(event, data)
+#define TAU_DISABLE_CONTEXT_EVENT(event)
+#define TAU_ENABLE_CONTEXT_EVENT(event)
+
+
 #define TAU_REGISTER_EVENT(event, name)
 #define TAU_EVENT(event, data)
 #define TAU_EVENT_DISABLE_MIN(event)
