@@ -15,14 +15,7 @@
 # ifndef __PCXX_EVENTS__H__
 # define __PCXX_EVENTS__H__
 
-#ifdef TAU_WINDOWS
-  typedef __int64 x_int64;
-  typedef unsigned __int64 x_uint64;
-#else
-  typedef long long x_int64;
-  typedef unsigned long long x_uint64;
-#endif
-
+#include "tau_types.h"
 #   include "pcxx_ansi.h"
 
 #   if !defined(__ksr__) || defined(UNIPROC) || defined(__PCXX__) || defined(_MASTER_SLAVE_)
@@ -95,9 +88,10 @@ extern int aa_poll_count; /* For Ariadne - defined in tulip/mpi/src/KernelCom.c 
         /* -- event record buffer descriptor ------------------------- */
         typedef struct
         {
-          long int           ev;    /* -- event id        -- */
-          short unsigned int nid;   /* -- node id         -- */
-          short unsigned int tid;   /* -- thread id       -- */
+	  /*           long int           ev;    /* -- event id        -- */
+          x_int32            ev;    /* -- event id        -- */
+          x_uint16           nid;   /* -- node id         -- */
+          x_uint16           tid;   /* -- thread id       -- */
           x_int64            par;   /* -- event parameter -- */
 /**** CHANGED long int to long long for 8 bytes. *******/
           x_uint64           ti;    /* -- time [us]?      -- */
