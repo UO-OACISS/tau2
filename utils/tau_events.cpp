@@ -254,7 +254,7 @@ int parse_edf_file(int node)
 #endif /* DEBUG */
         /* add to nodeEventTable the global id of the event */
 	nodeEventTable[node][localEventId] = eventNameMap[(const char *)stlEvName]->gid;
-	delete stlEvName; /* don't need this if its already there */
+	delete[] stlEvName; /* don't need this if its already there */
 #ifdef DEBUG
 	printf("node %d local %ld global %d %s \n", node, localEventId,
 	  nodeEventTable[node][localEventId], stlEvName);

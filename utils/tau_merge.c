@@ -48,28 +48,24 @@ int getdtablesize(void);
 # include <Profile/fujitsu.h>
 #endif
 
-# include <string.h>
+#include <string.h>
 
-# define TRACING_ON
-# define PCXX_EVENT_SRC
+#define TRACING_ON
+#define PCXX_EVENT_SRC
 
-# ifdef __PCXX__
-#   include "Profile/pcxx_events_def.h"
-# else
-#   include "Profile/pcxx_events.h"
-# endif
-# include "Profile/pcxx_ansi.h"
+#include "Profile/pcxx_events.h"
+#include "Profile/pcxx_ansi.h"
 
-# ifndef TRUE
+#ifndef TRUE
 #   define FALSE  0
 #   define TRUE   1
-# endif
+#endif
 
-# define F_EXISTS    0
+#define F_EXISTS    0
 
-# define CONTLEN  (sizeof(PCXX_EV) - sizeof(long int))
+#define CONTLEN  (sizeof(PCXX_EV) - sizeof(long int))
 
-# define STDOUT 1
+#define STDOUT 1
 
 /* -- buffer sizes ------------------ */
 # define INMAX    BUFSIZ   /* records */
@@ -102,43 +98,493 @@ struct trcdescr
   unsigned long lasttime;  /* -- timestamp of previous event record        -- */
   unsigned long offset;    /* -- offset of timestamp                       -- */
 
-  PCXX_EV  *buffer;    /* -- input buffer                              -- */
-  PCXX_EV  *erec;      /* -- current event record                      -- */
-  PCXX_EV  *next;      /* -- next available event record in buffer     -- */
-  PCXX_EV  *last;      /* -- last event record in buffer               -- */
+/*   PCXX_EV  *buffer;    /\* -- input buffer                              -- *\/ */
+/*   PCXX_EV  *erec;      /\* -- current event record                      -- *\/ */
+/*   PCXX_EV  *next;      /\* -- next available event record in buffer     -- *\/ */
+/*   PCXX_EV  *last;      /\* -- last event record in buffer               -- *\/ */
+
+  void  *buffer;    /* -- input buffer                              -- */
+  void  *erec;      /* -- current event record                      -- */
+  void  *next;      /* -- next available event record in buffer     -- */
+  void  *last;      /* -- last event record in buffer               -- */
+
+  int           format;    // see above
+  int           eventSize; // sizeof() the corresponding format struct
+
 } *trcdes;
 
 int outfd; /* output trace file */
 static void output_flush(int fd);
 
+
+
+/* copied from TAU_tf_decl.h  */
+
+#include "Profile/tau_types.h"
+
+
+
+#define FORMAT_NATIVE  0   // as a fallback
+#define FORMAT_32      1
+#define FORMAT_64      2
+#define FORMAT_32_SWAP 3
+#define FORMAT_64_SWAP 4
+
+
+/* for 32 bit platforms */
+typedef struct {
+  x_int32            ev;    /* -- event id        -- */
+  x_uint16           nid;   /* -- node id         -- */
+  x_uint16           tid;   /* -- thread id       -- */
+  x_int64            par;   /* -- event parameter -- */
+  x_uint64           ti;    /* -- time [us]?      -- */
+} PCXX_EV32;
+
+/* for 64 bit platforms */
+typedef struct {
+  x_int64            ev;    /* -- event id        -- */
+  x_uint16           nid;   /* -- node id         -- */
+  x_uint16           tid;   /* -- thread id       -- */
+  x_uint32           padding; /*  space wasted for 8-byte aligning the next item */ 
+  x_int64            par;   /* -- event parameter -- */
+  x_uint64           ti;    /* -- time [us]?      -- */
+} PCXX_EV64;
+
+
+typedef PCXX_EV PCXX_EV_NATIVE;
+
+
+
+#define swap16(A)  ((((x_uint16)(A) & 0xff00) >> 8) | \
+                   (((x_uint16)(A) & 0x00ff) << 8))
+#define swap32(A)  ((((x_uint32)(A) & 0xff000000) >> 24) | \
+                   (((x_uint32)(A) & 0x00ff0000) >> 8)  | \
+                   (((x_uint32)(A) & 0x0000ff00) << 8)  | \
+                   (((x_uint32)(A) & 0x000000ff) << 24))
+#define swap64(A)  ((((x_uint64)(A) & 0xff00000000000000ull) >> 56) | \
+                    (((x_uint64)(A) & 0x00ff000000000000ull) >> 40) | \
+                    (((x_uint64)(A) & 0x0000ff0000000000ull) >> 24) | \
+                    (((x_uint64)(A) & 0x000000ff00000000ull) >> 8) | \
+                    (((x_uint64)(A) & 0x00000000ff000000ull) << 8) | \
+                    (((x_uint64)(A) & 0x0000000000ff0000ull) << 24)  | \
+                    (((x_uint64)(A) & 0x000000000000ff00ull) << 40)  | \
+                    (((x_uint64)(A) & 0x00000000000000ffull) << 56))
+  
+
+
+  
+/* copied from TAU_tf_decl.h  */
+
+
+/* Endian/bitsize stuff */
+
+/* void convertEvent(struct trcdescr *tdes, void *event, int index) { */
+/*   PCXX_EV32 *event32; */
+/*   PCXX_EV64 *event64; */
+
+/*   switch (tdes->format) { */
+/*   case FORMAT_NATIVE: */
+/*   case FORMAT_32: */
+/*   case FORMAT_64: */
+/*     return; */
+
+/*   case FORMAT_32_SWAP: */
+/*     event32 = (PCXX_EV32*) event; */
+/*     event32[index].ev = swap32(event32[index].ev); */
+/*     event32[index].nid = swap16(event32[index].nid); */
+/*     event32[index].tid = swap16(event32[index].tid); */
+/*     event32[index].par = swap64(event32[index].par); */
+/*     event32[index].ti = swap64(event32[index].ti); */
+/*     return; */
+
+/*   case FORMAT_64_SWAP: */
+/*     event64 = (PCXX_EV64*) event; */
+/*     event64[index].ev = swap64(event64[index].ev); */
+/*     event64[index].nid = swap16(event64[index].nid); */
+/*     event64[index].tid = swap16(event64[index].tid); */
+/*     event64[index].par = swap64(event64[index].par); */
+/*     event64[index].ti = swap64(event64[index].ti); */
+
+/*     //    printf ("event.ti = %llu\n", swap64(event64->ti)); */
+/*     return; */
+/*   } */
+
+/*   return; */
+/* } */
+
+x_int32 event_GetEv(struct trcdescr *tFile, void *event, int index) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    return nativeEvent[index].ev;
+    
+  case FORMAT_32:
+    event32 = (PCXX_EV32*) event;
+    return event32[index].ev;
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    return swap32(event32[index].ev);
+
+  case FORMAT_64:
+    event64 = (PCXX_EV64*) event;
+    return event64[index].ev;
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    return swap64(event64[index].ev);
+  }
+  return 0;
+}
+
+void event_SetEv(struct trcdescr *tFile, void *event, int index, x_int32 value) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+  x_int64 tmpValue;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent[index].ev = value;
+    break;
+
+  case FORMAT_32:
+    event32 = (PCXX_EV32*) event;
+    event32[index].ev = value;
+    break;
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    event32[index].ev = swap32(value);
+    break;
+
+  case FORMAT_64:
+    event64 = (PCXX_EV64*) event;
+    event64[index].ev = value;
+    break;
+  case FORMAT_64_SWAP:
+    tmpValue = value;
+    event64 = (PCXX_EV64*) event;
+    event64[index].ev = swap64(tmpValue);
+    break;
+  }
+  return;
+}
+
+x_uint64 event_GetTi(struct trcdescr *tFile, void *event, int index) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    return nativeEvent[index].ti;
+    
+  case FORMAT_32:
+    event32 = (PCXX_EV32*) event;
+    return event32[index].ti;
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    return swap64(event32[index].ti);
+
+  case FORMAT_64:
+    event64 = (PCXX_EV64*) event;
+    return event64[index].ti;
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    return swap64(event64[index].ti);
+  }
+  return 0;
+}
+
+void event_SetTi(struct trcdescr *tFile, void *event, int index, x_uint64 value) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent[index].ti = value;
+    break;
+  case FORMAT_32:
+    event32 = (PCXX_EV32*) event;
+    event32[index].ti = value;
+    break;
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    event32[index].ti = swap64(value);
+    break;
+  case FORMAT_64:
+    event64 = (PCXX_EV64*) event;
+    event64[index].ti = value;
+    break;
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    event64[index].ti = swap64(value);
+    break;
+  }
+  return;
+}
+
+
+x_uint16 event_GetNid(struct trcdescr *tFile, void *event, int index) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    return nativeEvent[index].nid;
+    
+  case FORMAT_32:
+    event32 = (PCXX_EV32*) event;
+    return event32[index].nid;
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    return swap16(event32[index].nid);
+
+  case FORMAT_64:
+    event64 = (PCXX_EV64*) event;
+    return event64[index].nid;
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    return swap16(event64[index].nid);
+  }
+  return 0;
+}
+
+void event_SetNid(struct trcdescr *tFile, void *event, int index, x_uint16 value) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent[index].nid = value;
+    break;
+
+  case FORMAT_32:
+    event32 = (PCXX_EV32*) event;
+    event32[index].nid = value;
+    break;
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    event32[index].nid = swap16(value);
+    break;
+
+  case FORMAT_64:
+    event64 = (PCXX_EV64*) event;
+    event64[index].nid = value;
+    break;
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    event64[index].nid = swap16(value);
+    break;
+  }
+  return;
+}
+
+
+x_uint16 event_GetTid(struct trcdescr *tFile, void *event, int index) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    return nativeEvent[index].tid;
+    
+  case FORMAT_32:
+    event32 = (PCXX_EV32*) event;
+    return event32[index].tid;
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    return swap16(event32[index].tid);
+
+  case FORMAT_64:
+    event64 = (PCXX_EV64*) event;
+    return event64[index].tid;
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    return swap16(event64[index].tid);
+  }
+  return 0;
+}
+
+
+x_uint64 event_GetPar(struct trcdescr *tFile, void *event, int index) {
+  PCXX_EV_NATIVE *nativeEvent;
+  PCXX_EV32 *event32;
+  PCXX_EV64 *event64;
+
+  switch (tFile->format) {
+  case FORMAT_NATIVE:
+    nativeEvent = (PCXX_EV_NATIVE*)event;
+    return nativeEvent[index].par;
+    
+  case FORMAT_32:
+    event32 = (PCXX_EV32*) event;
+    return event32[index].par;
+  case FORMAT_32_SWAP:
+    event32 = (PCXX_EV32*) event;
+    return swap64(event32[index].par);
+
+  case FORMAT_64:
+    event64 = (PCXX_EV64*) event;
+    return event64[index].par;
+  case FORMAT_64_SWAP:
+    event64 = (PCXX_EV64*) event;
+    return swap64(event64[index].par);
+  }
+  return 0;
+}
+
+
+void determineFormat(struct trcdescr *tdes) {
+  int bytesRead;
+  int formatFound;
+  PCXX_EV32 event32;
+  PCXX_EV64 event64;
+
+  formatFound = 0;
+/*   printf ("determining format!\n"); */
+/*   printf ("sizeof(PCXX_EV32) = %d\n", sizeof(PCXX_EV32)); */
+/*   printf ("sizeof(PCXX_EV64) = %d\n", sizeof(PCXX_EV64)); */
+
+
+/*   printf ("par32 : %d\n", (long)&event32.par - (long)&event32); */
+/*   printf ("par64 : %d\n", (long)&event64.par - (long)&event64); */
+
+
+/*   lseek(tdes->fd, 0, SEEK_SET); */
+  bytesRead = read(tdes->fd, &event32, sizeof(PCXX_EV32));
+  lseek(tdes->fd, 0, SEEK_SET);
+  bytesRead = read(tdes->fd, &event64, sizeof(PCXX_EV64));
+  lseek(tdes->fd, 0, SEEK_SET);
+
+  // 32 bit regular
+  if (event32.par == 3) {
+    tdes->format = FORMAT_32;
+    tdes->eventSize = sizeof(PCXX_EV32);
+    formatFound = 1;
+/*     printf ("32 regular!\n"); */
+  }
+
+
+  // 32 bit swapped
+  if (swap64(event32.par) == 3) {
+    if (formatFound == 1) { // shouldn't happen, if it does, go to native
+      tdes->format = FORMAT_NATIVE;
+      tdes->eventSize = sizeof(PCXX_EV_NATIVE);
+      return;
+    }
+    tdes->format = FORMAT_32_SWAP;
+    tdes->eventSize = sizeof(PCXX_EV32);
+    formatFound = 1;
+/*     printf ("32 swapped!\n"); */
+  }
+
+  // 64 bit regular
+  if (event64.par == 3) {
+    if (formatFound == 1) { // shouldn't happen, if it does, go to native
+      tdes->format = FORMAT_NATIVE;
+      tdes->eventSize = sizeof(PCXX_EV_NATIVE);
+      return;
+    }
+    tdes->format = FORMAT_64;
+    tdes->eventSize = sizeof(PCXX_EV64);
+    formatFound = 1;
+/*     printf ("64 regular!\n"); */
+  }
+
+
+  // 64 bit swapped
+  if (swap64(event64.par) == 3) {
+    if (formatFound == 1) { // shouldn't happen, if it does, go to native
+      tdes->format = FORMAT_NATIVE;
+      tdes->eventSize = sizeof(PCXX_EV_NATIVE);
+      return;
+    }
+    tdes->format = FORMAT_64_SWAP;
+    tdes->eventSize = sizeof(PCXX_EV64);
+    formatFound = 1;
+/*     printf ("64 swapped!\n"); */
+  }
+
+  if (formatFound == 0) {
+    fprintf (stderr, "Warning: couldn't determine format, using native!\n");
+    tdes->format = FORMAT_NATIVE;
+    tdes->eventSize = sizeof(PCXX_EV_NATIVE);
+  }
+
+/*   printf ("event32.par = 0x%x\n", event32.par); */
+/*   printf ("swap32(event32.par) = 0x%x\n", swap32(event32.par)); */
+/*   printf ("event64.par = 0x%x\n", event64.par); */
+/*   printf ("swap64(event64.par) = 0x%x\n", swap64(event64.par)); */
+
+/*   printf ("---------------\n"); */
+/*   printf ("event64.ev = 0x%llx\n", swap64(event64.ev)); */
+/*   printf ("event64.nid = 0x%x\n",  swap64(event64.nid)); */
+/*   printf ("event64.tid = 0x%x\n",  swap64(event64.tid)); */
+/*   printf ("event64.padding = 0x%x\n",  swap64(event64.padding)); */
+/*   printf ("event64.par = 0x%x\n",  swap64(event64.par)); */
+/*   printf ("event64.ti = 0x%llx\n",  swap64(event64.ti)); */
+
+/*   printf ("---------------\n"); */
+/*   printf ("event32.ev = 0x%llx\n", swap32(event32.ev)); */
+/*   printf ("event32.nid = 0x%x\n",  swap32(event32.nid)); */
+/*   printf ("event32.tid = 0x%x\n",  swap32(event32.tid)); */
+/*   printf ("event32.par = 0x%x\n",  swap32(event32.par)); */
+/*   printf ("event32.ti = 0x%llx\n",  swap32(event32.ti)); */
+
+/*   printf ("---------------\n"); */
+/*   printf ("swap(event32.ev) = %lu\n", swap32(event32.ev)); */
+/*   printf ("swap(event32.nid) = %u\n",  swap32(event32.nid)); */
+/*   printf ("swap(event32.tid) = %u\n",  swap32(event32.tid)); */
+/*   printf ("swap(event32.par) = %u\n",  swap32(event32.par)); */
+/*   printf ("swap(event32.ti) = %llu\n",  swap64(event32.ti)); */
+}
+
+
+
 /* -------------------------------------------------------------------------- */
 /* -- input buffer handling                                                -- */
 /* -------------------------------------------------------------------------- */
 
-static PCXX_EV *get_next_rec(struct trcdescr *tdes)
+static void *get_next_rec(struct trcdescr *tdes)
 {
   long no;
   const char *last_event_name;
 
+/*   printf ("get_next_rec called\n"); */
+/*   printf ("tdes->eventSize = %d\n", tdes->eventSize); */
+/*   printf ("next = 0x%x\n", tdes->next); */
+/*   printf ("last = 0x%x\n", tdes->last); */
+
   if ( (tdes->last == NULL) || (tdes->next > tdes->last) )
   {
     /* -- input buffer empty: read new records from file -------------------- */
-    if ( (no = read (tdes->fd, tdes->buffer, INMAX * sizeof(PCXX_EV)))
-         != (INMAX * sizeof(PCXX_EV)) )
-    {
-      if ( no == 0 )
-      {
+    //if ( (no = read (tdes->fd, tdes->buffer, INMAX * sizeof(PCXX_EV))) != (INMAX * sizeof(PCXX_EV)) )
+    if ( (no = read (tdes->fd, tdes->buffer, INMAX * tdes->eventSize)) != (INMAX * tdes->eventSize) ) {
+      if ( no == 0 ) {
 		
 #ifdef DEBUG
 	printf("Received EOF on trace \n");	
 #endif /* DEBUG */
         /* -- no more event record: ----------------------------------------- */
-	if (tdes->last != NULL)
-	{
+	if (tdes->last != NULL) {
 #ifdef DEBUG
 	  printf("Last rec not null\n");	
 #endif /* DEBUG */
-	  last_event_name = get_event_name(tdes->last->ev);
+	  //last_event_name = get_event_name(tdes->last->ev);
+	  last_event_name = get_event_name(event_GetEv(tdes,tdes->last,0));
 	  if (last_event_name != NULL)
 	  { /* the last event in the trace file is WALL_CLOCK. Is it EOF? */
 #ifdef DEBUG
@@ -161,36 +607,39 @@ static PCXX_EV *get_next_rec(struct trcdescr *tdes)
 	      store_merged_edffile(mergededffile);
 	      output_flush(outfd);
 	      /* Block waiting for the trace to get some more records in it */
-	      while ((no = read (tdes->fd, tdes->buffer, INMAX * sizeof(PCXX_EV))) == 0)
+	      while ((no = read (tdes->fd, tdes->buffer, INMAX * tdes->eventSize)) == 0)
 	      {
 #ifdef DEBUG
 		printf("WAITING... no = %d, node filename = %s \n", no, tdes->name);
 #endif /* DEBUG */
-		#ifdef TAU_WINDOWS
+
+#ifdef TAU_WINDOWS
 		 Sleep(1);
-		#else
+#else
   	 	 sleep(1);
-		#endif
+#endif
 	      }
 	      /* got the trace data! */
 #ifdef DEBUG
 	      printf("Read %d bytes\n", no);
 #endif /* DEBUG */
-	      if ((no < 0) || (no % sizeof(PCXX_EV) != 0))
-	      {
+	      if ((no < 0) || (no % tdes->eventSize != 0)) {
 		close(tdes->fd);
 		tdes->fd = -1;
 		return ((PCXX_EV *)NULL);
-	      }
-	      else
-	      {
+	      } else {
 #ifdef DEBUG
 	        printf("Got trace data!\n");
 #endif /* DEBUG */
                 /* -- we got some event records ------------------------- */
     		tdes->next = tdes->buffer;
-    		tdes->last = tdes->buffer + (no / sizeof(PCXX_EV)) - 1;
-  		return (tdes->erec = tdes->next++);
+    		//tdes->last = tdes->buffer + (no / tdes->eventSize) - 1;
+		tdes->last = (char*)tdes->buffer + no - tdes->eventSize;
+  		//return (tdes->erec = tdes->next++);
+
+		tdes->erec = tdes->next;
+		tdes->next = (void*)(((char*)tdes->next) + tdes->eventSize);
+		return tdes->erec;
 	      }
 	    }
 	
@@ -201,9 +650,9 @@ static PCXX_EV *get_next_rec(struct trcdescr *tdes)
 #endif /* DEBUG */
         close (tdes->fd);
         tdes->fd = -1;
-        return ( (PCXX_EV *) NULL);
+        return ( NULL);
       } /* possible EOF */
-      else if ( (no % sizeof(PCXX_EV)) != 0 )
+      else if ( (no % tdes->eventSize) != 0 )
       {
         /* -- read error: --------------------------------------------------- */
         fprintf (stderr, "%s: read error\n", tdes->name);
@@ -211,11 +660,19 @@ static PCXX_EV *get_next_rec(struct trcdescr *tdes)
       }
     }
 
+
     /* -- we got some event records ----------------------------------------- */
     tdes->next = tdes->buffer;
-    tdes->last = tdes->buffer + (no / sizeof(PCXX_EV)) - 1;
+    //tdes->last = tdes->buffer + (no / tdes->eventSize) - 1;
+    tdes->last = (char*)tdes->buffer + no - tdes->eventSize;
+
   }
-  return (tdes->erec = tdes->next++);
+
+  //  return (tdes->erec = tdes->next++);
+  tdes->erec = tdes->next;
+  tdes->next = ((char*)tdes->next) + tdes->eventSize;
+
+  return tdes->erec;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -314,7 +771,7 @@ int main(int argc, char *argv[])
   unsigned long min_time, first_time;
   long numrec;
   char *trcfile;
-  PCXX_EV *erec;
+  void *erec;
 # ifdef __ksr__
   int *sequence;
   int last_pthread, num_pthreads;
@@ -323,6 +780,7 @@ int main(int argc, char *argv[])
   unsigned long last_time;
 # endif
 
+  PCXX_EV nativeEvent;
   edfcount   = 0;
   numtrc     = 0;
   numrec     = 0;
@@ -410,32 +868,39 @@ int main(int argc, char *argv[])
   }
   trcdes = (struct trcdescr *) malloc (active * sizeof(struct trcdescr));
 
-  for (i=optind; i<argc-1; i++)
-  {
+  for (i=optind; i<argc-1; i++) {
+/*     printf ("opening %s!\n", argv[i]); */
     /* -- open input trace -------------------------------------------------- */
-    if ( (trcdes[numtrc].fd = open (argv[i], O_RDONLY | O_BINARY | LARGEFILE_OPTION )) < 0 )
-    {
+    if ( (trcdes[numtrc].fd = open (argv[i], O_RDONLY | O_BINARY | LARGEFILE_OPTION | O_LARGEFILE)) < 0 ) {
+/*       printf ("failed!\n"); */
       perror (argv[i]);
       errflag = TRUE;
-    }
-    else
-    {
+    } else {
+/*       printf ("success!\n"); */
+      
+
+      /* determine format */
+      determineFormat(&trcdes[numtrc]);
+
       trcdes[numtrc].name      = argv[i];
-      trcdes[numtrc].buffer    = (PCXX_EV *) malloc (INMAX * sizeof(PCXX_EV));
-      trcdes[numtrc].erec      = (PCXX_EV *) NULL;
-      trcdes[numtrc].next      = (PCXX_EV *) NULL;
-      trcdes[numtrc].last      = (PCXX_EV *) NULL;
+      trcdes[numtrc].buffer    = (void *) malloc (INMAX * trcdes[numtrc].eventSize);
+      trcdes[numtrc].erec      = NULL;
+      trcdes[numtrc].next      = NULL;
+      trcdes[numtrc].last      = NULL;
       trcdes[numtrc].overflows = 0;
 
+
       /* -- read first event record ----------------------------------------- */
-      if ( (erec = get_next_rec (trcdes + numtrc)) == NULL )
-      {
+      if ( (erec = get_next_rec (trcdes + numtrc)) == NULL ) {
         /* -- no event record: ---------------------------------------------- */
         fprintf (stderr, "%s: warning: trace empty - ignored\n",
                  trcdes[numtrc].name);
         trcdes[numtrc].numrec = 0L;
         active--;
       }
+
+
+
 
       /* We can't do this check because the event is EV_INIT, but its ev id
        * is different from original creation time after merging */
@@ -447,24 +912,30 @@ int main(int argc, char *argv[])
       } */
       else
       {
-        if ( erec->nid > PCXX_MAXPROCS )
+
+/* 	printf ("first record has Ev = %d\n", event_GetEv(trcdes+numtrc,erec,0)); */
+
+        if ( event_GetNid(trcdes+numtrc, erec, 0) > PCXX_MAXPROCS )
           fprintf (stderr,
            "%s: warning: node id %d too big for this machine (max. %d nodes)\n",
-           trcdes[numtrc].name, erec->nid, PCXX_MAXPROCS);
+           trcdes[numtrc].name, event_GetNid(trcdes, erec, 0), PCXX_MAXPROCS);
 
         trcdes[numtrc].numrec = 1L;
-        if ( erec->ev == PCXX_EV_INIT )
-        {
+        if ( event_GetEv(trcdes+numtrc, erec, 0) == PCXX_EV_INIT ) {
 	  if (!dynamic) { /* for dynamic trace, don't change this to INITM */
-            erec->ev = PCXX_EV_INITM;
+            //erec->ev = PCXX_EV_INITM;
+	    event_SetEv(trcdes+numtrc, erec, 0, PCXX_EV_INITM);
 	  }
-          trcdes[numtrc].nid = erec->nid;
-        }
-        else
+          //trcdes[numtrc].nid = erec->nid;
+          trcdes[numtrc].nid = event_GetNid(trcdes+numtrc, erec, 0);
+        } else {
           trcdes[numtrc].nid = -1;
+	}
 
-        trcdes[numtrc].lasttime = erec->ti;
+        //trcdes[numtrc].lasttime = erec->ti;
+        trcdes[numtrc].lasttime = event_GetTi(trcdes+numtrc,erec,0);
         trcdes[numtrc].offset   = 0L;
+
 
 	if(dynamic)
 	{
@@ -735,10 +1206,13 @@ int main(int argc, char *argv[])
       }
     }
 
-    if ( adjust )
-    {
-      if ( numrec == 0 ) first_time = trcdes[source].erec->ti;
-      trcdes[source].erec->ti -= first_time;
+    if ( adjust ) {
+      if ( numrec == 0 ) {
+	//first_time = trcdes[source].erec->ti;
+	first_time = event_GetTi(trcdes+source,erec,0);
+      }
+      //trcdes[source].erec->ti -= first_time;
+      event_SetTi(trcdes+source,erec,0,event_GetTi(trcdes+source,erec,0)-first_time);
     }
     /* -- correct event id to be global event id ---------------------------- */
 #ifdef DEBUG 
@@ -747,13 +1221,24 @@ int main(int argc, char *argv[])
 
     /* OLD : trcdes[source].erec->ev = GID(trcdes[source].nid, trcdes[source].erec->ev);
      */
-    trcdes[source].erec->ev = GID(source, trcdes[source].erec->ev);
+    //trcdes[source].erec->ev = GID(source, trcdes[source].erec->ev);
+    event_SetEv(trcdes+source,trcdes[source].erec,0,GID(source, event_GetEv(trcdes+source,trcdes[source].erec,0)));
 
 #ifdef DEBUG
     printf("Output: node %d event %d\n", source, trcdes[source].erec->ev);
 #endif /* DEBUG */
 
-    output (outfd, (char *) trcdes[source].erec, sizeof(PCXX_EV));
+
+    //    output (outfd, (char *) trcdes[source].erec, sizeof(PCXX_EV));
+
+    nativeEvent.ev = event_GetEv(trcdes+source,trcdes[source].erec,0);
+    nativeEvent.nid = event_GetNid(trcdes+source,trcdes[source].erec,0);
+    nativeEvent.tid = event_GetTid(trcdes+source,trcdes[source].erec,0);
+    nativeEvent.par = event_GetPar(trcdes+source,trcdes[source].erec,0);
+    nativeEvent.ti = event_GetTi(trcdes+source,trcdes[source].erec,0);
+/*     printf ("writing out record with ev = %d\n", nativeEvent.ev); */
+    output (outfd, (char *) &nativeEvent, sizeof(PCXX_EV));
+
     numrec++;
 
 # if defined(__ksr__) && defined(__PCXX__)
@@ -770,52 +1255,40 @@ int main(int argc, char *argv[])
     /* -- get next event record(s) from same trace -------------------------- */
     do
     {
-      if ( (erec = get_next_rec (trcdes + source)) == NULL )
-      {
+      if ( (erec = get_next_rec (trcdes + source)) == NULL ) {
         active--;
         break;
-      }
-      else
-      {
+      } else  {
         trcdes[source].numrec++;
 
-        if ( erec->ev == PCXX_EV_CONT_EVENT )
-        {
-          /* -- continuation event: output immediately ---------------------- */
-	  /* -- dynamic traces, correct event id to global event id --------- */
-	  /* OLD: erec->ev = GID(trcdes[source].nid, erec->ev);
-	   * */
-	  erec->ev = GID(source, erec->ev);
-          if ( reassembly )
-          {
-            output (outfd, ((char *) erec) + sizeof(short unsigned int),
-                    trcdes[source].contlen < CONTLEN ?
-                    trcdes[source].contlen : CONTLEN);
-            trcdes[source].contlen -= CONTLEN;
-          }
-          else
-            output (outfd, (char *) erec, sizeof(PCXX_EV));
-          numrec++;
-        }
-        else
-        {
           /* -- correct nid event field (only the first time) --------------- */
-          if ( trcdes[source].nid != -1 ) erec->nid = trcdes[source].nid;
+          if ( trcdes[source].nid != -1 ) {
+	    //erec->nid = trcdes[source].nid;
+
+	    event_SetNid(trcdes+source,erec,0,trcdes[source].nid);
+	  }
 
           /* -- correct clock ----------------------------------------------- */
-          erec->ti += trcdes[source].offset;
+          //erec->ti += trcdes[source].offset;
+	  event_SetTi(trcdes+source,erec,0,event_GetTi(trcdes+source,erec,0)+trcdes[source].offset);
 
           /* -- check clock overflow ---------------------------------------- */
-          if ( erec->ti < trcdes[source].lasttime ) trcdes[source].overflows++;
-          trcdes[source].lasttime = erec->ti;
+          //if ( erec->ti < trcdes[source].lasttime ) {
+          if ( event_GetTi(trcdes+source,erec,0) < trcdes[source].lasttime ) {
+	    trcdes[source].overflows++;
+	  }
+
+          //trcdes[source].lasttime = erec->ti;
+          trcdes[source].lasttime = event_GetTi(trcdes+source,erec,0);
 
           /* -- remember continuation event length -------------------------- */
-          trcdes[source].contlen = erec->par;
+          //trcdes[source].contlen = erec->par;
+          trcdes[source].contlen = event_GetPar(trcdes+source,erec,0);
 
-        }
       }
     }
-    while ( erec->ev == PCXX_EV_CONT_EVENT );
+    //while ( erec->ev == PCXX_EV_CONT_EVENT );
+    while ( event_GetEv(trcdes+source,erec,0) == PCXX_EV_CONT_EVENT );
   }
   while ( active > 0 );
   for (i=0; i<numtrc; i++)
