@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * XML Handler for cube data
  *
  * 
- * <P>CVS $Id: HPCToolkitXMLHandler.java,v 1.2 2005/06/17 22:10:22 amorris Exp $</P>
+ * <P>CVS $Id: HPCToolkitXMLHandler.java,v 1.3 2005/08/24 01:45:05 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see HPCToolkitDataSource.java
  */
 public class HPCToolkitXMLHandler extends DefaultHandler {
@@ -100,7 +100,7 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
     
     // given A => B => C, this retrieves the FP for C
     private FunctionProfile getFlatFunctionProfile(Thread thread, Function function) {
-        if (!function.getCallPathFunction()) {
+        if (!function.isCallPathFunction()) {
             return null;
         }
         String childName = function.getName().substring(function.getName().lastIndexOf("=>") + 2).trim();

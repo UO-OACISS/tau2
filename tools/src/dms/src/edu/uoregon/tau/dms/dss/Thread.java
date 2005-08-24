@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.18 2005/06/17 22:10:22 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.19 2005/08/24 01:45:05 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -247,10 +247,15 @@ public class Thread implements Comparable {
             for (Iterator it = this.getFunctionProfileIterator(); it.hasNext();) {
                 FunctionProfile fp = (FunctionProfile) it.next();
                 if (fp != null) {
+                    if (fp.getFunction().isPhase()) {
+                        maxExclusive = Math.max(maxExclusive, fp.getInclusive(metric));
+                        maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getInclusivePerCall(metric));
+                    } else {
+                        maxExclusive = Math.max(maxExclusive, fp.getExclusive(metric));
+                        maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getExclusivePerCall(metric));
+                    }
                     maxInclusive = Math.max(maxInclusive, fp.getInclusive(metric));
-                    maxExclusive = Math.max(maxExclusive, fp.getExclusive(metric));
                     maxInclusivePerCall = Math.max(maxInclusivePerCall, fp.getInclusivePerCall(metric));
-                    maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getExclusivePerCall(metric));
                     maxNumCalls = Math.max(maxNumCalls, fp.getNumCalls());
                     maxNumSubr = Math.max(maxNumSubr, fp.getNumSubr());
                 }

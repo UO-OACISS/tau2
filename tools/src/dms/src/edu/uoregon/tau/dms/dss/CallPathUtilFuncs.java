@@ -10,22 +10,19 @@ import java.util.*;
 
 public class CallPathUtilFuncs {
 
-    public CallPathUtilFuncs() {
+    private CallPathUtilFuncs() {
     }
 
     public static boolean checkCallPathsPresent(Iterator l) {
         boolean result = false;
         while (l.hasNext()) {
             Function function = (Function) l.next();
-            String s = function.getName();
-            if (s != null) {
-                if (s.indexOf("=>") > 0) {
-                    function.setCallPathFunction(true);
-                    result = true;
-                }
+            
+            if (function.isCallPathFunction()) {
+                return true;
             }
         }
-        return result;
+        return false;
     }
 
 //    public static int buildRelations(DataSource dataSource) {

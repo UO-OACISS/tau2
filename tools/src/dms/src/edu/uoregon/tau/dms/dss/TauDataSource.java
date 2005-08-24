@@ -337,7 +337,6 @@ public class TauDataSource extends DataSource {
 //        time = System.currentTimeMillis();
 
 
-        checkForPhases();
 
         //Generate derived data.
         this.generateDerivedData();
@@ -346,7 +345,6 @@ public class TauDataSource extends DataSource {
             setCallPathDataPresent(true);
         }
 
-        finishPhaseAnalysis();
         
         
         //time = (System.currentTimeMillis()) - time;

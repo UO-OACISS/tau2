@@ -12,7 +12,6 @@ import java.util.*;
 
 public class UtilFncs {
 
-    
     public static class EmptyIterator implements ListIterator, Iterator {
 
         public int nextIndex() {
@@ -27,7 +26,7 @@ public class UtilFncs {
 
         public void remove() {
             // TODO Auto-generated method stub
-            
+
         }
 
         public boolean hasNext() {
@@ -52,16 +51,16 @@ public class UtilFncs {
 
         public void add(Object o) {
             // TODO Auto-generated method stub
-            
+
         }
 
         public void set(Object o) {
             // TODO Auto-generated method stub
-            
+
         }
-        
+
     }
-    
+
     // left pad : pad string 's' up to length plen, but put the whitespace on
     // the left
     public static String lpad(String s, int plen) {
@@ -273,32 +272,32 @@ public class UtilFncs {
         }
     }
 
-    public static String getValueTypeString(int type) {
-        switch (type) {
-        case 2:
-            return "exclusive";
-        case 4:
-            return "inclusive";
-        case 6:
-            return "number of calls";
-        case 8:
-            return "number of subroutines";
-        case 10:
-            return "per call value";
-        case 12:
-            return "number of userEvents";
-        case 14:
-            return "minimum number of userEvents";
-        case 16:
-            return "maximum number of userEvents";
-        case 18:
-            return "mean number of userEvents";
-        case 20:
-            return "Standard Deviation of User Event Value";
-        default:
-            throw new RuntimeException("Unexpected string type: " + type);
-        }
-    }
+//    public static String getValueTypeString(int type) {
+//        switch (type) {
+//        case 2:
+//            return "exclusive";
+//        case 4:
+//            return "inclusive";
+//        case 6:
+//            return "number of calls";
+//        case 8:
+//            return "number of subroutines";
+//        case 10:
+//            return "per call value";
+//        case 12:
+//            return "number of userEvents";
+//        case 14:
+//            return "minimum number of userEvents";
+//        case 16:
+//            return "maximum number of userEvents";
+//        case 18:
+//            return "mean number of userEvents";
+//        case 20:
+//            return "Standard Deviation of User Event Value";
+//        default:
+//            throw new RuntimeException("Unexpected string type: " + type);
+//        }
+//    }
 
     //    public static int exists(int[] ref, int i) {
     //        if (ref == null)
@@ -325,7 +324,23 @@ public class UtilFncs {
         return -1;
     }
 
-   
+    public static String getRightSide(String str) {
+        int location = str.indexOf("=>");
+        if (location >= 0) {
+            return str.substring(location + 2).trim();
+        } else {
+            return str;
+        }
+    }
+
+    public static String getLeftSide(String str) {
+        int location = str.indexOf("=>");
+        if (location >= 0) {
+            return str.substring(0, location).trim();
+        } else {
+            return str;
+        }
+    }
 
     public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames)
             throws DataSourceException {

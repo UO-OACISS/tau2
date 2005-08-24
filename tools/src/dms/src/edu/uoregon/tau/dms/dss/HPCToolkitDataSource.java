@@ -28,9 +28,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *       hpcquick.
  * 
  * 
- * <P>CVS $Id: HPCToolkitDataSource.java,v 1.2 2005/06/17 22:10:22 amorris Exp $</P>
+ * <P>CVS $Id: HPCToolkitDataSource.java,v 1.3 2005/08/24 01:45:05 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class HPCToolkitDataSource extends DataSource {
 
@@ -109,7 +109,7 @@ public class HPCToolkitDataSource extends DataSource {
     
     // retrieve the parent profile on a given thread (A=>B for A=>B=>C)
     private FunctionProfile getParent(Thread thread, Function function) {
-        if (!function.getCallPathFunction()) {
+        if (!function.isCallPathFunction()) {
             return null;
         }
         String functionName = function.getName();
@@ -121,7 +121,7 @@ public class HPCToolkitDataSource extends DataSource {
 
     // given A => B => C, this retrieves the FP for C
     private FunctionProfile getFlatFunctionProfile(Thread thread, Function function) {
-        if (!function.getCallPathFunction()) {
+        if (!function.isCallPathFunction()) {
             return null;
         }
         String childName = function.getName().substring(function.getName().lastIndexOf("=>") + 2).trim();

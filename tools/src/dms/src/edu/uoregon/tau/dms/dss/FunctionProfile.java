@@ -6,9 +6,9 @@ import java.text.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.13 2005/08/18 01:03:37 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.14 2005/08/24 01:45:04 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		Function
  */
 public class FunctionProfile implements Comparable {
@@ -57,11 +57,12 @@ public class FunctionProfile implements Comparable {
     }
 
     public double getExclusive(int metric) {
-        if (function.isPhase()) {
-            return this.getDouble(metric, 0);
-        } else {
-            return this.getDouble(metric, 1);
-        }
+//        if (function.isPhase()) {
+//            return this.getDouble(metric, 0);
+//        } else {
+//            return this.getDouble(metric, 1);
+//        }
+        return this.getDouble(metric, 1);
     }
 
     public void setInclusivePercent(int metric, double value) {

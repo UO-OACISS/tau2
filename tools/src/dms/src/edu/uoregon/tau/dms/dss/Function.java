@@ -9,10 +9,15 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.11 2005/08/18 01:03:37 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.12 2005/08/24 01:45:04 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		FunctionProfile
+ */
+/**
+ * @author amorris
+ *
+ * TODO ...
  */
 public class Function implements Serializable, Comparable {
 
@@ -20,7 +25,6 @@ public class Function implements Serializable, Comparable {
     private String reversedName = null;
     private int id = -1;
     private List groups = null;
-    private boolean callPathFunction = false;
     private boolean phase = false;
     private Function actualPhase;
     private Function parentPhase;
@@ -60,7 +64,7 @@ public class Function implements Serializable, Comparable {
      */
     public String getReversedName() {
         if (reversedName == null) {
-            if (callPathFunction == false) {
+            if (isCallPathFunction() == false) {
                 reversedName = name;
             } else {
 
@@ -117,7 +121,7 @@ public class Function implements Serializable, Comparable {
             return true;
         }
 
-        if (getCallPathFunction() != true) {
+        if (isCallPathFunction() != true) {
             return false;
         }
 
@@ -131,27 +135,9 @@ public class Function implements Serializable, Comparable {
         return false;
     }
 
-    /**
-     * Set callpath status
-     * 
-     * @param	b			whether or not this function is a callpath (contains '=>')
-     */
-    public void setCallPathFunction(boolean b) {
-        callPathFunction = b;
-    }
 
-    /**
-     * Retrieve callpath status
-     * 
-     * @return				whether or not this function is a callpath (contains '=>')
-     */
     public boolean isCallPathFunction() {
-        return callPathFunction;
-    }
-
-    public boolean getCallPathFunction() {
         if (!callpathFunctionSet) {
-
             if (name.indexOf("=>") > 0) {
                 callpathFunction = true;
             }
@@ -323,6 +309,12 @@ public class Function implements Serializable, Comparable {
         this.phase = phase;
     }
 
+    /**
+     * Returns the actual phase.  If "A" and "B" are phases, then "A => B" is also a phase.
+     * getActualPhase will return "B" for "A => B".  It will return "B" for "B".
+     * 
+     * @return the actual phase
+     */
     public Function getActualPhase() {
         return actualPhase;
     }
@@ -331,6 +323,13 @@ public class Function implements Serializable, Comparable {
         this.actualPhase = actualPhase;
     }
 
+    /**
+     * Returns the phase that this function exists in.
+     * Example:
+     *   if this function is "A => B", then parent phase is "A"
+     * 
+     * @return the parent phase
+     */
     public Function getParentPhase() {
         return parentPhase;
     }

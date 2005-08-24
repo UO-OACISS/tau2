@@ -129,7 +129,6 @@ public class GprofDataSource extends DataSource {
                                     callPathFunction = this.addFunction(lineDataParent.s0 + " => " + self.s0
                                             + "  ", 1);
 
-                                    callPathFunction.setCallPathFunction(true);
 
                                     functionProfile = new FunctionProfile(callPathFunction);
                                     thread.addFunctionProfile(functionProfile);
@@ -150,7 +149,6 @@ public class GprofDataSource extends DataSource {
                                     callPathFunction = this.addFunction(self.s0 + " => " + lineDataChild.s0
                                             + "  ", 1);
 
-                                    callPathFunction.setCallPathFunction(true);
 
                                     functionProfile = new FunctionProfile(callPathFunction);
                                     thread.addFunctionProfile(functionProfile);

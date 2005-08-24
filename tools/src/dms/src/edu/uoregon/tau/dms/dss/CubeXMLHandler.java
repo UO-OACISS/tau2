@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.4 2005/06/09 23:54:46 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.5 2005/08/24 01:45:04 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -264,7 +264,7 @@ public class CubeXMLHandler extends DefaultHandler {
                     //fp.setInclusive(metric.getID(), 0);
                 }
 
-                if (function.getCallPathFunction()) { // get the flat profile (C for A => B => C)
+                if (function.isCallPathFunction()) { // get the flat profile (C for A => B => C)
 
                     FunctionProfile flatFP = getFlatFunctionProfile(thread, function);
 
@@ -299,7 +299,7 @@ public class CubeXMLHandler extends DefaultHandler {
 
     // given A => B => C, this retrieves the FP for C
     private FunctionProfile getFlatFunctionProfile(Thread thread, Function function) {
-        if (!function.getCallPathFunction()) {
+        if (!function.isCallPathFunction()) {
             return null;
         }
 
@@ -323,7 +323,7 @@ public class CubeXMLHandler extends DefaultHandler {
     
     // retrieve the parent profile on a given thread (A=>B for A=>B=>C)
     private FunctionProfile getParent(Thread thread, Function function) {
-        if (!function.getCallPathFunction()) {
+        if (!function.isCallPathFunction()) {
             return null;
         }
 

@@ -10,9 +10,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.18 2005/08/18 01:03:37 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.19 2005/08/24 01:45:04 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  * @see		TrialData
  * @see		NCT
  */
@@ -314,6 +314,8 @@ public abstract class DataSource {
     public void generateDerivedData() {
         //long time = System.currentTimeMillis();
 
+        checkForPhases();
+
         for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
             ((Thread) it.next()).setThreadDataAllMetrics();
         }
@@ -321,6 +323,8 @@ public abstract class DataSource {
         this.meanData.setThreadDataAllMetrics();
         this.totalData.setThreadDataAllMetrics();
         this.stddevData.setThreadDataAllMetrics();
+
+        finishPhaseAnalysis();
 
         //time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + time);
@@ -698,8 +702,7 @@ public abstract class DataSource {
     protected void checkForPhases() {
         
         Group tau_phase = this.getGroup("TAU_PHASE");
-        
-        ArrayList phases = new ArrayList();
+
         if (tau_phase != null) {
             phasesPresent = true;
             
@@ -707,15 +710,9 @@ public abstract class DataSource {
                 Function function = (Function) it.next();
                 
                 if (function.isGroupMember(tau_phase)) {
-                    phases.add(function);
                     function.setPhase(true);
                     function.setActualPhase(function);
                 }
-                
-
-//                System.out.println("Temporary: Remove this line when Sameer updates the measurement system groups");
-//                phases.add(function);
-
             }   
 
             for (Iterator it = this.getFunctions(); it.hasNext();) {
@@ -724,8 +721,9 @@ public abstract class DataSource {
               int location = function.getName().indexOf("=>");
               
               if (location > 0) {
-                  String phaseRoot = function.getName().substring(0, location).trim();
-                  String phaseChild = function.getName().substring(location+2).trim();
+                  // split "A => B"
+                  String phaseRoot = UtilFncs.getLeftSide(function.getName());
+                  String phaseChild = UtilFncs.getRightSide(function.getName());
 
                   Function f = this.getFunction(phaseChild);
                   if (f.isPhase()) {
@@ -743,10 +741,9 @@ public abstract class DataSource {
     
     protected void finishPhaseAnalysis() {
   
-        Group tau_phase = this.getGroup("TAU_PHASE");
-        ArrayList phases = new ArrayList();
         if (phasesPresent) {
-            phasesPresent = true;
+            Group tau_phase = this.getGroup("TAU_PHASE");
+            ArrayList phases = new ArrayList();
             
             for (Iterator it = this.getFunctions(); it.hasNext();) {
                 Function function = (Function) it.next();
@@ -759,6 +756,8 @@ public abstract class DataSource {
             if (phases.size() == 0) {
                 throw new RuntimeException("Error: TAU_PHASE found, but no phases!");
             }
+            
+            // try to find the "top level phase", usually 'main'
             topLevelPhase = (Function)phases.get(0);
             for (Iterator it = phases.iterator(); it.hasNext();) {
                 Function function = (Function) it.next();
@@ -773,6 +772,11 @@ public abstract class DataSource {
         return phasesPresent;
     }
 
+    /**
+     * Returns the top level phase, usually 'main'.
+     * 
+     * @return the top level phase
+     */
     public Function getTopLevelPhase() {
         return topLevelPhase;
     }
