@@ -15,17 +15,17 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 
-
 /**
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.14 2005/06/17 22:13:47 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.15 2005/08/24 01:45:41 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  * @see		HistogramWindowPanel
  */
-public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow, UnitListener {
+public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
+        UnitListener {
 
     // instance data
     private ParaProfTrial ppTrial = null;
@@ -34,7 +34,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     // hold on to these two for 'menuSelected'
     private JMenu unitsSubMenu = null;
-
 
     private JScrollPane sp = null;
     private HistogramWindowPanel panel = null;
@@ -47,8 +46,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     private JLabel numBinsLabel = new JLabel("Number of Bins");
     private JSlider numBinsSlider = new JSlider(0, 100, 10);
     private int numBins = 10;
-
-    
 
     public HistogramWindow(ParaProfTrial ppTrial, Function function) {
         this.ppTrial = ppTrial;
@@ -74,7 +71,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         }
 
         sortLocalData();
-
 
         numBinsSlider.setPaintTicks(true);
         numBinsSlider.setMajorTickSpacing(50);
@@ -104,13 +100,10 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         ParaProf.incrementNumWindows();
     }
 
-
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
         JMenu subMenu = null;
         JMenuItem menuItem = null;
-
-        
 
         // options menu
         JMenu optionsMenu = new JMenu("Options");
@@ -164,9 +157,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         optionsMenu.add(subMenu);
 
         optionsMenu.addMenuListener(this);
-
-        
-
 
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
@@ -269,11 +259,11 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     public void menuSelected(MenuEvent evt) {
         try {
-        	if (ppTrial.isTimeMetric()) {
-        	    unitsSubMenu.setEnabled(true);
-        	} else {
-        	    unitsSubMenu.setEnabled(false);
-        	}
+            if (ppTrial.isTimeMetric()) {
+                unitsSubMenu.setEnabled(true);
+            } else {
+                unitsSubMenu.setEnabled(false);
+            }
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -346,15 +336,34 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public String getHeaderString() {
-        if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
-            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
-                    + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType()
-                    + "\n";
-        else
-            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
-                    + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType()
-                    + "\n" + "Units: "
-                    + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
+        if (ppTrial.getDataSource().getPhasesPresent()) {
+            String starter;
+            if (function.isCallPathFunction()) {
+                starter = "Phase: " + UtilFncs.getLeftSide(function.getName()) + "\nName: "
+                        + UtilFncs.getRightSide(function.getName());
+            } else {
+                starter = "Name: " + function.getName();
+            }
+
+            starter = starter + "\nMetric: " + ppTrial.getMetricName(dataSorter.getSelectedMetricID()) + "\nValue: "
+                    + dataSorter.getValueType();
+
+            if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)) {
+                return starter;
+            } else {
+                return starter + "\nUnits: "
+                        + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
+            }
+        } else {
+            if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR) {
+                return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
+                        + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n";
+            } else {
+                return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
+                        + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n"
+                        + "Units: " + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
+            }
+        }
     }
 
     public List getData() {
@@ -384,7 +393,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         dispose();
     }
 
-
     public int units() {
 
         if (!dataSorter.isTimeMetric()) // we don't do units for non-time metrics
@@ -396,16 +404,14 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         return units;
     }
 
-    
     public void setNumBins(int numBins) {
-        this.numBins =  numBins;
+        this.numBins = numBins;
         panel.repaint();
     }
 
     public int getNumBins() {
         return numBins;
     }
-
 
     public void setUnits(int units) {
         this.units = units;

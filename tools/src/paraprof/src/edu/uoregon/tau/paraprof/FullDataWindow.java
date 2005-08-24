@@ -68,7 +68,6 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
 
     private boolean mShown = false;
 
-    
     public FullDataWindow(ParaProfTrial ppTrial, Function phase) {
         this.ppTrial = ppTrial;
         this.phase = phase;
@@ -77,12 +76,12 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
         if (phase == null) {
             setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {
-            setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + " Phase: " + phase.getName());
+            setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + " Phase: "
+                    + phase.getName());
         }
         int windowWidth = 750;
         int windowHeight = 400;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
-
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -304,8 +303,13 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
     }
 
     public String getHeaderString() {
-        return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Value Type: "
-                + UtilFncs.getValueTypeString(2) + "\n";
+        if (phase != null) {
+            return "Phase: " + phase + "\nMetric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID()))
+                    + "\nValue: " + "Exclusive" + "\n";
+        } else {
+            return "Metric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Value: "
+                    + "Exclusive" + "\n";
+        }
     }
 
     private void showWidthSlider(boolean displaySliders) {
@@ -380,7 +384,6 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
     public List getData() {
         return list;
     }
-
 
     public void addNotify() {
         super.addNotify();

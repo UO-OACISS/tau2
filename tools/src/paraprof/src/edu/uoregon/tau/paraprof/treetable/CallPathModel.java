@@ -2,9 +2,7 @@ package edu.uoregon.tau.paraprof.treetable;
 
 import java.util.*;
 
-import edu.uoregon.tau.dms.dss.DataSource;
-import edu.uoregon.tau.dms.dss.Function;
-import edu.uoregon.tau.dms.dss.FunctionProfile;
+import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.paraprof.DataSorter;
 import edu.uoregon.tau.paraprof.PPFunctionProfile;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
@@ -15,9 +13,9 @@ import edu.uoregon.tau.paraprof.ParaProfTrial;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.5 2005/07/11 22:59:53 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.6 2005/08/24 01:45:42 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -50,26 +48,26 @@ public class CallPathModel extends AbstractTreeTableModel {
         roots = new ArrayList();
         DataSorter dataSorter = new DataSorter(ppTrial);
 
-        // don't ask the thread directly, since we want group masking to work
+        // don't ask the thread for its functions directly, since we want group masking to work
         List functionProfileList = dataSorter.getFunctionProfiles(thread);
 
         Map rootNames = new HashMap();
 
         if (window.getTreeMode()) {
             for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
+                // Find all the rootNames (as strings)
                 PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next(); 
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
 
                 if (fp != null && fp.isCallPathFunction()) {
-                    String fname = fp.getName();
-                    int loc = fname.indexOf("=>");
-                    String rootName = fname.substring(0, loc).trim();
+                    String rootName = UtilFncs.getLeftSide(fp.getName());
                     if (rootNames.get(rootNames) == null) {
                         rootNames.put(rootName, "1");
                     }
                 }
             }
             for (Iterator it = rootNames.keySet().iterator(); it.hasNext();) {
+                // no go through the strings and get the actual functions
                 String rootName = (String) it.next();
                 Function function = dataSource.getFunction(rootName);
 

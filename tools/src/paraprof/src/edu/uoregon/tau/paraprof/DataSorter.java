@@ -14,9 +14,9 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.12 2005/08/18 01:04:02 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.13 2005/08/24 01:45:40 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  */
 public class DataSorter {
 
@@ -179,18 +179,18 @@ public class DataSorter {
             Collections.sort(ppThread.getFunctionList());
             threads.add(ppThread);
 
-            thread = ppTrial.getDataSource().getTotalData();
-            ppThread = new PPThread(thread, this.ppTrial);
-            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
-                FunctionProfile functionProfile = (FunctionProfile) e4.next();
-                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
-                        && functionProfile.getFunction().isPhaseMember(phase)) {
-                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                    ppThread.addFunction(ppFunctionProfile);
-                }
-            }
-            Collections.sort(ppThread.getFunctionList());
-            threads.add(ppThread);
+//            thread = ppTrial.getDataSource().getTotalData();
+//            ppThread = new PPThread(thread, this.ppTrial);
+//            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
+//                FunctionProfile functionProfile = (FunctionProfile) e4.next();
+//                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
+//                        && functionProfile.getFunction().isPhaseMember(phase)) {
+//                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+//                    ppThread.addFunction(ppFunctionProfile);
+//                }
+//            }
+//            Collections.sort(ppThread.getFunctionList());
+//            threads.add(ppThread);
 
         }
 
@@ -273,13 +273,13 @@ public class DataSorter {
                     newList.add(ppFunctionProfile);
                 }
 
-                thread = ppTrial.getDataSource().getTotalData();
-                functionProfile = thread.getFunctionProfile(function);
-                if (functionProfile != null) {
-                    //Create a new thread data object.
-                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                    newList.add(ppFunctionProfile);
-                }
+//                thread = ppTrial.getDataSource().getTotalData();
+//                functionProfile = thread.getFunctionProfile(function);
+//                if (functionProfile != null) {
+//                    //Create a new thread data object.
+//                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+//                    newList.add(ppFunctionProfile);
+//                }
 
             }
         }

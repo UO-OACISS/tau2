@@ -25,9 +25,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.20 2005/08/18 01:04:02 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.21 2005/08/24 01:45:41 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.20 $
+ * @version	$Revision: 1.21 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements MouseListener, Printable, ImageExport {
@@ -90,7 +90,6 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
     }
 
     public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-
         list = window.getData();
 
         int stringWidth = 0;
@@ -178,7 +177,7 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
             String barString;
 
             if (window.getPhaseDisplay()) {
-                barString = ParaProfUtils.getLeftSide(ppFunctionProfile.getFunctionName());
+                barString = UtilFncs.getLeftSide(ppFunctionProfile.getFunctionName());
             } else {
                 if (ppFunctionProfile.getNodeID() == -1) {
                     barString = "mean";
@@ -246,8 +245,9 @@ public class FunctionDataWindowPanel extends JPanel implements MouseListener, Pr
             //s = (UtilFncs.adjustDoublePresision(value, 4)) + "%";
             s = UtilFncs.getOutputString(0, value, 6) + "%";
 
-        } else
+        } else {
             s = UtilFncs.getOutputString(window.units(), value, ParaProf.defaultNumberPrecision);
+        }
         stringWidth = fmFont.stringWidth(s);
         //Now draw the percent value to the left of the bar.
         stringStart = barXCoord - xLength - stringWidth - 5;

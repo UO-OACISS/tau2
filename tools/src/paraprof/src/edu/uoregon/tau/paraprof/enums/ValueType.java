@@ -8,9 +8,9 @@ import edu.uoregon.tau.dms.dss.*;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: ValueType.java,v 1.5 2005/08/18 01:04:03 amorris Exp $</P>
+ * <P>CVS $Id: ValueType.java,v 1.6 2005/08/24 01:45:41 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 
 public abstract class ValueType {
@@ -76,7 +76,11 @@ public abstract class ValueType {
 
     public static final ValueType EXCLUSIVE_PERCENT = new ValueType("Exclusive percent") {
         public double getValue(FunctionProfile functionProfile, int metric) {
-            return functionProfile.getExclusivePercent(metric);
+            if (functionProfile.getFunction().isPhase()) {
+                return functionProfile.getExclusivePercent(metric);
+            } else {
+                return functionProfile.getInclusivePercent(metric);
+            }
         }
         public double getThreadMaxValue(edu.uoregon.tau.dms.dss.Thread thread, int metric) {
         	return thread.getMaxExclusivePercent(metric);

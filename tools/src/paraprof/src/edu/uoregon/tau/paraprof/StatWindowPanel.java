@@ -332,7 +332,13 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             } else {
                 nameColor = ppFunctionProfile.getColor();
                 nameString = ppFunctionProfile.getFunctionName();
+                if (window.getPhase() != null) {
+                    nameString = UtilFncs.getRightSide(nameString);
+                }
             }
+            
+            
+            
 
             String fullLine = statString + "   " + nameString;
             searcher.drawHighlights(g2D, xOffset, yCoord, i + 3);

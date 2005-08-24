@@ -35,26 +35,26 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         KeyListener, SearchableOwner, ScrollBarController, ParaProfWindow, UnitListener {
 
     private PPThread ppThread;
-    private ParaProfTrial ppTrial = null;
-    private DataSorter dataSorter = null;
+    private ParaProfTrial ppTrial;
+    private DataSorter dataSorter;
     private Function phase;
 
-    private JMenu optionsMenu = null;
-    private JMenu unitsSubMenu = null;
+    private JMenu optionsMenu;
+    private JMenu unitsSubMenu;
 
-    private JCheckBoxMenuItem sortByName = null;
-    private JCheckBoxMenuItem descendingOrder = null;
-    private JCheckBoxMenuItem showValuesAsPercent = null;
-    private JCheckBoxMenuItem showPathTitleInReverse = null;
-    private JCheckBoxMenuItem showMetaData = null;
+    private JCheckBoxMenuItem sortByName;
+    private JCheckBoxMenuItem descendingOrder;
+    private JCheckBoxMenuItem showValuesAsPercent;
+    private JCheckBoxMenuItem showPathTitleInReverse;
+    private JCheckBoxMenuItem showMetaData;
     private JCheckBoxMenuItem showFindPanelBox;
 
     private JLabel barLengthLabel = new JLabel("Bar Width");
     private JSlider barLengthSlider = new JSlider(0, 2000, 250);
 
-    private Container contentPane = null;
-    private GridBagLayout gbl = null;
-    private GridBagConstraints gbc = null;
+    private Container contentPane;
+    private GridBagLayout gbl;
+    private GridBagConstraints gbc;
 
     private JScrollPane jScrollPane;
     private ThreadDataWindowPanel panel;
@@ -611,14 +611,23 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     }
 
     public String getHeaderString() {
+        String starter;
+        
+        if (phase != null) {
+            starter = "Phase: " + phase + "\nMetric: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Value: "
+                    + dataSorter.getValueType();
+        } else {
+            starter = "Metric: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Value: "
+            + dataSorter.getValueType();
+        }
+        
         if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
-                || showValuesAsPercent.isSelected())
-            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Value Type: "
-                    + dataSorter.getValueType() + "\n";
-        else
-            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Value Type: "
-                    + dataSorter.getValueType() + "\n" + "Units: "
+                || showValuesAsPercent.isSelected()) {
+            return starter;
+        } else {
+            return starter + "\nUnits: "
                     + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
+        }
     }
 
     public void showSearchPanel(boolean show) {

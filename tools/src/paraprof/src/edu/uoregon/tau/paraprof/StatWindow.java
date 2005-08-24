@@ -10,27 +10,28 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
+import edu.uoregon.tau.dms.dss.Function;
 import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.*;
 
-public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner,
-        ScrollBarController, KeyListener, ParaProfWindow, UnitListener {
+public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner, ScrollBarController,
+        KeyListener, ParaProfWindow, UnitListener {
 
     //Instance data.
     private ParaProfTrial ppTrial = null;
     private DataSorter dataSorter;
+    private Function phase;
+
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
@@ -52,17 +53,17 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     private int units = ParaProf.preferences.getUnits();
 
-    
     private SearchPanel searchPanel;
 
     private edu.uoregon.tau.dms.dss.Thread thread;
-    
-    
-    public StatWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, boolean userEventWindow) {
+
+    public StatWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, boolean userEventWindow, Function phase) {
         this.ppTrial = ppTrial;
+        this.phase = phase;
         ppTrial.getSystemEvents().addObserver(this);
 
         this.dataSorter = new DataSorter(ppTrial);
+        dataSorter.setPhase(phase);
         this.userEventWindow = userEventWindow;
         this.thread = thread;
 
@@ -72,21 +73,30 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         nodeID = thread.getNodeID();
         contextID = thread.getContextID();
         threadID = thread.getThreadID();
-        
-        
+
         if (nodeID == -1 && userEventWindow) {
             // There is no User Event data for mean
             throw new ParaProfException("There is no User Event data for mean");
         }
 
+        String title;
         //Now set the title.
-        if (nodeID == -1)
-            this.setTitle("Mean Data Statistics: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        else if (nodeID == -3) {
-            this.setTitle("Standard Deviation Statistics: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        if (nodeID == -1) {
+            title = "Mean Data Statistics: ";
+        } else if (nodeID == -2) {
+            title = "Total Statistics: ";
+        } else if (nodeID == -3) {
+            title = "Standard Deviation Statistics: ";
         } else {
-            this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            title = "n,c,t, " + nodeID + "," + contextID + "," + threadID;
+        }
+
+        title = title + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse());
+
+        if (phase != null) {
+            this.setTitle(title + " Phase: " + phase.getName());
+        } else {
+            this.setTitle(title);
         }
 
         addKeyListener(this);
@@ -112,8 +122,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-       
-       
         //######
         //Options menu.
         //######
@@ -141,12 +149,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
         if (!userEventWindow) {
             unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
-        } else { 
+        } else {
             unitsSubMenu = new JMenu("Select Units");
         }
         optionsMenu.add(unitsSubMenu);
 
-        
         //Set the value type options.
         subMenu = new JMenu("Sort By");
         group = new ButtonGroup();
@@ -221,9 +228,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //End - Options menu.
         //######
 
-     
-
-      
         //####################################
         //End - Code to generate the menus.
         //####################################
@@ -264,8 +268,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //####################################
         //End - Create and add the components.
         //####################################
-        
-        
+
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
@@ -274,7 +277,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
-        
+
         ParaProf.incrementNumWindows();
     }
 
@@ -501,12 +504,20 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     }
 
     public String getHeaderString() {
-        if (userEventWindow)
+        if (userEventWindow) {
             return "Sorted By: " + dataSorter.getUserEventValueType() + "\n";
-        else
-            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Sorted By: "
-                    + dataSorter.getValueType() + "\n" + "Units: "
-                    + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
+        } else {
+
+            if (phase != null) {
+                return "Phase: " + phase.getName() + "\nMetric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Sorted By: "
+                + dataSorter.getValueType() + "\n" + "Units: "
+                + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
+            } else {
+                return "Metric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Sorted By: "
+                        + dataSorter.getValueType() + "\n" + "Units: "
+                        + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
+            }
+        }
     }
 
     //######
@@ -528,7 +539,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         }
         dispose();
     }
-
 
     public void showSearchPanel(boolean show) {
         if (show) {
@@ -585,5 +595,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         this.units = units;
         this.setHeader();
         panel.repaint();
+    }
+
+    public Function getPhase() {
+        return phase;
     }
 }

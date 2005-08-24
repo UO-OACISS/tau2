@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.7 2005/08/18 01:04:04 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.8 2005/08/24 01:45:42 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -46,7 +46,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     private int units = ParaProf.preferences.getUnits();
 
     private final JMenuItem showAsTreeMenuItem = new JCheckBoxMenuItem("Show as Call Path Tree");
-    private final JMenuItem showInclExclMenuItem = new JCheckBoxMenuItem("Show Inclusive/Exclusive");
+    private final JMenuItem showInclExclMenuItem = new JCheckBoxMenuItem("Show Inclusive/Exclusive", true);
 
     private List columns;
     private ColumnChooser columnChooser;
@@ -65,6 +65,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
         if (thread.getNodeID() == -1) {
             this.setTitle("Mean Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        } else if (thread.getNodeID() == -2) {
+            this.setTitle("Total Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -3) {
             this.setTitle("Std. Dev. Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {

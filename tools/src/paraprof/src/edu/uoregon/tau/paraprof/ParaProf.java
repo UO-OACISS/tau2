@@ -20,11 +20,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.52 2005/08/18 01:04:03 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.53 2005/08/24 01:45:41 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.52 $
+ * @version $Revision: 1.53 $
  */
 public class ParaProf implements ActionListener {
 
@@ -57,7 +57,7 @@ public class ParaProf implements ActionListener {
     static ParaProfManagerWindow paraProfManagerWindow = null;
     static ApplicationManager applicationManager = new ApplicationManager();
     public static HelpWindow helpWindow = null;
-    static PreferencesWindow preferencesWindow;
+    public static PreferencesWindow preferencesWindow;
     static Runtime runtime = null;
     static private int numWindowsOpen = 0;
     //End - System wide stuff.
@@ -407,6 +407,16 @@ public class ParaProf implements ActionListener {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();
                 System.exit(-1);
+            }
+        } else {
+            if (sourceFilenames.length == 1) {
+                String filename = sourceFiles[0].getName();
+                if (filename.endsWith(".ppk")) {
+                    ParaProf.fileType = 7;
+                }
+                if (filename.endsWith(".cube")) {
+                    ParaProf.fileType = 8;
+                }
             }
         }
 

@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.26 2005/07/12 18:26:56 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.27 2005/08/24 01:45:41 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.26 $
+ * @version	$Revision: 1.27 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -390,6 +390,20 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 }
 
             } else {
+
+//                for (Iterator it = loadedTrials.iterator(); it.hasNext();) {
+//                    ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+//                    
+//                    if (ppTrial.getExperiment() == experiment) {
+//                        System.out.println("found it");
+//                    }
+//                    
+//                    
+//                }
+//                for (Iterator it=experiment.getTrialList(); it.hasNext();) {
+//                    ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+//                    handleDelete(ppTrial);
+//                }
                 experiment.getApplication().removeExperiment(experiment);
                 treeModel.removeNodeFromParent(experiment.getDMTN());
             }
@@ -415,6 +429,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             } else {
                 ppTrial.getExperiment().removeTrial(ppTrial);
                 treeModel.removeNodeFromParent(ppTrial.getDMTN());
+//                ppTrial.getFullDataWindow().dispose();
+//                loadedTrials.remove(ppTrial);
+//                System.gc();
             }
         }
     }
@@ -1400,10 +1417,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         }
     }
 
-    public void createTreeNodesForLoadedTrial(Object hook) {
-
-    }
-
+  
     public DefaultMutableTreeNode expandApplicationType(int type, int applicationID, ParaProfApplication application) {
         switch (type) {
         case 0:
@@ -1689,6 +1703,11 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         getContentPane().add(c, gbc);
     }
 
+    
+    /**
+     * Returns all the loaded trials
+     * @return the loaded trials
+     */
     public Vector getLoadedTrials() {
         return loadedTrials;
     }

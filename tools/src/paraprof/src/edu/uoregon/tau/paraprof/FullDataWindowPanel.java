@@ -49,6 +49,7 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
     private int xPanelSize = 0;
     private int yPanelSize = 0;
 
+    
     public FullDataWindowPanel(ParaProfTrial ppTrial, FullDataWindow window) {
         this.setToolTipText("ParaProf Full Data Window");
         setBackground(Color.white);
@@ -399,10 +400,8 @@ public class FullDataWindowPanel extends JPanel implements MouseListener, Printa
 
         }
 
-        //We have reached the end of the cycle for this thread. However, we
-        // might be less
-        //than the max length of the bar. Therefore, fill in the rest of the
-        // bar with the
+        //We have reached the end of the cycle for this thread. However, we might be less
+        //than the max length of the bar. Therefore, fill in the rest of the bar with the
         //misc. function color.
 
         if (window.getNormalizeBars()) {

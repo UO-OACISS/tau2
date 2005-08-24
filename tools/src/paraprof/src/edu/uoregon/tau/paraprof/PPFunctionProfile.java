@@ -236,7 +236,11 @@ public class PPFunctionProfile implements Comparable {
         DecimalFormat dF = new DecimalFormat("##0.0");
         tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(metric)), 13);
 
-        tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getExclusive(metric), 14);
+        if (functionProfile.getFunction().isPhase()) {
+            tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 14);
+        } else {
+            tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getExclusive(metric), 14);
+        }
         tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 16);
         tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(), 12, true);
         tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(), 12, true);
