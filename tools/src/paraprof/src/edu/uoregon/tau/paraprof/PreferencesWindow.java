@@ -310,9 +310,10 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         setJMenuBar(mainMenu);
     }
 
-    public void showPreferencesWindow() {
+    public void showPreferencesWindow(Component invoker) {
         //The path to data might have changed, therefore, reset the title.
         this.setTitle("ParaProf Preferences");
+        this.setLocation(WindowPlacer.getNewLocation(this,invoker));
         this.show();
     }
     
@@ -398,7 +399,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             if (EventSrc instanceof JMenuItem) {
 
                 if (arg.equals("Show Color Map")) {
-                    ParaProf.colorMap.showColorMap();
+                    ParaProf.colorMap.showColorMap(this);
                 } else if (arg.equals("Load Preferences...")) {
 
                     JFileChooser fileChooser = new JFileChooser();
@@ -440,7 +441,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     }
 
                 } else if (arg.equals("Edit Default Colors")) {
-                    ParaProf.colorChooser.showColorChooser();
+                    ParaProf.colorChooser.showColorChooser(this);
                 } else if (arg.equals("Exit ParaProf!")) {
                     setVisible(false);
                     dispose();

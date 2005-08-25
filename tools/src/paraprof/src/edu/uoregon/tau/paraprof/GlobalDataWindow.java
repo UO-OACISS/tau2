@@ -1,11 +1,3 @@
-/*
- * StaticMainWindow.java
- * 
- * Title: ParaProf 
- * Author: Robert Bell 
- * Description:
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
@@ -21,12 +13,13 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 
 import edu.uoregon.tau.dms.dss.Function;
-import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.barchart.BarChartPanel;
+import edu.uoregon.tau.paraprof.barchart.GlobalBarChartModel;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 
-public class FullDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
+public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
 
     private int userEventLedgerIndex;
     private int groupLedgerIndex;
@@ -39,7 +32,8 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
     private JFileChooser fileChooser = new JFileChooser();
 
     //References for some of the components for this frame.
-    private FullDataWindowPanel panel;
+    private BarChartPanel panel;
+    private GlobalBarChartModel model;
     private DataSorter dataSorter;
 
     private JMenu optionsMenu;
@@ -53,25 +47,25 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
     private JCheckBoxMenuItem metaDataCheckBox;
 
     private JLabel barLengthLabel = new JLabel("Bar Width");
-    private JSlider barLengthSlider = new JSlider(0, 2000, 500);
+    private JSlider barLengthSlider = new JSlider(0, 2000, 600);
 
     private Container contentPane;
     private GridBagLayout gbl;
     private GridBagConstraints gbc;
-    private JScrollPane jScrollPane;
 
     private boolean normalizeBars = true;
     private boolean stackBars = true;
     private boolean displaySliders = false;
 
-    private List list;
-
     private boolean mShown = false;
 
-    public FullDataWindow(ParaProfTrial ppTrial, Function phase) {
+    public GlobalDataWindow(ParaProfTrial ppTrial, Function phase) {
         this.ppTrial = ppTrial;
         this.phase = phase;
         ppTrial.getSystemEvents().addObserver(this);
+
+        dataSorter = new DataSorter(ppTrial);
+        dataSorter.setPhase(phase);
 
         if (phase == null) {
             setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
@@ -80,8 +74,10 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
                     + phase.getName());
         }
         int windowWidth = 750;
-        int windowHeight = 400;
+        int windowHeight = 410;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
+
+        setLocation(WindowPlacer.getGlobalDataWindowPosition(this));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -90,10 +86,13 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
             }
         });
 
-        int xPosition = ParaProf.paraProfManagerWindow.getLocation().x;
-        int yPosition = ParaProf.paraProfManagerWindow.getLocation().y;
-        setLocation(xPosition + 75, yPosition + 110);
+//        int xPosition = ParaProf.paraProfManagerWindow.getLocation().x;
+//        int yPosition = ParaProf.paraProfManagerWindow.getLocation().y;
+//        setLocation(xPosition + 75, yPosition + 110);
 
+        
+        
+        
         //Setting up the layout system for the main window.
         contentPane = getContentPane();
         gbl = new GridBagLayout();
@@ -101,13 +100,14 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
         gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        //Panel and ScrollPane definition.
-        panel = new FullDataWindowPanel(ppTrial, this);
-        jScrollPane = new JScrollPane(panel);
-
+        model = new GlobalBarChartModel(this, dataSorter, ppTrial);
+        panel = new BarChartPanel(model, null);
         setupMenus();
 
-        JScrollBar jScrollBar = jScrollPane.getVerticalScrollBar();
+        panel.getBarChart().setLeftJustified(true);
+        panel.getBarChart().setBarLength(barLengthSlider.getValue());
+
+        JScrollBar jScrollBar = panel.getVerticalScrollBar();
         jScrollBar.setUnitIncrement(35);
 
         this.setHeader();
@@ -122,10 +122,7 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 1;
         gbc.weighty = 1;
-        addCompItem(jScrollPane, gbc, 0, 0, 1, 1);
-
-        dataSorter = new DataSorter(ppTrial);
-        dataSorter.setPhase(phase);
+        addCompItem(panel, gbc, 0, 0, 1, 1);
 
         sortLocalData();
 
@@ -197,18 +194,16 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Normalize Bars")) {
-                    if (normalizeCheckBox.isSelected())
-                        normalizeBars = true;
-                    else
-                        normalizeBars = false;
+                    panel.getBarChart().setNormalized(normalizeCheckBox.isSelected());
                     panel.repaint();
-
                 } else if (arg.equals("Stack Bars Together")) {
                     if (stackBarsCheckBox.isSelected()) {
 
                         normalizeCheckBox.setEnabled(true);
                         orderByMeanCheckBox.setEnabled(true);
 
+                        panel.getBarChart().setNormalized(normalizeCheckBox.isSelected());
+                        panel.getBarChart().setStacked(true);
                         stackBars = true;
                     } else {
                         stackBars = false;
@@ -218,7 +213,11 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
                         normalizeBars = false;
                         orderByMeanCheckBox.setSelected(true);
                         orderByMeanCheckBox.setEnabled(false);
+
+                        panel.getBarChart().setNormalized(normalizeCheckBox.isSelected());
+                        panel.getBarChart().setStacked(false);
                     }
+                    sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Order By Mean")) {
                     sortLocalData();
@@ -242,7 +241,8 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
 
     public void stateChanged(ChangeEvent event) {
         try {
-            panel.setBarLength(barLengthSlider.getValue());
+            panel.getBarChart().setBarLength(barLengthSlider.getValue());
+            panel.repaint();
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -269,16 +269,11 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
     }
 
     public Dimension getViewportSize() {
-        return jScrollPane.getViewport().getExtentSize();
+        return panel.getViewport().getExtentSize();
     }
 
     public Rectangle getViewRect() {
-        return jScrollPane.getViewport().getViewRect();
-    }
-
-    public void setVerticalScrollBarPosition(int position) {
-        JScrollBar scrollBar = jScrollPane.getVerticalScrollBar();
-        scrollBar.setValue(position);
+        return panel.getViewport().getViewRect();
     }
 
     //######
@@ -297,24 +292,23 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
             PreferencesWindow p = ppTrial.getPreferencesWindow();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
-            jScrollPane.setColumnHeaderView(jTextArea);
+            panel.setColumnHeaderView(jTextArea);
         } else
-            jScrollPane.setColumnHeaderView(null);
+            panel.setColumnHeaderView(null);
     }
 
     public String getHeaderString() {
         if (phase != null) {
-            return "Phase: " + phase + "\nMetric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID()))
-                    + "\nValue: " + "Exclusive" + "\n";
-        } else {
-            return "Metric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Value: "
+            return "Phase: " + phase + "\nMetric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\nValue: "
                     + "Exclusive" + "\n";
+        } else {
+            return "Metric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Value: " + "Exclusive" + "\n";
         }
     }
 
     private void showWidthSlider(boolean displaySliders) {
         if (displaySliders) {
-            contentPane.remove(jScrollPane);
+            contentPane.remove(panel);
 
             gbc.insets = new Insets(5, 5, 5, 5);
             gbc.fill = GridBagConstraints.NONE;
@@ -334,17 +328,17 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1.0;
             gbc.weighty = 0.99;
-            addCompItem(jScrollPane, gbc, 0, 1, 2, 1);
+            addCompItem(panel, gbc, 0, 1, 2, 1);
         } else {
             contentPane.remove(barLengthLabel);
             contentPane.remove(barLengthSlider);
-            contentPane.remove(jScrollPane);
+            contentPane.remove(panel);
 
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1;
             gbc.weighty = 1;
-            addCompItem(jScrollPane, gbc, 0, 0, 1, 1);
+            addCompItem(panel, gbc, 0, 0, 1, 1);
         }
 
         //Now call validate so that these component changes are displayed.
@@ -378,11 +372,7 @@ public class FullDataWindow extends JFrame implements ActionListener, Observer, 
             }
         }
         dataSorter.setDescendingOrder(orderCheckBox.isSelected());
-        list = dataSorter.getAllFunctionProfiles();
-    }
-
-    public List getData() {
-        return list;
+        model.reloadData();
     }
 
     public void addNotify() {

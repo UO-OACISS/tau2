@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.27 2005/08/24 01:45:41 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.28 2005/08/25 20:48:48 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.27 $
+ * @version	$Revision: 1.28 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -456,7 +456,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         }
                     }
                 } else if (arg.equals("Preferences...")) {
-                    ParaProf.preferencesWindow.showPreferencesWindow();
+                    ParaProf.preferencesWindow.showPreferencesWindow(this);
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
 

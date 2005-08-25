@@ -1,7 +1,9 @@
 /*
  * PPUserEventProfile.java
  * 
- * Title: ParaProf Author: Robert Bell Description: The primary functions of
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description: The primary functions of
  * this class are: 1)Pass data calls onto the objects which contain function
  * userevent, mean, and other data. 2)Implement the Comparable interface to
  * allow it to be sorted. 3)Hold drawing information.
@@ -26,15 +28,8 @@ public class PPUserEventProfile implements Comparable {
 
     private UserEventProfile userEventProfile;
     private DataSorter dataSorter;
-    private UserEvent userEvent = null;
+    private UserEvent userEvent;
 
-    //Drawing coordinates for this thread data object.
-    private int xBeg = 0;
-    private int xEnd = 0;
-    private int yBeg = 0;
-    private int yEnd = 0;
-
-    private boolean statDrawnTo;
 
     //Boolean indicating whether or not this object is highlighted.
     private boolean highlighted = false;
@@ -274,36 +269,6 @@ public class PPUserEventProfile implements Comparable {
             return 1;
     }
 
-    public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd) {
-        this.xBeg = xBeg;
-        this.xEnd = xEnd;
-        this.yBeg = yBeg;
-        this.yEnd = yEnd;
-    }
-
-    public int getXBeg() {
-        return xBeg;
-    }
-
-    public int getXEnd() {
-        return xEnd;
-    }
-
-    public int getYBeg() {
-        return yBeg;
-    }
-
-    public int getYEnd() {
-        return yEnd;
-    }
-
-    public boolean getStatDrawnTo() {
-        return statDrawnTo;
-    }
-
-    public void setStatDrawnTo(boolean statDrawnTo) {
-        this.statDrawnTo = statDrawnTo;
-    }
 
     public void setHighlighted(boolean highlighted) {
         this.highlighted = highlighted;
@@ -315,6 +280,10 @@ public class PPUserEventProfile implements Comparable {
 
     public void setSortType(int sortType) {
         this.sortType = sortType;
+    }
+
+    public edu.uoregon.tau.dms.dss.Thread getThread() {
+        return thread;
     }
 
 }

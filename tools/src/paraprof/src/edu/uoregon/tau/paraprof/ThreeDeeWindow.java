@@ -63,7 +63,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     float minScatterValues[];
     float maxScatterValues[];
 
-    public ThreeDeeWindow(ParaProfTrial ppTrial) {
+    public ThreeDeeWindow(ParaProfTrial ppTrial, Component invoker) {
         // set the VisTools exception handler
         VisTools.setSwingExceptionHandler(new ExceptionHandler() {
             public void handleException(Exception e) {
@@ -144,6 +144,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         this.getContentPane().add(jSplitPane);
 
         this.setSize(1000, 700);
+        this.setLocation(WindowPlacer.getNewLocation(this,invoker));
 
         //        //Grab the screen size.
         //        Toolkit tk = Toolkit.getDefaultToolkit();

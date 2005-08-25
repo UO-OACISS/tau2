@@ -9,6 +9,7 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.Iterator;
@@ -65,10 +66,10 @@ public class ColorChooser implements WindowListener {
         }
     }
 
-    public void showColorChooser() {
+    public void showColorChooser(Component invoker) {
         if (!clrChooserFrameShowing) {
             //Bring up the color chooser frame.
-            clrChooserFrame = new ColorDefaultsWindow(this);
+            clrChooserFrame = new ColorDefaultsWindow(this, invoker);
             clrChooserFrame.addWindowListener(this);
             clrChooserFrame.show();
             clrChooserFrameShowing = true;

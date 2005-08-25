@@ -53,13 +53,13 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
     private JButton restoreDefaultsButton;
     private int numberOfColors = -1;
    
-    public ColorDefaultsWindow(ColorChooser colorChooser) {
+    public ColorDefaultsWindow(ColorChooser colorChooser, Component invoker) {
         this.colorChooser = colorChooser;
         numberOfColors = colorChooser.getNumberOfColors();
 
         //Window Stuff.
-        setLocation(new Point(100, 100));
         setSize(new Dimension(855, 450));
+        setLocation(WindowPlacer.getNewLocation(this, invoker));
         setTitle("ParaProf: Edit Default Colors");
 
         setupMenus();

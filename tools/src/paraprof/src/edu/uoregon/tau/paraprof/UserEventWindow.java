@@ -20,6 +20,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 
 import edu.uoregon.tau.dms.dss.UserEvent;
+import edu.uoregon.tau.paraprof.barchart.BarChartPanel;
+import edu.uoregon.tau.paraprof.barchart.UserEventBarChartModel;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 
@@ -34,22 +36,24 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     private JCheckBoxMenuItem descendingOrder = null;
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
+    private JCheckBoxMenuItem displayWidthSlider;
 
     private JLabel barLengthLabel = new JLabel("Bar Width");
-    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
+    private JSlider barLengthSlider = new JSlider(0, 2000, 400);
 
     private GridBagLayout gbl = null;
     private GridBagConstraints gbc = null;
 
-    private UserEventWindowPanel panel = null;
-    private JScrollPane sp = null;
-
+    
+    private BarChartPanel panel;
+    private UserEventBarChartModel model;
+    
     private List list = new ArrayList();
 
     private UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
     
 
-    public UserEventWindow(ParaProfTrial ppTrial, UserEvent userEvent, DataSorter dataSorter) {
+    public UserEventWindow(ParaProfTrial ppTrial, UserEvent userEvent, DataSorter dataSorter, Component invoker) {
         this.userEvent = userEvent;
         this.ppTrial = ppTrial;
         ppTrial.getSystemEvents().addObserver(this);
@@ -58,20 +62,9 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
         int windowWidth = 650;
         int windowHeight = 550;
-        //Grab the screen size.
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        Dimension screenDimension = tk.getScreenSize();
-        int screenHeight = screenDimension.height;
-        int screenWidth = screenDimension.width;
-        if (windowWidth > screenWidth)
-            windowWidth = screenWidth;
-        if (windowHeight > screenHeight)
-            windowHeight = screenHeight;
-        //Set the window to come up in the center of the screen.
-        int xPosition = (screenWidth - windowWidth) / 2;
-        int yPosition = (screenHeight - windowHeight) / 2;
+
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
-        setLocation(xPosition, yPosition);
+        setLocation(WindowPlacer.getNewLocation(this,invoker));
 
         //Now set the title.
         this.setTitle("User Event Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
@@ -88,9 +81,17 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
             this.help(false);
         }
 
+        
+        model = new UserEventBarChartModel(this, dataSorter, userEvent);
+        
+        
         //Sort the local data.
         sortLocalData();
-        panel = new UserEventWindowPanel(ppTrial, userEvent, this);
+        
+        panel = new BarChartPanel(model, null);
+        
+        panel.getBarChart().setBarLength(barLengthSlider.getValue());
+        
         
         //####################################
         //Code to generate the menus.
@@ -109,6 +110,16 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         JCheckBoxMenuItem box = null;
         JRadioButtonMenuItem button = null;
 
+        displayWidthSlider = new JCheckBoxMenuItem("Show Width Slider", false);
+        displayWidthSlider.addActionListener(this);
+        optionsMenu.add(displayWidthSlider);
+
+        showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+        showMetaData.addActionListener(this);
+        optionsMenu.add(showMetaData);
+
+        optionsMenu.add(new JSeparator());
+        
         descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
         descendingOrder.addActionListener(this);
         optionsMenu.add(descendingOrder);
@@ -144,14 +155,6 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
         optionsMenu.add(subMenu);
 
-        box = new JCheckBoxMenuItem("Show Width Slider", false);
-        box.addActionListener(this);
-        optionsMenu.add(box);
-
-
-        showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
-        showMetaData.addActionListener(this);
-        optionsMenu.add(showMetaData);
 
 
        
@@ -173,16 +176,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        //######
-        //Panel and ScrollPane definition.
-        //######
-       
-        //The scroll panes into which the list shall be placed.
-        sp = new JScrollPane(panel);
         this.setHeader();
-        //######
-        //Panel and ScrollPane definition.
-        //######
 
         //######
         //Slider setup.
@@ -200,7 +194,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0.95;
         gbc.weighty = 0.98;
-        addCompItem(sp, gbc, 0, 1, 2, 1);
+        addCompItem(panel, gbc, 0, 1, 2, 1);
 
         ParaProf.incrementNumWindows();
     }
@@ -242,10 +236,11 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Show Width Slider")) {
-                    if (((JCheckBoxMenuItem) optionsMenu.getItem(2)).isSelected())
+                    if (displayWidthSlider.isSelected()) {
                         displaySiders(true);
-                    else
+                    } else {
                         displaySiders(false);
+                    }
                 } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
                 }
@@ -257,7 +252,8 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
     public void stateChanged(ChangeEvent event) {
         try {
-            panel.setBarLength(barLengthSlider.getValue());
+            panel.getBarChart().setBarLength(barLengthSlider.getValue());
+            panel.repaint();
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -306,7 +302,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     public void sortLocalData() {
 
         dataSorter.setUserEventValueType(userEventValueType);
-        list = dataSorter.getUserEventData(userEvent);
+        model.reloadData();
     }
 
     public List getData() {
@@ -318,15 +314,15 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     }
 
     public Dimension getViewportSize() {
-        return sp.getViewport().getExtentSize();
+        return panel.getViewport().getExtentSize();
     }
 
     public Rectangle getViewRect() {
-        return sp.getViewport().getViewRect();
+        return panel.getViewport().getViewRect();
     }
 
     public void setVerticalScrollBarPosition(int position) {
-        JScrollBar scrollBar = sp.getVerticalScrollBar();
+        JScrollBar scrollBar = panel.getVerticalScrollBar();
         scrollBar.setValue(position);
     }
 
@@ -344,9 +340,9 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
             jTextArea.append(this.getHeaderString());
-            sp.setColumnHeaderView(jTextArea);
+            panel.setColumnHeaderView(jTextArea);
         } else
-            sp.setColumnHeaderView(null);
+            panel.setColumnHeaderView(null);
     }
 
     public String getHeaderString() {
@@ -403,6 +399,10 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
             // do nothing
         }
         dispose();
+    }
+
+    public ParaProfTrial getPpTrial() {
+        return ppTrial;
     }
 
  

@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.interfaces.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.29 2005/08/18 01:04:02 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.30 2005/08/25 20:48:46 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.29 $
+ * @version	$Revision: 1.30 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -28,7 +28,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     private ParaProfTrial ppTrial = null;
     private DataSorter dataSorter = null;
-    private int windowType = 0; //0: mean data,1: function data, 2: global relations.
 
     private JMenu optionsMenu = null;
     private JMenu unitsSubMenu = null;
@@ -52,16 +51,15 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     private edu.uoregon.tau.dms.dss.Thread thread;
     
-    public CallPathTextWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, int windowType) {
+    public CallPathTextWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, Component invoker) {
         this.ppTrial = ppTrial;
         ppTrial.getSystemEvents().addObserver(this);
         this.dataSorter = new DataSorter(ppTrial);
-        this.windowType = windowType;
         this.thread = thread;
         
-        setLocation(0, 0);
         setSize(800, 600);
-
+        setLocation(WindowPlacer.getNewLocation(this, invoker));
+        
         addKeyListener(this);
 
         //Now set the title.
@@ -103,11 +101,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         gbc.insets = new Insets(5, 5, 5, 5);
 
 
-        if (windowType == 2) {
-            this.thread = ppTrial.getDataSource().getMeanData();
-        }
-
-        panel = new CallPathTextWindowPanel(ppTrial, this.thread, this, windowType);
+        panel = new CallPathTextWindowPanel(ppTrial, this.thread, this);
         //The scroll panes into which the list shall be placed.
 
         setupMenus();
@@ -229,19 +223,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
-                if (arg.equals("Print")) {
-                    ParaProfUtils.print(panel);
-                } else if (arg.equals("Preferences...")) {
-                    ppTrial.getPreferencesWindow().showPreferencesWindow();
-                } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput.saveImage(panel);
-                } else if (arg.equals("Close This Window")) {
-                    closeThisWindow();
-                } else if (arg.equals("Exit ParaProf!")) {
-                    setVisible(false);
-                    dispose();
-                    ParaProf.exitParaProf(0);
-                } else if (arg.equals("Name")) {
+                if (arg.equals("Name")) {
                     sortByName = true;
                     sortLocalData();
                     panel.resetAllDrawObjects();
@@ -381,25 +363,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
         this.setHeader();
 
-        if (sortByName) {
-            if (windowType == 0 || windowType == 1) {
-                list = dataSorter.getFunctionProfiles(thread);
-            } else {
-                list = new ArrayList();
-                for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();)
-                    list.add(it.next());
-            }
-        } else {
-            if (windowType == 0 || windowType == 1) {
-                list = dataSorter.getFunctionProfiles(thread);
-            } else {
-                list = new ArrayList();
-                for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();)
-                    list.add(it.next());
-                Collections.sort(list);
-            }
-        }
-
+        list = dataSorter.getFunctionProfiles(thread);
     }
 
     public List getData() {
@@ -408,10 +372,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     public ListIterator getDataIterator() {
         return list.listIterator();
-    }
-
-    public int getWindowType() {
-        return windowType;
     }
 
     public int units() {

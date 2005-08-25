@@ -113,8 +113,8 @@ public class ColorMap extends Observable implements Serializable {
         notifyObservers("colorMap");
     }
 
-    public void showColorMap() {
-        ColorMapWindow colorMapWindow = new ColorMapWindow();
+    public void showColorMap(Component invoker) {
+        ColorMapWindow colorMapWindow = new ColorMapWindow(invoker);
         colorMapWindow.show();
         this.addObserver(colorMapWindow);
     }

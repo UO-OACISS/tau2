@@ -14,9 +14,9 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.13 2005/08/24 01:45:40 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.14 2005/08/25 20:48:46 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  */
 public class DataSorter {
 
@@ -232,18 +232,18 @@ public class DataSorter {
                 maxExclusiveSum = sum;
             }
 
-            //Sort thread and add to context if required (see above for an explanation).
+            // sort thread and add to the list
             if (counter != 0) {
                 Collections.sort(ppThread.getFunctionList());
                 threads.add(ppThread);
             }
         }
 
-        if (ppTrial.getDataSource().getAllThreads().size() > 1 && threads.size() == 4) {
-            threads.remove(0);
-            threads.remove(0);
-            threads.remove(0);
-        }
+//        if (ppTrial.getDataSource().getAllThreads().size() > 1 && threads.size() == 4) {
+//            threads.remove(0);
+//            threads.remove(0);
+//            threads.remove(0);
+//        }
 
         return threads;
     }

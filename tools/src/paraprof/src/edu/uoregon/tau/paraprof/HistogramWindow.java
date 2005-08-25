@@ -19,9 +19,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.15 2005/08/24 01:45:41 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.16 2005/08/25 20:48:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
@@ -47,7 +47,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     private JSlider numBinsSlider = new JSlider(0, 100, 10);
     private int numBins = 10;
 
-    public HistogramWindow(ParaProfTrial ppTrial, Function function) {
+    public HistogramWindow(ParaProfTrial ppTrial, Function function, Component invoker) {
         this.ppTrial = ppTrial;
         ppTrial.getSystemEvents().addObserver(this);
 
@@ -55,8 +55,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         this.function = function;
 
         setTitle("Histogram: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        setLocation(new java.awt.Point(300, 200));
         setSize(new java.awt.Dimension(670, 630));
+        setLocation(WindowPlacer.getNewLocation(this,invoker));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {

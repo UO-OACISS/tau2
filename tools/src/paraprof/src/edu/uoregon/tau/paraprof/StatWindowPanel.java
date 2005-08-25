@@ -366,44 +366,15 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
-                if (arg.equals("Show Function Details")) {
-
-                    if (clickedOnObject instanceof PPFunctionProfile) {
-                        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        FunctionDataWindow tmpRef = new FunctionDataWindow(ppTrial, ppFunctionProfile.getFunction());
-                        tmpRef.show();
-                    }
-                } else if (arg.equals("Show Function Histogram")) {
-                    if (clickedOnObject instanceof PPFunctionProfile) {
-                        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        HistogramWindow hw = new HistogramWindow(ppTrial, ppFunctionProfile.getFunction());
-                        hw.show();
-                    }
-
-                } else if (arg.equals("Show User Event Bar Chart")) {
+                if (arg.equals("Show User Event Bar Chart")) {
 
                     if (clickedOnObject instanceof PPUserEventProfile) {
                         ppUserEventProfile = (PPUserEventProfile) clickedOnObject;
                         //Bring up an expanded data window for this user event and highlight it
                         ppTrial.setHighlightedUserEvent(ppUserEventProfile.getUserEvent());
                         UserEventWindow tmpRef = new UserEventWindow(ppTrial, ppUserEventProfile.getUserEvent(),
-                                ppTrial.getFullDataWindow().getDataSorter());
+                                ppTrial.getFullDataWindow().getDataSorter(), this);
                         tmpRef.show();
-                    }
-                } else if (arg.equals("Change Function Color")) {
-                    Function function = null;
-                    if (clickedOnObject instanceof PPFunctionProfile) {
-                        function = ((PPFunctionProfile) clickedOnObject).getFunction();
-
-                        Color tmpCol = function.getColor();
-                        JColorChooser tmpJColorChooser = new JColorChooser();
-                        tmpCol = JColorChooser.showDialog(this, "Please select a new color", tmpCol);
-                        if (tmpCol != null) {
-                            function.setSpecificColor(tmpCol);
-                            function.setColorFlag(true);
-
-                            ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
-                        }
                     }
                 } else if (arg.equals("Change User Event Color")) {
                     UserEvent userEvent = null;
@@ -420,13 +391,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                         ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
                     }
                 } else if (arg.equals("Reset to Generic Color")) {
-
-                    //Get the clicked on object.
-                    if (clickedOnObject instanceof PPFunctionProfile) {
-                        Function f = ((PPFunctionProfile) clickedOnObject).getFunction();
-                        f.setColorFlag(false);
-
-                    }
 
                     if (clickedOnObject instanceof PPUserEventProfile) {
                         UserEvent ue = ((PPUserEventProfile) clickedOnObject).getUserEvent();

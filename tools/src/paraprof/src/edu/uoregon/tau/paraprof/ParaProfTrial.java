@@ -34,7 +34,7 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     private boolean loading = false;
 
     private SystemEvents systemEvents = new SystemEvents();
-    private FullDataWindow fullDataWindow = null;
+    private GlobalDataWindow fullDataWindow = null;
     private ColorChooser clrChooser = ParaProf.colorChooser;
     private PreferencesWindow preferencesWindow = ParaProf.preferencesWindow;
 
@@ -198,15 +198,16 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     //Functions that control the obtaining and the opening
     //and closing of the static main window for this trial.
     //####################################
-    public FullDataWindow getFullDataWindow() {
+    public GlobalDataWindow getFullDataWindow() {
         return fullDataWindow;
     }
 
     public void showMainWindow() {
         if (fullDataWindow == null) {
-            fullDataWindow = new FullDataWindow(this, trial.getDataSource().getTopLevelPhase());
+            fullDataWindow = new GlobalDataWindow(this, trial.getDataSource().getTopLevelPhase());
             ParaProf.incrementNumWindows();
             fullDataWindow.setVisible(true);
+
         } else {
             ParaProf.incrementNumWindows();
             fullDataWindow.setVisible(true);

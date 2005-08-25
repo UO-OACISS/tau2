@@ -10,8 +10,10 @@ import java.awt.event.MouseMotionListener;
 import java.awt.font.TextHitInfo;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JPanel;
+
+import javax.swing.JComponent;
 
 import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
 import edu.uoregon.tau.paraprof.interfaces.Searchable;
@@ -22,13 +24,13 @@ import edu.uoregon.tau.paraprof.interfaces.Searchable;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Searcher.java,v 1.4 2005/05/31 23:21:49 amorris Exp $</P>
+ * <P>CVS $Id: Searcher.java,v 1.5 2005/08/25 20:48:48 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class Searcher implements Searchable, MouseListener, MouseMotionListener, ClipboardOwner {
 
-    private List searchLines;
+    private List searchLines = new ArrayList();
     private String searchString = "";
     private int searchLine;
     private int searchColumn;
@@ -39,7 +41,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     private int lineHeight;
     private int maxDescent;
     
-    private JPanel panel;
+    private JComponent panel;
     private ScrollBarController scrollBarController;
 
     private int firstVisibleLine;
@@ -55,7 +57,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     private int selectionStartX, selectionStartY;
     private int selectionEndX, selectionEndY;
 
-    public Searcher(JPanel panel, ScrollBarController scrollBarController) {
+    public Searcher(JComponent panel, ScrollBarController scrollBarController) {
         this.panel = panel;
         this.scrollBarController = scrollBarController;
     }

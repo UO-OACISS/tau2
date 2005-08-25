@@ -175,7 +175,8 @@ public class ParaProfUtils {
                     if (arg.equals("Print")) {
                         ParaProfUtils.print(printable);
                     } else if (arg.equals("Preferences...")) {
-                        ParaProf.preferencesWindow.showPreferencesWindow();
+                        // this is just in case there is ever a ParaProfWindow that is not a JFrame (there shouldn't be)
+                        ParaProf.preferencesWindow.showPreferencesWindow(window instanceof JFrame ? (JFrame)window : null);
                     } else if (arg.equals("Save Image")) {
 
                         if (panel instanceof ImageExport) {
@@ -292,13 +293,13 @@ public class ParaProfUtils {
                     if (arg.equals("ParaProf Manager")) {
                         (new ParaProfManagerWindow()).show();
                     } else if (arg.equals("Function Ledger")) {
-                        (new LedgerWindow(ppTrial, 0)).show();
+                        (new LedgerWindow(ppTrial, 0,owner)).show();
                     } else if (arg.equals("Group Ledger")) {
-                        (new LedgerWindow(ppTrial, 1)).show();
+                        (new LedgerWindow(ppTrial, 1,owner)).show();
                     } else if (arg.equals("User Event Ledger")) {
-                        (new LedgerWindow(ppTrial, 2)).show();
+                        (new LedgerWindow(ppTrial, 2,owner)).show();
                     } else if (arg.equals("Phase Ledger")) {
-                        (new LedgerWindow(ppTrial, 3)).show();
+                        (new LedgerWindow(ppTrial, 3,owner)).show();
                     } else if (arg.equals("3D Visualization")) {
 
                         if (JVMDependent.version.equals("1.3")) {
@@ -311,7 +312,7 @@ public class ParaProfUtils {
                         //(new Gears()).show();
 
                         try {
-                            (new ThreeDeeWindow(ppTrial)).show();
+                            (new ThreeDeeWindow(ppTrial,owner)).show();
                             //(new ThreeDeeWindow()).show();
                         } catch (UnsatisfiedLinkError e) {
                             JOptionPane.showMessageDialog(owner, "Unable to load jogl library.  Possible reasons:\n"
@@ -321,9 +322,6 @@ public class ParaProfUtils {
                         } catch (UnsupportedClassVersionError e) {
                             JOptionPane.showMessageDialog(owner, "Unsupported class version.  Are you using Java 1.4 or above?");
                         }
-                    } else if (arg.equals("Call Path Relations")) {
-                        CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, ppTrial.getDataSource().getMeanData(), 1);
-                        tmpRef.show();
                     } else if (arg.equals("Close All Sub-Windows")) {
                         ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
                     }
@@ -367,10 +365,10 @@ public class ParaProfUtils {
                     String arg = evt.getActionCommand();
 
                     if (arg.equals("Bar Chart")) {
-                        FunctionDataWindow w = new FunctionDataWindow(ppTrial, selectedFunction);
+                        FunctionBarChartWindow w = new FunctionBarChartWindow(ppTrial, selectedFunction, owner);
                         w.show();
                     } else if (arg.equals("Histogram")) {
-                        HistogramWindow w = new HistogramWindow(ppTrial, selectedFunction);
+                        HistogramWindow w = new HistogramWindow(ppTrial, selectedFunction, owner);
                         w.show();
                     }
                 }
@@ -401,18 +399,18 @@ public class ParaProfUtils {
                     edu.uoregon.tau.dms.dss.Thread selectedThread = (edu.uoregon.tau.dms.dss.Thread) fSelector.getSelectedObject();
 
                     if (arg.equals("Bar Chart")) {
-                        ThreadDataWindow w = new ThreadDataWindow(ppTrial, selectedThread, null);
+                        FunctionBarChartWindow w = new FunctionBarChartWindow(ppTrial, selectedThread, null, owner);
                         w.setVisible(true);
                     } else if (arg.equals("Statistics Text")) {
-                        (new StatWindow(ppTrial, selectedThread, false, null)).setVisible(true);
+                        (new StatWindow(ppTrial, selectedThread, false, null,owner)).setVisible(true);
                     } else if (arg.equals("Statistics Table")) {
-                        (new TreeTableWindow(ppTrial, selectedThread)).setVisible(true);
+                        (new TreeTableWindow(ppTrial, selectedThread, owner)).setVisible(true);
                     } else if (arg.equals("Call Graph")) {
-                        (new CallGraphWindow(ppTrial, selectedThread)).setVisible(true);
+                        (new CallGraphWindow(ppTrial, selectedThread, owner)).setVisible(true);
                     } else if (arg.equals("Call Path Relations")) {
-                        (new CallPathTextWindow(ppTrial, selectedThread, 0)).setVisible(true);
+                        (new CallPathTextWindow(ppTrial, selectedThread, owner)).setVisible(true);
                     } else if (arg.equals("User Event Statistics")) {
-                        (new StatWindow(ppTrial, selectedThread, true, null)).setVisible(true);
+                        (new StatWindow(ppTrial, selectedThread, true, null,owner)).setVisible(true);
                     }
                 }
             }
@@ -502,7 +500,7 @@ public class ParaProfUtils {
     }
 
     public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function, final Thread thread,
-            final JComponent owner) {
+            final Component owner) {
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
@@ -511,17 +509,18 @@ public class ParaProfUtils {
                     String arg = evt.getActionCommand();
 
                     if (arg.equals("Show Function Bar Chart")) {
-                        FunctionDataWindow functionDataWindow = new FunctionDataWindow(ppTrial, function);
+                        FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
                         functionDataWindow.show();
-                    } else if (arg.equals("Show New Function Bar Chart")) {
-                        NewFunctionBarChartWindow window = new NewFunctionBarChartWindow(ppTrial, function);
-                        window.show();
                     } else if (arg.equals("Show Function Data over Phases")) {
-                        FunctionDataWindow functionDataWindow = new FunctionDataWindow(ppTrial, function);
+                        FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
                         functionDataWindow.changeToPhaseDisplay(thread);
                         functionDataWindow.show();
+                    } else if (arg.equals("Show New Function Data over Phases")) {
+                        FunctionBarChartWindow window = new FunctionBarChartWindow(ppTrial, function, owner);
+                        window.changeToPhaseDisplay(thread);
+                        window.show();
                     } else if (arg.equals("Show Function Histogram")) {
-                        HistogramWindow hw = new HistogramWindow(ppTrial, function);
+                        HistogramWindow hw = new HistogramWindow(ppTrial, function, owner);
                         hw.show();
                     } else if (arg.equals("Assign Function Color")) {
                         ParaProf.colorMap.assignColor(owner, function);
@@ -529,7 +528,7 @@ public class ParaProfUtils {
                         ParaProf.colorMap.removeColor(function);
                         ParaProf.colorMap.reassignColors();
                     } else if (arg.equals("Open Profile for this Phase")) {
-                        FullDataWindow fdw = new FullDataWindow(ppTrial, function.getActualPhase());
+                        GlobalDataWindow fdw = new GlobalDataWindow(ppTrial, function.getActualPhase());
                         fdw.show();
                         ParaProf.incrementNumWindows();
                     }
@@ -549,23 +548,20 @@ public class ParaProfUtils {
             functionPopup.add(functionDetailsItem);
         }
 
-        if (ppTrial.getDataSource().getPhasesPresent()) {
-            JMenuItem functionDetailsItem = new JMenuItem("Show Function Data over Phases");
-            functionDetailsItem.addActionListener(actionListener);
-            functionPopup.add(functionDetailsItem);
-        }
 
         JMenuItem functionDetailsItem = new JMenuItem("Show Function Bar Chart");
         functionDetailsItem.addActionListener(actionListener);
         functionPopup.add(functionDetailsItem);
 
-//        functionDetailsItem = new JMenuItem("Show New Function Bar Chart");
-//        functionDetailsItem.addActionListener(actionListener);
-//        functionPopup.add(functionDetailsItem);
-
         JMenuItem functionHistogramItem = new JMenuItem("Show Function Histogram");
         functionHistogramItem.addActionListener(actionListener);
         functionPopup.add(functionHistogramItem);
+
+        if (ppTrial.getDataSource().getPhasesPresent()) {
+            JMenuItem jMenuItem = new JMenuItem("Show Function Data over Phases");
+            jMenuItem.addActionListener(actionListener);
+            functionPopup.add(jMenuItem);
+        }
 
         JMenuItem jMenuItem = new JMenuItem("Assign Function Color");
         jMenuItem.addActionListener(actionListener);
@@ -580,11 +576,11 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createStatisticsMenuItem(String text, final ParaProfTrial ppTrial, final Function phase,
-            final edu.uoregon.tau.dms.dss.Thread thread, final boolean userEvent) {
+            final edu.uoregon.tau.dms.dss.Thread thread, final boolean userEvent, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                StatWindow statWindow = new StatWindow(ppTrial, thread, userEvent, phase);
+                StatWindow statWindow = new StatWindow(ppTrial, thread, userEvent, phase, owner);
                 statWindow.show();
             }
 
@@ -593,11 +589,11 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createStatisticsTableMenuItem(String text, final ParaProfTrial ppTrial, final Function phase,
-            final edu.uoregon.tau.dms.dss.Thread thread) {
+            final edu.uoregon.tau.dms.dss.Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                TreeTableWindow ttWindow = new TreeTableWindow(ppTrial, thread);
+                TreeTableWindow ttWindow = new TreeTableWindow(ppTrial, thread, owner);
                 ttWindow.show();
             }
 
@@ -606,11 +602,11 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createCallGraphMenuItem(String text, final ParaProfTrial ppTrial,
-            final edu.uoregon.tau.dms.dss.Thread thread) {
+            final edu.uoregon.tau.dms.dss.Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, thread);
+                CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, thread, owner);
                 tmpRef.show();
             }
 
@@ -619,11 +615,11 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createCallPathThreadRelationMenuItem(String text, final ParaProfTrial ppTrial,
-            final edu.uoregon.tau.dms.dss.Thread thread) {
+            final edu.uoregon.tau.dms.dss.Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial, thread, 0);
+                CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial, thread, owner);
                 callPathTextWindow.show();
             }
 
@@ -632,11 +628,13 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createThreadDataMenuItem(String text, final ParaProfTrial ppTrial, final Function phase,
-            final edu.uoregon.tau.dms.dss.Thread thread) {
+            final edu.uoregon.tau.dms.dss.Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ThreadDataWindow w = new ThreadDataWindow(ppTrial, thread, phase);
+//                ThreadDataWindow w = new ThreadDataWindow(ppTrial, thread, phase);
+//                w.show();
+                FunctionBarChartWindow w = new FunctionBarChartWindow(ppTrial, thread, phase, owner);
                 w.show();
             }
 
@@ -648,30 +646,30 @@ public class ParaProfUtils {
             final edu.uoregon.tau.dms.dss.Thread thread, JComponent owner, MouseEvent evt) {
         if (thread.getNodeID() == -1) { // mean
             JPopupMenu meanThreadPopup = new JPopupMenu();
-            meanThreadPopup.add(createThreadDataMenuItem("Show Mean Bar Chart", ppTrial, phase, thread));
-            meanThreadPopup.add(createStatisticsMenuItem("Show Mean Statistics Text Window", ppTrial, phase, thread, false));
-            meanThreadPopup.add(createStatisticsTableMenuItem("Show Mean Statistics Table", ppTrial, phase, thread));
-            meanThreadPopup.add(createCallGraphMenuItem("Show Mean Call Graph", ppTrial, thread));
-            meanThreadPopup.add(createCallPathThreadRelationMenuItem("Show Mean Call Path Relations", ppTrial, thread));
+            meanThreadPopup.add(createThreadDataMenuItem("Show Mean Bar Chart", ppTrial, phase, thread, owner));
+            meanThreadPopup.add(createStatisticsMenuItem("Show Mean Statistics Text Window", ppTrial, phase, thread, false,owner));
+            meanThreadPopup.add(createStatisticsTableMenuItem("Show Mean Statistics Table", ppTrial, phase, thread, owner));
+            meanThreadPopup.add(createCallGraphMenuItem("Show Mean Call Graph", ppTrial, thread, owner));
+            meanThreadPopup.add(createCallPathThreadRelationMenuItem("Show Mean Call Path Relations", ppTrial, thread, owner));
             meanThreadPopup.show(owner, evt.getX(), evt.getY());
         } else if (thread.getNodeID() == -3) { // stddev
             JPopupMenu threadPopup = new JPopupMenu();
-            threadPopup.add(createThreadDataMenuItem("Show Standard Deviation Bar Chart", ppTrial, phase, thread));
-            threadPopup.add(createStatisticsMenuItem("Show Standard Deviation Statistics Text Window", ppTrial, phase, thread, false));
-            threadPopup.add(createStatisticsTableMenuItem("Show Standard Deviation Statistics Table", ppTrial, phase, thread));
-            threadPopup.add(createCallGraphMenuItem("Show Standard Deviation Call Graph", ppTrial, thread));
+            threadPopup.add(createThreadDataMenuItem("Show Standard Deviation Bar Chart", ppTrial, phase, thread, owner));
+            threadPopup.add(createStatisticsMenuItem("Show Standard Deviation Statistics Text Window", ppTrial, phase, thread, false,owner));
+            threadPopup.add(createStatisticsTableMenuItem("Show Standard Deviation Statistics Table", ppTrial, phase, thread, owner));
+            threadPopup.add(createCallGraphMenuItem("Show Standard Deviation Call Graph", ppTrial, thread, owner));
             threadPopup.add(createCallPathThreadRelationMenuItem("Show Standard Deviation Call Path Thread Relations", ppTrial,
-                    thread));
+                    thread, owner));
             threadPopup.show(owner, evt.getX(), evt.getY());
         } else {
             JPopupMenu threadPopup = new JPopupMenu();
-            threadPopup.add(createThreadDataMenuItem("Show Thread Bar Chart", ppTrial, phase, thread));
-            threadPopup.add(createStatisticsMenuItem("Show Thread Statistics Text Window", ppTrial, phase, thread, false));
-            threadPopup.add(createStatisticsTableMenuItem("Show Thread Statistics Table", ppTrial, phase, thread));
-            threadPopup.add(createCallGraphMenuItem("Show Thread Call Graph", ppTrial, thread));
-            threadPopup.add(createCallPathThreadRelationMenuItem("Show Thread Call Path Relations", ppTrial, thread));
+            threadPopup.add(createThreadDataMenuItem("Show Thread Bar Chart", ppTrial, phase, thread, owner));
+            threadPopup.add(createStatisticsMenuItem("Show Thread Statistics Text Window", ppTrial, phase, thread, false,owner));
+            threadPopup.add(createStatisticsTableMenuItem("Show Thread Statistics Table", ppTrial, phase, thread, owner));
+            threadPopup.add(createCallGraphMenuItem("Show Thread Call Graph", ppTrial, thread, owner));
+            threadPopup.add(createCallPathThreadRelationMenuItem("Show Thread Call Path Relations", ppTrial, thread, owner));
             if (ppTrial.userEventsPresent()) {
-                threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true));
+                threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true,owner));
             }
             threadPopup.show(owner, evt.getX(), evt.getY());
 

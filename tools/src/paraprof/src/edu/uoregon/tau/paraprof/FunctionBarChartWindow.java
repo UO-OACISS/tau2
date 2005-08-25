@@ -1,35 +1,37 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.List;
+import java.awt.event.*;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.*;
 import javax.swing.event.*;
 
 import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.Thread;
 import edu.uoregon.tau.dms.dss.UtilFncs;
+import edu.uoregon.tau.paraprof.barchart.*;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
-import edu.uoregon.tau.dms.dss.Thread;
-
-
 
 /**
- * FunctionDataWindow
- * This is the FunctionDataWindow.
+ * FunctionBarChartWindow
+ * This is the FunctionBarChartWindow.  It can display performance data in many way.  
+ * All functions for one thread, all threads for one function, all phases for one function.
+ * 
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.24 2005/08/18 01:04:02 amorris Exp $</P>
- * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.24 $
- * @see		FunctionDataWindowPanel
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.1 2005/08/25 20:48:47 amorris Exp $</P>
+ * @author  Robert Bell, Alan Morris
+ * @version $Revision: 1.1 $
+ * @see     FunctionBarChartModel
+ * @see     ThreadBarChartModel
  */
-public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
-        UnitListener {
+public class FunctionBarChartWindow extends JFrame implements KeyListener, SearchableOwner, ActionListener, MenuListener,
+        Observer, ChangeListener, ParaProfWindow, UnitListener {
 
     private ParaProfTrial ppTrial;
     private DataSorter dataSorter;
@@ -40,38 +42,91 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     private JMenu unitsSubMenu;
 
     private JCheckBoxMenuItem sortByNCTCheckbox;
+    private JCheckBoxMenuItem sortByNameCheckBox;
     private JCheckBoxMenuItem descendingOrderCheckBox;
     private JCheckBoxMenuItem showValuesAsPercent;
     private JCheckBoxMenuItem showPathTitleInReverse;
     private JCheckBoxMenuItem showMetaData;
+    private JCheckBoxMenuItem showFindPanelBox;
 
     private JLabel barLengthLabel = new JLabel("Bar Width");
-    private JSlider barLengthSlider = new JSlider(0, 2000, 250);
+    private JSlider barLengthSlider = new JSlider(0, 2000, 400);
 
-    private FunctionDataWindowPanel panel;
-    private JScrollPane sp;
+    private BarChartPanel panel;
 
-    private List list = new ArrayList();
-
-    private double maxValue;
     private int units = ParaProf.preferences.getUnits();
 
-    
+    private BarChartModel model;
+
     // Phase support
     private Thread phaseThread;
     private boolean phaseDisplay;
-    
-    public FunctionDataWindow(ParaProfTrial ppTrial, Function function) {
+
+    private SearchPanel searchPanel;
+
+    private PPThread ppThread;
+    private Function phase;
+
+    // Initializes Chart as a single function across threads
+    public FunctionBarChartWindow(ParaProfTrial ppTrial, Function function, Component parent) {
         this.ppTrial = ppTrial;
+        this.function = function;
+        dataSorter = new DataSorter(ppTrial);
+
+        model = new FunctionBarChartModel(this, dataSorter, function);
+        panel = new BarChartPanel(model, null);
+        initialize(parent);
+
+        this.setTitle("Function Data Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+    }
+
+    // Initializes Chart as a single thread across functions
+    public FunctionBarChartWindow(ParaProfTrial ppTrial, Thread thread, Function phase, Component parent) {
+        this.ppTrial = ppTrial;
+        this.ppThread = new PPThread(thread, ppTrial);
+        this.phase = phase;
+        dataSorter = new DataSorter(ppTrial);
+        dataSorter.setPhase(phase);
+
+        barLengthSlider.setValue(250);
+        model = new ThreadBarChartModel(this, dataSorter, ppThread);
+        panel = new BarChartPanel(model, null);
+        initialize(parent);
+
+        panel.getBarChart().setLeftJustified(false);
+
+        String phaseString = "";
+        if (phase != null) {
+            phaseString = " Phase: " + phase.getName();
+        }
+
+        if (thread.getNodeID() == -1) {
+            this.setTitle("Mean Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
+                    + phaseString);
+        } else if (thread.getNodeID() == -2) {
+            this.setTitle("Total Data - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
+        } else if (thread.getNodeID() == -3) {
+            this.setTitle("Standard Deviation Data - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
+        } else {
+            this.setTitle(ppThread.getName() + " - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
+        }
+    }
+
+    private void initialize(Component parent) {
+
         ppTrial.getSystemEvents().addObserver(this);
 
-        this.function = function;
+        panel.getBarChart().setBarLength(barLengthSlider.getValue());
+
         int windowWidth = 650;
         int windowHeight = 550;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
-        //Now set the title.
-        this.setTitle("Function Data Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        setLocation(WindowPlacer.getNewLocation(this,parent));
+        //        setLocation(650, 0);
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -81,7 +136,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         });
 
         // Set up the data sorter
-        dataSorter = new DataSorter(ppTrial);
         dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
         dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
 
@@ -95,11 +149,16 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        //Panel and ScrollPane definition.
-        panel = new FunctionDataWindowPanel(ppTrial, function, this);
-        sp = new JScrollPane(panel);
-        JScrollBar vScrollBar = sp.getVerticalScrollBar();
+        BarChart barChart = panel.getBarChart();
+        
+        if (function != null) {
+            barChart.setLeftJustified(true);
+        }
+
+        JScrollBar vScrollBar = panel.getVerticalScrollBar();
         vScrollBar.setUnitIncrement(35);
+
+        this.addKeyListener(this);
 
         setupMenus();
 
@@ -119,21 +178,31 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 100;
         gbc.weighty = 100;
-        addCompItem(sp, gbc, 0, 0, 1, 1);
+        addCompItem(panel, gbc, 0, 0, 1, 1);
         ParaProf.incrementNumWindows();
+
     }
 
-    
     public void changeToPhaseDisplay(Thread thread) {
         phaseThread = thread;
         phaseDisplay = true;
-        sortLocalData();
-        
-        //Now set the title.
-        this.setTitle(ParaProfUtils.getThreadIdentifier(thread) + " - Function Data: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
+        this.setTitle(ParaProfUtils.getThreadIdentifier(thread) + " - Function Data: "
+                + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+
+        // in case we were opened on "main => foo", switch to foo
+        this.function = ppTrial.getDataSource().getFunction(UtilFncs.getLeftSide(function.getName()));
+        
+        // we're no longer in a phase
+        this.phase = null;
+        setHeader();
+        sortByNCTCheckbox.setSelected(false);
+        optionsMenu.remove(sortByNCTCheckbox);
+        descendingOrderCheckBox.setSelected(true);
+
+        sortLocalData();
     }
-    
+
     private Component createMetricMenu(final ValueType valueType, boolean enabled, ButtonGroup group) {
         JRadioButtonMenuItem button = null;
 
@@ -178,6 +247,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
+        mainMenu.addKeyListener(this);
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
@@ -190,6 +260,10 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         box = new JCheckBoxMenuItem("Show Width Slider", false);
         box.addActionListener(this);
         optionsMenu.add(box);
+
+        showFindPanelBox = new JCheckBoxMenuItem("Show Find Panel", false);
+        showFindPanelBox.addActionListener(this);
+        optionsMenu.add(showFindPanelBox);
 
         showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
         showMetaData.addActionListener(this);
@@ -204,11 +278,17 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             }
         };
 
-        sortByNCTCheckbox = new JCheckBoxMenuItem("Sort By N,C,T", true);
-        sortByNCTCheckbox.addActionListener(sortData);
-        optionsMenu.add(sortByNCTCheckbox);
+        if (function != null) {
+            sortByNCTCheckbox = new JCheckBoxMenuItem("Sort By N,C,T", true);
+            sortByNCTCheckbox.addActionListener(sortData);
+            optionsMenu.add(sortByNCTCheckbox);
+        } else {
+            sortByNameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
+            sortByNameCheckBox.addActionListener(sortData);
+            optionsMenu.add(sortByNameCheckBox);
+        }
 
-        descendingOrderCheckBox = new JCheckBoxMenuItem("Descending Order", false);
+        descendingOrderCheckBox = new JCheckBoxMenuItem("Descending Order", function == null);
         descendingOrderCheckBox.addActionListener(sortData);
         optionsMenu.add(descendingOrderCheckBox);
 
@@ -259,6 +339,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
+
         mainMenu.add(optionsMenu);
         //mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
@@ -274,12 +355,19 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Show Width Slider")) {
-                    if (((JCheckBoxMenuItem) EventSrc).isSelected())
+                    if (((JCheckBoxMenuItem) EventSrc).isSelected()) {
                         showWidthSlider(true);
-                    else
+                    } else {
                         showWidthSlider(false);
+                    }
                 } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
+                } else if (arg.equals("Show Find Panel")) {
+                    if (showFindPanelBox.isSelected()) {
+                        showSearchPanel(true);
+                    } else {
+                        showSearchPanel(false);
+                    }
                 } else {
                     throw new ParaProfException("Menu system not implemented properly: " + arg);
                 }
@@ -291,7 +379,8 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
     public void stateChanged(ChangeEvent event) {
         try {
-            panel.setBarLength(barLengthSlider.getValue());
+            panel.getBarChart().setBarLength(barLengthSlider.getValue());
+            panel.repaint();
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -361,18 +450,33 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
-        if (display)
+        if (display) {
             ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("This is the function data window for:");
-        ParaProf.helpWindow.writeText(ParaProfUtils.getFunctionName(function));
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
-        ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default color");
-        ParaProf.helpWindow.writeText("for this function.");
+        }
+        
+        if (function != null) {
+            ParaProf.helpWindow.writeText("This is the function data window for:");
+            ParaProf.helpWindow.writeText(ParaProfUtils.getFunctionName(function));
+            ParaProf.helpWindow.writeText("");
+            ParaProf.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
+            ParaProf.helpWindow.writeText("");
+            ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
+            ParaProf.helpWindow.writeText("");
+            ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
+            ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default color");
+            ParaProf.helpWindow.writeText("for this function.");
+        } else {
+            ParaProf.helpWindow.writeText("This is the thread data window");
+            ParaProf.helpWindow.writeText("");
+            ParaProf.helpWindow.writeText("This window shows you the values for all functions on this thread.");
+            ParaProf.helpWindow.writeText("");
+            ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
+            ParaProf.helpWindow.writeText("");
+            ParaProf.helpWindow.writeText("Right click on any function within this window to bring up a popup");
+            ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default color");
+            ParaProf.helpWindow.writeText("for the function, or to show more details about the function.");
+            ParaProf.helpWindow.writeText("You can also left click any function to highlight it in the system.");
+        }
     }
 
     public DataSorter getDataSorter() {
@@ -381,15 +485,23 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
     public void sortLocalData() {
 
-        
-        
-        if (sortByNCTCheckbox.isSelected()) {
-            dataSorter.setSortType(SortType.NCT);
-        } else {
-            dataSorter.setSortType(SortType.VALUE);
-        }
-
         dataSorter.setDescendingOrder(descendingOrderCheckBox.isSelected());
+
+        if (function != null) { // function
+            if (sortByNCTCheckbox.isSelected()) {
+                dataSorter.setSortType(SortType.NCT);
+            } else {
+                dataSorter.setSortType(SortType.VALUE);
+            }
+
+        } else { // thread
+
+            if (sortByNameCheckBox.isSelected()) {
+                dataSorter.setSortType(SortType.NAME);
+            } else {
+                dataSorter.setSortType(SortType.VALUE);
+            }
+        }
 
         if (showValuesAsPercent.isSelected()) {
             if (dataSorter.getValueType() == ValueType.EXCLUSIVE) {
@@ -404,34 +516,10 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                 dataSorter.setValueType(ValueType.INCLUSIVE);
             }
         }
-
         setHeader();
 
-        if (phaseDisplay) {
-            list = dataSorter.getFunctionAcrossPhases(function, phaseThread);
-        } else {
-            list = dataSorter.getFunctionData(function, true, true);
-        }
-        
-        maxValue = 0;
-        for (Iterator it = list.iterator(); it.hasNext();) {
-            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
-            double value = ppFunctionProfile.getValue();
-            //            double value = ParaProfUtils.getValue(ppFunctionProfile, this.getValueType(), this.isPercent());
-            maxValue = Math.max(maxValue, value);
-        }
-    }
+        model.reloadData();
 
-    public double getMaxValue() {
-        return maxValue;
-    }
-
-    public List getData() {
-        return list;
-    }
-
-    public boolean isPercent() {
-        return showValuesAsPercent.isSelected();
     }
 
     public int units() {
@@ -448,15 +536,15 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public Dimension getViewportSize() {
-        return sp.getViewport().getExtentSize();
+        return panel.getViewport().getExtentSize();
     }
 
     public Rectangle getViewRect() {
-        return sp.getViewport().getViewRect();
+        return panel.getViewport().getViewRect();
     }
 
     public void setVerticalScrollBarPosition(int position) {
-        JScrollBar scrollBar = sp.getVerticalScrollBar();
+        JScrollBar scrollBar = panel.getVerticalScrollBar();
         scrollBar.setValue(position);
     }
 
@@ -472,26 +560,58 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             PreferencesWindow p = ppTrial.getPreferencesWindow();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
-            sp.setColumnHeaderView(jTextArea);
-        } else
-            sp.setColumnHeaderView(null);
+            panel.setColumnHeaderView(jTextArea);
+            jTextArea.addKeyListener(this);
+        } else {
+            panel.setColumnHeaderView(null);
+        }
     }
 
     public String getHeaderString() {
-        if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
-                || showValuesAsPercent.isSelected())
-            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Name: "
-                    + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n";
-        else
-            return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Name: "
-                    + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n"
-                    + "Units: " + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
+        if (function != null) {
+            String header = "";
+            if (ppTrial.getDataSource().getPhasesPresent() && function.isCallPathFunction()) {
+                header += "Phase: " + UtilFncs.getLeftSide(function.getName()) + "\nName: "
+                        + UtilFncs.getRightSide(function.getName());
+            } else {
+                header += "Name: " + function.getName();
+            }
+
+            header += "\nMetric Name: " + ppTrial.getMetricName(dataSorter.getSelectedMetricID()) + "\nValue: "
+                    + dataSorter.getValueType();
+
+            if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
+                    || showValuesAsPercent.isSelected()) {
+                // nothing
+            } else {
+                header += "\nUnits: " + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric());
+            }
+            return header + "\n";
+        } else {
+            String starter;
+
+            if (phase != null) {
+                starter = "Phase: " + phase + "\nMetric: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n"
+                        + "Value: " + dataSorter.getValueType();
+            } else {
+                starter = "Metric: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Value: "
+                        + dataSorter.getValueType();
+            }
+
+            if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
+                    || showValuesAsPercent.isSelected()) {
+                return starter;
+            } else {
+                return starter + "\nUnits: "
+                        + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
+            }
+        }
     }
 
     private void showWidthSlider(boolean displaySliders) {
         GridBagConstraints gbc = new GridBagConstraints();
         if (displaySliders) {
-            getContentPane().remove(sp);
+            getContentPane().remove(panel);
 
             gbc.insets = new Insets(5, 5, 5, 5);
             gbc.fill = GridBagConstraints.NONE;
@@ -511,20 +631,42 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1.0;
             gbc.weighty = 0.99;
-            addCompItem(sp, gbc, 0, 1, 2, 1);
+            addCompItem(panel, gbc, 0, 1, 2, 1);
         } else {
             getContentPane().remove(barLengthLabel);
             getContentPane().remove(barLengthSlider);
-            getContentPane().remove(sp);
+            getContentPane().remove(panel);
 
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 100;
             gbc.weighty = 100;
-            addCompItem(sp, gbc, 0, 0, 1, 1);
+            addCompItem(panel, gbc, 0, 0, 1, 1);
         }
 
         //Now call validate so that these componant changes are displayed.
+        validate();
+    }
+
+    public void showSearchPanel(boolean show) {
+        if (show) {
+            if (searchPanel == null) {
+                searchPanel = new SearchPanel(this, panel.getBarChart().getSearcher());
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.insets = new Insets(5, 5, 5, 5);
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                gbc.anchor = GridBagConstraints.CENTER;
+                gbc.weightx = 0.10;
+                gbc.weighty = 0.01;
+                addCompItem(searchPanel, gbc, 0, 3, 2, 1);
+                searchPanel.setFocus();
+            }
+        } else {
+            getContentPane().remove(searchPanel);
+            searchPanel = null;
+        }
+
+        showFindPanelBox.setSelected(show);
         validate();
     }
 
@@ -558,9 +700,28 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         panel.repaint();
     }
 
-
-    public boolean getPhaseDisplay() {
+    public boolean isPhaseDisplay() {
         return phaseDisplay;
+    }
+
+    public ParaProfTrial getPpTrial() {
+        return ppTrial;
+    }
+
+    public Thread getPhaseThread() {
+        return phaseThread;
+    }
+
+    public void keyPressed(KeyEvent e) {
+        if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F) {
+            showSearchPanel(true);
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {
+    }
+
+    public void keyTyped(KeyEvent e) {
     }
 
 }

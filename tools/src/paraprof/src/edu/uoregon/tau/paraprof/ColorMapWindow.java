@@ -22,65 +22,10 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
     private DefaultListModel listModel;
     private JList colorList;
 
-    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        gbc.gridx = x;
-        gbc.gridy = y;
-        gbc.gridwidth = w;
-        gbc.gridheight = h;
-        getContentPane().add(c, gbc);
-    }
+    public ColorMapWindow(Component invoker) {
 
-    private void setupMenus() {
-
-        JMenuBar mainMenu = new JMenuBar();
-
-        //File menu.
-        JMenu fileMenu = new JMenu("Assign Colors");
-
-        JMenu jMenu = new JMenu("Assign defaults from...");
-
-        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
-        int idx = 0;
-        for (Iterator it = trials.iterator(); it.hasNext();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
-
-            
-            
-            //            String name = ppTrial.getExperiment().getApplication().getName() + "/"
-            //            			  ppTrial.getExperiment().getName() + "/" +
-            //            			  ppTrial.getName() + " (" +
-            //            			  		"" +
-            //            			  		"
-
-            String name = ppTrial.getTrial().getApplicationID() + ":" + ppTrial.getTrial().getExperimentID() + ":" + ppTrial.getTrial().getID()
-                    + " - " + ppTrial.getName();
-
-            JMenuItem jMenuItem = new JMenuItem(name);
-            jMenuItem.setActionCommand(Integer.toString(idx));
-            jMenuItem.addActionListener(this);
-            jMenu.add(jMenuItem);
-            idx++;
-        }
-
-        fileMenu.add(jMenu);
-
-        JMenuItem closeItem = new JMenuItem("Close This Window");
-        closeItem.addActionListener(this);
-        fileMenu.add(closeItem);
-
-        JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
-        exitItem.addActionListener(this);
-        fileMenu.add(exitItem);
-
-        mainMenu.add(fileMenu);
-        setJMenuBar(mainMenu);
-
-    }
-
-    public ColorMapWindow() {
-
-        setLocation(new Point(100, 100));
         setSize(new Dimension(855, 450));
+        setLocation(WindowPlacer.getNewLocation(this, invoker));
         setTitle("ParaProf: Color Map");
 
         setupMenus();
@@ -135,6 +80,59 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
         //Now populate the color list.
 
         reload();
+    }
+
+    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        getContentPane().add(c, gbc);
+    }
+
+    private void setupMenus() {
+
+        JMenuBar mainMenu = new JMenuBar();
+
+        //File menu.
+        JMenu fileMenu = new JMenu("Assign Colors");
+
+        JMenu jMenu = new JMenu("Assign defaults from...");
+
+        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
+        int idx = 0;
+        for (Iterator it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+
+            //            String name = ppTrial.getExperiment().getApplication().getName() + "/"
+            //            			  ppTrial.getExperiment().getName() + "/" +
+            //            			  ppTrial.getName() + " (" +
+            //            			  		"" +
+            //            			  		"
+
+            String name = ppTrial.getTrial().getApplicationID() + ":" + ppTrial.getTrial().getExperimentID() + ":"
+                    + ppTrial.getTrial().getID() + " - " + ppTrial.getName();
+
+            JMenuItem jMenuItem = new JMenuItem(name);
+            jMenuItem.setActionCommand(Integer.toString(idx));
+            jMenuItem.addActionListener(this);
+            jMenu.add(jMenuItem);
+            idx++;
+        }
+
+        fileMenu.add(jMenu);
+
+        JMenuItem closeItem = new JMenuItem("Close This Window");
+        closeItem.addActionListener(this);
+        fileMenu.add(closeItem);
+
+        JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
+        exitItem.addActionListener(this);
+        fileMenu.add(exitItem);
+
+        mainMenu.add(fileMenu);
+        setJMenuBar(mainMenu);
+
     }
 
     public void reload() {
@@ -250,8 +248,7 @@ class ColorMapCellRenderer implements ListCellRenderer {
                 String tmpString1 = new String("00" + (ParaProf.colorChooser.getNumberOfColors()));
                 maxXNumFontSize = fmFont.stringWidth(tmpString1);
 
-                String tmpString2 = new String(inColor.getRed() + "," + inColor.getGreen() + ","
-                        + inColor.getBlue());
+                String tmpString2 = new String(inColor.getRed() + "," + inColor.getGreen() + "," + inColor.getBlue());
                 thisXFontSize = fmFont.stringWidth(tmpString2);
                 thisYFontSize = maxYFontSize;
 

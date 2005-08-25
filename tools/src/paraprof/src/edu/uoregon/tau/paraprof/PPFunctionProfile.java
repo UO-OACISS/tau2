@@ -32,11 +32,6 @@ public class PPFunctionProfile implements Comparable {
     private FunctionProfile functionProfile;
     private FunctionProfile meanProfile;
 
-    // drawing coordinates for this object
-    private int xBeg = 0;
-    private int xEnd = 0;
-    private int yBeg = 0;
-    private int yEnd = 0;
 
     public PPFunctionProfile(DataSorter dataSorter, edu.uoregon.tau.dms.dss.Thread thread, FunctionProfile fp) {
         this.dataSorter = dataSorter;
@@ -205,28 +200,6 @@ public class PPFunctionProfile implements Comparable {
         }
     }
 
-    public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd) {
-        this.xBeg = xBeg;
-        this.xEnd = xEnd;
-        this.yBeg = yBeg;
-        this.yEnd = yEnd;
-    }
-
-    public int getXBeg() {
-        return xBeg;
-    }
-
-    public int getXEnd() {
-        return xEnd;
-    }
-
-    public int getYBeg() {
-        return yBeg;
-    }
-
-    public int getYEnd() {
-        return yEnd;
-    }
 
     public String getStatString(int type) {
 

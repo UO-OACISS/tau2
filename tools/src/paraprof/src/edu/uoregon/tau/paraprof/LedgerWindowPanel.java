@@ -16,11 +16,11 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.14 2005/08/18 01:04:02 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.15 2005/08/25 20:48:48 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -90,6 +90,10 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             break;
         case LedgerWindow.USEREVENT_LEDGER:
             jMenuItem = new JMenuItem("Show User Event Bar Chart");
+            jMenuItem.addActionListener(this);
+            popup.add(jMenuItem);
+
+            jMenuItem = new JMenuItem("Show New User Event Bar Chart");
             jMenuItem.addActionListener(this);
             popup.add(jMenuItem);
 
@@ -271,7 +275,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                         // Highlight the user event and bring up the User Event Window
                         ppTrial.setHighlightedUserEvent(lde.getUserEvent());
                         UserEventWindow tmpRef = new UserEventWindow(ppTrial, lde.getUserEvent(),
-                                ppTrial.getFullDataWindow().getDataSorter());
+                                ppTrial.getFullDataWindow().getDataSorter(), this);
                         tmpRef.show();
                     } else if ((arg.equals("Change User Event Color")) || (arg.equals("Change Group Color"))) {
 
