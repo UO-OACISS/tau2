@@ -306,6 +306,16 @@ public class LoadTrial {
                 LoadTrial.usage();
                 System.exit(-1);
             }
+        } else {
+            if (sourceFiles.length == 1) {
+                String filename = sourceFiles[0];
+                if (filename.endsWith(".ppk")) {
+                    fileType = 7;
+                }
+                if (filename.endsWith(".cube")) {
+                    fileType = 8;
+                }
+            }
         }
 
         if (trialName == null) {
