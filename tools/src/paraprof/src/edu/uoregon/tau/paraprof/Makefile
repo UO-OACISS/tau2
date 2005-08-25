@@ -14,7 +14,8 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
              CallPathTextWindowPanel.java Preferences.java FunctionBarChartWindow.java \
              ColorChooser.java ParaProfExperiment.java \
              ColorPair.java LedgerWindow.java ParaProfImageOptionsPanel.java \
-             ParaProfImageFormatFileFilter.java LedgerDataElement.java DataSorter.java CallGraphWindow.java \
+             ParaProfImageFormatFileFilter.java LedgerDataElement.java \
+	     DataSorter.java CallGraphWindow.java \
              PPThread.java LedgerWindowPanel.java PPFunctionProfile.java \
              UserEventWindow.java DBConfiguration.java ParaProfMetric.java \
 	     PPUserEventProfile.java LoadTrialProgressWindow.java ColorBar.java \
@@ -23,7 +24,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
              GlobalDataWindow.java ParaProfTreeNodeUserObject.java \
 	     ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java \
 	     ColorDefaultsWindow.java ColorMap.java ColorMapWindow.java PreferencesWindow.java \
-	     Searcher.java SearchPanel.java FunctionSelectorDialog.java
+	     Searcher.java SearchPanel.java FunctionSelectorDialog.java WindowPlacer.java
 
 VIS_SOURCES = ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java  
 OTHER_SOURCES = $(wildcard enums/*.java) $(wildcard interfaces/*.java) $(wildcard treetable/*.java) $(wildcard barchart/*.java)

@@ -15,7 +15,7 @@ import javax.swing.*;
 
 public class ThreeDeeWindow extends JFrame {
 
-    public ThreeDeeWindow(ParaProfTrial ppTrial) {
+    public ThreeDeeWindow(ParaProfTrial ppTrial, Component invoker) {
 	JOptionPane.showMessageDialog(this, "3D Display not supported with Java 1.3, install 1.4 or higher and reconfigure TAU");
     }
 }
