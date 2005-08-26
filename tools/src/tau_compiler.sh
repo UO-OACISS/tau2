@@ -102,6 +102,7 @@ evalWithDebugMessage() {
 	echoIfVerbose "\n\nDebug: $2"
 	echoIfVerbose "Executing>  $1"
 	$1
+# NEVER add additional statements below $1, users of this function need the return code ($?)
 #	echoIfVerbose "....."
 }
 
@@ -630,6 +631,12 @@ if [ $gotoNextStep == $TRUE ]; then
 		  evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
 		else
 		  echoIfDebug "Not instrumenting source code. PDT not available."
+		fi
+
+		if [ $? -ne 0 ]; then
+			echoIfVerbose "Error: tau_instrumentor failed"
+			printError "$optTauInstr" "$tauCmd"
+			break
 		fi
 
 		echoIfDebug "Looking for tau file $tempInstFileName"
