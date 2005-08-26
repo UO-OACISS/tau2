@@ -76,6 +76,11 @@ struct itemRef {
 void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *i, pdbRoutine::callvec & c); /* in this file below */
 
 static bool locCmp(const itemRef* r1, const itemRef* r2) {
+
+  if (r1 == r2) { // strict weak ordering requires false on equal elements
+    return false;
+  }
+
   if ( r1->line == r2->line )
   {
     if (r1->col == r2->col)
@@ -214,6 +219,7 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
       }
     }
   }
+
   sort(itemvec.begin(), itemvec.end(), locCmp);
 }
 
@@ -1697,9 +1703,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.69 $   $Date: 2005/08/10 21:15:17 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.69 2005/08/10 21:15:17 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.70 $   $Date: 2005/08/26 20:27:09 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.70 2005/08/26 20:27:09 amorris Exp $
  ***************************************************************************/
 
 
