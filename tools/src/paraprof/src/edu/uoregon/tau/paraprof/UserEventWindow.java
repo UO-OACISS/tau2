@@ -1,11 +1,3 @@
-/*
- * UserEventWindow.java
- * 
- * Title: ParaProf 
- * Author: Robert Bell 
- * Description: The container for the UserEventWindowPanel.
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
@@ -25,6 +17,14 @@ import edu.uoregon.tau.paraprof.barchart.UserEventBarChartModel;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 
+/**
+ * The UserEventWindow shows one User Event over all threads.
+ * 
+ * <P>CVS $Id: UserEventWindow.java,v 1.27 2005/08/26 01:49:02 amorris Exp $</P>
+ * @author  Alan Morris, Robert Bell
+ * @version $Revision: 1.27 $
+ * @see GlobalBarChartModel
+ */
 public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
 
     private ParaProfTrial ppTrial = null;

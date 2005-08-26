@@ -15,20 +15,40 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.Searcher;
 import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 
-public class BarChart extends JPanel implements MouseListener, Printable, ImageExport, BarChartModelListener {
+/**
+ * Component for drawing all of the barcharts of ParaProf.
+ * Clients should probably use BarChartPanel instead of BarChart
+ * directly.
+ * 
+ * <P>CVS $Id: BarChart.java,v 1.2 2005/08/26 01:49:02 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ * @see BarChartPanel
+ */
+public class BarChart extends JPanel implements MouseListener, ImageExport, BarChartModelListener {
 
     private BarChartModel model;
 
+    // internal variables for lazy evaluation
     private int maxRowLabelStringWidth;
     private boolean maxRowLabelStringWidthSet;
-
     private int maxValueLabelStringWidth;
     private boolean maxValueLabelStringWidthSet;
+    private boolean preferredSizeSet;
+    private boolean dataProcessed;
 
+    // maximum values
+    double maxRowValues[];
+    double maxSubValues[];
+    double maxRowSum;
+    double rowSums[];
+
+    
     private FontMetrics fontMetrics;
-    private boolean leftJustified = false;
+    
+    // row labels on the left or right
+    private boolean leftJustified;
 
-    private boolean preferredSizeSet = false;
 
     private int barLength = 400;
     private int leftMargin = 5;
@@ -37,21 +57,34 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
     private int barVerticalSpacing = 4;
     private int barHeight;
 
-    private int barHorizSpacing = 5;
 
-    private boolean dataProcessed = false;
-    private boolean stacked = true;
-    private boolean normalized = true;
-
-    private int threshold = 2;
 
     private int rowStart;
+    
+    // list of row label draw objects (only the ones on the screen)
     private ArrayList rowLabelDrawObjects = new ArrayList();
+    // list of value label draw objects (only the ones on the screen)
     private ArrayList valueDrawObjects = new ArrayList();
 
     private BarChartPanel panel;
     private Searcher searcher;
 
+
+    // Multi-graph only stuff
+    
+    // horizontal spacing between bars in multi-graph mode
+    private int barHorizSpacing = 5;
+    
+    // threshold before not drawing a bar (add it to "other" instead)
+    private int threshold = 2;
+    
+    // stacked or not
+    private boolean stacked = true;
+    
+    // normalized or not
+    private boolean normalized = true;
+
+    
     public BarChart(BarChartModel model, BarChartPanel panel) {
         this.model = model;
         this.panel = panel;
@@ -86,6 +119,7 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
         int x = e.getX();
         int y = e.getY();
 
+        // search the row labels
         int size = rowLabelDrawObjects.size();
         for (int i = 0; i < size; i++) {
             DrawObject drawObject = (DrawObject) rowLabelDrawObjects.get(i);
@@ -94,6 +128,7 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
             }
         }
 
+        // search the values
         size = valueDrawObjects.size();
         for (int i = 0; i < size; i++) {
             ArrayList subList = (ArrayList) valueDrawObjects.get(i);
@@ -121,16 +156,13 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
         try {
             Rectangle rect = g.getClipBounds();
             //setBackground(Color.white);
-            //System.out.println("rect = " + rect);
-            //g.setColor(Color.white);
             //g.clearRect(rect.x, rect.y, rect.width, rect.height);
-            //            super.paintComponent(g);
+            //super.paintComponent(g);
 
+            // Java 1.3 seems to need this rather than clearRect
             g.setColor(Color.white);
             g.fillRect(rect.x, rect.y, rect.width, rect.height);
             
-            //Rectangle viewRect = panel.getViewport().getViewRect();
-            //g.translate(0,viewRect.y);
             export((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -142,15 +174,17 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
         int x = e.getX();
         int y = e.getY();
 
+        // search the row labels
         int size = rowLabelDrawObjects.size();
         for (int i = 0; i < size; i++) {
             DrawObject drawObject = (DrawObject) rowLabelDrawObjects.get(i);
             if (x >= drawObject.getXBeg() && x <= drawObject.getXEnd() && y >= drawObject.getYBeg() && y <= drawObject.getYEnd()) {
-                model.reportRowLabelClick(i + rowStart, e, this);
+                model.fireRowLabelClick(i + rowStart, e, this);
                 return;
             }
         }
 
+        // search the values
         size = valueDrawObjects.size();
         for (int i = 0; i < size; i++) {
             ArrayList subList = (ArrayList) valueDrawObjects.get(i);
@@ -164,7 +198,7 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
                         if (j == size2 - 1) { // "other"
                             // we don't support clicking on "other" yet
                         } else {
-                            model.reportValueClick(i + rowStart, j, e, this);
+                            model.fireValueClick(i + rowStart, j, e, this);
                         }
                     }
                 }
@@ -194,10 +228,7 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
 
     }
 
-    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
-        // TODO Auto-generated method stub
-        return 0;
-    }
+    
 
     private int getMaxRowLabelStringWidth() {
         if (!maxRowLabelStringWidthSet) {
@@ -256,11 +287,6 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
         this.invalidate();
     }
 
-    double maxRowValues[];
-    double maxSubValues[];
-    double maxRowSum;
-    double rowSums[];
-
     private void processData() {
         if (dataProcessed) {
             return;
@@ -286,6 +312,7 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
     }
 
 
+    // returns a "lighter" color
     private Color lighter(Color c) {
         int r = c.getRed();
         int g = c.getGreen();
@@ -300,25 +327,10 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
         b = b + (int) ((max - b) / 2.36);
         return new Color(r, g, b);
     }
-    private Color darker(Color c) {
-        int r = c.getRed();
-        int g = c.getGreen();
-        int b = c.getBlue();
-
-        int max = Math.max(r, g);
-        max = Math.max(max, b);
-        max = Math.max(max, 255);
-
-        r = r - (int) ((max - r) / 2.36);
-        g = g - (int) ((max - g) / 2.36);
-        b = b - (int) ((max - b) / 2.36);
-        r = Math.max(r,0);
-        g = Math.max(g,0);
-        b = Math.max(b,0);
-        return new Color(r, g, b);
-    }
 
     private void drawBar(Graphics2D g2D, int x, int y, int length, int height, Color color, Color highlight) {
+        
+        // special is whether or not we do the new style bars with the highlight along the top
         boolean special = true;
 
         if (special && height > 4) {
@@ -374,14 +386,6 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
         g2D.setFont(font);
         fontMetrics = g2D.getFontMetrics(font);
 
-        //Obtain the font and its metrics.
-        //Font font = new Font(ParaProf.getPreferencesWindow().getParaProfFont(), ppTrial.getPreferencesWindow().getFontStyle(),
-        //        barHeight);
-        //g2D.setFont(font);
-
-        //g2D.setFont(font);
-        //fontMetrics = g2D.getFontMetrics(g2D.getFont());
-        //barHeight = fontMetrics.getMaxAscent() + fontMetrics.getMaxDescent();
         int fontHeight = fontMetrics.getMaxAscent();
 
         processData();
@@ -406,21 +410,15 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
         int y = rowHeight;
 
         // this could be made faster, but the DrawObjects thing would have to change
-
-        // determine which elements to draw (clipping)
-        //int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), g2D.getClipBounds(), toScreen, fullWindow, model.getNumRows(),
-        //      rowHeight, y);
+        // the problem is that if I just redraw the clipRect, then there are objects on the screen
+        // that weren't in the last draw, so we would have to keep track of them some other way
         int[] clips = ParaProfUtils.computeClipping(panel.getViewport().getViewRect(), panel.getViewport().getViewRect(), true,
                 fullWindow, model.getNumRows(), rowHeight, y);
         rowStart = clips[0];
         int rowEnd = clips[1];
         y = clips[2];
 
-        //double maxValue = model.getMaxValue();
         double maxValue = maxRowSum;
-
-        //        System.err.println("\nrowStart = " + rowStart);
-        //        System.err.println("rowEnd = " + rowEnd);
 
         searcher.setVisibleLines(rowStart, rowEnd);
         searcher.setG2d(g2D);
@@ -432,7 +430,7 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
 
             ArrayList subDrawObjects = new ArrayList();
             valueDrawObjects.add(subDrawObjects);
-            if (model.getSubSize() == 1) {
+            if (model.getSubSize() == 1) {  // single graph style
 
                 String valueLabel = model.getValueLabel(row, 0);
 
@@ -476,7 +474,7 @@ public class BarChart extends JPanel implements MouseListener, Printable, ImageE
                 y = y + barHeight + barVerticalSpacing;
                 subDrawObjects.add(null); // "other"
 
-            } else {
+            } else { // multi-graph
                 int barStartX;
                 int barStartY;
                 int rowLabelPosition;

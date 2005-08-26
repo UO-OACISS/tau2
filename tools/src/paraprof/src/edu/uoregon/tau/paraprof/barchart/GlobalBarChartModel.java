@@ -12,6 +12,14 @@ import edu.uoregon.tau.dms.dss.Function;
 import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.*;
 
+/**
+ * A BarChartModel for doing the GlobalDataWindow
+ * 
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.2 2005/08/26 01:49:03 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ */
+
 public class GlobalBarChartModel extends AbstractBarChartModel {
     private GlobalDataWindow window;
     private DataSorter dataSorter;
@@ -49,19 +57,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         return "value";
     }
 
-    //    
-    //    
-    //    private PPFunctionProfile getFunction(int row, int subIndex) {
-    //        PPThread ppThread = (PPThread) threads.get(0);
-    //        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) ppThread.getFunctionList().get(subIndex);
-    //
-    //        ppThread.get
-    //        
-    //        PPThread ppThread = (PPThread) threads.get(row);
-    //        
-    //    }
-    //    
-    //    
+   
 
     public double getValue(int row, int subIndex) {
         PPThread ppThread = (PPThread) threads.get(row);
@@ -106,7 +102,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         return null;
     }
 
-    public void reportValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
+    public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
         PPThread ppThread = (PPThread) threads.get(row);
         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) ppThread.getFunctionList().get(subIndex);
         if (ParaProfUtils.rightClick(e)) { // Bring up context menu
@@ -121,7 +117,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         }
     }
 
-    public void reportRowLabelClick(int row, MouseEvent e, JComponent owner) {
+    public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
         PPThread ppThread = (PPThread) threads.get(row);
         if (ParaProfUtils.rightClick(e)) { // Bring up context menu
             ParaProfUtils.handleThreadClick(ppTrial, window.getPhase(), ppThread.getThread(), owner, e);

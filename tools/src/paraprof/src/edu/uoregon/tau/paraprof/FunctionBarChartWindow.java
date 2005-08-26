@@ -19,14 +19,14 @@ import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 
 /**
- * FunctionBarChartWindow
- * This is the FunctionBarChartWindow.  It can display performance data in many way.  
+ * The FunctionBarChartWindow displays performance data in many ways.  
  * All functions for one thread, all threads for one function, all phases for one function.
  * 
- *  
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.1 2005/08/25 20:48:47 amorris Exp $</P>
+ * TODO : Need to replace constructors with a factory, get rid of "changeToPhase..." 
+ * 
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.2 2005/08/26 01:49:02 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */

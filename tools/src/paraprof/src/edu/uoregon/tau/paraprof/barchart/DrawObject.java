@@ -1,5 +1,13 @@
 package edu.uoregon.tau.paraprof.barchart;
 
+/**
+ * Holds a rectangle, basically.  We should probably use java.awt.Rectangle.
+ * 
+ * <P>CVS $Id: DrawObject.java,v 1.2 2005/08/26 01:49:03 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ */
+
 public class DrawObject {
 
     int xBeg, xEnd, yBeg, yEnd;

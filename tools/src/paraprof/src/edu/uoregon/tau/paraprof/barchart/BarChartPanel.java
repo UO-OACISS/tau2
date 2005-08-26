@@ -14,6 +14,13 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
 
+/**
+ * Adds scroll ability, and handles image export/printing with header support.
+ * 
+ * <P>CVS $Id: BarChartPanel.java,v 1.2 2005/08/26 01:49:03 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ */
 public class BarChartPanel extends JScrollPane implements Printable, ImageExport, ScrollBarController {
 
     BarChart barChart;
@@ -25,132 +32,9 @@ public class BarChartPanel extends JScrollPane implements Printable, ImageExport
         this.setViewportView(barChart);
         this.setColumnHeaderView(header);
 
-        //JButton button = new JButton("asdf");
-        //button.setMinimumSize(new Dimension(1730,400));
-        //button.setPreferredSize(new Dimension(1730,400));
-        //button.setMaximumSize(new Dimension(1730,400));
-
-        //this.setViewportView(button);
     }
 
-    //    public static void main(String[] args) {
-    //        // TODO Auto-generated method stub
-    //
-    //        AbstractBarChartModel model = new AbstractBarChartModel() {
-    //
-    //            int numRows = 25;
-    //
-    //            public int getSubSize() {
-    //                return 9;
-    //            };
-    //
-    //            public int getNumRows() {
-    //                return numRows;
-    //            }
-    //
-    //            public String getRowLabel(int row) {
-    //                return "n,c,t " + row + "," + row + "," + row;
-    //            }
-    //
-    //            public double getValue(int row, int subIndex) {
-    //                return subIndex + row * subIndex * subIndex * 200 + (((row * 32) % 115 + (subIndex + 50) * 25) % 253);
-    //            }
-    //
-    //            public String getValueLabel(int row, int subIndex) {
-    //                if (subIndex == 0) {
-    //                    return Double.toString((numRows - row) * 5) + "0000";
-    //                } else {
-    //                    return Double.toString(row * 5) + "0000";
-    //                }
-    //            }
-    //
-    //            public double getMaxValue() {
-    //                return numRows * 5;
-    //            }
-    //
-    //            public Color getValueColor(int row, int subIndex) {
-    //                return new Color((row * 30 + 36 + subIndex * 30) % 250, (row * 40 + 64) % 250, (row * 70 + 35) % 250);
-    //            }
-    //
-    //            public Color getValueHighlightColor(int row, int subIndex) {
-    //                if (row % 3 == 0) {
-    //                    return Color.red;
-    //                }
-    //                return null;
-    //            }
-    //
-    //            public String getRowValueLabel(int row) {
-    //                return "none";
-    //            }
-    //
-    //            public void revalidate() {
-    //                // TODO Auto-generated method stub
-    //                
-    //            }
-    //
-    //            public boolean hasChanged() {
-    //                // TODO Auto-generated method stub
-    //                return false;
-    //            }
-    //
-    //            public void reportValueClick(int row, int subIndex) {
-    //                // TODO Auto-generated method stub
-    //                
-    //            }
-    //
-    //            public void reportRowLabelClick(int row) {
-    //                // TODO Auto-generated method stub
-    //                
-    //            }
-    //        };
-    //
-    //        JFrame frame = new JFrame();
-    //        frame.setTitle("Testing Bar Chart");
-    //        frame.setSize(600, 400);
-    //        frame.setLocation(500, 300);
-    //
-    //        frame.getContentPane().add(new BarChartPanel(model, new JTextArea("Hi!")));
-    //        frame.show();
-    //        frame.addWindowListener(new WindowListener() {
-    //
-    //            public void windowActivated(WindowEvent e) {
-    //                // TODO Auto-generated method stub
-    //
-    //            }
-    //
-    //            public void windowClosed(WindowEvent e) {
-    //                System.exit(0);
-    //                // TODO Auto-generated method stub
-    //
-    //            }
-    //
-    //            public void windowClosing(WindowEvent e) {
-    //                System.exit(0);
-    //                // TODO Auto-generated method stub
-    //
-    //            }
-    //
-    //            public void windowDeactivated(WindowEvent e) {
-    //                // TODO Auto-generated method stub
-    //
-    //            }
-    //
-    //            public void windowDeiconified(WindowEvent e) {
-    //                // TODO Auto-generated method stub
-    //
-    //            }
-    //
-    //            public void windowIconified(WindowEvent e) {
-    //                // TODO Auto-generated method stub
-    //
-    //            }
-    //
-    //            public void windowOpened(WindowEvent e) {
-    //                // TODO Auto-generated method stub
-    //
-    //            }
-    //        });
-    //    }
+   
 
     public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
         try {

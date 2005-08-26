@@ -19,6 +19,14 @@ import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 
+/**
+ * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
+ * 
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.2 2005/08/26 01:49:02 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ * @see GlobalBarChartModel
+ */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
 
     private int userEventLedgerIndex;

@@ -2,18 +2,27 @@ package edu.uoregon.tau.paraprof.barchart;
 
 import javax.swing.event.EventListenerList;
 
+/**
+ * Implementation of BarChartModel that implements listener handling.
+ * Bar Chart models should extend from this rather than implementing
+ * BarChartModel directly.
+ * 
+ * @author Alan Morris
+ *
+ */
 public abstract class AbstractBarChartModel implements BarChartModel {
 
     /** List of listeners */
     protected EventListenerList listenerList = new EventListenerList();
 
+    /**
+     * Default implementation, only one item per row
+     * 
+     * @see edu.uoregon.tau.paraprof.barchart.BarChartModel#getSubSize()
+     */
     public int getSubSize() {
         return 1;
     }
-
-    //
-    //  Managing Listeners
-    //
 
     /**
      * Adds a listener to the list that's notified each time a change
@@ -39,6 +48,9 @@ public abstract class AbstractBarChartModel implements BarChartModel {
         return (BarChartModelListener[]) listenerList.getListeners(BarChartModelListener.class);
     }
 
+    /**
+     * Notifies all listeners that the model has changed.
+     */
     public void fireModelChanged() {
         // Guaranteed to return a non-null array
         Object[] listeners = listenerList.getListenerList();

@@ -12,6 +12,13 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 
+/**
+ * A BarChartModel for displaying all functions for one thread.
+ * 
+ * <P>CVS $Id: ThreadBarChartModel.java,v 1.2 2005/08/26 01:49:03 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ */
 public class ThreadBarChartModel extends AbstractBarChartModel {
 
     private List list;
@@ -83,7 +90,7 @@ public class ThreadBarChartModel extends AbstractBarChartModel {
     }
 
   
-    public void reportRowLabelClick(int row, MouseEvent e, JComponent owner) {
+    public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
 
         if (ParaProfUtils.rightClick(e)) {
@@ -96,7 +103,7 @@ public class ThreadBarChartModel extends AbstractBarChartModel {
         }
     }
 
-    public void reportValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
+    public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
         Function function = ppFunctionProfile.getFunction();
         if (ParaProfUtils.rightClick(e)) {

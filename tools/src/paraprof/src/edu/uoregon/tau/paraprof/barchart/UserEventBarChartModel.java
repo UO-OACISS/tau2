@@ -10,6 +10,13 @@ import edu.uoregon.tau.dms.dss.UserEvent;
 import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.*;
 
+/**
+ * A BarChartModel for displaying one User Event over all threads.
+ * 
+ * <P>CVS $Id: UserEventBarChartModel.java,v 1.2 2005/08/26 01:49:03 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ */
 public class UserEventBarChartModel extends AbstractBarChartModel {
 
     private UserEventWindow window;
@@ -62,11 +69,11 @@ public class UserEventBarChartModel extends AbstractBarChartModel {
         return null;
     }
 
-    public void reportValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
+    public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
         // TODO we should do something here
     }
 
-    public void reportRowLabelClick(int row, MouseEvent e, JComponent owner) {
+    public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
         PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
 
         ppUserEventProfile.getThread();

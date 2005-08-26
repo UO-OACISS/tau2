@@ -12,6 +12,16 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 
+
+/**
+ * A BarChartModel for doing A) One function across threads, or 
+ * B) One function across all phases (for one thread).
+ * 
+ * <P>CVS $Id: FunctionBarChartModel.java,v 1.2 2005/08/26 01:49:03 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ */
+
 public class FunctionBarChartModel extends AbstractBarChartModel {
 
     private List list;
@@ -116,7 +126,7 @@ public class FunctionBarChartModel extends AbstractBarChartModel {
         return null;
     }
 
-    public void reportRowLabelClick(int row, MouseEvent e, JComponent owner) {
+    public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
 
         if (window.isPhaseDisplay()) {
@@ -143,7 +153,7 @@ public class FunctionBarChartModel extends AbstractBarChartModel {
         }
     }
 
-    public void reportValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
+    public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
         Function function = ppFunctionProfile.getFunction();
         if (ParaProfUtils.rightClick(e)) {
