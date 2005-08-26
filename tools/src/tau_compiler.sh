@@ -739,6 +739,13 @@ if [ $gotoNextStep == $TRUE ]; then
 		if [ $hasAnOutputFile == $FALSE ]; then
 			passedOutputFile="a.out"
 		fi
+	
+		if [ $opari == $TRUE ]; then
+	  	  evalWithDebugMessage "/bin/rm -f opari.rc" "Removing opari.rc"
+	  	  cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} opari.tab.c"
+		  evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
+	  	  objectFilesForLinking="$objectFilesForLinking opari.tab.o"
+		fi
 
 		newCmd="$CMD  $argsRemaining $listOfObjectFiles $objectFilesForLinking $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
 		evalWithDebugMessage "$newCmd" "Linking (Together) object files"
@@ -746,6 +753,10 @@ if [ $gotoNextStep == $TRUE ]; then
 		if [ ! -e $passedOutputFile ] ; then
 			echoIfVerbose "Error: Tried Looking for file: $passedOutputFile"
 			printError "$CMD" "$newCmd"
+		fi
+	
+		if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
+	  	evalWithDebugMessage "/bin/rm -f opari.tab.c opari.tab.o *.opari.inc" "Removing opari.tab.c opari.tab.o *.opari.inc"
 		fi
 	fi
 
