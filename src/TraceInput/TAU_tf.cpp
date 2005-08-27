@@ -85,7 +85,7 @@ int event_GetEv(Ttf_fileT *tFile, void *event, int index) {
   return 0;
 }
 
-uint64_t event_GetTi(Ttf_fileT *tFile, void *event, int index) {
+x_uint64 event_GetTi(Ttf_fileT *tFile, void *event, int index) {
   PCXX_EV_NATIVE *nativeEvent;
   PCXX_EV32 *event32;
   PCXX_EV64 *event64;
@@ -155,7 +155,7 @@ int event_GetTid(Ttf_fileT *tFile, void *event, int index) {
 }
 
 
-int64_t event_GetPar(Ttf_fileT *tFile, void *event, int index) {
+x_int64 event_GetPar(Ttf_fileT *tFile, void *event, int index) {
   PCXX_EV_NATIVE *nativeEvent;
   PCXX_EV32 *event32;
   PCXX_EV64 *event64;
@@ -843,6 +843,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.12 $   $Date: 2005/08/23 21:11:09 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.12 2005/08/23 21:11:09 amorris Exp $ 
+ * $Revision: 1.13 $   $Date: 2005/08/27 00:48:52 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.13 2005/08/27 00:48:52 amorris Exp $ 
  ***************************************************************************/
