@@ -1318,7 +1318,7 @@ fi
 if [ $trace = yes ]
   then
     cat <<EOF > tau_type_test.c
-  #include "include/Profile/tau_types.h"
+  #include <include/Profile/tau_types.h>
 
   int main(int argc, char **argv) {
     if (sizeof(x_int8) != 1 ||
