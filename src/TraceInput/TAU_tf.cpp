@@ -194,7 +194,7 @@ void determineFormat(Ttf_fileT *tFile) {
     tFile->format = FORMAT_32;
     tFile->eventSize = sizeof(PCXX_EV32);
     formatFound = true;
-    printf ("32 regular!\n");
+//     printf ("32 regular!\n");
   }
 
   // 32 bit swapped
@@ -209,7 +209,7 @@ void determineFormat(Ttf_fileT *tFile) {
     tFile->format = FORMAT_32_SWAP;
     tFile->eventSize = sizeof(PCXX_EV32);
     formatFound = true;
-    printf ("32 swapped!\n");
+//     printf ("32 swapped!\n");
   }
 
   // 64 bit regular
@@ -224,7 +224,7 @@ void determineFormat(Ttf_fileT *tFile) {
     tFile->format = FORMAT_64;
     tFile->eventSize = sizeof(PCXX_EV64);
     formatFound = true;
-    printf ("64 regular!\n");
+//     printf ("64 regular!\n");
   }
 
   // 64 bit swapped
@@ -239,12 +239,12 @@ void determineFormat(Ttf_fileT *tFile) {
     tFile->format = FORMAT_64_SWAP;
     tFile->eventSize = sizeof(PCXX_EV64);
     formatFound = true;
-    printf ("64 swapped!\n");
+//     printf ("64 swapped!\n");
   }
 
 
   if (formatFound == false) {
-    printf ("couldn't determine format!\n");
+    printf ("couldn't determine format, using native!\n");
     tFile->format = FORMAT_NATIVE;
     tFile->eventSize = sizeof(PCXX_EV_NATIVE);
   }
@@ -843,6 +843,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.13 $   $Date: 2005/08/27 00:48:52 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.13 2005/08/27 00:48:52 amorris Exp $ 
+ * $Revision: 1.14 $   $Date: 2005/08/27 02:03:23 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.14 2005/08/27 02:03:23 amorris Exp $ 
  ***************************************************************************/
