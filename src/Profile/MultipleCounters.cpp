@@ -170,14 +170,14 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 #ifdef TAU_PAPI 
       MultipleCounterLayer::papiMCL_CP[a] = -1;
       MultipleCounterLayer::PAPI_CounterCodeList[a] = -1;
-      MultipleCounterLayer::ThreadList[TAU_MAX_THREADS] = NULL;
+      MultipleCounterLayer::ThreadList[TAU_MAX_THREADS-1] = NULL;
 #endif//TAU_PAPI
 #ifdef TAU_PCL
       MultipleCounterLayer::pclMCL_CP[a] = -1;
       MultipleCounterLayer::PCL_CounterCodeList[a] = -1;
-      MultipleCounterLayer::threadInit[TAU_MAX_THREADS] = false;
-      MultipleCounterLayer::CounterList[MAX_TAU_COUNTERS] = 0;
-      MultipleCounterLayer::FpCounterList[MAX_TAU_COUNTERS] = 0;      
+      MultipleCounterLayer::threadInit[TAU_MAX_THREADS-1] = false;
+      MultipleCounterLayer::CounterList[MAX_TAU_COUNTERS-1] = 0;
+      MultipleCounterLayer::FpCounterList[MAX_TAU_COUNTERS-1] = 0;      
 #endif//TAU_PCL
     }
 
