@@ -20,11 +20,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.54 2005/08/25 20:48:48 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.55 2005/08/30 19:58:37 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.54 $
+ * @version $Revision: 1.55 $
  */
 public class ParaProf implements ActionListener {
 
@@ -52,14 +52,14 @@ public class ParaProf implements ActionListener {
     public static int defaultNumberPrecision = 6;
     //static ParaProfLisp paraProfLisp = null;
     public static Preferences preferences = null;
-    static ColorChooser colorChooser;
+    public static ColorChooser colorChooser;
 
-    static ParaProfManagerWindow paraProfManagerWindow = null;
-    static ApplicationManager applicationManager = new ApplicationManager();
+    public static ParaProfManagerWindow paraProfManagerWindow = null;
+    public static ApplicationManager applicationManager = new ApplicationManager();
     public static HelpWindow helpWindow = null;
     public static PreferencesWindow preferencesWindow;
-    static Runtime runtime = null;
-    static private int numWindowsOpen = 0;
+    public static Runtime runtime = null;
+    private static int numWindowsOpen = 0;
     //End - System wide stuff.
 
     //Command line options related.
@@ -68,6 +68,9 @@ public class ParaProf implements ActionListener {
     private static boolean fixNames = false;
     //End - Command line options related.
 
+    
+    public static FunctionBarChartWindow theComparisonWindow;
+    
     private ParaProfTrial pptrial = null;
     public static boolean JNLP = false;
     

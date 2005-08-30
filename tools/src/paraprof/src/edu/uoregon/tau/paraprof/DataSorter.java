@@ -14,9 +14,9 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.14 2005/08/25 20:48:46 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.15 2005/08/30 19:58:37 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  */
 public class DataSorter {
 
@@ -354,6 +354,14 @@ public class DataSorter {
 
     public Function getPhase() {
         return phase;
+    }
+
+    public ParaProfTrial getPpTrial() {
+        return ppTrial;
+    }
+
+    public void setPpTrial(ParaProfTrial ppTrial) {
+        this.ppTrial = ppTrial;
     }
 
 }

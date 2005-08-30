@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.2 2005/08/26 01:49:02 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.3 2005/08/30 19:58:38 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, ImageExport, BarChartModelListener {
@@ -41,14 +41,13 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
     double maxRowValues[];
     double maxSubValues[];
     double maxRowSum;
+    double maxOverallValue;
     double rowSums[];
 
-    
     private FontMetrics fontMetrics;
-    
+
     // row labels on the left or right
     private boolean leftJustified;
-
 
     private int barLength = 400;
     private int leftMargin = 5;
@@ -57,10 +56,10 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
     private int barVerticalSpacing = 4;
     private int barHeight;
 
-
-
-    private int rowStart;
+    private int topMargin = 0;
     
+    private int rowStart;
+
     // list of row label draw objects (only the ones on the screen)
     private ArrayList rowLabelDrawObjects = new ArrayList();
     // list of value label draw objects (only the ones on the screen)
@@ -69,21 +68,24 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
     private BarChartPanel panel;
     private Searcher searcher;
 
-
     // Multi-graph only stuff
-    
+
     // horizontal spacing between bars in multi-graph mode
     private int barHorizSpacing = 5;
-    
+
     // threshold before not drawing a bar (add it to "other" instead)
     private int threshold = 2;
-    
+
     // stacked or not
     private boolean stacked = true;
-    
+
     // normalized or not
     private boolean normalized = true;
 
+    private boolean singleLine = true;
+
+    
+    private int fontHeight;
     
     public BarChart(BarChartModel model, BarChartPanel panel) {
         this.model = model;
@@ -162,7 +164,7 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
             // Java 1.3 seems to need this rather than clearRect
             g.setColor(Color.white);
             g.fillRect(rect.x, rect.y, rect.width, rect.height);
-            
+
             export((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -228,8 +230,6 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
 
     }
 
-    
-
     private int getMaxRowLabelStringWidth() {
         if (!maxRowLabelStringWidthSet) {
             maxRowLabelStringWidth = 0;
@@ -269,16 +269,25 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
             maxWidth = barLength + getMaxRowLabelStringWidth() + getMaxValueLabelStringWidth() + leftMargin + (2 * horizSpacing)
                     + rightMargin;
         } else {
-            if (stacked) {
-                maxWidth = leftMargin + getMaxRowLabelStringWidth() + horizSpacing + barLength + rightMargin;
-            } else {
-                maxWidth = leftMargin + getMaxRowLabelStringWidth() + horizSpacing + rightMargin;
-                for (int i = 0; i < model.getSubSize(); i++) {
-                    int subIndexMaxWidth = (int) (maxSubValues[i] / maxRowSum * barLength);
-                    //if (subIndexMaxWidth >= threshold) {
+            if (singleLine) {
+                if (stacked) {
+                    maxWidth = leftMargin + getMaxRowLabelStringWidth() + horizSpacing + barLength + rightMargin;
+                } else {
+                    maxWidth = leftMargin + getMaxRowLabelStringWidth() + horizSpacing + rightMargin;
+                    for (int i = 0; i < model.getSubSize(); i++) {
+                        int subIndexMaxWidth = (int) (maxSubValues[i] / maxRowSum * barLength);
+                        //if (subIndexMaxWidth >= threshold) {
                         maxWidth += (maxSubValues[i] / maxRowSum * barLength) + barHorizSpacing;
-                    //}
+                        //}
+                    }
                 }
+            } else {
+                
+                int rowHeight = (fontHeight*model.getSubSize()) + 10;
+
+                maxWidth = barLength + getMaxRowLabelStringWidth() + getMaxValueLabelStringWidth() + leftMargin + (2 * horizSpacing)
+                + rightMargin;
+                maxHeight = model.getNumRows()*rowHeight;
             }
         }
         super.setSize(new Dimension(maxWidth, maxHeight));
@@ -297,6 +306,7 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
         maxSubValues = new double[model.getSubSize()];
         rowSums = new double[model.getNumRows()];
         maxRowSum = 0;
+        maxOverallValue = 0;
 
         for (int row = 0; row < model.getNumRows(); row++) {
             double rowSum = 0;
@@ -306,11 +316,11 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
                 maxSubValues[i] = Math.max(maxSubValues[i], value);
                 rowSum += value;
                 rowSums[row] += value;
+                maxOverallValue = Math.max(maxOverallValue, value);
             }
             maxRowSum = Math.max(maxRowSum, rowSum);
         }
     }
-
 
     // returns a "lighter" color
     private Color lighter(Color c) {
@@ -329,7 +339,7 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
     }
 
     private void drawBar(Graphics2D g2D, int x, int y, int length, int height, Color color, Color highlight) {
-        
+
         // special is whether or not we do the new style bars with the highlight along the top
         boolean special = true;
 
@@ -347,15 +357,15 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
             g2D.setColor(lighter(lighter(color)));
             g2D.fillRect(x, y + (innerHeight / 2) + 1 + innerHeight2, length, innerHeight2);
 
-            
             g2D.setColor(Color.black);
             if (highlight != null) {
                 g2D.setColor(highlight);
                 g2D.drawRect(x + 1, y + 1, length - 2, height - 2);
             }
-            g2D.drawRect(x, y, length, barHeight);
+            g2D.drawRect(x, y, length, height-1);
 
         } else {
+            height = Math.max(height,1);
             g2D.setColor(color);
             g2D.fillRect(x, y, length, height);
 
@@ -365,7 +375,7 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
                     g2D.setColor(highlight);
                     g2D.drawRect(x + 1, y + 1, length - 2, height - 2);
                 }
-                g2D.drawRect(x, y, length, barHeight);
+                g2D.drawRect(x, y, length, height);
             }
         }
     }
@@ -376,18 +386,37 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
         valueDrawObjects.clear();
 
         //To make sure the bar details are set, this method must be called.
-        ParaProf.preferencesWindow.setBarDetails(g2D);
+        //ParaProf.preferencesWindow.setBarDetails(g2D);
 
-        //Now safe to grab spacing and bar heights.
-        barHeight = ParaProf.preferencesWindow.getBarHeight();
-        barVerticalSpacing = ParaProf.preferencesWindow.getBarSpacing() - barHeight;
 
-        Font font = new Font(ParaProf.preferencesWindow.getParaProfFont(), ParaProf.preferencesWindow.getFontStyle(), barHeight);
+        //System.out.println("Requesting point size = " + barHeight);
+        Font font = new Font(ParaProf.preferencesWindow.getParaProfFont(), ParaProf.preferencesWindow.getFontStyle(), ParaProf.preferences.getFontSize());
         g2D.setFont(font);
         fontMetrics = g2D.getFontMetrics(font);
 
-        int fontHeight = fontMetrics.getMaxAscent();
+        //Now safe to grab spacing and bar heights.
+        int fontSize = ParaProf.preferencesWindow.getFontSize();
 
+        barVerticalSpacing = 0;
+
+        
+        fontHeight = fontMetrics.getHeight();
+        int maxDescent = fontMetrics.getMaxDescent();
+        int maxAscent = fontMetrics.getMaxAscent();
+        int leading = fontMetrics.getLeading();
+        barHeight = maxDescent + maxAscent + fontMetrics.getLeading()-2;
+
+        //barHeight = maxAscent;
+
+//        System.out.println("\n");
+//        System.out.println("getHeight = " + fontMetrics.getHeight());
+//        System.out.println("getAscent = " + fontMetrics.getAscent());
+//        System.out.println("getDescent = " + fontMetrics.getDescent());
+//        System.out.println("getMaxAscent = " + fontMetrics.getMaxAscent());
+//        System.out.println("getMaxDescent = " + fontMetrics.getMaxDescent());
+//        System.out.println("getLeading = " + fontMetrics.getLeading());
+        
+        
         processData();
         int fulcrum;
 
@@ -397,17 +426,27 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
             fulcrum = leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLength + horizSpacing;
         }
 
-        //System.out.println("fulcrum = " + fulcrum);
-        int barOffset = fontMetrics.getMaxAscent();
+        //        System.out.println("leftMargin=" + leftMargin);
+        //        System.out.println("getMaxValueLabelStringWidth() = " + getMaxValueLabelStringWidth());
+        //        System.out.println("barlength = " + barLength);
+        //        System.out.println("fulcrum = " + fulcrum);
+        int barOffset = (int)(maxAscent - (((float)maxDescent+maxAscent+leading) - barHeight)/2);
 
         checkPreferredSize();
 
-        int rowHeight = barHeight + barVerticalSpacing;
+        //int rowHeight = maxDescent + maxAscent + barVerticalSpacing;
+        int rowHeight = maxDescent + maxAscent + leading;
 
+        //System.out.println("rowHeight = " + rowHeight);
+        
         searcher.setLineHeight(rowHeight);
         searcher.setMaxDescent(fontMetrics.getMaxDescent());
 
         int y = rowHeight;
+
+        if (singleLine == false) {
+            rowHeight = (rowHeight*model.getSubSize()) + 10;
+        }
 
         // this could be made faster, but the DrawObjects thing would have to change
         // the problem is that if I just redraw the clipRect, then there are objects on the screen
@@ -430,7 +469,7 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
 
             ArrayList subDrawObjects = new ArrayList();
             valueDrawObjects.add(subDrawObjects);
-            if (model.getSubSize() == 1) {  // single graph style
+            if (model.getSubSize() == 1) { // single graph style
 
                 String valueLabel = model.getValueLabel(row, 0);
 
@@ -471,96 +510,153 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
 
                 g2D.drawString(valueLabel, valueLabelPosition, y);
 
-                y = y + barHeight + barVerticalSpacing;
+                y = y + rowHeight;
                 subDrawObjects.add(null); // "other"
 
             } else { // multi-graph
-                int barStartX;
-                int barStartY;
-                int rowLabelPosition;
-                barStartY = y - barOffset;
 
-                if (normalized) {
-                    maxValue = rowSums[row];
-                } else {
-                    maxValue = maxRowSum;
-                }
+                if (singleLine) {
+                    int barStartX;
+                    int barStartY;
+                    int rowLabelPosition;
+                    barStartY = y - barOffset;
 
-                if (leftJustified) {
-                    barStartX = fulcrum + horizSpacing;
-                    rowLabelPosition = fulcrum - rowLabelStringWidth;
-                } else {
-                    barStartX = 0;
-                    rowLabelPosition = 0;
-                }
-
-                searcher.drawHighlights(g2D, rowLabelPosition, y, row);
-                g2D.setColor(Color.black);
-                g2D.drawString(rowLabel, rowLabelPosition, y);
-                rowLabelDrawObjects.add(new DrawObject(rowLabelPosition, y - fontHeight, rowLabelPosition + rowLabelStringWidth,
-                        y));
-
-                double otherValue = 0;
-
-                for (int i = 0; i < model.getSubSize(); i++) {
-                    g2D.setColor(model.getValueColor(row, i));
-                    double value = model.getValue(row, i);
-                    double ratio = (value / maxValue);
-                    int length = (int) (ratio * barLength);
-
-
-                    if (length < threshold && stacked) {
-                        otherValue += value;
-                        subDrawObjects.add(null);
+                    if (normalized) {
+                        maxValue = rowSums[row];
                     } else {
+                        maxValue = maxRowSum;
+                    }
 
-                        int subIndexMaxWidth = (int) (maxSubValues[i] / maxValue * barLength);
+                    if (leftJustified) {
+                        barStartX = fulcrum + horizSpacing;
+                        rowLabelPosition = fulcrum - rowLabelStringWidth;
+                    } else {
+                        barStartX = 0;
+                        rowLabelPosition = 0;
+                    }
 
-                        if (subIndexMaxWidth < threshold) {
-                            // this column will be skipped by all rows since no one's has at least 3 pixels
-                            subDrawObjects.add(null);
+                    searcher.drawHighlights(g2D, rowLabelPosition, y, row);
+                    g2D.setColor(Color.black);
+                    g2D.drawString(rowLabel, rowLabelPosition, y);
+                    rowLabelDrawObjects.add(new DrawObject(rowLabelPosition, y - fontHeight, rowLabelPosition
+                            + rowLabelStringWidth, y));
+
+                    double otherValue = 0;
+
+                    for (int i = 0; i < model.getSubSize(); i++) {
+                        g2D.setColor(model.getValueColor(row, i));
+                        double value = model.getValue(row, i);
+                        double ratio = (value / maxValue);
+                        int length = (int) (ratio * barLength);
+
+                        if (length < threshold && stacked) {
                             otherValue += value;
-
+                            subDrawObjects.add(null);
                         } else {
-                            if (value < 0) { // negative means no value
-                                subDrawObjects.add(null);
 
-                            } else if (length < threshold) {
+                            int subIndexMaxWidth = (int) (maxSubValues[i] / maxValue * barLength);
+
+                            if (subIndexMaxWidth < threshold) {
+                                // this column will be skipped by all rows since no one's has at least 3 pixels
                                 subDrawObjects.add(null);
                                 otherValue += value;
-                            } else {
-                                drawBar(g2D, barStartX, y - barOffset, length, barHeight, model.getValueColor(row, i),
-                                        model.getValueHighlightColor(row, i));
 
-                                subDrawObjects.add(new DrawObject(barStartX, y - barOffset, barStartX + length, y - barOffset
-                                        + barHeight));
-                            }
-                            
-                            if (!stacked) {
-                                barStartX += (maxSubValues[i] / maxValue * barLength) + barHorizSpacing;
                             } else {
-                                barStartX += length;
-                            }
+                                if (value < 0) { // negative means no value
+                                    subDrawObjects.add(null);
 
+                                } else if (length < threshold) {
+                                    subDrawObjects.add(null);
+                                    otherValue += value;
+                                } else {
+                                    drawBar(g2D, barStartX, y - barOffset, length, barHeight, model.getValueColor(row, i),
+                                            model.getValueHighlightColor(row, i));
+
+                                    subDrawObjects.add(new DrawObject(barStartX, y - barOffset, barStartX + length, y - barOffset
+                                            + barHeight));
+                                }
+
+                                if (!stacked) {
+                                    barStartX += (maxSubValues[i] / maxValue * barLength) + barHorizSpacing;
+                                } else {
+                                    barStartX += length;
+                                }
+
+                            }
                         }
                     }
-                }
 
-                int otherLength;
-                if (normalized) {
-                    otherLength = barLength + fulcrum + horizSpacing - barStartX;
+                    int otherLength;
+                    if (normalized) {
+                        otherLength = barLength + fulcrum + horizSpacing - barStartX;
 
+                    } else {
+                        // draw "other" (should make this optional)
+                        double ratio = (otherValue / maxValue);
+                        otherLength = (int) (ratio * barLength);
+                    }
+                    g2D.setColor(Color.black);
+                    g2D.fillRect(barStartX, y - barOffset, otherLength, barHeight);
+                    g2D.drawRect(barStartX, barStartY, otherLength, barHeight);
+                    subDrawObjects.add(new DrawObject(barStartX, y - barOffset, barStartX + otherLength, y - barOffset
+                            + barHeight));
+
+                    y = y + rowHeight;
                 } else {
-                    // draw "other" (should make this optional)
-                    double ratio = (otherValue / maxValue);
-                    otherLength = (int) (ratio * barLength);
-                }
-                g2D.setColor(Color.black);
-                g2D.fillRect(barStartX, y - barOffset, otherLength, barHeight);
-                g2D.drawRect(barStartX, barStartY, otherLength, barHeight);
-                subDrawObjects.add(new DrawObject(barStartX, y - barOffset, barStartX + otherLength, y - barOffset + barHeight));
+                    int barStartX;
+                    int rowLabelPosition;
 
-                y = y + rowHeight;
+                    maxValue = maxOverallValue;
+
+                    leftJustified = false;
+                    if (leftJustified) {
+                        rowLabelPosition = fulcrum - rowLabelStringWidth;
+                    } else {
+                        rowLabelPosition = fulcrum;
+                    }
+
+                    int rowLabelPositionY = y + rowHeight/2 - maxAscent;
+                    searcher.drawHighlights(g2D, rowLabelPosition, rowLabelPositionY, row);
+                    g2D.setColor(Color.black);
+                    g2D.drawString(rowLabel, rowLabelPosition, rowLabelPositionY);
+                    rowLabelDrawObjects.add(new DrawObject(rowLabelPosition, rowLabelPositionY - fontHeight, rowLabelPosition
+                            + rowLabelStringWidth, rowLabelPositionY));
+
+                    int suby = y;
+                    for (int i = 0; i < model.getSubSize(); i++) {
+                        double value = model.getValue(row, i);
+                        if (value < 0) {
+                            suby += fontHeight;
+                            continue;
+                        }
+                        String valueLabel = model.getValueLabel(row, i);
+                        int valueLabelStringWidth = fontMetrics.stringWidth(valueLabel);
+
+                        
+                        double ratio = (value / maxValue);
+                        int length = (int) (ratio * barLength);
+                        int valueLabelPosition;
+
+                        if (leftJustified) {
+                            barStartX = fulcrum + horizSpacing;
+                            valueLabelPosition = fulcrum + length + (2 * horizSpacing);
+
+                        } else {
+                            barStartX = fulcrum - length - horizSpacing;
+                            valueLabelPosition = fulcrum - length - valueLabelStringWidth - (2 * horizSpacing);
+
+                        }
+                        drawBar(g2D, barStartX, suby - barOffset, length, barHeight, model.getValueColor(row, i),
+                                model.getValueHighlightColor(row, 0));
+
+                        g2D.drawString(valueLabel, valueLabelPosition, suby);
+
+                        suby += fontHeight;
+                    }
+
+                    y = y + rowHeight;
+
+                }
             }
 
         }
@@ -618,6 +714,14 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
     public void setStacked(boolean stacked) {
         this.stacked = stacked;
         this.preferredSizeSet = false;
+    }
+
+    public boolean getSingleLine() {
+        return singleLine;
+    }
+
+    public void setSingleLine(boolean singleLine) {
+        this.singleLine = singleLine;
     }
 
 }

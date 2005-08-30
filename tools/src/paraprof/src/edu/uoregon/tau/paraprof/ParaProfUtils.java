@@ -632,8 +632,6 @@ public class ParaProfUtils {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-//                ThreadDataWindow w = new ThreadDataWindow(ppTrial, thread, phase);
-//                w.show();
                 FunctionBarChartWindow w = new FunctionBarChartWindow(ppTrial, thread, phase, owner);
                 w.show();
             }
@@ -642,38 +640,49 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
+    public static JMenuItem createComparisonMenuItem(String text, final ParaProfTrial ppTrial, final edu.uoregon.tau.dms.dss.Thread thread, final Component owner) {
+        JMenuItem jMenuItem = new JMenuItem(text);
+        jMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (ParaProf.theComparisonWindow == null) {
+                    ParaProf.theComparisonWindow = FunctionBarChartWindow.CreateComparisonWindow(ppTrial, thread, owner);
+                } else {
+                    ParaProf.theComparisonWindow.addThread(ppTrial, thread);
+                }
+                ParaProf.theComparisonWindow.show();
+            }
+
+        });
+        return jMenuItem;
+    }
+
     public static void handleThreadClick(final ParaProfTrial ppTrial, final Function phase,
             final edu.uoregon.tau.dms.dss.Thread thread, JComponent owner, MouseEvent evt) {
-        if (thread.getNodeID() == -1) { // mean
-            JPopupMenu meanThreadPopup = new JPopupMenu();
-            meanThreadPopup.add(createThreadDataMenuItem("Show Mean Bar Chart", ppTrial, phase, thread, owner));
-            meanThreadPopup.add(createStatisticsMenuItem("Show Mean Statistics Text Window", ppTrial, phase, thread, false,owner));
-            meanThreadPopup.add(createStatisticsTableMenuItem("Show Mean Statistics Table", ppTrial, phase, thread, owner));
-            meanThreadPopup.add(createCallGraphMenuItem("Show Mean Call Graph", ppTrial, thread, owner));
-            meanThreadPopup.add(createCallPathThreadRelationMenuItem("Show Mean Call Path Relations", ppTrial, thread, owner));
-            meanThreadPopup.show(owner, evt.getX(), evt.getY());
-        } else if (thread.getNodeID() == -3) { // stddev
-            JPopupMenu threadPopup = new JPopupMenu();
-            threadPopup.add(createThreadDataMenuItem("Show Standard Deviation Bar Chart", ppTrial, phase, thread, owner));
-            threadPopup.add(createStatisticsMenuItem("Show Standard Deviation Statistics Text Window", ppTrial, phase, thread, false,owner));
-            threadPopup.add(createStatisticsTableMenuItem("Show Standard Deviation Statistics Table", ppTrial, phase, thread, owner));
-            threadPopup.add(createCallGraphMenuItem("Show Standard Deviation Call Graph", ppTrial, thread, owner));
-            threadPopup.add(createCallPathThreadRelationMenuItem("Show Standard Deviation Call Path Thread Relations", ppTrial,
-                    thread, owner));
-            threadPopup.show(owner, evt.getX(), evt.getY());
-        } else {
-            JPopupMenu threadPopup = new JPopupMenu();
-            threadPopup.add(createThreadDataMenuItem("Show Thread Bar Chart", ppTrial, phase, thread, owner));
-            threadPopup.add(createStatisticsMenuItem("Show Thread Statistics Text Window", ppTrial, phase, thread, false,owner));
-            threadPopup.add(createStatisticsTableMenuItem("Show Thread Statistics Table", ppTrial, phase, thread, owner));
-            threadPopup.add(createCallGraphMenuItem("Show Thread Call Graph", ppTrial, thread, owner));
-            threadPopup.add(createCallPathThreadRelationMenuItem("Show Thread Call Path Relations", ppTrial, thread, owner));
-            if (ppTrial.userEventsPresent()) {
-                threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true,owner));
-            }
-            threadPopup.show(owner, evt.getX(), evt.getY());
 
+        String ident;
+        
+        if (thread.getNodeID() == -1) {
+            ident = "Mean";
+        } else if (thread.getNodeID() == -2) {
+            ident = "Total";
+        } else if (thread.getNodeID() == -3) {
+            ident = "Standard Deviation";
+        } else {
+            ident = "Thread";
         }
+        
+        JPopupMenu threadPopup = new JPopupMenu();
+        threadPopup.add(createThreadDataMenuItem("Show "+ident+" Bar Chart", ppTrial, phase, thread, owner));
+        threadPopup.add(createStatisticsMenuItem("Show "+ident+" Statistics Text Window", ppTrial, phase, thread, false,owner));
+        threadPopup.add(createStatisticsTableMenuItem("Show "+ident+" Statistics Table", ppTrial, phase, thread, owner));
+        threadPopup.add(createCallGraphMenuItem("Show "+ident+" Call Graph", ppTrial, thread, owner));
+        threadPopup.add(createCallPathThreadRelationMenuItem("Show "+ident+" Call Path Relations", ppTrial, thread, owner));
+        if (thread.getNodeID() >= 0 && ppTrial.userEventsPresent()) {
+            threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true,owner));
+        }
+        threadPopup.add(createComparisonMenuItem("Add "+ident+" to Comparison Window", ppTrial, thread, owner));
+        threadPopup.show(owner, evt.getX(), evt.getY());
+        
     }
 
     public static int[] computeClipping(Rectangle clipRect, Rectangle viewRect, boolean toScreen, boolean fullWindow, int size,

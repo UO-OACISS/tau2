@@ -1,14 +1,14 @@
 package edu.uoregon.tau.paraprof.barchart;
 
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 
-import javax.swing.JComponent;
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
+import javax.swing.*;
 
+import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfErrorDialog;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.interfaces.ImageExport;
@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
 /**
  * Adds scroll ability, and handles image export/printing with header support.
  * 
- * <P>CVS $Id: BarChartPanel.java,v 1.2 2005/08/26 01:49:03 amorris Exp $</P>
+ * <P>CVS $Id: BarChartPanel.java,v 1.3 2005/08/30 19:58:38 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class BarChartPanel extends JScrollPane implements Printable, ImageExport, ScrollBarController {
 
@@ -108,4 +108,95 @@ public class BarChartPanel extends JScrollPane implements Printable, ImageExport
         return this.getViewport().getExtentSize();
     }
 
+    
+    public static void main(String[] args) {
+        final ParaProf paraProf = new ParaProf();
+        paraProf.startSystem();
+
+        
+        JFrame frame = new JFrame("Bar Chart Test");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        BarChartModel model = new AbstractBarChartModel() {
+
+            public int getNumRows() {
+                // TODO Auto-generated method stub
+                return 5;
+            }
+
+            public int getSubSize() {
+                return 3;
+            };
+            
+            public String getRowLabel(int row) {
+                // TODO Auto-generated method stub
+                return "row " + row;
+            }
+
+            public String getValueLabel(int row, int subIndex) {
+                // TODO Auto-generated method stub
+                return "xygYpAcol " + subIndex;
+            }
+
+            public double getValue(int row, int subIndex) {
+                // TODO Auto-generated method stub
+                return (row+5) * (subIndex+15);
+            }
+
+            public Color getValueColor(int row, int subIndex) {
+                // TODO Auto-generated method stub
+                return Color.orange;
+            }
+
+            public Color getValueHighlightColor(int row, int subIndex) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            public String getValueToolTipText(int row, int subIndex) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public String getRowLabelToolTipText(int row) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public String getOtherToolTopText(int row) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public void reloadData() {
+                // TODO Auto-generated method stub
+                
+            }
+        };
+        
+        
+        BarChartPanel panel = new BarChartPanel(model, new JTextArea("asdf"));
+
+        panel.getBarChart().setLeftJustified(true);
+        panel.getBarChart().setSingleLine(false);
+        panel.getBarChart().setBarLength(300);
+        
+        frame.getContentPane().add(panel);
+        //Display the window.
+        frame.pack();
+        frame.setVisible(true);
+        frame.setLocation(500,500);
+        frame.setSize(640,480);
+    }
+    
 }

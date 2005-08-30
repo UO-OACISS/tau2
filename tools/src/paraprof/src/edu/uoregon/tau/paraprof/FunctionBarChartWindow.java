@@ -22,11 +22,13 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * The FunctionBarChartWindow displays performance data in many ways.  
  * All functions for one thread, all threads for one function, all phases for one function.
  * 
- * TODO : Need to replace constructors with a factory, get rid of "changeToPhase..." 
+ * TODO : 
+ * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
+ * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.2 2005/08/26 01:49:02 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.3 2005/08/30 19:58:37 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -67,6 +69,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     private PPThread ppThread;
     private Function phase;
 
+    private boolean comparisonChart;
+
     // Initializes Chart as a single function across threads
     public FunctionBarChartWindow(ParaProfTrial ppTrial, Function function, Component parent) {
         this.ppTrial = ppTrial;
@@ -104,8 +108,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             this.setTitle("Mean Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
                     + phaseString);
         } else if (thread.getNodeID() == -2) {
-            this.setTitle("Total Data - "
-                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
+            this.setTitle("Total Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
+                    + phaseString);
         } else if (thread.getNodeID() == -3) {
             this.setTitle("Standard Deviation Data - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
@@ -113,6 +117,36 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             this.setTitle(ppThread.getName() + " - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
         }
+    }
+
+    private FunctionBarChartWindow() {
+    }
+
+    public static FunctionBarChartWindow CreateComparisonWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
+        FunctionBarChartWindow window = new FunctionBarChartWindow();
+
+        window.setTitle("Comparison Window");
+        window.dataSorter = new DataSorter(ppTrial);
+        window.ppTrial = ppTrial;
+        window.comparisonChart = true;
+        window.model = new ComparisonBarChartModel(window, ppTrial, thread, window.dataSorter);
+
+        window.panel = new BarChartPanel(window.model, null);
+        //window.addThread(ppTrial, thread);
+
+        window.initialize(invoker);
+        window.panel.getBarChart().setLeftJustified(false);
+        window.panel.getBarChart().setSingleLine(false);
+
+        window.setHeader();
+        return window;
+    }
+
+    public void addThread(ParaProfTrial ppTrial, Thread thread) {
+        ComparisonBarChartModel comp = (ComparisonBarChartModel) model;
+        comp.addThread(ppTrial, thread);
+        comp.reloadData();
+        this.setHeader();
     }
 
     private void initialize(Component parent) {
@@ -124,11 +158,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         int windowWidth = 650;
         int windowHeight = 550;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
+        setLocation(WindowPlacer.getNewLocation(this, parent));
 
-        setLocation(WindowPlacer.getNewLocation(this,parent));
-        //        setLocation(650, 0);
-
-        //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 thisWindowClosing(evt);
@@ -150,7 +181,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         gbc.insets = new Insets(5, 5, 5, 5);
 
         BarChart barChart = panel.getBarChart();
-        
+
         if (function != null) {
             barChart.setLeftJustified(true);
         }
@@ -192,7 +223,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
         // in case we were opened on "main => foo", switch to foo
         this.function = ppTrial.getDataSource().getFunction(UtilFncs.getLeftSide(function.getName()));
-        
+
         // we're no longer in a phase
         this.phase = null;
         setHeader();
@@ -453,7 +484,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         if (display) {
             ParaProf.helpWindow.show();
         }
-        
+
         if (function != null) {
             ParaProf.helpWindow.writeText("This is the function data window for:");
             ParaProf.helpWindow.writeText(ParaProfUtils.getFunctionName(function));
@@ -560,8 +591,28 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             PreferencesWindow p = ppTrial.getPreferencesWindow();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
-            panel.setColumnHeaderView(jTextArea);
             jTextArea.addKeyListener(this);
+
+            if (comparisonChart) {
+                
+                JPanel legendPanel = new LegendPanel(((ComparisonBarChartModel) model).getLegendModel());
+                JPanel holder = new JPanel();
+                holder.setLayout(new GridBagLayout());
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.fill = GridBagConstraints.BOTH;
+                gbc.anchor = GridBagConstraints.WEST;
+                gbc.weightx = 0;
+                gbc.weighty = 1;
+                ParaProfUtils.addCompItem(holder, jTextArea, gbc, 0,0,1,1);
+                gbc.weightx = 1;
+                gbc.weighty = 1;
+                gbc.anchor = GridBagConstraints.WEST;
+                ParaProfUtils.addCompItem(holder, legendPanel, gbc, 1,0,1,1);
+                
+                panel.setColumnHeaderView(holder);
+            } else {
+                panel.setColumnHeaderView(jTextArea);
+            }
         } else {
             panel.setColumnHeaderView(null);
         }
@@ -686,8 +737,13 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     public void closeThisWindow() {
         try {
             setVisible(false);
+            
+            if (comparisonChart) {
+                ParaProf.theComparisonWindow = null;
+            }
             ppTrial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
+            
         } catch (Exception e) {
             // do nothing
         }
