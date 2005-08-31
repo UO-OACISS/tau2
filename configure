@@ -4092,8 +4092,10 @@ echo .
 
 if [ $tauprefix != unknown ]
   then 
-    echo "TAU: Copying include directory in ${tauprefix}"
+    echo "TAU: Copying include directory to ${tauprefix}"
     cp -r include ${tauprefix}
+    echo "TAU: Copying man directory to ${tauprefix}"
+    cp -r man ${tauprefix}
 fi
 
 # Attempt to install metatext (jev)
