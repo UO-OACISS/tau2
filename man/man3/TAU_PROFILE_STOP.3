@@ -1,0 +1,57 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PROFILE_STOP" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PROFILE_STOP \- Stops a timer.
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 17
+\fB\fBTAU_PROFILE_STOP\fR\fR\fB(\fR\fBProfiler\ \fR\fB\fItimer\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 17
+\fB\fBTAU_PROFILE_STOP\fR\fR\fB(\fR\fBinteger\ \fR\fB\fIprofiler\fR\fR\fB(2)\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+Stops the timer given by
+\fItimer\fR. It is important to note that timers can be nested, but not overlapping. TAU detects programming errors that lead to such overlaps at runtime, and prints a warning message.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int foo(int a) {
+  TAU_PROFILE_TIMER(timer, "foo", "int (int)", TAU_USER);
+  TAU_PROFILE_START(timer);
+  ...
+  TAU_PROFILE_STOP(timer);
+  return a;
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+subroutine F1()
+  integer profiler(2) / 0, 0 /
+  save    profiler
+
+  call TAU_PROFILE_TIMER(profiler,'f1()')
+  call TAU_PROFILE_START(profiler)
+  ...
+  call TAU_PROFILE_STOP(profiler)
+end
+  
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_PROFILE_TIMER(3),
+TAU_PROFILE_START(3)

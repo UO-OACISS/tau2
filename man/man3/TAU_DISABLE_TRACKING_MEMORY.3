@@ -1,0 +1,44 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_DISABLE_TRACKING" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_DISABLE_TRACKING_MEMORY \- Disables memory tracking
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 28
+\fB\fBTAU_DISABLE_TRACKING_MEMORY\fR\fR\fB(\fR\fBvoid);\fR
+.PP
+\fBFortran:\fR
+.HP 28
+\fB\fBTAU_DISABLE_TRACKING_MEMORY\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+Disables tracking of heap memory utilization. This call may be used in sections of code where TAU should not interrupt the execution to periodically track the heap memory utilization.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_DISABLE_TRACKING_MEMORY();      
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_DISABLE_TRACKING_MEMORY()
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_ENABLE_TRACKING_MEMORY(3),
+TAU_SET_INTERRUPT_INTERVAL(3),
+TAU_TRACK_MEMORY(3),
+TAU_TRACK_MEMORY_HERE(3)

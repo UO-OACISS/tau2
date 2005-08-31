@@ -1,0 +1,77 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PHASE_CREATE_DYN" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PHASE_CREATE_DYNAMIC \- Defines a dynamic phase.
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 25
+\fB\fBTAU_PHASE_CREATE_DYNAMIC\fR\fR\fB(\fR\fBPhase\ \fR\fB\fIphase\fR\fR\fB, \fR\fBchar*\ or\ string&\ \fR\fB\fIfunction_name\fR\fR\fB, \fR\fBchar*\ or\ string&\ \fR\fB\fItype\fR\fR\fB, \fR\fBTauGroup_t\ \fR\fB\fIgroup\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 25
+\fB\fBTAU_PHASE_CREATE_DYNAMIC\fR\fR\fB(\fR\fBinteger\ \fR\fB\fIphase\fR\fR\fB(2)\fR\fB, \fR\fBcharacter\ \fR\fB\fIname\fR\fR\fB(size)\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_PHASE_CREATE_DYNAMIC
+creates a dynamic phase. The name of the timer can be different for each execution.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int main(int argc, char **argv) {
+  int i;
+  TAU_PROFILE_TIMER(t,"main()", "", TAU_DEFAULT);
+  TAU_PROFILE_SET_NODE(0);
+  TAU_PROFILE_START(t);
+
+  for (i=0; i&5; i++) {
+    char buf[32];
+    sprintf(buf, "Iteration %d", i);
+
+    TAU_PHASE_CREATE_DYNAMIC(timer, buf, "", TAU_USER);
+    TAU_PHASE_START(timer);
+    printf("Iteration %d\\n", i);
+    f1();
+
+    TAU_PHASE_STOP(timer);
+  }
+  return 0;
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+subroutine ITERATION(val)
+  integer val
+  character(13) cvar
+  integer profiler(2) / 0, 0 /
+  save profiler
+
+  print *, "Iteration ", val
+
+  write (cvar,'(a9,i2)') 'Iteration', val
+  call TAU_PHASE_CREATE_DYNAMIC(profiler, cvar)
+  call TAU_PHASE_START(profiler)
+
+  call F1()
+  call TAU_PHASE_STOP(profiler)
+  return
+end
+  
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_PHASE_CREATE_STATIC(3),
+TAU_PHASE_START(3),
+TAU_PHASE_STOP(3)

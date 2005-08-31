@@ -1,0 +1,39 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_GET_COUNTER_NAME" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_GET_COUNTER_NAMES \- Gets the counter names
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 22
+\fB\fBTAU_GET_COUNTER_NAMES\fR\fR\fB(\fR\fBchar\ **\fR\fB\fIcounterList\fR\fR\fB, \fR\fBint\ \fR\fB\fInumCounters\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_GET_COUNTER_NAMES
+returns the list of counter names and the number of counters used for measurement. When wallclock time is used, the counter name of "default" is returned.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int numOfCounters;
+const char ** counterList;
+
+TAU_GET_COUNTER_NAMES(counterList, numOfCounters);
+
+for(int j=0;j<numOfCounters;j++){ 
+  cout << "The counter names so far are: " << counterList[j] << endl;
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_GET_FUNC_NAMES(3),
+TAU_GET_FUNC_VALS(3)

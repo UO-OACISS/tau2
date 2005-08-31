@@ -1,0 +1,43 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_GLOBAL_PHASE_EXT" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_GLOBAL_PHASE_EXTERNAL \- Declares a global phase from an external compilation unit
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 26
+\fB\fBTAU_GLOBAL_PHASE_EXTERNAL\fR\fR\fB(\fR\fBProfiler\ \fR\fB\fItimer\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_GLOBAL_PHASE_EXTERNAL
+allows you to access a phase defined in another compilation unit.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+/* f1.c */
+
+TAU_GLOBAL_PHASE(globalPhase, "global phase", "", TAU_USER);
+
+/* f2.c */
+
+int bar(void) {
+  TAU_GLOBAL_PHASE_START(globalPhase);
+  /* ... */
+  TAU_GLOBAL_PHASE_STOP(globalPhase);
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_GLOBAL_PHASE(3),
+TAU_GLOBAL_PHASE_START(3),
+TAU_GLOBAL_PHASE_STOP(3)

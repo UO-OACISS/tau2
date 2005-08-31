@@ -1,0 +1,45 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_DISABLE_TRACKING" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_DISABLE_TRACKING_MEMORY_HEADROOM \- Disables memory headroom tracking
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 37
+\fB\fBTAU_DISABLE_TRACKING_MEMORY_HEADROOM\fR\fR\fB(\fR\fBvoid);\fR
+.PP
+\fBFortran:\fR
+.HP 37
+\fB\fBTAU_DISABLE_TRACKING_MEMORY_HEADROOM\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_DISABLE_TRACKING_MEMORY_HEADROOM()
+disables memory headroom tracking.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_DISABLE_TRACKING_MEMORY_HEADROOM();
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_DISABLE_TRACKING_MEMORY_HEADROOM()
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_TRACK_MEMORY_HEADROOM(3),
+TAU_ENABLE_TRACKING_MEMORY_HEADROOM(3),
+TAU_TRACK_MEMORY_HEADROOM_HERE(3),
+TAU_SET_INTERRUPT_INTERVAL(3)

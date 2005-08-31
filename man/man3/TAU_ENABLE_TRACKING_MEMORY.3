@@ -1,0 +1,45 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_ENABLE_TRACKING_" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_ENABLE_TRACKING_MEMORY \- Enables memory tracking
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 27
+\fB\fBTAU_ENABLE_TRACKING_MEMORY\fR\fR\fB(\fR\fBvoid);\fR
+.PP
+\fBFortran:\fR
+.HP 27
+\fB\fBTAU_ENABLE_TRACKING_MEMORY\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+Enables tracking of the heap memory utilization in the program. TAU takes a sample of the heap memory utilized (as reported by the mallinfo system call) and associates it with a single global user defined event. An interrupt is generated every 10 seconds and the value of the heap memory used is recorded in the user defined event. The inter\-interrupt interval (default of 10 seconds) may be set by the user using the call
+TAU_SET_INTERRUPT_INTERVAL.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_ENABLE_TRACKING_MEMORY();      
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_ENABLE_TRACKING_MEMORY()
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_DISABLE_TRACKING_MEMORY(3),
+TAU_SET_INTERRUPT_INTERVAL(3),
+TAU_TRACK_MEMORY(3),
+TAU_TRACK_MEMORY_HERE(3)

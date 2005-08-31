@@ -1,0 +1,45 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_TRACK_MEMORY" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_TRACK_MEMORY \- Initializes memory tracking system
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 17
+\fB\fBTAU_TRACK_MEMORY\fR\fR\fB(\fR\fBvoid);\fR
+.PP
+\fBFortran:\fR
+.HP 17
+\fB\fBTAU_TRACK_MEMORY\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+For memory profiling, there are two modes of operation: 1) the user explicitly inserts TAU_TRACK_MEMORY_HERE() calls in the source code and the memory event is triggered at those locations, and 2) the user enables tracking memory by calling TAU_TRACK_MEMORY() and an interrupt is generated every 10 seconds and the memory event is triggered with the current value. Also, this interrupt interval can be changed by calling TAU_SET_INTERRUPT_INTERVAL(value). The tracking of memory events in both cases can be explictly enabled or disabled by calling the macros TAU_ENABLE_TRACKING_MEMORY() or TAU_DISABLE_TRACKING_MEMORY() respectively.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_TRACK_MEMORY();      
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_TRACK_MEMORY()
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_ENABLE_TRACKING_MEMORY(3),
+TAU_DISABLE_TRACKING_MEMORY(3),
+TAU_SET_INTERRUPT_INTERVAL(3),
+TAU_TRACK_MEMORY_HERE(3),
+TAU_TRACK_MEMORY_HEADROOM(3)

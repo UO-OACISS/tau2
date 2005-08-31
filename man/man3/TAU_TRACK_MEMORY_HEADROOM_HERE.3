@@ -1,0 +1,44 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_TRACK_MEMORY_HEA" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_TRACK_MEMORY_HEADROOM_HERE \- Takes a sample of the amount of memory available at a given point.
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 31
+\fB\fBTAU_TRACK_MEMORY_HEADROOM_HERE\fR\fR\fB(\fR\fBvoid);\fR
+.PP
+\fBFortran:\fR
+.HP 31
+\fB\fBTAU_TRACK_MEMORY_HEADROOM_HERE\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+Instead of relying on a periodic interrupt to track the amount of memory available to grow, this call may be used to take a sample at a given location in the source code. Context events are used to track the amount of memory headroom.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+ary = new double [1024*1024*50];
+TAU_TRACK_MEMORY_HEADROOM_HERE();
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+INTEGER, ALLOCATABLE :: STORAGEARY(:)
+allocate(STORAGEARY(1:999), STAT=IERR)
+TAU_TRACK_MEMORY_HEADROOM_HERE();
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_TRACK_MEMORY_HEADROOM(3)

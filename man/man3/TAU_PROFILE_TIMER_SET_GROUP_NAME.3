@@ -1,0 +1,38 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PROFILE_TIMER_SE" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PROFILE_TIMER_SET_GROUP_NAME \- Changes the group name for a timer
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 33
+\fB\fBTAU_PROFILE_TIMER_SET_GROUP_NAME\fR\fR\fB(\fR\fBProfiler\ \fR\fB\fItimer\fR\fR\fB, \fR\fBchar\ *\fR\fB\fIgroupname\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_PROFILE_TIMER_SET_GROUP_NAME
+changes the group name associated with a given timer.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+void foo() {
+  TAU_PROFILE_TIMER(looptimer, "foo: loop1", " ", TAU_USER);
+  TAU_PROFILE_START(looptimer);
+  for (int i = 0; i < N; i++) { /* do something */ }
+  TAU_PROFILE_STOP(looptimer);
+  TAU_PROFILE_TIMER_SET_GROUP_NAME("Field");
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_PROFILE_TIMER(3),
+TAU_PROFILE_TIMER_SET_GROUP(3)

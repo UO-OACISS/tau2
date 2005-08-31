@@ -1,0 +1,56 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_ENABLE_INSTRUMEN" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_ENABLE_INSTRUMENTATION \- Enables instrumentation
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 27
+\fB\fBTAU_ENABLE_INSTRUMENTATION\fR\fR\fB(\fR\fBvoid);\fR
+.PP
+\fBFortran:\fR
+.HP 27
+\fB\fBTAU_ENABLE_INSTRUMENTATION\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_ENABLE_INSTRUMENTATION
+macro re\-enables all TAU instrumentation. All instances of functions and statements that occur between the disable/enable section are ignored by TAU. This allows a user to limit the trace size, if the macros are used to disable recording of a set of iterations that have the same characteristics as, for example, the first recorded instance.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int main(int argc, char **argv) { 
+  foo();
+  TAU_DISABLE_INSTRUMENTATION();
+  for (int i =0; i < N; i++) { 
+    bar();  // not recorded
+  }
+  TAU_ENABLE_INSTRUMENTATION();
+  bar(); // recorded
+} 
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_DISABLE_INSTRUMENTATION()
+...
+call TAU_ENABLE_INSTRUMENTATION()
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_DISABLE_INSTRUMENTATION(3),
+TAU_ENABLE_GROUP(3),
+TAU_DISABLE_GROUP(3),
+TAU_INIT(3),
+TAU_PROFILE_INIT(3)

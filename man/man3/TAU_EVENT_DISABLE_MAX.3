@@ -1,0 +1,30 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_EVENT_DISABLE_MA" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_EVENT_DISABLE_MAX \- Disables tracking of maximum statistic for a given event
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 22
+\fB\fBTAU_EVENT_DISABLE_MAX\fR\fR\fB(\fR\fBTauUserEvent\ \fR\fB\fIevent\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+Disables tracking of maximum statistic for a given event
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_EVENT_DISABLE_MAX(event);
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_REGISTER_EVENT(3)

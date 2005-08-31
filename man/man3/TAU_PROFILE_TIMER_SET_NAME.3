@@ -1,0 +1,35 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PROFILE_TIMER_SE" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PROFILE_TIMER_SET_NAME \- Changes the name of a timer
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 27
+\fB\fBTAU_PROFILE_TIMER_SET_NAME\fR\fR\fB(\fR\fBProfiler\ \fR\fB\fItimer\fR\fR\fB, \fR\fBstring\ \fR\fB\fInewname\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_PROFILE_TIMER_SET_NAME
+macro changes the name associated with a timer to the newname argument.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+void foo() {
+  TAU_PROFILE_TIMER(timer1, "foo:loop1", " ", TAU_USER);
+  ...
+  TAU_PROFILE_TIMER_SET_NAME(timer1, "foo:lines 21\-34");
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_PROFILE_TIMER(3)

@@ -1,0 +1,80 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_MERGE" "1" "08/31/2005" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau_merge \- combine multiple node and or thread TAU tracefiles into a merged tracefile
+.SH "SYNOPSIS"
+.HP 10
+\fBtau_merge\fR [\fB\-a\fR] [\fB\-r\fR] [\fB\-n\fR] [\fB\-e\fR\ \fIeventfile_list\fR] [\fB\-m\fR\ \fIoutput_eventfile\fR] {\fItracefile_list\fR} [{\fIoutput_tracefile\fR} {\fI\ \-\ \fR}]
+.SH "DESCRIPTION"
+.PP
+tau_merge is generated when TAU is configured with the \-TRACE option.
+.PP
+This tool assembles a set of tau trace and event files from multiple multiple nodes or threads across a program's execution into a single unified trace file. Many TAU trace file tools operate on merged trace files.
+.PP
+Minimally, tau_merge must be invoked with a list of unmerged trace files followed by the desired name of the merged trace file or the \- flag to send the output to the standard out. Typically the list can be designated by giving the shared name of the trace files to be merged followed by desired range of thread or node designators in brackets or the wild card character '*' to encompass variable thread and node designations in the filename (trace.A.B.C.trc where A, B and C are the node, context and thread numbers respectively). For example tautrace.*.trc would represent all tracefiles in a given directory while tautrace.[0\-5].0.0.trc would represent the tracefiles of nodes 0 through 5 with context 0 and thread 0.
+.PP
+tau_merge will generate the specified merged trace file and an event definition file, tau.edf by default.
+.PP
+The event definition file can be given an alternative name by using the '\-m' flag followed by the desired filename. A list of event definition files to be merged can be designated explicitly by using the '\-e' flag followed by a list of unmerged .edf files, specified in the same manner as the trace file list.
+.PP
+If computational resources are insufficient to merge all trace and event files simultaneously the process may be undertaken hierarchically. Corresponding subsets of the tracefiles and eventfiles may be merged in sequence to produce a smaller set of files that can then be to merged into a singular fully merged tracefile and eventfile. E.g. for a 100 node trace, trace sets 1\-10, 11\-20, ..., 91\-100 could be merged into traces 1a, 2a, ..., 10a. Then 1a\-10a could be merged to create a fully merged tracefile.
+.SH "OPTIONS"
+.PP
+\fB\-e\fR
+eventfile_list explicitly define the eventfiles to be merged
+.PP
+\fB\-m\fR
+output_eventfile explicitly name the merged eventfile to be created
+.PP
+\fB\-\fR
+send the merged tracefile to the standard out
+.PP
+\fB\-a\fR
+adjust earliest timestamp time to zero
+.PP
+\fB\-r\fR
+do not reassemble long events
+.PP
+\fB\-n\fR
+do not block waiting for new events. By default tau_merge will block and wait for new events to be appended if a tracefile is incomplete. This command allows offline merging of (potentially) incomplete tracefiles.
+.SH "EXAMPLES"
+.PP
+To merge all TAU tracefiles into app.trc and produce a merged tau.edf eventfile:
+.sp
+.nf
+tau_merge *.trc app.trc
+      
+.fi
+.sp
+To merge all eventfiles 0\-255 into ev0_255merged.edf and TAU tracefiles for nodes 0\-255 into the standard out:
+.sp
+.nf
+tau_merge \-e events.[0\-255].edf \-m ev0_255merged.edf \\
+  tautrace.[0\-255].*.trc \-
+      
+.fi
+.sp
+To merge eventfiles 0, 5 and seven info ev057.edf and tau tracefiles for nodes 0, 5 and 7 with context and thread 0 into app.trc:
+.sp
+.nf
+tau_merge \-e events.0.edf events.5.edf events.7.edf \-m ev057.edf \\
+  tautrace.0.0.0.trc tautrace.5.0.0.trc tautrace.7.0.0.trc app.trc
+      
+.fi
+.sp
+.SH "SEE ALSO"
+.PP
+tau_convert
+.PP
+tau2vtf
+.PP
+tau2elg
+.PP
+tau2slog2

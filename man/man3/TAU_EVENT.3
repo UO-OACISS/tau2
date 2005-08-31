@@ -1,0 +1,49 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_EVENT" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_EVENT \- Triggers a user event
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 10
+\fB\fBTAU_EVENT\fR\fR\fB(\fR\fBTauUserEvent\ \fR\fB\fIvariable\fR\fR\fB, \fR\fBdouble\ \fR\fB\fIvalue\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 10
+\fB\fBTAU_EVENT\fR\fR\fB(\fR\fBinteger\ \fR\fB\fIvariable\fR\fR\fB(2)\fR\fB, \fR\fBreal\ \fR\fB\fIvalue\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+Triggers an event that was registered with
+TAU_REGISTER_EVENT.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int user_square(int count) {
+  TAU_REGISTER_EVENT(ue1, "UserSquare Event");
+  TAU_EVENT(ue1, count * count);
+  return 0;
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+integer eventid(2)
+save eventid
+call TAU_REGISTER_EVENT(eventid, 'Error in Iteration')
+call TAU_EVENT(eventid, count)
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_REGISTER_EVENT(3)

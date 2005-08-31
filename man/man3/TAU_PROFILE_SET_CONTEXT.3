@@ -1,0 +1,79 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PROFILE_SET_CONT" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PROFILE_SET_CONTEXT \- Informs the measurement system of the context id
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 24
+\fB\fBTAU_PROFILE_SET_CONTEXT\fR\fR\fB(\fR\fBint\ \fR\fB\fIcontext\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 24
+\fB\fBTAU_PROFILE_SET_CONTEXT\fR\fR\fB(\fR\fBinteger\ \fR\fB\fIcontext\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+The
+TAU_PROFILE_SET_CONTEXT
+macro sets the context identifier of the executing task for profiling and tracing. Tasks are identified using context, context and thread ids. The profile data files generated will accordingly be named profile.<context>.<context>.<thread>. Note that it is not necessary to call
+TAU_PROFILE_SET_CONTEXT
+when using the TAU MPI wrapper library.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int main (int argc, char **argv) {
+  int ret, i;
+  pthread_attr_t  attr;
+  pthread_t       tid;
+  TAU_PROFILE_TIMER(tautimer,"main()", "int (int, char **)",
+                    TAU_DEFAULT);
+  TAU_PROFILE_START(tautimer);
+  TAU_PROFILE_INIT(argc, argv);
+  TAU_PROFILE_SET_NODE(0);
+  TAU_PROFILE_SET_CONTEXT(1);
+  /* ... */
+  TAU_PROFILE_STOP(tautimer);
+  return 0;
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+     PROGRAM SUM_OF_CUBES
+       integer profiler(2) / 0, 0 /
+        save profiler
+      INTEGER :: H, T, U
+        call TAU_PROFILE_INIT()
+        call TAU_PROFILE_TIMER(profiler, 'PROGRAM SUM_OF_CUBES')
+        call TAU_PROFILE_START(profiler)
+        call TAU_PROFILE_SET_NODE(0)
+        call TAU_PROFILE_SET_CONTEXT(1)
+      ! This program prints all 3\-digit numbers that
+      ! equal the sum of the cubes of their digits.
+      DO H = 1, 9
+        DO T = 0, 9
+          DO U = 0, 9
+          IF (100*H + 10*T + U == H**3 + T**3 + U**3) THEN
+             PRINT "(3I1)", H, T, U
+          ENDIF
+          END DO
+        END DO
+      END DO
+      call TAU_PROFILE_STOP(profiler)
+      END PROGRAM SUM_OF_CUBES
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_PROFILE_SET_NODE(3)

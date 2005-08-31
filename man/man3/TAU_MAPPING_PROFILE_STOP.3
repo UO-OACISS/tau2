@@ -1,0 +1,44 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_MAPPING_PROFILE_" "3" "08/31/2005" "" "TAU Mapping API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_MAPPING_PROFILE_STOP \- Stops a mapping timer
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 25
+\fB\fBTAU_MAPPING_PROFILE_STOP\fR\fR\fB(\fR\fBProfiler\ \fR\fB\fItimer\fR\fR\fB, \fR\fBint\ \fR\fB\fItid\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_MAPPING_PROFILE_STOP
+stops the timer that is created using
+TAU_MAPPING_PROFILE_TIMER. This will measure the elapsed time in groups of statements, instead of the entire block. A corresponding stop statement stops the timer as described next. The thread identifier is specified in the tid parameter.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+template<class LHS,class Op,class RHS,class EvalTag>
+void
+ExpressionKernel<LHS,Op,RHS,EvalTag>::run() {
+  TAU_MAPPING_PROFILE_TIMER(timer, TauMapFI);
+  printf("ExpressionKernel::run() this = 4854\\n", this);
+  // Just evaluate the expression.
+  
+  TAU_MAPPING_PROFILE_START(timer);
+  KernelEvaluator<EvalTag>().evaluate(lhs_m, op_m, rhs_m);
+  TAU_MAPPING_PROFILE_STOP();
+  // we could release the locks here instead of in the dtor.
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_MAPPING_PROFILE_TIMER(3),
+TAU_MAPPING_PROFILE_START(3)

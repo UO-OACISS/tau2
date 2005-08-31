@@ -1,0 +1,42 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_REGISTER_FORK" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_REGISTER_FORK \- Informs the measurement system that a fork has taken place
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 18
+\fB\fBTAU_REGISTER_FORK\fR\fR\fB(\fR\fBint\ \fR\fB\fIpid\fR\fR\fB, \fR\fBenum\ TauFork_t\ \fR\fB\fIoption\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+To register a child process obtained from the fork() syscall, invoke the
+TAU_REGISTER_FORK
+macro. It takes two parameters, the first is the node id of the child process (typically the process id returned by the fork call or any 0..N\-1 range integer). The second parameter specifies whether the performance data for the child process should be derived from the parent at the time of fork (
+TAU_INCLUDE_PARENT_DATA
+) or should be independent of its parent at the time of fork (
+TAU_EXCLUDE_PARENT_DATA
+). If the process id is used as the node id, before any analysis is done, all profile files should be converted to contiguous node numbers (from 0..N\-1). It is highly recommended to use flat contiguous node numbers in this call for profiling and tracing.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+pID = fork();
+if (pID == 0) {
+  printf("Parent : pid returned %d\\n", pID)
+}  else { 
+  // If we'd used the TAU_INCLUDE_PARENT_DATA, we get
+  // the performance data from the parent in this process
+  // as well.
+  TAU_REGISTER_FORK(pID, TAU_EXCLUDE_PARENT_DATA);        
+  printf("Child : pid = %d", pID);
+}
+    
+.fi

@@ -1,0 +1,56 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_DISABLE_INSTRUME" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_DISABLE_INSTRUMENTATION \- Disables instrumentation
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 28
+\fB\fBTAU_DISABLE_INSTRUMENTATION\fR\fR\fB(\fR\fBvoid);\fR
+.PP
+\fBFortran:\fR
+.HP 28
+\fB\fBTAU_DISABLE_INSTRUMENTATION\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_DISABLE_INSTRUMENTATION
+macro disables all entry/exit instrumentation within all threads of a context. This allows the user to selectively enable and disable instrumentation in parts of his/her code. It is important to re\-enable the instrumentation within the same basic block and scope.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int main(int argc, char **argv) { 
+  foo();
+  TAU_DISABLE_INSTRUMENTATION();
+  for (int i =0; i < N; i++) { 
+    bar();  // not recorded
+  }
+  TAU_DISABLE_INSTRUMENTATION();
+  bar(); // recorded
+} 
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_DISABLE_INSTRUMENTATION()
+...
+call TAU_DISABLE_INSTRUMENTATION()
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_ENABLE_INSTRUMENTATION(3),
+TAU_ENABLE_GROUP(3),
+TAU_DISABLE_GROUP(3),
+TAU_INIT(3),
+TAU_PROFILE_INIT(3)

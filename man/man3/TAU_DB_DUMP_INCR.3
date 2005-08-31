@@ -1,0 +1,36 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_DB_DUMP_INCR" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_DB_DUMP_INCR \- Dumps profile database into timestamped profiles on disk
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 17
+\fB\fBTAU_DB_DUMP_INCR\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+This is similar to the TAU_DB_DUMP macro but it produces dump files that have a timestamp in their names. This allows the user to record timestamped incremental dumps as the application executes.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_DB_DUMP_INCR();
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_DB_DUMP(3),
+TAU_DB_DUMP_PREFIX(3),
+TAU_DUMP_FUNC_NAMES(3),
+TAU_DUMP_FUNC_VALS(3),
+TAU_DUMP_FUNC_VALS_INCR(3),
+TAU_DB_PURGE(3),
+TAU_PROFILE_EXIT(3)

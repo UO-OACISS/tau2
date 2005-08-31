@@ -1,0 +1,46 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_SET_INTERRUPT_IN" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_SET_INTERRUPT_INTERVAL \- Change the inter\-interrupt interval for tracking memory and headroom
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 27
+\fB\fBTAU_SET_INTERRUPT_INTERVAL\fR\fR\fB(\fR\fBint\ \fR\fB\fIvalue\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 27
+\fB\fBTAU_SET_INTERRUPT_INTERVAL\fR\fR\fB(\fR\fBinteger\ \fR\fB\fIvalue\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+Set the interrupt interval for tracking memory and headroom (See
+TAU_TRACK_MEMORY(3)
+and
+TAU_TRACK_MEMORY_HEADROOM(3)). By default an inter\-interrupt interval of 10 seconds is used in TAU. This call allows the user to set it to a different value specified by the argument value.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_SET_INTERRUPT_INTERVAL(2)
+/* invokes the interrupt handler for memory every 2s */
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_SET_INTERRUPT_INTERVAL(2)
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_TRACK_MEMORY(3),
+TAU_TRACK_MEMORY_HEADROOM(3)

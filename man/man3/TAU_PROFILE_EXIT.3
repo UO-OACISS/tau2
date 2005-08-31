@@ -1,0 +1,46 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PROFILE_EXIT" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PROFILE_EXIT \- Alerts the profiling system to an exit call
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 17
+\fB\fBTAU_PROFILE_EXIT\fR\fR\fB(\fR\fBconst\ char\ *\ \fR\fB\fImessage\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 17
+\fB\fBTAU_PROFILE_EXIT\fR\fR\fB(\fR\fBcharacter\ \fR\fB\fImessage\fR\fR\fB(size)\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_PROFILE_EXIT
+should be called prior to an error exit from the program so that any profiles or event traces can be dumped to disk before quitting.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+if ((ret = open(...)) < 0) {
+  TAU_PROFILE_EXIT("ERROR in opening a file");
+  perror("open() failed");
+  exit(1);
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_PROFILE_EXIT('abort called')
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_DB_DUMP(3)

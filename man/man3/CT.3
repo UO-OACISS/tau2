@@ -1,0 +1,36 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "CT" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+CT \- Returns the type information for a variable
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 3
+\fB\fBCT\fR\fR\fB(\fR\fB<type>\ \fR\fB\fIvariable\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+The
+CT
+macro returns the runtime type information string of a variable. This is useful in constructing the type parameter of the
+TAU_PROFILE
+macro. For templates, the type information can be constructed using the type of the return and the type of each of the arguments (parameters) of the template. The example in the following macro will clarify this.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_PROFILE("foo::memberfunc()", CT(*this), TAU_DEFAULT);
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_PROFILE,
+TAU_PROFILE_TIMER(3),
+TAU_TYPE_STRING(3)

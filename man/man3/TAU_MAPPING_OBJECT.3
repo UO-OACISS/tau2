@@ -1,0 +1,64 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_MAPPING_OBJECT" "3" "08/31/2005" "" "TAU Mapping API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_MAPPING_OBJECT \- Declares a mapping object
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 19
+\fB\fBTAU_MAPPING_OBJECT\fR\fR\fB(\fR\fBFunctionInfo\ \fR\fB\fIFuncIdVar\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+To create storage for an identifier associated with a higher level statement that is mapped using
+TAU_MAPPING, we use the
+TAU_MAPPING_OBJECT
+macro. For example, in the
+TAU_MAPPING
+example, the array expressions are created into objects of a class ExpressionKernel, and each statement is an object that is an instance of this class. To embed the identity of the statement we store the mapping object in a data field in this class. This is shown below:
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+template<class LHS,class Op,class RHS,class EvalTag>
+class ExpressionKernel : public Pooma::Iterate_t {
+  public:
+      
+    typedef ExpressionKernel<LHS,Op,RHS,EvalTag> This_t;
+    //
+    // Construct from an Expr.
+    // Build the kernel that will evaluate the expression on the 
+    // given domain.
+    // Acquire locks on the data referred to by the expression.
+    //
+    ExpressionKernel(const LHS&,const Op&,const RHS&,
+    Pooma::Scheduler_t&);
+      
+      
+    virtual ~ExpressionKernel();
+    
+    // Do the loop.
+    virtual void run();
+    
+  private:
+      
+    // The expression we will evaluate.
+    LHS lhs_m;
+    Op  op_m;
+    RHS rhs_m;
+    TAU_MAPPING_OBJECT(TauMapFI)
+};
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_MAPPING_CREATE(3),
+TAU_MAPPING_LINK(3),
+TAU_MAPPING_PROFILE(3)

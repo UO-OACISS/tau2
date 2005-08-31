@@ -1,0 +1,84 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_CONVERT" "1" "08/31/2005" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau_convert \- convert TAU tracefiles into various alternative trace formats
+.SH "SYNOPSIS"
+.HP 12
+\fBtau_convert\fR [[\fB\-alog\fR] [\fB\-SSDF\fR] [\fB\-dump\fR] [\fB\-paraver\fR\ [\-t]] [\fB\-pv\fR] [\fB\-vampir\fR\ [\ \fB\-longsymbolbugfix\fR\ ]\ [\ \fB\-compact\fR\ ]\ [[\ \fB\-user\fR\ ]\ [\ \fB\-class\fR\ ]\ [\ \fB\-all\fR\ ]]\ [\ \fB\-nocomm\fR\ ]]] [\fIoutputtrc\fR] {\fIinputtrc\fR} {\fIedffile\fR}
+.SH "DESCRIPTION"
+.PP
+tau_convert is generated when TAU is configured with the \-TRACE option.
+.PP
+This program requires specification of a TAU tracefile and eventfile. It will convert the given TAU traces to the ASCII\-based trace format specified in the first argument. The conversion type specification may be followed by additional options specific to the conversion type. It defaults to the single threaded vampir format if no other format is specified. tau_convert also accepts specification of an output file as the last argument. If none is given it prints the converted data to the standard out.
+.SH "OPTIONS"
+.PP
+\fB\-alog\fR
+convert TAU tracefile into the alog format (This format is deprecated. The SLOG2 format is recommended.)
+.PP
+\fB\-SDDF\fR
+convert TAU tracefile into the SDDF format
+.PP
+\fB\-dump\fR
+convert TAU tracefile into multi\-column human readable text
+.PP
+\fB\-paraver\fR
+convert TAU tracefile into paraver format
+.PP
+\fB\-t\fR
+indicate conversion of multi threaded TAU trace into paraver format
+.PP
+\fB\-pv\fR
+convert single threaded TAU tracefile into vampir format (all \-vampir options apply) (default)
+.PP
+\fB\-vampir\fR
+convert multi threaded TAU tracefile into vampir format
+.PP
+\fB\-longsymbolbugfix\fR
+make the first characters of long, similar identifier strings unique to avoid a bug in vampir
+.PP
+\fB\-compact\fR
+abbreviate individual event entries
+.PP
+\fB\-all\fR
+compact all entries (default)
+.PP
+\fB\-user\fR
+compact user entries only
+.PP
+\fB\-class\fR
+compact class entries only
+.PP
+\fB\-nocomm\fR
+disregard communication events
+.PP
+\fB[outputtrc]\fR
+specify the name of the output tracefile to be produced
+.SH "EXAMPLES"
+.PP
+To print the contents of a TAU tracefile to the screen:
+.sp
+.nf
+tau_convert \-dump app.trc tau.edf
+      
+.fi
+.sp
+To convert a merged, threaded TAU tracefile to paraver format:
+.sp
+.nf
+	
+tau_convert \-paraver \-t app.trc tau.edf app.pv 
+      
+.fi
+.sp
+.SH "SEE ALSO"
+.PP
+tau_merge(1),
+tau2vtf(1),
+tau2slog2(1)

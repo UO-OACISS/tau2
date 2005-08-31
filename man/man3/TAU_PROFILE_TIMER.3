@@ -1,0 +1,79 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PROFILE_TIMER" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PROFILE_TIMER \- Defines a static timer.
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 18
+\fB\fBTAU_PROFILE_TIMER\fR\fR\fB(\fR\fBProfiler\ \fR\fB\fItimer\fR\fR\fB, \fR\fBchar*\ or\ string&\ \fR\fB\fIfunction_name\fR\fR\fB, \fR\fBchar*\ or\ string&\ \fR\fB\fItype\fR\fR\fB, \fR\fBTauGroup_t\ \fR\fB\fIgroup\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 18
+\fB\fBTAU_PROFILE_TIMER\fR\fR\fB(\fR\fBinteger\ \fR\fB\fIprofiler\fR\fR\fB(2)\fR\fB, \fR\fBcharacter\ \fR\fB\fIname\fR\fR\fB(size)\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+\fBC/C++ :\fR
+.PP
+With
+TAU_PROFILE_TIMER, a group of one or more statements is profiled. This macro has a timer variable as its first argument, and then strings for name and type, as described earlier. It associates the timer to the profile group specified in the last parameter.
+.PP
+\fBFortran :\fR
+.PP
+To profile a block of Fortran code, such as a function, subroutine, loop etc., the user must first declare a profiler, which is an integer array of two elements (pointer) with the save attribute, and pass it as the first parameter to the
+TAU_PROFILE_TIMER
+subroutine. The second parameter must contain the name of the routine, which is enclosed in a single quote.
+TAU_PROFILE_TIMER
+declares the profiler that must be used to profile a block of code. The profiler is used to profile the statements using
+TAU_PROFILE_START
+and
+TAU_PROFILE_STOP
+as explained later.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+template< class T, unsigned Dim >
+void BareField<T,Dim>::fillGuardCells(bool reallyFill)
+{
+ // profiling macros
+ TAU_TYPE_STRING(taustr, CT(*this) + " void (bool)" );
+ TAU_PROFILE("BareField::fillGuardCells()", taustr, TAU_FIELD);
+ TAU_PROFILE_TIMER(sendtimer, "fillGuardCells\-send", 
+                   taustr, TAU_FIELD);
+ TAU_PROFILE_TIMER(localstimer, "fillGuardCells\-locals",
+                   taustr, TAU_FIELD);
+ ...
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+subroutine bcast_inputs
+implicit none
+integer profiler(2)
+save profiler
+					
+include 'mpinpb.h'
+include 'applu.incl'
+					
+interger IERR
+					
+call TAU_PROFILE_TIMER(profiler, 'bcast_inputs')
+  
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_PROFILE_TIMER_DYNAMIC(3),
+TAU_PROFILE_START(3),
+TAU_PROFILE_STOP(3)

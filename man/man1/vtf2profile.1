@@ -1,0 +1,54 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "VTF2PROFILE" "1" "08/31/2005" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+vtf2profile \- Generate a TAU profile set from a vampir trace file
+.SH "SYNOPSIS"
+.HP 12
+\fBvtf2profile\fR [\fB\-p\fR\ \fIprofile\fR] [\fB\-i\fR\ \fIinterval_start\fR\ \fIinterval_end\fR] [\fB\-c\fR] [\fB\-h\fR] {\fB\-f\fR\ \fItracefile\fR}
+.SH "DESCRIPTION"
+.PP
+vtf2profile is created when TAU is configured with the \-vtf=<vtf_dir> option. This tool converts a VTF trace file (*.vpt) to a tau profile set (profile.A.B.C where A, B and C are the node, context and thread numbers respectively).
+.PP
+The vtf file to be read is specified in the command line by the \-f flag followed by the file's location. The VTF tracefile specified may be in gzipped form, eg app.vpt.gz. \-p is similarly used to specify the relative path to the directory where the profile files should be stored. If no output directory is specified the current directory will be used. A contiguous interval within the vtf file may be selected for conversion by using the \-i flag followed by two integers, representing the timestamp of the start and end of the desired interval respectively. The entire vtf file is converted if no interval is given.
+.SH "OPTIONS"
+.PP
+\fB\-f tracefile\fR
+\-Specify the Vampir tracefile to be converted.
+.PP
+\fB\-p profile\fR
+\-Specify the location where the profile file(s) should be written.
+.PP
+\fB\-i interval_start interval_end\fR
+\-Limit the profile produced to the specified interval within the vampir trace file.
+.PP
+\fB\-c\fR
+\-Opens a command line interface for the program.
+.PP
+\fB\-h\fR
+\-Displays a help message.
+.SH "EXAMPLES"
+.PP
+To convert a vampir tracefile, trace.vpt, to an equivalent TAU profile, use the following:
+.sp
+.nf
+vtf2profile \-f trace.vpt
+    
+.fi
+.sp
+To produce a TAU profile in the ./profiles directory representing only the events from the start of the tracefile to timestamp 6000, use:
+.sp
+.nf
+vtf2profile \-f trace.vpt \-p ./profiles \-i 0 6000
+    
+.fi
+.sp
+.SH "SEE ALSO"
+.PP
+tau2vtf(1)

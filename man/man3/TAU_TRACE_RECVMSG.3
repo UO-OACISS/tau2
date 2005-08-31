@@ -1,0 +1,65 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_TRACE_RECVMSG" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_TRACE_RECVMSG \- Traces a receive operation
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 18
+\fB\fBTAU_TRACE_RECVMSG\fR\fR\fB(\fR\fBint\ \fR\fB\fItag\fR\fR\fB, \fR\fBint\ \fR\fB\fIsource\fR\fR\fB, \fR\fBint\ \fR\fB\fIlength\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 18
+\fB\fBTAU_TRACE_RECVMSG\fR\fR\fB(\fR\fBinteger\ \fR\fB\fItag\fR\fR\fB, \fR\fBinteger\ \fR\fB\fIsource\fR\fR\fB, \fR\fBinteger\ \fR\fB\fIlength\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_TRACE_RECVMSG
+traces a receive operation where tag represents the type of the message received from the source process.
+.PP
+\fINOTE:\fR
+When TAU is configured to use MPI (\-mpiinc=<dir> \-mpilib=<dir>), the
+TAU_TRACE_RECVMSG
+and
+TAU_TRACE_SENDMSG
+macros are not required. The wrapper interposition library in
+.sp
+.nf
+$(TAU_MPI_LIBS)
+.fi
+.sp
+uses these macros internally for logging messages.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+if (pid == 0) {
+  TAU_TRACE_SENDMSG(currCol, sender, ncols * sizeof(T));
+  MPI_Send(vctr2, ncols * sizeof(T), MPI_BYTE, sender, 
+           currCol, MPI_COMM_WORLD);
+} else {
+  MPI_Recv(&ans, sizeof(T), MPI_BYTE, MPI_ANY_SOURCE, 
+           MPI_ANY_TAG,MPI_COMM_WORLD, &stat);
+  MPI_Get_count(&stat, MPI_BYTE, &recvcount);
+  TAU_TRACE_RECVMSG(stat.MPI_TAG, stat.MPI_SOURCE, recvcount);
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_TRACE_RECVMSG(tag, source, length)
+call TAU_TRACE_SENDMSG(tag, destination, length)
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_TRACE_SENDMSG(3)

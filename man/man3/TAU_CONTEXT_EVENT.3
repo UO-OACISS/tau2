@@ -1,0 +1,61 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_CONTEXT_EVENT" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_CONTEXT_EVENT \- Triggers a context event
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 18
+\fB\fBTAU_CONTEXT_EVENT\fR\fR\fB(\fR\fBTauUserEvent\ \fR\fB\fIvariable\fR\fR\fB, \fR\fBdouble\ \fR\fB\fIvalue\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 18
+\fB\fBTAU_CONTEXT_EVENT\fR\fR\fB(\fR\fBinteger\ \fR\fB\fIvariable\fR\fR\fB(2)\fR\fB, \fR\fBreal\ \fR\fB\fIvalue\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+Triggers a context event. A context event associates the name with the list of routines along the callstack. A context event tracks information like a user defined event and TAU records the maxima, minima, mean, std. deviation and the number of samples for each context event. A context event helps distinguish the data supplied by the user based on the location where an event occurs and the sequence of actions (routine/timer invocations) that preceeded the event. The depth of the the callstack embedded in the context event's name is specified by the user in the environment variable
+TAU_CALLPATH_DEPTH. If this variable is not specified, TAU uses a default depth of 2.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int f2(void)
+{
+  static int count = 0;
+  count ++;
+  TAU_PROFILE("f2()", "(sleeps 2 sec, calls f3)", TAU_USER);
+  TAU_REGISTER_CONTEXT_EVENT(event, "Iteration count");
+/*
+  if (count == 2)
+    TAU_DISABLE_CONTEXT_EVENT(event);
+*/
+  printf("Inside f2: sleeps 2 sec, calls f3\\n");
+
+  TAU_CONTEXT_EVENT(event, 232+count);
+  sleep(2);
+  f3();
+  return 0;
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+integer memevent(2) / 0, 0 /
+save memevent
+call TAU_REGISTER_CONTEXT_EVENT(memevent, "STORAGEARY mem allocated')
+call TAU_CONTEXT_EVENT(memevent, SIZEOF(STORAGEARY)*sizeof(INTEGER))
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_REGISTER_CONTEXT_EVENT(3)

@@ -1,0 +1,44 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_REPORT_STATISTIC" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_REPORT_STATISTICS \- Outputs statistics
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 22
+\fB\fBTAU_REPORT_STATISTICS\fR\fR\fB(\fR\fBvoid);\fR
+.PP
+\fBFortran:\fR
+.HP 22
+\fB\fBTAU_REPORT_STATISTICS\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_REPORT_STATISTICS
+prints the aggregate statistics of user events across all threads in each node. Typically, this should be called just before the main thread exits.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_REPORT_STATISTICS();
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_REPORT_STATISTICS()
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_REGISTER_EVENT(3),
+TAU_REGISTER_CONTEXT_EVENT(3),
+TAU_REPORT_THREAD_STATISTICS(3)

@@ -1,0 +1,57 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_ENABLE_GROUP_NAM" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_ENABLE_GROUP_NAME \- Enables a group based on name
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 22
+\fB\fBTAU_ENABLE_GROUP_NAME\fR\fR\fB(\fR\fBchar\ *\fR\fB\fIgroupname\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 22
+\fB\fBTAU_ENABLE_GROUP_NAME\fR\fR\fB(\fR\fBcharacter\ \fR\fB\fIgroupname\fR\fR\fB(size)\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_ENABLE_GROUP_NAME
+macro can turn on the instrumentation associated with routines based on a dynamic group assigned to them. It is important to note that this and the
+TAU_DISABLE_GROUP_NAME
+macros apply to groups created dynamically using
+TAU_GET_PROFILE_GROUP.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+/* tau_instrumentor was invoked with \-g DTM for a set of files */
+TAU_DISABLE_GROUP_NAME("DTM"); 
+dtm_routines();
+/* disable and then re\-enable the group with the name DTM */
+TAU_ENABLE_GROUP_NAME("DTM");
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+! tau_instrumentor was invoked with \-g DTM for this file 
+    call TAU_PROFILE_TIMER(profiler, "ITERATE>DTM")
+
+    call TAU_DISABLE_GROUP_NAME("DTM")
+! Disable, then re\-enable DTM group
+    call TAU_ENABLE_GROUP_NAME("DTM")
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_GET_PROFILE_GROUP(3),
+TAU_DISABLE_GROUP_NAME(3),
+TAU_ENABLE_ALL_GROUPS(3),
+TAU_DISABLE_ALL_GROUPS(3)

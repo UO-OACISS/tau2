@@ -1,0 +1,59 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_GET_EVENT_VALS" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_GET_EVENT_VALS \- Gets user event data for given user events.
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 19
+\fB\fBTAU_GET_EVENT_VALS\fR\fR\fB(\fR\fBconst\ char\ **\fR\fB\fIinUserEvents\fR\fR\fB, \fR\fBint\ \fR\fB\fInumUserEvents\fR\fR\fB, \fR\fBint\ **\fR\fB\fInumEvents\fR\fR\fB, \fR\fBdouble\ **\fR\fB\fImax\fR\fR\fB, \fR\fBdouble\ **\fR\fB\fImin\fR\fR\fB, \fR\fBdouble\ **\fR\fB\fImean\fR\fR\fB, \fR\fBdouble\ **\fR\fB\fIsumSqe\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+Retrieves user defined event data for the specified user defined events. The list of events are specified by the first parameter (eventList) and the user specifies the number of events in the second parameter (numUserEvents). TAU returns the number of times the event was invoked in the numUserEvents. The max, min, mean values are returned in the following parameters. TAU computes the sum of squares of the given event and returns this value in the next argument (sumSqe).
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+  const char **eventList;
+  int numEvents;
+
+  TAU_GET_EVENT_NAMES(eventList, numEvents);
+
+  cout << "numEvents: " << numEvents << endl;
+
+  if (numEvents > 0) {
+    int *numSamples;
+    double *max;
+    double *min;
+    double *mean;
+    double *sumSqr;
+
+    TAU_GET_EVENT_VALS(eventList, numEvents, numSamples, 
+      max, min, mean, sumSqr);
+    for (int i=0; i<numEvents; i++) {
+      cout << "\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\\n";
+      cout << "User Event:        " << eventList[i] << endl;
+      cout << "Number of Samples: " << numSamples[i] << endl;
+      cout << "Maximum Value:     " << max[i] << endl;
+      cout << "Minimum Value:     " << min[i] << endl;
+      cout << "Mean Value:        " << mean[i] << endl;
+      cout << "Sum Squared:       " << sumSqr[i] << endl;
+    }
+  }
+}
+
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_REGISTER_EVENT(3),
+TAU_REGISTER_CONTEXT_EVENT(3),
+TAU_GET_EVENT_NAMES(3)

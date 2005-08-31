@@ -1,0 +1,93 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_REGISTER_CONTEXT" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_REGISTER_CONTEXT_EVENT \- Registers a context event
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 27
+\fB\fBTAU_REGISTER_CONTEXT_EVENT\fR\fR\fB(\fR\fBTauUserEvent\ \fR\fB\fIvariable\fR\fR\fB, \fR\fBchar\ *\fR\fB\fIevent_name\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 27
+\fB\fBTAU_REGISTER_CONTEXT_EVENT\fR\fR\fB(\fR\fBint\ \fR\fB\fIvariable\fR\fR\fB(2)\fR\fB, \fR\fBcharacter\ \fR\fB\fIevent_name\fR\fR\fB(size)\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+Creates a context event with name. A context event appends the names of routines executing on the callstack to the name specified by the user. Whenver a context event is triggered, the callstack is examined to determine the context of execution. Starting from the parent function where the event is triggered, TAU walks up the callstack to a depth specified by the user in the environment variable
+TAU_CALLPATH_DEPTH. If this environment variable is not specified, TAU uses 2 as the default depth. For e.g., if the user registers a context event with the name "memory used" and specifies 3 as the callpath depth, and if the event is triggered in two locations (in routine a, when it was called by b, when it was called by c, and in routine h, when it was called by g, when it was called by i), then, we'd see the user defined event information for "memory used: c() => b() => a()" and "memory used: i() => g() => h()".
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int f2(void)
+{
+  static int count = 0;
+  count ++;
+  TAU_PROFILE("f2()", "(sleeps 2 sec, calls f3)", TAU_USER);
+  TAU_REGISTER_CONTEXT_EVENT(event, "Iteration count");
+/*
+  if (count == 2)
+    TAU_DISABLE_CONTEXT_EVENT(event);
+*/
+  printf("Inside f2: sleeps 2 sec, calls f3\\n");
+
+  TAU_CONTEXT_EVENT(event, 232+count);
+  sleep(2);
+  f3();
+  return 0;
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+subroutine foo(id)
+  integer id
+       
+  integer profiler(2) / 0, 0 /
+  integer maev(2) / 0, 0 /
+  integer mdev(2) / 0, 0 /
+  save profiler, maev, mdev
+
+  integer :: ierr
+  integer :: h, t, u
+  INTEGER, ALLOCATABLE :: STORAGEARY(:)
+  DOUBLEPRECISION   edata
+
+  call TAU_PROFILE_TIMER(profiler, 'FOO')
+  call TAU_PROFILE_START(profiler)
+  call TAU_PROFILE_SET_NODE(0)
+
+  call TAU_REGISTER_CONTEXT_EVENT(maev, "STORAGEARY Alloc [cubes.f:20]")
+  call TAU_REGISTER_CONTEXT_EVENT(mdev, "STORAGEARY Dealloc [cubes.f:37]")
+
+  allocate(STORAGEARY(1:999), STAT=IERR)
+  edata = SIZE(STORAGEARY)*sizeof(INTEGER)
+  call TAU_CONTEXT_EVENT(maev, edata)
+  ...
+  deallocate(STORAGEARY)
+  edata = SIZE(STORAGEARY)*sizeof(INTEGER)
+  call TAU_CONTEXT_EVENT(mdev, edata)
+  call TAU_PROFILE_STOP(profiler)
+  end subroutine foo
+     
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_CONTEXT_EVENT(3),
+TAU_ENABLE_CONTEXT_EVENT(3),
+TAU_DISABLE_CONTEXT_EVENT(3),
+TAU_REGISTER_EVENT(3),
+TAU_REPORT_STATISTICS(3),
+TAU_REPORT_THREAD_STATISTICS(3),
+TAU_GET_EVENT_NAMES(3),
+TAU_GET_EVENT_VALS(3)

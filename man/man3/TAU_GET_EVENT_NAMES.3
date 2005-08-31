@@ -1,0 +1,38 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_GET_EVENT_NAMES" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_GET_EVENT_NAMES \- Gets the registered user events.
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 20
+\fB\fBTAU_GET_EVENT_NAMES\fR\fR\fB(\fR\fBconst\ char\ ***\fR\fB\fIeventList\fR\fR\fB, \fR\fBint\ *\fR\fB\fInumEvents\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+Retrieves user event names for all user\-defined events
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+const char **eventList;
+int numEvents;
+
+TAU_GET_EVENT_NAMES(eventList, numEvents);
+
+cout << "numEvents: " << numEvents << endl;
+
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_REGISTER_EVENT(3),
+TAU_REGISTER_CONTEXT_EVENT(3),
+TAU_GET_EVENT_VALS(3)

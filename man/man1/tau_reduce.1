@@ -1,0 +1,97 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_REDUCE" "1" "08/31/2005" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau_reduce \- generates selective instrumentation rules based on profile data
+.SH "SYNOPSIS"
+.HP 11
+\fBtau_reduce\fR {\fB\-f\fR\ \fIfilename\fR} [\fB\-n\fR] [\fB\-r\fR\ \fIfilename\fR] [\fB\-o\fR\ \fIfilename\fR] [\fB\-v\fR] [\fB\-p\fR]
+.SH "DESCRIPTION"
+.PP
+tau_reduce is an application that will apply a set of user\-defined rules to a pprof dump file (\fBpprof \-d\fR) in order to create a select file that will include an exclude list for selective implementation for TAU. The user must specify the name of the pprof dump file that this application will use. This is done with the \-f filename flag. If no rule file is specified, then a single default rule will be applied to the file. This rule is: numcalls > 1000000 & usecs/call < 2, which will exclude all routines that are called at least 1,000,000 times and average less then two microseconds per call. If a rule file is specified, then this rule is not applied. If no output file is specified, then the results will be printed out to the screen.
+.SH "RULES"
+.PP
+Users can specify a set of rules for tau_reduce to apply. The rules should be specified in a separate file, one rule per line, and the file name should be specifed with the appropriate option on the command line. The grammar for a rule is: [GROUPNAME:]FIELD OPERATOR NUMBER. The GROUPNAME followed by the colon (:) is optional. If included, the rule will only be applied to routines that are a member of the group specified. Only one group name can be applied to each rule, and a rule must follow a groupname. If only a groupname is given, then an unrecognized field error will be returned. If the desired effect is to exclude all routines that belong to a certain group, then a trivial rule, such as GROUP:numcalls > \-1 may be applied. If a groupnameis given, but the data does not contain any groupname data, then then an error message will be given, but the rule will still be applied to the date ignoring the groupname specification. A FIELD is any of the routine attributes listed in the following table:
+.sp
+.nf
+ATTRIBUTE NAME     MEANING	
+numcalls           Number of times the routine is called	
+numsubrs           Number of subroutines that the routine contains	
+percent            Percent of total implementation time	
+usec               Exclusive routine running time, in microseconds	
+cumusec            Inclusive routine running time, in microseconds	
+count              Exclusive hardware count	
+totalcount         Inclusive hardware count	
+stddev             Standard deviation	
+usecs/call         Microseconds per call	
+counts/call        Hardware counts per call
+    
+.fi
+.PP
+Some FIELDS are only available for certain files. If hardware counters are used, then usec, cumusec, usecs/per call are not applicable and a error is reported. The opposite is true if timing data is used rather than hardware counters. Also, stddev is only available for certain files that contain that data.
+.PP
+An OPERATOR is any of the following: < (less than), > (greater than), or = (equals).
+.PP
+A NUMBER is any number.
+.PP
+A compound rule may be formed by using the & (and) symbol in between two simple rules. There is no "OR" because there is an implied or between two separate simple rules, each on a separate line. (ie the compound rule usec < 1000 OR numcalls = 1 is the same as the two simple rules "usec < 1000" and "numcalls = 1").
+.SH "RULE EXAMPLES"
+.sp
+.nf
+#exclude all routines that are members of TAU_USER and have less than
+#1000 microseconds
+TAU_USER:usec < 1000
+
+#exclude all routines that have less than 1000 microseconds and are
+#called only once.
+usec < 1000 & numcalls = 1
+
+#exclude all routines that have less than 1000 usecs per call OR have a percent
+#less than 5
+usecs/call < 1000
+percent < 5
+    
+.fi
+.PP
+NOTE: Any line in the rule file that begins with a # is a comment line. For clarity, blank lines may be inserted in between rules and will also be ignored.
+.SH "OPTIONS"
+.PP
+\fB\-f\fR
+filename specify filename of pprof dump file
+.PP
+\fB\-p\fR
+print out all functions with their attributes
+.PP
+\fB\-o\fR
+filename specify filename for select file output (default: print to screen
+.PP
+\fB\-r\fR
+filename specify filename for rule file
+.PP
+\fB\-v\fR
+verbose mode (for each rule, print out rule and all functions that it excludes)
+.SH "EXAMPLES"
+.PP
+To print to the screen the selective instrumentation list for the paraprof dump file app.prf with default selection rules use:
+.sp
+.nf
+tau_reduce \-f app.prf
+      
+.fi
+.sp
+To create a selection file, app.sel, from the paraprof dump file app.prf using rules specified in foo.rlf use:
+.sp
+.nf
+tau_reduce \-f app.prf \-r foo.rlf \-o app.sel
+      
+.fi
+.sp
+.SH "SEE ALSO"
+.PP
+

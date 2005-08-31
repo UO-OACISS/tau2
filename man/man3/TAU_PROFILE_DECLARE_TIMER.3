@@ -1,0 +1,49 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PROFILE_DECLARE_" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PROFILE_DECLARE_TIMER \- Declares a timer for C
+.SH "SYNOPSIS"
+.PP
+\fBC:\fR
+.HP 26
+\fB\fBTAU_PROFILE_DECLARE_TIMER\fR\fR\fB(\fR\fBProfiler\ \fR\fB\fItimer\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+Because C89 does not allow mixed code and declarations,
+TAU_PROFILE_TIMER
+can only be used once in a function. To declare two timers in a C function, use
+TAU_PROFILE_DECLARE_TIMER
+and
+TAU_PROFILE_CREATE_TIMER.
+.SH "EXAMPLE"
+.PP
+\fBC :\fR
+.sp
+.nf
+int f1(void) {
+  TAU_PROFILE_DECLARE_TIMER(t1);
+  TAU_PROFILE_DECLARE_TIMER(t2);
+
+  TAU_PROFILE_CREATE_TIMER(t1, "timer1", "", TAU_USER);
+  TAU_PROFILE_CREATE_TIMER(t2, "timer2", "", TAU_USER);
+
+  TAU_PROFILE_START(t1);
+  ...
+  TAU_PROFILE_START(t2);
+  ...
+  TAU_PROFILE_STOP(t2);
+  TAU_PROFILE_STOP(t1);
+  return 0;
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_PROFILE_CREATE_TIMER

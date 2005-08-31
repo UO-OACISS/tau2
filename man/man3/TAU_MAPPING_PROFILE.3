@@ -1,0 +1,53 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_MAPPING_PROFILE" "3" "08/31/2005" "" "TAU Mapping API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_MAPPING_PROFILE \- Profiles a block based on a mapping
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 20
+\fB\fBTAU_MAPPING_PROFILE\fR\fR\fB(\fR\fBFunctionInfo\ *\fR\fB\fIFuncIdVar\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+The
+TAU_MAPPING_PROFILE
+macro measures the time and attributes it to the statement mapped in
+TAU_MAPPING
+macro. It takes as its argument the identifier of the higher level statement that is stored using
+TAU_MAPPING_OBJECT
+and linked to the statement using
+TAU_MAPPING_LINK
+macros.
+TAU_MAPPING_PROFILE
+measures the time spent in the entire block in which it is invoked. For example, if the time spent in the run method of the class does work that must be associated with the higher\-level array expression, then, we can instrument it as follows:
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+// Evaluate the kernel
+// Just tell an InlineEvaluator to do it.
+      
+template<class LHS,class Op,class RHS,class EvalTag>
+void
+ExpressionKernel<LHS,Op,RHS,EvalTag>::run() {
+  TAU_MAPPING_PROFILE(TauMapFI)
+      
+  // Just evaluate the expression.
+  KernelEvaluator<EvalTag>().evalate(lhs_m,op_m,rhs_m);
+  // we could release the locks here or in dtor 
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_MAPPING_CREATE(3),
+TAU_MAPPING_LINK(3),
+TAU_MAPPING_OBJECT(3)

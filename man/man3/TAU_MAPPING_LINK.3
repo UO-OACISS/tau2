@@ -1,0 +1,70 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_MAPPING_LINK" "3" "08/31/2005" "" "TAU Mapping API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_MAPPING_LINK \- Creates a mapping link
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 17
+\fB\fBTAU_MAPPING_LINK\fR\fR\fB(\fR\fBFunctionInfo\ \fR\fB\fIFuncIdVar\fR\fR\fB, \fR\fBunsigned\ long\ \fR\fB\fIKey\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_MAPPING_LINKcreates a link between the object defined in
+TAU_MAPPING_OBJECT
+(that identifies a statement) and the actual higher\-level statement that is mapped with
+TAU_MAPPING. The Key argument represents a profile group to which the statement belongs, as specified in the
+TAU_MAPPING
+macro argument. For the example of array statements, this link should be created in the constructor of the class that represents the expression.
+TAU_MAPPING_LINK
+should be executed before any measurement takes place. It assigns the identifier of the statement to the object to which FuncIdVar refers. For example
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+class MyClass {
+  public:
+    MyClass() { }
+    ~MyClass() { }
+
+    void Run(void) {
+      TAU_MAPPING_OBJECT(runtimer)
+      TAU_MAPPING_LINK(runtimer, (unsigned long) this);
+      TAU_MAPPING_PROFILE(runtimer); // For one object
+      TAU_PROFILE("MyClass::Run()", " void (void)", TAU_USER1);
+      
+      /* ... */
+    }
+};
+
+int main(int argc, char **argv) {
+  TAU_PROFILE_INIT(argc, argv);
+  TAU_PROFILE("main()", "int (int, char **)", TAU_DEFAULT);
+  MyClass x, y, z;
+  MyClass a;
+  TAU_MAPPING_CREATE("MyClass::Run() for object a", " " , 
+                     (TauGroup_t) &a, "TAU_USER", 0);
+  TAU_MAPPING_CREATE("MyClass::Run() for object x", " " , 
+                     (TauGroup_t) &x, "TAU_USER", 0);
+  TAU_PROFILE_SET_NODE(0);
+  cout <<"Inside main"<<endl;
+
+  a.Run();
+  x.Run();
+  y.Run();
+
+
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_MAPPING_CREATE(3),
+TAU_MAPPING_OBJECT(3),
+TAU_MAPPING_PROFILE(3)

@@ -1,0 +1,44 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_GLOBAL_TIMER_STO" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_GLOBAL_TIMER_STOP \- Stops a global timer
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 22
+\fB\fBTAU_GLOBAL_TIMER_STOP\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_GLOBAL_TIMER_STOP
+stops a global timer.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+/* f1.c */
+
+TAU_GLOBAL_TIMER(globalTimer, "global timer", "", TAU_USER);
+
+/* f2.c */
+
+TAU_GLOBAL_TIMER_EXTERNAL(globalTimer);
+int foo(void) {
+  TAU_GLOBAL_TIMER_START(globalTimer);
+  /* ... */
+  TAU_GLOBAL_TIMER_STOP();
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_GLOBAL_TIMER(3),
+TAU_GLOBAL_TIMER_EXTERNAL,
+TAU_GLOBAL_TIMER_START(3)

@@ -1,0 +1,32 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_DUMP_FUNC_NAMES" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_DUMP_FUNC_NAMES \- Dumps function names to disk
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 20
+\fB\fBTAU_DUMP_FUNC_NAMES\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+This macro writes the names of active functions to a file named dump_functionnames_<node>.<context>.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_DUMP_FUNC_NAMES();
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_DB_DUMP(3),
+TAU_DUMP_FUNC_VALS(3),
+TAU_DUMP_FUNC_VALS_INCR(3)

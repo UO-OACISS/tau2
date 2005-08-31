@@ -1,0 +1,41 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_GET_FUNC_NAMES" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_GET_FUNC_NAMES \- Gets the function names
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 19
+\fB\fBTAU_GET_FUNC_NAMES\fR\fR\fB(\fR\fBchar\ **\fR\fB\fIfunctionList\fR\fR\fB, \fR\fBint\ \fR\fB\fInumFuncs\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+This macro fills the funcList argument with the list of timer and routine names. It also records the number of routines active in the numFuncs argument.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+  const char ** functionList;
+  int numOfFunctions;
+
+  TAU_GET_FUNC_NAMES(functionList, numOfFunctions);
+
+  for(int i=0;i<numOfFunctions;i++){
+    cout << "This function names so far are: " << functionList[i] << endl;
+  }
+
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_GET_COUNTER_NAMES(3),
+TAU_GET_FUNC_VALS(3),
+TAU_DUMP_FUNC_NAMES(3),
+TAU_DUMP_FUNC_VALS(3)

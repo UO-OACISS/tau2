@@ -1,0 +1,44 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_GET_PROFILE_GROU" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_GET_PROFILE_GROUP \- Creates groups based on names
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 22
+\fB\fBTAU_GET_PROFILE_GROUP\fR\fR\fB(\fR\fBchar\ *\fR\fB\fIgroupname\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_GET_PROFILE_GROUP
+allows the user to dynamically create groups based on strings, rather than use predefined, statically assigned groups such as
+TAU_USER1, TAU_USER2
+etc. This allows names to be associated in creating unique groups that are more meaningful, using names of files or directories for instance.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+#define PARTICLES TAU_GET_PROFILE_GROUP("PARTICLES")
+
+void foo() {
+  TAU_PROFILE("foo()", " ", PARTICLES);
+}
+
+void bar() {
+  TAU_PROFILE("bar()", " ", PARTICLES);
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_ENABLE_GROUP_NAME(3),
+TAU_DISABLE_GROUP_NAME(3),
+TAU_ENABLE_ALL_GROUPS(3),
+TAU_DISABLE_ALL_GROUPS(3)

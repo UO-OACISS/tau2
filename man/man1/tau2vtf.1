@@ -1,0 +1,55 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU2VTF" "1" "08/31/2005" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau2vtf \- convert TAU tracefiles to vampir tracefiles
+.SH "SYNOPSIS"
+.HP 8
+\fBtau2vtf\fR [\fB\-nomessage\fR] [\fB\-v\fR] [[\fB\-a\fR] [\fB\-fa\fR]] {\fItau_tracefile\fR} {\fItau_eventfile\fR} {\fIvtf_tracefile\fR}
+.SH "DESCRIPTION"
+.PP
+This program is generated when TAU is configured with the \-vtf=<vtf_dir> option.
+.PP
+The tau2vtf trace converter takes a single tau_tracefile (*.trc) and tau_eventfile (*.edf) and produces a corresponding vtf_tracefile (*.vtf). The input files and output file must be specified in that order. Multi\-file TAU traces must be merged before conversion.
+.PP
+The default output file format is VTF3 binary. If the output filename is given as the .vpt.gz type, rather than .vpt, the output file will be gzipped. There are two additional output format options. The command line argument '\-a' produces the vtf file output in ASCII VTF3 format. The command line argument '\-fa' produces the vtf file output in the FAST ASCII VTF3 format. Note that these arguments are mutually exclusive.
+.SH "OPTIONS"
+.PP
+\fB\-nomessage\fR
+Suppresses printing of message information in the trace.
+.PP
+\fB\-v\fR
+Verbose mode sends trace event descriptions to the standard output as they are converted.
+.PP
+\fB\-a\fR
+Print the vtf file output in the human\-readable VTF3 ASCII format
+.PP
+\fB\-fa\fR
+Print the vtf file in the simplified human\-readable FAST ASCII VTF3 format
+.SH "EXAMPLES"
+.PP
+The program must be run with the tau trace, tau event and vtf output files specified in the command line in that order. Any additional arguments follow. The following will produced a VTF, app.vpt, from the TAU trace and event files merged.trc and tau.edf trace file:
+.sp
+.nf
+tau2vtf merged.trc tau.edf app.vpt
+      
+.fi
+.sp
+The following will convert merged.trc and tau.edf to a gzipped FAST ASCII vampir tracefile app.vpt.gz, with message events omitted:
+.sp
+.nf
+tau2vtf merged.trc tau.edf app.vpt.gz \-nomessage \-fa
+      
+.fi
+.sp
+.SH "SEE ALSO"
+.PP
+vtf2profile(1),
+tau_merge(1),
+tau_convert(1)

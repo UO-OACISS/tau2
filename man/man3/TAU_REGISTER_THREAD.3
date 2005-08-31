@@ -1,0 +1,55 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_REGISTER_THREAD" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_REGISTER_THREAD \- Register a thread with the profiling system
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 20
+\fB\fBTAU_REGISTER_THREAD\fR\fR\fB(\fR\fBvoid);\fR
+.PP
+\fBFortran:\fR
+.HP 20
+\fB\fBTAU_REGISTER_THREAD\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+To register a thread with the profiling system, invoke the
+TAU_REGISTER_THREAD
+macro in the run method of the thread prior to executing any other TAU macro. This sets up thread identifiers that are later used by the instrumentation system.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+void * threaded_func(void *data) {
+  TAU_REGISTER_THREAD();
+  { /**** NOTE WE START ANOTHER BLOCK IN THREAD */
+    TAU_PROFILE_TIMER(tautimer, "threaded_func()", "int ()", 
+                      TAU_DEFAULT);
+    TAU_PROFILE_START(tautimer);
+    work(); /* work done by this thread */
+    TAU_PROFILE_STOP(tautimer);
+  }
+  return NULL;
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_REGISTER_THREAD()
+    
+.fi
+.SH "CAVEAT"
+.PP
+PDT based tau_instrumentor does not insert
+TAU_REGISTER_THREAD
+calls, they must be inserted manually

@@ -1,0 +1,50 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_TRACK_MEMORY_HEA" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_TRACK_MEMORY_HEADROOM \- Track the headroom (amount of memory for a process to grow) by periodically interrupting the program
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 26
+\fB\fBTAU_TRACK_MEMORY_HEADROOM\fR\fR\fB(\fR\fBvoid);\fR
+.PP
+\fBFortran:\fR
+.HP 26
+\fB\fBTAU_TRACK_MEMORY_HEADROOM\fR\fR\fB(\fR\fBvoid);\fR
+.SH "DESCRIPTION"
+.PP
+Tracks the amount of memory available for the process before it runs out of free memory on the heap. This call sets up a signal handler that is invoked every 10 seconds by an interrupt (this interval may be altered by using the
+TAU_SET_INTERRUPT_INTERVAL
+call). Inside the interrupt handler, TAU evaluates how much memory it can allocate and associates it with the callstack using the TAU context events (See
+TAU_REGISTER_CONTEXT_EVENT(3)). The user can vary the size of the callstack by setting the environment variable
+TAU_CALLPATH_DEPTH
+(default is 2). This call is useful on machines like IBM BG/L where no virtual memory (or paging using the swap space) is present. The amount of heap memory available to the program is limited by the amount of available physical memory. TAU executes a series of malloc calls with a granularity of 1MB and determines the amount of memory available for the program to grow.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_TRACK_MEMORY_HEADROOM();
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_TRACK_MEMORY_HEADROOM()
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_TRACK_MEMORY(3),
+TAU_SET_INTERRUPT_INTERVAL(3),
+TAU_ENABLE_TRACKING_MEMORY_HEADROOM(3),
+TAU_DISABLE_TRACKING_MEMORY_HEADROOM(3),
+TAU_TRACK_MEMORY_HEADROOM_HERE(3)

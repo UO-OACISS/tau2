@@ -1,0 +1,35 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PROFILE_SET_GROU" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PROFILE_SET_GROUP_NAME \- Changes the group name of a profiled section
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 27
+\fB\fBTAU_PROFILE_SET_GROUP_NAME\fR\fR\fB(\fR\fBchar\ *\fR\fB\fIgroupname\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_PROFILE_SET_GROUP_NAME
+macro allows the user to change the group name associated with the instrumented routine. This macro must be called within the instrumented routine.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+void foo() {
+  TAU_PROFILE("foo()", "void ()", TAU_USER);
+  TAU_PROFILE_SET_GROUP_NAME("Particle"); 
+  /* gives a more meaningful group name */
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_PROFILE

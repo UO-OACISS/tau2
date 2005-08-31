@@ -1,0 +1,62 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PHASE_STOP" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PHASE_STOP \- Exits a phase.
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 15
+\fB\fBTAU_PHASE_STOP\fR\fR\fB(\fR\fBPhase\ \fR\fB\fIphase\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 15
+\fB\fBTAU_PHASE_STOP\fR\fR\fB(\fR\fBinteger\ \fR\fB\fIphase\fR\fR\fB(2)\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_PHASE_STOP
+exits a phase. Phases can be nested, but not overlapped.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int f2(void)
+{
+  TAU_PHASE_CREATE_STATIC(t2,"IO Phase", "", TAU_USER);
+  TAU_PHASE_START(t2);
+  input();
+  output();
+  TAU_PHASE_STOP(t2);
+  return 0;
+}
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+subroutine F2()
+
+  integer phase(2) / 0, 0 /
+  save    phase
+
+  call TAU_PHASE_CREATE_STATIC(phase,'IO Phase')
+  call TAU_PHASE_START(phase)
+
+  call INPUT()
+  call OUTPUT()
+
+  call TAU_PHASE_STOP(phase)
+end
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_PHASE_CREATE_STATIC(3),
+TAU_PHASE_CREATE_DYNAMIC(3),
+TAU_PHASE_START(3)

@@ -1,0 +1,29 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_PROFILE_STMT" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_PROFILE_STMT \- Executes a statement only when TAU is used.
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 17
+\fB\fBTAU_PROFILE_STMT\fR\fR\fB(\fR\fBstatement\ \fR\fB\fIstatement\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_PROFILE_STMT
+executes a statement, or declares a variable that is used only during profiling or for execution of a statement that takes place only when the instrumentation is active. When instrumentation is inactive (i.e., when profiling and tracing are turned off as described in Chapter 2), all macros are defined as null.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_PROFILE_STMT(T obj;); // T is a template parameter)
+TAU_TYPE_STRING(str, "void () " + CT(obj) );
+    
+.fi

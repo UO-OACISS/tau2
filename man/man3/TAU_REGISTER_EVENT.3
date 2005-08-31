@@ -1,0 +1,56 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_REGISTER_EVENT" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_REGISTER_EVENT \- Registers a user event
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 19
+\fB\fBTAU_REGISTER_EVENT\fR\fR\fB(\fR\fBTauUserEvent\ \fR\fB\fIvariable\fR\fR\fB, \fR\fBchar\ *\fR\fB\fIevent_name\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 19
+\fB\fBTAU_REGISTER_EVENT\fR\fR\fB(\fR\fBint\ \fR\fB\fIvariable\fR\fR\fB(2)\fR\fB, \fR\fBcharacter\ \fR\fB\fIevent_name\fR\fR\fB(size)\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU can profile user\-defined events using
+TAU_REGISTER_EVENT. The meaning of the event is determined by the user. The first argument to
+TAU_REGISTER_EVENT
+is the pointer to an integer array. This array is declared with a save attribute as shown below.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int user_square(int count) {
+  TAU_REGISTER_EVENT(ue1, "UserSquare Event");
+  TAU_EVENT(ue1, count * count);
+  return 0;
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+integer eventid(2)
+save eventid
+call TAU_REGISTER_EVENT(eventid, 'Error in Iteration')
+call TAU_EVENT(eventid, count)
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_EVENT(3),
+TAU_REGISTER_CONTEXT_EVENT(3),
+TAU_REPORT_STATISTICS(3),
+TAU_REPORT_THREAD_STATISTICS(3),
+TAU_GET_EVENT_NAMES(3),
+TAU_GET_EVENT_VALS(3)

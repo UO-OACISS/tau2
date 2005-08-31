@@ -1,0 +1,90 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_GET_FUNC_VALS" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_GET_FUNC_VALS \- Gets detailed performance data for given functions
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 18
+\fB\fBTAU_GET_FUNC_VALS\fR\fR\fB(\fR\fBconst\ char\ **\fR\fB\fIinFuncs\fR\fR\fB, \fR\fBint\ \fR\fB\fInumOfFuncs\fR\fR\fB, \fR\fBdouble\ ***\fR\fB\fIcounterExclusiveValues\fR\fR\fB, \fR\fBdouble\ ***\fR\fB\fIcounterInclusiveValues\fR\fR\fB, \fR\fBint\ **\fR\fB\fInumOfCalls\fR\fR\fB, \fR\fBint\ **\fR\fB\fInumOfSubRoutines\fR\fR\fB, \fR\fBconst\ char\ ***\fR\fB\fIcounterNames\fR\fR\fB, \fR\fBint\ *\fR\fB\fInumOfCounters\fR\fR\fB, \fR\fBint\ \fR\fB\fItid\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+It gets detailed performance data for the list of routines. The user specifies inFuncs and the number of routines; TAU then returns the other arguments with the performance data. counterExclusiveValues and counterInclusiveValues are two dimensional arrays: the first dimension is the routine id and the second is counter id. The value is indexed by these two dimensions. numCalls and numSubrs (or child routines) are one dimensional arrays.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+const char **inFuncs;
+/* The first dimension is functions, and the 
+second dimension is counters */
+double **counterExclusiveValues;
+double **counterInclusiveValues;
+int *numOfCalls;
+int *numOfSubRoutines;
+const char **counterNames;
+int numOfCouns;
+      
+TAU_GET_FUNC_NAMES(functionList, numOfFunctions);
+      
+/* We are only interested in the first two routines 
+that are executing in this context. So, we allocate 
+space for two routine names and get the performance 
+data for these two routines at runtime. */
+if (numOfFunctions >=2 ) {
+  inFuncs = (const char **) malloc(sizeof(const char *) * 2);
+      
+  inFuncs[0] = functionList[0];
+  inFuncs[1] = functionList[1];
+      
+  //Just to show consistency.
+  TAU_DB_DUMP();
+      
+  TAU_GET_FUNC_VALS(inFuncs, 2,
+  counterExclusiveValues,
+  counterInclusiveValues,
+  numOfCalls,
+  numOfSubRoutines,
+  counterNames,
+  numOfCouns);
+      
+  TAU_DUMP_FUNC_VALS_INCR(inFuncs, 2);
+      
+      
+  cout << "@@@@@@@@@@@@@@@" << endl;
+  cout << "The number of counters is: " << numOfCouns << endl;
+  cout << "The first counter is: " << counterNames[0] << endl;
+      
+  cout << "The Exclusive value of: " << inFuncs[0]
+  << " is: " << counterExclusiveValues[0][0] << endl;
+  cout << "The numOfSubRoutines of: " << inFuncs[0]
+  << " is: " << numOfSubRoutines[0]
+  << endl;
+      
+      
+  cout << "The Inclusive value of: " << inFuncs[1]
+  << " is: " << counterInclusiveValues[1][0]
+  << endl;
+  cout << "The numOfCalls of: " << inFuncs[1]
+  << " is: " << numOfCalls[1]
+  << endl;
+
+  cout << "@@@@@@@@@@@@@@@" << endl;
+}
+      
+TAU_DB_DUMP_INCR();
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_GET_COUNTER_NAMES(3),
+TAU_GET_FUNC_NAMES(3),
+TAU_DUMP_FUNC_NAMES(3),
+TAU_DUMP_FUNC_VALS(3)

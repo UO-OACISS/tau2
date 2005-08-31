@@ -1,0 +1,43 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_DB_DUMP_PREFIX" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_DB_DUMP_PREFIX \- Dumps the profile database into profile files with a given prefix
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 19
+\fB\fBTAU_DB_DUMP_PREFIX\fR\fR\fB(\fR\fBchar\ *\fR\fB\fIprefix\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 19
+\fB\fBTAU_DB_DUMP_PREFIX\fR\fR\fB(\fR\fBcharacter\ \fR\fB\fIprefix\fR\fR\fB(size)\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+The
+TAU_DB_DUMP_PREFIX
+macro dumps all profile data to disk and records a checkpoint or a snapshot of the profile statistics at that instant. The dump files are named <prefix>.<node>.<context>.<thread>. If prefix is "profile", the files are named profile.0.0.0, etc. and may be read by paraprof/pprof tools as the application executes.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+TAU_DB_DUMP_PREFIX("prefix");      
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+call TAU_DB_DUMP_PREFIX("prefix")
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_DB_DUMP(3)

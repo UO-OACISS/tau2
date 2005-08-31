@@ -1,0 +1,33 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_DUMP_FUNC_VALS" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_DUMP_FUNC_VALS \- Dumps performance data for given functions to disk.
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 19
+\fB\fBTAU_DUMP_FUNC_VALS\fR\fR\fB(\fR\fBchar\ **\fR\fB\fIinFuncs\fR\fR\fB, \fR\fBint\ \fR\fB\fInumFuncs\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_DUMP_FUNC_VALS
+writes the data associated with the routines listed in inFuncs to disk. The number of routines is specified by the user in numFuncs.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_DB_DUMP(3),
+TAU_DUMP_FUNC_NAMES(3),
+TAU_DUMP_FUNC_VALS_INCR(3)

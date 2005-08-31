@@ -1,0 +1,50 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_DISABLE_GROUP" "3" "08/31/2005" "" "TAU Instrumentation API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_DISABLE_GROUP \- Disables tracking of a given group
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 18
+\fB\fBTAU_DISABLE_GROUP\fR\fR\fB(\fR\fBTauGroup_t\ \fR\fB\fIgroup\fR\fR\fB);\fR
+.PP
+\fBFortran:\fR
+.HP 18
+\fB\fBTAU_DISABLE_GROUP\fR\fR\fB(\fR\fBinteger\ \fR\fB\fIgroup\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+Disables the instrumentation for a given group. By default, it is on.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+void foo() {
+  TAU_PROFILE("foo()", " ", TAU_USER);
+  ...
+  TAU_DISABLE_GROUP(TAU_USER);
+}
+    
+.fi
+.PP
+\fBFortran :\fR
+.sp
+.nf
+  include 'Profile/TauFAPI.h'
+  call TAU_DISABLE_GROUP(TAU_USER)
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_ENABLE_INSTRUMENTATION(3),
+TAU_DISABLE_INSTRUMENTATION(3),
+TAU_ENABLE_GROUP(3),
+TAU_INIT(3),
+TAU_PROFILE_INIT(3)

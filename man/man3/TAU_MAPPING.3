@@ -1,0 +1,41 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_MAPPING" "3" "08/31/2005" "" "TAU Mapping API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_MAPPING \- Encapsulates a C++ statement for profiling
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 12
+\fB\fBTAU_MAPPING\fR\fR\fB(\fR\fBstatement\ \fR\fB\fIstatement\fR\fR\fB, \fR\fBTauGroup_t\ \fR\fB\fIkey\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_MAPPING
+is used to encapsulate a C++ statement as a timer. A timer will be made, named by the statment, and will profile the statement. The key given can be used with
+TAU_MAPPING_LINK(3)
+to retrieve the timer.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+int main(int argc, char **argv) {
+  Array <2> A(N, N), B(N, N), C(N,N), D(N, N);
+  // Original statement:
+  // A = B + C + D;
+  //Instrumented statement:
+  TAU_MAPPING(A = B + C + D; , TAU_USER);
+  ... 
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_MAPPING_CREATE(3),
+TAU_MAPPING_LINK(3)

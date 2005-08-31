@@ -1,0 +1,66 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_MAPPING_CREATE" "3" "08/31/2005" "" "TAU Mapping API"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+TAU_MAPPING_CREATE \- Creates a mapping
+.SH "SYNOPSIS"
+.PP
+\fBC/C++:\fR
+.HP 19
+\fB\fBTAU_MAPPING_CREATE\fR\fR\fB(\fR\fBchar\ *\fR\fB\fIname\fR\fR\fB, \fR\fBchar\ *\fR\fB\fItype\fR\fR\fB, \fR\fBchar\ *\fR\fB\fIgroupname\fR\fR\fB, \fR\fBunsigned\ long\ \fR\fB\fIkey\fR\fR\fB, \fR\fBint\ \fR\fB\fItid\fR\fR\fB);\fR
+.SH "DESCRIPTION"
+.PP
+TAU_MAPPING_CREATE
+creates a mapping and associates it with the key that is specified. Later, this key may be used to retrieve the FunctionInfo object associated with this key for timing purposes. The thread identifier is specified in the
+tid
+parameter.
+.SH "EXAMPLE"
+.PP
+\fBC/C++ :\fR
+.sp
+.nf
+class MyClass {
+  public:
+    MyClass() {
+      TAU_MAPPING_LINK(runtimer, TAU_USER); 
+    } 
+    ~MyClass() {}
+
+    void Run(void) {
+      TAU_MAPPING_PROFILE(runtimer); // For one object
+      TAU_PROFILE("MyClass::Run()", " void (void)", TAU_USER1);
+	
+      cout <<"Sleeping for 2 secs..."<<endl;
+      sleep(2);
+    }
+  private:
+    TAU_MAPPING_OBJECT(runtimer)  // EMBEDDED ASSOCIATION
+};
+
+int main(int argc, char **argv) {
+  TAU_PROFILE_INIT(argc, argv);
+  TAU_PROFILE("main()", "int (int, char **)", TAU_DEFAULT);
+  MyClass x, y, z;
+  TAU_MAPPING_CREATE("MyClass::Run() for object a", " " , TAU_USER, 
+                     "TAU_USER", 0);
+  MyClass a;
+  TAU_PROFILE_SET_NODE(0);
+  cout <<"Inside main"<<endl;
+
+  a.Run();
+  x.Run();
+  y.Run();
+}
+    
+.fi
+.SH "SEE ALSO"
+.PP
+TAU_MAPPING_LINK(3),
+TAU_MAPPING_OBJECT(3),
+TAU_MAPPING_PROFILE(3)
