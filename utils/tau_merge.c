@@ -871,7 +871,7 @@ int main(int argc, char *argv[])
   for (i=optind; i<argc-1; i++) {
 /*     printf ("opening %s!\n", argv[i]); */
     /* -- open input trace -------------------------------------------------- */
-    if ( (trcdes[numtrc].fd = open (argv[i], O_RDONLY | O_BINARY | LARGEFILE_OPTION | O_LARGEFILE)) < 0 ) {
+    if ( (trcdes[numtrc].fd = open (argv[i], O_RDONLY | O_BINARY | LARGEFILE_OPTION )) < 0 ) {
 /*       printf ("failed!\n"); */
       perror (argv[i]);
       errflag = TRUE;
