@@ -18,16 +18,15 @@ import edu.uoregon.tau.paraprof.ParaProf;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.3 2005/07/11 22:59:53 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.4 2005/09/02 00:22:01 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
     private FunctionProfile functionProfile;
     private String displayName;
     private boolean expanded;
-    private Icon icon;
     private CallPathModel model;
     private String alternateName;
 
@@ -42,15 +41,15 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
         this.alternateName = alternateName;
         if (functionProfile != null) {
             displayName = functionProfile.getName();
-
-            if (model.getWindow().getTreeMode()) {
-                int loc = displayName.lastIndexOf("=>");
-                if (loc != -1) {
-                    displayName = displayName.substring(loc + 2).trim();
-                }
-            }
         } else {
             displayName = alternateName;
+        }
+
+        if (model.getWindow().getTreeMode()) {
+            int loc = displayName.lastIndexOf("=>");
+            if (loc != -1) {
+                displayName = displayName.substring(loc + 2).trim();
+            }
         }
     }
 
@@ -74,6 +73,15 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
 
             List functionProfileList = model.getThread().getFunctionProfiles();
 
+            // If we are B, this will be true if there is "A => B => C", but there is
+            // no "A => B".  This should never happen with TAU, but will happen all the time
+            // with multi-level mpiP data.
+
+            boolean foundAsInternal = false;
+            Map potentialChildren = new HashMap();
+
+            boolean foundActual = false;
+
             for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
                 FunctionProfile fp = (FunctionProfile) it.next();
                 if (fp == this.functionProfile)
@@ -82,30 +90,66 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
                 if (fp != null && fp.isCallPathFunction()) {
                     String fname = fp.getName();
 
+                    // For mpiP (and possibly others), there will be nodes that do not have
+                    // a FunctionProfile associated with them, use the alternateName instead
                     String thisName = alternateName;
                     if (functionProfile != null) {
                         thisName = functionProfile.getName();
                     }
 
+                    // thisname = "main"
                     int loc = fname.indexOf(thisName);
+
+                    // fname = "main => a => b => MPI_Send"
+                    // want "main => a"
+
+                    if (loc != -1) {
+                        int loc2 = fname.indexOf("=>", loc + thisName.length());
+
+                        int loc3 = fname.indexOf("=>", loc2 + 1);
+
+                        if (loc2 != -1) {
+                            foundAsInternal = true;
+
+                            if (loc3 == -1) {
+                                potentialChildren.put(fp, new Object());
+                            } else {
+                                potentialChildren.put(fname.substring(0, loc3), new Object());
+                            }
+                        }
+
+                    }
 
                     if (loc == 0) {
                         String remainder = fname.substring(thisName.length()).trim();
 
                         int loc2 = remainder.lastIndexOf("=>");
                         if (loc2 == 0) {
+                            foundActual = true;
                             TreeTableNode node = new TreeTableNode(fp, model, null);
                             children.add(node);
                         }
                     }
                 }
             }
+
+            if (!foundActual && foundAsInternal) {
+                for (Iterator it = potentialChildren.keySet().iterator(); it.hasNext();) {
+                    Object obj = it.next();
+                    TreeTableNode node;
+                    if (obj instanceof String) {
+                        node = new TreeTableNode(null, model, (String) obj);
+                    } else {
+                        node = new TreeTableNode((FunctionProfile) obj, model, null);
+                    }
+                    children.add(node);
+                }
+            }
+
         }
 
         Collections.sort(children);
     }
-
-
 
     public String toString() {
         return displayName;
@@ -117,10 +161,8 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
 
     public void setExpanded(boolean expanded) {
         this.expanded = expanded;
-        icon = null;
     }
 
-    
     public Color getColor(int metricID) {
         if (!model.getWindow().getTreeMode()) {
             return null;
@@ -158,7 +200,6 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
         } else {
             TreeTableColumn column = (TreeTableColumn) model.getWindow().getColumns().get(model.getSortColumn() - 1);
 
-
             Comparable a = (Comparable) column.getValueFor(this, true);
             Comparable b = (Comparable) column.getValueFor((TreeTableNode) o, true);
 
@@ -169,7 +210,6 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
         }
         return result;
     }
-
 
     public CallPathModel getModel() {
         return model;

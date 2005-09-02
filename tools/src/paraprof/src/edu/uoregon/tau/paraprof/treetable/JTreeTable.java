@@ -16,8 +16,8 @@ package edu.uoregon.tau.paraprof.treetable;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.net.URL;
 import java.text.NumberFormat;
+import java.util.Enumeration;
 import java.util.EventObject;
 
 import javax.swing.*;
@@ -26,8 +26,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.*;
 import javax.swing.tree.*;
 
-import edu.uoregon.tau.dms.dss.Function;
-import edu.uoregon.tau.paraprof.ParaProfTreeCellRenderer;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 /**
@@ -71,9 +69,45 @@ public class JTreeTable extends JTable implements MouseListener {
                     if (path != null) {
                         TreeTableNode node = (TreeTableNode) path.getLastPathComponent();
                         if (ParaProfUtils.rightClick(evt)) {
-                            ParaProfUtils.createFunctionClickPopUp(node.getModel().getPPTrial(),
-                                    node.getFunctionProfile().getFunction(), window.getThread(), JTreeTable.this).show(JTreeTable.this,
-                                    evt.getX(), evt.getY());
+                            JPopupMenu popup;
+                            if (node.getFunctionProfile() != null) {
+                                popup = ParaProfUtils.createFunctionClickPopUp(node.getModel().getPPTrial(),
+                                        node.getFunctionProfile().getFunction(), window.getThread(), JTreeTable.this);
+                                popup.show(JTreeTable.this, evt.getX(), evt.getY());
+                            } else {
+                                //popup = new JPopupMenu();
+                            }
+
+//                            ActionListener actionListener = new ActionListener() {
+//
+//                                public void actionPerformed(ActionEvent e) {
+//                                    String arg = e.getActionCommand();
+//                                    if (arg.equals("Expand all nodes")) {
+//
+//                                        //                                        TreeNode root = (TreeNode)tree.getModel().getRoot();
+//                                        //                                        for (int i = root.getChildCount(); i > 0; i--) {
+//                                        //                                            tree.expandRow(i);
+//                                        //                                        }
+//
+//                                        for (int lastRow = tree.getRowCount(); lastRow >= 0; --lastRow) {
+//                                            tree.expandRow(lastRow);
+//                                        }
+//
+//                                        //expandAll(tree, true);
+//                                    } else if (arg.equals("Collapse all nodes")) {
+//                                        expandAll(tree, false);
+//                                    }
+//                                }
+//                            };
+
+//                            JMenuItem jMenuItem = new JMenuItem("Expand all nodes");
+//                            jMenuItem.addActionListener(actionListener);
+//                            popup.add(jMenuItem);
+//                            jMenuItem = new JMenuItem("Collapse all nodes");
+//                            jMenuItem.addActionListener(actionListener);
+//                            popup.add(jMenuItem);
+//                            popup.show(JTreeTable.this, evt.getX(), evt.getY());
+
                         }
                     }
                 } catch (Exception e) {
@@ -223,8 +257,8 @@ public class JTreeTable extends JTable implements MouseListener {
             super();
         }
 
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-                boolean hasFocus, int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row,
+                int column) {
 
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
@@ -309,8 +343,8 @@ public class JTreeTable extends JTable implements MouseListener {
         /**
          * TreeCellRenderer method. Overridden to update the visible row.
          */
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-                boolean hasFocus, int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row,
+                int column) {
             visibleRow = row;
             return this;
         }
@@ -324,7 +358,7 @@ public class JTreeTable extends JTable implements MouseListener {
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int r, int c) {
             return tree;
         }
-        
+
         /**
          * Overridden to return false, and if the event is a mouse event
          * it is forwarded to the tree.<p>
@@ -348,8 +382,8 @@ public class JTreeTable extends JTable implements MouseListener {
                 for (int counter = getColumnCount() - 1; counter >= 0; counter--) {
                     if (getColumnClass(counter) == TreeTableModel.class) {
                         MouseEvent me = (MouseEvent) e;
-                        MouseEvent newME = new MouseEvent(tree, MouseEvent.MOUSE_PRESSED, me.getWhen(), me.getModifiers(), me.getX()
-                                - getCellRect(0, counter, true).x, me.getY(), me.getClickCount(), me.isPopupTrigger());
+                        MouseEvent newME = new MouseEvent(tree, MouseEvent.MOUSE_PRESSED, me.getWhen(), me.getModifiers(),
+                                me.getX() - getCellRect(0, counter, true).x, me.getY(), me.getClickCount(), me.isPopupTrigger());
 
                         tree.dispatchEvent(newME);
 
@@ -465,6 +499,34 @@ public class JTreeTable extends JTable implements MouseListener {
 
     public int getSortedColumnIndex() {
         return sortedColumnIndex;
+    }
+
+    // If expand is true, expands all nodes in the tree.
+    // Otherwise, collapses all nodes in the tree.
+    public void expandAll(JTree tree, boolean expand) {
+        TreeNode root = (TreeNode) tree.getModel().getRoot();
+
+        // Traverse tree from root
+        expandAll(tree, new TreePath(root), expand);
+    }
+
+    private void expandAll(JTree tree, TreePath parent, boolean expand) {
+        // Traverse children
+        TreeNode node = (TreeNode) parent.getLastPathComponent();
+        if (node.getChildCount() >= 0) {
+            for (Enumeration e = node.children(); e.hasMoreElements();) {
+                TreeNode n = (TreeNode) e.nextElement();
+                TreePath path = parent.pathByAddingChild(n);
+                expandAll(tree, path, expand);
+            }
+        }
+
+        // Expansion or collapse must be done bottom-up
+        if (expand) {
+            tree.expandPath(parent);
+        } else {
+            tree.collapsePath(parent);
+        }
     }
 
 }

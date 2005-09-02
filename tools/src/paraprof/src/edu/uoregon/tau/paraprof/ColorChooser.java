@@ -88,16 +88,11 @@ public class ColorChooser implements WindowListener {
     }
 
     public int getNumberOfColors() {
-        int tmpInt = -1;
-        tmpInt = colors.size();
-
-        return tmpInt;
+        return colors.size();
     }
 
     public int getNumberOfGroupColors() {
-        int tmpInt = -1;
-        tmpInt = groupColors.size();
-        return tmpInt;
+        return groupColors.size();
     }
 
     public void addColor(Color color) {
@@ -109,10 +104,7 @@ public class ColorChooser implements WindowListener {
     }
 
     public Color getColor(int location) {
-        Color color = null;
-        color = (Color) colors.elementAt(location);
-
-        return color;
+        return (Color) colors.get(location);
     }
 
     public Vector getColors() {
@@ -175,37 +167,61 @@ public class ColorChooser implements WindowListener {
 
     //A function which sets the colors vector to be the default set.
     public void setDefaultColors() {
-        //Clear the colors vector.
         colors.clear();
 
-        //Add the default colors.
-        addColor(new Color(70, 156, 168));
+       
+        
+
+        addColor(new Color(115,165,255));
+        addColor(new Color(215, 0, 0));
+        addColor(new Color(70, 215, 70));
+        addColor(new Color(105, 17, 169));
         addColor(new Color(255, 153, 0));
-
-        addColor(new Color(0, 51, 255));
-
-        addColor(new Color(102, 0, 51));
-        addColor(new Color(221, 232, 30));
-        addColor(new Color(0, 255, 0));
-        addColor(new Color(121, 196, 144));
-        addColor(new Color(86, 88, 112));
-
-        addColor(new Color(151, 204, 255));
-        addColor(new Color(102, 102, 255));
-        addColor(new Color(0, 102, 102));
+        addColor(new Color(0, 0, 255));
         addColor(new Color(204, 255, 51));
-        addColor(new Color(102, 132, 25));
-        addColor(new Color(255, 204, 153));
-        addColor(new Color(204, 0, 204));
-        addColor(new Color(0, 102, 102));
-        addColor(new Color(204, 204, 255));
-        addColor(new Color(61, 104, 63));
-        addColor(new Color(102, 255, 255));
-        addColor(new Color(255, 102, 102));
-        addColor(new Color(119, 71, 145));
-        addColor(new Color(255, 204, 204));
-        addColor(new Color(240, 97, 159));
-        addColor(new Color(0, 102, 153));
+        addColor(new Color(0,227,154));
+        addColor(new Color(233, 107, 53));
+        addColor(new Color(204, 194, 220));
+        addColor(new Color(44, 238, 202));
+        addColor(new Color(30, 175, 141));
+        addColor(new Color(132, 127, 121));
+        addColor(new Color(246, 211, 47));
+
+        for (int i=0; i<50; i++) {
+            //addColor(new Color((i*i*777 + 85) % 255, ((i*i*i * 333) + 125) % 255, ((i * 666) + 205) % 255));
+            addColor(new Color((i*i*525) % 255, ((i*i*i * 33) + 125) % 255, ((i * 666) + 205) % 255));
+            //addColor(new Color((float)Math.random(),(float)Math.random(),(float)Math.random()));
+   
+        }
+//        
+//        //Add the default colors.
+//        addColor(new Color(70, 156, 168));
+//        addColor(new Color(255, 153, 0));
+//
+//        addColor(new Color(0, 51, 255));
+//
+//        addColor(new Color(102, 0, 51));
+//        addColor(new Color(221, 232, 30));
+//        addColor(new Color(0, 255, 0));
+//        addColor(new Color(121, 196, 144));
+//        addColor(new Color(86, 88, 112));
+//
+//        addColor(new Color(151, 204, 255));
+//        addColor(new Color(102, 102, 255));
+//        addColor(new Color(0, 102, 102));
+//        addColor(new Color(204, 255, 51));
+//        addColor(new Color(102, 132, 25));
+//        addColor(new Color(255, 204, 153));
+//        addColor(new Color(204, 0, 204));
+//        addColor(new Color(0, 102, 102));
+//        addColor(new Color(204, 204, 255));
+//        addColor(new Color(61, 104, 63));
+//        addColor(new Color(102, 255, 255));
+//        addColor(new Color(255, 102, 102));
+//        addColor(new Color(119, 71, 145));
+//        addColor(new Color(255, 204, 204));
+//        addColor(new Color(240, 97, 159));
+//        addColor(new Color(0, 102, 153));
     }
 
     //A function which sets the groupColors vector to be the default set.

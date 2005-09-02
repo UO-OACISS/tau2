@@ -13,9 +13,9 @@ import edu.uoregon.tau.paraprof.ParaProfTrial;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.6 2005/08/24 01:45:42 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.7 2005/09/02 00:22:01 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -32,9 +32,9 @@ public class CallPathModel extends AbstractTreeTableModel {
 
     public CallPathModel(TreeTableWindow window, ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread) {
         super(null);
-        root = new TreeTableNode(null, this, "root");
         this.window = window;
-
+        root = new TreeTableNode(null, this, "root");
+        
         dataSource = ppTrial.getDataSource();
         this.thread = thread;
         this.ppTrial = ppTrial;

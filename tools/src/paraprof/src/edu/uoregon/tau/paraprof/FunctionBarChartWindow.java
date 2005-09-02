@@ -2,8 +2,8 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -26,9 +26,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.3 2005/08/30 19:58:37 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.4 2005/09/02 00:22:01 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -47,7 +47,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     private JCheckBoxMenuItem sortByNameCheckBox;
     private JCheckBoxMenuItem descendingOrderCheckBox;
     private JCheckBoxMenuItem showValuesAsPercent;
-    private JCheckBoxMenuItem showPathTitleInReverse;
     private JCheckBoxMenuItem showMetaData;
     private JCheckBoxMenuItem showFindPanelBox;
 
@@ -143,6 +142,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     }
 
     public void addThread(ParaProfTrial ppTrial, Thread thread) {
+        ppTrial.getSystemEvents().addObserver(this);
+
         ComparisonBarChartModel comp = (ComparisonBarChartModel) model;
         comp.addThread(ppTrial, thread);
         comp.reloadData();
@@ -740,8 +741,14 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             
             if (comparisonChart) {
                 ParaProf.theComparisonWindow = null;
+                List trialList = ((ComparisonBarChartModel)model).getPpTrials();
+                for (Iterator it=trialList.iterator(); it.hasNext();) {
+                    ParaProfTrial trial = (ParaProfTrial)it.next();
+                    trial.getSystemEvents().deleteObserver(this);
+                }
+            } else {
+                ppTrial.getSystemEvents().deleteObserver(this);
             }
-            ppTrial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
             
         } catch (Exception e) {
@@ -778,6 +785,10 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     }
 
     public void keyTyped(KeyEvent e) {
+    }
+
+    public Function getPhase() {
+        return phase;
     }
 
 }

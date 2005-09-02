@@ -15,9 +15,9 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
 /**
  * A BarChartModel for displaying all functions for one thread.
  * 
- * <P>CVS $Id: ThreadBarChartModel.java,v 1.2 2005/08/26 01:49:03 amorris Exp $</P>
+ * <P>CVS $Id: ThreadBarChartModel.java,v 1.3 2005/09/02 00:22:01 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class ThreadBarChartModel extends AbstractBarChartModel {
 
@@ -42,7 +42,12 @@ public class ThreadBarChartModel extends AbstractBarChartModel {
 
     public String getRowLabel(int row) {
         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
-        return ppFunctionProfile.getFunctionName();
+
+        if (window.getPhase() != null) {
+            return UtilFncs.getRightSide(ppFunctionProfile.getFunctionName());
+        } else {
+            return ppFunctionProfile.getFunctionName();
+        }
     }
 
 

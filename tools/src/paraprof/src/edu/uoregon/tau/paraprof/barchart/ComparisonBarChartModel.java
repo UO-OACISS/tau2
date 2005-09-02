@@ -12,22 +12,32 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 
-//public class ComparisonBarChartModel extends AbstractBarChartModel {
+/**
+ * Compares threads from (potentially) any trial
+ * 
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.2 2005/09/02 00:22:01 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
     private List ppTrials = new ArrayList();
     private List threads = new ArrayList();
-    private ParaProfTrial selectedTrial; // we sort by this one
 
-    private Map blobMap = new HashMap(); // maps function names (Strings) to blobs
+    private Map rowMap = new HashMap(); // maps function names (Strings) to RowBlobs
+    private List rows = new ArrayList();
 
     private DataSorter dataSorter;
     private FunctionBarChartWindow window;
 
-    private static class Blob extends ArrayList {
+    private LegendModel legendModel;
+
+    // A RowBlob is the data needed for one row.  If we're comparing trial A to trial B, then
+    // a single RowBlob will contain two PPFunctionProfiles, one for each trial.
+    private static class RowBlob extends ArrayList {
         String functionName;
 
-        public Blob(String functionName) {
+        public RowBlob(String functionName) {
             this.functionName = functionName;
         }
 
@@ -59,7 +69,6 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
         addThread(ppTrial, thread);
     }
 
-    private LegendModel legendModel;
 
     public LegendModel getLegendModel() {
         if (legendModel == null) {
@@ -78,7 +87,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                 }
 
                 public Color getColor(int index) {
-                    return new Color((index*index*199 + 85) % 255, ((index * 337) + 135) % 255, ((index * 558) + 215) % 255);
+                    return ComparisonBarChartModel.this.getValueColor(0,index);
                 }
             };
         }
@@ -90,11 +99,10 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
         threads.add(thread);
     }
 
-    private List blobs = new ArrayList();
 
     public void reloadData() {
-        blobs.clear();
-        blobMap.clear();
+        rows.clear();
+        rowMap.clear();
 
         ParaProfTrial selectedTrial = (ParaProfTrial) ppTrials.get(0);
         Thread selectedThread = (Thread) threads.get(0);
@@ -104,10 +112,10 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         for (Iterator it = list.iterator(); it.hasNext();) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
-            Blob blob = new Blob(ppFunctionProfile.getFunctionName());
-            blobs.add(blob);
+            RowBlob blob = new RowBlob(ppFunctionProfile.getFunctionName());
+            rows.add(blob);
             blob.add(ppFunctionProfile);
-            blobMap.put(ppFunctionProfile.getFunctionName(), blob);
+            rowMap.put(ppFunctionProfile.getFunctionName(), blob);
         }
 
         // add all the others
@@ -121,12 +129,12 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             for (Iterator it = list.iterator(); it.hasNext();) {
                 PPFunctionProfile fp = (PPFunctionProfile) it.next();
                 if (ppTrial.displayFunction(fp.getFunction())) {
-                    Blob blob = (Blob) blobMap.get(fp.getFunction().getName());
+                    RowBlob blob = (RowBlob) rowMap.get(fp.getFunction().getName());
                     if (blob != null) {
                         blob.add(i, fp);
                     } else {
-                        blob = new Blob(fp.getFunctionName());
-                        blobMap.put(fp.getFunction(), blob);
+                        blob = new RowBlob(fp.getFunctionName());
+                        rowMap.put(fp.getFunction(), blob);
                         blob.add(i, fp);
 
                     }
@@ -139,11 +147,11 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     }
 
     public int getNumRows() {
-        return blobs.size();
+        return rows.size();
     }
 
     public int getSubSize() {
-        return ((List) blobs.get(0)).size();
+        return ((List) rows.get(0)).size();
     }
 
     public String getLabel(int row) {
@@ -152,7 +160,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     }
 
     public double getValue(int row, int subIndex) {
-        Blob blob = (Blob) blobs.get(row);
+        RowBlob blob = (RowBlob) rows.get(row);
         PPFunctionProfile ppFp = (PPFunctionProfile) blob.get(subIndex);
         if (ppFp == null) {
             return -1;
@@ -175,13 +183,14 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     }
 
     public String getRowLabel(int row) {
-        Blob blob = (Blob) blobs.get(row);
+        RowBlob blob = (RowBlob) rows.get(row);
         return blob.getFunctionName();
     }
 
     public Color getValueColor(int row, int subIndex) {
-        // TODO Auto-generated method stub
-        return new Color((subIndex*subIndex*199 + 85) % 255, ((subIndex * 337) + 135) % 255, ((subIndex * 558) + 215) % 255);
+        // we use the "default" colors for our legend and bars
+        List colorList = ParaProf.colorChooser.getColors();
+        return (Color)colorList.get(subIndex % colorList.size());
     }
 
     public Color getValueHighlightColor(int row, int subIndex) {
@@ -262,5 +271,17 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
         } catch (Exception e) {
             throw new RuntimeException("Exception while sleeping");
         }
+    }
+
+    public List getThreads() {
+        return threads;
+    }
+
+    public List getPpTrials() {
+        return ppTrials;
+    }
+
+    public void setThreads(List threads) {
+        this.threads = threads;
     }
 }
