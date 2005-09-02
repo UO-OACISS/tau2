@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.4 2005/09/02 00:22:01 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.5 2005/09/02 01:01:26 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, ImageExport, BarChartModelListener {
@@ -50,13 +50,13 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
     private boolean leftJustified;
 
     private int barLength = 400;
-    private int leftMargin = 5;
+    private int leftMargin = 8;
     private int rightMargin = 5;
     private int horizSpacing = 10;
     private int barVerticalSpacing = 4;
     private int barHeight;
 
-    private int topMargin = 5;
+    private int topMargin = 0;
 
     private int rowStart;
 
@@ -98,6 +98,7 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
         setOpaque(true);
 
         searcher = new Searcher(this, panel);
+        searcher.setTopMargin(topMargin);
         addMouseListener(searcher);
         addMouseMotionListener(searcher);
         setAutoscrolls(true);
@@ -360,7 +361,7 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
             g2D.setColor(Color.black);
             if (highlight != null) {
                 g2D.setColor(highlight);
-                g2D.drawRect(x + 1, y + 1, length - 2, height - 2);
+                g2D.drawRect(x + 1, y + 1, length - 2, height - 3);
             }
             g2D.drawRect(x, y, length, height - 1);
 
@@ -438,8 +439,6 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
         
         //System.out.println("rowHeight = " + rowHeight);
 
-        searcher.setLineHeight(rowHeight);
-        searcher.setMaxDescent(fontMetrics.getMaxDescent());
 
         int y = rowHeight + topMargin;
 
@@ -447,6 +446,10 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
             rowHeight = (rowHeight * model.getSubSize()) + 10;
         }
 
+        searcher.setLineHeight(rowHeight);
+        searcher.setMaxDescent(fontMetrics.getMaxDescent());
+
+        
         // this could be made faster, but the DrawObjects thing would have to change
         // the problem is that if I just redraw the clipRect, then there are objects on the screen
         // that weren't in the last draw, so we would have to keep track of them some other way

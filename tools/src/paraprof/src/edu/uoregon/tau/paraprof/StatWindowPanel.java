@@ -196,10 +196,12 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
         int yCoord = 0;
 
+        ParaProf.preferencesWindow.setBarDetails(g2D);
+        
         //In this window, a Monospaced font has to be used. This will probably
         // not be the same font as the rest of ParaProf. As a result, some extra work will
         // have to be done to calculate spacing.
-        int fontSize = ppTrial.getPreferencesWindow().getBarHeight();
+        int fontSize = ppTrial.getPreferencesWindow().getFontSize();
         spacing = ppTrial.getPreferencesWindow().getBarSpacing();
         monoFont = new Font("Monospaced", ppTrial.getPreferencesWindow().getFontStyle(), fontSize);
         fmMonoFont = g2D.getFontMetrics(monoFont);
@@ -338,9 +340,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             }
             
             
-            
-
-            String fullLine = statString + "   " + nameString;
             searcher.drawHighlights(g2D, xOffset, yCoord, i + 3);
 
             setStatStringColor(g2D, ppUserEventProfile, ppFunctionProfile);
@@ -348,7 +347,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
             g2D.setColor(nameColor);
             (new TextLayout(nameString, monoFont, frc)).draw(g2D, namePosition, yCoord);
-
         }
         //Resize the panel if needed.
         if ((newYPanelSize != yPanelSize) || (maxLinePixelWidth >= xPanelSize)) {
@@ -382,7 +380,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                         userEvent = ((PPUserEventProfile) clickedOnObject).getUserEvent();
 
                     Color tmpCol = userEvent.getColor();
-                    JColorChooser tmpJColorChooser = new JColorChooser();
                     tmpCol = JColorChooser.showDialog(this, "Please select a new color", tmpCol);
                     if (tmpCol != null) {
                         userEvent.setSpecificColor(tmpCol);
@@ -406,18 +403,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
     public void mouseClicked(MouseEvent evt) {
         try {
-
-            String tmpString = null;
-
-            //Get the location of the mouse.
-            //Get the location of the mouse.
-            int xCoord = evt.getX();
             int yCoord = evt.getY();
-
-            int fontSize = ppTrial.getPreferencesWindow().getBarHeight();
-
-            //Get the number of times clicked.
-            int clickCount = evt.getClickCount();
 
             int tmpInt1 = yCoord - startLocation;
             int tmpInt2 = tmpInt1 / spacing;

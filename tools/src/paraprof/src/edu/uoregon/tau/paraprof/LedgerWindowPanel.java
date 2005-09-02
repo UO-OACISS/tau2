@@ -16,11 +16,11 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.15 2005/08/25 20:48:48 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.16 2005/09/02 01:01:24 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -149,7 +149,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
         //Now safe to grab spacing and bar heights.
         barSpacing = ppTrial.getPreferencesWindow().getBarSpacing();
-        barHeight = ppTrial.getPreferencesWindow().getBarHeight();
+        barHeight = ppTrial.getPreferencesWindow().getFontSize();
 
         //Obtain the font and its metrics.
         Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(), ppTrial.getPreferencesWindow().getFontStyle(),

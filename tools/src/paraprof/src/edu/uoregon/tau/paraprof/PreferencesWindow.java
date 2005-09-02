@@ -381,9 +381,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         return barSpacing;
     }
 
-    public int getBarHeight() {
-        return barHeight;
-    }
+   
 
     //####################################
     //Interface code.

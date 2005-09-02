@@ -24,9 +24,9 @@ import edu.uoregon.tau.paraprof.interfaces.Searchable;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Searcher.java,v 1.6 2005/09/02 00:22:01 amorris Exp $</P>
+ * <P>CVS $Id: Searcher.java,v 1.7 2005/09/02 01:01:25 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class Searcher implements Searchable, MouseListener, MouseMotionListener, ClipboardOwner {
 
@@ -49,7 +49,9 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     private Graphics2D g2d;
     private int xOffset;
-
+    private int topMargin;
+    
+    
     // for selection
     private String selectionString = "";
     private boolean selectionReversed;
@@ -416,8 +418,8 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void mousePressed(MouseEvent e) {
         selectionStartX = e.getX();
-        selectionStartY = e.getY();
-        selectionStartLine = e.getY() / lineHeight;
+        selectionStartY = e.getY()-topMargin;
+        selectionStartLine = (e.getY()-topMargin) / lineHeight;
     }
 
     private void determineSelection() {
@@ -499,7 +501,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void mouseReleased(MouseEvent e) {
         selectionEndX = e.getX();
-        selectionEndY = e.getY();
+        selectionEndY = e.getY()-topMargin;
 
         if (selectionStartY < selectionEndY) {
             selectionStartLine = selectionStartY / lineHeight;
@@ -519,7 +521,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void mouseDragged(MouseEvent e) {
         selectionEndX = e.getX();
-        selectionEndY = e.getY() - maxDescent;
+        selectionEndY = (e.getY()-topMargin) - maxDescent;
 
         if (selectionStartY < selectionEndY) {
             selectionStartLine = selectionStartY / lineHeight;
@@ -565,6 +567,10 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void setMaxDescent(int maxDescent) {
         this.maxDescent = maxDescent;
+    }
+
+    public void setTopMargin(int topMargin) {
+        this.topMargin = topMargin;
     }
 
 }

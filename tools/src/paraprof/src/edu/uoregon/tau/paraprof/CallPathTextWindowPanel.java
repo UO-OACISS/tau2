@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.23 2005/08/25 20:48:46 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.24 2005/09/02 01:01:24 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.23 $
+ * @version	$Revision: 1.24 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -53,8 +53,6 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
     private int base = 20;
     private int startPosition = 0;
-    private int stringWidth = 0;
-    private int numCallsWidth = 0;
     private int excPos = 0;
     private int incPos = 0;
     private int callsPos1 = 0;
@@ -62,7 +60,6 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
     private int yHeightNeeded = 0;
     private int xWidthNeeded = 0;
 
-    private Object clickedOnObject = null;
 
     private int lastHeaderEndPosition = 0;
 
@@ -70,8 +67,6 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
     private String normalHeader = "      Exclusive        Inclusive      Calls/Tot.Calls     Name[id]";
     private String normalDashString = "      --------------------------------------------------------------------------------";
-
-    private JPopupMenu popup;
 
     public CallPathTextWindowPanel(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, CallPathTextWindow cPTWindow) {
 
@@ -264,116 +259,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
     }
 
-    private void createDrawObjectsCompleteStupid() {
-
-        drawObjectsComplete = new Vector(); //Add five spacer
-        // objects representing
-        // the column headings.
-        drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-        drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-        drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-        drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-
-        for (Iterator it = thread.getFunctionProfileIterator(); it.hasNext();) {
-            FunctionProfile fp = (FunctionProfile) it.next();
-            if (!(fp.isCallPathFunction())) {
-                Iterator l2 = fp.getParentProfiles();
-                while (l2.hasNext()) {
-                    FunctionProfile parent = (FunctionProfile) l2.next();
-                    CallPathDrawObject callPathDrawObject = new CallPathDrawObject(parent.getFunction(), true, false, false);
-                    drawObjectsComplete.add(callPathDrawObject);
-                }
-                CallPathDrawObject callPathDrawObject = new CallPathDrawObject(fp.getFunction(), false, false, false);
-                drawObjectsComplete.add(callPathDrawObject);
-                l2 = fp.getChildProfiles();
-                while (l2.hasNext()) {
-                    FunctionProfile child = (FunctionProfile) l2.next();
-                    callPathDrawObject = new CallPathDrawObject(child.getFunction(), false, true, false);
-                    drawObjectsComplete.add(callPathDrawObject);
-                }
-                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-            }
-        }
-
-    }
-
-    private void createDrawObjectsStupid() {
-
-        drawObjects = new Vector();
-        Vector holdingPattern = new Vector();
-        boolean adding = false;
-        int state = -1;
-        int size = -1;
-        if (window.showCollapsedView()) {
-            for (Enumeration e = drawObjectsComplete.elements(); e.hasMoreElements();) {
-                CallPathDrawObject callPathDrawObject = (CallPathDrawObject) e.nextElement();
-                if (callPathDrawObject.isSpacer())
-                    state = 0;
-                else if (callPathDrawObject.isParent()) {
-                    if (adding)
-                        state = 1;
-                    else
-                        state = 2;
-                } else if (callPathDrawObject.isChild()) {
-                    if (adding)
-                        state = 3;
-                    else
-                        state = 4;
-                } else {
-                    if (adding)
-                        state = 5;
-                    else
-                        state = 6;
-                }
-
-                switch (state) {
-                case 0:
-                    drawObjects.add(callPathDrawObject);
-                    break;
-                case 1:
-                    adding = false;
-                    holdingPattern.add(callPathDrawObject);
-                    break;
-                case 2:
-                    holdingPattern.add(callPathDrawObject);
-                    break;
-                case 3:
-                    drawObjects.add(callPathDrawObject);
-                    break;
-                case 5:
-                    //Transfer holdingPattern elements to drawObjects, then add this function to drawObjects.
-                    size = holdingPattern.size();
-                    for (int i = 0; i < size; i++)
-                        drawObjects.add(holdingPattern.elementAt(i));
-                    holdingPattern.clear();
-                    drawObjects.add(callPathDrawObject);
-                    //Now check to see if this object is expanded.
-                    if (callPathDrawObject.isExpanded())
-                        adding = true;
-                    else
-                        adding = false;
-                    break;
-                case 6:
-                    if (callPathDrawObject.isExpanded()) {
-                        //Transfer holdingPattern elements to drawObjects, then add this function to drawObjects.
-                        size = holdingPattern.size();
-                        for (int i = 0; i < size; i++)
-                            drawObjects.add(holdingPattern.elementAt(i));
-                        holdingPattern.clear();
-                        adding = true;
-                    } else {
-                        holdingPattern.clear();
-                    }
-                    drawObjects.add(callPathDrawObject);
-                    break;
-                default:
-                }
-            }
-        } else
-            drawObjects = drawObjectsComplete;
-
-    }
+   
 
     private void setSearchLines() {
         if (searcher.getSearchLines() == null) {
@@ -416,47 +302,19 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
         }
     }
 
-    private void setSearchLinesStupid() {
-        if (searcher.getSearchLines() == null) {
-            Vector searchLines = new Vector();
-            for (int i = 0; i < drawObjects.size(); i++) {
-                CallPathDrawObject callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
-
-                String line;
-                if (i == 1) {
-                    line = "    Name[id]";
-                } else if (i == 2) {
-                    line = "    --------------------------------------------------------------------------------";
-                } else if (!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()) {
-                    Function function = callPathDrawObject.getFunction();
-                    line = "--> " + callPathDrawObject.getName() + "[" + function.getID() + "]";
-                } else if (callPathDrawObject.isSpacer()) {
-                    line = " ";
-                } else {
-
-                    Function function = callPathDrawObject.getFunction();
-                    line = "    " + callPathDrawObject.getName() + "[" + function.getID() + "]";
-                }
-                searchLines.add(line);
-            }
-            searcher.setSearchLines(searchLines);
-        }
-    }
-
+   
     public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
-        int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
         int yCoord = 0;
 
         //In this window, a Monospaced font has to be used. This will
         // probably not be the same font as the rest of ParaProf. As a result, some extra work will
         // have to be done to calculate spacing.
 
-        int fontSize = ppTrial.getPreferencesWindow().getBarHeight();
         spacing = ppTrial.getPreferencesWindow().getBarSpacing();
 
         //Create font.
-        monoFont = new Font("Monospaced", ppTrial.getPreferencesWindow().getFontStyle(), fontSize);
+        monoFont = new Font("Monospaced", ppTrial.getPreferencesWindow().getFontStyle(), ParaProf.preferencesWindow.getFontSize());
         //Compute the font metrics.
         fontMetrics = g2D.getFontMetrics(monoFont);
         int maxFontAscent = fontMetrics.getMaxAscent();
@@ -473,20 +331,9 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
         //TODO: rewrite this crap
 
-        Iterator l1 = null;
-        Iterator l2 = null;
-        Iterator l3 = null;
-        String s = null;
-        List functionProfiles = null;
-        PPFunctionProfile ppFunctionProfile = null;
         CallPathDrawObject callPathDrawObject = null;
-        double d1 = 0.0;
-        double d2 = 0.0;
-        double d3 = 0;
 
         CallPathUtilFuncs.buildThreadRelations(ppTrial.getDataSource(), thread);
-
-        functionProfiles = thread.getFunctionProfiles();
 
         //Populate drawObjectsComplete vector.
         //This should only happen once.
@@ -633,9 +480,6 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
             //Get the location of the mouse.
             int xCoord = evt.getX();
             int yCoord = evt.getY();
-
-            //Get the number of times clicked.
-            int clickCount = evt.getClickCount();
 
             //Calculate which CallPathDrawObject was clicked on.
             int index = (yCoord - 1) / (ppTrial.getPreferencesWindow().getBarSpacing());

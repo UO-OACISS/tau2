@@ -38,7 +38,7 @@ public class LegendPanel extends JPanel {
         ParaProf.preferencesWindow.setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
-        int barHeight = ParaProf.preferencesWindow.getBarHeight();
+        int barHeight = ParaProf.preferencesWindow.getFontSize();
         int barVerticalSpacing = ParaProf.preferencesWindow.getBarSpacing() - barHeight;
 
         Font font = new Font(ParaProf.preferencesWindow.getParaProfFont(), ParaProf.preferencesWindow.getFontStyle(), ParaProf.preferencesWindow.getFontSize());

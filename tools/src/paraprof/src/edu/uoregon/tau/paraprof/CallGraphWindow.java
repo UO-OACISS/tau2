@@ -32,9 +32,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.33 2005/08/25 20:48:46 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.34 2005/09/02 01:01:23 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.33 $
+ * @version	$Revision: 1.34 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ImageExport, Printable, ParaProfWindow {
@@ -315,7 +315,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         // obtain the font and its metrics
         font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
-                ppTrial.getPreferencesWindow().getFontStyle(), ppTrial.getPreferencesWindow().getBarHeight());
+                ppTrial.getPreferencesWindow().getFontStyle(), ppTrial.getPreferencesWindow().getFontSize());
         FontMetrics fm = getFontMetrics(font);
 
         // set the box height to the font height + 5
@@ -1639,10 +1639,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     private void handlePrefEvent() {
 
-        Map attributeMap = new Hashtable();
-
         font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
-                ppTrial.getPreferencesWindow().getFontStyle(), ppTrial.getPreferencesWindow().getBarHeight());
+                ppTrial.getPreferencesWindow().getFontStyle(), ppTrial.getPreferencesWindow().getFontSize());
 
         this.setFont(font);
         FontMetrics fm = getFontMetrics(font);

@@ -26,9 +26,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.4 2005/09/02 00:22:01 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.5 2005/09/02 01:01:24 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -183,9 +183,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
         BarChart barChart = panel.getBarChart();
 
-        if (function != null) {
-            barChart.setLeftJustified(true);
-        }
+//        if (function != null) {
+//            barChart.setLeftJustified(true);
+//        }
 
         JScrollBar vScrollBar = panel.getVerticalScrollBar();
         vScrollBar.setUnitIncrement(35);

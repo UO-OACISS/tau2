@@ -35,7 +35,7 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
 
         //Set local spacing and bar heights.
         barSpacing = ParaProf.preferencesWindow.getBarSpacing();
-        barHeight = ParaProf.preferencesWindow.getBarHeight();
+        barHeight = ParaProf.preferencesWindow.getFontSize();
 
         //Set up the yCoord.
         yCoord = 25 + barHeight;
