@@ -23,11 +23,11 @@ import edu.uoregon.tau.dms.*;
 public class MpiPDataSource extends DataSource {
 
     private File file;
-    private LineData callsiteHeader = new LineData();
     private LineData callsiteData = new LineData();
     private String[] eventNames = null;
 
-    
+    private boolean levelInformationPresent;
+
     public MpiPDataSource(File file) {
         super();
         this.setMetrics(new ArrayList());
@@ -47,18 +47,12 @@ public class MpiPDataSource extends DataSource {
         Function function = null;
         FunctionProfile functionProfile = null;
 
-
         String inputString = null;
-        String s1 = null;
-        String s2 = null;
 
-        String tokenString;
-        String groupNamesString = null;
         StringTokenizer genericTokenizer;
 
-
         //System.out.println("Processing data file, please wait ......");
-        long time = System.currentTimeMillis();
+        //long time = System.currentTimeMillis();
 
         FileInputStream fileIn = new FileInputStream(file);
         InputStreamReader inReader = new InputStreamReader(fileIn);
@@ -113,6 +107,7 @@ public class MpiPDataSource extends DataSource {
             }
         }
 
+        // start from the top in case we couldn't find start and stop time
         fileIn = new FileInputStream(file);
         inReader = new InputStreamReader(fileIn);
         br = new BufferedReader(inReader);
@@ -121,12 +116,14 @@ public class MpiPDataSource extends DataSource {
         // find the callsite names
         while ((inputString = br.readLine()) != null) {
             if (inputString.startsWith("@--- Callsites:")) {
-                // System.out.print("Found callsites: ");
+
+                // inputString is typically 
+                // "@--- Callsites: 235 -------------------------------------------------------"
+                // we need to parse out that number, below is a poor, but working way to do it
+
                 genericTokenizer = new StringTokenizer(inputString, ":");
-                // left side
-                inputString = genericTokenizer.nextToken();
-                // right side
-                inputString = genericTokenizer.nextToken();
+                inputString = genericTokenizer.nextToken(); // left side
+                inputString = genericTokenizer.nextToken(); // right side
                 genericTokenizer = new StringTokenizer(inputString, " ");
                 // get the callsite count
                 eventCount = Integer.parseInt(genericTokenizer.nextToken());
@@ -135,31 +132,82 @@ public class MpiPDataSource extends DataSource {
                 // System.out.println(eventCount + " callsites found.");
                 // ignore the next two lines
                 br.readLine();
-                br.readLine();
+                inputString = br.readLine();
+
+                if (inputString.startsWith(" ID Lev File")) {
+                    levelInformationPresent = true;
+                }
+
                 // exit this while loop
                 break;
             }
         }
 
         if (inputString != null) {
-            // parse each of the event names
-            for (int i = 1; i <= eventCount; i++) {
-                inputString = br.readLine();
-                getCallsiteHeaders(inputString);
-                eventNames[i] = new String(callsiteHeader.s1 + " => " + "MPI_" + callsiteHeader.s0 + " file: "
-                        + callsiteHeader.s2 + " line:" + callsiteHeader.i1);
 
-                //eventNames[i] = new String(callsiteHeader.s1 + " => "
-                // + "MPI_" + callsiteHeader.s0);
+            inputString = br.readLine();
+            while (!inputString.startsWith("-------")) {
+                //getCallsiteHeaders(inputString);
+
+                StringTokenizer st1 = new StringTokenizer(inputString, " ");
+
+                int id, level, line;
+                String file, parent, mpiCall;
+
+                id = Integer.parseInt(st1.nextToken()); // callsite id
+                if (levelInformationPresent) {
+                    level = Integer.parseInt(st1.nextToken()); // Level
+                    file = st1.nextToken(); // Filename
+                    line = Integer.parseInt(st1.nextToken()); // Line
+
+                    parent = "";
+                    while (st1.hasMoreTokens()) {
+                        parent = parent + " " + st1.nextToken();
+                    }
+
+                    if (level == 0) {
+                        int loc = parent.lastIndexOf(" ");
+                        if (loc == -1) {
+                            throw new RuntimeException("Couldn't find MPI Call!");
+                        }
+                        mpiCall = parent.substring(loc + 1);
+                        parent = parent.substring(0, loc);
+
+                        eventNames[id] = parent + " [file:" + file + " line:" + line + "] => " + "MPI_" + mpiCall;
+
+                    } else {
+                        eventNames[id] = parent + " [file:" + file + " line:" + line + "] => " + eventNames[id];
+                    }
+
+                } else {
+                    level = 0;
+                    mpiCall = st1.nextToken();
+                    parent = st1.nextToken();
+                    file = st1.nextToken();
+                    line = Integer.parseInt(st1.nextToken());
+                    eventNames[id] = parent + " [file:" + file + " line:" + line + "] => " + "MPI_" + mpiCall;
+                    eventNames[id] = eventNames[id].trim();
+                }
+
+                inputString = br.readLine();
+
             }
+
+            //            
+            //            // parse each of the event names
+            //            for (int i = 1; i <= eventCount; i++) {
+            //                inputString = br.readLine();
+            //                getCallsiteHeaders(inputString);
+            //                eventNames[i] = new String(callSite.parent + " => " + "MPI_" + callSite.mpiCall + " file: "
+            //                        + callSite.file + " line:" + callSite.line);
+            //            }
         }
 
         // find the callsite data
         int eventDataCount = 0;
         while ((inputString = br.readLine()) != null) {
             // 0.9
-            //if (inputString.startsWith("@--- Callsite statistics")) {
-            if (inputString.startsWith("@--- Callsite Time statistics")) {
+            if (inputString.startsWith("@--- Callsite statistics") || inputString.startsWith("@--- Callsite Time statistics")) {
                 // exit this while loop
                 // System.out.print("Found callsite data: ");
                 genericTokenizer = new StringTokenizer(inputString, ":");
@@ -174,7 +222,8 @@ public class MpiPDataSource extends DataSource {
                 // lines found.");
                 // ignore the next two lines
                 br.readLine();
-                br.readLine();
+                inputString = br.readLine();
+
                 break;
             }
         }
@@ -212,7 +261,7 @@ public class MpiPDataSource extends DataSource {
                         functionProfile.setInclusivePercent(metric, callsiteData.d3);
                         functionProfile.setNumCalls(callsiteData.i2);
                         functionProfile.setNumSubr(0);
-                       
+
                     } else {
                         i = i - 1;
                     }
@@ -228,7 +277,7 @@ public class MpiPDataSource extends DataSource {
 
         if (startTime != null && stopTime != null) {
 
-            long inclusive = (stopTime.getTime() - startTime.getTime()) * 1000;
+            double inclusive = (stopTime.getTime() - startTime.getTime()) * 1000;
 
             function = this.addFunction(".MpiP.Application", 1);
 
@@ -249,6 +298,11 @@ public class MpiPDataSource extends DataSource {
                                 numSubroutines = numSubroutines + fp.getNumCalls();
                                 exclusive = exclusive - fp.getExclusive(metric);
                             }
+                        }
+
+                        if (exclusive < 0 || inclusive <= 0) {
+                            inclusive = Math.abs(exclusive);
+                            exclusive = 0;
                         }
 
                         double exclusivePercent = exclusive / inclusive;
@@ -281,29 +335,6 @@ public class MpiPDataSource extends DataSource {
         this.generateDerivedData();
     }
 
-
-    private void getCallsiteHeaders(String string) {
-        StringTokenizer st1 = new StringTokenizer(string, " ");
-        callsiteHeader.i0 = Integer.parseInt(st1.nextToken()); // callsite
-        // index
-
-        // 0.9
-        //callsiteHeader.s0 = st1.nextToken(); // MPI function
-        //callsiteHeader.s1 = st1.nextToken(); // Parent Function
-        //callsiteHeader.s2 = st1.nextToken(); // Filename
-        //callsiteHeader.i1 = Integer.parseInt(st1.nextToken()); // Line
-        //callsiteHeader.s3 = st1.nextToken(); // PC
-
-        int lev = Integer.parseInt(st1.nextToken()); // Lev, unknown
-        callsiteHeader.s2 = st1.nextToken(); // Filename
-        callsiteHeader.i1 = Integer.parseInt(st1.nextToken()); // Line
-        callsiteHeader.s1 = st1.nextToken(); // Parent Function
-        callsiteHeader.s0 = st1.nextToken(); // MPI function
-
-        //	    System.out.println ("function: " + callsiteHeader.s1);
-
-    }
-
     private void getCallsiteData(String string) {
         StringTokenizer st1 = new StringTokenizer(string, " ");
         callsiteData.s0 = st1.nextToken(); // MPI function
@@ -311,10 +342,11 @@ public class MpiPDataSource extends DataSource {
         // index
 
         String tmpString = st1.nextToken(); // rank
-        if (tmpString.equals("*"))
+        if (tmpString.equals("*")) {
             callsiteData.i1 = -1;
-        else
+        } else {
             callsiteData.i1 = Integer.parseInt(tmpString); // rank
+        }
         callsiteData.i2 = Integer.parseInt(st1.nextToken()); // count
         callsiteData.d0 = Double.parseDouble(st1.nextToken()); // Max
         callsiteData.d1 = Double.parseDouble(st1.nextToken()) * 1000; // Mean
