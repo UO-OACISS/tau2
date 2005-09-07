@@ -20,12 +20,12 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.5 2005/09/02 01:01:26 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.6 2005/09/07 22:24:05 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  * @see BarChartPanel
  */
-public class BarChart extends JPanel implements MouseListener, ImageExport, BarChartModelListener {
+public class BarChart extends JPanel implements MouseListener, BarChartModelListener {
 
     private BarChartModel model;
 
@@ -165,7 +165,7 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
             g.setColor(Color.white);
             g.fillRect(rect.x, rect.y, rect.width, rect.height);
 
-            export((Graphics2D) g, true, false, false);
+            export((Graphics2D) g, true, false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
             //            window.closeThisWindow();
@@ -211,23 +211,15 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
     }
 
     public void mouseEntered(MouseEvent e) {
-        // TODO Auto-generated method stub
-
     }
 
     public void mouseExited(MouseEvent e) {
-        // TODO Auto-generated method stub
-
     }
 
     public void mousePressed(MouseEvent e) {
-        // TODO Auto-generated method stub
-
     }
 
     public void mouseReleased(MouseEvent e) {
-        // TODO Auto-generated method stub
-
     }
 
     private int getMaxRowLabelStringWidth() {
@@ -381,22 +373,15 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
         }
     }
 
-    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow) {
+        
         rowLabelDrawObjects.clear();
         valueDrawObjects.clear();
 
-        //To make sure the bar details are set, this method must be called.
-        //ParaProf.preferencesWindow.setBarDetails(g2D);
-
-        //System.out.println("Requesting point size = " + barHeight);
-        Font font = new Font(ParaProf.preferencesWindow.getParaProfFont(), ParaProf.preferencesWindow.getFontStyle(),
-                ParaProf.preferences.getFontSize());
+        Font font = ParaProf.preferencesWindow.getFont();
         g2D.setFont(font);
         fontMetrics = g2D.getFontMetrics(font);
 
-        //Now safe to grab spacing and bar heights.
-        int fontSize = ParaProf.preferencesWindow.getFontSize();
 
         barVerticalSpacing = 0;
 
@@ -404,9 +389,7 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
         int maxDescent = fontMetrics.getMaxDescent();
         int maxAscent = fontMetrics.getMaxAscent();
         int leading = fontMetrics.getLeading();
-        barHeight = maxDescent + maxAscent + fontMetrics.getLeading() - 2;
-
-        //barHeight = maxAscent;
+        barHeight = maxDescent + maxAscent + leading - 2;
 
         //        System.out.println("\n");
         //        System.out.println("getHeight = " + fontMetrics.getHeight());
@@ -429,12 +412,12 @@ public class BarChart extends JPanel implements MouseListener, ImageExport, BarC
         //        System.out.println("getMaxValueLabelStringWidth() = " + getMaxValueLabelStringWidth());
         //        System.out.println("barlength = " + barLength);
         //        System.out.println("fulcrum = " + fulcrum);
+        
+        // we want the bar to be in the middle of the text
         int barOffset = (int) (maxAscent - (((float) maxDescent + maxAscent + leading) - barHeight) / 2);
 
         checkPreferredSize();
 
-        //int rowHeight = maxDescent + maxAscent + barVerticalSpacing;
-        //int rowHeight = maxDescent + maxAscent + leading;
         int rowHeight = fontHeight;
         
         //System.out.println("rowHeight = " + rowHeight);

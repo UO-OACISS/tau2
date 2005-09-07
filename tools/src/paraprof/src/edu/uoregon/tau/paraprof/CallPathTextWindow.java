@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.interfaces.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.30 2005/08/25 20:48:46 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.31 2005/09/07 22:24:03 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.30 $
+ * @version	$Revision: 1.31 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -424,8 +424,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
             jTextArea.addKeyListener(this);
-            PreferencesWindow p = ppTrial.getPreferencesWindow();
-            jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
+            jTextArea.setFont(ParaProf.preferencesWindow.getFont());
             jTextArea.append(this.getHeaderString());
             sp.setColumnHeaderView(jTextArea);
         } else
@@ -450,7 +449,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public void showSearchPanel(boolean show) {
-        // TODO Auto-generated method stub
         if (show) {
             if (searchPanel == null) {
                 searchPanel = new SearchPanel(this, panel.getSearcher());
@@ -487,13 +485,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public void keyReleased(KeyEvent e) {
-        // TODO Auto-generated method stub
-
     }
 
     public void keyTyped(KeyEvent e) {
-        // TODO Auto-generated method stub
-
     }
 
     public void setUnits(int units) {
@@ -501,5 +495,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         this.setHeader();
         panel.repaint();
         
+    }
+
+    public JScrollPane getScrollPane() {
+        return sp;
     }
 }

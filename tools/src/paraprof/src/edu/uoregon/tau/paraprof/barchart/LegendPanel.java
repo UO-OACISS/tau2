@@ -34,16 +34,16 @@ public class LegendPanel extends JPanel {
     
     private void draw(Graphics2D g2D) {
         
-        //To make sure the bar details are set, this method must be called.
-        ParaProf.preferencesWindow.setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
         int barHeight = ParaProf.preferencesWindow.getFontSize();
-        int barVerticalSpacing = ParaProf.preferencesWindow.getBarSpacing() - barHeight;
 
-        Font font = new Font(ParaProf.preferencesWindow.getParaProfFont(), ParaProf.preferencesWindow.getFontStyle(), ParaProf.preferencesWindow.getFontSize());
+        Font font = ParaProf.preferencesWindow.getFont();
         g2D.setFont(font);
         FontMetrics fontMetrics = g2D.getFontMetrics(font);
+
+        int barVerticalSpacing = fontMetrics.getHeight() - barHeight;
+        
 
         int y = barVerticalSpacing;
         for (int i = 0; i < model.getNumElements(); i++) {

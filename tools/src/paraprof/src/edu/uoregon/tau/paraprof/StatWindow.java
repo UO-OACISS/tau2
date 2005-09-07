@@ -498,7 +498,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             jTextArea.setEditable(false);
             jTextArea.addKeyListener(this);
             PreferencesWindow p = ppTrial.getPreferencesWindow();
-            jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
+            jTextArea.setFont(ParaProf.preferencesWindow.getFont());
             jTextArea.append(this.getHeaderString());
             jScrollpane.setColumnHeaderView(jTextArea);
         } else

@@ -31,23 +31,17 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
     private Preferences preferences;
 
-    // computed on each execution
-    private int barSpacing = 0;
-    private int barHeight = 0;
-    private boolean barDetailsSet = false;
-
-    private String paraProfFont = "SansSerif";
+    private String fontName = "SansSerif";
     private int fontStyle = Font.PLAIN;
     private int fontSize = 12;
+    private Font font;
 
-    JComboBox unitsBox;
-    JCheckBox showValuesAsPercentBox = new JCheckBox("Show Values as Percent");
-    JCheckBox showPathTitleInReverseBox = new JCheckBox("Show Path Title in Reverse");
-    JCheckBox reverseCallPathsBox = new JCheckBox("Reverse Call Paths");
-    JCheckBox meanIncludeNullBox = new JCheckBox("<html>Interpret threads that do not call a given function as a 0 value for statistics computation</html>");
-    
-    
-
+    private JComboBox unitsBox;
+    private JCheckBox showValuesAsPercentBox = new JCheckBox("Show Values as Percent");
+    private JCheckBox showPathTitleInReverseBox = new JCheckBox("Show Path Title in Reverse");
+    private JCheckBox reverseCallPathsBox = new JCheckBox("Reverse Call Paths");
+    private JCheckBox meanIncludeNullBox = new JCheckBox(
+            "<html>Interpret threads that do not call a given function as a 0 value for statistics computation</html>");
 
     public PreferencesWindow(Preferences preferences) {
         this.preferences = preferences;
@@ -57,15 +51,14 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         items[1] = "Milliseconds";
         items[2] = "Seconds";
         items[3] = "hr:mm:ss";
-        unitsBox = new JComboBox(items); 
+        unitsBox = new JComboBox(items);
 
         meanIncludeNullBox.setToolTipText("<html>There are two methods for computing the mean for a given function over all threads:<br>1. Add up the values for that function for each thread and divide by the total number of threads.<br>2. Add up the values for that function for each thread and divide by the number of threads that actually called that function.<br><br>This has the effect that if a particular function is only called by 2 threads:<br>The first method will show the mean value as 1/N where N is the total number of threads.<br>The second method will only divide by 2.<br><br>This option also affects standard deviation computation.");
         reverseCallPathsBox.setToolTipText("<html>If this option is enabled, call path names will be shown in reverse<br>(e.g. \"C &lt;= B &lt;= A\" vs. \"A =&gt; B =&gt; C\")");
-        
-        
+
         if (preferences.getLoaded()) {
             // Set preferences based on saved values.
-            paraProfFont = preferences.getParaProfFont();
+            fontName = preferences.getFontName();
             fontStyle = preferences.getFontStyle();
             fontSize = preferences.getFontSize();
             unitsBox.setSelectedIndex(preferences.getUnits());
@@ -75,8 +68,6 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             meanIncludeNullBox.setSelected(!preferences.getComputeMeanWithoutNulls());
         }
 
-        //meanIncludeNullBox.setT
-        //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 thisWindowClosing(evt);
@@ -102,12 +93,6 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
         //There is really no need to resize this window.
         setResizable(true);
-
-        //Grab the screen size.
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        Dimension screenDimension = tk.getScreenSize();
-        int screenHeight = screenDimension.height;
-        int screenWidth = screenDimension.width;
 
         //Set the window to come up in the center of the screen.
         int xPosition = 0;
@@ -148,7 +133,6 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         JPanel fontPanel = new JPanel();
         fontPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Font"));
         fontPanel.setLayout(new GridBagLayout());
-        
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
@@ -180,37 +164,29 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         gbc.weighty = 0.25;
         ParaProfUtils.addCompItem(fontPanel, barHeightSlider, gbc, 1, 2, 1, 1);
 
-
-
-
         JPanel defaultsPanel = new JPanel();
         defaultsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Window defaults"));
         defaultsPanel.setLayout(new GridBagLayout());
 
-        
         JLabel unitsLabel = new JLabel("Units");
-        
-        
+
         ParaProfUtils.addCompItem(defaultsPanel, unitsLabel, gbc, 0, 0, 1, 1);
         ParaProfUtils.addCompItem(defaultsPanel, unitsBox, gbc, 1, 0, 1, 1);
         ParaProfUtils.addCompItem(defaultsPanel, showValuesAsPercentBox, gbc, 0, 1, 2, 1);
-        
-        
+
         JPanel settingsPanel = new JPanel();
         settingsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Settings"));
         settingsPanel.setLayout(new GridBagLayout());
         ParaProfUtils.addCompItem(settingsPanel, showPathTitleInReverseBox, gbc, 0, 2, 2, 1);
         ParaProfUtils.addCompItem(settingsPanel, reverseCallPathsBox, gbc, 0, 3, 2, 1);
         ParaProfUtils.addCompItem(settingsPanel, meanIncludeNullBox, gbc, 0, 4, 2, 1);
-        
-        
+
         gbc.fill = GridBagConstraints.BOTH;
-        
+
         addCompItem(fontPanel, gbc, 0, 0, 1, 1);
         addCompItem(defaultsPanel, gbc, 0, 1, 1, 1);
         addCompItem(settingsPanel, gbc, 1, 1, 1, 1);
 
-        
         JButton defaultButton = new JButton("Restore Defaults");
         defaultButton.addActionListener(this);
         gbc.fill = GridBagConstraints.NONE;
@@ -243,13 +219,13 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         setSavedPreferences();
 
     }
-    
+
     void setControls() {
         int tmpInt = fontComboBox.getItemCount();
         int counter = 0;
         //We should always have some fonts available, so this should be safe.
         String tmpString = (String) fontComboBox.getItemAt(counter);
-        while ((counter < tmpInt) && (!(paraProfFont.equals(tmpString)))) {
+        while ((counter < tmpInt) && (!(fontName.equals(tmpString)))) {
             counter++;
             tmpString = (String) fontComboBox.getItemAt(counter);
         }
@@ -262,8 +238,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         }
 
         bold.setSelected((fontStyle == Font.BOLD) || (fontStyle == (Font.BOLD | Font.ITALIC)));
-        italic.setSelected((fontStyle == (Font.PLAIN | Font.ITALIC))
-                || (fontStyle == (Font.BOLD | Font.ITALIC)));
+        italic.setSelected((fontStyle == (Font.PLAIN | Font.ITALIC)) || (fontStyle == (Font.BOLD | Font.ITALIC)));
         barHeightSlider.setValue(fontSize);
     }
 
@@ -313,22 +288,30 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     public void showPreferencesWindow(Component invoker) {
         //The path to data might have changed, therefore, reset the title.
         this.setTitle("ParaProf Preferences");
-        this.setLocation(WindowPlacer.getNewLocation(this,invoker));
+        this.setLocation(WindowPlacer.getNewLocation(this, invoker));
         this.show();
     }
-    
+
     public void loadSavedPreferences() {
         this.preferences = ParaProf.preferences;
         if (preferences.getLoaded()) {
             // Set preferences based on saved values.
-            paraProfFont = preferences.getParaProfFont();
+            fontName = preferences.getFontName();
             fontStyle = preferences.getFontStyle();
             fontSize = preferences.getFontSize();
+            font = null;
         }
     }
 
+    public Font getFont() {
+        if (font == null) {
+            font = new Font(fontName, fontStyle, fontSize);
+        }
+        return font;
+    }
+
     public void setSavedPreferences() {
-        ParaProf.preferences.setParaProfFont(paraProfFont);
+        ParaProf.preferences.setFontName(fontName);
         ParaProf.preferences.setFontStyle(fontStyle);
         ParaProf.preferences.setFontSize(fontSize);
         ParaProf.preferences.setUnits(unitsBox.getSelectedIndex());
@@ -338,12 +321,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setComputeMeanWithoutNulls(!meanIncludeNullBox.isSelected());
     }
 
-    public boolean areBarDetailsSet() {
-        return barDetailsSet;
-    }
-
-    public String getParaProfFont() {
-        return paraProfFont;
+    public String getFontName() {
+        return fontName;
     }
 
     public int getFontStyle() {
@@ -354,42 +333,16 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         return fontSize;
     }
 
-    public void setBarDetails(Graphics2D g2D) {
-        if (!barDetailsSet) {
-            Font font = new Font(paraProfFont, fontStyle, fontSize);
-            g2D.setFont(font);
-            FontMetrics fmFont = g2D.getFontMetrics(font);
-            int maxFontAscent = fmFont.getAscent();
-            int maxFontDescent = fmFont.getMaxDescent();
-            this.barHeight = maxFontAscent;
-            this.barSpacing = maxFontAscent + maxFontDescent + 2;
-            barDetailsSet = true;
-        }
-    }
-
     public void setFontSize(int fontSize) {
         this.fontSize = fontSize;
-        barDetailsSet = false;
+        font = null;
     }
 
     public void updateFontSize() {
         fontSize = Math.max(1, barHeightSlider.getValue());
-        barDetailsSet = false;
+        font = null;
     }
 
-    public int getBarSpacing() {
-        return barSpacing;
-    }
-
-   
-
-    //####################################
-    //Interface code.
-    //####################################
-
-    //######
-    //ActionListener.
-    //######
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
@@ -414,8 +367,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                         try {
                             ParaProf.loadPreferences(file);
                         } catch (Exception e) {
-                            JOptionPane.showMessageDialog(this, "Error loading preferences!",
-                                    "ParaProf Preferences", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(this, "Error loading preferences!", "ParaProf Preferences",
+                                    JOptionPane.ERROR_MESSAGE);
 
                         }
                         loadSavedPreferences();
@@ -433,8 +386,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                         File file = fileChooser.getSelectedFile();
 
                         if (ParaProf.savePreferences(file) == false) {
-                            JOptionPane.showMessageDialog(this, "Error Saving preferences!",
-                                    "ParaProf Preferences", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(this, "Error Saving preferences!", "ParaProf Preferences",
+                                    JOptionPane.ERROR_MESSAGE);
                         }
                     }
 
@@ -473,19 +426,19 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     prefSpacingPanel.repaint();
                 }
             } else if (EventSrc == fontComboBox) {
-                paraProfFont = (String) fontComboBox.getSelectedItem();
+                fontName = (String) fontComboBox.getSelectedItem();
                 prefSpacingPanel.repaint();
             } else if (EventSrc instanceof JButton) {
                 if (arg.equals("Apply")) {
                     apply();
                 } else if (arg.equals("Cancel")) {
                     setVisible(false);
-                    paraProfFont = preferences.getParaProfFont();
+                    fontName = preferences.getFontName();
                     fontStyle = preferences.getFontStyle();
                     fontSize = preferences.getFontSize();
                     setControls();
                 } else if (arg.equals("Restore Defaults")) {
-                    paraProfFont = "SansSerif";
+                    fontName = "SansSerif";
                     fontStyle = Font.PLAIN;
                     fontSize = 12;
                     unitsBox.setSelectedIndex(0);
@@ -507,13 +460,13 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         if (reverseCallPathsBox.isSelected() != ParaProf.preferences.getReversedCallPaths()) {
             needDataEvent = true;
         }
-        
+
         if (meanIncludeNullBox.isSelected() == ParaProf.preferences.getComputeMeanWithoutNulls()) {
             needDataEvent = true;
             DataSource.setMeanIncludeNulls(meanIncludeNullBox.isSelected());
             ParaProf.paraProfManagerWindow.recomputeStats();
         }
-        
+
         setSavedPreferences();
         Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
         for (Iterator it = trials.iterator(); it.hasNext();) {
@@ -522,7 +475,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
         }
     }
-    
+
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
         if (tmpString.equals("colorEvent")) {
@@ -560,7 +513,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     // Close the window when the close box is clicked
     void thisWindowClosing(java.awt.event.WindowEvent e) {
         setVisible(false);
-        paraProfFont = preferences.getParaProfFont();
+        fontName = preferences.getFontName();
         fontStyle = preferences.getFontStyle();
         fontSize = preferences.getFontSize();
         setControls();

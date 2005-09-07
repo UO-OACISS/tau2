@@ -32,9 +32,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.34 2005/09/02 01:01:23 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.35 2005/09/07 22:24:03 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.34 $
+ * @version	$Revision: 1.35 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ImageExport, Printable, ParaProfWindow {
@@ -314,8 +314,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         this.getContentPane().setLayout(gbl);
 
         // obtain the font and its metrics
-        font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
-                ppTrial.getPreferencesWindow().getFontStyle(), ppTrial.getPreferencesWindow().getFontSize());
+        font = ParaProf.preferencesWindow.getFont();
         FontMetrics fm = getFontMetrics(font);
 
         // set the box height to the font height + 5
@@ -1639,7 +1638,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     private void handlePrefEvent() {
 
-        font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
+        font = new Font(ppTrial.getPreferencesWindow().getFontName(),
                 ppTrial.getPreferencesWindow().getFontStyle(), ppTrial.getPreferencesWindow().getFontSize());
 
         this.setFont(font);

@@ -19,15 +19,14 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.16 2005/08/25 20:48:47 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.17 2005/09/07 22:24:04 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  * @see		HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
         UnitListener {
 
-    // instance data
     private ParaProfTrial ppTrial = null;
     private DataSorter dataSorter = null;
     private Function function = null;
@@ -103,7 +102,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
         JMenu subMenu = null;
-        JMenuItem menuItem = null;
 
         // options menu
         JMenu optionsMenu = new JMenu("Options");
@@ -112,7 +110,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         slidersCheckBox.addActionListener(this);
         optionsMenu.add(slidersCheckBox);
 
-        JCheckBoxMenuItem box = null;
         ButtonGroup group = null;
         JRadioButtonMenuItem button = null;
 
@@ -329,8 +326,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         jTextArea.setLineWrap(true);
         jTextArea.setWrapStyleWord(true);
         jTextArea.setEditable(false);
-        PreferencesWindow p = ppTrial.getPreferencesWindow();
-        jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
+        jTextArea.setFont(ParaProf.preferencesWindow.getFont());
         jTextArea.append(this.getHeaderString());
         sp.setColumnHeaderView(jTextArea);
     }

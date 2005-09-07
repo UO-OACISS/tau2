@@ -158,6 +158,8 @@ public class ParaProfUtils {
         return helpMenu;
     }
 
+    
+    
     public static JMenu createFileMenu(final ParaProfWindow window, final Printable printable, final Object panel) {
 
         if (printable == null) {
@@ -168,7 +170,6 @@ public class ParaProfUtils {
             public void actionPerformed(ActionEvent evt) {
 
                 try {
-                    Object EventSrc = evt.getSource();
 
                     String arg = evt.getActionCommand();
 
@@ -180,8 +181,7 @@ public class ParaProfUtils {
                     } else if (arg.equals("Save Image")) {
 
                         if (panel instanceof ImageExport) {
-                            ImageExport ppImageInterface = (ImageExport) panel;
-                            ParaProfImageOutput.saveImage(ppImageInterface);
+                            ParaProfImageOutput.saveImage((ImageExport) panel);
                         } else if (panel instanceof ThreeDeeWindow) {
                             ThreeDeeWindow threeDeeWindow = (ThreeDeeWindow) panel;
                             ParaProfImageOutput.save3dImage(threeDeeWindow);
@@ -189,6 +189,14 @@ public class ParaProfUtils {
                             throw new ParaProfException("Don't know how to \"Save Image\" for " + panel.getClass());
                         }
 
+                    } else if (arg.equals("Save as SVG")) {
+                        if (panel instanceof ImageExport) {
+                            JVMDependent.exportSVG((ImageExport)panel);
+                        } else if (panel instanceof ThreeDeeWindow) {
+                            JOptionPane.showMessageDialog((JFrame)window, "Can't save 3D visualization as SVG");
+                        } else {
+                            throw new ParaProfException("Don't know how to \"Save as SVG\" for " + panel.getClass());
+                        }
                     } else if (arg.equals("Close This Window")) {
                         window.closeThisWindow();
                     } else if (arg.equals("Exit ParaProf!")) {
@@ -207,6 +215,9 @@ public class ParaProfUtils {
         subMenu.getPopupMenu().setLightWeightPopupEnabled(false);
 
         JMenuItem menuItem = new JMenuItem("Save Image");
+        menuItem.addActionListener(actionListener);
+        subMenu.add(menuItem);
+        menuItem = new JMenuItem("Save as SVG");
         menuItem.addActionListener(actionListener);
         subMenu.add(menuItem);
         fileMenu.add(subMenu);
@@ -286,7 +297,6 @@ public class ParaProfUtils {
             public void actionPerformed(ActionEvent evt) {
 
                 try {
-                    Object EventSrc = evt.getSource();
 
                     String arg = evt.getActionCommand();
 
@@ -360,8 +370,6 @@ public class ParaProfUtils {
                 if (fSelector.choose()) {
                     Function selectedFunction = (Function) fSelector.getSelectedObject();
 
-                    Object EventSrc = evt.getSource();
-
                     String arg = evt.getActionCommand();
 
                     if (arg.equals("Bar Chart")) {
@@ -384,7 +392,6 @@ public class ParaProfUtils {
 
         ActionListener tActionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                Object EventSrc = evt.getSource();
                 String arg = evt.getActionCommand();
 
                 List list = new ArrayList(ppTrial.getDataSource().getAllThreads());
@@ -504,7 +511,6 @@ public class ParaProfUtils {
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
-                    Object EventSrc = evt.getSource();
 
                     String arg = evt.getActionCommand();
 
@@ -739,10 +745,7 @@ public class ParaProfUtils {
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
-                    Object EventSrc = evt.getSource();
-
                     String arg = evt.getActionCommand();
-
                     if (arg.equals("Microseconds")) {
                         unitListener.setUnits(0);
                     } else if (arg.equals("Milliseconds")) {

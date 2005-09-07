@@ -196,17 +196,15 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
         int yCoord = 0;
 
-        ParaProf.preferencesWindow.setBarDetails(g2D);
-        
         //In this window, a Monospaced font has to be used. This will probably
         // not be the same font as the rest of ParaProf. As a result, some extra work will
         // have to be done to calculate spacing.
         int fontSize = ppTrial.getPreferencesWindow().getFontSize();
-        spacing = ppTrial.getPreferencesWindow().getBarSpacing();
         monoFont = new Font("Monospaced", ppTrial.getPreferencesWindow().getFontStyle(), fontSize);
         fmMonoFont = g2D.getFontMetrics(monoFont);
         maxFontAscent = fmMonoFont.getMaxAscent();
         maxFontDescent = fmMonoFont.getMaxDescent();
+        spacing = fmMonoFont.getHeight();
         g2D.setFont(monoFont);
         FontRenderContext frc = g2D.getFontRenderContext();
 

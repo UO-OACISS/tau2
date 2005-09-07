@@ -37,8 +37,10 @@ public class ParaProfImageFormatFileFilter extends javax.swing.filechooser.FileF
             return "PNG File (*.png)";
         else if (extension.equals("ppk"))
             return "ParaProf Packed Profile (*.ppk)";
+        else if (extension.equals("svg"))
+            return "Scalable Vector Graphics (*.svg)";
         else
-            return "Unknown Extension (*.";
+            return "Unknown Extension (*.*)";
     }
 
     public String toString() {
@@ -68,6 +70,7 @@ public class ParaProfImageFormatFileFilter extends javax.swing.filechooser.FileF
     static String JPG = "jpg";
     static String PNG = "png";
     static String PPK = "ppk";
+    static String SVG = "svg";
     //####################################
     //End - Instance Data.
     //####################################

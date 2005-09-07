@@ -40,6 +40,11 @@ CC-OLD=javac
 
 NOW = $(shell date)
 
+
+CP_CORE = $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar
+CP13 = $(CP_CORE):$(TOOLS_SRC)/contrib/jgraph-1.3.jar
+CP14 = $(CP_CORE):$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/vis/bin/vis.jar
+
 new: $(TOOLS_SRC)/paraprof/bin/ParaProf.jar
 
 old: ../bin/ParaProf-Old.jar
@@ -49,7 +54,7 @@ wrapper/ParaProf.java : ParaProf.java
 
 $(TOOLS_SRC)/paraprof/bin/ParaProf.jar: $(NEW_SOURCES)
 	rm -f ./paraprof/*.class
-	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar::$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/vis/bin/vis.jar $(NEW_SOURCES)
+	$(CC) -d ./classes -classpath $(CP14) $(NEW_SOURCES)
 	cp ./resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	cd classes; jar -cvf ParaProf.jar edu
 	mv ./classes/ParaProf.jar $(TOOLS_SRC)/paraprof/bin
@@ -58,7 +63,7 @@ $(TOOLS_SRC)/paraprof/bin/ParaProf.jar: $(NEW_SOURCES)
 
 ../bin/ParaProf-Old.jar: $(OLD_SOURCES)
 	rm -f ./paraprof/*.class
-	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/jgraph-1.3.jar $(OLD_SOURCES)
+	$(CC) -d ./classes -classpath $(CP13) $(OLD_SOURCES)
 	cd classes; jar -cvf ParaProf-Old.jar edu
 	mv ./classes/ParaProf-Old.jar $(TOOLS_SRC)/paraprof/bin
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf-Old.jar

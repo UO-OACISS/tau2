@@ -30,21 +30,18 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
         int tmpYPanelSize = 0;
         Graphics2D g2D = (Graphics2D) g;
 
-        //To make sure the bar details are set, this method must be called.
-        ParaProf.preferencesWindow.setBarDetails(g2D);
 
         //Set local spacing and bar heights.
-        barSpacing = ParaProf.preferencesWindow.getBarSpacing();
         barHeight = ParaProf.preferencesWindow.getFontSize();
 
         //Set up the yCoord.
         yCoord = 25 + barHeight;
 
         //Create font.
-        Font font = new Font(ParaProf.preferencesWindow.getParaProfFont(), ParaProf.preferencesWindow.getFontStyle(),
-                barHeight);
+        Font font = ParaProf.preferencesWindow.getFont();
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
+        barSpacing = fmFont.getHeight();
 
         //calculate the maximum string width.
         int maxStringWidth = 0;

@@ -235,7 +235,7 @@ class ColorMapCellRenderer implements ListCellRenderer {
                 barHeight = 12;
 
                 //Create font.
-                Font font = new Font(ParaProf.preferencesWindow.getParaProfFont(), Font.PLAIN, barHeight);
+                Font font = new Font("SansSerif", Font.PLAIN, barHeight);
                 g.setFont(font);
                 FontMetrics fmFont = g.getFontMetrics(font);
 
@@ -292,7 +292,7 @@ class ColorMapCellRenderer implements ListCellRenderer {
                 int barHeight = 12;
 
                 //Create font.
-                Font font = new Font(ParaProf.preferencesWindow.getParaProfFont(), Font.PLAIN, barHeight);
+                Font font = new Font(ParaProf.preferencesWindow.getFontName(), Font.PLAIN, barHeight);
                 Graphics g = getGraphics();
                 FontMetrics fmFont = g.getFontMetrics(font);
 

@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * HistogramWindowPanel
  * This is the panel for the HistogramWindow.
  *  
- * <P>CVS $Id: HistogramWindowPanel.java,v 1.12 2005/06/17 22:13:47 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindowPanel.java,v 1.13 2005/09/07 22:24:04 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		HistogramWindow
  */
 public class HistogramWindowPanel extends JPanel implements Printable, ImageExport {
@@ -186,8 +186,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ImageExpo
 
         processData();
 
-        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
-                ppTrial.getPreferencesWindow().getFontStyle(), ppTrial.getPreferencesWindow().getFontSize());
+        Font font = ParaProf.preferencesWindow.getFont();
         g2D.setFont(font);
         FontMetrics fontMetrics = g2D.getFontMetrics(font);
 
@@ -210,13 +209,13 @@ public class HistogramWindowPanel extends JPanel implements Printable, ImageExpo
                 float y = insets.right;
                 while (lbm.getPosition() < aci.getEndIndex()) {
                     TextLayout textLayout = lbm.nextLayout(wrappingWidth);
-                    yOffset += ppTrial.getPreferencesWindow().getBarSpacing();
+                    yOffset += fontMetrics.getHeight();
                     textLayout.draw(g2D, x, yOffset);
                     x = insets.left;
                 }
             }
             lastHeaderEndPosition = yOffset;
-            yOffset = yOffset + ppTrial.getPreferencesWindow().getBarSpacing();
+            yOffset = yOffset + fontMetrics.getHeight();
         }
 
         int maxFontAscent = fontMetrics.getMaxAscent();
@@ -299,7 +298,6 @@ public class HistogramWindowPanel extends JPanel implements Printable, ImageExpo
 
         int tmpXPanelSize = Math.max(xPanelSize, lastHeaderEndPosition);
         int tmpYPanelSize = 420 + yOffset;
-        boolean sizeChange = false;
         if (tmpXPanelSize != xPanelSize || tmpYPanelSize != yPanelSize) {
             xPanelSize = tmpXPanelSize;
             yPanelSize = tmpYPanelSize;

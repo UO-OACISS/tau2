@@ -26,9 +26,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.5 2005/09/02 01:01:24 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.6 2005/09/07 22:24:04 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -589,8 +589,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
-            PreferencesWindow p = ppTrial.getPreferencesWindow();
-            jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
+            jTextArea.setFont(ParaProf.preferencesWindow.getFont());
             jTextArea.append(this.getHeaderString());
             jTextArea.addKeyListener(this);
 

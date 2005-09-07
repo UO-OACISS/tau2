@@ -22,22 +22,17 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.2 2005/08/26 01:49:02 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.3 2005/09/07 22:24:04 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
-
-    private int userEventLedgerIndex;
-    private int groupLedgerIndex;
 
     //Instance data.
     private ParaProfTrial ppTrial;
     private Function phase;
 
-    //Create a file chooser to allow the user to select files for loading data.
-    private JFileChooser fileChooser = new JFileChooser();
 
     //References for some of the components for this frame.
     private BarChartPanel panel;
@@ -51,7 +46,6 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private JCheckBoxMenuItem orderByMeanCheckBox;
     private JCheckBoxMenuItem orderCheckBox;
     private JCheckBoxMenuItem slidersCheckBox;
-    private JCheckBoxMenuItem pathTitleCheckBox;
     private JCheckBoxMenuItem metaDataCheckBox;
 
     private JLabel barLengthLabel = new JLabel("Bar Width");
@@ -63,7 +57,6 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
     private boolean normalizeBars = true;
     private boolean stackBars = true;
-    private boolean displaySliders = false;
 
     private boolean mShown = false;
 
@@ -141,8 +134,6 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
 
-        JMenu subMenu = null;
-        JMenuItem menuItem = null;
 
         //Options menu.
         optionsMenu = new JMenu("Options");
@@ -298,7 +289,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
             PreferencesWindow p = ppTrial.getPreferencesWindow();
-            jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
+            jTextArea.setFont(ParaProf.preferencesWindow.getFont());
             jTextArea.append(this.getHeaderString());
             panel.setColumnHeaderView(jTextArea);
         } else

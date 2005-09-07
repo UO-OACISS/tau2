@@ -16,11 +16,11 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.16 2005/09/02 01:01:24 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.17 2005/09/07 22:24:04 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -30,8 +30,9 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     private int yPanelSize = 400;
 
     private int barHeight = -1;
-    private int barSpacing = -1;
 
+    private int rowHeight = -1;
+    
     private ParaProfTrial ppTrial = null;
     private LedgerWindow window = null;
 
@@ -144,19 +145,18 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
         int barXCoord = 0;
         int tmpXWidthCalc = 0;
 
-        //To make sure the bar details are set, this method must be called.
-        ppTrial.getPreferencesWindow().setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
-        barSpacing = ppTrial.getPreferencesWindow().getBarSpacing();
         barHeight = ppTrial.getPreferencesWindow().getFontSize();
 
         //Obtain the font and its metrics.
-        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(), ppTrial.getPreferencesWindow().getFontStyle(),
-                barHeight);
+        Font font = ParaProf.preferencesWindow.getFont();
         g2D.setFont(font);
+
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
+        rowHeight = fmFont.getHeight();
+        
         if (!widthSet) { // only do this once
             for (int i = 0; i < list.size(); i++) {
                 LedgerDataElement lde = (LedgerDataElement) list.get(i);
@@ -179,7 +179,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
         //      determine which elements to draw (clipping)
         int[] clips = ParaProfUtils.computeClipping(g2D.getClipBounds(), window.getViewRect(), toScreen, fullWindow, list.size(),
-                barSpacing, yCoord);
+               rowHeight, yCoord);
         int startElement = clips[0];
         int endElement = clips[1];
         yCoord = clips[2];
@@ -193,7 +193,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
                 //For consistency in drawing, the y coord is updated at the
                 // beginning of the loop.
-                yCoord = yCoord + (barSpacing);
+                yCoord = yCoord +rowHeight;
 
                 //First draw the color box.
                 g2D.setColor(lde.getColor());
@@ -250,7 +250,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     //This method sets both xPanelSize and yPanelSize.
     private boolean resizePanel(FontMetrics fmFont, int barXCoord) {
         boolean resized = false;
-        int newYPanelSize = ((window.getData().size())) * barSpacing;
+        int newYPanelSize = ((window.getData().size())) * rowHeight;
 
         if ((newYPanelSize != yPanelSize)) {
             yPanelSize = newYPanelSize;

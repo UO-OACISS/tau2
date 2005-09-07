@@ -5,6 +5,12 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
 
+
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
+import java.awt.*;
+import javax.swing.*;
+
+
 public class JVMDependent {
 
     public static final String version = "1.3";
@@ -19,6 +25,10 @@ public class JVMDependent {
         Clipboard cp = tk.getSystemClipboard();
         cp.setContents(st, owner);
     }
-    
+
+
+    public static void exportSVG(ImageExport ie) throws Exception {
+	JOptionPane.showMessageDialog((JFrame)ie, "Can't save SVG with Java 1.3.  Reconfigure TAU with Java 1.4 or higher in the path.");
+    }    
     
 }
