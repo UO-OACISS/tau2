@@ -688,7 +688,8 @@ if [ $gotoNextStep == $TRUE ]; then
 
 			tempTauFileName=${arrTau[$tempCounter]##*/}
 			instrumentedFileForCompilation="$tempTauFileName"
-			newCmd="$CMD  $argsRemaining $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile"
+#			newCmd="$CMD  $argsRemaining $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile"
+	e		newCmd="$CMD -I ${arrFileNameDirectory[$tempCounter]} $argsRemaining $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile"
 
 			#echoIfDebug "cmd before appending the .o file is $newCmd"
 			if [ $hasAnOutputFile == $TRUE ]; then
