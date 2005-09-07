@@ -85,5 +85,5 @@ if [ "$OLDJDK" = "yes" ]
 then
 java -Xmx800m -cp ${LIBDIR}/ParaProf-Old.jar:${LIBDIR}/dms.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph-1.3.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
 else
-java -Xmx800m -Djava.library.path=${LIBDIR} -cp ${LIBDIR}/ParaProf.jar:${LIBDIR}/dms.jar:${LIBDIR}/vis.jar:${LIBDIR}/jogl.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
+java -Xmx800m -Djava.library.path=${LIBDIR} -cp ${LIBDIR}/ParaProf.jar:${LIBDIR}/dms.jar:${LIBDIR}/vis.jar:${LIBDIR}/jogl.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar:${LIBDIR}/batik-combined.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
 fi
