@@ -347,6 +347,7 @@ for arg in "$@"
 		*.cc|*.CC|*.cpp|*.CPP|*.cxx|*.CXX|*.C)
 			fileName=$arg
 			arrFileName[$numFiles]=$arg
+			arrFileNameDirectory[$numFiles]=`dirname $arg`
 			numFiles=numFiles+1
 			pdtParserType=cxxparse
 			groupType=$group_C
@@ -355,6 +356,7 @@ for arg in "$@"
 		*.c)
 			fileName=$arg
 			arrFileName[$numFiles]=$arg
+			arrFileNameDirectory[$numFiles]=`dirname $arg`
 			numFiles=numFiles+1
 			pdtParserType=cparse
 			groupType=$group_c
@@ -363,6 +365,7 @@ for arg in "$@"
 		*.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)
 			fileName=$arg
 			arrFileName[$numFiles]=$arg
+			arrFileNameDirectory[$numFiles]=`dirname $arg`
 			numFiles=numFiles+1
 			if [ $fortranParserDefined == $FALSE ]; then
 				#If it is not passed EXPLICITY, use the default f95parse.
@@ -730,7 +733,8 @@ if [ $gotoNextStep == $TRUE ]; then
 			tempTauFileName=${arrTau[$tempCounter]##*/}
 			instrumentedFileForCompilation=" $tempTauFileName"
 
-			newCmd="$CMD $argsRemaining  -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
+#			newCmd="$CMD $argsRemaining  -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
+			newCmd="$CMD $argsRemaining  -I ${arrFileNameDirectory[$tempCounter]} -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
 
 			evalWithDebugMessage "$newCmd" "Compiling (Individually) with Instrumented Code"
 			if [  ! -e $outputFile ]; then
