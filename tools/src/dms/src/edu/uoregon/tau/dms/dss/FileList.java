@@ -14,8 +14,14 @@ import java.util.*;
 
 class ProfileFileFilter implements FilenameFilter {
 
+    String prefix;
+
+    public ProfileFileFilter(String prefix) {
+        this.prefix = prefix;
+    }
+
     public boolean accept(File okplace, String name) {
-        if (name.startsWith("profile.")) {
+        if (name.startsWith(prefix + ".")) {
 
             // try to parse into n,c,t, if it craps out, it must not be a valid name
             try {
@@ -59,12 +65,10 @@ class MultiFileFilter implements FilenameFilter {
 
 public class FileList {
 
-    public FileList() {
-    }
 
-    public List helperFindProfiles(String path) {
+    public List helperFindProfilesPrefix(String path, String prefix) {
 
-        String prefix = "\\Aprofile\\..*\\..*\\..*\\z";
+        //String prefix = "\\Aprofile\\..*\\..*\\..*\\z";
         List v = new ArrayList();
 
         File file = new File(path);
@@ -72,7 +76,7 @@ public class FileList {
             return v;
         }
         //FilenameFilter prefixFilter = new FileFilter(prefix);
-        FilenameFilter prefixFilter = new ProfileFileFilter();
+        FilenameFilter prefixFilter = new ProfileFileFilter(prefix);
         File files[] = file.listFiles(prefixFilter);
 
         if (files.length == 0) {
@@ -88,6 +92,18 @@ public class FileList {
         } else {
             v.add(files);
             return v;
+        }
+        
+        
+        
+        return v;
+    }
+
+    public List helperFindProfiles(String path) {
+
+        List v = helperFindProfilesPrefix(path, "profile");
+        if (v.size() == 0) {
+            v = helperFindProfilesPrefix(path, "dump");
         }
         return v;
     }

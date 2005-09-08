@@ -10,9 +10,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.19 2005/08/24 01:45:04 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.20 2005/09/08 22:29:07 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.19 $
+ * @version	$Revision: 1.20 $
  * @see		TrialData
  * @see		NCT
  */
@@ -47,6 +47,34 @@ public abstract class DataSource {
 
     abstract public void cancelLoad();
 
+    
+    // by default no files
+    public List getFiles() {
+        return new ArrayList();
+    }
+    
+    public void reloadData() throws Exception {
+        cleanData();
+        load();
+    }
+    
+    private void cleanData() {
+        for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = (Thread) it.next();
+            for (Iterator it2 = thread.getFunctionProfileIterator(); it2.hasNext();) {
+                FunctionProfile fp = (FunctionProfile) it2.next();
+                if (fp != null) {
+                    for (int m = 0; m < this.getNumberOfMetrics(); m++) {
+                        fp.setExclusive(m,0);
+                        fp.setInclusive(m,0);
+                    }
+                    fp.setNumSubr(0);
+                    fp.setNumCalls(0);
+                }
+            }
+        }
+    }
+    
     public Thread getMeanData() {
         return meanData;
     }

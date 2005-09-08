@@ -28,9 +28,18 @@ public class TauDataSource extends DataSource {
     private boolean groupCheck = false;
     private List dirs; // list of directories (e.g. MULTI__PAPI_FP_INS, MULTI__PAPI_L1_DCM)
     
+    private File fileToMonitor;
+    
     public TauDataSource(List dirs) {
         super();
         this.dirs = dirs;
+
+        if (dirs.size() > 0) {
+            File[] files = (File[])dirs.get(0);
+            if (files.length > 0) {
+                fileToMonitor = files[0];
+            }
+        }
     }
 
 
@@ -45,11 +54,18 @@ public class TauDataSource extends DataSource {
             return (int) ((float) filesRead / (float) totalFiles * 100);
         return 0;
     }
+    
+    public List getFiles() {
+        List list = new ArrayList();
+        list.add(fileToMonitor);
+        return list;
+    }
 
     public void load() throws FileNotFoundException, IOException, DataSourceException {
         long time = System.currentTimeMillis();
 
 
+        
         // first count the files (for progressbar)
         for (Iterator e = dirs.iterator(); e.hasNext();) {
             File[] files = (File[]) e.next();
@@ -80,11 +96,8 @@ public class TauDataSource extends DataSource {
         int threadID = -1;
 
         String inputString = null;
-        String s1 = null;
-        String s2 = null;
 
         String tokenString;
-        String groupNamesString = null;
         StringTokenizer genericTokenizer;
 
         // iterate through the vector of File arrays (each directory)
@@ -194,9 +207,6 @@ public class TauDataSource extends DataSource {
                         this.getFunctionDataLine(inputString);
                         String groupNames = this.getGroupNames(inputString);
 
-                        //Calculate inclusive/call
-                        double inclusivePerCall = functionDataLine.d1 / functionDataLine.i0;
-
                         if (functionDataLine.i0 != 0) {
                             func = this.addFunction(functionDataLine.s0, 1);
 
@@ -209,7 +219,6 @@ public class TauDataSource extends DataSource {
 
                             //When we encounter duplicate names in the profile.x.x.x file, treat as additional
                             //data for the name (that is, don't just overwrite what was there before).
-                            //See todo item 7 in the ParaProf docs directory.
                             functionProfile.setExclusive(metric, functionProfile.getExclusive(metric)
                                     + functionDataLine.d0);
                             functionProfile.setInclusive(metric, functionProfile.getInclusive(metric)
@@ -218,9 +227,6 @@ public class TauDataSource extends DataSource {
                                 functionProfile.setNumCalls(functionProfile.getNumCalls() + functionDataLine.i0);
                                 functionProfile.setNumSubr(functionProfile.getNumSubr() + functionDataLine.i1);
                             }
-                            //functionProfile.setInclusivePerCall(metric,
-                            //        functionProfile.getInclusivePerCall(metric) + inclusivePerCall);
-
 
                             if (metric == 0 && groupNames != null) {
                                 StringTokenizer st = new StringTokenizer(groupNames, "|");
