@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 /**
  * The UserEventWindow shows one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventWindow.java,v 1.27 2005/08/26 01:49:02 amorris Exp $</P>
+ * <P>CVS $Id: UserEventWindow.java,v 1.28 2005/09/08 22:40:44 amorris Exp $</P>
  * @author  Alan Morris, Robert Bell
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  * @see GlobalBarChartModel
  */
 public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -56,7 +56,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     public UserEventWindow(ParaProfTrial ppTrial, UserEvent userEvent, DataSorter dataSorter, Component invoker) {
         this.userEvent = userEvent;
         this.ppTrial = ppTrial;
-        ppTrial.getSystemEvents().addObserver(this);
+        ppTrial.addObserver(this);
 
         this.dataSorter = dataSorter;
 
@@ -393,7 +393,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     public void closeThisWindow() {
         try {
             setVisible(false);
-            ppTrial.getSystemEvents().deleteObserver(this);
+            ppTrial.deleteObserver(this);
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
             // do nothing

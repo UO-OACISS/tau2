@@ -179,7 +179,7 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
             
             colorChooser.setColors(ppTrial, -1);
             //Update the listeners.
-            ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
+            ppTrial.updateRegisteredObjects("colorEvent");
         }
    
     }

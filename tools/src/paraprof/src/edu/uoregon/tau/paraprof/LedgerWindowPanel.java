@@ -16,11 +16,11 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.17 2005/09/07 22:24:04 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.18 2005/09/08 22:40:44 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -284,23 +284,23 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                         if (color != null) {
                             lde.setSpecificColor(color);
                             lde.setColorFlag(true);
-                            ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                            ppTrial.updateRegisteredObjects("colorEvent");
                         }
                     } else if (arg.equals("Reset to Generic Color")) {
                         lde.setColorFlag(false);
-                        ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                        ppTrial.updateRegisteredObjects("colorEvent");
                     } else if (arg.equals("Show This Group Only")) {
                         ppTrial.setSelectedGroup(lde.getGroup());
                         ppTrial.setGroupFilter(1);
-                        ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
+                        ppTrial.updateRegisteredObjects("dataEvent");
                     } else if (arg.equals("Show All Groups Except This One")) {
                         ppTrial.setSelectedGroup(lde.getGroup());
                         ppTrial.setGroupFilter(2);
-                        ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
+                        ppTrial.updateRegisteredObjects("dataEvent");
                     } else if (arg.equals("Show All Groups")) {
                         ppTrial.setSelectedGroup(null);
                         ppTrial.setGroupFilter(0);
-                        ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
+                        ppTrial.updateRegisteredObjects("dataEvent");
                     }
                 }
             }

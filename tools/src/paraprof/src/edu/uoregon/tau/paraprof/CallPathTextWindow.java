@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.interfaces.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.31 2005/09/07 22:24:03 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.32 2005/09/08 22:40:43 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.31 $
+ * @version	$Revision: 1.32 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -53,7 +53,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     
     public CallPathTextWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, Component invoker) {
         this.ppTrial = ppTrial;
-        ppTrial.getSystemEvents().addObserver(this);
+        ppTrial.addObserver(this);
         this.dataSorter = new DataSorter(ppTrial);
         this.thread = thread;
         
@@ -443,7 +443,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     public void closeThisWindow() {
         setVisible(false);
-        ppTrial.getSystemEvents().deleteObserver(this);
+        ppTrial.deleteObserver(this);
         ParaProf.decrementNumWindows();
         dispose();
     }

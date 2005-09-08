@@ -26,9 +26,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.6 2005/09/07 22:24:04 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.7 2005/09/08 22:40:43 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -142,7 +142,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     }
 
     public void addThread(ParaProfTrial ppTrial, Thread thread) {
-        ppTrial.getSystemEvents().addObserver(this);
+        ppTrial.addObserver(this);
 
         ComparisonBarChartModel comp = (ComparisonBarChartModel) model;
         comp.addThread(ppTrial, thread);
@@ -152,7 +152,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
     private void initialize(Component parent) {
 
-        ppTrial.getSystemEvents().addObserver(this);
+        ppTrial.addObserver(this);
 
         panel.getBarChart().setBarLength(barLengthSlider.getValue());
 
@@ -516,7 +516,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     }
 
     public void sortLocalData() {
-
         dataSorter.setDescendingOrder(descendingOrderCheckBox.isSelected());
 
         if (function != null) { // function
@@ -743,10 +742,10 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 List trialList = ((ComparisonBarChartModel)model).getPpTrials();
                 for (Iterator it=trialList.iterator(); it.hasNext();) {
                     ParaProfTrial trial = (ParaProfTrial)it.next();
-                    trial.getSystemEvents().deleteObserver(this);
+                    trial.deleteObserver(this);
                 }
             } else {
-                ppTrial.getSystemEvents().deleteObserver(this);
+                ppTrial.deleteObserver(this);
             }
             ParaProf.decrementNumWindows();
             

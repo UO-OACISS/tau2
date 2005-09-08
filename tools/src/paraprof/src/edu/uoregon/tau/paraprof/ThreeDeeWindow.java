@@ -164,7 +164,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         ParaProf.incrementNumWindows();
-        ppTrial.getSystemEvents().addObserver(this);
+        ppTrial.addObserver(this);
 
     }
 
@@ -532,7 +532,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
     public void closeThisWindow() {
         setVisible(false);
-        ppTrial.getSystemEvents().deleteObserver(this);
+        ppTrial.deleteObserver(this);
         ParaProf.decrementNumWindows();
 
         if (plot != null) {

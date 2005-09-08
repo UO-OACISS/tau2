@@ -31,7 +31,6 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 
         this.dataSource = dataSource;
         this.ppTrial = ppTrial;
-        ppTrial.getTrial().setDataSource(dataSource);
         this.paraProfManager = paraProfManager;
 
         //Window Stuff.

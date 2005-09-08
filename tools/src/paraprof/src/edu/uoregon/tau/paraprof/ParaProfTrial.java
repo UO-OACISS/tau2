@@ -14,12 +14,18 @@
 
 package edu.uoregon.tau.paraprof;
 
+import java.awt.EventQueue;
+import java.io.File;
 import java.util.*;
-import javax.swing.tree.*;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.util.FileMonitor;
+import edu.uoregon.tau.paraprof.util.FileMonitorListener;
 
-public class ParaProfTrial implements ParaProfTreeNodeUserObject {
+public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObject {
 
     private Function highlightedFunction = null;
     private Group highlightedGroup = null;
@@ -33,7 +39,6 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     private boolean upload = false;
     private boolean loading = false;
 
-    private SystemEvents systemEvents = new SystemEvents();
     private GlobalDataWindow fullDataWindow = null;
     private ColorChooser clrChooser = ParaProf.colorChooser;
     private PreferencesWindow preferencesWindow = ParaProf.preferencesWindow;
@@ -41,10 +46,18 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     private String path = null;
     private String pathReverse = null;
     private int defaultMetricID = 0;
-    private Vector observers = new Vector();
+
+    private Group selectedGroup;
+    private int groupFilter = 0;
 
     private Trial trial;
 
+    private boolean monitored;
+    //private Timer monitorTimer;
+
+    
+    private FileMonitorListener fileMonitorListener;
+    
     public ParaProfTrial() {
         trial = new Trial();
         trial.setID(-1);
@@ -164,8 +177,8 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
             else
                 return path;
         } else
-            return "Application " + trial.getApplicationID() + ", Experiment " + trial.getExperimentID()
-                    + ", Trial " + trial.getID() + ".";
+            return "Application " + trial.getApplicationID() + ", Experiment " + trial.getExperimentID() + ", Trial "
+                    + trial.getID() + ".";
     }
 
     //Sets both the path and the path reverse.
@@ -216,19 +229,14 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
 
     public void closeStaticMainWindow() {
         if (fullDataWindow != null) {
-            this.getSystemEvents().deleteObserver(fullDataWindow);
+            this.deleteObserver(fullDataWindow);
             fullDataWindow.setVisible(false);
         }
     }
 
-    //####################################
-    //End - Functions that control the opening
-    //and closing of the static main window for this trial.
-    //####################################
-
-    public SystemEvents getSystemEvents() {
-        return systemEvents;
-    }
+    //public SystemEvents getSystemEvents() {
+    //    return systemEvents;
+    //  }
 
     //####################################
     //Interface for ParaProfMetrics.
@@ -376,9 +384,6 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
         return groupFilter;
     }
 
-    private Group selectedGroup;
-    private int groupFilter = 0;
-
     //####################################
     //end - Pass-though methods to the data session for this instance.
     //####################################
@@ -398,11 +403,9 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
             ppMetrics.add(ppMetric);
         }
 
-        
         // Now set the dataSource's metrics.
         trial.getDataSource().setMetrics(ppMetrics);
 
-        
         // Set the default metric to the first time based metric (if it exists)
         for (int i = 0; i < numberOfMetrics; i++) {
             ParaProfMetric ppMetric = (ParaProfMetric) trial.getDataSource().getMetric(i);
@@ -411,7 +414,6 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
                 break;
             }
         }
-        
 
         // Set the default metric to the first metric named "Time" (if it exists)
         for (int i = 0; i < numberOfMetrics; i++) {
@@ -422,8 +424,6 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
             }
         }
 
-        
-        
         // set the colors
         clrChooser.setColors(this, -1);
 
@@ -441,7 +441,7 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
 
     public void setHighlightedFunction(Function func) {
         this.highlightedFunction = func;
-        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+        updateRegisteredObjects("colorEvent");
     }
 
     public Function getHighlightedFunction() {
@@ -453,12 +453,12 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
             highlightedFunction = null;
         else
             highlightedFunction = function;
-        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+        updateRegisteredObjects("colorEvent");
     }
 
     public void setHighlightedGroup(Group group) {
         this.highlightedGroup = group;
-        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+        updateRegisteredObjects("colorEvent");
     }
 
     public Group getHighlightedGroup() {
@@ -466,18 +466,19 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     }
 
     public void toggleHighlightedGroup(Group group) {
-        if (highlightedGroup == group)
+        if (highlightedGroup == group) {
             highlightedGroup = null;
-        else
+        } else {
             highlightedGroup = group;
-        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+        }
+        updateRegisteredObjects("colorEvent");
     }
 
     //    private boolean uploading;
 
     public void setHighlightedUserEvent(UserEvent userEvent) {
         this.highlightedUserEvent = userEvent;
-        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+        updateRegisteredObjects("colorEvent");
     }
 
     public UserEvent getHighlightedUserEvent() {
@@ -485,10 +486,82 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     }
 
     public void toggleHighlightedUserEvent(UserEvent userEvent) {
-        if (highlightedUserEvent == userEvent)
+        if (highlightedUserEvent == userEvent) {
             highlightedUserEvent = null;
-        else
+        } else {
             highlightedUserEvent = userEvent;
-        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+        }
+        updateRegisteredObjects("colorEvent");
     }
+
+    public boolean getMonitored() {
+        return monitored;
+    }
+
+    public void setMonitored(boolean monitored) {
+        this.monitored = monitored;
+
+        if (monitored == true) {
+
+            FileMonitor fileMonitor = new FileMonitor(1000);
+
+            List files = trial.getDataSource().getFiles();
+
+            for (Iterator it = files.iterator(); it.hasNext();) {
+                File file = (File) it.next();
+                fileMonitor.addFile(file);
+            }
+
+            
+            fileMonitorListener = new FileMonitorListener() {
+
+                public void fileChanged(File file) {
+                    try {
+//                        System.err.println("fileChanged!");
+                        getDataSource().reloadData();
+
+                        EventQueue.invokeLater(new Runnable() {
+                            public void run() {
+                                updateRegisteredObjects("dataEvent");
+                            }
+                        });
+                    } catch (Exception e) {
+                        // eat it
+                    }
+
+                }
+            };
+            
+            fileMonitor.addListener(fileMonitorListener);
+
+//            monitorTimer = new Timer();
+//            monitorTimer.scheduleAtFixedRate(new TimerTask() {
+//
+//                public void run() {
+//                    try {
+//                        //                        System.err.println("Monitoring Profiles!");
+//                        getDataSource().reloadData();
+//
+//                        EventQueue.invokeLater(new Runnable() {
+//                            public void run() {
+//                                updateRegisteredObjects("dataEvent");
+//                            }
+//                        });
+//
+//                    } catch (Exception e) {
+//                        // eat it
+//                    }
+//                }
+//            }, 5000, 5000);
+        }
+    }
+
+    public void updateRegisteredObjects(String inString) {
+        //Set this object as changed.
+        this.setChanged();
+
+        //Now notify observers.
+        this.notifyObservers(inString);
+    }
+
 }

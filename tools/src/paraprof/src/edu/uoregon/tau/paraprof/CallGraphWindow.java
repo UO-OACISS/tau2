@@ -32,9 +32,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.35 2005/09/07 22:24:03 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.36 2005/09/08 22:40:43 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.35 $
+ * @version	$Revision: 1.36 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ImageExport, Printable, ParaProfWindow {
@@ -265,7 +265,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     public CallGraphWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, Component invoker) {
         this.ppTrial = ppTrial;
-        ppTrial.getSystemEvents().addObserver(this);
+        ppTrial.addObserver(this);
         this.colorMetricID = ppTrial.getDefaultMetricID();
         this.widthMetricID = ppTrial.getDefaultMetricID();
 
@@ -1826,7 +1826,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     public void closeThisWindow() {
         setVisible(false);
-        ppTrial.getSystemEvents().deleteObserver(this);
+        ppTrial.deleteObserver(this);
         ParaProf.decrementNumWindows();
         dispose();
     }

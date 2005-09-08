@@ -471,8 +471,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();
-            ppTrial.getSystemEvents().updateRegisteredObjects("prefEvent");
-            ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
+            ppTrial.updateRegisteredObjects("prefEvent");
+            ppTrial.updateRegisteredObjects("dataEvent");
         }
     }
 

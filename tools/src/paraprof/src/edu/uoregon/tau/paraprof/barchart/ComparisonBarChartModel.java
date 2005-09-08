@@ -15,9 +15,9 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.2 2005/09/02 00:22:01 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.3 2005/09/08 22:40:45 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -252,7 +252,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         ParaProfExperiment experiment = application.addExperiment();
 
-        ParaProf.paraProfManagerWindow.addTrial(application, experiment, files, type, false);
+        ParaProf.paraProfManagerWindow.addTrial(application, experiment, files, type, false, false);
 
         Vector trials = experiment.getTrials();
 

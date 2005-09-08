@@ -60,7 +60,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     public StatWindow(ParaProfTrial ppTrial, edu.uoregon.tau.dms.dss.Thread thread, boolean userEventWindow, Function phase, Component invoker) {
         this.ppTrial = ppTrial;
         this.phase = phase;
-        ppTrial.getSystemEvents().addObserver(this);
+        ppTrial.addObserver(this);
 
         this.dataSorter = new DataSorter(ppTrial);
         dataSorter.setPhase(phase);
@@ -534,7 +534,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     public void closeThisWindow() {
         try {
             setVisible(false);
-            ppTrial.getSystemEvents().deleteObserver(this);
+            ppTrial.deleteObserver(this);
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
             // do nothing

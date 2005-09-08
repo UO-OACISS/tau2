@@ -333,7 +333,7 @@ public class ParaProfUtils {
                             JOptionPane.showMessageDialog(owner, "Unsupported class version.  Are you using Java 1.4 or above?");
                         }
                     } else if (arg.equals("Close All Sub-Windows")) {
-                        ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+                        ppTrial.updateRegisteredObjects("subWindowCloseEvent");
                     }
 
                 } catch (Exception e) {

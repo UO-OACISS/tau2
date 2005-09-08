@@ -34,6 +34,8 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
     private File selectedFiles[];
     private JButton selectButton = null;
 
+    private JCheckBox monitorTrialCheckBox = new JCheckBox("Monitor Trial");
+    
     public LoadTrialWindow(ParaProfManagerWindow paraProfManager, ParaProfApplication application,
             ParaProfExperiment experiment, boolean newApplication, boolean newExperiment) {
         this.paraProfManagerWindow = paraProfManager;
@@ -110,26 +112,44 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         gbc.weighty = 0;
         addCompItem(dirLocationField, gbc, 1, 1, 2, 1);
 
-        JButton jButton = new JButton("Cancel");
-        jButton.addActionListener(this);
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.EAST;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        addCompItem(jButton, gbc, 0, 2, 1, 1);
+        
+        if (!experiment.dBExperiment()) {
+            monitorTrialCheckBox.addActionListener(this);
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.CENTER;
 
-        jButton = new JButton("Ok");
-        jButton.addActionListener(this);
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.EAST;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        addCompItem(jButton, gbc, 2, 2, 1, 1);
+            addCompItem(monitorTrialCheckBox, gbc, 1, 2, 1, 1);
+
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.anchor = GridBagConstraints.EAST;
+
+            JButton jButton = new JButton("Cancel");
+            jButton.addActionListener(this);
+            addCompItem(jButton, gbc, 0, 3, 1, 1);
+
+            jButton = new JButton("Ok");
+            jButton.addActionListener(this);
+            addCompItem(jButton, gbc, 2, 3, 1, 1);
+        } else {
+            
+            JButton jButton = new JButton("Cancel");
+            jButton.addActionListener(this);
+            addCompItem(jButton, gbc, 0, 2, 1, 1);
+
+            jButton = new JButton("Ok");
+            jButton.addActionListener(this);
+            addCompItem(jButton, gbc, 2, 2, 1, 1);
+            
+        }
+        
     }
 
     public void actionPerformed(ActionEvent evt) {
         try {
-            Object EventSrc = evt.getSource();
             String arg = evt.getActionCommand();
             if (arg.equals("Select Directory")) {
                 JFileChooser jFileChooser = new JFileChooser(lastDirectory);
@@ -183,7 +203,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                         return;
                     }
                     paraProfManagerWindow.addTrial(application, experiment, files,
-                            trialTypes.getSelectedIndex(), false);
+                            trialTypes.getSelectedIndex(), false, monitorTrialCheckBox.isSelected());
                 } else {
                     if (selectedFiles == null) {
                         selectedFiles = new File[1];
@@ -195,15 +215,18 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                         }
                     }
                     paraProfManagerWindow.addTrial(application, experiment, selectedFiles,
-                            trialTypes.getSelectedIndex(), false);
+                            trialTypes.getSelectedIndex(), false, monitorTrialCheckBox.isSelected());
                 }
                 closeThisWindow();
             } else if (arg.equals("comboBoxChanged")) {
                 if (trialTypes.getSelectedIndex() == 0) {
                     selectButton.setText("Select Directory");
                     dirLocationField.setEditable(true);
+                    monitorTrialCheckBox.setEnabled(true);
                 } else {
                     selectButton.setText("  Select File(s)  ");
+                    monitorTrialCheckBox.setSelected(false);
+                    monitorTrialCheckBox.setEnabled(false);
                 }
             }
         } catch (Exception e) {

@@ -383,7 +383,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                         userEvent.setSpecificColor(tmpCol);
                         userEvent.setColorFlag(true);
 
-                        ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                        ppTrial.updateRegisteredObjects("colorEvent");
                     }
                 } else if (arg.equals("Reset to Generic Color")) {
 
@@ -391,7 +391,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                         UserEvent ue = ((PPUserEventProfile) clickedOnObject).getUserEvent();
                         ue.setColorFlag(false);
                     }
-                    ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                    ppTrial.updateRegisteredObjects("colorEvent");
                 }
             }
         } catch (Exception e) {

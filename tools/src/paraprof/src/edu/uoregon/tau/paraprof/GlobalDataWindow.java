@@ -22,9 +22,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.3 2005/09/07 22:24:04 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.4 2005/09/08 22:40:43 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -63,7 +63,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     public GlobalDataWindow(ParaProfTrial ppTrial, Function phase) {
         this.ppTrial = ppTrial;
         this.phase = phase;
-        ppTrial.getSystemEvents().addObserver(this);
+        ppTrial.addObserver(this);
 
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setPhase(phase);

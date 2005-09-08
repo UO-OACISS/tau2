@@ -20,11 +20,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.55 2005/08/30 19:58:37 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.56 2005/09/08 22:40:44 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.55 $
+ * @version $Revision: 1.56 $
  */
 public class ParaProf implements ActionListener {
 
@@ -66,12 +66,12 @@ public class ParaProf implements ActionListener {
     private static int fileType = 0; //0:profile, 1:pprof, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun, 7:ppk, 8:cube
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
+    private static boolean monitorProfiles;
     //End - Command line options related.
 
     
     public static FunctionBarChartWindow theComparisonWindow;
     
-    private ParaProfTrial pptrial = null;
     public static boolean JNLP = false;
     
     public ParaProf() {
@@ -97,7 +97,7 @@ public class ParaProf implements ActionListener {
     }
 
     private static void usage() {
-        System.err.println("Usage: paraprof [--pack <file>] [--dump] [-p] [-i] [-f <filetype>] <files/directory>\n\n"
+        System.err.println("Usage: paraprof [--pack <file>] [--dump] [-p] [-m] [-i] [-f <filetype>] <files/directory>\n\n"
                 + "try `paraprof --help` for more information");
     }
 
@@ -113,6 +113,8 @@ public class ParaProf implements ActionListener {
                 + "                                    (does not launch ParaProf GUI)\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
                 + "                                    (does not launch ParaProf GUI)\n" + "\n" + "Notes:\n"
+                + "  -m, --monitor                   Perform runtime monitoring of profile data\n"
+                + "\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -146,7 +148,7 @@ public class ParaProf implements ActionListener {
         ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
 
         try {
-            paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames);
+            paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames, monitorProfiles);
         } catch (java.security.AccessControlException ace) {
             // running as Java Web Start without permission
         }
@@ -291,8 +293,8 @@ public class ParaProf implements ActionListener {
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();
             ParaProf.colorChooser.setColors(ppTrial, -1);
-            ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
-            ppTrial.getSystemEvents().updateRegisteredObjects("prefEvent");
+            ppTrial.updateRegisteredObjects("colorEvent");
+            ppTrial.updateRegisteredObjects("prefEvent");
         }
 
     }
@@ -351,6 +353,7 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
         CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
         CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
+        CmdLineParser.Option monitorOpt = parser.addBooleanOption('m', "monitor");
 
         try {
             parser.parse(args);
@@ -365,7 +368,12 @@ public class ParaProf implements ActionListener {
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
         String pack = (String) parser.getOptionValue(packOpt);
         Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
-
+        Boolean monitor = (Boolean) parser.getOptionValue(monitorOpt);
+        
+        if (monitor != null) {
+            monitorProfiles = monitor.booleanValue();
+        }
+        
         if (pack != null && unpack != null) {
             System.err.println("--pack and --dump are mutually exclusive");
             System.exit(-1);

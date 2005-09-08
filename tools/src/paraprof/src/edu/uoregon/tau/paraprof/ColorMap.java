@@ -31,7 +31,7 @@ public class ColorMap extends Observable implements Serializable {
                 for (Iterator it = trials.iterator(); it.hasNext();) {
                     ParaProfTrial ppTrial = (ParaProfTrial) it.next();
                     ParaProf.colorChooser.setColors(ppTrial, -1);
-                    ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                    ppTrial.updateRegisteredObjects("colorEvent");
                 }
                 setChanged();
                 notifyObservers("colorMap");
@@ -97,7 +97,7 @@ public class ColorMap extends Observable implements Serializable {
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();
             ParaProf.colorChooser.setColors(ppTrial, -1);
-            ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
+            ppTrial.updateRegisteredObjects("colorEvent");
         }
 
     }
