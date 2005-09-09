@@ -21,7 +21,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.21 2005/08/10 21:45:46 amorris Exp $
+ * CVS $Id: Trial.java,v 1.22 2005/09/09 23:39:29 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -71,29 +71,6 @@ public class Trial implements Serializable {
         } else {
             this.fields = new String[Trial.fieldNames.length];
         }
-    }
-
-
-    // these are here because I don't have time to fix the analysis
-    // routines that are using them
-    public int getNodeCount() {
-        System.err.println("Do not use trial.getNodeCount");
-        return -1;
-    }
-
-    public int getNumContextsPerNode() {
-        System.err.println("Do not use trial.getNumContextsPerNode");
-        return -1;
-    }
-
-    public int getNumThreadsPerContext() {
-        System.err.println("Do not use trial.getNumThreadsPerContext");
-        return -1;
-    }
-
-    public int[] getMaxNCTNumbers() {
-        System.err.println("Do not use trial.getMaxNCTNumbers");
-        return new int[3];
     }
 
     ///////////////////////////////////////////////////////

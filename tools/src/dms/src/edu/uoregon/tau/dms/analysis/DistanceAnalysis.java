@@ -18,7 +18,7 @@ import java.sql.SQLException;
  * details.  The two extensions of this class are EventDistance and
  * ThreadDistance.
  *
- * <P>CVS $Id: DistanceAnalysis.java,v 1.8 2004/12/29 00:00:43 amorris Exp $</P>
+ * <P>CVS $Id: DistanceAnalysis.java,v 1.9 2005/09/09 23:39:29 khuck Exp $</P>
  * @author	Kevin Huck
  * @version	0.1
  * @since	0.1
@@ -44,7 +44,9 @@ abstract public class DistanceAnalysis {
 
 	private void getRawData() {
 		// calculate the threadCount;
-		int threadCount = trial.getNodeCount() * trial.getNumContextsPerNode() * trial.getNumThreadsPerContext();
+		int threadCount = Integer.parseInt(trial.getField("node_count")) *
+		Integer.parseInt(trial.getField("contexts_per_node")) *
+		Integer.parseInt(trial.getField("threads_per_context"));
 
 		// get the event count from the database
 		StringBuffer buf = new StringBuffer();

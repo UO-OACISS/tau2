@@ -44,8 +44,8 @@ public class EventDistance extends DistanceAnalysis {
 	protected void getMatrixData() {
 		// build the query to get the raw data
 		StringBuffer buf = new StringBuffer();
-		int cFactor = trial.getNumThreadsPerContext();
-		int nFactor = cFactor * trial.getNumContextsPerNode();
+		int cFactor = Integer.parseInt(trial.getField("threads_per_context"));
+		int nFactor = cFactor * Integer.parseInt(trial.getField("contexts_per_node"));
 		buf.append("select (l.node * ");
 		buf.append(nFactor);
 		buf.append(") + (l.context * ");
