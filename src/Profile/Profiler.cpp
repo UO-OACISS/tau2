@@ -2385,7 +2385,7 @@ int Profiler::StoreData(int tid){
 }
 int Profiler::DumpData(bool increment, int tid, char *prefix){
   
-  TAU_PROFILE("TAU_DUMP_DB()", " ", TAU_IO);
+  TAU_PROFILE("TAU_DB_DUMP()", " ", TAU_IO);
 
 #ifdef PROFILING_ON
   vector<FunctionInfo*>::iterator it;
@@ -2878,9 +2878,9 @@ void Profiler::SetDepthLimit(int value)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.117 $   $Date: 2005/09/09 03:02:01 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.117 2005/09/09 03:02:01 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.118 $   $Date: 2005/09/09 23:46:37 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.118 2005/09/09 23:46:37 amorris Exp $ 
  ***************************************************************************/
 
 	
