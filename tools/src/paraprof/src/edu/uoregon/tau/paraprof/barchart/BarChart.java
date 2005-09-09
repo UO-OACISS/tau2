@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.6 2005/09/07 22:24:05 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.7 2005/09/09 23:32:37 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, BarChartModelListener {
@@ -531,6 +531,8 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
                     for (int i = 0; i < model.getSubSize(); i++) {
                         g2D.setColor(model.getValueColor(row, i));
                         double value = model.getValue(row, i);
+                        Color color = model.getValueColor(row, i);
+                        
                         double ratio = (value / maxValue);
                         int length = (int) (ratio * barLength);
 
@@ -554,7 +556,7 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
                                     subDrawObjects.add(null);
                                     otherValue += value;
                                 } else {
-                                    drawBar(g2D, barStartX, y - barOffset, length, barHeight, model.getValueColor(row, i),
+                                    drawBar(g2D, barStartX, y - barOffset, length, barHeight, color,
                                             model.getValueHighlightColor(row, i));
 
                                     subDrawObjects.add(new DrawObject(barStartX, y - barOffset, barStartX + length, y - barOffset

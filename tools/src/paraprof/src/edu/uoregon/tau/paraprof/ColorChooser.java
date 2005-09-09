@@ -260,6 +260,11 @@ public class ColorChooser implements WindowListener {
 
             for (int i = 0; i < list.size(); i++) {
                 Function func = ((PPFunctionProfile) list.get(i)).getFunction();
+
+                // we could be doing runtime analysis, don't reassign colors
+                if (func.getColor() != null) {
+                    continue;
+                }
                 
                 Color color = ParaProf.colorMap.getColor(func);
                 

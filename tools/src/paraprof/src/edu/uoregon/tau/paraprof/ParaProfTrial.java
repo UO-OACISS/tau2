@@ -520,6 +520,9 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 //                        System.err.println("fileChanged!");
                         getDataSource().reloadData();
 
+                        // set the colors
+                        clrChooser.setColors(ParaProfTrial.this, -1);
+
                         EventQueue.invokeLater(new Runnable() {
                             public void run() {
                                 updateRegisteredObjects("dataEvent");
