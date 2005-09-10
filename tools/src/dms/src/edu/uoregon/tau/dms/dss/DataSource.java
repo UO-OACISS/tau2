@@ -10,9 +10,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.20 2005/09/08 22:29:07 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.21 2005/09/10 00:23:49 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.20 $
+ * @version	$Revision: 1.21 $
  * @see		TrialData
  * @see		NCT
  */
@@ -58,7 +58,7 @@ public abstract class DataSource {
         load();
     }
     
-    private void cleanData() {
+    protected void cleanData() {
         for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
             Thread thread = (Thread) it.next();
             for (Iterator it2 = thread.getFunctionProfileIterator(); it2.hasNext();) {
@@ -130,7 +130,6 @@ public abstract class DataSource {
     }
 
     public Function getFunction(String name) {
-        Function f = (Function) functions.get(name.trim());
         return (Function) functions.get(name.trim());
     }
 
