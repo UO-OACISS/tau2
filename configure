@@ -2156,6 +2156,8 @@ EOF
     fi
   fi
 
+  echo $mpicompiler $orig_useropt $mpi_include -c mpi2iorequest.$msuf  
+  cp mpi2iorequest.$msuf io.$msuf
   if $mpicompiler $orig_useropt $mpi_include -c mpi2iorequest.$msuf  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
@@ -2830,17 +2832,22 @@ case $machine in
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
-     bgl|ppc64)
+     ppc64)
 	echo "Found an IBM PPC-64 Linux configuration definition"
 	fixmakeargs="arch=$machine PPC64 $fixmakeargs"
 	if [ $papi = yes ]
  	  then
 	    fixmakeargs="$fixmakeargs PPC64PAPI"
 	fi
-	if [ $machine = bgl ] 
-          then
-	    fixmakeargs="$fixmakeargs BGL"
-        fi
+        ;; 
+
+     bgl)
+	echo "Found an IBM PPC-64 BGL Linux configuration definition"
+	fixmakeargs="arch=$machine BGL $fixmakeargs"
+	if [ $papi = yes ]
+ 	  then
+	    fixmakeargs="$fixmakeargs BGLPAPI"
+	fi
         ;; 
 
      ia64)
@@ -3205,7 +3212,7 @@ if [ $papi = yes ]
     fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
     tauoptions="${tauoptions}-papi"
     p=$papidir/lib
-    if [ -f $p/libpapi.so -o -f $p/libpapi.a -o -f $p/libpapi64.so -o -f $p/libpapi64.a ]
+    if [ -f $p/libpapi.so -o -f $p/libpapi.a -o -f $p/libpapi64.so -o -f $p/libpapi64.a -o -f $p/libpapi.rts.a ]
     then
 	fixmakeargs="$fixmakeargs papisubdir=lib"
     else

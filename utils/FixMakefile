@@ -1005,6 +1005,10 @@ ALPHATIMERS)
 	echo "NOTE: Using PAPI with PM Toolkit options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     BGLPAPI)
+	echo "NOTE: Using PAPI with BGL options ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      ALPHAPAPI)
 	echo "NOTE: Using PAPI with DADD options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
