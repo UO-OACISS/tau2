@@ -325,7 +325,7 @@ FWRAPPER	       = TauFMpi.o
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
 #IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -L/usr/pmapi/lib -lpmapi#ENDIF#
 #PPC64PAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
-#BGLPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.rts.a #ENDIF#
+#BGLPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.rts.a -L/bgl/BlueLight/ppcfloor/bglsys/lib -lbgl_perfctr.rts -lrts.rts -ldevices.rts #ENDIF#
 #X86_64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR)/ -lpapi -lperfctr #ENDIF#
 #IBM64PAPI#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a -L/usr/lpp/pmtoolkit/lib  -L/usr/pmapi/lib -lpmapi #ENDIF#
 #IBM64PAPILINUX#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a #ENDIF#
@@ -334,6 +334,7 @@ FWRAPPER	       = TauFMpi.o
 
 #PAPI#TAU_PAPI_RPATH	= -rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
 #PPC64PAPI#TAU_PAPI_RPATH = #ENDIF#
+#BGLPAPI#TAU_PAPI_RPATH = #ENDIF#
 #USE_INTELCXX#TAU_PAPI_RPATH	=  #ENDIF#
 #CRAYX1CC#TAU_PAPI_RPATH = #ENDIF#
 #PGI#TAU_PAPI_RPATH	= -R $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
