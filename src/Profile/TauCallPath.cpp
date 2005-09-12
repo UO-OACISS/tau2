@@ -243,7 +243,9 @@ void Profiler::CallPathStart(int tid)
   // Start the callpath profiling
   if (ParentProfiler != NULL)
   { // There is a callpath 
-    ParentProfiler->CallPathFunction->IncrNumSubrs(tid);
+    if (ParentProfiler->CallPathFunction != 0) {
+      ParentProfiler->CallPathFunction->IncrNumSubrs(tid);
+    }
     DEBUGPROFMSG("Inside CallPath Start "<<ThisFunction->GetName()<<endl;);
     comparison = TauFormulateComparisonArray(this);
     DEBUGPROFMSG("Comparison string = "<<*comparison<<endl;);
@@ -325,7 +327,7 @@ void Profiler::CallPathStop(double TotalTime, int tid)
 }
   
 /***************************************************************************
- * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.21 $   $Date: 2005/09/12 23:51:43 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.21 2005/09/12 23:51:43 sameer Exp $ 
+ * $RCSfile: TauCallPath.cpp,v $   $Author: amorris $
+ * $Revision: 1.22 $   $Date: 2005/09/12 23:54:36 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.22 2005/09/12 23:54:36 amorris Exp $ 
  ***************************************************************************/
