@@ -335,9 +335,9 @@ public class TauDataSource extends DataSource {
                                 }
                             }
 
+                            lock.release();
                             br.close();
                             inReader.close();
-                            lock.release();
                             fileIn.close();
                         }
                     }
@@ -349,6 +349,7 @@ public class TauDataSource extends DataSource {
                 // retry the load once, maybe the profiles were being written
                 if (ioExceptionEncountered) {
                     finished = true;
+                    //ioe.printStackTrace();
                 } else {
                     cleanData();
                 }
@@ -473,7 +474,7 @@ public class TauDataSource extends DataSource {
 
         if (functionDataLine.d0 < 0) {
             System.err.println("Warning, negative values found in profile, ignoring!");
-            System.err.println("value = " + functionDataLine.d0);
+            System.err.println("string = " + string);
 
             functionDataLine.d0 = 0;
         }
