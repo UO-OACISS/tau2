@@ -30,15 +30,19 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
         int tmpYPanelSize = 0;
         Graphics2D g2D = (Graphics2D) g;
 
-
         //Set local spacing and bar heights.
+        
         barHeight = ParaProf.preferencesWindow.getFontSize();
 
         //Set up the yCoord.
         yCoord = 25 + barHeight;
 
         //Create font.
-        Font font = ParaProf.preferencesWindow.getFont();
+
+        
+        Font font = new Font(ParaProf.preferencesWindow.getFontName(), ParaProf.preferencesWindow.getFontStyle(),
+                ParaProf.preferencesWindow.getFontSize());
+        //Font font = ParaProf.preferencesWindow.getFont();
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
         barSpacing = fmFont.getHeight();
@@ -46,7 +50,7 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
         //calculate the maximum string width.
         int maxStringWidth = 0;
         for (int k = 0; k < 3; k++) {
-            String s1 = "n,c,t    0,0," + k;
+            String s1 = "n,c,t 0,0," + k;
             int tmpInt = fmFont.stringWidth(s1);
 
             if (maxStringWidth < tmpInt)
@@ -58,7 +62,7 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
         barXCoord = barXStart;
 
         for (int i = 0; i < 3; i++) {
-            String s1 = "n,c,t    0,0," + i;
+            String s1 = "n,c,t 0,0," + i;
             int tmpStringWidth = fmFont.stringWidth(s1);
             g2D.drawString(s1, (barXStart - tmpStringWidth - 5), yCoord);
 
@@ -75,9 +79,9 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
             g2D.setColor(Color.black);
             yCoord = yCoord + (barSpacing);
         }
-        
+
         tmpYPanelSize = yCoord - barSpacing;
-        
+
         if (xPanelSize != tmpXPanelSize || yPanelSize != tmpYPanelSize) {
             xPanelSize = tmpXPanelSize;
             yPanelSize = tmpYPanelSize;
@@ -94,6 +98,7 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
         ParaProf.preferencesWindow.updateFontSize();
         this.repaint();
     }
+
     //Instance data.
 
     int xPanelSize = 200;

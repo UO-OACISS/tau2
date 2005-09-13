@@ -403,24 +403,36 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                 }
 
             } else if (EventSrc instanceof JCheckBox) {
-                if (arg.equals("Bold Font")) {
-                    if (italic.isSelected())
-                        fontStyle = Font.BOLD | Font.ITALIC;
-                    else
-                        fontStyle = Font.BOLD;
+                if (arg.equals("Bold")) {
+                    if (italic.isSelected()) {
+                        if (bold.isSelected()) {
+                            fontStyle = Font.BOLD | Font.ITALIC;
+                        } else {
+                            fontStyle = Font.PLAIN | Font.ITALIC;
+                        }
+                    } else {
+                        if (bold.isSelected()) {
+                            fontStyle = Font.BOLD;
+                        } else {
+                            fontStyle = Font.PLAIN;
+                        }
+                    }
+                    
 
                     prefSpacingPanel.repaint();
-                } else if (arg.equals("Italic Font")) {
+                } else if (arg.equals("Italic")) {
                     if (italic.isSelected()) {
-                        if (bold.isSelected())
+                        if (bold.isSelected()) {
                             fontStyle = Font.BOLD | Font.ITALIC;
-                        else
+                        } else {
                             fontStyle = Font.PLAIN | Font.ITALIC;
+                        }
                     } else {
-                        if (bold.isSelected())
+                        if (bold.isSelected()) {
                             fontStyle = Font.BOLD;
-                        else
+                        } else {
                             fontStyle = Font.PLAIN;
+                        }
                     }
 
                     prefSpacingPanel.repaint();

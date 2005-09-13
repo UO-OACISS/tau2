@@ -24,9 +24,9 @@ import edu.uoregon.tau.paraprof.interfaces.Searchable;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Searcher.java,v 1.7 2005/09/02 01:01:25 amorris Exp $</P>
+ * <P>CVS $Id: Searcher.java,v 1.8 2005/09/13 18:03:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class Searcher implements Searchable, MouseListener, MouseMotionListener, ClipboardOwner {
 
@@ -55,7 +55,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     // for selection
     private String selectionString = "";
     private boolean selectionReversed;
-    private int selectionStartLine, selectionEndLine;
+    private int selectionStartLine=-1, selectionEndLine=-1;
     private int selectionStartX, selectionStartY;
     private int selectionEndX, selectionEndY;
 
