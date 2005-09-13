@@ -241,7 +241,9 @@ void Profiler::Start(int tid)
 
 #ifdef TAU_PROFILEPHASE
       if (ParentProfiler == (Profiler *) NULL) {
+	if (ThisFunction->AllGroups.find("TAU_PHASE", 0) == string::npos) {
 	  ThisFunction->AllGroups.append(" | TAU_PHASE"); 
+	}
       }
 #endif /* TAU_PROFILEPHASE */
 
@@ -1007,7 +1009,12 @@ void Profiler::getFunctionValues(const char **inFuncs,
 	  
 	  while (current != 0){
 	    /* Traverse the stack */ 
-	    if ((*it) == current->ThisFunction){ /* Match! */
+#ifdef TAU_CALLPATH
+	    if ((*it) == current->ThisFunction || (*it) == current->CallPathFunction) {
+#else
+	    if ((*it) == current->ThisFunction) { 
+#endif
+	      /* Match! */
 	      DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
 			   <<endl;);
 	      total = currenttime - current->StartTime;
@@ -1173,7 +1180,14 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 		prevtime = 0; /* for reducing from the parent profiler */
 		while (current != 0){
 		  /* Traverse the stack */ 
-		  if ((*it) == current->ThisFunction){ /* Match! */
+
+#ifdef TAU_CALLPATH
+		  if ((*it) == current->ThisFunction || (*it) == current->CallPathFunction) {
+#else
+		  if ((*it) == current->ThisFunction) { 
+#endif
+		    /* Match! */
+		    
 		    DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
 				 <<endl;);
 		    total = currenttime - current->StartTime; 
@@ -1588,10 +1602,15 @@ int Profiler::DumpData(bool increment, int tid, char *prefix)
 		while (current != 0) 
 		{
 		  /* Traverse the stack */ 
-		  if ((*it) == current->ThisFunction) 
-	 	  { /* Match! */
-		    DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
-	  	      <<endl;);
+		  
+#ifdef TAU_CALLPATH
+		  if ((*it) == current->ThisFunction || (*it) == current->CallPathFunction) {
+#else
+		  if ((*it) == current->ThisFunction) { 
+#endif
+		    /* Match! */
+		    DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName() << endl;);
+		    
 		    total = currenttime - current->StartTime; 
 		    excltime += total - prevtime; 
 		    /* prevtime is the inclusive time of the subroutine that should
@@ -1885,8 +1904,16 @@ void Profiler::getFunctionValues(const char **inFuncs,
 	  }
 	  
 	  while (current != 0){
-	    /* Traverse the stack */ 
-	    if ((*it) == current->ThisFunction){ /* Match! */
+	    /* Traverse the stack */
+
+
+#ifdef TAU_CALLPATH
+	      if ((*it) == current->ThisFunction || (*it) == current->CallPathFunction) {
+#else
+	      if ((*it) == current->ThisFunction) { 
+#endif
+		/* Match! */
+ 
 	      DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
 			   <<endl;);
 	      
@@ -2092,7 +2119,13 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	      
 	      while (current != 0){
 		/* Traverse the stack */ 
-		if ((*it) == current->ThisFunction){ /* Match! */
+
+#ifdef TAU_CALLPATH
+		if ((*it) == current->ThisFunction || (*it) == current->CallPathFunction) {
+#else
+		if ((*it) == current->ThisFunction) { 
+#endif
+		  /* Match! */
 		  DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
 			       <<endl;);
 		  
@@ -2384,7 +2417,7 @@ int Profiler::StoreData(int tid){
   return 1;
 }
 int Profiler::DumpData(bool increment, int tid, char *prefix){
-  
+
   TAU_PROFILE("TAU_DB_DUMP()", " ", TAU_IO);
 
 #ifdef PROFILING_ON
@@ -2440,10 +2473,10 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
 
       DEBUGPROFMSG("Creating " << filename << endl;);
       if ((fp = fopen (filename, "w+")) == NULL) {
-      errormsg = new char[1024];
-      sprintf(errormsg,"Error: Could not create %s",filename);
-      perror(errormsg);
-      return 0;
+	errormsg = new char[1024];
+	sprintf(errormsg,"Error: Could not create %s",filename);
+	perror(errormsg);
+	return 0;
       }
 
       // Data format :
@@ -2505,7 +2538,13 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
 
 	    while (current != 0){
 	      /* Traverse the stack */ 
-	      if ((*it) == current->ThisFunction){ /* Match! */
+
+#ifdef TAU_CALLPATH
+	      if ((*it) == current->ThisFunction || (*it) == current->CallPathFunction) {
+#else
+		if ((*it) == current->ThisFunction) { 
+#endif
+		  /* Match! */
 		DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
 			     <<endl;);
 
@@ -2544,12 +2583,11 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
 		       << (*it)->GetCalls(tid) << " Subrs : "<< (*it)->GetSubrs(tid)
 		       << " Excl : " << tmpDoubleExcl[i] << " Incl : "
 		       << tmpDoubleIncl[i] << endl;);
-	  
+
 	  fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(),
 		  (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid),
 		  tmpDoubleExcl[i], tmpDoubleIncl[i]);
-	}
-	else{
+	} else {
 	  DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping "
 		       << (*it)->GetName()<< " "  << (*it)->GetType() << " Calls : "
 		       << (*it)->GetCalls(tid) << " Subrs : "<< (*it)->GetSubrs(tid)
@@ -2879,8 +2917,8 @@ void Profiler::SetDepthLimit(int value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.118 $   $Date: 2005/09/09 23:46:37 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.118 2005/09/09 23:46:37 amorris Exp $ 
+ * $Revision: 1.119 $   $Date: 2005/09/13 00:14:22 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.119 2005/09/13 00:14:22 amorris Exp $ 
  ***************************************************************************/
 
 	
