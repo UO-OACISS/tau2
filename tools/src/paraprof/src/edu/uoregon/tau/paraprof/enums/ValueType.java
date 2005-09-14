@@ -8,14 +8,20 @@ import edu.uoregon.tau.dms.dss.*;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: ValueType.java,v 1.7 2005/08/30 19:58:38 amorris Exp $</P>
+ * <P>CVS $Id: ValueType.java,v 1.8 2005/09/14 00:33:38 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 
 public abstract class ValueType {
 
     private final String name;
+    public abstract double getValue(FunctionProfile functionProfile, int metric);
+    public abstract double getThreadMaxValue(edu.uoregon.tau.dms.dss.Thread thread, int metric);
+    public abstract String getSuffix(int units, ParaProfMetric ppMetric);
+    public abstract int getUnits(int units, ParaProfMetric ppMetric);
+        
+    
 
     private ValueType(String name) {
         this.name = name;
@@ -197,12 +203,7 @@ public abstract class ValueType {
         }
     };
 
-    public abstract double getValue(FunctionProfile functionProfile, int metric);
-    public abstract double getThreadMaxValue(edu.uoregon.tau.dms.dss.Thread thread, int metric);
-    public abstract String getSuffix(int units, ParaProfMetric ppMetric);
-    public abstract int getUnits(int units, ParaProfMetric ppMetric);
-        
-    
     public static ValueType[] VALUES = { EXCLUSIVE, INCLUSIVE, EXCLUSIVE_PERCENT, INCLUSIVE_PERCENT, NUMCALLS, NUMSUBR, INCLUSIVE_PER_CALL, EXCLUSIVE_PER_CALL };
+
 }
 

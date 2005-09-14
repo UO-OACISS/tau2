@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.7 2005/09/09 23:32:37 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.8 2005/09/14 00:33:38 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, BarChartModelListener {
@@ -303,7 +303,7 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
         for (int row = 0; row < model.getNumRows(); row++) {
             double rowSum = 0;
             for (int i = 0; i < model.getSubSize(); i++) {
-                double value = Math.max(0,model.getValue(row, i));
+                double value = Math.max(0, model.getValue(row, i));
                 maxRowValues[row] = Math.max(maxRowValues[row], value);
                 maxSubValues[i] = Math.max(maxSubValues[i], value);
                 rowSum += value;
@@ -331,6 +331,10 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
     }
 
     private void drawBar(Graphics2D g2D, int x, int y, int length, int height, Color color, Color highlight) {
+
+//         if (length > 5000) {
+//             System.out.println("length = " + length);
+//         }
 
         // special is whether or not we do the new style bars with the highlight along the top
         boolean special = true;
@@ -374,14 +378,13 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
     }
 
     public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow) {
-        
+
         rowLabelDrawObjects.clear();
         valueDrawObjects.clear();
 
         Font font = ParaProf.preferencesWindow.getFont();
         g2D.setFont(font);
         fontMetrics = g2D.getFontMetrics(font);
-
 
         barVerticalSpacing = 0;
 
@@ -412,16 +415,15 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
         //        System.out.println("getMaxValueLabelStringWidth() = " + getMaxValueLabelStringWidth());
         //        System.out.println("barlength = " + barLength);
         //        System.out.println("fulcrum = " + fulcrum);
-        
+
         // we want the bar to be in the middle of the text
         int barOffset = (int) (maxAscent - (((float) maxDescent + maxAscent + leading) - barHeight) / 2);
 
         checkPreferredSize();
 
         int rowHeight = fontHeight;
-        
-        //System.out.println("rowHeight = " + rowHeight);
 
+        //System.out.println("rowHeight = " + rowHeight);
 
         int y = rowHeight + topMargin;
 
@@ -432,7 +434,6 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
         searcher.setLineHeight(rowHeight);
         searcher.setMaxDescent(fontMetrics.getMaxDescent());
 
-        
         // this could be made faster, but the DrawObjects thing would have to change
         // the problem is that if I just redraw the clipRect, then there are objects on the screen
         // that weren't in the last draw, so we would have to keep track of them some other way
@@ -528,65 +529,66 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
 
                     double otherValue = 0;
 
-                    for (int i = 0; i < model.getSubSize(); i++) {
-                        g2D.setColor(model.getValueColor(row, i));
-                        double value = model.getValue(row, i);
-                        Color color = model.getValueColor(row, i);
-                        
-                        double ratio = (value / maxValue);
-                        int length = (int) (ratio * barLength);
+                    if (maxValue > 0) {
+                        for (int i = 0; i < model.getSubSize(); i++) {
+                            g2D.setColor(model.getValueColor(row, i));
+                            double value = model.getValue(row, i);
+                            Color color = model.getValueColor(row, i);
 
-                        if (length < threshold && stacked) {
-                            otherValue += value;
-                            subDrawObjects.add(null);
-                        } else {
+                            double ratio = (value / maxValue);
+                            int length = (int) (ratio * barLength);
 
-                            int subIndexMaxWidth = (int) (maxSubValues[i] / maxValue * barLength);
-
-                            if (subIndexMaxWidth < threshold) {
-                                // this column will be skipped by all rows since no one's has at least 3 pixels
-                                subDrawObjects.add(null);
+                            if (length < threshold && stacked) {
                                 otherValue += value;
-
+                                subDrawObjects.add(null);
                             } else {
-                                if (value < 0) { // negative means no value
-                                    subDrawObjects.add(null);
 
-                                } else if (length < threshold) {
+                                int subIndexMaxWidth = (int) (maxSubValues[i] / maxValue * barLength);
+
+                                if (subIndexMaxWidth < threshold) {
+                                    // this column will be skipped by all rows since no one's has at least 3 pixels
                                     subDrawObjects.add(null);
                                     otherValue += value;
+
                                 } else {
-                                    drawBar(g2D, barStartX, y - barOffset, length, barHeight, color,
-                                            model.getValueHighlightColor(row, i));
+                                    if (value < 0) { // negative means no value
+                                        subDrawObjects.add(null);
 
-                                    subDrawObjects.add(new DrawObject(barStartX, y - barOffset, barStartX + length, y - barOffset
-                                            + barHeight));
+                                    } else if (length < threshold) {
+                                        subDrawObjects.add(null);
+                                        otherValue += value;
+                                    } else {
+                                        drawBar(g2D, barStartX, y - barOffset, length, barHeight, color,
+                                                model.getValueHighlightColor(row, i));
+
+                                        subDrawObjects.add(new DrawObject(barStartX, y - barOffset, barStartX + length, y
+                                                - barOffset + barHeight));
+                                    }
+
+                                    if (!stacked) {
+                                        barStartX += (maxSubValues[i] / maxValue * barLength) + barHorizSpacing;
+                                    } else {
+                                        barStartX += length;
+                                    }
+
                                 }
-
-                                if (!stacked) {
-                                    barStartX += (maxSubValues[i] / maxValue * barLength) + barHorizSpacing;
-                                } else {
-                                    barStartX += length;
-                                }
-
                             }
                         }
+
+                        int otherLength;
+                        if (normalized) {
+                            otherLength = barLength + fulcrum + horizSpacing - barStartX;
+
+                        } else {
+                            // draw "other" (should make this optional)
+                            double ratio = (otherValue / maxValue);
+                            otherLength = (int) (ratio * barLength);
+                        }
+
+                        drawBar(g2D, barStartX, y - barOffset, otherLength, barHeight, Color.black, null);
+                        subDrawObjects.add(new DrawObject(barStartX, y - barOffset, barStartX + otherLength, y - barOffset
+                                + barHeight));
                     }
-
-                    int otherLength;
-                    if (normalized) {
-                        otherLength = barLength + fulcrum + horizSpacing - barStartX;
-
-                    } else {
-                        // draw "other" (should make this optional)
-                        double ratio = (otherValue / maxValue);
-                        otherLength = (int) (ratio * barLength);
-                    }
-                    
-                    drawBar(g2D, barStartX, y - barOffset, otherLength, barHeight, Color.black, null);
-                    subDrawObjects.add(new DrawObject(barStartX, y - barOffset, barStartX + otherLength, y - barOffset
-                            + barHeight));
-
                     y = y + rowHeight;
                 } else {
                     int barStartX;

@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.31 2005/09/13 18:03:51 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.32 2005/09/14 00:33:37 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.31 $
+ * @version	$Revision: 1.32 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -1388,6 +1388,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         ppTrial = new ParaProfTrial();
         // this must be done before setting the monitored flag
         ppTrial.getTrial().setDataSource(dataSource);
+        ppTrial.setLoading(true);
 
         ppTrial.setMonitored(monitorProfiles);
 
@@ -1400,7 +1401,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             ppTrial.setPaths(System.getProperty("user.dir"));
         }
         ppTrial.getTrial().setName(ppTrial.getPathReverse());
-        ppTrial.setLoading(true);
         if (experiment.dBExperiment()) {
             loadedDBTrials.add(ppTrial);
             ppTrial.setUpload(true); // This trial is not set to a db trial until after it has finished loading.

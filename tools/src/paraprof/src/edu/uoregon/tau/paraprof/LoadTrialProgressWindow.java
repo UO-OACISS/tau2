@@ -158,8 +158,13 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
                                 upload();
                             }
 
+                            final ParaProfTrial thisTrial = ppTrial;
                             ParaProf.paraProfManagerWindow.populateTrialMetrics(ppTrial);
-                            ppTrial.showMainWindow();
+                            EventQueue.invokeLater(new Runnable() {
+                                public void run() {
+                                    thisTrial.showMainWindow();
+                                }
+                            });
                         }
                         ppTrial = null;
                         jTimer.stop();

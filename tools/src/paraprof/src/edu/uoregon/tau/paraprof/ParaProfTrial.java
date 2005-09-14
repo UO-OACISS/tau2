@@ -55,9 +55,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     private boolean monitored;
     //private Timer monitorTimer;
 
-    
     private FileMonitorListener fileMonitorListener;
-    
+
     public ParaProfTrial() {
         trial = new Trial();
         trial.setID(-1);
@@ -503,7 +502,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
         if (monitored == true) {
 
-            FileMonitor fileMonitor = new FileMonitor(1000);
+            FileMonitor fileMonitor = new FileMonitor(5000);
 
             List files = trial.getDataSource().getFiles();
 
@@ -512,50 +511,60 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
                 fileMonitor.addFile(file);
             }
 
-            
             fileMonitorListener = new FileMonitorListener() {
 
                 public void fileChanged(File file) {
                     try {
-//                        System.err.println("fileChanged!");
-                        getDataSource().reloadData();
+                        while (ParaProfTrial.this.loading) {
+                            java.lang.Thread.sleep(1000);
+                        }
+                        //                        System.err.println("fileChanged!");
 
-                        // set the colors
-                        clrChooser.setColors(ParaProfTrial.this, -1);
-
-                        EventQueue.invokeLater(new Runnable() {
+                        EventQueue.invokeAndWait(new Runnable() {
                             public void run() {
-                                updateRegisteredObjects("dataEvent");
+                                try {
+                                    if (getDataSource().reloadData()) {
+
+                                        // set the colors
+                                        clrChooser.setColors(ParaProfTrial.this, -1);
+
+                                        updateRegisteredObjects("dataEvent");
+                                    }
+                                } catch (Exception e) {
+                                    // eat it
+                                }
+
                             }
                         });
+
                     } catch (Exception e) {
                         // eat it
                     }
 
                 }
             };
-            
+
             fileMonitor.addListener(fileMonitorListener);
 
-//            monitorTimer = new Timer();
-//            monitorTimer.scheduleAtFixedRate(new TimerTask() {
-//
-//                public void run() {
-//                    try {
-//                        //                        System.err.println("Monitoring Profiles!");
-//                        getDataSource().reloadData();
-//
-//                        EventQueue.invokeLater(new Runnable() {
-//                            public void run() {
-//                                updateRegisteredObjects("dataEvent");
-//                            }
-//                        });
-//
-//                    } catch (Exception e) {
-//                        // eat it
-//                    }
-//                }
-//            }, 5000, 5000);
+            //            monitorTimer = new Timer();
+            //            monitorTimer.scheduleAtFixedRate(new TimerTask() {
+            //
+            //                public void run() {
+            //                    try {
+            //                        //                        System.err.println("Monitoring Profiles!");
+            //                        getDataSource().reloadData();
+            //
+            //                        EventQueue.invokeLater(new Runnable() {
+            //                            public void run() {
+            //                                updateRegisteredObjects("dataEvent");
+            //                            }
+            //                        });
+            //
+            //                    } catch (Exception e) {
+            //                        // eat it
+            //                    }
+            //                }
+            //            }, 5000, 5000);
         }
     }
 
