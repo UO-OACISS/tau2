@@ -81,6 +81,6 @@ cat <<EOF > /tmp/makefile.tau$$
 EOF
 fi
 
-make -f /tmp/makefile.tau$$
+make -s -f /tmp/makefile.tau$$
 /bin/rm -f /tmp/makefile.tau$$
 
