@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.19 2005/08/24 01:45:05 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.20 2005/09/14 00:31:19 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.19 $
+ * @version	$Revision: 1.20 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -18,9 +18,9 @@ import java.io.*;
  */
 public class Thread implements Comparable {
 
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
+    private int nodeID;
+    private int contextID;
+    private int threadID;
     private List functionProfiles = new ArrayList();
     private List userEventProfiles = new ArrayList();
     private double[] doubleList;

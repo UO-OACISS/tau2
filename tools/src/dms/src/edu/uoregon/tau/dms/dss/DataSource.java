@@ -10,9 +10,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.21 2005/09/10 00:23:49 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.22 2005/09/14 00:31:19 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.21 $
+ * @version	$Revision: 1.22 $
  * @see		TrialData
  * @see		NCT
  */
@@ -48,14 +48,28 @@ public abstract class DataSource {
     abstract public void cancelLoad();
 
     
+    protected volatile boolean reloading;
+    
     // by default no files
     public List getFiles() {
         return new ArrayList();
     }
+
+    public boolean isReloading() {
+        return reloading;
+    }
     
-    public void reloadData() throws Exception {
+    public boolean reloadData() throws Exception {
+        if (this.reloading) {
+            return false;
+        }
+        this.reloading = true;
+        //System.out.println("=> Begin Reloading");
         cleanData();
         load();
+        //System.out.println("=> End Reloading");
+        this.reloading = false;
+        return true;
     }
     
     protected void cleanData() {
