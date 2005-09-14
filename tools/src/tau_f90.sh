@@ -74,8 +74,8 @@ cat <<EOF > /tmp/makefile.tau$$
 EOF
 else
 cat <<EOF > /tmp/makefile.tau$$
-  include $MAKEFILE
-  all:
+include $MAKEFILE
+all:
 	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_F90) $* 
 
 EOF
