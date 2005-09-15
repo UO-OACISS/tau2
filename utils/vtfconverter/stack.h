@@ -37,7 +37,6 @@ class stack
 {
 private:
 	tray * topTray;		// Points to the tray on top
-	tray * lastEntry;	// Used to track most recent timeStamp
 	tray * tempTray;	//For memory control
 	nodeC * parent;		// 'cpu' node which owns this stack
 	double startTime;	// Holds starting interval time if provided.
@@ -54,7 +53,6 @@ public:
 	{
 		parent = n_parent;
 		topTray = 0;
-		lastEntry = 0;
 		tempTray = 0;
 
 		startMets = 0;
@@ -70,7 +68,6 @@ public:
 	{
 		parent = n_parent;
 		topTray = 0;
-		lastEntry = 0;
 
 		startMets = 0;
 		endMets = 0;

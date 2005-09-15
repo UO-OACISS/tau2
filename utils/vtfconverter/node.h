@@ -147,8 +147,9 @@ public:
 	}//node(int, int, char[])
 
 	~node()
-	{delete[] excsamples;
-	 delete[] incsamples;
+	{
+	  delete[] excsamples;
+	  delete[] incsamples;
 	}
 
 	/* Now for function prototypes. */

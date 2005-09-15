@@ -172,7 +172,6 @@ void stack::routine(int n_functionID, double n_timeStamp, unsigned long long * a
   if(topTray == 0)
     {
       topTray = tempTray;
-      lastEntry = tempTray;
       int tempFuncID = topTray->getFunctionID();
       node * tempNode = parent->funcTree->getFuncNode(tempFuncID);
       double tempTime = tempTray->getTimeStamp();
@@ -200,7 +199,7 @@ void stack::routine(int n_functionID, double n_timeStamp, unsigned long long * a
       tempTray->setLastEntrance(n_timeStamp);
       tempTray->setLastSamples(a_samples);//Equi!
 
-      topTray->setNext(tempTray);
+      //      topTray->setNext(tempTray);
       tempTray->setPrevious(topTray);
 
       /* Now calculate the exclusive time for previous function. */
@@ -294,7 +293,6 @@ void stack::routine(int n_functionID, double n_timeStamp, unsigned long long * a
 	 addition to the stack (the top tray). */
       //delete topTray;
       topTray = tempTray;
-      lastEntry = tempTray;
 
       /* Now incSubrs of previous function in topTray.previous. */
       tempTray = tempTray->getPrevious();
@@ -307,9 +305,9 @@ void stack::routine(int n_functionID, double n_timeStamp, unsigned long long * a
 	  // tempNode->incSubrs();
 
 #ifdef DEBUG
-	    printf ("\nstartTime == %G\n", startTime);
-	    printf ("endTime == %G\n", endTime);
-	    printf ("tempExclusive == %G\n", tempExclusive);
+	  printf ("\nstartTime == %G\n", startTime);
+	  printf ("endTime == %G\n", endTime);
+	  printf ("tempExclusive == %G\n", tempExclusive);
 #endif /* DEBUG */
 	  /* I'm not yet positive whether the next
 	     conditional is required or not, I don't have
@@ -362,224 +360,178 @@ void stack::routine(int n_functionID, double n_timeStamp, unsigned long long * a
 void stack::returnfrom(int n_functionID, double n_timeStamp, unsigned long long * a_samples, int n_samplesdim)
 {
   /* The following is for timeStamp error detection. */
-  if(parent->lastTimeOne > n_timeStamp)
-    {
-      parent->totalOutOrder += 1;
-      parent->lastTimeTwo = parent->lastTimeOne;
-      parent->lastTimeOne = n_timeStamp;
-    }//if
-  else
-    {
-      if((parent->lastTimeTwo == n_timeStamp) && (parent->lastTimeOne < n_timeStamp))
-	{
-	  parent->totalRepeats += 1;
-	}//if
-      parent->lastTimeTwo = parent->lastTimeOne;
-      parent->lastTimeOne = n_timeStamp;
-
-    }//else
-  /* Check whether stack is empty. */
-  if(topTray == 0)
-    {
-      cerr << "received exchangeType(2) event when stack is "
-	   << "already empty\n";
-      parent->stackError = 1;
-      return;
+  if (parent->lastTimeOne > n_timeStamp) {
+    parent->totalOutOrder += 1;
+    parent->lastTimeTwo = parent->lastTimeOne;
+    parent->lastTimeOne = n_timeStamp;
+  } else {
+    if((parent->lastTimeTwo == n_timeStamp) && (parent->lastTimeOne < n_timeStamp)) {
+      parent->totalRepeats += 1;
     }
-
+    parent->lastTimeTwo = parent->lastTimeOne;
+    parent->lastTimeOne = n_timeStamp;
+    
+  }
+  /* Check whether stack is empty. */
+  if (topTray == 0) {
+    cerr << "received exchangeType(2) event when stack is "
+	 << "already empty\n";
+    parent->stackError = 1;
+    return;
+  }
+  
 
   /* Now check that topTray is exchangeType(1). */
-  if(topTray->getExchangeType() != 1)
-    {
-      cerr << "missmatched exchangeTypes in traceStack!\n";
-      parent->stackError = 1;
-      return;
-    }
+  if(topTray->getExchangeType() != 1) {
+    cerr << "missmatched exchangeTypes in traceStack!\n";
+    parent->stackError = 1;
+    return;
+  }
 
-  else
-    {
-		
-      //Set tempTray's 'lastEntrance' time.
-      tray * prevTray = topTray->getPrevious();
-      if(prevTray != 0)
-	{
-	  if((prevTray->getFunctionID()) != (n_functionID))
-	    {
-	      cerr << "missmatched functionID's in the trays\n";
-	    }//if
-	  else
-	    {
-	      prevTray->setLastEntrance(n_timeStamp);
-	      prevTray->setLastSamples(a_samples);//Equi!
-	    }//else
-	}//if
+  //Set tempTray's 'lastEntrance' time.
+  tray * prevTray = topTray->getPrevious();
 
-      if(n_functionID == -1)
-	{
-	  //delete tempTray;
-	  lastreturn(n_functionID, n_timeStamp, a_samples, n_samplesdim);
-	  return;
-	}
-
-      /* Verify that the topTray.previousTray is an exchangeType(1)
-	 with matching functionID. */
-
-      tray * the_prev = topTray->getPrevious();
-      if(the_prev != 0)
-	{
-	  if( (the_prev->getFunctionID()) != n_functionID )
-	    {
-	      cerr << "topTray.previous.functionID != "
-		   << "tempTray.functionID in traceStack!\n\n";
-	      parent->stackError = 1;
-	      return;
-	    }//if
-
-	  else
-	    {   
-	      tray * tempTray = new tray(	n_functionID,
-						n_timeStamp, a_samples, n_samplesdim,
-						2);
-
-	      double tempTime = tempTray->getTimeStamp();
-	      double tempExclusive = 0;		// Holds difference to be added.
-	      //double lastTime = lastEntry->getTimeStamp();
-	      double lastTime = topTray->getLastEntrance();
-
-	      //unsigned long * tempSamps = tempTray->getSamples();//Equi!
-	      unsigned long long * tempSamps = new unsigned long long[n_samplesdim];
-	      for(int i = 0; i< n_samplesdim;i++)
-		{
-		  tempSamps[i] = tempTray->getSamples()[i];
-		}
-					
-	      unsigned long long * tempSampExclusive = new unsigned long long[n_samplesdim];//Equi!
-	      unsigned long long * lastSamples = topTray->getLastSamples();//Equ
-
-	      /* If endTime == -1, then the interval option isn't set and
-		 we are profiling the entire tracefile. */
-
-	      if(endTime != -1)
-		{
-
-		  if((tempTime < startTime) || (endTime < lastTime))
-		    {
-		      // Do nothing, doesn't occur within interval.
-		    }//if
-		  else
-		    {
-		      /*
-			cerr << "startTime: " << startTime << "\n";
-			cerr << "endTime: " << endTime << "\n";
-			cerr << "tempTime: " << tempTime << "\n";
-			cerr << "lastTime: " << lastTime << "\n";
-		      */
-
-
-		      if(endTime < tempTime)
-			{
-			  tempTime = endTime;
-			  tempSamps = endMets;
-			}
-		      if(lastTime < startTime)
-			{
-			  lastTime = startTime;
-			  lastSamples = startMets;
-			}
-
-		      tempExclusive = tempTime - lastTime;
-		      for(int i = 0; i<n_samplesdim; i++)
-			{
-			  tempSampExclusive[i] = tempSamps[i]-lastSamples[i];
-			}//for-Equi!
-
-		    }//else
-
-		}//if
-	      else
-		{
-		  /* Else, no interval was set. */
-		  tempExclusive = tempTime - lastTime;
-		  for(int i = 0; i<n_samplesdim; i++)
-		    {
-		      tempSampExclusive[i] = tempSamps[i]-lastSamples[i];
-		    }//for-Equi!
-						
-
-		}//else
-	      delete[] tempSamps;
-	      node * funcNode =
-		(*parent).funcTree->getFuncNode(topTray->getFunctionID());
-
-
-	      if(funcNode != 0)
-		{
-		  funcNode->addExclusive(tempExclusive);
-		  funcNode->addExcSamples(tempSampExclusive,n_samplesdim);//Equi!
-		}
-
-	      /* Inclusive time needs to be handled (calculated)
-		 more carefully when recursion is present in the
-		 program; so for every exchangetype 2 event which
-		 comes to our stack, we now verify whether there
-		 already exists a tray on the stack representing
-		 the function which is currently being pushed.
-		 If an instance of the function already exists,
-		 it implies either recursion or subsequent calls
-		 to identical functions: we don't want to add the
-		 same inclusive time to the same function multiple
-		 times. */
-
-	      tray * searchTray = topTray->getPrevious();
-	      int inclusiveID = topTray->getFunctionID();
-	      int recursionPresent = 0;
-	      while(searchTray != 0)
-		{
-		  if( (searchTray->getFunctionID()) == inclusiveID)
-		    {
-		      recursionPresent = 1;
-		    }//if
-
-		  searchTray = searchTray->getPrevious();
-		}//while
-
-	      if(!recursionPresent)
-		{
-		  norec(funcNode, n_samplesdim, tempTray);
-		}//if(!recursionPresent)
-
-
-	      /* Garbage collect tempTray. */
-	      //delete lastEntry;
-	      lastEntry = tempTray;
-
-	      /* Assign tempTray pointer = topTray for garbage collection
-		 purposes. */
-	      tempTray = topTray;
-
-
-	      /* Now make topTray pointer point to topTray.previous. */
-	      topTray = topTray->getPrevious();
-
-	      /* Now make sure topTray.nextTray == NULL. */
-	      //delete topTray->getNext();
-	      topTray->setNext(0);
-
-	      /* garbage collect what was topTray. */
-	      //delete tempTray;
-	      //delete[] tempSampExclusive;
-	      //tempSampExclusive = NULL;
-	      return;
-	    }//else
-	}//if
-      else
-	{
-	  cerr << "error: the_prev == NULL in stack.\n";
-	  parent->stackError = 1;
-	  return;
-	}//else
+  if (prevTray != 0) {
+    if ((prevTray->getFunctionID()) != (n_functionID)) {
+      cerr << "missmatched functionID's in the trays\n";
+    } else {
+      prevTray->setLastEntrance(n_timeStamp);
+      prevTray->setLastSamples(a_samples);//Equi!
     }//else
+  }//if
+
+  if(n_functionID == -1) {
+    //delete tempTray;
+    lastreturn(n_functionID, n_timeStamp, a_samples, n_samplesdim);
+    return;
+  }
+
+  /* Verify that the topTray.previousTray is an exchangeType(1)
+     with matching functionID. */
+
+
+  if (prevTray == 0) {
+    cerr << "error: prevTray == NULL in stack.\n";
+    parent->stackError = 1;
+    return;
+  }
+
+
+
+  if ( (prevTray->getFunctionID()) != n_functionID ) {
+    cerr << "topTray.previous.functionID != "
+	 << "tempTray.functionID in traceStack!\n\n";
+    parent->stackError = 1;
+    return;
+  } 
+
+  
+  tray * tempTray = new tray(	n_functionID,
+				n_timeStamp, a_samples, n_samplesdim,
+				2);
 	
+  double tempTime = tempTray->getTimeStamp();
+  double tempExclusive = 0;		// Holds difference to be added.
+  //double lastTime = lastEntry->getTimeStamp();
+  double lastTime = topTray->getLastEntrance();
+	
+  //unsigned long * tempSamps = tempTray->getSamples();//Equi!
+  unsigned long long * tempSamps = new unsigned long long[n_samplesdim];
+  for(int i = 0; i< n_samplesdim;i++) {
+    tempSamps[i] = tempTray->getSamples()[i];
+  }
+	
+  unsigned long long * tempSampExclusive = new unsigned long long[n_samplesdim];//Equi!
+  unsigned long long * lastSamples = topTray->getLastSamples();//Equ
+	
+  /* If endTime == -1, then the interval option isn't set and
+     we are profiling the entire tracefile. */
+	
+  if (endTime != -1) {
+    if ((tempTime < startTime) || (endTime < lastTime)) {
+      // Do nothing, doesn't occur within interval.
+    } else {
+      /*
+	cerr << "startTime: " << startTime << "\n";
+	cerr << "endTime: " << endTime << "\n";
+	cerr << "tempTime: " << tempTime << "\n";
+	cerr << "lastTime: " << lastTime << "\n";
+      */
+	    
+	    
+      if(endTime < tempTime) {
+	tempTime = endTime;
+	tempSamps = endMets;
+      }
+      if(lastTime < startTime) {
+	lastTime = startTime;
+	lastSamples = startMets;
+      }
+	    
+      tempExclusive = tempTime - lastTime;
+      for(int i = 0; i<n_samplesdim; i++) {
+	tempSampExclusive[i] = tempSamps[i]-lastSamples[i];
+      }
+	    
+    }//else
+	  
+  } else {
+    /* Else, no interval was set. */
+    tempExclusive = tempTime - lastTime;
+    for(int i = 0; i<n_samplesdim; i++) {
+      tempSampExclusive[i] = tempSamps[i]-lastSamples[i];
+    }//for-Equi!
+	  
+	  
+  }//else
+  delete[] tempSamps;
+  node * funcNode =
+    (*parent).funcTree->getFuncNode(topTray->getFunctionID());
+	
+	
+  if (funcNode != 0) {
+    funcNode->addExclusive(tempExclusive);
+    funcNode->addExcSamples(tempSampExclusive,n_samplesdim);//Equi!
+  }
+
+  /* Inclusive time needs to be handled (calculated)
+     more carefully when recursion is present in the
+     program; so for every exchangetype 2 event which
+     comes to our stack, we now verify whether there
+     already exists a tray on the stack representing
+     the function which is currently being pushed.
+     If an instance of the function already exists,
+     it implies either recursion or subsequent calls
+     to identical functions: we don't want to add the
+     same inclusive time to the same function multiple
+     times. */
+
+  tray * searchTray = topTray->getPrevious();
+  int inclusiveID = topTray->getFunctionID();
+  int recursionPresent = 0;
+  while(searchTray != 0){
+    if( (searchTray->getFunctionID()) == inclusiveID) {
+      recursionPresent = 1;
+    }//if
+	  
+    searchTray = searchTray->getPrevious();
+  }
+	
+  if(!recursionPresent) {
+    norec(funcNode, n_samplesdim, tempTray);
+  }
+	
+	
+  delete tempTray;
+  tempTray = topTray;
+	
+	
+  /* Now make topTray pointer point to topTray.previous. */
+  topTray = topTray->getPrevious();
+	
+  delete tempTray;
+
+  
   return;
 }
 
@@ -659,7 +611,7 @@ void stack::norec(node * funcNode, int n_samplesdim, tray * tempTray)
       funcNode->addIncSamples(tempSampInclusive,n_samplesdim);//Equi!
     }
   delete[] tempSamps;
-  delete tempTray;
+  //  delete tempTray;
   tempTray = 0;
 }
 
@@ -695,43 +647,37 @@ void stack::lastreturn(int n_functionID, double n_timeStamp, unsigned long long 
   /* If endTime == -1, then the interval option isn't set and
      we are profiling the entire tracefile. */
 
-  if(endTime != -1)
-    {
-
-      if((tempTime < startTime) || (endTime < lastTime))
+  if(endTime != -1) {
+    
+    if((tempTime < startTime) || (endTime < lastTime)) {
+	// Do nothing, doesn't occur within interval.
+    } else {
+      /*
+	cerr << "startTime: " << startTime << "\n";
+	cerr << "endTime: " << endTime << "\n";
+	cerr << "tempTime: " << tempTime << "\n";
+	cerr << "lastTime: " << lastTime << "\n";
+      */
+      
+      if(endTime < tempTime)
 	{
-	  // Do nothing, doesn't occur within interval.
-	}//if
-      else
+	  tempTime = endTime;
+	  tempSamps = endMets;
+	}
+      if(lastTime < startTime)
 	{
-	  /*
-	    cerr << "startTime: " << startTime << "\n";
-	    cerr << "endTime: " << endTime << "\n";
-	    cerr << "tempTime: " << tempTime << "\n";
-	    cerr << "lastTime: " << lastTime << "\n";
-	  */
-
-	  if(endTime < tempTime)
-	    {
-	      tempTime = endTime;
-	      tempSamps = endMets;
-	    }
-	  if(lastTime < startTime)
-	    {
-	      lastTime = startTime;
-	      lastSamples = startMets;
-	    }
-
-	  tempExclusive = tempTime - lastTime;
-	  for(int i = 0; i<n_samplesdim; i++)
-	    {
-	      tempSampExclusive[i] = tempSamps[i]-lastSamples[i];
-	    }//for-Equi!
-	}//else
-
-    }//if
-  else
-    {
+	  lastTime = startTime;
+	  lastSamples = startMets;
+	}
+      
+      tempExclusive = tempTime - lastTime;
+      for(int i = 0; i<n_samplesdim; i++)
+	{
+	  tempSampExclusive[i] = tempSamps[i]-lastSamples[i];
+	}//for-Equi!
+    }//else
+    
+  } else {
       /* Else, no interval was set. */
       tempExclusive = tempTime - lastTime;
       for(int i = 0; i<n_samplesdim; i++)
@@ -766,25 +712,23 @@ void stack::lastreturn(int n_functionID, double n_timeStamp, unsigned long long 
   tray * searchTray = topTray->getPrevious();
   int inclusiveID = topTray->getFunctionID();
   int recursionPresent = 0;
-  while(searchTray != 0)
-    {
-      if( (searchTray->getFunctionID()) == inclusiveID)
-	{
-	  recursionPresent = 1;
-	}//if
-
-      searchTray = searchTray->getPrevious();
-    }//while
-
-  if(!recursionPresent)
-    {
-      norec(funcNode, n_samplesdim, tempTray);
-    }//if(!recursionPresent)
+  while(searchTray != 0) {
+    if( (searchTray->getFunctionID()) == inclusiveID) {
+      recursionPresent = 1;
+    }//if
+    
+    searchTray = searchTray->getPrevious();
+  }//while
+  
+  if(!recursionPresent) {
+    norec(funcNode, n_samplesdim, tempTray);
+  }//if(!recursionPresent)
 
   /* Garbage collect tempTray. */
   //delete lastEntry;
   //lastEntry = 0;
-  lastEntry = tempTray;
+
+  delete tempTray;
 
   /* Assign tempTray pointer = topTray for garbage collection
      purposes. */

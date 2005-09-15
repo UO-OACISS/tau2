@@ -117,10 +117,10 @@ tray * tray::getPrevious(void)
  
 	Parameters: none
 ************************************************************************/
-tray * tray::getNext(void)
-{
-	return(nextTray);
-}//getNext
+// tray * tray::getNext(void)
+// {
+// 	return(nextTray);
+// }//getNext
 
 /************************************************************************
 	tray::setPrevious
@@ -130,7 +130,7 @@ tray * tray::getNext(void)
 ************************************************************************/
 void tray::setPrevious(tray * n_previousTray)
 {
-	delete previousTray;
+  //	delete previousTray;
 	previousTray = n_previousTray;
 	return;
 }//setPrevious
@@ -141,12 +141,12 @@ void tray::setPrevious(tray * n_previousTray)
  
 	Parameters: reference to a tray pointer ( pass by address)
 ************************************************************************/
-void tray::setNext(tray * n_nextTray)
-{
-	delete nextTray;
-	nextTray = n_nextTray;
-	return;
-}//setNext
+// void tray::setNext(tray * n_nextTray)
+// {
+//   //	delete nextTray;
+// 	nextTray = n_nextTray;
+// 	return;
+// }//setNext
 
 /************************************************************************
 	tray::getLastEntrance
