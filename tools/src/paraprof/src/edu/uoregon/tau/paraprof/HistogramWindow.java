@@ -19,9 +19,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.18 2005/09/08 22:40:44 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.19 2005/09/19 21:49:42 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  * @see		HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
@@ -54,7 +54,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         this.function = function;
 
         setTitle("Histogram: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        setSize(new java.awt.Dimension(670, 630));
+        setSize(ParaProfUtils.checkSize(new java.awt.Dimension(670, 630)));
         setLocation(WindowPlacer.getNewLocation(this,invoker));
 
         //Add some window listener code

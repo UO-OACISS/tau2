@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.10 2005/09/08 22:40:45 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.11 2005/09/19 21:49:43 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -60,7 +60,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         // create the column chooser.  Note: the column chooser holds the data on which columns are shown
         columnChooser = new ColumnChooser(this, ppTrial);
 
-        setSize(1000, 600);
+        setSize(ParaProfUtils.checkSize(new Dimension(1000, 600)));
+
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 
         if (thread.getNodeID() == -1) {
@@ -198,7 +199,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         //columns.add(new MiniHistogramColumn(this));
 
         model = new CallPathModel(this, ppTrial, thread);
-        JTreeTable treeTable = createTreeTable(model);
+        createTreeTable(model);
         addComponents();
 
     }
@@ -282,7 +283,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     }
 
-    private JTreeTable createTreeTable(AbstractTreeTableModel model) {
+    private void createTreeTable(AbstractTreeTableModel model) {
         //        treeTable = new JTreeTable(model, showAsTreeMenuItem.isSelected());
         treeTable = new JTreeTable(model, true, this);
 
@@ -295,10 +296,16 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         TableColumn col = treeTable.getColumnModel().getColumn(0);
 
         int nameWidth = 500;
+        
 
         if (ppTrial.getNumberOfMetrics() > 1) {
             nameWidth = 350;
         }
+
+        if (ParaProf.demoMode) {
+            nameWidth = 200;
+        }
+
         col.setPreferredWidth(nameWidth);
 
         int numCols = treeTable.getColumnCount();
@@ -306,8 +313,6 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         col.setPreferredWidth(10);
         col = treeTable.getColumnModel().getColumn(numCols - 1);
         col.setPreferredWidth(10);
-
-        return treeTable;
     }
 
     public void treeCollapsed(TreeExpansionEvent event) {

@@ -32,9 +32,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.36 2005/09/08 22:40:43 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.37 2005/09/19 21:49:41 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.36 $
+ * @version	$Revision: 1.37 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ImageExport, Printable, ParaProfWindow {
@@ -346,7 +346,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         if (prefSize.height > 1000)
             prefSize.height = 1000;
 
-        setSize(prefSize);
+        setSize(ParaProfUtils.checkSize(prefSize));
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 
         this.setVisible(true);

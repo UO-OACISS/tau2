@@ -502,7 +502,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
         if (monitored == true) {
 
-            FileMonitor fileMonitor = new FileMonitor(5000);
+            FileMonitor fileMonitor = new FileMonitor(1000);
 
             List files = trial.getDataSource().getFiles();
 

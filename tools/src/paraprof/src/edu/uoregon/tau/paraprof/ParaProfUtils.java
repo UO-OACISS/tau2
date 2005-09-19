@@ -1173,4 +1173,17 @@ public class ParaProfUtils {
         new ParaProfErrorDialog(e);
     }
 
+    public static Dimension checkSize(Dimension d) {
+        if (!ParaProf.demoMode) {
+            return d;
+        }
+        
+        int width = d.width;
+        int height = d.height;
+        
+        width = Math.min(width, 640);
+        height = Math.min(height,480);
+        return new Dimension(width, height);
+    }
+    
 }

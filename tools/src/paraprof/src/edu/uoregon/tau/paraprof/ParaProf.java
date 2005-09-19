@@ -20,11 +20,11 @@ import edu.uoregon.tau.dms.dss.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.56 2005/09/08 22:40:44 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.57 2005/09/19 21:49:42 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.56 $
+ * @version $Revision: 1.57 $
  */
 public class ParaProf implements ActionListener {
 
@@ -69,6 +69,7 @@ public class ParaProf implements ActionListener {
     private static boolean monitorProfiles;
     //End - Command line options related.
 
+    public static boolean demoMode;
     
     public static FunctionBarChartWindow theComparisonWindow;
     
@@ -354,6 +355,7 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
         CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
         CmdLineParser.Option monitorOpt = parser.addBooleanOption('m', "monitor");
+        CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
 
         try {
             parser.parse(args);
@@ -369,7 +371,10 @@ public class ParaProf implements ActionListener {
         String pack = (String) parser.getOptionValue(packOpt);
         Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
         Boolean monitor = (Boolean) parser.getOptionValue(monitorOpt);
-        
+        Boolean demo = (Boolean) parser.getOptionValue(demoOpt);
+
+        demoMode = demo != null && demo.booleanValue();
+
         if (monitor != null) {
             monitorProfiles = monitor.booleanValue();
         }

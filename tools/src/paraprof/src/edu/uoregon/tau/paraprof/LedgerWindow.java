@@ -18,9 +18,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.19 2005/09/08 22:40:44 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.20 2005/09/19 21:49:42 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.19 $
+ * @version	$Revision: 1.20 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -54,7 +54,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
         this.windowType = windowType;
 
-        setSize(new java.awt.Dimension(350, 450));
+        setSize(ParaProfUtils.checkSize(new java.awt.Dimension(350, 450)));
 
         //setLocation(new java.awt.Point(300, 200));
         setLocation(WindowPlacer.getNewLedgerLocation(this, parent));

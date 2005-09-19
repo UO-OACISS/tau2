@@ -26,9 +26,9 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.7 2005/09/08 22:40:43 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.8 2005/09/19 21:49:42 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -158,7 +158,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
         int windowWidth = 650;
         int windowHeight = 550;
-        setSize(new java.awt.Dimension(windowWidth, windowHeight));
+        setSize(ParaProfUtils.checkSize(new java.awt.Dimension(windowWidth, windowHeight)));
         setLocation(WindowPlacer.getNewLocation(this, parent));
 
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -650,7 +650,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
             if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
                     || showValuesAsPercent.isSelected()) {
-                return starter;
+                return starter + "\n";
             } else {
                 return starter + "\nUnits: "
                         + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";

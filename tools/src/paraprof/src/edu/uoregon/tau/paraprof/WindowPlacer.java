@@ -17,8 +17,9 @@ public class WindowPlacer {
 
     private static List visibleWindows = new ArrayList();
 
-    private static List lastLocations = new ArrayList();
+    private static int lastXOffset;
 
+    
     static void addToVisibleList(JFrame frame) {
         visibleWindows.add(frame);
     }
@@ -47,6 +48,7 @@ public class WindowPlacer {
             placement.setLocation(placement.x, 0);
         }
 
+        sanityCheck(frame, placement);
         return placement;
     }
 
@@ -97,9 +99,12 @@ public class WindowPlacer {
         y = Math.min(y, screenHeight - frame.getHeight());
         y = Math.max(y, 0);
         p.setLocation(x, y);
-    }
+        
 
-    private static int lastXOffset;
+        if (ParaProf.demoMode) {
+            p.setLocation(0, 0);
+        }
+    }
 
     public static Point getNewLocation(JFrame frame, Component parent) {
         if (lastLocation == null) {
@@ -125,6 +130,7 @@ public class WindowPlacer {
         }
 
         lastLocation = new Point(x, y);
+        sanityCheck(frame, lastLocation);
         return lastLocation;
     }
 

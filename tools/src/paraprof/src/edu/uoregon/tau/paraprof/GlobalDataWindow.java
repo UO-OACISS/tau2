@@ -22,9 +22,9 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.4 2005/09/08 22:40:43 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.5 2005/09/19 21:49:42 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -76,7 +76,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         }
         int windowWidth = 750;
         int windowHeight = 410;
-        setSize(new java.awt.Dimension(windowWidth, windowHeight));
+        setSize(ParaProfUtils.checkSize(new java.awt.Dimension(windowWidth, windowHeight)));
 
         setLocation(WindowPlacer.getGlobalDataWindowPosition(this));
 
@@ -91,6 +91,9 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 //        int yPosition = ParaProf.paraProfManagerWindow.getLocation().y;
 //        setLocation(xPosition + 75, yPosition + 110);
 
+        if (ParaProf.demoMode) {
+            barLengthSlider.setValue(500);
+        }
         
         
         
