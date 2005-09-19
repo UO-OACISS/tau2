@@ -67,7 +67,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         this.userEventWindow = userEventWindow;
         this.thread = thread;
 
-        setSize(new java.awt.Dimension(1000, 600));
+        
+        setSize(ParaProfUtils.checkSize(new Dimension(1000, 600)));
 
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 
