@@ -99,7 +99,7 @@ int EnterState(void *userData, double time,
 		exit(1);
 	}
 	callstack[cpuid].push(stateid);
-	ElgOut_write_ENTER((ElgOut*)userData, cpuid, time, matchreg[stateid], 0, NULL);
+	ElgOut_write_ENTER((ElgOut*)userData, cpuid, time * 1e-6, matchreg[stateid], 0, NULL);
 	return 0;
 }
 
@@ -118,7 +118,7 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid)
 	int cpuid = GlobalId(nid, tid);
 	/*int stateid = callstack[cpuid].top();*/
 	callstack[cpuid].pop();
-	ElgOut_write_EXIT((ElgOut*)userData, cpuid, time, 0, NULL);	
+	ElgOut_write_EXIT((ElgOut*)userData, cpuid, time * 1e-6, 0, NULL);	
 	return 0;
 }
 
@@ -129,10 +129,11 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid)
  ***************************************************************************/
 int ClockPeriod( void*  userData, double clkPeriod )
 {
-	dprintf("Clock period %g\n", clkPeriod);
+        dprintf("Clock period %g\n", clkPeriod);
 	if(clkPeriod==0)
 		return 0;
-	clockp = 1000000/clkPeriod;//1/(clkPeriod/1000000);
+	//clockp = 1000000/clkPeriod;//1/(clkPeriod/1000000);
+	clockp = clkPeriod;//1/(clkPeriod/1000000);
 	return 0;
 }
 
@@ -216,7 +217,7 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 		strings,
 		ELG_NO_ID,
 		ELG_NO_LNO,
-		ELG_NO_LNO, ELG_NO_ID, ELG_FUNCTION);//last ELG_NO_ID for descript
+		ELG_NO_LNO, strings, ELG_FUNCTION);//last ELG_NO_ID for descript
 	strings++;
 	matchreg[stateToken]=regs;
 	return 0;
@@ -314,7 +315,7 @@ int SendMessage( void *userData, double time,
 	dprintf("SendMessage:time %g, source nid %d tid %d, destination nid %d tid %d, size %d, tag %d\n", time, sourceNodeToken, sourceThreadToken, destinationNodeToken, destinationThreadToken, messageSize, messageTag);
 	int source = GlobalId(sourceNodeToken, sourceThreadToken);
 	int dest   = GlobalId(destinationNodeToken, destinationThreadToken);
-	ElgOut_write_MPI_SEND((ElgOut*)userData, source, time, dest, 0, messageTag,messageSize);//elg_ui4 cid = 0
+	ElgOut_write_MPI_SEND((ElgOut*)userData, source, time * 1e-6, dest, 0, messageTag,messageSize);//elg_ui4 cid = 0
 	//VTF3_WriteSendmsg(userData, time, source, dest, TAU_DEFAULT_COMMUNICATOR, 
 	//messageTag, messageSize, VTF3_SCLNONE);
 	return 0;
@@ -349,7 +350,7 @@ int RecvMessage( void *userData, double time,
 	dprintf("RecvMessage: time %g, source nid %d tid %d, destination nid %d tid %d, size %d, tag %d\n", time, sourceNodeToken, sourceThreadToken, destinationNodeToken, destinationThreadToken, messageSize, messageTag);
 	int source = GlobalId(sourceNodeToken, sourceThreadToken);
 	int dest = GlobalId(destinationNodeToken, destinationThreadToken);
-	ElgOut_write_MPI_RECV((ElgOut*)userData, dest, time, source, 0, messageTag);//elg_ui4 cid, = 0
+	ElgOut_write_MPI_RECV((ElgOut*)userData, dest, time * 1e-6, source, 0, messageTag);//elg_ui4 cid, = 0
 	//VTF3_WriteRecvmsg(userData, time, dest, source, TAU_DEFAULT_COMMUNICATOR, 
 	//messageTag, messageSize, VTF3_SCLNONE);
 	return 0;
