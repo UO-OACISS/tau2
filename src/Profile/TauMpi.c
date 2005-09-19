@@ -246,6 +246,9 @@ char *note;
 
   /* Remove the record from the request list */
   if (last) {
+    if (rq == requests_tail_0) {
+      requests_tail_0 = last;
+    }
     last->next = rq->next;
   } else {
     requests_head_0 = rq->next;
@@ -290,6 +293,9 @@ char *note;
   }
   /* remove the request */
   if (last) {
+    if (rq == requests_tail_0) {
+      requests_tail_0 = last;
+    }
     last->next = rq->next;
   } else {
     requests_head_0 = rq->next;
