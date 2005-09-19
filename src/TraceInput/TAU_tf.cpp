@@ -244,7 +244,7 @@ void determineFormat(Ttf_fileT *tFile) {
 
 
   if (formatFound == false) {
-    printf ("couldn't determine format, using native!\n");
+    fprintf (stderr, "couldn't determine format, using native!\n");
     tFile->format = FORMAT_NATIVE;
     tFile->eventSize = sizeof(PCXX_EV_NATIVE);
   }
@@ -484,8 +484,6 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 #endif /* DEBUG */
 
   }
-
-  printf ("reading records!\n");
 
   /* Read n records and go through each event record */
   if ((bytesRead = read(tFile->Fid, traceBuffer, recordsToRead*tFile->eventSize))
@@ -843,6 +841,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.14 $   $Date: 2005/08/27 02:03:23 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.14 2005/08/27 02:03:23 amorris Exp $ 
+ * $Revision: 1.15 $   $Date: 2005/09/19 16:37:35 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.15 2005/09/19 16:37:35 amorris Exp $ 
  ***************************************************************************/
