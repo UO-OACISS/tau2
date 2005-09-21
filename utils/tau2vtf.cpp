@@ -158,8 +158,8 @@ const char *threadName )
   numthreads[nodeToken] = numthreads[nodeToken] + 1; 
   if(numthreads[nodeToken]==1)
   {
-	nodename[nodeToken]=nodename.size()-1;
-	nodenum[nodename[nodeToken]=nodeToken;
+	nodename[nodeToken]=nodename.size();
+	nodenum[nodename[nodeToken]]=nodeToken;
 	printf("Node: %d, ID: %d\n",nodeToken,nodename[nodeToken]);
   }
   if (threadToken > 0) multiThreaded = true; 
@@ -512,7 +512,8 @@ int main(int argc, char **argv)
 
   /* Then write out the thread names if it is multi-threaded */
   if (multiThreaded)
-  { /* create the thread ids */
+  {
+    /* create the thread ids */
     unsigned int groupid = 0x1 << 31; /* Valid vampir group id nos */
     int tid = 0; 
     int nodes = numthreads.size(); /* total no. of nodes */ 
@@ -520,7 +521,8 @@ int main(int argc, char **argv)
     offset = new int[nodes+1];
     offset[0] = 0; /* no offset for node 0 */
     for (i=0; i < nodes; i++)
-    { /* one for each node */
+    {
+      /* one for each node */
       threadnumarray[i] = numthreads[i]; 
       offset[i+1] = offset[i] + numthreads[i]; 
     }
@@ -531,18 +533,29 @@ int main(int argc, char **argv)
       char name[32];
       for (tid = 0; tid < threadnumarray[i]; tid++)
       {
-        sprintf(name, "node %d, thread %d", i, tid);
-        int cpuid = GlobalId(i,tid);
+        sprintf(name, "node %d, thread %d", nodenum[i], tid);
+        int cpuid = GlobalId(nodenum[i],tid);
         cpuidarray[tid] = cpuid;
         VTF3_WriteDefcpuname(fcb, cpuid, name);
       }
-      sprintf(name, "Node %d", i);
+      sprintf(name, "Node %d", nodenum[i]);
       groupid ++; /* let flat group for samples take the first one */
       /* Define a group: threadnumarray[i] represents no. of threads in node */
       VTF3_WriteDefcpugrp(fcb, groupid, threadnumarray[i], 
 		(const unsigned int *) cpuidarray, name);
     }
     delete[] cpuidarray;
+  }
+  else
+  {
+     int nodes = numthreads.size();
+     for(i=0;i<nodes;i++)
+     {
+         char name[32];
+	 sprintf(name, "node %d",nodenum[i]);
+	 int cpuid = GlobalId(nodenum[i],1);
+	 VTF3_WriteDefcpuname(fcb, cpuid, name);
+     }
   }
 
 
@@ -631,8 +644,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2vtf.cpp,v $   $Author: wspear $
- * $Revision: 1.9 $   $Date: 2005/09/21 22:34:25 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.9 2005/09/21 22:34:25 wspear Exp $
+ * $Revision: 1.10 $   $Date: 2005/09/21 23:14:04 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.10 2005/09/21 23:14:04 wspear Exp $
  ***************************************************************************/
 
 
