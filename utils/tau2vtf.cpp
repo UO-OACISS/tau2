@@ -34,6 +34,8 @@ bool multiThreaded = false;
 /* implementation of callback routines */
 map< pair<int,int>, int, less< pair<int,int> > > EOF_Trace;
 map< int,int, less<int > > numthreads; 
+map< int,int > nodename;
+map <int, int> nodenum;
 /* numthreads[k] is no. of threads in rank k */
 
 int EndOfTrace = 0;  /* false */
@@ -64,6 +66,7 @@ int *offset = 0;
 /* utilities */
 int GlobalId(int localnodeid, int localthreadid)
 {
+  localnodeid=nodename[localnodeid];
   if (multiThreaded)
   {
     if (offset == (int *) NULL)
@@ -145,8 +148,20 @@ const char *threadName )
 {
   dprintf("DefThread nid %d tid %d, thread name %s\n", 
 		  nodeToken, threadToken, threadName);
+		  
+  
+		  
   EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = 0; /* initialize it */
+  
+  
+  
   numthreads[nodeToken] = numthreads[nodeToken] + 1; 
+  if(numthreads[nodeToken]==1)
+  {
+	nodename[nodeToken]=nodename.size()-1;
+	nodenum[nodename[nodeToken]=nodeToken;
+	printf("Node: %d, ID: %d\n",nodeToken,nodename[nodeToken]);
+  }
   if (threadToken > 0) multiThreaded = true; 
   return 0;
 }
@@ -512,7 +527,7 @@ int main(int argc, char **argv)
     unsigned int *cpuidarray = new unsigned int[totalnidtids]; /* max */
     /* next, we write the cpu name and a group name for node/threads */
     for (i=0; i < nodes; i++)
-    { 
+    {
       char name[32];
       for (tid = 0; tid < threadnumarray[i]; tid++)
       {
@@ -615,9 +630,9 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau2vtf.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 2005/01/05 22:46:38 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.8 2005/01/05 22:46:38 sameer Exp $
+ * $RCSfile: tau2vtf.cpp,v $   $Author: wspear $
+ * $Revision: 1.9 $   $Date: 2005/09/21 22:34:25 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.9 2005/09/21 22:34:25 wspear Exp $
  ***************************************************************************/
 
 
