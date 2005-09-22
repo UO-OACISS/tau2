@@ -766,7 +766,8 @@ int edfspecified; /* tau_events also needs this */
 int main(int argc, char *argv[])
 {
   int i, active, numtrc, source, errflag, first;
-  int adjust, min_over, reassembly, numedfprocessed;
+  int adjust, min_over, reassembly;
+  int numedfprocessed;
   int startedfindex, edfcount;
   unsigned long min_time, first_time;
   long numrec;
@@ -789,7 +790,7 @@ int main(int argc, char *argv[])
   adjust     = FALSE;
   reassembly = TRUE;
   edfspecified = FALSE; /* by default edf files are not specified on cmdline */
-  numedfprocessed = 0 ; /* only used with -e events.*.edf files are specified */
+  numedfprocessed = 0; /* only used with -e events.*.edf files are specified */
   first_time = 0L;
   mergededffile = strdup("tau.edf"); /* initialize it */
 
@@ -864,12 +865,13 @@ int main(int argc, char *argv[])
       fprintf (stderr, "%s: too many input traces:\n", argv[0]);
       fprintf (stderr, "  1. merge half of the input traces\n");
       fprintf (stderr, "  2. merge other half and output of step 1\n");
+      fprintf (stderr, "  Or use, \"tau_treemerge.pl\"\n");
       exit (1);
   }
   trcdes = (struct trcdescr *) malloc (active * sizeof(struct trcdescr));
 
   for (i=optind; i<argc-1; i++) {
-/*     printf ("opening %s!\n", argv[i]); */
+/*     printf ("opening %s!\n", argv[i]);  */
     /* -- open input trace -------------------------------------------------- */
     if ( (trcdes[numtrc].fd = open (argv[i], O_RDONLY | O_BINARY | LARGEFILE_OPTION )) < 0 ) {
 /*       printf ("failed!\n"); */
@@ -945,6 +947,10 @@ int main(int argc, char *argv[])
 	    char eventfilename[2048];
 	    sprintf(eventfilename, "events.%d.edf", trcdes[numtrc].nid); 
 	    open_edf_file(eventfilename, numtrc, TRUE);
+	  }
+	  if (edfspecified && numtrc >= numedfprocessed) {
+	    fprintf (stderr, "Error: When specifying -e, you must specify one .edf file for each trace\n");
+	    exit(-1);
 	  }
 	  parse_edf_file(numtrc);
 	}
