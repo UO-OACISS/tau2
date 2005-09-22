@@ -111,7 +111,7 @@ int EnterState(void *userData, double time,
 }
 
 /***************************************************************************
- * Description: EnterState is called at routine exit by trace input library
+ * Description: LeaveState is called at routine exit by trace input library
  * 		This is a callback routine which must be registered by the 
  * 		trace converter. 
  ***************************************************************************/
@@ -119,6 +119,11 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid)
 {
   dprintf("Leaving state time %g nid %d tid %d\n", time, nid, tid);
   int cpuid = GlobalId(nid, tid);
+  if (callstack[cpuid].size()==0) 
+  {
+    fprintf(stderr, "ERROR: tau2vtf: LeaveState() cpuid %d has state departure before entry\n", cpuid);
+    exit(1);
+  }
   int stateid = callstack[cpuid].top();
   callstack[cpuid].pop();
   
@@ -162,7 +167,7 @@ const char *threadName )
 	nodename[nodeToken]=countnodes;//nodename.size();
 	nodenum[countnodes]=nodeToken;
 	countnodes++;
-	printf("Node: %d, ID: %d\n",nodeToken,nodename[nodeToken]);
+	//printf("Node: %d, ID: %d\n",nodeToken,nodename[nodeToken]);
   }
   if (threadToken > 0) multiThreaded = true; 
   return 0;
@@ -646,8 +651,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2vtf.cpp,v $   $Author: wspear $
- * $Revision: 1.11 $   $Date: 2005/09/22 19:53:55 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.11 2005/09/22 19:53:55 wspear Exp $
+ * $Revision: 1.12 $   $Date: 2005/09/22 20:42:53 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.12 2005/09/22 20:42:53 wspear Exp $
  ***************************************************************************/
 
 
