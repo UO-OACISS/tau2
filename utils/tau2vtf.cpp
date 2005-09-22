@@ -36,6 +36,7 @@ map< pair<int,int>, int, less< pair<int,int> > > EOF_Trace;
 map< int,int, less<int > > numthreads; 
 map< int,int > nodename;
 map <int, int> nodenum;
+int countnodes = 0;
 /* numthreads[k] is no. of threads in rank k */
 
 int EndOfTrace = 0;  /* false */
@@ -158,8 +159,9 @@ const char *threadName )
   numthreads[nodeToken] = numthreads[nodeToken] + 1; 
   if(numthreads[nodeToken]==1)
   {
-	nodename[nodeToken]=nodename.size();
-	nodenum[nodename[nodeToken]]=nodeToken;
+	nodename[nodeToken]=countnodes;//nodename.size();
+	nodenum[countnodes]=nodeToken;
+	countnodes++;
 	printf("Node: %d, ID: %d\n",nodeToken,nodename[nodeToken]);
   }
   if (threadToken > 0) multiThreaded = true; 
@@ -530,7 +532,7 @@ int main(int argc, char **argv)
     /* next, we write the cpu name and a group name for node/threads */
     for (i=0; i < nodes; i++)
     {
-      char name[32];
+      char name[64];
       for (tid = 0; tid < threadnumarray[i]; tid++)
       {
         sprintf(name, "node %d, thread %d", nodenum[i], tid);
@@ -551,7 +553,7 @@ int main(int argc, char **argv)
      int nodes = numthreads.size();
      for(i=0;i<nodes;i++)
      {
-         char name[32];
+         char name[64];
 	 sprintf(name, "node %d",nodenum[i]);
 	 int cpuid = GlobalId(nodenum[i],1);
 	 VTF3_WriteDefcpuname(fcb, cpuid, name);
@@ -644,8 +646,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2vtf.cpp,v $   $Author: wspear $
- * $Revision: 1.10 $   $Date: 2005/09/21 23:14:04 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.10 2005/09/21 23:14:04 wspear Exp $
+ * $Revision: 1.11 $   $Date: 2005/09/22 19:53:55 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.11 2005/09/22 19:53:55 wspear Exp $
  ***************************************************************************/
 
 
