@@ -3675,6 +3675,7 @@ then
   cp ${tauroot}/tools/src/vis/bin/vis.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/batik-combined.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/epsgraphics.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jfreechart-0.9.21.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jcommon-0.9.6.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jgraph.jar ${tauroot}/${architecture}/lib
@@ -3750,7 +3751,8 @@ else
   cp ${tauroot}/tools/src/dms/dms.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/vis/bin/vis.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/batik-combined.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/batik-combined.jar ${tauprefix}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/epsgraphics.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jfreechart-0.9.21.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jcommon-0.9.6.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jgraph.jar ${tauprefix}/${architecture}/lib
