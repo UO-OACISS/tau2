@@ -1,0 +1,322 @@
+package edu.uoregon.tau.dms.dss;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+
+import edu.uoregon.tau.dms.database.DB;
+
+public class DBDataSource extends DataSource {
+
+    private Object initializeObject;
+
+    private volatile boolean abort = false;
+    private volatile int totalItems = 0;
+    private volatile int itemsDone = 0;
+
+    private Map ieToFunction = new HashMap();
+    private Map metricMap = new HashMap();
+
+    public DBDataSource(Object initializeObject) {
+        super();
+        this.setMetrics(new Vector());
+        this.initializeObject = initializeObject;
+    }
+
+    public int getProgress() {
+        return 0;
+        //return DatabaseAPI.getProgress();
+    }
+
+    public void cancelLoad() {
+        abort = true;
+        return;
+    }
+
+    private void createMetricMap() throws SQLException {
+        DatabaseAPI databaseAPI = (DatabaseAPI) initializeObject;
+
+        DB db = databaseAPI.db();
+
+        StringBuffer buf = new StringBuffer();
+        buf.append("select id, name ");
+        buf.append("from " + db.getSchemaPrefix() + "metric ");
+        buf.append("where trial = ");
+        buf.append(databaseAPI.getTrial().getID());
+        buf.append(" order by id ");
+        // System.out.println(buf.toString());
+
+        // get the results
+        int count = 0;
+        ResultSet resultSet = db.executeQuery(buf.toString());
+        while (resultSet.next() != false) {
+            metricMap.put(new Integer(resultSet.getInt(1)), new Integer(count));
+            count++;
+        }
+        resultSet.close();
+    }
+
+    private void alternateIntervalEventLoader() throws SQLException {
+        DatabaseAPI databaseAPI = (DatabaseAPI) initializeObject;
+        DB db = databaseAPI.db();
+
+        StringBuffer buf = new StringBuffer();
+        buf.append("select p.interval_event, p.metric, p.node, p.context, p.thread, ");
+        buf.append("p.inclusive_percentage, ");
+
+        if (db.getDBType().compareTo("oracle") == 0) {
+            buf.append("p.inclusive, p.exclusive_percentage, p.excl, ");
+        } else {
+            buf.append("p.inclusive, p.exclusive_percentage, p.exclusive, ");
+        }
+        buf.append("p.call, p.subroutines ");
+        buf.append("from " + db.getSchemaPrefix() + "interval_event e inner join " + db.getSchemaPrefix()
+                + "interval_location_profile p ");
+        buf.append("on e.id = p.interval_event ");
+        buf.append("WHERE e.trial = " + databaseAPI.getTrial().getID());
+//        buf.append(" order by p.interval_event, p.node, p.context, p.thread, p.metric ");
+
+        long time;
+        time = System.currentTimeMillis();
+
+        ResultSet resultSet = db.executeQuery(buf.toString());
+        System.out.println("Query took: " + (System.currentTimeMillis() - time) + "ms");
+        time = System.currentTimeMillis();
+
+        int count = 0;
+        while (resultSet.next() != false) {
+            count++;
+            Node node = this.getNode(resultSet.getInt(3));
+            if (node == null)
+                node = this.addNode(resultSet.getInt(3));
+            Context context = node.getContext(resultSet.getInt(4));
+            if (context == null)
+                context = node.addContext(resultSet.getInt(4));
+            Thread thread = context.getThread(resultSet.getInt(5));
+            if (thread == null) {
+                thread = context.addThread(resultSet.getInt(5), this.getNumberOfMetrics(), ieToFunction.size());
+            }
+
+//            Function function = (Function) ieToFunction.get(new Integer(resultSet.getInt(1)));
+//            //            Function function = this.getFunction(databaseAPI.getIntervalEvent(resultSet.getInt(1)).getName());
+//            FunctionProfile functionProfile = thread.getFunctionProfile(function);
+//
+//            if (functionProfile == null) {
+//                functionProfile = new FunctionProfile(function, this.getNumberOfMetrics());
+//                thread.addFunctionProfile(functionProfile);
+//            }
+//
+//            int dbMetricID = resultSet.getInt(2);
+//            int metricID = ((Integer)metricMap.get(new Integer(dbMetricID))).intValue();
+//
+//            if (metricID == 0) {
+//                functionProfile.setNumCalls(resultSet.getDouble(10));
+//                functionProfile.setNumSubr(resultSet.getDouble(11));
+//            }
+//            functionProfile.setExclusive(metricID, resultSet.getDouble(9));
+//            functionProfile.setInclusive(metricID, resultSet.getDouble(7));
+//            functionProfile.setExclusivePercent(metricID, resultSet.getDouble(7));
+//            functionProfile.setInclusivePercent(metricID, resultSet.getDouble(6));
+        }
+        resultSet.close();
+
+        System.out.println("count = " + count);
+        System.out.println("ResultSet->DMS took: " + (System.currentTimeMillis() - time) + "ms");
+
+    }
+
+    public void load() throws SQLException {
+        DatabaseAPI databaseAPI = (DatabaseAPI) initializeObject;
+
+        Function function = null;
+        UserEvent userEvent = null;
+        FunctionProfile functionProfile = null;
+        UserEventProfile userEventProfile = null;
+
+        Node node = null;
+        Context context = null;
+        edu.uoregon.tau.dms.dss.Thread thread = null;
+        int nodeID = -1;
+        int contextID = -1;
+        int threadID = -1;
+
+        // System.out.println("Processing data, please wait ......");
+        long time = System.currentTimeMillis();
+
+        int numberOfMetrics = databaseAPI.getNumberOfMetrics();
+        for (int i = 0; i < numberOfMetrics; i++) {
+            this.addMetric(databaseAPI.getMetricName(i));
+        }
+
+        //Add the functionProfiles.
+        ListIterator l = databaseAPI.getIntervalEvents().listIterator();
+
+        meanData = new Thread(-1, -1, -1, numberOfMetrics);
+        totalData = new Thread(-2, -2, -2, numberOfMetrics);
+
+        totalItems += this.getNumFunctions();
+
+        while (l.hasNext()) {
+            IntervalEvent ie = (IntervalEvent) l.next();
+
+            function = this.addFunction(ie.getName(), numberOfMetrics);
+
+            ieToFunction.put(new Integer(ie.getID()), function);
+            FunctionProfile meanProfile = new FunctionProfile(function, numberOfMetrics);
+            function.setMeanProfile(meanProfile);
+            meanData.addFunctionProfile(meanProfile);
+
+            FunctionProfile totalProfile = new FunctionProfile(function, numberOfMetrics);
+            function.setTotalProfile(totalProfile);
+            totalData.addFunctionProfile(totalProfile);
+
+            IntervalLocationProfile ilp = ie.getMeanSummary();
+
+            if (ie.getGroup() != null) {
+
+                String groupNames = ie.getGroup();
+                StringTokenizer st = new StringTokenizer(groupNames, "|");
+                while (st.hasMoreTokens()) {
+                    String groupName = st.nextToken();
+                    if (groupName != null) {
+                        // The potential new group is added here. If the group is already present,
+                        // then the addGroup function will just return the
+                        // already existing group id. See the TrialData
+                        // class for more details.
+                        Group group = this.addGroup(groupName.trim());
+                        function.addGroup(group);
+                    }
+                }
+
+                //Group group = this.addGroup(ie.getGroup());
+                //function.addGroup(group);
+                this.setGroupNamesPresent(true);
+            }
+
+            for (int i = 0; i < numberOfMetrics; i++) {
+                meanProfile.setExclusive(i, ilp.getExclusive(i));
+                meanProfile.setExclusivePercent(i, ilp.getExclusivePercentage(i));
+                meanProfile.setInclusive(i, ilp.getInclusive(i));
+                meanProfile.setInclusivePercent(i, ilp.getInclusivePercentage(i));
+                //meanProfile.setInclusivePerCall(i, ilp.getInclusivePerCall(i));
+                meanProfile.setNumCalls(ilp.getNumCalls());
+                meanProfile.setNumSubr(ilp.getNumSubroutines());
+
+            }
+
+            ilp = ie.getTotalSummary();
+            for (int i = 0; i < numberOfMetrics; i++) {
+                totalProfile.setExclusive(i, ilp.getExclusive(i));
+                totalProfile.setExclusivePercent(i, ilp.getExclusivePercentage(i));
+                totalProfile.setInclusive(i, ilp.getInclusive(i));
+                totalProfile.setInclusivePercent(i, ilp.getInclusivePercentage(i));
+                //totalProfile.setInclusivePerCall(i, ilp.getInclusivePerCall(i));
+                totalProfile.setNumCalls(ilp.getNumCalls());
+                totalProfile.setNumSubr(ilp.getNumSubroutines());
+            }
+        }
+
+        System.out.println("Time up to 'getIntervalEventData': " + (System.currentTimeMillis() - time));
+
+        createMetricMap();
+        alternateIntervalEventLoader();
+        time = System.currentTimeMillis();
+
+//                l = databaseAPI.getIntervalEventData().listIterator();
+//        
+//                time = System.currentTimeMillis();
+//        
+//                while (l.hasNext()) {
+//                    IntervalLocationProfile fdo = (IntervalLocationProfile) l.next();
+//                    node = this.getNode(fdo.getNode());
+//                    if (node == null)
+//                        node = this.addNode(fdo.getNode());
+//                    context = node.getContext(fdo.getContext());
+//                    if (context == null)
+//                        context = node.addContext(fdo.getContext());
+//                    thread = context.getThread(fdo.getThread());
+//                    if (thread == null) {
+//                        thread = context.addThread(fdo.getThread(), numberOfMetrics);
+//                    }
+//        
+//                    //Get Function and FunctionProfile.
+//        
+//                    function = this.getFunction(databaseAPI.getIntervalEvent(fdo.getIntervalEventID()).getName());
+//                    functionProfile = thread.getFunctionProfile(function);
+//        
+//                    if (functionProfile == null) {
+//                        functionProfile = new FunctionProfile(function, numberOfMetrics);
+//                        thread.addFunctionProfile(functionProfile);
+//                    }
+//        
+//                    for (int i = 0; i < numberOfMetrics; i++) {
+//                        functionProfile.setExclusive(i, fdo.getExclusive(i));
+//                        functionProfile.setInclusive(i, fdo.getInclusive(i));
+//                        functionProfile.setExclusivePercent(i, fdo.getExclusivePercentage(i));
+//                        functionProfile.setInclusivePercent(i, fdo.getInclusivePercentage(i));
+//                        //functionProfile.setInclusivePerCall(i, fdo.getInclusivePerCall(i));
+//                        functionProfile.setNumCalls(fdo.getNumCalls());
+//                        functionProfile.setNumSubr(fdo.getNumSubroutines());
+//                    }
+//                }
+
+        l = databaseAPI.getAtomicEvents().listIterator();
+        while (l.hasNext()) {
+            AtomicEvent ue = (AtomicEvent) l.next();
+            this.addUserEvent(ue.getName());
+            setUserEventsPresent(true);
+        }
+
+        l = databaseAPI.getAtomicEventData().listIterator();
+        while (l.hasNext()) {
+            AtomicLocationProfile alp = (AtomicLocationProfile) l.next();
+
+            // do we need to do this?
+            node = this.getNode(alp.getNode());
+            if (node == null)
+                node = this.addNode(alp.getNode());
+            context = node.getContext(alp.getContext());
+            if (context == null)
+                context = node.addContext(alp.getContext());
+            thread = context.getThread(alp.getThread());
+            if (thread == null) {
+                thread = context.addThread(alp.getThread(), numberOfMetrics);
+            }
+
+            userEvent = this.getUserEvent(databaseAPI.getAtomicEvent(alp.getAtomicEventID()).getName());
+
+            userEventProfile = thread.getUserEventProfile(userEvent);
+
+            if (userEventProfile == null) {
+                userEventProfile = new UserEventProfile(userEvent);
+                thread.addUserEvent(userEventProfile);
+            }
+
+            userEventProfile.setUserEventNumberValue(alp.getSampleCount());
+            userEventProfile.setUserEventMaxValue(alp.getMaximumValue());
+            userEventProfile.setUserEventMinValue(alp.getMinimumValue());
+            userEventProfile.setUserEventMeanValue(alp.getMeanValue());
+            userEventProfile.setUserEventSumSquared(alp.getSumSquared());
+            userEventProfile.updateMax();
+
+        }
+        System.out.println("ILP->dms: " + (System.currentTimeMillis() - time));
+
+        time = (System.currentTimeMillis()) - time;
+        //        System.out.println("Time to download file (in milliseconds): " + time);
+
+        for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
+            ((Thread) it.next()).setThreadDataAllMetrics();
+        }
+        this.meanData.setThreadDataAllMetrics();
+
+        if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
+            setCallPathDataPresent(true);
+        }
+
+        // yep, I'm going to do it anyway, I have other stats to compute, we're just discarding the
+        // database values.
+        generateDerivedData();
+
+    }
+}

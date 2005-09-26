@@ -1,0 +1,141 @@
+#!/bin/@SHELL@
+TAUROOT=@TAUROOTDIR@
+CONFIG_ARCH=@ARCH@
+
+PERFDMF_HOME=${TAUROOT}/tools/src/perfdmf
+PERFDMF_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/perfdmf.jar
+XMLSAX_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
+JARGS_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
+CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
+
+if [ "x$TAUROOT" = "x" ] 
+    then
+    echo "TAUROOT not set.  Please run 'configure' in the tau root directory."
+    exit
+fi
+
+if [ ! -r ${PERFDMF_JAR} ]
+    then
+    echo ""
+    echo "$PERFDMF_JAR not found."
+    echo "Please run 'make' in the directory ${PERFDMF_HOME}."
+    echo ""
+    exit 
+fi
+
+if [ ! -r ${XMLSAX_JAR} ]
+    then
+    echo ""
+    echo "$XMLSAX_JAR not found."
+    echo ""
+    exit
+fi
+
+if [ ! -r ${JARGS_JAR} ]
+    then
+    echo ""
+    echo "$JARGS_JAR not found."
+    echo ""
+    exit
+fi
+
+if [ ! -r ${HOME}/.ParaProf ]
+    then
+    mkdir ${HOME}/.ParaProf
+fi
+
+java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR} edu.uoregon.tau.perfdmf.loader.Configure -t ${TAUROOT} -a ${CONFIG_ARCH} -g ${CONFIG_FILE}
+
+
+JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} | sed s/jdbc_db_jarfile://`
+
+if [ ! -r ${JDBC_JAR} ]; then
+    echo ""
+    echo "$JDBC_JAR not found."
+    echo ""
+    
+    
+    JDBC_ROOT=`basename ${JDBC_JAR}`
+    
+    if [ x${JDBC_ROOT} == "xojdbc14.jar" ]; then
+	echo ""
+	echo "Sorry, can't automatically download drivers for Oracle"
+	echo "Please acquire them manually"
+	exit
+    else
+
+	echo "JDBC drivers are not distributed with TAU.  You should acquire the JDBC driver"
+	echo "that corresponds to the database you are connecting to.  TAU can now attempt "
+	echo "to download a JDBC driver that will *probably* work."  
+	echo ""
+	
+	
+	    # -- set up portable echo command
+	case "`echo 'x\c'`" in
+	    'x\c')  echo="echo -n"  nnl= ;;     #BSD
+	    x)      echo="echo"     nnl="\c";;  #SysV
+	    *)      echo 'Cannot setup echo. What weird machine do you have?' 1>2&
+		exit 1;;
+	esac
+	
+	while [ "x$RESPONSE" = "x" ]; do
+	    $echo "Would you like to attempt to automatically download a JDBC driver? (y/n) ${nnl}"
+	    read RESPONSE
+	    case $RESPONSE in
+		[yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
+		[nN]|[Nn][Oo]) RESPONSE=n ;;
+	    esac
+	    
+	done
+	
+	
+	if [ "${RESPONSE}" == "y" ]; then 
+	    
+	    WGET=`which wget 2>/dev/null`
+	    
+	    if [ ! -r "$WGET" ]; then
+		echo ""
+		echo "Couldn't find wget, you'll have to manually download your JDBC driver"
+		exit 1
+	    fi
+	    
+	    if [ x${JDBC_ROOT} == "xmysql.jar" ]; then
+		/bin/rm -f mysql-redirect.html
+                wget http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html
+                URL=`grep URL mysql-redirect.html | sed s/URL=//`
+                FILE=`grep FILE mysql-redirect.html | sed s/FILE=//`
+                TAR=`grep TAR mysql-redirect.html | sed s/TAR=//`
+                JAR=`grep JAR mysql-redirect.html | sed s/JAR=//`
+                echo wget "$URL"
+                wget "$URL"
+                gunzip "$FILE"
+                tar -Oxf "$TAR" "$JAR" > ${JDBC_JAR}
+                rm "$TAR"
+		/bin/rm -f mysql-redirect.html
+	    fi
+	    
+	    if [ x${JDBC_ROOT} == "xpostgresql.jar" ]; then
+		/bin/rm -f postgresql-redirect.html
+                wget http://www.cs.uoregon.edu/research/paracomp/tau/postgresql-redirect.html
+                URL=`grep URL postgresql-redirect.html | sed s/URL=//`
+                FILE=`grep FILE postgresql-redirect.html | sed s/FILE=//`
+		wget "$URL"
+		mv "$FILE" ${JDBC_JAR}
+		/bin/rm -f postgresql-redirect.html
+	    fi
+	    
+	    
+	    if [ ! -r ${JDBC_JAR} ]; then
+		echo ""
+		echo "Still couldn't find $JDBC_JAR, please acquire your JDBC driver manually"
+		echo ""
+		
+		exit
+	    fi
+	else
+	    exit
+	fi
+    fi
+fi
+
+java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${JDBC_JAR} edu.uoregon.tau.perfdmf.loader.ConfigureTest -t ${TAUROOT} -a ${CONFIG_ARCH} -g ${CONFIG_FILE}

@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<!--
+
+  $Id: package.html,v 1.1 2005/09/26 20:24:34 amorris Exp $
+
+-->
+</head>
+<body bgcolor="white">
+
+Provides an API for access to TAU performance data.
+
+<p>
+The DMS package provides access to the TAU data in three forms:  
+PerfDMF database, pprof.dat files, and streaming TAU data.  The user
+is expected to create an instance of a DataSession object, and refer
+to all data through the public methods of the DataSession object.
+</p>
+<p>
+Currently, only support for PerfDMF is available.  Support for pprof.dat
+files and streaming TAU data will be available in a future release.
+</p>
+<p>
+The DataSession object can return one of several data objects, including
+Application, Experiment, Trial, Function, FunctionDataObject, UserEvent 
+and UserEventDataObject.
+</p>
+
+
+<h2>Package Specification</h2>
+
+N/A
+<!--
+<ul>
+  <li><a href="">##### REFER TO ANY FRAMEMAKER SPECIFICATION HERE #####</a>
+</ul>
+-->
+
+<h2>Related Documentation</h2>
+
+For overviews, tutorials, examples, guides, and tool documentation, please see:
+<ul>
+  <li><a href="../../../../../../src/examples/TestPerfDMFSession.java">TestPerfDMFSession.java</a>
+  <li><a href="../../../../../../src/examples/SimpleExample.java">SimpleExample.java</a>
+  <li><a href="../../../../../../doc/README.perfdmf">README file for PerfDMF</a>
+  <li><a href="../../../../../../../../../README">README file for TAU</a>
+</ul>
+
+<!-- Put @see and @since tags down here. -->
+@see edu.uoregon.tau.dms.dss.Application
+@see edu.uoregon.tau.dms.dss.DataSession
+@see edu.uoregon.tau.dms.dss.DataSessionIterator
+@see edu.uoregon.tau.dms.dss.Experiment
+@see edu.uoregon.tau.dms.dss.IntervalEvent
+@see edu.uoregon.tau.dms.dss.IntervalLocationProfile
+@see edu.uoregon.tau.dms.dss.PerfDMFSession
+@see edu.uoregon.tau.dms.dss.Trial
+@see edu.uoregon.tau.dms.dss.AtomicEvent
+@see edu.uoregon.tau.dms.dss.AtomicLocationProfile
+@since 0.1
+
+</body>
+</html>

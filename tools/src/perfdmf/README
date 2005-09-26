@@ -1,0 +1,155 @@
+PerfDMF
+
+University of Oregon
+
+Copyright © 2005 University of Oregon Performance Research Lab
+
+-------------------------------------------------------------------------------
+
+Table of Contents
+
+1. Introduction
+
+    Prerequisites
+    Installation
+
+2. Using PerfDMF
+
+    perfdmf_createapp
+    perfdmf_createapp
+    perfdmf_loadtrial
+
+Chapter 1. Introduction
+
+Table of Contents
+
+Prerequisites
+Installation
+
+PerfDMF (Performance Data Management Framework) is a an API/Toolkit that sits
+atop a DBMS to manage and anaylize performance data. The API is available in
+its native Java form as well as C.
+
+Prerequisites
+
+ 1. A supported database (currently, PostgreSQL, MySQL, or Oracle).
+
+ 2. Java 1.4.
+
+Installation
+
+The PerfDMF utilities and applications are installed as part of the standard
+TAU release. Shell scripts are installed in the TAU bin directory to configure
+and run the utilities. It is assumed that the user has installed TAU and run
+TAU's configre and 'make install'.
+
+ 1. Create a database. This step will depend on the user's chosen database.
+
+      * PostgreSQL:
+
+        $ createdb -O perfdmf perfdmf
+
+        Or, from psql
+
+        psql=# create database perfdmf with owner = perfdmf;
+
+      * MySQL: From the MySQL prompt
+
+        mysql> create database perfdmf;
+
+      * Oracle: It is recommended that you create a tablespace for perfdmf:
+
+        create tablespace perfdmf
+        datafile '/path/to/somewhere' size 500m reuse;
+
+        Then, create a user that has this tablespace as default:
+
+        create user amorris identified by db;
+        grant create session to amorris;
+        grant create table to amorris;
+        grant create sequence to amorris;
+        grant create trigger to amorris;
+        alter user amorris quota unlimited on perfdmf;
+        alter user amorris default tablespace perfdmf;
+
+        PerfDMF is set up to use the Oracle Thin Java driver. You will have to
+        obtain this jar file for your database. In our case, it was ojdbc14.jar
+
+ 2. Configure PerfDMF. To configure PerfDMF, run the perfdmf_configure from the
+    TAU bin directory.
+
+    The configuration program will prompt the user for several values. The
+    default values will work for most users. When configuration is complete, it
+    will connect to the database and test the configuration. If the
+    configuration is valid and the schema is not found (as will be the case on
+    initial configuration), the schema will be uploaded. Be sure to specify the
+    correct schema for your database.
+
+Chapter 2. Using PerfDMF
+
+Table of Contents
+
+perfdmf_createapp
+perfdmf_createapp
+perfdmf_loadtrial
+
+The easiest way to interact with PerfDMF is to use ParaProf which provides a
+GUI interface to all of the database information. In addition, the following
+commandline utilities are provided.
+
+perfdmf_createapp
+
+This utility creates applications with a given name
+
+$ perfdmf_createapp -n "New Application"
+Created Application, ID: 24
+
+perfdmf_createapp
+
+This utility creates experiments with a given name, under a specified
+application
+
+$ perfdmf_createexp -a 24 -n "New Experiment"
+Created Experiment, ID: 38
+
+perfdmf_loadtrial
+
+This utility uploads a trial to the database with a given name, under a
+specified experiment
+
+Usage: perfdmf_loadtrial -e <experiment id> -n <name>
+                                     [options] <files>
+
+Required Arguments:
+
+  -e, --experimentid <number>    Specify associated experiment
+                                       ID for the trial
+  -n, --name <text>              Specify the name of the trial
+
+Optional Arguments:
+
+  -f, --filetype <filetype>   Specify type of performance data,
+                               options are: profiles (default), pprof,
+                               dynaprof, mpip, gprof, psrun, hpm,
+                               packed, cube, hpc
+  -t, --trialid <number>         Specify trial ID
+  -i, --fixnames                 Use the fixnames option for gprof
+
+Notes:
+  For the TAU profiles type, you can specify either a specific set of
+  profile files on the commandline, or you can specify a directory
+  (by default the current directory).  The specified directory will
+  be searched for profile.*.*.* files, or, in the case of
+  multiple counters, directories named MULTI_* containing profile data.
+
+Examples:
+
+  perfdmf_loadtrial -e 12 -n "Batch 001"
+    This will load profile.* (or multiple counters directories MULTI_*)
+    into experiment 12 and give the trial the name "Batch 001"
+
+  perfdmf_loadtrial -e 12 -n "HPM data 01" perfhpm*
+    This will load perfhpm* files of type HPMToolkit into experiment
+    12 and give the trial the name "HPM data 01"
+
+

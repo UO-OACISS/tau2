@@ -1,0 +1,11 @@
+
+
+Once a PostgreSQL is installed, a database needs to be created.  This database
+can be called anything the user likes - perfdmf is the default.
+e.g.
+
+	$ createdb -O perfdmf perfdmf
+
+If the user is in psql, the command is:
+
+	psql=# create database perfdmf with owner = perfdmf;
