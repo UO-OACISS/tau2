@@ -1256,6 +1256,9 @@ int RtsLayer::MergeAndConvertTracesIfNecessary(void)
 
       /* and execute it */
 #ifndef TAU_CATAMOUNT
+/* NOTE: BGL will not execute this code as well because the compute node 
+   kernels cannot fork tasks. So, on BGL, nothing will happen when the 
+   following system command executes */
       system(cmd);
 #endif /* TAU_CATAMOUNT */
     } /* on node 0, thread 0 */
@@ -1292,7 +1295,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.67 $   $Date: 2005/07/29 21:44:05 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.67 2005/07/29 21:44:05 amorris Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.68 $   $Date: 2005/09/26 17:58:09 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.68 2005/09/26 17:58:09 sameer Exp $ 
  ***************************************************************************/

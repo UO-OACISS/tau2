@@ -59,6 +59,9 @@ using namespace std;
 #if (!defined(TAU_WINDOWS))
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
 #include <sys/time.h>
 #else
@@ -1798,7 +1801,11 @@ bool Profiler::createDirectories(){
       sprintf(mkdircommand,"mkdir -p %s",newdirname);
     
       //system(rmdircommand);
-      system(mkdircommand);
+      //system(mkdircommand);
+      /* On IBM BGL, system command doesn't execute. So, we need to create
+      these directories using our mkdir syscall instead. */
+      mkdir(newdirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+     
     }
   }
     flag = false;
@@ -2916,9 +2923,9 @@ void Profiler::SetDepthLimit(int value)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.119 $   $Date: 2005/09/13 00:14:22 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.119 2005/09/13 00:14:22 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.120 $   $Date: 2005/09/26 17:58:09 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.120 2005/09/26 17:58:09 sameer Exp $ 
  ***************************************************************************/
 
 	
