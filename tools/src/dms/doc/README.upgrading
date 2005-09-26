@@ -1,8 +1,0 @@
-Notes for upgrading from tau-2.13:
-
-If you are upgrading from tau-2.13, please make sure that you run 
-the conversion SQL commands before trying to use the updated perfdmf 
-commands.  To run the SQL commands with the PostgreSQL DBMS and a 
-database named "perfdb", do the following:
-
-	$ psql perfdb < $TAUROOT/tools/src/dms/data/conversion.sql

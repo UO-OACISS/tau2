@@ -1,9 +1,0 @@
-
-# Create a database for use with PerfDMF:
-# e.g.
-
-mysql> create database perfdmf;
-
-# connect to it using perfdmf_configure to set up the schema
-
-> perfdmf_configure
