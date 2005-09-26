@@ -1271,7 +1271,18 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 { /* only if the earlier clause was false will this be executed */
 		  is_if_stmt = true;
                 }
-
+		/* Before we declare that we should insert the then clause,
+		 * we need to ensure that a then does not appear in the 
+		 * statement already */
+		if (is_if_stmt == true)
+ 		{
+		  /* does a then appear? */
+		  if (strstr(checkbuf, "THEN") != NULL) 
+		    is_if_stmt = false;
+		  if (strstr(checkbuf, "then") != NULL) 
+		    is_if_stmt = false;
+		}
+		  
 		/* Check to see if return is in a continuation line */
 		/* such as :
 		 *     if(  (ii/=jj  .or. kk<=0)  .and. &
@@ -1703,9 +1714,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.70 $   $Date: 2005/08/26 20:27:09 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.70 2005/08/26 20:27:09 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.71 $   $Date: 2005/09/26 17:27:30 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.71 2005/09/26 17:27:30 sameer Exp $
  ***************************************************************************/
 
 
