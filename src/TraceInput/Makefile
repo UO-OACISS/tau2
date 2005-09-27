@@ -68,9 +68,9 @@ LDFLAGS	      	= $(USER_OPT) $(TAU_LDFLAGS)
 
 LIBTARGET 	= libTAU_traceinput$(TAU_OPTIONS).a
 
-OBJS		= TAU_tf.o TAU_Cwrapper.o 
+OBJS		= TAU_tf.o TAU_Cwrapper.o TAU_tf_writer.o
 
-HDRS 		= ../../include/TAU_tf.h TAU_tf_decl.h TAU_tf_headers.h
+HDRS 		= ../../include/TAU_tf.h ../../include/TAU_tf_writer.h TAU_tf_decl.h TAU_tf_headers.h
 
 ##############################################
 
@@ -95,6 +95,9 @@ $(LIBTARGET):	$(OBJS)
 TAU_tf.o : TAU_tf.cpp $(HDRS)
 	$(TAU_CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TAU_tf_writer.o : TAU_tf_writer.cpp $(HDRS)
+	$(TAU_CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 TAU_Cwrapper.o : TAU_Cwrapper.cpp $(HDRS)
 	$(TAU_CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -102,7 +105,7 @@ clean:
 	$(RM) $(OBJS) $(LIBTARGET) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 ##############################################
 #/***************************************************************************
-# * $RCSfile: Makefile,v $   $Author: sameer $
-# * $Revision: 1.6 $   $Date: 2004/11/10 22:56:35 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.6 2004/11/10 22:56:35 sameer Exp $ 
+# * $RCSfile: Makefile,v $   $Author: amorris $
+# * $Revision: 1.7 $   $Date: 2005/09/27 20:07:30 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.7 2005/09/27 20:07:30 amorris Exp $ 
 # ***************************************************************************/

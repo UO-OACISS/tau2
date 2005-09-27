@@ -584,9 +584,19 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
     {
       if ((eventDescr.Param != NULL) && (strcmp(eventDescr.Param,"TriggerValue\n")==0))
       { /* User defined event */
-	 if (*callbacks.EventTrigger)
-	   (*callbacks.EventTrigger)(callbacks.UserData, ts, nid, tid, 
-				     event_GetEv(tFile, traceBuffer, i), event_GetPar(tFile, traceBuffer, i));
+	
+	if (*callbacks.EventTrigger) {
+	  x_uint64 parameter = event_GetPar(tFile, traceBuffer, i);
+	  
+	  // to use as a double
+//	  double dparameter = *(reinterpret_cast<double*>(&parameter));
+// 	  (*callbacks.EventTrigger)(callbacks.UserData, ts, nid, tid, 
+// 				     event_GetEv(tFile, traceBuffer, i), 
+// 				     dparameter);
+	  (*callbacks.EventTrigger)(callbacks.UserData, ts, nid, tid, 
+				     event_GetEv(tFile, traceBuffer, i), 
+				     parameter);
+	}
       }
       if (eventDescr.Tag == TAU_MESSAGE_SEND_EVENT) 
       {
@@ -643,25 +653,23 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
       }
     }
     if ((parameter == 0) && (eventDescr.EventName != NULL) &&
-		    (strcmp(eventDescr.EventName, "\"FLUSH_CLOSE\"") == 0))
-    {
+		    (strcmp(eventDescr.EventName, "\"FLUSH_CLOSE\"") == 0)) {
       /* reset the flag in NidTidMap to 0 (from 1) */
       (*tFile->NidTidMap)[pair<int,int>(nid,tid)] = 0; 
       /* setting this flag to 0 tells us that a flush close has taken place 
        * on this node, thread */
-    }
-    else
-    { /* see if it is a WALL_CLOCK record */
+    } else { 
+      /* see if it is a WALL_CLOCK record */
       if ((parameter != 1) && (parameter != -1) && (eventDescr.EventName != NULL) 
-        && (strcmp(eventDescr.EventName, "\"WALL_CLOCK\"") == 0)) 
-      { /* ok, it is a wallclock event alright. But is it the *last* wallclock event?
+        && (strcmp(eventDescr.EventName, "\"WALL_CLOCK\"") == 0)) { 
+	/* ok, it is a wallclock event alright. But is it the *last* wallclock event?
 	 * We can confirm that it is if the NidTidMap flag has been set to 0 by a 
 	 * previous FLUSH_CLOSE call */
-
-	 if ((*tFile->NidTidMap)[pair<int,int>(nid,tid)] == 0 )
-	 {
+	
+	if ((*tFile->NidTidMap)[pair<int,int>(nid,tid)] == 0 )
+	  {
 #ifdef DEBUG
-           printf("LAST WALL_CLOCK! End of trace file detected \n");
+	    printf("LAST WALL_CLOCK! End of trace file detected \n");
 #endif /* DEBUG */
 	   /* see if an end of the trace callback is registered and 
 	    * if it is, invoke it.*/
@@ -841,6 +849,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.15 $   $Date: 2005/09/19 16:37:35 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.15 2005/09/19 16:37:35 amorris Exp $ 
+ * $Revision: 1.16 $   $Date: 2005/09/27 20:07:30 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.16 2005/09/27 20:07:30 amorris Exp $ 
  ***************************************************************************/

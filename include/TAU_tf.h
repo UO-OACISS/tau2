@@ -16,6 +16,8 @@
 #ifndef _TAU_TF_H_
 #define _TAU_TF_H_
 
+#include "TAU_tf_writer.h"
+
 /* callbacks */
 typedef int (*Ttf_DefClkPeriodT)( void*  userData,
                                   double clkPeriod );
@@ -76,11 +78,12 @@ typedef int (*Ttf_DefUserEvent)( void *userData,
 				);
 
 typedef int (*Ttf_EventTrigger)( void *userData, 
-				double time, 
-				unsigned int nodeToken,
-				unsigned int threadToken,
-				unsigned int userEventToken,
-				long long userEventValue
+				 double time, 
+				 unsigned int nodeToken,
+				 unsigned int threadToken,
+				 unsigned int userEventToken,
+				 // double userEventValue
+				 long long userEventValue
 				);
 
 /* callback table */
@@ -102,8 +105,6 @@ typedef struct Ttf_Callbacks
 } Ttf_CallbacksT;
    
 
-/* TAU file handler */
-typedef void* Ttf_FileHandleT;
 
 
 #ifdef __cplusplus
@@ -168,9 +169,9 @@ Ttf_FileHandleT Ttf_CloseFile( Ttf_FileHandleT fileHandle );
 
 
 /***************************************************************************
- * $RCSfile: TAU_tf.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2004/08/13 00:38:49 $
- * TAU_VERSION_ID: $Id: TAU_tf.h,v 1.3 2004/08/13 00:38:49 sameer Exp $ 
+ * $RCSfile: TAU_tf.h,v $   $Author: amorris $
+ * $Revision: 1.4 $   $Date: 2005/09/27 20:07:14 $
+ * TAU_VERSION_ID: $Id: TAU_tf.h,v 1.4 2005/09/27 20:07:14 amorris Exp $ 
  ***************************************************************************/
 
 

@@ -33,6 +33,7 @@
 #endif /* TAU_HP_GNU */
 
 #define TAU_BUFSIZE 	1024
+#define TAU_MAX_RECORDS 64*1024
 
 /* TAU trace library related declarations */
 typedef struct Ttf_EventDescr {
@@ -79,7 +80,9 @@ typedef struct {
 } PCXX_EV64;
 
 
+typedef PCXX_EV32 EVENT;
 typedef PCXX_EV PCXX_EV_NATIVE;
+
 
 
 
@@ -104,6 +107,10 @@ typedef PCXX_EV PCXX_EV_NATIVE;
 typedef map< pair<int, int>, int, less < pair<int, int> > > NidTidMapT;
 typedef map< long int , Ttf_EventDescrT, less <long int> > EventIdMapT;
 typedef map< const char *, int, Ttf_ltstr > GroupIdMapT;
+
+/* for trace writing */
+typedef map< int, const char * > GroupNameMapT;
+
 typedef struct Ttf_file 
 {
   int 		Fid;
@@ -116,6 +123,12 @@ typedef struct Ttf_file
 
   int           format;    // see above
   int           eventSize; // sizeof() the corresponding format struct
+
+  /* For Trace Writing */
+  EVENT         *traceBuffer; 
+  int           tracePosition;
+  bool          needsEdfFlush;
+  GroupNameMapT *groupNameMap;
 } Ttf_fileT;
 
 int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb);
@@ -125,6 +138,6 @@ int isEventIDRegistered(Ttf_fileT *tFile, long int eid);
 
 /***************************************************************************
  * $RCSfile: TAU_tf_decl.h,v $   $Author: amorris $
- * $Revision: 1.2 $   $Date: 2005/08/23 21:11:09 $
- * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.2 2005/08/23 21:11:09 amorris Exp $ 
+ * $Revision: 1.3 $   $Date: 2005/09/27 20:07:30 $
+ * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.3 2005/09/27 20:07:30 amorris Exp $ 
  ***************************************************************************/
