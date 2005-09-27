@@ -13,6 +13,7 @@ architecture=@ARCH@
 taushell=@SHELL@
 targetdir=@TARGETDIR@
 engine=weka
+engine_upper=WEKA
 rroot=/usr/lib/R
 serverhostname=localhost
 objectport=9999
@@ -28,7 +29,8 @@ do
     myarg=`echo $arg | sed 's/-engine=//'`
     if [ $myarg = weka -o $myarg = R ]
       then
-        engine=$myarg
+        engine=`echo $myarg | tr "[:upper:]" "[:lower:]"`
+        engine_upper=`echo $engine | tr "[:lower:]" "[:upper:]"`
       else
         echo "WARNING: valid options for engine are 'weka' and 'R' "
     fi
@@ -125,6 +127,7 @@ sed -e 's,@TAUROOT@,'$targetdir',' \
 -e 's,@TAUARCH@,'$architecture',' \
 -e 's,@RROOT@,'$rroot',' \
 -e 's,@ANALYSIS_ENGINE@,'$engine',' \
+-e 's,@ANALYSIS_ENGINE_DEF@,'$engine_upper',' \
  > ${tauroot}/tools/src/perfexplorer/Makefile
 
 WEKA_JAR=${targetdir}/${architecture}/lib/weka.jar
