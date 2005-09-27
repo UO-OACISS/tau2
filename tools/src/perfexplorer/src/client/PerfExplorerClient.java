@@ -6,8 +6,6 @@ import jargs.gnu.CmdLineParser;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.net.URL;
-import java.net.MalformedURLException;
 
 public class PerfExplorerClient extends JFrame {
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";

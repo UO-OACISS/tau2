@@ -3,7 +3,6 @@ package client;
 import java.util.ListIterator;
 import javax.swing.*;
 import javax.swing.tree.*;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
