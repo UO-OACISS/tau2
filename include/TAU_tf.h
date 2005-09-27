@@ -71,13 +71,13 @@ typedef int (*Ttf_RecvMessageT)( void*  userData,
 				unsigned int messageTag
 				);
 
-typedef int (*Ttf_DefUserEvent)( void *userData,
+typedef int (*Ttf_DefUserEventT)( void *userData,
 				unsigned int userEventToken,
 				const char *userEventName,
 				int monotonicallyIncreasing
 				);
 
-typedef int (*Ttf_EventTrigger)( void *userData, 
+typedef int (*Ttf_EventTriggerT)( void *userData, 
 				 double time, 
 				 unsigned int nodeToken,
 				 unsigned int threadToken,
@@ -100,8 +100,8 @@ typedef struct Ttf_Callbacks
    Ttf_LeaveStateT    LeaveState;
    Ttf_SendMessageT   SendMessage;
    Ttf_RecvMessageT   RecvMessage;
-   Ttf_DefUserEvent   DefUserEvent;
-   Ttf_EventTrigger   EventTrigger;
+   Ttf_DefUserEventT   DefUserEvent;
+   Ttf_EventTriggerT   EventTrigger;
 } Ttf_CallbacksT;
    
 
@@ -170,8 +170,8 @@ Ttf_FileHandleT Ttf_CloseFile( Ttf_FileHandleT fileHandle );
 
 /***************************************************************************
  * $RCSfile: TAU_tf.h,v $   $Author: amorris $
- * $Revision: 1.4 $   $Date: 2005/09/27 20:07:14 $
- * TAU_VERSION_ID: $Id: TAU_tf.h,v 1.4 2005/09/27 20:07:14 amorris Exp $ 
+ * $Revision: 1.5 $   $Date: 2005/09/27 20:48:19 $
+ * TAU_VERSION_ID: $Id: TAU_tf.h,v 1.5 2005/09/27 20:48:19 amorris Exp $ 
  ***************************************************************************/
 
 
