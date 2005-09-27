@@ -29,15 +29,15 @@ int main(int argc, char** argv) {
   Ttf_DefState(file, FOO, "foo", 1);
   Ttf_DefState(file, BAR, "bar", 1);
 
-  Ttf_DefineUserEvent(file, USER_EVENT_1, "User Event 1", 1);
+  Ttf_DefUserEvent(file, USER_EVENT_1, "User Event 1", 1);
 
   double s = 1e6;
 
   Ttf_EnterState(file, 1*s, 0, 0, MAIN);
   Ttf_EnterState(file, 2*s, 0, 0, FOO);
   Ttf_EnterState(file, 3*s, 0, 0, BAR);
-  Ttf_TriggerUserEvent(file, 3.1*s, 0, 0, USER_EVENT_1, 500);
-  Ttf_TriggerUserEvent(file, 3.9*s, 0, 0, USER_EVENT_1, 1000);
+  Ttf_EventTrigger(file, 3.1*s, 0, 0, USER_EVENT_1, 500);
+  Ttf_EventTrigger(file, 3.9*s, 0, 0, USER_EVENT_1, 1000);
 
   Ttf_EnterState(file, 4*s, 1, 0, MAIN);
   Ttf_SendMessage(file, 4.5*s, 
