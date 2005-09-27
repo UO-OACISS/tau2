@@ -8,7 +8,7 @@ import java.util.Timer;
  * requests.  It is created by the PerfExplorerServer object, and 
  * checks the queue every 1 seconds to see if there are any new requests.
  *
- * <P>CVS $Id: TimerThread.java,v 1.1 2005/07/05 22:29:54 amorris Exp $</P>
+ * <P>CVS $Id: TimerThread.java,v 1.2 2005/09/27 19:46:32 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -20,6 +20,7 @@ public class TimerThread extends Timer implements Runnable {
 	 *  reference to the server which created this thread
 	 */
 	private PerfExplorerServer server = null;
+	private int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
 
 	/**
 	 * Constructor.  Expects a reference to a PerfExplorerServer.
@@ -27,6 +28,7 @@ public class TimerThread extends Timer implements Runnable {
 	 */
 	public TimerThread (PerfExplorerServer server, int analysisEngine) {
 		this.server = server;
+		this.analysisEngine = analysisEngine;
 	}
 
 	/**
@@ -38,7 +40,8 @@ public class TimerThread extends Timer implements Runnable {
 	 */
 	public void run() {
 		// use this line for the new processing
-		AnalysisTaskWrapper analysisTask = new AnalysisTaskWrapper(this.server, AnalysisTaskWrapper.WEKA_ENGINE);
+		AnalysisTaskWrapper analysisTask = new
+		AnalysisTaskWrapper(this.server, this.analysisEngine);
 		// use this line for the old processing
 		//AnalysisTask analysisTask = new AnalysisTask(this.server);
 

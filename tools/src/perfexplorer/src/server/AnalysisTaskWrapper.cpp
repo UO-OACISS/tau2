@@ -4,6 +4,15 @@
 package server;
 
 import clustering.*;
+#ifdef USE_WEKA_ENGINE
+import clustering.weka.*;
+#endif
+#ifdef USE_R_ENGINE
+import clustering.r.*;
+#endif
+#ifdef USE_OCTAVE_ENGINE
+import clustering.octave.*;
+#endif
 import common.*;
 import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.dms.database.*;
@@ -34,7 +43,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.java,v 1.6 2005/07/28 19:33:19 amorris Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.1 2005/09/27 19:46:32 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -90,19 +99,27 @@ public class AnalysisTaskWrapper extends TimerTask {
 		this.server = server;
 		this.engine = engine;
 		switch (engine) {
+#ifdef USE_WEKA_ENGINE
 			case WEKA_ENGINE:
 				factory = WekaAnalysisFactory.getFactory();
 				break;
-/*			case RPROJECT_ENGINE:
-				rInterpreter = server.getRInterpreter();
-				rEvaluator = server.getREvaluator();
-				factory = RProjectAnalysisFactory.getFactory(rInterpreter, rEvaluator);
+#endif
+#ifdef USE_R_ENGINE
+			case RPROJECT_ENGINE:
+				//rInterpreter = server.getRInterpreter();
+				//rEvaluator = server.getREvaluator();
+				factory = RAnalysisFactory.getFactory();
 				break;
+#endif
+#ifdef USE_OCTAVE_ENGINE
 			case OCTAVE_ENGINE:
 				factory = OctaveAnalysisFactory.getFactory();
 				break;
-*/			//default:
-				//assert false : engine;
+#endif
+			default:
+				System.out.println("Undefined analysis engine type.");
+				System.exit(1);
+				break;
 		}
 	}
 
@@ -241,7 +258,6 @@ public class AnalysisTaskWrapper extends TimerTask {
 			PreparedStatement statement = null;
 			// for each centroid, save the data
 			// TODO - MAKE THIS A GENERAL USE LATER!
-			Instances instances = (Instances) centroids.getData();
 			StringBuffer buf = new StringBuffer();
 			buf.append("insert into analysis_result ");
 			buf.append(" (analysis_settings, description, thumbnail_size, thumbnail, image_size, image, result_type) values (?, ?, ?, ?, ?, ?, ?)");
@@ -276,6 +292,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			buf.append(" (interval_event, metric, value, data_type, analysis_result, cluster_index)");
 			buf.append(" values (?, ?, ?, ?, ?, ?)");
 			statement = db.prepareStatement(buf.toString());
+			Instances instances = (Instances) centroids.getData();
 			for (int i = 0 ; i < instances.numInstances() ; i++) {
 				Instance instance = instances.instance(i);
 				for (int j = 0 ; j < numEvents ; j++) {
@@ -603,7 +620,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 	 */
 	private void getRawData () throws PerfExplorerException {
 		System.out.print("Getting raw data...");
-		rawData = new WekaRawData("Cluster Test", eventIDs, numTotalThreads, numEvents);
+		rawData = factory.createRawData("Cluster Test", eventIDs, numTotalThreads, numEvents);
 		ResultSet results = null;
 		int currentFunction = 0;
 		int functionIndex = -1;
@@ -764,7 +781,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 					for (int i = 2 ; i <= maxClusters ; i++) {
 						System.out.println("Doing " + i + " clusters...");
 						// create a cluster engine
-						KMeansClusterInterface clusterer = factory.CreateKMeansEngine();
+						KMeansClusterInterface clusterer = factory.createKMeansEngine();
 						clusterer.setInputData(reducedData);
 						clusterer.setK(i);
 						clusterer.findClusters();
@@ -779,20 +796,24 @@ public class AnalysisTaskWrapper extends TimerTask {
 						chartType = HISTOGRAM;
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
 						
+						if (modelData.getCurrentSelection() instanceof Metric) {
 						// do PCA breakdown
-						PrincipalComponentsAnalysisInterface pca = factory.CreatePCAEngine();
+						PrincipalComponentsAnalysisInterface pca =
+						factory.createPCAEngine(server.getCubeData(modelData));
 						pca.setInputData(reducedData);
 						pca.setK(1);
 						pca.doPCA();
 						// get the components
 						RawDataInterface components = pca.getResults();
+						pca.setClusterer(clusterer);
+						RawDataInterface[] clusters = pca.getClusters();
 						// do a scatterplot
 						chartType = AnalysisTaskWrapper.PCA_SCATTERPLOT;
 						//System.out.println("PCA Dimensions: " + components.numDimensions());
-						thumbnail = generateThumbnail(components, reducedData, clusterer);
-						chart = generateImage(components, reducedData, clusterer);
-						chartType = PCA_SCATTERPLOT;
-						saveAnalysisResult(components, components, thumbnail, chart);			
+						thumbnail = generateThumbnail(clusters);
+						chart = generateImage(components, clusters);
+						saveAnalysisResult(components, components, thumbnail, chart);
+						}
 						
 						// do virtual topology
 						VirtualTopology vt = new VirtualTopology(modelData, clusterer);
@@ -801,25 +822,27 @@ public class AnalysisTaskWrapper extends TimerTask {
 						saveAnalysisResult("Virtual Topology", filename, nail, false);
 						
 						// do maxes
-						thumbnail = generateThumbnail(centroids, deviations, eventIDs);
-						chart = generateImage(centroids, deviations, eventIDs);
+						thumbnail = generateThumbnail(clusterer.getClusterMaximums(), deviations, eventIDs);
+						chart = generateImage(clusterer.getClusterMaximums(), deviations, eventIDs);
 						chartType = CLUSTER_AVERAGES;
-						saveAnalysisResult(centroids, deviations, thumbnail, chart);
+						saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart);
 						// do averages
 						thumbnail = generateThumbnail(centroids, deviations, eventIDs);
 						chart = generateImage(centroids, deviations, eventIDs);
 						chartType = CLUSTER_MAXIMUMS;
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
 						// do mins
-						thumbnail = generateThumbnail(centroids, deviations, eventIDs);
-						chart = generateImage(centroids, deviations, eventIDs);
+						thumbnail =
+						generateThumbnail(clusterer.getClusterMinimums(), deviations, eventIDs);
+						chart = generateImage(clusterer.getClusterMinimums(), deviations, eventIDs);
 						chartType = CLUSTER_MINIMUMS;
-						saveAnalysisResult(centroids, deviations, thumbnail, chart);
+						saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
 					}
 				} else {
 					System.out.println("Doing PCA...");
 					// create a PCA engine
-					PrincipalComponentsAnalysisInterface pca = factory.CreatePCAEngine();
+					PrincipalComponentsAnalysisInterface pca = 
+						factory.createPCAEngine(server.getCubeData(modelData));
 					pca.setInputData(reducedData);
 					pca.setK(1);
 					pca.doPCA();
@@ -913,10 +936,10 @@ public class AnalysisTaskWrapper extends TimerTask {
 	 * @param clusterer
 	 * @return
 	 */
-	public File generateThumbnail(RawDataInterface pcaData, RawDataInterface rawData, KMeansClusterInterface clusterer) {
+	public File generateThumbnail(RawDataInterface[] clusters) {
 		File outfile = null;
 		if (chartType == PCA_SCATTERPLOT) {
-	        XYDataset data = new PCAPlotDataset(pcaData, rawData, clusterer);
+	        XYDataset data = new PCAPlotDataset(clusters);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
 	            null, null, null, data, PlotOrientation.VERTICAL, false, false, false);
 	        outfile = new File("/tmp/thumbnail." + modelData.toShortString() + ".png");
@@ -933,9 +956,10 @@ public class AnalysisTaskWrapper extends TimerTask {
 	 * @param clusterer
 	 * @return
 	 */
-	public File generateImage(RawDataInterface pcaData, RawDataInterface rawData, KMeansClusterInterface clusterer) {
+	public File generateImage(RawDataInterface pcaData, RawDataInterface[] clusters) {
 		File outfile = null;
 		if (chartType == PCA_SCATTERPLOT) {
+		/*
 			int max = pcaData.numDimensions();
 			int x = max - 1;
 			int y = max - 2;
@@ -943,11 +967,12 @@ public class AnalysisTaskWrapper extends TimerTask {
 				x = 0;
 				y = 0;
 			}
-	        XYDataset data = new PCAPlotDataset(pcaData, rawData, clusterer);
+			*/
+	        XYDataset data = new PCAPlotDataset(clusters);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
 	            "PCA Results",
-	            (String)(pcaData.getEventNames().get(x)),
-	            (String)(pcaData.getEventNames().get(y)),
+	            (String)(pcaData.getEventNames().get(0)),
+	            (String)(pcaData.getEventNames().get(1)),
 	            data,
 	            PlotOrientation.VERTICAL,
 	            true,

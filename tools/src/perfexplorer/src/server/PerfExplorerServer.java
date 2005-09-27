@@ -2,7 +2,6 @@ package server;
 
 import java.rmi.*;
 import java.rmi.server.*;
-import java.util.StringTokenizer;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -17,8 +16,6 @@ import edu.uoregon.tau.dms.database.*;
 import org.omegahat.R.Java.REvaluator;
 import org.omegahat.R.Java.ROmegahatInterpreter;
 import jargs.gnu.CmdLineParser;
-import java.net.URL;
-import java.net.MalformedURLException;
 
 /**
  * The main PerfExplorer Server class.  This class is defined as a singleton,
@@ -27,7 +24,7 @@ import java.net.MalformedURLException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.19 2005/08/18 21:37:07 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.20 2005/09/27 19:46:32 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -102,7 +99,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		super(port);
 		PerfExplorerOutput.initialize(quiet);
 		theServer = this;
-		this.port = port;
+		PerfExplorerServer.port = port;
 		this.configFile = configFile;
 		this.requestQueue = new Queue();
 		try {
