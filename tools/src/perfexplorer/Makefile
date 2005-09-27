@@ -1,8 +1,11 @@
-R_HOME = /Library/Frameworks/R.framework/Versions/2.0.1/Resources
+R_HOME = /Library/Frameworks/R.framework/Versions/Current/Resources
 TAUROOT = /Users/khuck/tau2
 CONFIG_ARCH = apple
+ENGINE_PACKAGE = weka
+ENGINE_DEFINE = WEKA
 
 ##########################
+
 JAVA_JVM_VERSION=1.4
 NOW = $(shell date)
 
@@ -10,6 +13,12 @@ OMEGAHAT_HOME = $(R_HOME)/library/SJava
 CONFIGFILE = ${HOME}/.ParaProf/perfdmf.cfg
 OMEGAHAT_JARPATH = ${OMEGAHAT_HOME}/org/omegahat/Jars
 WEBSTART_DIR = /Library/WebServer/Documents/perfexplorer
+
+CPP = cpp -P -CC -D=USE_${ENGINE_DEFINE}_ENGINE
+JAVAC = javac -target 1.3 
+RMIC = rmic
+
+##########################
 
 WEKA_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/weka.jar
 PERFDMF_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/dms.jar
@@ -23,21 +32,31 @@ OMEGAHAT_JARS = ${OMEGAHAT_HOME}:${OMEGAHAT_JARPATH}/Environment.jar:${OMEGAHAT_
 JFREECHART_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jfreechart-0.9.21.jar
 JCOMMON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jcommon-0.9.6.jar
 
+##########################
+
 CLIENT_DYLD_LIBRARY_PATH=${TAUROOT}/${CONFIG_ARCH}/lib
 SERVER_DYLD_LIBRARY_PATH=${OMEGAHAT_HOME}/libs:${R_HOME}/lib:${R_HOME}/bin:${R_HOME}/library/SJava/libs
 
+##########################
+
 BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JOGL_JAR}:${PARAPROF_JAR}:${JARGS_JAR}
 CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${PARAPROF_JAR}:${JARGS_JAR}
-CLUSTERING_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${WEKA_JAR}
+CLUSTERING_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${WEKA_JAR}:${OMEGAHAT_JARS}
 SERVER_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}
 CLIENT_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${PARAPROF_JAR}
-SERVER_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}
+SERVER_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}
 STANDALONE_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${JFREECHART_JAR}:${JCOMMON_JAR}:${WEKA_JAR}:${JOGL_JAR}:${PARAPROF_JAR}
 
+##########################
+
+SERVER_CPP_INPUT = ${wildcard src/server/*.cpp}
+SERVER_CPP_OUTPUT = ${patsubst %.cpp, %.java, ${SERVER_CPP_INPUT}}
+
 COMMON_SOURCES = ${wildcard src/common/*.java}
-CLUSTERING_SOURCES = ${wildcard src/clustering/*.java}
+CLUSTERING_SOURCES = ${wildcard src/clustering/*.java} ${wildcard src/clustering/${ENGINE_PACKAGE}/*.java} 
 CLIENT_SOURCES = ${wildcard src/client/*.java}
-SERVER_SOURCES = ${wildcard src/server/*.java}
+SERVER_SOURCES_TMP = ${wildcard src/server/*.java}
+SERVER_SOURCES = ${subst ${SERVER_CPP_OUTPUT}, , ${SERVER_SOURCES_TMP}} ${SERVER_CPP_OUTPUT} 
 SOURCES = ${COMMON_SOURCES} ${SERVER_SOURCES} ${CLIENT_SOURCES} ${CLUSTERING_SOURCES}
 
 COMMON_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${COMMON_SOURCES}}} 
@@ -55,15 +74,15 @@ default: perfexplorer.jar
 
 # all: perfexplorer.jar
 
-common: ${COMMON_CLASSES} server
+common: ${COMMON_CLASSES}
 
-clustering: ${CLUSTERING_CLASSES} server
+clustering: ${CLUSTERING_CLASSES}
 
 server: ${SERVER_CLASSES} ${RMIC_CLASSES}
 
-client: ${CLIENT_CLASSES} server
+client: ${CLIENT_CLASSES}
 
-perfexplorer.jar: ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
+perfexplorer.jar: ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${SERVER_CPP_CLASSES} ${RMIC_CLASSES}
 	jar -cvf perfexplorer.jar -C classes .
 	cp perfexplorer.jar ${TAUROOT}/${CONFIG_ARCH}/lib/.
 
@@ -74,23 +93,26 @@ perfexplorer.jar: ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SE
 
 ${COMMON_CLASSES}: ${COMMON_SOURCES}
 	mkdir -p classes
-	javac -target 1.3 -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
+	${JAVAC} -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
 
-${CLUSTERING_CLASSES}: ${CLUSTERING_SOURCES}
-	javac -target 1.3 -classpath ${CLUSTERING_BUILD_CLASSPATH} -d classes ${CLUSTERING_SOURCES}
+${CLUSTERING_CLASSES}: ${CLUSTERING_SOURCES} ${COMMON_CLASSES}
+	${JAVAC} -classpath ${CLUSTERING_BUILD_CLASSPATH} -d classes ${CLUSTERING_SOURCES}
+
+${SERVER_CPP_OUTPUT}: ${SERVER_CPP_INPUT}
+	${CPP} ${SERVER_CPP_INPUT} ${SERVER_CPP_OUTPUT}
 
 ${SERVER_CLASSES}: ${SERVER_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES}
-	javac -target 1.3 -classpath ${SERVER_BUILD_CLASSPATH} -d classes ${SERVER_SOURCES}
+	${JAVAC} -classpath ${SERVER_BUILD_CLASSPATH} -d classes ${SERVER_SOURCES}
 
-${CLIENT_CLASSES}: ${CLIENT_SOURCES} ${COMMON_CLASSES} ${SERVER_CLASSES}
+${RMIC_CLASSES}: ${SERVER_SOURCES} ${SERVER_CLASSES}
+	${RMIC} -classpath ${SERVER_BUILD_CLASSPATH} -d classes server.PerfExplorerServer
+
+${CLIENT_CLASSES}: ${CLIENT_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
 	/bin/mv src/client/PerfExplorerActionListener.java src/client/PerfExplorerActionListener.java.orig
 	sed "s/XXXXX/$(NOW)/" src/client/PerfExplorerActionListener.java.orig > src/client/PerfExplorerActionListener.java
-	javac -target 1.3 -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
+	${JAVAC} -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
 	/bin/mv src/client/PerfExplorerActionListener.java.orig src/client/PerfExplorerActionListener.java
 	cp src/client/resources/*.gif classes/client/.
-
-${RMIC_CLASSES}: ${SERVER_CLASSES}
-	rmic -classpath ${SERVER_BUILD_CLASSPATH} -d classes server.PerfExplorerServer
 
 ###
 ### THESE COMMANDS ARE FOR CLEANING
@@ -101,6 +123,7 @@ cleanclient:
 
 cleanserver:
 	rm -rf classes/server
+	rm -rf ${SERVER_CPP_OUTPUT}
 
 cleancommon:
 	rm -rf classes/common
@@ -114,7 +137,7 @@ clean: cleanclient cleanserver cleancommon cleanclustering
 	rm -f PerfExplorer-0.1.tgz
 	rm -rf classes
 
-remake: clean all
+remake: clean perfexplorer.jar
 
 ###
 ### THESE COMMANDS ARE FOR RUNNING/TESTING
