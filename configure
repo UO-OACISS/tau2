@@ -3653,9 +3653,9 @@ fi
 
 if [ $oldjdk = yes ]
 then
-  paraprofjar=ParaProf-Old.jar
+  paraprofjar=paraprof-1.3.jar
 else
-  paraprofjar=ParaProf.jar
+  paraprofjar=paraprof.jar
 fi
 
 
