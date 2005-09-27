@@ -73,10 +73,10 @@ extern "C" {
 
 
   // returns userEventToken
-  int Ttf_DefineUserEvent(Ttf_FileHandleT file, unsigned int userEventToken, 
+  int Ttf_DefUserEvent(Ttf_FileHandleT file, unsigned int userEventToken, 
 			  const char *userEventName, int monotonicallyIncreasing);
 
-  int Ttf_TriggerUserEvent(Ttf_FileHandleT file, double time, 
+  int Ttf_EventTrigger(Ttf_FileHandleT file, double time, 
 			   unsigned int nodeToken,
 			   unsigned int threadToken,
 			   unsigned int userEventToken,
@@ -100,8 +100,8 @@ extern "C" {
 
 /***************************************************************************
  * $RCSfile: TAU_tf_writer.h,v $   $Author: amorris $
- * $Revision: 1.1 $   $Date: 2005/09/27 20:07:14 $
- * TAU_VERSION_ID: $Id: TAU_tf_writer.h,v 1.1 2005/09/27 20:07:14 amorris Exp $ 
+ * $Revision: 1.2 $   $Date: 2005/09/27 20:50:46 $
+ * TAU_VERSION_ID: $Id: TAU_tf_writer.h,v 1.2 2005/09/27 20:50:46 amorris Exp $ 
  ***************************************************************************/
 
 

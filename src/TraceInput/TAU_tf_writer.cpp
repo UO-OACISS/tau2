@@ -288,7 +288,7 @@ extern "C" {
       }
     }
     
-    printf ("flushing %d bytes\n", size);
+    //printf ("flushing %d bytes\n", size);
     int ret = write (tFile->Fid, tFile->traceBuffer, size);
     if (ret != size) {
       perror("Error flushing trace buffer");
@@ -433,7 +433,7 @@ extern "C" {
 
 
 
-  int Ttf_DefineUserEvent(Ttf_FileHandleT file, unsigned int userEventToken, 
+  int Ttf_DefUserEvent(Ttf_FileHandleT file, unsigned int userEventToken, 
 			  const char *userEventName, int monotonicallyIncreasing) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
@@ -451,7 +451,7 @@ extern "C" {
 
   }
 
-  int Ttf_TriggerUserEvent(Ttf_FileHandleT file, double time, 
+  int Ttf_EventTrigger(Ttf_FileHandleT file, double time, 
 			   unsigned int nodeToken,
 			   unsigned int threadToken,
 			   unsigned int userEventToken,
