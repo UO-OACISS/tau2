@@ -2,8 +2,9 @@
  * Created on Mar 16, 2005
  *
  */
-package clustering;
+package clustering.r;
 
+import clustering.*;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -22,6 +23,7 @@ public class RRawData implements RawDataInterface {
 	private double[][] data = null;
 	private String[] eventNames = null;
 	private String[] threadNames = null;
+	private double maximum = 0.0;
 	
 	/**
 	 * Default constructor.
@@ -30,18 +32,57 @@ public class RRawData implements RawDataInterface {
 		super();
 		this.vectors = vectors;
 		this.dimensions = dimensions;
-		data = new double[vectors][dimensions];
-		eventNames = new String[dimensions];
-		threadNames = new String[dimensions];
+		this.data = new double[vectors][dimensions];
+		this.eventNames = new String[dimensions];
+		this.threadNames = new String[dimensions];
+		//initialize();
 	}
 
+	public RRawData(int vectors, int dimensions, String[] eventNames) {
+		super();
+		this.vectors = vectors;
+		this.dimensions = dimensions;
+		this.data = new double[vectors][dimensions];
+		this.eventNames = eventNames;
+		this.threadNames = new String[dimensions];
+		//initialize();
+	}
+
+	public RRawData(int vectors, int dimensions, double[] inData) {
+		super();
+		this.vectors = vectors;
+		this.dimensions = dimensions;
+		this.eventNames = new String[dimensions];
+		this.threadNames = new String[dimensions];
+		this.data = new double[vectors][dimensions];
+		int i = 0;
+		for (int x = 0 ; x < vectors ; x++) {
+			for (int y = 0 ; y < dimensions ; y++) {
+				data[x][y] = inData[i++];
+			}
+		}
+	}
+
+	public void initialize() {
+		for (int x = 0 ; x < vectors ; x++) {
+			for (int y = 0 ; y < dimensions ; y++) {
+				data[x][y] = 0.0;
+			}
+		}
+	}
 	/* (non-Javadoc)
 	 * @see clustering.RawDataInterface#addValue(int, int, double)
 	 */
 	public void addValue(int vectorIndex, int dimensionIndex, double value) {
-		//assert vectorIndex > 0 && vectorIndex < vectors : vectorIndex;
-		//assert dimensionIndex > 0 && dimensionIndex < dimensions : dimensionIndex;
+		//assert vectorIndex >= 0 && vectorIndex < vectors : vectorIndex;
+		//assert dimensionIndex >= 0 && dimensionIndex < dimensions : dimensionIndex;
 		data[vectorIndex][dimensionIndex] = value;
+		if (maximum < value)
+			maximum = value;
+	}
+
+	public void addEventNames(String[] eventNames) {
+		this.eventNames = eventNames;
 	}
 
 	/* (non-Javadoc)
@@ -113,4 +154,11 @@ public class RRawData implements RawDataInterface {
 		return this.dimensions;
 	}
 
+	public double getMaximum() {
+		return maximum;
+	}
+
+	public double[] getVector(int i) {
+		return data[i];
+	}
 }

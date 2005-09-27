@@ -2,8 +2,9 @@
  * Created on Mar 17, 2005
  *
  */
-package clustering;
+package clustering.weka;
 
+import clustering.*;
 import weka.core.Instances;
 import weka.core.Instance;
 import weka.core.FastVector;
@@ -18,9 +19,10 @@ import java.util.Enumeration;
  */
 public class WekaRawData implements RawDataInterface {
 
-	Instances instances = null;
-	int vectors = 0;
-	int dimensions = 0;
+	private Instances instances = null;
+	private int vectors = 0;
+	private int dimensions = 0;
+	private double maximum = 0.0;
 	
 	public WekaRawData (String name, List attributes, int vectors, int dimensions) {
 		this.vectors = vectors;
@@ -51,6 +53,8 @@ public class WekaRawData implements RawDataInterface {
 	public void addValue(int vectorIndex, int dimensionIndex, double value) {
 		Instance i = instances.instance(vectorIndex);
 		i.setValue(dimensionIndex, value);
+		if (maximum < value)
+			maximum = value;
 	}
 
 	/* (non-Javadoc)
@@ -122,6 +126,18 @@ public class WekaRawData implements RawDataInterface {
 	 */
 	public int numDimensions() {
 		return dimensions;
+	}
+
+	public double getMaximum() {
+		return maximum;
+	}
+
+	public double[] getVector(int i) {
+		double[] data = new double[dimensions];
+		for (int j = 0 ; j < dimensions ; j++) {
+			data[j] = instances.instance(i).value(j);
+		}
+		return data;
 	}
 
 }

@@ -41,7 +41,11 @@ public interface PrincipalComponentsAnalysisInterface {
 	public void setInputData(RawDataInterface inputData);
 	
 	public RawDataInterface getResults();
-	
+
+	public void setClusterer(KMeansClusterInterface clusterer);
+
+	public RawDataInterface[] getClusters();
+
 	public void reset();
 	
 }

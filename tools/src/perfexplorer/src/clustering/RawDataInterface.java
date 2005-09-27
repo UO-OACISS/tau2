@@ -66,4 +66,8 @@ public interface RawDataInterface {
 	public int numVectors();
 	
 	public int numDimensions();
+
+	public double getMaximum();
+
+	public double[] getVector(int i);
 }

@@ -45,6 +45,8 @@ public interface KMeansClusterInterface {
 	public void setInputData(RawDataInterface inputData);
 	
 	public RawDataInterface getClusterCentroids();
+	public RawDataInterface getClusterMinimums();
+	public RawDataInterface getClusterMaximums();
 	
 	public RawDataInterface getClusterStandardDeviations();
 	/**

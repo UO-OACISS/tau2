@@ -4,9 +4,13 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package clustering;
+package clustering.weka;
 
+import clustering.*;
+import common.RMICubeData;
 import weka.core.Instances;
+import weka.core.Instance;
+import java.util.ArrayList;
 import weka.attributeSelection.PrincipalComponents;
 
 /**
@@ -26,7 +30,18 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	private PrincipalComponents pca = null;
 	private int numAttributes = 0;
 	private double[][] correlationCoefficients = null;
+	private RMICubeData cubeData = null;
+	private KMeansClusterInterface clusterer = null;
+	private RawDataInterface[] clusters = null;
+	private RawDataInterface transformed = null;
+	private AnalysisFactory factory = null;
 	
+	public WekaPrincipalComponents (RMICubeData cubeData,
+	AnalysisFactory factory) {
+		this.cubeData = cubeData;
+		this.factory = factory;
+	}
+
 	/* (non-Javadoc)
 	 * @see clustering.PrincipalComponentsAnalysisInterface#doPCA()
 	 */
@@ -34,22 +49,6 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 		//assert instances != null : instances;
 
 /*
-		getCorrelationCoefficients();
-		for (int i = 0 ; i < numAttributes ; i++) {
-			for (int j = 0 ; j < i ; j++) {
-				if (correlationCoefficients[i][j] > 0.8 || correlationCoefficients[i][j] < -0.8) {
-					StringBuffer buf = new StringBuffer();
-					buf.append(instances.attribute(i).name());
-					buf.append(" / ");
-					buf.append(instances.attribute(j).name());
-					buf.append(" = ");
-					buf.append(correlationCoefficients[i][j]);
-					System.out.println(buf.toString());
-				}
-			}
-		}
-		*/
-		
 		try {
 			this.pca = new PrincipalComponents();
 			if (k > 0)
@@ -58,7 +57,22 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 			//pca.setTransformBackToOriginal(true);
 			pca.buildEvaluator(instances);
 			components = pca.transformedData();
+			transformed = new WekaRawData(components);
 		} catch (Exception e) {
+		}
+*/
+		ArrayList names = new ArrayList();
+		for (int i = 0 ; i < 2 ; i++) {
+			names.add(cubeData.getNames()[i]);
+		}
+
+		transformed = factory.createRawData("Scatterplot Data",
+			names, 2,inputData.numVectors());
+		for (int i = 0 ; i < inputData.numVectors() ; i++) {
+			float[] values = cubeData.getValues(i);
+			for (int j = 0 ; j < 2 ; j++) {
+				transformed.addValue(j,i,(double)(values[j]));
+			}
 		}
 	}
 
@@ -106,7 +120,6 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	 */
 	public RawDataInterface getResults() {
 		//assert components != null : components;
-		WekaRawData transformed = new WekaRawData(components);
 		return transformed;
 	}
 
@@ -116,6 +129,44 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	public void reset() {
 		// TODO Auto-generated method stub
 
+	}
+
+	public RawDataInterface[] getClusters () {
+		if (this.clusterer != null) {
+			int[] clusterSizes = clusterer.getClusterSizes();
+			int k = clusterer.getK();
+			clusters = new RawDataInterface[k];
+			Instances[] instances = new Instances[k];
+			int[] counters = new int[k];
+			
+			for (int i = 0 ; i < k ; i++) {
+				instances[i] = new
+				Instances((Instances)(transformed.getData()), clusterSizes[i]);
+				counters[i] = 0;
+			}
+
+			double values[] = new double[2];
+			//int x = transformed.numDimensions() - 1;
+			//int y = transformed.numDimensions() - 2;
+			//int x = 0;
+			//int y = 1;
+			for (int i = 0 ; i < inputData.numVectors() ; i++) {
+				int location = clusterer.clusterInstance(i);
+				values[0] = transformed.getValue(0, i);
+				values[1] = transformed.getValue(1, i);
+				instances[location].add(new Instance(1.0, values));
+				counters[location]++;
+			}
+			
+			for (int i = 0 ; i < k ; i++) {
+				clusters[i] = new WekaRawData(instances[i]);
+			}
+		}
+		return clusters;
+	}
+
+	public void setClusterer (KMeansClusterInterface clusterer) {
+		this.clusterer = clusterer;
 	}
 
 }

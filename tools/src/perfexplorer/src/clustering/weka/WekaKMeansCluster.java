@@ -2,20 +2,17 @@
  * Created on Mar 16, 2005
  *
  */
-package clustering;
+package clustering.weka;
 
-import java.util.List;
-import weka.core.Instance;
+import clustering.*;
 import weka.core.Instances;
 import weka.attributeSelection.PrincipalComponents;
-import weka.clusterers.ClusterEvaluation;
-import weka.clusterers.Clusterer;
 
 /**
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaKMeansCluster.java,v 1.3 2005/07/26 23:14:17 khuck Exp $</P>
+ * <P>CVS $Id: WekaKMeansCluster.java,v 1.1 2005/09/27 19:49:30 khuck Exp $</P>
  * @author khuck
  *
  */
@@ -26,7 +23,6 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 	// the number of clusters to find
 	private int k = 0;
 	// the cluster descriptions
-	private List clusterDescriptions = null;
 	private RawDataInterface inputData = null;
 	private Instances instances = null;
 	private Instances clusterCentroids = null;
@@ -47,7 +43,6 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 	 * with several K values, then we need a reset method.
 	 */
 	public void reset() {
-		this.clusterDescriptions = null;
 		this.clusterCentroids = null;
 		this.clusterStandardDeviations = null;
 	}
@@ -130,6 +125,16 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 	public RawDataInterface getClusterCentroids() {
 		WekaRawData centroids = new WekaRawData(clusterCentroids);
 		return centroids;
+	}
+
+	public RawDataInterface getClusterMaximums() {
+		WekaRawData maximums = new WekaRawData(clusterCentroids);
+		return maximums;
+	}
+
+	public RawDataInterface getClusterMinimums() {
+		WekaRawData minimums = new WekaRawData(clusterCentroids);
+		return minimums;
 	}
 
 	/* (non-Javadoc)

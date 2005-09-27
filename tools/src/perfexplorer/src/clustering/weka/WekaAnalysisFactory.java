@@ -2,8 +2,10 @@
  * Created on Mar 18, 2005
  *
  */
-package clustering;
+package clustering.weka;
 
+import clustering.*;
+import common.RMICubeData;
 import java.util.List;
 
 /**
@@ -21,25 +23,25 @@ public class WekaAnalysisFactory extends AnalysisFactory {
 		return theFactory;
 	}
 	/* (non-Javadoc)
-	 * @see clustering.AnalysisFactory#CreateRawData(java.lang.String, java.util.List, int, int)
+	 * @see clustering.AnalysisFactory#createRawData(java.lang.String, java.util.List, int, int)
 	 */
-	public RawDataInterface CreateRawData(String name, List attributes,
+	public RawDataInterface createRawData(String name, List attributes,
 			int vectors, int dimensions) {
 		return new WekaRawData(name, attributes, vectors, dimensions);
 	}
 
 	/* (non-Javadoc)
-	 * @see clustering.AnalysisFactory#CreateKMeansEngine()
+	 * @see clustering.AnalysisFactory#createKMeansEngine()
 	 */
-	public KMeansClusterInterface CreateKMeansEngine() {
+	public KMeansClusterInterface createKMeansEngine() {
 		return new WekaKMeansCluster();
 	}
 	
 	/* (non-Javadoc)
-	 * @see clustering.AnalysisFactory#CreatePCAEngine()
+	 * @see clustering.AnalysisFactory#createPCAEngine()
 	 */
-	public PrincipalComponentsAnalysisInterface CreatePCAEngine() {
-		return new WekaPrincipalComponents();
+	public PrincipalComponentsAnalysisInterface createPCAEngine(RMICubeData cubeData) {
+		return new WekaPrincipalComponents(cubeData, this);
 	}
 
 }
