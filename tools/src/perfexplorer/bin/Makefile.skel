@@ -91,23 +91,23 @@ perfexplorer.jar: ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SE
 # otherwise specify -source 1.4 to enable assertions.
 ########################
 
-${COMMON_CLASSES}: ${COMMON_SOURCES}
+${COMMON_CLASSES}: Makefile ${COMMON_SOURCES}
 	mkdir -p classes
 	${JAVAC} -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
 
-${CLUSTERING_CLASSES}: ${CLUSTERING_SOURCES} ${COMMON_CLASSES}
+${CLUSTERING_CLASSES}: Makefile ${CLUSTERING_SOURCES} ${COMMON_CLASSES}
 	${JAVAC} -classpath ${CLUSTERING_BUILD_CLASSPATH} -d classes ${CLUSTERING_SOURCES}
 
-${SERVER_CPP_OUTPUT}: ${SERVER_CPP_INPUT}
+${SERVER_CPP_OUTPUT}: Makefile ${SERVER_CPP_INPUT}
 	${CPP} ${SERVER_CPP_INPUT} ${SERVER_CPP_OUTPUT}
 
-${SERVER_CLASSES}: ${SERVER_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES}
+${SERVER_CLASSES}: Makefile ${SERVER_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES}
 	${JAVAC} -classpath ${SERVER_BUILD_CLASSPATH} -d classes ${SERVER_SOURCES}
 
-${RMIC_CLASSES}: ${SERVER_SOURCES} ${SERVER_CLASSES}
+${RMIC_CLASSES}: Makefile ${SERVER_SOURCES} ${SERVER_CLASSES}
 	${RMIC} -classpath ${SERVER_BUILD_CLASSPATH} -d classes server.PerfExplorerServer
 
-${CLIENT_CLASSES}: ${CLIENT_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
+${CLIENT_CLASSES}: Makefile ${CLIENT_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
 	/bin/mv src/client/PerfExplorerActionListener.java src/client/PerfExplorerActionListener.java.orig
 	sed "s/XXXXX/$(NOW)/" src/client/PerfExplorerActionListener.java.orig > src/client/PerfExplorerActionListener.java
 	${JAVAC} -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}

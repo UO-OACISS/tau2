@@ -45,4 +45,7 @@ public class RAnalysisFactory extends AnalysisFactory {
 		return new RPrincipalComponents(cubeData);
 	}
 
+	public void closeFactory() {
+		RSingletons.endRSession();
+	}
 }

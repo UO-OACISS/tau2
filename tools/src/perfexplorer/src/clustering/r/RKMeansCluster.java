@@ -7,20 +7,17 @@ package clustering.r;
 import clustering.*;
 import java.util.Hashtable;
 import org.omegahat.R.Java.REvaluator;
-import org.omegahat.R.Java.ROmegahatInterpreter;
 
 /**
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: RKMeansCluster.java,v 1.1 2005/09/27 19:49:29 khuck Exp $</P>
+ * <P>CVS $Id: RKMeansCluster.java,v 1.2 2005/09/28 01:06:58 khuck Exp $</P>
  * @author khuck
  *
  */
 public class RKMeansCluster implements KMeansClusterInterface {
 
-	// dimension reduction possibilities
-	private boolean doPCA = false;
 	// the number of clusters to find
 	private int k = 0;
 	// the cluster descriptions
@@ -29,7 +26,6 @@ public class RKMeansCluster implements KMeansClusterInterface {
 	private RawDataInterface clusterMaximums = null;
 	private RawDataInterface clusterMinimums = null;
 	private RawDataInterface clusterStandardDeviations = null;
-	private ROmegahatInterpreter rInterpreter = null;
 	private REvaluator rEvaluator = null;
 	private DendrogramTree dendrogramTree = null;
 	private int[] clusterSizes = null;
@@ -40,7 +36,6 @@ public class RKMeansCluster implements KMeansClusterInterface {
 	 */
 	public RKMeansCluster() {
 		super();
-		this.rInterpreter = RSingletons.getRInterpreter();
 		this.rEvaluator = RSingletons.getREvaluator();
 		reset();
 	}
@@ -137,7 +132,7 @@ public class RKMeansCluster implements KMeansClusterInterface {
 		System.out.println(" Done!");
 
 		clusterSizes = (int[])rEvaluator.eval("cl$size");
-		double[] centers = (double[])rEvaluator.eval("cl$centers");
+		//double[] centers = (double[])rEvaluator.eval("cl$centers");
 		double[] avgs = (double[])rEvaluator.eval("centers");
 		clusterCentroids = new RRawData(k, inputData.numDimensions(), avgs);
 		double[] mins = (double[])rEvaluator.eval("mins");
@@ -145,7 +140,7 @@ public class RKMeansCluster implements KMeansClusterInterface {
 		double[] maxes = (double[])rEvaluator.eval("maxes");
 		clusterMaximums = new RRawData(k, inputData.numDimensions(), maxes);
 		clusters = (int[])rEvaluator.eval("cl$cluster");
-
+		evaluateCluster();
 		return;
 	}
 
@@ -209,7 +204,6 @@ public class RKMeansCluster implements KMeansClusterInterface {
 	 * @see clustering.KMeansClusterInterface#doPCA(boolean)
 	 */
 	public void doPCA(boolean doPCA) {
-		this.doPCA = doPCA;
 	}
 	
 	/* (non-Javadoc)
@@ -230,6 +224,7 @@ public class RKMeansCluster implements KMeansClusterInterface {
 
 	// this method is by Calinski & Harabasz(1974)
 	private void evaluateCluster() {
+		return;
 	}
 
 	private boolean findInitialCenters() {

@@ -9,8 +9,6 @@ package clustering.r;
 
 import clustering.*;
 import common.RMICubeData;
-import org.omegahat.R.Java.REvaluator;
-import org.omegahat.R.Java.ROmegahatInterpreter;
 
 /**
  * @author khuck
@@ -20,13 +18,8 @@ import org.omegahat.R.Java.ROmegahatInterpreter;
  */
 public class RPrincipalComponents implements PrincipalComponentsAnalysisInterface {
 
-	// the number of components to keep
-	private int k = 0;
 	// the cluster descriptions
 	private RawDataInterface inputData = null;
-	private ROmegahatInterpreter rInterpreter = null;
-	private REvaluator rEvaluator = null;
-	private double[] sdevs = null;
 	private int[] maxIndex = null;
 	private RMICubeData cubeData = null;
 	private RawDataInterface transformed = null;
@@ -39,8 +32,6 @@ public class RPrincipalComponents implements PrincipalComponentsAnalysisInterfac
 	public RPrincipalComponents (RMICubeData cubeData) {
 		super();
 		this.cubeData = cubeData;
-		this.rInterpreter = RSingletons.getRInterpreter();
-		this.rEvaluator = RSingletons.getREvaluator();
 		maxIndex = new int[2];
 		maxIndex[0] = maxIndex[1] = 0;
 	}
@@ -84,13 +75,6 @@ public class RPrincipalComponents implements PrincipalComponentsAnalysisInterfac
 			throws ClusterException {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see clustering.PrincipalComponentsAnalysisInterface#setK(int)
-	 */
-	public void setK(int k) {
-		this.k = k;
 	}
 
 	/* (non-Javadoc)

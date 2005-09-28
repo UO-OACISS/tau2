@@ -5,13 +5,13 @@ package server;
 
 import clustering.*;
 #ifdef USE_WEKA_ENGINE
-import clustering.weka.*;
+import clustering.weka.WekaAnalysisFactory;
 #endif
 #ifdef USE_R_ENGINE
-import clustering.r.*;
+import clustering.r.RAnalysisFactory;
 #endif
 #ifdef USE_OCTAVE_ENGINE
-import clustering.octave.*;
+import clustering.octave.RAnalysisFactory;
 #endif
 import common.*;
 import edu.uoregon.tau.dms.dss.*;
@@ -26,9 +26,6 @@ import java.util.TimerTask;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import org.omegahat.R.Java.REvaluator;
-import org.omegahat.R.Java.ROmegahatInterpreter;
-import weka.core.Instances;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 
@@ -43,7 +40,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.1 2005/09/27 19:46:32 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.2 2005/09/28 01:06:59 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -63,29 +60,22 @@ public class AnalysisTaskWrapper extends TimerTask {
 	public static final int PCA_SCATTERPLOT = 6;
 	public static final int CORRELATION_SCATTERPLOT = 7;
 	
-	private int engine = 0;
 	private int chartType = 0;
 	private AnalysisFactory factory = null;
 	
 	private RMIPerfExplorerModel modelData = null;
 	private PerfExplorerServer server = null;
-	private ROmegahatInterpreter rInterpreter = null;
-	private REvaluator rEvaluator = null;
-	private DendrogramTree dendrogramTree = null;
 	private int analysisID = 0;
 	private int numRows = 0;
 	private int numCenterRows = 0;
 	private int numTotalThreads = 0;
 	private int numEvents = 0;
-	private int numMetrics = 0;
 	private int nodes = 0;
 	private int contexts = 0;
 	private int threads = 0;
 	private RawDataInterface rawData = null;
 	private double maximum = 0.0;
-	private static final int reducedDimension = 12;
 	private List eventIDs = null;
-	private List metricIDs = null;
 
 	/**
 	 * Constructor.  The engine parameter passed in specifies which analysis
@@ -97,7 +87,6 @@ public class AnalysisTaskWrapper extends TimerTask {
 	public AnalysisTaskWrapper (PerfExplorerServer server, int engine) {
 		super();
 		this.server = server;
-		this.engine = engine;
 		switch (engine) {
 #ifdef USE_WEKA_ENGINE
 			case WEKA_ENGINE:
@@ -120,77 +109,6 @@ public class AnalysisTaskWrapper extends TimerTask {
 				System.out.println("Undefined analysis engine type.");
 				System.exit(1);
 				break;
-		}
-	}
-
-	/**
-	 * The makeDendrogram method will read the raw data into the analysis
-	 * engine, create the distance matrix, and do the hierachical clustering.
-	 * Once the clustering is done, the results are used to create a dendrogram
-	 * to represent the results.
-	 * 
-	 * The proper way to do this analysis is to pass objects to R, and to call
-	 * R routines from the RSJava interface.  However, this was a faster way
-	 * to implement the code for "proof of concept", so this is the design.
-	 * 
-	 * @throws PerfExplorerException
-	 */
-	private void makeDendrogram() throws PerfExplorerException {
-		// Copy the raw data into R
-		System.out.print("Copying data...");
-		rEvaluator.voidEval("raw <- matrix(0, nrow=" + numTotalThreads + ", ncol=" + numEvents + ")");
-		for (int i = 0 ; i < numTotalThreads ; i++) {
-			for (int j = 0 ; j < numEvents ; j++) {
-				rEvaluator.voidEval("raw[" + (i+1) + "," + (j+1) + "] <- " + rawData.getValue(i,j));
-			}
-		}
-		System.out.println(" Done!");
-
-		// If the user requested dimension reduction, do the linear projection
-		if (modelData.getDimensionReduction().equals(RMIPerfExplorerModel.LINEAR_PROJECTION)) {
-			System.out.print("Reducing Dimensions...");
-			int numReduced = numTotalThreads * reducedDimension;
-			rEvaluator.voidEval("reducer <- matrix((runif("+numReduced+",0,1)), nrow=" + numEvents + ", ncol="+reducedDimension+")");
-			rEvaluator.voidEval("raw <- crossprod(t(raw), reducer)");
-			numEvents = reducedDimension;
-			System.out.println(" Done!");
-		}
-		
-		// if there are more than 4K threads, then the hierarchical clustering
-		// in R crashes... don't do the hierarchical clustering for more than 4K
-		// threads.  After the clustering is done, create the dendrogramTree
-		// data structure, and then create the image to be stored in the database.
-		if (numTotalThreads < 4098) {
-			System.out.print("Getting distances...");
-			rEvaluator.voidEval("threads <- dist(raw, method=\"manhattan\")");
-			System.out.println(" Done!");
-			System.out.print("Hierarchical clustering...");
-			rEvaluator.voidEval("hcgtr <- hclust(threads, method=\"average\")");
-			int[] merge = (int[])rEvaluator.eval("t(hcgtr$merge)");
-			double[] height = (double[])rEvaluator.eval("hcgtr$height");
-			// int[] merge = rInterpreter.call("makeDendrogram", rawData, numTotalThreads, numEvents);
-			dendrogramTree = createDendrogramTree(merge, height);
-			// dendrogramTree = createDendrogramTree(merge);
-			rEvaluator.voidEval("dend <- as.dendrogram(hcgtr)");
-			System.out.println(" Done!");
-			System.out.print("Making png image...");
-			String description = "dendrogram." + 
-				modelData.getApplication().getName() + "." +
-				modelData.getExperiment().getName() + "." +
-				modelData.getTrial().getName() + "." +
-				((Metric)(modelData.getCurrentSelection())).getName();
-			String shortDescription = modelData.getApplication().getID() + "." +
-				modelData.getExperiment().getID() + "." +
-				modelData.getTrial().getID() + "." +
-				((Metric)(modelData.getCurrentSelection())).getID();
-			String fileName = "/tmp/dendrogram." + shortDescription + ".png";
-			String thumbnail = "/tmp/dendrogram.thumb." + shortDescription + ".jpg";
-			rEvaluator.voidEval("png(\"" + fileName + "\",width=800, height=400)");
-			rEvaluator.voidEval("plot (dend, main=\"" + description + "\", edge.root=FALSE,horiz=FALSE,axes=TRUE)");
-			rEvaluator.voidEval("dev.off()");
-			System.out.println(" Done!");
-			chartType = DENDROGRAM;
-			saveAnalysisResult(description, fileName, thumbnail, true);
 		}
 	}
 
@@ -275,7 +193,7 @@ public class AnalysisTaskWrapper extends TimerTask {
        		statement.executeUpdate();
        		statement.close();
        		// get the new ID
-			String tmpStr = new String();
+/*			String tmpStr = new String();
 			if (db.getDBType().compareTo("mysql") == 0) {
 		   	tmpStr = "select LAST_INSERT_ID();";
 			} else if (db.getDBType().compareTo("db2") == 0) {
@@ -287,7 +205,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			}
 			int analysisResultID = Integer.parseInt(db.getDataItem(tmpStr));
 			
-/*			buf = new StringBuffer();
+			buf = new StringBuffer();
 			buf.append("insert into analysis_result_data ");
 			buf.append(" (interval_event, metric, value, data_type, analysis_result, cluster_index)");
 			buf.append(" values (?, ?, ?, ?, ?, ?)");
@@ -314,142 +232,6 @@ public class AnalysisTaskWrapper extends TimerTask {
 			e.printStackTrace();
 			PerfExplorerServer.getServer().getControl().SIGNAL("saveAnalysisResult");
 			throw new PerfExplorerException(error, e);
-		}
-	}
-
-	/**
-	 * This method does the k-means clustering on the data.
-	 * 
-	 * @param haveCenters
-	 * @throws PerfExplorerException
-	 */
-	private void doKMeansClustering(boolean haveCenters) throws PerfExplorerException {
-		rEvaluator.voidEval("traw <- t(raw)");
-		// create a palette!
-		rEvaluator.voidEval("first <- rgb(0,0,0:15,max=15)");
-		rEvaluator.voidEval("second <- rgb(0,0:15,15:0,max=15)");
-		rEvaluator.voidEval("third <- rgb(0:15,15:0,0,max=15)");
-		rEvaluator.voidEval("fourth <- rgb(15,0:15,0,max=15)");
-		//rEvaluator.voidEval("fifth <- rgb(15,15,0:15,max=15)");
-		rEvaluator.voidEval("all <- c(first, second, third, fourth)");
-		int maxClusters = (numTotalThreads <= modelData.getNumberOfClusters()) ? (numTotalThreads-1) : modelData.getNumberOfClusters();
-		for (int i = 2 ; i <= maxClusters ; i++) {
-			if (haveCenters) {
-				System.out.print("Making " + i + " centers...");
-				int[]centerIndexes = dendrogramTree.findCenters(i);
-				rEvaluator.voidEval("centers <- matrix(0, nrow=" + i + ", ncol=" + numEvents + ")");
-				System.out.print("centers: ");
-				for (int j = 1 ; j <= i ; j++) {
-					System.out.print(centerIndexes[j-1]);
-					rEvaluator.voidEval("centers[" + j + ",] <- raw[" + centerIndexes[j-1] + ",]");
-					if (j != i)
-						System.out.print(",");
-				}
-				System.out.println(" Done!");
-			}
-
-			System.out.print("Doing k-means clustering...");
-			if (haveCenters)
-				rEvaluator.voidEval("cl <- kmeans(raw, centers, 20)");
-			else
-				rEvaluator.voidEval("cl <- kmeans(raw, " + i + ", 20)");
-			System.out.println(" Done!");
-
-			String description = modelData.getApplication().getName() + "." +
-				modelData.getExperiment().getName() + "." +
-				modelData.getTrial().getName() + "." +
-				((Metric)(modelData.getCurrentSelection())).getName() + "." +
-				i + "_clusters";
-			String shortDescription = modelData.getApplication().getID() + "." +
-				modelData.getExperiment().getID() + "." +
-				modelData.getTrial().getID() + "." +
-				((Metric)(modelData.getCurrentSelection())).getID() + i;
-
-			System.out.print("Making png image...");
-			String fileName = "/tmp/clusterSizes." + shortDescription + ".png";
-			String thumbnail = "/tmp/clusterSizes.thumb." + shortDescription + ".jpg";
-			rEvaluator.voidEval("png(\"" + fileName + "\")");
-			rEvaluator.voidEval("barplot (cl$size, main=\"cluster sizes: " + description + "\", xlab=\"count\", ylab=\"cluster\", horiz=TRUE)");
-			rEvaluator.voidEval("dev.off()");
-			System.out.println(" Done!");
-			chartType = HISTOGRAM;
-			saveAnalysisResult(description, fileName, thumbnail, false);
-
-			System.out.print("Making colormap image...");
-			if (haveCenters) {
-				if (numTotalThreads > 32 && threads != 1) {
-					rEvaluator.voidEval("mymat <- matrix(cl$cluster, nrow="+threads * contexts+", ncol="+nodes+")");
-					rEvaluator.voidEval("mymat <- t(mymat)");
-				} else {
-					rEvaluator.voidEval("mymat <- matrix(cl$cluster, nrow="+(numTotalThreads/16)+", ncol=16)");
-				}
-			} else {
-				rEvaluator.voidEval("mymat <- matrix(cl$cluster, nrow="+(numTotalThreads/32)+", ncol=32)");
-			}
-			fileName = "/tmp/clusterimage." + shortDescription + ".png";
-			thumbnail = "/tmp/clusterimage.thumb." + shortDescription + ".jpg";
-			rEvaluator.voidEval("png(\"" + fileName + "\")");
-			rEvaluator.voidEval("image(mymat, col=all, axes=FALSE)");
-			rEvaluator.voidEval("dev.off()");
-			System.out.println(" Done!");
-			chartType = VIRTUAL_TOPOLOGY;
-			saveAnalysisResult(description, fileName, thumbnail, false);
-
-			System.out.print("Getting averages, mins, maxes...");
-			// get the averages for each cluster, and graph them
-			rEvaluator.voidEval("maxes <- matrix(0.0, nrow=" + i + ", ncol=" + numEvents + ")");
-			rEvaluator.voidEval("mins <- matrix(" + maximum + ", nrow=" + i + ", ncol=" + numEvents + ")");
-			rEvaluator.voidEval("totals <- matrix(0.0, nrow=" + i + ", ncol=" + numEvents + ")");
-			rEvaluator.voidEval("counts <- matrix(0.0, nrow=" + i + ", ncol=" + numEvents + ")");
-			rEvaluator.voidEval("ci <- 0");
-			for (int m = 1 ; m <= numTotalThreads ; m++) {
-  				rEvaluator.voidEval("ci <- cl$cluster["+m+"]");
-				for (int n = 1 ; n <= numEvents ; n++) {
-   					rEvaluator.voidEval("if (raw["+m+","+n+"] > maxes[ci,"+n+"]) maxes[ci,"+n+"] <- raw["+m+","+n+"]");
-   					rEvaluator.voidEval("if (raw["+m+","+n+"] < mins[ci,"+n+"]) mins[ci,"+n+"] <- raw["+m+","+n+"]");
-   					rEvaluator.voidEval("totals[ci,"+n+"] = totals[ci,"+n+"] + raw["+m+","+n+"]");
-   					rEvaluator.voidEval("counts[ci,"+n+"] = counts[ci,"+n+"] + 1");
-				}
-			}
-			rEvaluator.voidEval("avgs <- totals / counts");
-			System.out.println(" Done!");
-/*
-			rEvaluator.voidEval("for (i in 1:" + numTotalThreads + ") {\nci <- cl$cluster[i] for (j in 1:" + numEvents + ") {\nif (raw[i,j] > maxes[ci,j]) maxes[ci,j] <- raw[i,j]\nif (raw[i,j] < mins[ci,j]) mins[ci,j] <- raw[i,j]\ntotals[ci,j] = totals[ci,j] + raw[i,j]\ncounts[ci,j] = counts[ci,j] + 1 } } ");
-
-			double[] val = (double[])rEvaluator.eval("mins");
-			for (int m = 0 ; m < 10 ; m++)
-				System.out.println("val[" + m + "]: " + val[m]);
-*/
-
-			System.out.print("Making png image of averages...");
-			fileName = "/tmp/barplot_averages." + shortDescription + ".png";
-			thumbnail = "/tmp/barplot_averages.thumb." + shortDescription + ".jpg";
-			rEvaluator.voidEval("png(\"" + fileName + "\")");
-			rEvaluator.voidEval("barplot(t(avgs), main=\"barplot averages: " + description + "\", xlab=\"cluster\", ylab=\"" + ((Metric)(modelData.getCurrentSelection())).getName() + "\", col=1:" + numEvents + ", horiz=TRUE)");
-			rEvaluator.voidEval("dev.off()");
-			System.out.println(" Done!");
-			chartType = CLUSTER_AVERAGES;
-			saveAnalysisResult(description, fileName, thumbnail, false);
-
-			System.out.print("Making png image of maxes...");
-			fileName = "/tmp/barplot_maxes." + shortDescription + ".png";
-			thumbnail = "/tmp/barplot_maxes.thumb." + shortDescription + ".jpg";
-			rEvaluator.voidEval("png(\"" + fileName + "\")");
-			rEvaluator.voidEval("barplot(t(maxes), main=\"barplot maxes: " + description + "\", xlab=\"cluster\", ylab=\"" + ((Metric)(modelData.getCurrentSelection())).getName() + "\", col=1:" + numEvents + ", horiz=TRUE)");
-			rEvaluator.voidEval("dev.off()");
-			System.out.println(" Done!");
-			chartType = CLUSTER_MAXIMUMS;
-			saveAnalysisResult(description, fileName, thumbnail, false);
-
-			System.out.print("Making png image of mins...");
-			fileName = "/tmp/barplot_mins." + shortDescription + ".png";
-			thumbnail = "/tmp/barplot_mins.thumb." + shortDescription + ".jpg";
-			rEvaluator.voidEval("png(\"" + fileName + "\")");
-			rEvaluator.voidEval("barplot(t(mins), main=\"barplot mins: " + description + "\", xlab=\"cluster\", ylab=\"" + ((Metric)(modelData.getCurrentSelection())).getName() + "\", col=1:" + numEvents + ", horiz=TRUE)");
-			rEvaluator.voidEval("dev.off()");
-			System.out.println(" Done!");
-			chartType = CLUSTER_MINIMUMS;
-			saveAnalysisResult(description, fileName, thumbnail, false);
 		}
 	}
 
@@ -801,7 +583,6 @@ public class AnalysisTaskWrapper extends TimerTask {
 						PrincipalComponentsAnalysisInterface pca =
 						factory.createPCAEngine(server.getCubeData(modelData));
 						pca.setInputData(reducedData);
-						pca.setK(1);
 						pca.doPCA();
 						// get the components
 						RawDataInterface components = pca.getResults();
@@ -844,7 +625,6 @@ public class AnalysisTaskWrapper extends TimerTask {
 					PrincipalComponentsAnalysisInterface pca = 
 						factory.createPCAEngine(server.getCubeData(modelData));
 					pca.setInputData(reducedData);
-					pca.setK(1);
 					pca.doPCA();
 					// get the components
 					RawDataInterface components = pca.getResults();

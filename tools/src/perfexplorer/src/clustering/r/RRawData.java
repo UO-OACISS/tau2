@@ -22,7 +22,6 @@ public class RRawData implements RawDataInterface {
 	private int dimensions = 0;
 	private double[][] data = null;
 	private String[] eventNames = null;
-	private String[] threadNames = null;
 	private double maximum = 0.0;
 	
 	/**
@@ -34,7 +33,6 @@ public class RRawData implements RawDataInterface {
 		this.dimensions = dimensions;
 		this.data = new double[vectors][dimensions];
 		this.eventNames = new String[dimensions];
-		this.threadNames = new String[dimensions];
 		//initialize();
 	}
 
@@ -44,7 +42,6 @@ public class RRawData implements RawDataInterface {
 		this.dimensions = dimensions;
 		this.data = new double[vectors][dimensions];
 		this.eventNames = eventNames;
-		this.threadNames = new String[dimensions];
 		//initialize();
 	}
 
@@ -53,7 +50,6 @@ public class RRawData implements RawDataInterface {
 		this.vectors = vectors;
 		this.dimensions = dimensions;
 		this.eventNames = new String[dimensions];
-		this.threadNames = new String[dimensions];
 		this.data = new double[vectors][dimensions];
 		int i = 0;
 		for (int x = 0 ; x < vectors ; x++) {

@@ -5,7 +5,7 @@ import org.omegahat.R.Java.ROmegahatInterpreter;
 
 /**
  *
- * <P>CVS $Id: RSingletons.java,v 1.1 2005/09/27 19:49:30 khuck Exp $</P>
+ * <P>CVS $Id: RSingletons.java,v 1.2 2005/09/28 01:06:58 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -38,6 +38,8 @@ public class RSingletons {
 	 * @return
 	 */
 	public static REvaluator getREvaluator () {
+		// make suer the interpreter is not null
+		getRInterpreter();
 		if (rEvaluator == null) {
 			rEvaluator = new REvaluator();
 		}
@@ -45,11 +47,12 @@ public class RSingletons {
 	}
 	
 	/**
-	 * End the R Session.  Currently only called on System.exit().
+	 * End the R Session.  Currently only called on RAnalysisFactory.closeFactory().
 	 */
 	public static void endRSession() {
 		try {
-			rEvaluator.call("quit");
+			// call the method, to make sure the evaluator exists
+			getREvaluator().call("quit");
 		} catch (Exception e) { 
 			System.out.println(e);
 			e.printStackTrace();

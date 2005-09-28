@@ -13,8 +13,6 @@ import java.io.InputStream;
 import common.*;
 import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.dms.database.*;
-import org.omegahat.R.Java.REvaluator;
-import org.omegahat.R.Java.ROmegahatInterpreter;
 import jargs.gnu.CmdLineParser;
 
 /**
@@ -24,7 +22,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.20 2005/09/27 19:46:32 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.21 2005/09/28 01:06:59 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -44,18 +42,13 @@ import jargs.gnu.CmdLineParser;
 public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfExplorer {
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>] [{-p,--port}=<port_number>]\n  where analysis_engine = R or Weka";
 
-	private String configFile = null;
 	private DatabaseAPI session = null;
 	private Semaphore dbControl = null;
-	private ROmegahatInterpreter rInterpreter = null;
-	private REvaluator rEvaluator = null;
 	private Queue requestQueue = null;
 	private java.lang.Thread timerThread = null;
 	private TimerThread timer = null;
 
 	private static PerfExplorerServer theServer = null;
-	private static int port = 9999;
-
 	/**
 	 * Static method to get the server instance reference.
 	 * Note: This method assumes the server has been instantiated.
@@ -99,8 +92,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		super(port);
 		PerfExplorerOutput.initialize(quiet);
 		theServer = this;
-		PerfExplorerServer.port = port;
-		this.configFile = configFile;
 		this.requestQueue = new Queue();
 		try {
 			this.session = new DatabaseAPI();
@@ -501,51 +492,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 */
 	public DB getDB (){
 		return session.db();
-	}
-
-	/**
-	 * The RInterpreter is a singleton object, so if the object has not yet
-	 * been instantiated, create one.  Then return the instance.
-	 * 
-	 * @return
-	 */
-	public ROmegahatInterpreter getRInterpreter () {
-		if (rInterpreter == null) {
-			String myArgs[] = new String[2];
-			myArgs[0] = new String("--silent");
-			myArgs[1] = new String("--vanilla");
-			rInterpreter = 
-				new ROmegahatInterpreter(ROmegahatInterpreter.fixArgs(myArgs), false);
-		}
-		return rInterpreter;
-	}
-
-	/**
-	 * The REvaluator is a singleton object, so if the object has not yet
-	 * been instantiated, create one.  Then return the instance.
-	 * 
-	 * @return
-	 */
-	public REvaluator getREvaluator () {
-		if (rEvaluator == null) {
-			rEvaluator = new REvaluator();
-		}
-		return rEvaluator;
-	}
-	
-	/**
-	 * End the R Session.  Currently only called on System.exit().
-	 */
-	public void endRSession() {
-		try {
-			rEvaluator.call("quit");
-		} catch (Exception e) { 
-			System.out.println(e);
-			e.printStackTrace();
-		}
-		rInterpreter = null;
-		rEvaluator = null;
-		System.out.println("R session over.");
 	}
 
 	/**

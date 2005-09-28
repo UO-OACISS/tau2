@@ -100,27 +100,21 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 		int dimensions = 3;
 		
 		// generate some raw data
-//		RawDataInterface data = new RRawData(vectors, dimensions);
 		List attrs = new ArrayList(vectors);
 		attrs.add("x");
 		attrs.add("y");
 		attrs.add("z");
 		RawDataInterface data = new WekaRawData("test", attrs, vectors, dimensions);
-		int k = 1;
 		for (int i = 0 ; i < vectors ; i++) {
 			for (int j = 0 ; j < dimensions ; j++) {
-//				data.addValue(i, j, k++);
 				data.addValue(i, j, Math.random());
-				//System.out.print(data.getValue(i,j) + " ");
 			}
-			//System.out.println("");
 		}
 		
 		// get the distances
 		DistanceMatrix distances = new DistanceMatrix(vectors);
 		distances.solveManhattanDistances(data);
 		System.out.println("Got Distances...");
-		//System.out.println(distances.toString());
 		
 		// do the hierarchical clustering
 		JavaHierarchicalCluster hclust = new JavaHierarchicalCluster(distances);

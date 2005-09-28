@@ -21,8 +21,6 @@ import weka.attributeSelection.PrincipalComponents;
  */
 public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInterface {
 
-	// the number of components to keep
-	private int k = 0;
 	// the cluster descriptions
 	private RawDataInterface inputData = null;
 	private Instances instances = null;
@@ -83,13 +81,6 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 			throws ClusterException {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see clustering.PrincipalComponentsAnalysisInterface#setK(int)
-	 */
-	public void setK(int k) {
-		this.k = k;
 	}
 
 	/* (non-Javadoc)

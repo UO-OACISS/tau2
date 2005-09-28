@@ -7,22 +7,18 @@ package clustering.r;
 import common.*;
 import clustering.*;
 import org.omegahat.R.Java.REvaluator;
-import org.omegahat.R.Java.ROmegahatInterpreter;
 
 /**
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: RDimensionReduction.java,v 1.1 2005/09/27 19:49:29 khuck Exp $</P>
+ * <P>CVS $Id: RDimensionReduction.java,v 1.2 2005/09/28 01:06:58 khuck Exp $</P>
  * @author khuck
  *
  */
 public class RDimensionReduction implements DimensionReductionInterface {
 
-	// dimension reduction possibilities
-	private boolean doPCA = false;
 	private RawDataInterface inputData = null;
-	private ROmegahatInterpreter rInterpreter = null;
 	private REvaluator rEvaluator = null;
 	private String method = RMIPerfExplorerModel.NONE;
 	private int newDimension = 0;
@@ -32,7 +28,6 @@ public class RDimensionReduction implements DimensionReductionInterface {
 	 */
 	public RDimensionReduction(String method, int newDimension) {
 		super();
-		this.rInterpreter = RSingletons.getRInterpreter();
 		this.rEvaluator = RSingletons.getREvaluator();
 		this.method = method;
 		this.newDimension = newDimension;

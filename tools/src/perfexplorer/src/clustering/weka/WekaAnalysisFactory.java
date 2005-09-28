@@ -44,4 +44,8 @@ public class WekaAnalysisFactory extends AnalysisFactory {
 		return new WekaPrincipalComponents(cubeData, this);
 	}
 
+	public void closeFactory() {
+		// do nothing
+		return;
+	}
 }

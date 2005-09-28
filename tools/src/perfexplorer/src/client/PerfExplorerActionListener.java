@@ -222,7 +222,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public void createClusterSizeWindow() {
 		String numClusters = (new Integer(PerfExplorerModel.getModel().getNumberOfClusters())).toString();
 		String reply = (String)JOptionPane.showInputDialog (mainFrame,
-			"Enter the max number of clusters (<= " + PerfExplorerModel.MAX_CLUSTERS + "):",
+			"Enter the max number of clusters (<= " + numClusters + "):",
 			"Max Clusters", JOptionPane.PLAIN_MESSAGE);
 		if (reply != null && !reply.equals(""))
 			PerfExplorerModel.getModel().setNumberOfClusters(reply);
@@ -358,7 +358,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		Object selection = theModel.getCurrentSelection();
 		String status = null;
 		if ((selection instanceof Trial) || (selection instanceof Metric)) {
-			String tmp = theModel.getClusterMethod();
+//			String tmp = theModel.getClusterMethod();
 			RMIPerfExplorerModel modelCopy = theModel.copy();
 			modelCopy.setClusterMethod(PerfExplorerModel.CORRELATION_ANALYSIS);
 			int reply = getConfirmation(modelCopy);

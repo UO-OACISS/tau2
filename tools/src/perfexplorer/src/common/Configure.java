@@ -15,21 +15,10 @@ public class Configure {
     
     private static String Greeting = "\nNow testing your database connection.\n";
 
-    private String perfdmf_home = "";
     private String tau_root = "";
-    private String arch = "";
-    private String jdbc_db_jarfile = "postgresql.jar";
-    private String jdbc_db_driver = "org.postgresql.Driver";
-    private String jdbc_db_type = "postgresql";
-    private String db_hostname = "localhost";
-    private String db_portnum = "5432";
     private String db_dbname = "perfdmf";
-    private String db_username = "";
     private String db_password = "";
-    private String db_schemafile = "dbschema.txt";
-    private String xml_parser = "xerces.jar";
     private ParseConfig parser;
-    private boolean configFileFound = false;
 
     private String configFileName;
 
@@ -38,14 +27,9 @@ public class Configure {
     public Configure(String tauroot, String arch) {
         super();
         this.tau_root = tauroot;
-        this.arch = arch;
-        this.perfdmf_home = tauroot + "/tools/src/dms";
     }
 
     public void initialize(String configFileNameIn) {
-        // Create a reader to parse the input
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
         // Welcome the user to the program
         System.out.println(Greeting);
 
@@ -57,7 +41,6 @@ public class Configure {
                 //System.out.println("Configuration file found...");
                 // Parse the configuration file
                 parseConfigFile();
-                configFileFound = true;
             } else {
                 System.out.println("Configuration file NOT found...");
                 System.out.println("a new configuration file will be created.");
@@ -75,17 +58,8 @@ public class Configure {
     public void parseConfigFile() throws IOException, FileNotFoundException {
         //System.out.println("Parsing config file...");
         parser = new ParseConfig(configFileName);
-        perfdmf_home = parser.getPerfDMFHome();
-        jdbc_db_jarfile = parser.getJDBCJarFile();
-        jdbc_db_driver = parser.getJDBCDriver();
-        jdbc_db_type = parser.getDBType();
-        db_hostname = parser.getDBHost();
-        db_portnum = parser.getDBPort();
         db_dbname = parser.getDBName();
-        db_username = parser.getDBUserName();
         db_password = parser.getDBPasswd();
-        db_schemafile = parser.getDBSchema();
-        xml_parser = parser.getXMLSAXParser();
     }
 
     
@@ -111,6 +85,7 @@ public class Configure {
         try {
             String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "analysis_settings");
             ResultSet resultSet = db.executeQuery(query);
+            resultSet.close();
         } catch (SQLException e) {
             // this is our method of determining that no 'application' table exists
 

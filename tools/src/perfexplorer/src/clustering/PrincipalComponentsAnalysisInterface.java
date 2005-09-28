@@ -28,13 +28,6 @@ public interface PrincipalComponentsAnalysisInterface {
 	public ClusterDescription getComponentDescription(int i) throws ClusterException;
 
 	/**
-	 * Set the value of K (nuber of significant components to keep)
-	 * @param k
-	 */
-	public void setK(int k);
-
-	
-	/**
 	 * Sets the input data for the clustering operation.
 	 * @param inputData
 	 */

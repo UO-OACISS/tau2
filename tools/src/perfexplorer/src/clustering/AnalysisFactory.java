@@ -15,4 +15,5 @@ public abstract class AnalysisFactory {
 	public abstract RawDataInterface createRawData(String name, List attributes, int vectors, int dimensions);
 	public abstract KMeansClusterInterface createKMeansEngine();
 	public abstract PrincipalComponentsAnalysisInterface createPCAEngine(RMICubeData cubeData);
+	public abstract void closeFactory();
 }

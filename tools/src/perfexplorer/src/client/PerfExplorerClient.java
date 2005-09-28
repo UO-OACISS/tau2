@@ -11,7 +11,6 @@ public class PerfExplorerClient extends JFrame {
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
 
 	private ActionListener listener = null;
-	private JSplitPane splitPane = null;
 	private static PerfExplorerClient mainFrame = null;
 
 	public static PerfExplorerClient getMainFrame() {

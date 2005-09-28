@@ -11,7 +11,6 @@ public class PerfExplorerConnection {
     private static PerfExplorerConnection theConnection = null;
 
     private RMIPerfExplorer server = null;
-    private static String codebase = null;
     private static boolean standalone = false;
     private static String configFile = null;
     private static int analysisEngine = 0;
