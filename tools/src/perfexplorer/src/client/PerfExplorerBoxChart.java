@@ -80,7 +80,8 @@ public class PerfExplorerBoxChart {
         for (int s = 0; s < SERIES_COUNT; s++) {
             for (int c = 0; c < CATEGORY_COUNT; c++) {
                 List values = createValueList(data.getRowData(s));
-                result.add(values, (String)names.get(s), "Category " + c);
+                //result.add(values, (String)names.get(s), "Category " + c);
+                result.add(values, (String)names.get(s), "");
             }
         }
         return result;
@@ -133,7 +134,8 @@ public class PerfExplorerBoxChart {
        
         chart.setBackgroundPaint(Color.white);
 
-        plot.setBackgroundPaint(Color.lightGray);
+        //plot.setBackgroundPaint(Color.lightGray);
+        plot.setBackgroundPaint(Color.white);
         plot.setDomainGridlinePaint(Color.white);
         plot.setDomainGridlinesVisible(true);
         plot.setRangeGridlinePaint(Color.white);
