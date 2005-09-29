@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.12 2005/08/16 22:31:36 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.13 2005/09/29 15:45:29 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -493,6 +493,37 @@ public class ChartData extends RMIChartData {
 
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
+		} else if (dataType == IQR_DATA) {
+			int contexts = 1;
+			int threads = 16;
+			// get the number of contexts and threads
+			
+			// The user wants to know the runtime breakdown by phases 
+			// of one experiment as the number of threads of execution
+			// increases.
+			buf.append("select ie.name, (p.node*");
+			buf.append(contexts * threads);
+			buf.append(") + (p.context*");
+			buf.append(threads);
+            
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append(") + p.thread as thread, p.excl ");
+            } else {
+                buf.append(") + p.thread as thread, p.exclusive_percentage ");
+            }
+
+			buf.append("from interval_event ie ");
+			buf.append("inner join interval_mean_summary s ");
+			buf.append("on ie.id = s.interval_event and s.exclusive_percentage > 1.0 ");
+			buf.append("left outer join interval_location_profile p ");
+			buf.append("on ie.id = p.interval_event ");
+			buf.append("and p.metric = s.metric where ie.trial = ? ");
+			buf.append(" and p.metric = ? ");
+			buf.append(" and ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append(" order by 1,2 ");
+			statement = db.prepareStatement(buf.toString());
+			statement.setInt(1, model.getTrial().getID());
+			statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
 		}
 		return statement;
 	}

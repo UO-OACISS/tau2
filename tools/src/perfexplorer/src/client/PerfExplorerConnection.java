@@ -275,5 +275,4 @@ public class PerfExplorerConnection {
 	return results;
     }
 
-
 }

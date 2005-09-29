@@ -1,6 +1,7 @@
 package client;
 
 import javax.swing.*;
+
 import java.awt.event.*;
 import java.util.List;
 import java.util.ListIterator;
@@ -45,6 +46,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	// arbitrary view menu items
 	public final static String CREATE_NEW_VIEW = "Create New View";
 	public final static String CREATE_NEW_SUB_VIEW = "Create New Sub-view";
+	public final static String DO_ICQ_BOXCHART = "Create BoxChart with Whiskers";
 
 	private PerfExplorerClient mainFrame;
 
@@ -87,6 +89,9 @@ public class PerfExplorerActionListener implements ActionListener {
 				} else if (arg.equals(DO_CORRELATION_CUBE)) {
 					if (valid3DSelection())
 						PerfExplorerCube.doCorrelationCube();
+				} else if (arg.equals(DO_ICQ_BOXCHART)) {
+					if (valid3DSelection())
+						PerfExplorerBoxChart.doICQBoxChart();
 				} else if (arg.equals(DO_VARIATION_ANALYSIS)) {
 					if (valid3DSelection())
 						PerfExplorerVariation.doVariationAnalysis();

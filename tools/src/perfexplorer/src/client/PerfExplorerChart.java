@@ -601,7 +601,7 @@ public class PerfExplorerChart {
 
 	}
 
-	private static void centerFrame(ChartFrame frame) {
+	public static void centerFrame(ChartFrame frame) {
         //Window Stuff.
         int windowWidth = 700;
         int windowHeight = 450;
