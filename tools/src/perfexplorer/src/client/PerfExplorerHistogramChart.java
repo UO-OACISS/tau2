@@ -80,7 +80,8 @@ public class PerfExplorerHistogramChart {
     		}
 			int bins = 10;
 			if (doubles.size() >= 2098)
-				bins = Math.max(200, doubles.size() / 100);
+				bins = 200;
+				//bins = Math.max(200, doubles.size() / 100);
 			else if (doubles.size() >= 256)
 				bins = doubles.size() / 10;
 			else if (doubles.size() >= 16)
