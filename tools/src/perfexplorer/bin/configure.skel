@@ -27,9 +27,10 @@ do
 
   -engine=*)
     myarg=`echo $arg | sed 's/-engine=//'`
-    if [ $myarg = weka -o $myarg = R ]
+    myarg=`echo $myarg | tr "[:upper:]" "[:lower:]"`
+    if [ $myarg = weka -o $myarg = r ]
       then
-        engine=`echo $myarg | tr "[:upper:]" "[:lower:]"`
+        engine=$myarg
         engine_upper=`echo $engine | tr "[:lower:]" "[:upper:]"`
       else
         echo "WARNING: valid options for engine are 'weka' and 'R' "

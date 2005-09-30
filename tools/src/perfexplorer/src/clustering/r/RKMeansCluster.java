@@ -12,7 +12,7 @@ import org.omegahat.R.Java.REvaluator;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: RKMeansCluster.java,v 1.2 2005/09/28 01:06:58 khuck Exp $</P>
+ * <P>CVS $Id: RKMeansCluster.java,v 1.3 2005/09/30 20:35:48 khuck Exp $</P>
  * @author khuck
  *
  */
@@ -132,8 +132,8 @@ public class RKMeansCluster implements KMeansClusterInterface {
 		System.out.println(" Done!");
 
 		clusterSizes = (int[])rEvaluator.eval("cl$size");
-		//double[] centers = (double[])rEvaluator.eval("cl$centers");
-		double[] avgs = (double[])rEvaluator.eval("centers");
+		double[] centers = (double[])rEvaluator.eval("cl$centers");
+		double[] avgs = (double[])rEvaluator.eval("avgs");
 		clusterCentroids = new RRawData(k, inputData.numDimensions(), avgs);
 		double[] mins = (double[])rEvaluator.eval("mins");
 		clusterMinimums = new RRawData(k, inputData.numDimensions(), mins);

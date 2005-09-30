@@ -46,7 +46,8 @@ public class PerfExplorerActionListener implements ActionListener {
 	// arbitrary view menu items
 	public final static String CREATE_NEW_VIEW = "Create New View";
 	public final static String CREATE_NEW_SUB_VIEW = "Create New Sub-view";
-	public final static String DO_ICQ_BOXCHART = "Create BoxChart with Whiskers";
+	public final static String DO_IQR_BOXCHART = "Create BoxChart";
+	public final static String DO_HISTOGRAM = "Create Histogrms";
 
 	private PerfExplorerClient mainFrame;
 
@@ -89,9 +90,12 @@ public class PerfExplorerActionListener implements ActionListener {
 				} else if (arg.equals(DO_CORRELATION_CUBE)) {
 					if (valid3DSelection())
 						PerfExplorerCube.doCorrelationCube();
-				} else if (arg.equals(DO_ICQ_BOXCHART)) {
+				} else if (arg.equals(DO_IQR_BOXCHART)) {
 					if (valid3DSelection())
-						PerfExplorerBoxChart.doICQBoxChart();
+						PerfExplorerBoxChart.doIQRBoxChart();
+				} else if (arg.equals(DO_HISTOGRAM)) {
+					if (valid3DSelection())
+						PerfExplorerHistogramChart.doHistogram();
 				} else if (arg.equals(DO_VARIATION_ANALYSIS)) {
 					if (valid3DSelection())
 						PerfExplorerVariation.doVariationAnalysis();

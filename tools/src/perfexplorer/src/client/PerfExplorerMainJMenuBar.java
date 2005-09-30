@@ -79,10 +79,16 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		visualizationMenu.add(varianceItem);
 
 		//Add a menu item.
-		JMenuItem icqItem = new JMenuItem(
-				PerfExplorerActionListener.DO_ICQ_BOXCHART);
-		icqItem.addActionListener(listener);
-		visualizationMenu.add(icqItem);
+		JMenuItem iqrItem = new JMenuItem(
+				PerfExplorerActionListener.DO_IQR_BOXCHART);
+		iqrItem.addActionListener(listener);
+		visualizationMenu.add(iqrItem);
+		
+		//Add a menu item.
+		JMenuItem histogramItem = new JMenuItem(
+				PerfExplorerActionListener.DO_HISTOGRAM);
+		histogramItem.addActionListener(listener);
+		visualizationMenu.add(histogramItem);
 
 		
 		this.add(visualizationMenu);

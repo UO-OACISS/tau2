@@ -49,7 +49,7 @@ public class PerfExplorerBoxChart {
     }
      */
 
-	public static void doICQBoxChart() {
+	public static void doIQRBoxChart() {
 		// for each event, get the variation across all threads.
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -59,7 +59,7 @@ public class PerfExplorerBoxChart {
 		BoxAndWhiskerCategoryDataset dataset = createDataset(data);
         JFreeChart chart = createChart(dataset);
         
-		ChartFrame frame = new ChartFrame("Total Runtime Breakdown", chart);
+		ChartFrame frame = new ChartFrame("Distributions of Significant Events", chart);
 		PerfExplorerChart.centerFrame(frame);
 
 		frame.pack();
@@ -90,7 +90,7 @@ public class PerfExplorerBoxChart {
     private static List createValueList(List inData) {
     		List result = new java.util.ArrayList();
     		double min = ((double[])(inData.get(0)))[1];
-     	double max = min;  
+     		double max = min;  
     		for (int i = 1; i < inData.size(); i++) {
     			if (min > ((double[])(inData.get(i)))[1])
     				min = ((double[])(inData.get(i)))[1];
@@ -130,7 +130,7 @@ public class PerfExplorerBoxChart {
         CategoryPlot plot = new CategoryPlot(
             dataset, domainAxis, rangeAxis, renderer
         );
-        JFreeChart chart = new JFreeChart("Box-and-Whisker Chart Demo 1", plot);
+        JFreeChart chart = new JFreeChart("Significant (>2.0% of runtime) Event IQR Boxplot with Outliers", plot);
        
         chart.setBackgroundPaint(Color.white);
 
