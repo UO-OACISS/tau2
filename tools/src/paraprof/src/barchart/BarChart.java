@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.1 2005/09/26 21:12:12 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.2 2005/09/30 01:44:18 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, BarChartModelListener {
@@ -527,17 +527,26 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
                     rowLabelDrawObjects.add(new DrawObject(rowLabelPosition, y - fontHeight, rowLabelPosition
                             + rowLabelStringWidth, y));
 
-                    double otherValue = 0;
 
                     if (maxValue > 0) {
+                        // the "otherValue" is the sum of values that are less than a pixel
+                        // we put them together in their own box at the end
+                        double otherValue = 0;
+
+                        // the "bonus" is the remainder of the conversion of the ratio to integer pixels
+                        // we add it to the next bar so that 1.1 + 1.9 is the same length as 3.0
+                        // it makes the bars more representative
+                        double bonus = 0;
+                        
                         for (int i = 0; i < model.getSubSize(); i++) {
                             g2D.setColor(model.getValueColor(row, i));
                             double value = model.getValue(row, i);
                             Color color = model.getValueColor(row, i);
 
                             double ratio = (value / maxValue);
-                            int length = (int) (ratio * barLength);
-
+                            int length = (int) (ratio * barLength + bonus);
+                            bonus = (ratio*barLength + bonus) - length;
+                            
                             if (length < threshold && stacked) {
                                 otherValue += value;
                                 subDrawObjects.add(null);
@@ -582,7 +591,7 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
                         } else {
                             // draw "other" (should make this optional)
                             double ratio = (otherValue / maxValue);
-                            otherLength = (int) (ratio * barLength);
+                            otherLength = (int) (ratio * barLength + bonus);
                         }
 
                         drawBar(g2D, barStartX, y - barOffset, otherLength, barHeight, Color.black, null);
