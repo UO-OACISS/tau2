@@ -4,8 +4,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import common.*;
-import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.dms.database.*;
+import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.database.*;
 import java.util.List;
 
 /**
@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.14 2005/09/30 20:35:48 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.15 2005/10/05 23:03:02 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

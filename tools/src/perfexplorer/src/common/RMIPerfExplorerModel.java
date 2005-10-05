@@ -1,6 +1,6 @@
 package common;
 
-import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.perfdmf.*;
 import java.io.Serializable;
 import java.util.List;
 
@@ -8,7 +8,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.5 2005/08/11 20:47:14 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.6 2005/10/05 23:03:01 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

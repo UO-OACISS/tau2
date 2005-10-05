@@ -3,7 +3,7 @@ package client;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.tree.*;
-import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.perfdmf.*;
 
 public class PerfExplorerTreeCellRenderer extends DefaultTreeCellRenderer{
 	public Component getTreeCellRendererComponent(JTree tree,

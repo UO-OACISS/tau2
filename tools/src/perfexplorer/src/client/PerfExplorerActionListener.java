@@ -5,7 +5,7 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.util.List;
 import java.util.ListIterator;
-import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.perfdmf.*;
 import common.RMIView;
 import common.RMIPerfExplorerModel;
 

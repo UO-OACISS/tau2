@@ -1,8 +1,8 @@
 R_HOME = /Library/Frameworks/R.framework/Versions/Current/Resources
 TAUROOT = /Users/khuck/tau2
 CONFIG_ARCH = apple
-ENGINE_PACKAGE = r
-ENGINE_DEFINE = R
+ENGINE_PACKAGE = weka
+ENGINE_DEFINE = WEKA
 
 ##########################
 
@@ -21,7 +21,7 @@ RMIC = rmic
 ##########################
 
 WEKA_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/weka.jar
-PERFDMF_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/dms.jar
+PERFDMF_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/perfdmf.jar
 XMLSAX_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
 JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
 JDBC_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/postgresql.jar

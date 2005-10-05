@@ -6,9 +6,9 @@ import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import edu.uoregon.tau.dms.database.ConnectionManager;
-import edu.uoregon.tau.dms.database.DB;
-import edu.uoregon.tau.dms.database.ParseConfig;
+import edu.uoregon.tau.perfdmf.database.ConnectionManager;
+import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
 public class Configure {
 

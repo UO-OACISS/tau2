@@ -1,5 +1,5 @@
 package client;
-import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.perfdmf.*;
 
 import javax.swing.table.*;
 import common.RMIView;

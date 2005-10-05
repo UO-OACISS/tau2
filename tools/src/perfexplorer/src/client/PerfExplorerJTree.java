@@ -6,7 +6,7 @@ import javax.swing.tree.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
-import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.perfdmf.*;
 import common.RMIView;;
 
 public class PerfExplorerJTree extends JTree {

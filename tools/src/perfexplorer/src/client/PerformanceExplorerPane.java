@@ -8,7 +8,7 @@ import java.util.Hashtable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import common.*;
-import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.perfdmf.*;
 
 public class PerformanceExplorerPane extends JScrollPane implements ActionListener {
 

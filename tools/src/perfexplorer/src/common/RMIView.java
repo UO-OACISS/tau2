@@ -1,6 +1,6 @@
 package common;
 
-import edu.uoregon.tau.dms.database.*;
+import edu.uoregon.tau.perfdmf.database.*;
 import java.sql.*;
 import java.io.Serializable;
 import java.io.ObjectInputStream;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * This class is the RMI class which contains the tree of views to be 
  * constructed in the PerfExplorerClient.
  *
- * <P>CVS $Id: RMIView.java,v 1.4 2005/08/11 22:44:38 khuck Exp $</P>
+ * <P>CVS $Id: RMIView.java,v 1.5 2005/10/05 23:03:01 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

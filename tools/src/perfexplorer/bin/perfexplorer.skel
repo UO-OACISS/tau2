@@ -76,7 +76,7 @@ if [ "x$JDBC_JAR" != "x" ]; then
     fi
 fi
 
-PERFDMF_JAR=$TAUROOT/$CONFIG_ARCH/lib/dms.jar
+PERFDMF_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfdmf.jar
 JARGS_JAR=$TAUROOT/$CONFIG_ARCH/lib/jargs.jar
 WEKA_JAR=$TAUROOT/$CONFIG_ARCH/lib/weka.jar
 PERFEXPLORER_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfexplorer.jar
