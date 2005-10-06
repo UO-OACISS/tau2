@@ -3,7 +3,7 @@ include ../../include/Makefile
 CC               = $(TAU_CC)
 CXX		 = $(TAU_CXX)
 RM               = /bin/rm -f
-LIBS		= $(TAU_TRACE_INPUT_LIB) -L$(EPILOGDIR)/lib -lelg.base
+LIBS		= $(TAU_TRACE_INPUT_LIB) -L$(EPILOGDIR)/lib -L$(EPILOGDIR)/src -lelg.base
 CFLAGS        	= $(TAU_INCLUDE) -I$(EPILOGDIR)/include -I$(EPILOGDIR)/src
 
 
