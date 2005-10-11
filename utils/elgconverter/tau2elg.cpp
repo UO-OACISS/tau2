@@ -105,14 +105,16 @@ int EnterState(void *userData, double time,
 
 int CountEnter(void *userData, double time, 
 		unsigned int nodeid, unsigned int tid, unsigned int stateid){ecount++; return 0;}
-int CountLeave(void *userData, double time, unsigned int nid, unsigned int tid){ecount++; return 0;}
+int CountLeave(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int stateid) {
+  ecount++; return 0;
+}
 
 /***************************************************************************
  * Description: LeaveState is called at routine exit by trace input library
  * 		This is a callback routine which must be registered by the 
  * 		trace converter. 
  ***************************************************************************/
-int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid)
+int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int stateid)
 {
 	dprintf("Leaving state time %g nid %d tid %d\n", time, nid, tid);
 	int cpuid = GlobalId(nid, tid);
@@ -310,7 +312,8 @@ int SendMessage( void *userData, double time,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag )
+		unsigned int messageTag,
+		unsigned int messageComm )
 {
 	dprintf("SendMessage:time %g, source nid %d tid %d, destination nid %d tid %d, size %d, tag %d\n", time, sourceNodeToken, sourceThreadToken, destinationNodeToken, destinationThreadToken, messageSize, messageTag);
 	int source = GlobalId(sourceNodeToken, sourceThreadToken);
@@ -326,14 +329,22 @@ int CountSend(void *userData, double time,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag){ecount++; return 0;}
+	        unsigned int messageTag,
+		unsigned int messageComm)
+{
+  ecount++; return 0;
+}
 int CountRecv(void *userData, double time,
 		unsigned int sourceNodeToken,
 		unsigned int sourceThreadToken, 
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag){ecount++; return 0;}
+	        unsigned int messageTag,
+		unsigned int messageComm)
+{
+  ecount++; return 0;
+}
 /***************************************************************************
  * Description: RecvMessage is called when a message is received by a process.
  * 		This is a callback routine which must be registered by the 
@@ -345,7 +356,8 @@ int RecvMessage( void *userData, double time,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag )
+		unsigned int messageTag,
+		unsigned int messageComm )
 {
 	dprintf("RecvMessage: time %g, source nid %d tid %d, destination nid %d tid %d, size %d, tag %d\n", time, sourceNodeToken, sourceThreadToken, destinationNodeToken, destinationThreadToken, messageSize, messageTag);
 	int source = GlobalId(sourceNodeToken, sourceThreadToken);
