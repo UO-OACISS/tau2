@@ -1183,7 +1183,8 @@ int EnterState(void *userData, double time,
  * 		This is a callback routine which must be registered by the 
  * 		trace converter. 
  ***************************************************************************/
-int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid)
+int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, 
+	       unsigned int stateid)
 {
   
   
@@ -1290,7 +1291,8 @@ int RegMessage( void *userData, double time,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag )
+		unsigned int messageTag,
+		unsigned int messageComm)
 {
 	int found = 0;
 char *name = "message";
@@ -1392,7 +1394,8 @@ int SendMessage( void *userData, double time,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag )
+		unsigned int messageTag,
+		unsigned int messageComm)
 {
 struct event_stack *temp;
 	int found = 0;
@@ -1555,7 +1558,8 @@ int RecvMessage( void *userData, double time,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag )
+		unsigned int messageTag,
+		unsigned int messageComm)
 {
 	
 	struct event_stack *temp = arrowBase;
