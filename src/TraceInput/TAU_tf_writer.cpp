@@ -15,15 +15,14 @@
  ****************************************************************************/
 
 
-#include <TAU_tf.h>
-#include <TAU_tf_headers.h>
-
+#include "TAU_tf.h"
+#include "TAU_tf_headers.h"
+#include <Profile/tau_types.h>
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
 
 
 
@@ -79,7 +78,7 @@ extern "C" {
       perror("ERROR: memory allocation failed for trace buffer");
       return NULL;
     }
-    tFile->tracePosition = 0;
+    tFile->tracePosition = 1; // 0 will be the EV_INIT record
 
     /* Open the trace file */
     if ((tFile->Fid = open (name, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0600)) < 0) {
@@ -191,8 +190,20 @@ extern "C" {
 
 
 
-
-
+	static int checkInitialized(Ttf_FileHandleT file, unsigned int nodeToken, unsigned int threadToken, double time) {
+	    Ttf_fileT *tFile = (Ttf_fileT*)file;
+		if (!tFile->initialized) {
+			//int pos = tFile->tracePosition;
+		    int pos = 0;
+		    tFile->traceBuffer[pos].ev = PCXX_EV_INIT;
+		    tFile->traceBuffer[pos].nid = nodeToken;
+		    tFile->traceBuffer[pos].tid = threadToken;
+		    tFile->traceBuffer[pos].ti = (x_uint64) time;
+		    tFile->traceBuffer[pos].par = 3;
+		    //tFile->tracePosition++;
+		    //checkFlush(tFile);
+		}
+	}
 
 
   int Ttf_DefThread(Ttf_FileHandleT file, unsigned int nodeToken, unsigned int threadToken, 
@@ -211,17 +222,7 @@ extern "C" {
       (*(tFile->NidTidMap))[pair<int,int>(nid,tid)] = 1;
     }
 
-
-    int pos = tFile->tracePosition;
-    tFile->traceBuffer[pos].ev = PCXX_EV_INIT;
-    tFile->traceBuffer[pos].nid = nodeToken;
-    tFile->traceBuffer[pos].tid = threadToken;
-    tFile->traceBuffer[pos].ti = (double) 0;
-    tFile->traceBuffer[pos].par = 3;
-    tFile->tracePosition++;
-    checkFlush(tFile);
-
-
+	return 0;
   }
 
 
@@ -275,6 +276,8 @@ extern "C" {
   int Ttf_FlushTrace(Ttf_FileHandleT file) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
+	checkInitialized(file, tFile->traceBuffer[1].nid, tFile->traceBuffer[1].tid, tFile->traceBuffer[1].ti);
+
     // compute size of write
     int size = tFile->tracePosition * sizeof(EVENT);
     
@@ -284,7 +287,7 @@ extern "C" {
     // must write out edf file first
     if (tFile->needsEdfFlush) {
       if (flushEdf(tFile) != 0) {
-	return -1;
+		return -1;
       }
     }
     
@@ -310,7 +313,7 @@ extern "C" {
       tFile->traceBuffer[pos].ev = PCXX_EV_CLOSE;
       tFile->traceBuffer[pos].nid = nidtid.first;
       tFile->traceBuffer[pos].tid = nidtid.second;
-      tFile->traceBuffer[pos].ti = (double) 0;
+      tFile->traceBuffer[pos].ti = tFile->lastTimestamp;
       tFile->traceBuffer[pos].par = 0;
       tFile->tracePosition++;
       checkFlush(tFile);
@@ -319,7 +322,7 @@ extern "C" {
       tFile->traceBuffer[pos].ev = PCXX_EV_WALL_CLOCK;
       tFile->traceBuffer[pos].nid = nidtid.first;
       tFile->traceBuffer[pos].tid = nidtid.second;
-      tFile->traceBuffer[pos].ti = (double) 0;
+      tFile->traceBuffer[pos].ti = tFile->lastTimestamp;
       tFile->traceBuffer[pos].par = 0;
       tFile->tracePosition++;
     
@@ -342,22 +345,22 @@ extern "C" {
     tFile->traceBuffer[pos].ev = stateToken;
     tFile->traceBuffer[pos].nid = nodeToken;
     tFile->traceBuffer[pos].tid = threadToken;
-    tFile->traceBuffer[pos].ti = (double) time;
+    tFile->traceBuffer[pos].ti = time;
     tFile->traceBuffer[pos].par = parameter;
     tFile->tracePosition++;
     checkFlush(tFile);
+    tFile->lastTimestamp = time;
 
   }
 
-  int Ttf_EnterState(Ttf_FileHandleT file, double time, 
+  int Ttf_EnterState(Ttf_FileHandleT file, x_uint64 time, 
 		     unsigned int nodeToken, unsigned int threadToken, 
 		     unsigned int stateToken) {
-    return enterExit(file, time, nodeToken, threadToken, stateToken, 1); // entry
+	return enterExit(file, time, nodeToken, threadToken, stateToken, 1); // entry
   }
 
-  int Ttf_LeaveState(Ttf_FileHandleT file, double time, 
-		     unsigned int nodeToken, unsigned int threadToken, 
-		     unsigned int stateToken) {
+  int Ttf_LeaveState(Ttf_FileHandleT file, x_uint64 time, 
+		     unsigned int nodeToken, unsigned int threadToken, unsigned int stateToken) {
     return enterExit(file, time, nodeToken, threadToken, stateToken, -1); // exit
   }
 
@@ -398,10 +401,11 @@ extern "C" {
     tFile->traceBuffer[pos].ev = eventId;
     tFile->traceBuffer[pos].nid = sourceNodeToken;
     tFile->traceBuffer[pos].tid = sourceThreadToken;
-    tFile->traceBuffer[pos].ti = (double) time;
+    tFile->traceBuffer[pos].ti = time;
     tFile->traceBuffer[pos].par = parameter;
     tFile->tracePosition++;
     checkFlush(tFile);
+    tFile->lastTimestamp = time;
 
 
   }
@@ -470,6 +474,7 @@ extern "C" {
     tFile->traceBuffer[pos].par = (x_uint64) userEventValue;
     tFile->tracePosition++;
     checkFlush(tFile);
+    tFile->lastTimestamp = time;
 
   }
 

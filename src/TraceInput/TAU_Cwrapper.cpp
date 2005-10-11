@@ -13,7 +13,7 @@
 **	Author		: Sameer Shende					  **
 **	Contact		: sameer@cs.uoregon.edu 	                  **
 ***************************************************************************/
-#include <TAU_tf.h>
+#include "TAU_tf.h"
 /* C API */
 /* open a trace file for reading */
 extern "C" 
@@ -59,9 +59,9 @@ Ttf_FileHandleT CTtf_CloseFile( Ttf_FileHandleT fileHandle )
 
 
 /***************************************************************************
- * $RCSfile: TAU_Cwrapper.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2003/11/13 00:09:27 $
- * TAU_VERSION_ID: $Id: TAU_Cwrapper.cpp,v 1.1 2003/11/13 00:09:27 sameer Exp $ 
+ * $RCSfile: TAU_Cwrapper.cpp,v $   $Author: amorris $
+ * $Revision: 1.2 $   $Date: 2005/10/11 16:20:38 $
+ * TAU_VERSION_ID: $Id: TAU_Cwrapper.cpp,v 1.2 2005/10/11 16:20:38 amorris Exp $ 
  ***************************************************************************/
 
 

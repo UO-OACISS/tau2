@@ -120,7 +120,8 @@ typedef struct Ttf_file
   GroupIdMapT	*GroupIdMap;
   int 		ClkInitialized;
   double        FirstTimestamp;
-
+  bool			subtractFirstTimestamp;
+  bool			nonBlocking;
   int           format;    // see above
   int           eventSize; // sizeof() the corresponding format struct
 
@@ -129,15 +130,23 @@ typedef struct Ttf_file
   int           tracePosition;
   bool          needsEdfFlush;
   GroupNameMapT *groupNameMap;
+  bool			initialized;
+  double	    lastTimestamp;
 } Ttf_fileT;
 
-int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb);
-int isEventIDRegistered(Ttf_fileT *tFile, long int eid);
+
+
+
+
+extern "C" int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb);
+extern "C" int isEventIDRegistered(Ttf_fileT *tFile, long int eid);
+
+
 
 #endif /* _TAU_TF_DECL_H_ */
 
 /***************************************************************************
  * $RCSfile: TAU_tf_decl.h,v $   $Author: amorris $
- * $Revision: 1.3 $   $Date: 2005/09/27 20:07:30 $
- * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.3 2005/09/27 20:07:30 amorris Exp $ 
+ * $Revision: 1.4 $   $Date: 2005/10/11 16:20:38 $
+ * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.4 2005/10/11 16:20:38 amorris Exp $ 
  ***************************************************************************/

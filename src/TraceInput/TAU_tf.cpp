@@ -16,6 +16,11 @@
 #include <TAU_tf.h>
 #include <TAU_tf_headers.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+
 /* Defines */
 #define TAU_MESSAGE_SEND_EVENT -7
 #define TAU_MESSAGE_RECV_EVENT -8
@@ -251,6 +256,17 @@ void determineFormat(Ttf_fileT *tFile) {
 }
 
 
+void Ttf_SetSubtractFirstTimestamp( Ttf_FileHandleT handle, int value ) {
+	Ttf_fileT *tFile = (Ttf_fileT *) handle;
+	tFile->subtractFirstTimestamp = value;
+}
+
+
+void Ttf_SetNonBlocking( Ttf_FileHandleT handle, int value ) {
+	Ttf_fileT *tFile = (Ttf_fileT *) handle;
+	tFile->nonBlocking = value;
+}
+
 /* Open the trace file and return a pointer to the Ttf_fileT struct that
  * contains the file id and the maps */
 Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
@@ -265,6 +281,9 @@ Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
     perror("ERROR: memory allocation failed for tFile");
     return NULL;
   }
+  
+  tFile->subtractFirstTimestamp = true;
+  tFile->nonBlocking = false;
 
   /* Open the trace file */
   if ( (tFile->Fid = open (filename, O_RDONLY | O_BINARY | LARGEFILE_OPTION)) < 0 )
@@ -556,7 +575,12 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 //     double ts = (double) (traceBuffer[i].ti - tFile->FirstTimestamp);
 //     long long parameter = traceBuffer[i].par;
 
-    double ts = (double) (event_GetTi(tFile, traceBuffer, i) - tFile->FirstTimestamp);
+	double ts;
+	if (tFile->subtractFirstTimestamp) {
+    	ts = (double) (event_GetTi(tFile, traceBuffer, i) - tFile->FirstTimestamp);
+	} else {
+    	ts = (double) (event_GetTi(tFile, traceBuffer, i));
+	}
     long long parameter = event_GetPar(tFile, traceBuffer, i);
     /* Get param entry from EventIdMap */
     Ttf_EventDescrT eventDescr = (*tFile->EventIdMap)[event_GetEv(tFile, traceBuffer, i)];
@@ -575,7 +599,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
       { if (parameter == -1)
 	{ /* exit event */
 	  if (*callbacks.LeaveState)
-            (*callbacks.LeaveState)(callbacks.UserData,ts, nid, tid);
+            (*callbacks.LeaveState)(callbacks.UserData,ts, nid, tid,event_GetEv(tFile, traceBuffer, i));
 	}
       } 
 	  
@@ -620,7 +644,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 	/* If the application is multithreaded, insert call for matching sends/recvs here */
 	otherTid = 0;
 	if (*callbacks.SendMessage) 
-	  (*callbacks.SendMessage)(callbacks.UserData, ts, nid, tid, otherNid, otherTid, msgLen, msgTag);
+	  (*callbacks.SendMessage)(callbacks.UserData, ts, nid, tid, otherNid, otherTid, msgLen, msgTag, comm);
 	/* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
 	 * tid (other), size, tag */
 
@@ -645,7 +669,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 	  /* If the application is multithreaded, insert call for matching sends/recvs here */
 	  otherTid = 0;
 	  if (*callbacks.RecvMessage) 
-	    (*callbacks.RecvMessage)(callbacks.UserData, ts, otherNid, otherTid, nid, tid, msgLen, msgTag);
+	    (*callbacks.RecvMessage)(callbacks.UserData, ts, otherNid, otherTid, nid, tid, msgLen, msgTag, comm);
 	  /* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
 	   * tid (other), size, tag */
 
@@ -681,7 +705,9 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 
         
   } /* cycle through all records */
-  
+
+
+  free(traceBuffer);
   /* return the number of event records read */
   return recordsRead;
 }
@@ -765,7 +791,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
       /* skip over till eventname begins */
       for (k=j; linebuf[k] != '"'; k++)
       {
-	eventname[k-j+1] = linebuf[k];
+		eventname[k-j+1] = linebuf[k];
       } 
       eventname[k-j+1] = '"';
       eventname[k-j+2] = '\0'; /* terminate eventname */
@@ -847,8 +873,13 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 
   return TRUE;
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.16 $   $Date: 2005/09/27 20:07:30 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.16 2005/09/27 20:07:30 amorris Exp $ 
+ * $Revision: 1.17 $   $Date: 2005/10/11 16:20:38 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.17 2005/10/11 16:20:38 amorris Exp $ 
  ***************************************************************************/
