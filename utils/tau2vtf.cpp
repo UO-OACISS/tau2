@@ -34,8 +34,11 @@ bool multiThreaded = false;
 /* implementation of callback routines */
 map< pair<int,int>, int, less< pair<int,int> > > EOF_Trace;
 map< int,int, less<int > > numthreads; 
-map< int,int > nodename;
+//map< int,int > nodename;
 map <int, int> nodenum;
+
+map<pair<int,int>,int, less< pair<int,int> > > GlobalId;
+
 int countnodes = 0;
 /* numthreads[k] is no. of threads in rank k */
 
@@ -60,11 +63,12 @@ struct {
 int sampgroupid = 0;
 int sampclassid = 0; 
 vector<stack <unsigned int> > callstack;
-int *offset = 0; 
+//int *offset = 0; 
 
 
 /* FIX GlobalID so it takes into account numthreads */
 /* utilities */
+/*
 int GlobalId(int localnodeid, int localthreadid)
 {
   localnodeid=nodename[localnodeid];
@@ -74,16 +78,16 @@ int GlobalId(int localnodeid, int localthreadid)
     {
       printf("Error: offset vector is NULL in GlobalId()\n");
       return localnodeid;
-    }
+    }*/
     
     /* for multithreaded programs, modify this routine */
-    return offset[localnodeid]+localthreadid;  /* for single node program */
-  }
+ //   return offset[localnodeid]+localthreadid;  /* for single node program */
+/*  }
   else
   { 
     return localnodeid;
   }
-}
+}*/
 
 /* implementation of callback routines */
 /***************************************************************************
@@ -96,7 +100,7 @@ int EnterState(void *userData, double time,
 {
   dprintf("Entered state %d time %g nid %d tid %d\n", 
 		  stateid, time, nodeid, tid);
-  int cpuid = GlobalId(nodeid, tid);
+  int cpuid = GlobalId[pair<int,int>(nodeid, tid)];
 
   if (cpuid >= callstack.size()) 
   {
@@ -118,7 +122,7 @@ int EnterState(void *userData, double time,
 int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int stateid)
 {
   dprintf("Leaving state time %g nid %d tid %d\n", time, nid, tid);
-  int cpuid = GlobalId(nid, tid);
+  int cpuid = GlobalId[pair<int,int>(nid, tid)];
   if (callstack[cpuid].size()==0) 
   {
     fprintf(stderr, "ERROR: tau2vtf: LeaveState() cpuid %d has state departure before entry\n", cpuid);
@@ -160,15 +164,14 @@ const char *threadName )
   EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = 0; /* initialize it */
   
   
-  
-  numthreads[nodeToken] = numthreads[nodeToken] + 1; 
-  if(numthreads[nodeToken]==1)
+  numthreads[nodeToken] = numthreads[nodeToken] + 1;
+  /*if(numthreads[nodeToken]==1)
   {
 	nodename[nodeToken]=countnodes;//nodename.size();
 	nodenum[countnodes]=nodeToken;
 	countnodes++;
-	//printf("Node: %d, ID: %d\n",nodeToken,nodename[nodeToken]);
-  }
+	printf("Node: %d, ID: %d\n",nodeToken,nodename[nodeToken]);
+  }*/
   if (threadToken > 0) multiThreaded = true; 
   return 0;
 }
@@ -300,7 +303,7 @@ int EventTrigger( void *userData, double time,
   dprintf("EventTrigger: time %g, nid %d tid %d event id %d triggered value %lld \n", time, nodeToken, threadToken, userEventToken, userEventValue);
 
   int type = VTF3_VALUETYPE_UINT;
-  int cpuid = GlobalId (nodeToken, threadToken); /* GID */
+  int cpuid = GlobalId[pair<int,int>(nodeToken, threadToken)]; /* GID */
   int samplearraydim = 1; 
 
   /* write the sample data */
@@ -330,8 +333,8 @@ int SendMessage( void *userData, double time,
 		  destinationNodeToken, destinationThreadToken,
 		  messageSize, messageTag);
 
-  int source = GlobalId(sourceNodeToken, sourceThreadToken);
-  int dest   = GlobalId(destinationNodeToken, destinationThreadToken);
+  int source = GlobalId[pair<int,int>(sourceNodeToken, sourceThreadToken)];
+  int dest   = GlobalId[pair<int,int>(destinationNodeToken, destinationThreadToken)];
   VTF3_WriteSendmsg(userData, time, source, dest, TAU_DEFAULT_COMMUNICATOR, 
 	messageTag, messageSize, VTF3_SCLNONE);
   return 0;
@@ -357,8 +360,8 @@ int RecvMessage( void *userData, double time,
 		  destinationNodeToken, destinationThreadToken,
 		  messageSize, messageTag);
 
-  int source = GlobalId(sourceNodeToken, sourceThreadToken);
-  int dest   = GlobalId(destinationNodeToken, destinationThreadToken);
+  int source = GlobalId[pair<int,int>(sourceNodeToken, sourceThreadToken)];
+  int dest   = GlobalId[pair<int,int>(destinationNodeToken, destinationThreadToken)];
 
   VTF3_WriteRecvmsg(userData, time, dest, source, TAU_DEFAULT_COMMUNICATOR, 
 	messageTag, messageSize, VTF3_SCLNONE);
@@ -487,7 +490,7 @@ int main(int argc, char **argv)
   firstpass.DefThread = DefThread;
   firstpass.EndTrace = EndTrace;
   firstpass.DefClkPeriod = ClockPeriod;
-  firstpass.DefThread = DefThread;
+  //firstpass.DefThread = DefThread;
   firstpass.DefStateGroup = DefStateGroup;
   firstpass.DefState = DefState;
   firstpass.SendMessage = 0; /* Important to declare these as null! */
@@ -507,13 +510,28 @@ int main(int argc, char **argv)
 #endif 
   }
   while ((recs_read >=0) && (!EndOfTrace));
-  /* reset the position of the trace to the first record */
+  
+  /* reset the position of the trace to the first record 
+     Initialize global id map*/
+  int global = 0;
   for (map< pair<int,int>, int, less< pair<int,int> > >:: iterator it = 
 		  EOF_Trace.begin(); it != EOF_Trace.end(); it++)
   { /* Explicilty mark end of trace to be not over */ 
+     GlobalId[pair<int,int>((*it).first)]=global;
+     nodenum[global]=((*it).first).first;
+     //printf("nodenum: %d, nodeid: %d, threadid: %d\n",global, ((*it).first).first,((*it).first).second);
+     global++;
     (*it).second = 0;
   }
 
+  /*
+  for (map< pair<int,int>, int, less< pair<int,int> > >:: iterator it = 
+		  GlobalId.begin(); it != GlobalId.end(); it++)
+  { // Explicilty mark end of trace to be not over 
+    GlobalId[*it] = global;
+    global++;
+  }*/
+  
   int totalnidtids = EOF_Trace.size(); 
   /* This is ok for single threaded programs. For multi-threaded programs
    * we'll need to modify the way we describe the cpus/threads */
@@ -527,14 +545,14 @@ int main(int argc, char **argv)
     int tid = 0; 
     int nodes = numthreads.size(); /* total no. of nodes */ 
     int *threadnumarray = new int[nodes]; 
-    offset = new int[nodes+1];
-    offset[0] = 0; /* no offset for node 0 */
-    for (i=0; i < nodes; i++)
+    //offset = new int[nodes+1];
+    //offset[0] = 0; /* no offset for node 0 */
+    /*for (i=0; i < nodes; i++)
     {
-      /* one for each node */
+      // one for each node 
       threadnumarray[i] = numthreads[i]; 
       offset[i+1] = offset[i] + numthreads[i]; 
-    }
+    }*/
     unsigned int *cpuidarray = new unsigned int[totalnidtids]; /* max */
     /* next, we write the cpu name and a group name for node/threads */
     for (i=0; i < nodes; i++)
@@ -543,7 +561,7 @@ int main(int argc, char **argv)
       for (tid = 0; tid < threadnumarray[i]; tid++)
       {
         sprintf(name, "node %d, thread %d", nodenum[i], tid);
-        int cpuid = GlobalId(nodenum[i],tid);
+        int cpuid = GlobalId[pair<int,int>(nodenum[i],tid)];
         cpuidarray[tid] = cpuid;
         VTF3_WriteDefcpuname(fcb, cpuid, name);
       }
@@ -562,7 +580,8 @@ int main(int argc, char **argv)
      {
          char name[64];
 	 sprintf(name, "node %d",nodenum[i]);
-	 int cpuid = GlobalId(nodenum[i],1);
+	 int cpuid = GlobalId[pair<int,int>(nodenum[i],0)];
+	 //printf("id: %d, name: %d\n",cpuid, nodenum[i]);
 	 VTF3_WriteDefcpuname(fcb, cpuid, name);
      }
   }
@@ -652,9 +671,9 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau2vtf.cpp,v $   $Author: amorris $
- * $Revision: 1.13 $   $Date: 2005/10/11 16:29:10 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.13 2005/10/11 16:29:10 amorris Exp $
+ * $RCSfile: tau2vtf.cpp,v $   $Author: wspear $
+ * $Revision: 1.14 $   $Date: 2005/10/11 18:03:00 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.14 2005/10/11 18:03:00 wspear Exp $
  ***************************************************************************/
 
 
