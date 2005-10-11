@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
 
   Ttf_DefUserEvent(file, USER_EVENT_1, "User Event 1", 1);
 
-  double s = 1e6;
+  long long s = 1e6;
 
   Ttf_EnterState(file, 1*s, 0, 0, MAIN);
   Ttf_EnterState(file, 2*s, 0, 0, FOO);

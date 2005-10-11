@@ -25,9 +25,9 @@ int EnterState(void *userData, double time,
   return 0;
 }
 
-int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid)
+int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int stateid)
 {
-  printf("Leaving state time %g nid %d tid %d\n", time, nid, tid);
+  printf("Leaving state %d time %g nid %d tid %d\n", stateid, time, nid, tid);
   return 0;
 }
 
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau_reader.c,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2005/03/04 01:50:06 $
- * TAU_VERSION_ID: $Id: tau_reader.c,v 1.3 2005/03/04 01:50:06 sameer Exp $ 
+ * $RCSfile: tau_reader.c,v $   $Author: amorris $
+ * $Revision: 1.4 $   $Date: 2005/10/11 19:18:37 $
+ * TAU_VERSION_ID: $Id: tau_reader.c,v 1.4 2005/10/11 19:18:37 amorris Exp $ 
  ***************************************************************************/
