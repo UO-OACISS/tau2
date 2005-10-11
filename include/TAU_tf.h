@@ -18,7 +18,12 @@
 
 #include "TAU_tf_writer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* callbacks */
+
 typedef int (*Ttf_DefClkPeriodT)( void*  userData,
                                   double clkPeriod );
 
@@ -49,7 +54,8 @@ typedef int (*Ttf_EnterStateT)( void*  userData,
 typedef int (*Ttf_LeaveStateT)( void*  userData,
                                 double time,
                                 unsigned int nodeToken, 
-                                unsigned int threadToken );
+                                unsigned int threadToken,
+                                unsigned int stateToken );
 
 typedef int (*Ttf_SendMessageT)( void*  userData,
                                 double time,
@@ -58,7 +64,8 @@ typedef int (*Ttf_SendMessageT)( void*  userData,
 				unsigned int destinationNodeToken,
 				unsigned int destinationThreadToken,
 				unsigned int messageSize,
-				unsigned int messageTag
+				unsigned int messageTag,
+				unsigned int messageComm
 				);
 
 typedef int (*Ttf_RecvMessageT)( void*  userData,
@@ -68,7 +75,8 @@ typedef int (*Ttf_RecvMessageT)( void*  userData,
 				unsigned int destinationNodeToken,
 				unsigned int destinationThreadToken,
 				unsigned int messageSize,
-				unsigned int messageTag
+				unsigned int messageTag,
+				unsigned int messageComm
 				);
 
 typedef int (*Ttf_DefUserEventT)( void *userData,
@@ -107,71 +115,50 @@ typedef struct Ttf_Callbacks
 
 
 
-#ifdef __cplusplus
 /* open a trace file for reading */
 Ttf_FileHandleT Ttf_OpenFileForInput( const char *name , 
                                  const char *edf);
 
 
+
+void Ttf_SetSubtractFirstTimestamp( Ttf_FileHandleT handle, int value );
+void Ttf_SetNonBlocking( Ttf_FileHandleT handle, int value );
+
 /* Seek to an absolute event position. 
  * A negative position indicates to start from the tail of the event stream. 
  * Returns the position if successful or 0 if an error occured */
-int             Ttf_AbsSeek( Ttf_FileHandleT handle, int eventPosition ); 
+int Ttf_AbsSeek( Ttf_FileHandleT handle, int eventPosition ); 
 
 
 /* seek to a event position relative to the current position (just for completeness!) 
  * Returns the position if successful or 0 if an error occured */
-int             Ttf_RelSeek( Ttf_FileHandleT handle, int plusMinusNumEvents ); 
+int Ttf_RelSeek( Ttf_FileHandleT handle, int plusMinusNumEvents ); 
 
 
 /* read n events and call appropriate handlers.
  * Returns the number of records read (can be 0).
  * Returns a -1 value when an error takes place. Check errno */
-int             Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle,
+int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle,
                                    Ttf_CallbacksT callbacks,
                                    int numberOfEvents );
 
 
 /* close a trace file */
 Ttf_FileHandleT Ttf_CloseFile( Ttf_FileHandleT fileHandle );
-#else /* not __cplusplus */
-#define Ttf_OpenFileForInput   CTtf_OpenFileForInput
-#define Ttf_AbsSeek            CTtf_AbsSeek
-#define Ttf_RelSeek            CTtf_RelSeek
-#define Ttf_ReadNumEvents      CTtf_ReadNumEvents
-#define Ttf_CloseFile          CTtf_CloseFile
 
-/* C API */
-/* open a trace file for reading */
-Ttf_FileHandleT Ttf_OpenFileForInput( const char *name, const char *edf);
-
-/* Seek to an absolute event position. 
- * A negative position indicates to start from the tail of the event stream. 
- * Returns the position if successful or 0 if an error occured */
-int  Ttf_AbsSeek( Ttf_FileHandleT handle, int eventPosition );
-
-/* seek to a event position relative to the current position (just for completeness!) 
- * Returns the position if successful or 0 if an error occured */
-int  Ttf_RelSeek( Ttf_FileHandleT handle, int plusMinusNumEvents ); 
-
-/* read n events and call appropriate handlers 
- * Returns the number of records read (can be 0).
- * Returns a -1 value when an error takes place. Check errno */
-int  Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle,
-                                   Ttf_CallbacksT callbacks,
-                                   int numberOfEvents );
-
-/* close a trace file */
-Ttf_FileHandleT Ttf_CloseFile( Ttf_FileHandleT fileHandle );
+#ifdef __cplusplus
+}
 #endif /* __cplusplus */
+
+
 #endif /* _TAU_TF_H_ */
 
 
 
 /***************************************************************************
  * $RCSfile: TAU_tf.h,v $   $Author: amorris $
- * $Revision: 1.5 $   $Date: 2005/09/27 20:48:19 $
- * TAU_VERSION_ID: $Id: TAU_tf.h,v 1.5 2005/09/27 20:48:19 amorris Exp $ 
+ * $Revision: 1.6 $   $Date: 2005/10/11 16:18:07 $
+ * TAU_VERSION_ID: $Id: TAU_tf.h,v 1.6 2005/10/11 16:18:07 amorris Exp $ 
  ***************************************************************************/
 
 

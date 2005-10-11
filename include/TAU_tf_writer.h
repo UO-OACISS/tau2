@@ -16,7 +16,7 @@
 #ifndef _TAU_TF_WRITER_H_
 #define _TAU_TF_WRITER_H_
 
-
+#include <Profile/tau_types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,27 +32,22 @@ extern "C" {
 
 
 
-  /* ALAN: Can we handle chdir while running??? */
-  /* see edf file generation */
-
   int Ttf_DefClkPeriod(Ttf_FileHandleT file, double clkPeriod);
 
   int Ttf_DefThread(Ttf_FileHandleT file, unsigned int nodeToken, unsigned int threadToken, 
 		    const char *threadName);
 
 
-  int Ttf_EnterState(Ttf_FileHandleT file, double time, 
+  int Ttf_EnterState(Ttf_FileHandleT file, x_uint64 time, 
 		     unsigned int nodeToken, unsigned int threadToken, 
 		     unsigned int stateToken);
 
-  int Ttf_LeaveState(Ttf_FileHandleT file, double time, 
-		     unsigned int nodeToken, unsigned int threadToken, 
+  int Ttf_LeaveState(Ttf_FileHandleT file, x_uint64 time, 
+		     unsigned int nodeToken, unsigned int threadToken,
 		     unsigned int stateToken);
 
-  // returns stateGroupToken
   int Ttf_DefStateGroup(Ttf_FileHandleT file, const char *stateGroupName, unsigned int stateGroupToken);
 
-  // returns stateToken
   int Ttf_DefState(Ttf_FileHandleT file, unsigned int stateToken, const char *stateName, unsigned int stateGroupToken);
 
   int Ttf_SendMessage(Ttf_FileHandleT file, double time, unsigned int sourceNodeToken,
@@ -71,8 +66,6 @@ extern "C" {
 		      unsigned int messageTag,
 		      unsigned int messageComm);
 
-
-  // returns userEventToken
   int Ttf_DefUserEvent(Ttf_FileHandleT file, unsigned int userEventToken, 
 			  const char *userEventName, int monotonicallyIncreasing);
 
@@ -100,8 +93,8 @@ extern "C" {
 
 /***************************************************************************
  * $RCSfile: TAU_tf_writer.h,v $   $Author: amorris $
- * $Revision: 1.2 $   $Date: 2005/09/27 20:50:46 $
- * TAU_VERSION_ID: $Id: TAU_tf_writer.h,v 1.2 2005/09/27 20:50:46 amorris Exp $ 
+ * $Revision: 1.3 $   $Date: 2005/10/11 16:18:07 $
+ * TAU_VERSION_ID: $Id: TAU_tf_writer.h,v 1.3 2005/10/11 16:18:07 amorris Exp $ 
  ***************************************************************************/
 
 
