@@ -1008,6 +1008,24 @@ int binarytree::writeTree(node * the_root, ofstream * outFile, int samprun, int 
 	  theFuncName = *(the_root->getFunctionName());
 	  theGroupName = *(the_root->getActivityName());
 
+
+	  // remove leading and trailing quotes
+	  while (theFuncName[0] == '"') {
+	    theFuncName = theFuncName.substr(1,theFuncName.size());
+	  }
+	  while (theFuncName[theFuncName.size()-1] == '"') {
+	    theFuncName = theFuncName.substr(0,theFuncName.size()-1);
+	  }
+
+	  // remove leading and trailing quotes
+	  while (theGroupName[0] == '"') {
+	    theGroupName = theGroupName.substr(1,theGroupName.size());
+	  }
+	  while (theGroupName[theGroupName.size()-1] == '"') {
+	    theGroupName = theGroupName.substr(0,theGroupName.size()-1);
+	  }
+
+
 	  (*outFile) << "\"" << theFuncName			<< "\" "
 		     << the_root->getCount()				<< " "
 		     << the_root->getSubrs()				<< " "

@@ -1474,14 +1474,14 @@ int readVTF::MySampHandler(void * ccbvoid,
 				a_SampNode->getFunctionName(),
 				a_SampNode->getFunctionName());//Make sure this sample token is in the right place
 
-	      if(samplevaluetypearray[i] == 1)
+	      if(samplevaluetypearray[i] == VTF3_VALUETYPE_UINT)
 		{
 		  unsigned long long thedata = ((unsigned long long *)samplevaluearray)[i];
 		  //cout << thedata << endl;
 		  a_CPUnode->incSampStat(sampletokenarray[i],(double)thedata);//Increment the sample node with the data
 		}//Convert the data
 	      else
-		if(samplevaluetypearray[i] == 2)
+		if(samplevaluetypearray[i] == VTF3_VALUETYPE_FLOAT)
 		  {
 		    double thedata = (((double *)samplevaluearray)[i]);
 		    //cout << thedata << endl;
