@@ -33,9 +33,9 @@ int EnterState(void *userData, double time,
   return 0;
 }
 
-int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid)
+int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int stateid)
 {
-  dprintf("Leaving state time %g nid %d tid %d\n", time, nid, tid);
+  dprintf("Leaving state %d time %g nid %d tid %d\n", stateid, time, nid, tid);
   return 0;
 }
 
@@ -114,7 +114,8 @@ int SendMessage( void *userData, double time,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag )
+		unsigned int messageTag,
+		unsigned int messageComm )
 {
   dprintf("SendMessage: time %g, source nid %d tid %d, destination nid %d tid %d, size %d, tag %d\n", 
 		  time, 
@@ -130,7 +131,8 @@ int RecvMessage( void *userData, double time,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag )
+                unsigned int messageTag,
+		unsigned int messageComm )
 {
   dprintf("RecvMessage: time %g, source nid %d tid %d, destination nid %d tid %d, size %d, tag %d\n", 
 		  time, 
