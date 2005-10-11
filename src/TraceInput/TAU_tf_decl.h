@@ -120,8 +120,8 @@ typedef struct Ttf_file
   GroupIdMapT	*GroupIdMap;
   int 		ClkInitialized;
   double        FirstTimestamp;
-  bool			subtractFirstTimestamp;
-  bool			nonBlocking;
+  bool		subtractFirstTimestamp;
+  bool		nonBlocking;
   int           format;    // see above
   int           eventSize; // sizeof() the corresponding format struct
 
@@ -130,8 +130,8 @@ typedef struct Ttf_file
   int           tracePosition;
   bool          needsEdfFlush;
   GroupNameMapT *groupNameMap;
-  bool			initialized;
-  double	    lastTimestamp;
+  bool		initialized;
+  double        lastTimestamp;
 } Ttf_fileT;
 
 
@@ -147,6 +147,6 @@ extern "C" int isEventIDRegistered(Ttf_fileT *tFile, long int eid);
 
 /***************************************************************************
  * $RCSfile: TAU_tf_decl.h,v $   $Author: amorris $
- * $Revision: 1.4 $   $Date: 2005/10/11 16:20:38 $
- * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.4 2005/10/11 16:20:38 amorris Exp $ 
+ * $Revision: 1.5 $   $Date: 2005/10/11 19:16:27 $
+ * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.5 2005/10/11 19:16:27 amorris Exp $ 
  ***************************************************************************/

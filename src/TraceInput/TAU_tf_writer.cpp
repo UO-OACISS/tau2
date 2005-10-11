@@ -79,6 +79,7 @@ extern "C" {
       return NULL;
     }
     tFile->tracePosition = 1; // 0 will be the EV_INIT record
+    tFile->initialized = false;
 
     /* Open the trace file */
     if ((tFile->Fid = open (name, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0600)) < 0) {
@@ -190,21 +191,22 @@ extern "C" {
 
 
 
-	static int checkInitialized(Ttf_FileHandleT file, unsigned int nodeToken, unsigned int threadToken, double time) {
-	    Ttf_fileT *tFile = (Ttf_fileT*)file;
-		if (!tFile->initialized) {
-			//int pos = tFile->tracePosition;
-		    int pos = 0;
-		    tFile->traceBuffer[pos].ev = PCXX_EV_INIT;
-		    tFile->traceBuffer[pos].nid = nodeToken;
-		    tFile->traceBuffer[pos].tid = threadToken;
-		    tFile->traceBuffer[pos].ti = (x_uint64) time;
-		    tFile->traceBuffer[pos].par = 3;
-		    //tFile->tracePosition++;
-		    //checkFlush(tFile);
-		}
-	}
-
+  static int checkInitialized(Ttf_FileHandleT file, unsigned int nodeToken, unsigned int threadToken, double time) {
+    Ttf_fileT *tFile = (Ttf_fileT*)file;
+    if (!tFile->initialized) {
+      //int pos = tFile->tracePosition;
+      int pos = 0;
+      tFile->traceBuffer[pos].ev = PCXX_EV_INIT;
+      tFile->traceBuffer[pos].nid = nodeToken;
+      tFile->traceBuffer[pos].tid = threadToken;
+      tFile->traceBuffer[pos].ti = (x_uint64) time;
+      tFile->traceBuffer[pos].par = 3;
+      //tFile->tracePosition++;
+      //checkFlush(tFile);
+      tFile->initialized = true;
+    }
+  }
+  
 
   int Ttf_DefThread(Ttf_FileHandleT file, unsigned int nodeToken, unsigned int threadToken, 
 		    const char *threadName) {
@@ -275,8 +277,9 @@ extern "C" {
 
   int Ttf_FlushTrace(Ttf_FileHandleT file) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
-
-	checkInitialized(file, tFile->traceBuffer[1].nid, tFile->traceBuffer[1].tid, tFile->traceBuffer[1].ti);
+    
+    checkInitialized(file, tFile->traceBuffer[1].nid, 
+		     tFile->traceBuffer[1].tid, tFile->traceBuffer[1].ti);
 
     // compute size of write
     int size = tFile->tracePosition * sizeof(EVENT);
@@ -287,7 +290,7 @@ extern "C" {
     // must write out edf file first
     if (tFile->needsEdfFlush) {
       if (flushEdf(tFile) != 0) {
-		return -1;
+	return -1;
       }
     }
     
@@ -309,6 +312,7 @@ extern "C" {
       pair<int, int> nidtid = (*it).first;
       
 
+      checkFlush(tFile);
       int pos = tFile->tracePosition;
       tFile->traceBuffer[pos].ev = PCXX_EV_CLOSE;
       tFile->traceBuffer[pos].nid = nidtid.first;
@@ -316,7 +320,6 @@ extern "C" {
       tFile->traceBuffer[pos].ti = tFile->lastTimestamp;
       tFile->traceBuffer[pos].par = 0;
       tFile->tracePosition++;
-      checkFlush(tFile);
       
       pos = tFile->tracePosition;
       tFile->traceBuffer[pos].ev = PCXX_EV_WALL_CLOCK;
@@ -335,11 +338,12 @@ extern "C" {
 
 
 
-  static int enterExit(Ttf_FileHandleT file, double time, 
+  static int enterExit(Ttf_FileHandleT file, x_uint64 time, 
 		     unsigned int nodeToken, unsigned int threadToken, 
 		       unsigned int stateToken, int parameter) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
+    checkFlush(tFile);
     int pos = tFile->tracePosition;
 
     tFile->traceBuffer[pos].ev = stateToken;
@@ -348,7 +352,6 @@ extern "C" {
     tFile->traceBuffer[pos].ti = time;
     tFile->traceBuffer[pos].par = parameter;
     tFile->tracePosition++;
-    checkFlush(tFile);
     tFile->lastTimestamp = time;
 
   }
@@ -397,6 +400,7 @@ extern "C" {
       (xcomm << 58 >> 16);
 
 
+    checkFlush(tFile);
     int pos = tFile->tracePosition;
     tFile->traceBuffer[pos].ev = eventId;
     tFile->traceBuffer[pos].nid = sourceNodeToken;
@@ -404,7 +408,6 @@ extern "C" {
     tFile->traceBuffer[pos].ti = time;
     tFile->traceBuffer[pos].par = parameter;
     tFile->tracePosition++;
-    checkFlush(tFile);
     tFile->lastTimestamp = time;
 
 
@@ -464,6 +467,7 @@ extern "C" {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
     
     
+    checkFlush(tFile);
     int pos = tFile->tracePosition;
     
     tFile->traceBuffer[pos].ev = userEventToken;
@@ -473,7 +477,6 @@ extern "C" {
     // currently casting to x_uint64
     tFile->traceBuffer[pos].par = (x_uint64) userEventValue;
     tFile->tracePosition++;
-    checkFlush(tFile);
     tFile->lastTimestamp = time;
 
   }
