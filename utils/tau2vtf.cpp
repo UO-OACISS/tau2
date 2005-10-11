@@ -115,7 +115,7 @@ int EnterState(void *userData, double time,
  * 		This is a callback routine which must be registered by the 
  * 		trace converter. 
  ***************************************************************************/
-int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid)
+int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int stateid)
 {
   dprintf("Leaving state time %g nid %d tid %d\n", time, nid, tid);
   int cpuid = GlobalId(nid, tid);
@@ -124,10 +124,10 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid)
     fprintf(stderr, "ERROR: tau2vtf: LeaveState() cpuid %d has state departure before entry\n", cpuid);
     exit(1);
   }
-  int stateid = callstack[cpuid].top();
+  int localstateid = callstack[cpuid].top();
   callstack[cpuid].pop();
   
-  VTF3_WriteUpfrom(userData, time, stateid, cpuid, VTF3_SCLNONE);
+  VTF3_WriteUpfrom(userData, time, localstateid, cpuid, VTF3_SCLNONE);
   return 0;
 }
 
@@ -321,7 +321,8 @@ int SendMessage( void *userData, double time,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag )
+		unsigned int messageTag,
+		unsigned int messageComm)
 {
   dprintf("SendMessage: time %g, source nid %d tid %d, destination nid %d tid %d, size %d, tag %d\n", 
 		  time, 
@@ -347,7 +348,8 @@ int RecvMessage( void *userData, double time,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag )
+		unsigned int messageTag,
+		unsigned int messageComm)
 {
   dprintf("RecvMessage: time %g, source nid %d tid %d, destination nid %d tid %d, size %d, tag %d\n", 
 		  time, 
@@ -650,9 +652,9 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau2vtf.cpp,v $   $Author: wspear $
- * $Revision: 1.12 $   $Date: 2005/09/22 20:42:53 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.12 2005/09/22 20:42:53 wspear Exp $
+ * $RCSfile: tau2vtf.cpp,v $   $Author: amorris $
+ * $Revision: 1.13 $   $Date: 2005/10/11 16:29:10 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.13 2005/10/11 16:29:10 amorris Exp $
  ***************************************************************************/
 
 
