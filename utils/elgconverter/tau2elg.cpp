@@ -213,7 +213,7 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 		name[len-2] = '\0';
 	}
 	/* create a state record */
-	ElgOut_write_STRING((ElgOut*)userData,regs,0,stateName);
+	ElgOut_write_STRING((ElgOut*)userData,regs,0,name);
 	ElgOut_write_REGION((ElgOut*)userData, 
 		regs,
 		strings,
