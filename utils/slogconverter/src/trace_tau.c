@@ -339,6 +339,13 @@ void Primitive_free( DRAW_Primitive *prime )
 }
 
 
+
+/*The number of enter events remaining on the stack*/
+int enters=0;
+int posteof=0;
+/*The latest recorded exit*/
+double finexit=0;
+
 /*/Determines if valid data has been read by the callback routines*/
 int thispeak = 0;
 /*/The number of End _ of _ File messages in the TAU trace*/
@@ -1165,7 +1172,7 @@ int EnterState(void *userData, double time,
 	
 	dprintf("Entered state %d time %g nid %d tid %d\n", 
 		  stateid, time, nodeid, tid);
-	
+	enters++;
 	if(top != NULL)
 	{
 		top->last=temp;
@@ -1187,7 +1194,7 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid,
 	       unsigned int stateid)
 {
   
-  
+  //printf("I\n");
   
 	struct event_stack *temp = top;
 	int found = 0;
@@ -1200,6 +1207,9 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid,
 	dprintf("Leaving state time %g nid %d tid %d\n", time, nid, tid);
 dprintf("%d events!\n", ((TRACE_file)userData)->event_count);
 	
+finexit=time;
+enters--;
+
 	while(found == 0)
 	{
 		if(temp == NULL){dprintf("BROKE!\n"); break;}
@@ -1275,6 +1285,7 @@ dprintf("%d events!\n", ((TRACE_file)userData)->event_count);
   
   currentkind = (int)TRACE_PRIMITIVE_DRAWABLE;
   thispeak = 1;
+  //dprintf("Left!\n");
   return 0;
 }
 
@@ -1887,48 +1898,56 @@ int TRACE_Close( TRACE_file *fp )
 ****************************************************************************@*/
   TRACE_EXPORT
 int TRACE_Peek_next_kind( const TRACE_file fp, TRACE_Rec_Kind_t *next_kind )
-{
-
-	int recs_read = 1;
-	if(fp->num_types != 0)
-	{
-		dprintf("%d categories to go.\n", fp->num_types);
-		*next_kind = TRACE_CATEGORY;
+{	
+	int recs_read=0;
+	if(posteof==0){
+		if(fp->num_types != 0)
+		{
+			dprintf("%d categories to go.\n", fp->num_types);
+			*next_kind = TRACE_CATEGORY;
+			thispeak = 0;
+			return 0;
+		}
+	
 		thispeak = 0;
-		return 0;
+		while(thispeak == 0)
+		{
+			//printf("Goodie!:%d\n",next_kind);
+			recs_read = Ttf_ReadNumEvents(fp->fd,cb, 1);
+			if(recs_read==0){break;}
+		}
+		thispeak = 0;
+		if(currentkind==(int)TRACE_EOF){posteof=1;}
+		else{
+			*next_kind = (TRACE_Rec_Kind_t)currentkind;
+			return 0;	
+		}
 	}
-		
-	if(ycordsets > 0 && currentkind == (int)TRACE_EOF)
-	{
-		*next_kind = TRACE_YCOORDMAP;
-		ycordsets--;
-		return 0;
-	}
-	if(currentkind == (int)TRACE_EOF)
-	{
+	
+	/*If the trace ends with unresolved enters call LeaveState directly so
+	the events are shown.   */
+	if(enters>0&&posteof==1){
+		//debugPrint = 1;
+		//dprintf("Enter %d.  nid:%d tid:%d time:%d\n",enters,top->nid,top->tid,finexit);
+		LeaveState(fp,finexit,top->nid,top->tid,0);
 		*next_kind = (TRACE_Rec_Kind_t)currentkind;
-
 		return 0;
 	}
 	
-	thispeak = 0;
-	
-	while(thispeak == 0 && recs_read > 0)
-	{
-		
-		recs_read = Ttf_ReadNumEvents(fp->fd,cb, 1);
-
-
-	}
-	thispeak = 0;
-	
-
-	if(ycordsets > 0 && currentkind == (int)TRACE_EOF)
+	if(ycordsets > 0 && posteof==1)
 	{
 		*next_kind = TRACE_YCOORDMAP;
 		ycordsets--;
 		return 0;
 	}
+	
+	if(posteof==1)
+	{
+		*next_kind = (int)TRACE_EOF;//(TRACE_Rec_Kind_t)currentkind;
+
+		return 0;
+	}
+
 	
 	*next_kind = (TRACE_Rec_Kind_t)currentkind;
 
