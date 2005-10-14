@@ -24,9 +24,9 @@ import edu.uoregon.tau.paraprof.interfaces.Searchable;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Searcher.java,v 1.2 2005/10/14 18:08:09 amorris Exp $</P>
+ * <P>CVS $Id: Searcher.java,v 1.3 2005/10/14 18:59:32 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class Searcher implements Searchable, MouseListener, MouseMotionListener, ClipboardOwner {
 
@@ -285,7 +285,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
         if (line == searchLine) {
             // the current incremental search line
 
-            if (text.indexOf(localSearchString, searchColumn) != -1) {
+            if (text.indexOf(localSearchString, searchColumn) != -1 && localSearchString.length() > 0) {
                 Shape base = textLayout.getLogicalHighlightShape(text.indexOf(localSearchString, searchColumn),
                         text.indexOf(localSearchString, searchColumn) + localSearchString.length());
                 AffineTransform at = AffineTransform.getTranslateInstance(x, y);
