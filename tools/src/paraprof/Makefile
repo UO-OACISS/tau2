@@ -10,7 +10,7 @@ TAUROOT=/home/amorris/tau2
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java \
              ParaProfTreeCellRenderer.java \
              HistogramWindow.java ParaProfTrial.java \
-             HistogramWindowPanel.java ParaProfApplication.java SystemEvents.java \
+             ParaProfApplication.java SystemEvents.java \
              CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java PrefSpacingPanel.java \
              CallPathTextWindowPanel.java Preferences.java FunctionBarChartWindow.java \
              ColorChooser.java ParaProfExperiment.java \
@@ -46,7 +46,7 @@ CC-OLD=javac
 NOW = $(shell date)
 
 
-CP_CORE = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar
+CP_CORE = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar:$(TOOLS_SRC)/contrib/jfreechart-0.9.21.jar:$(TOOLS_SRC)/contrib/jcommon-0.9.6.jar
 CP13 = $(CP_CORE):$(TOOLS_SRC)/contrib/jgraph-1.3.jar
 CP14 = $(CP_CORE):$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/vis/bin/vis.jar
 
