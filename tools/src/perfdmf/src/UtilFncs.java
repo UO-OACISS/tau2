@@ -134,24 +134,31 @@ public class UtilFncs {
 
             // create a format string of the same length, (e.g. ###.### for 123.456)
             for (int i = 0; i < str.length(); i++) {
-                if (str.charAt(i) != '.')
+                if (str.charAt(i) != '.') {
                     formatString = formatString + "#";
-                else
+                } else {
                     formatString = formatString + ".";
+                }
             }
+
+//            DecimalFormat bil = new DecimalFormat("#,###,###,##0");
+//            DecimalFormat mil = new DecimalFormat("#,###,##0");
+//            DecimalFormat thou = new DecimalFormat("#,##0");
 
             // now we reduce that format string as follows
 
             // first, do the minimum of 'width' or the length of the regular toString
 
             int min = width;
-            if (formatString.length() < min)
+            if (formatString.length() < min) {
                 min = formatString.length();
+            }
 
             // we don't want more than 4 digits past the decimal point
             // this 4 would be the old ParaProf.defaultNumberPrecision
-            if (formatString.indexOf('.') + 4 < min)
+            if (formatString.indexOf('.') + 4 < min) {
                 min = formatString.indexOf('.') + 4;
+            }
 
             formatString = formatString.substring(0, min);
 
@@ -162,7 +169,7 @@ public class UtilFncs {
             DecimalFormat dF = new DecimalFormat(formatString);
 
             str = dF.format(d);
-            //System.out.println ("value: " + d + ", width: " + width + ", returning: '" + lpad(str,width) + "'");
+            //System.out.println("value: " + d + ", width: " + width + ", returning: '" + lpad(str, width) + "'");
             if (pad) {
                 return lpad(str, width);
             } else {
@@ -173,8 +180,13 @@ public class UtilFncs {
 
         // toString used exponential form, so we ought to also
 
-        // we want up to four significant digits
-        String formatString = "0.0###";
+        String formatString;
+        if (d < 0.1) {
+            formatString = "0.0";
+        } else {
+            // we want up to four significant digits
+            formatString = "0.0###";
+        }
 
         formatString = formatString + "E0";
         DecimalFormat dF = new DecimalFormat(formatString);
@@ -216,10 +228,30 @@ public class UtilFncs {
             d = d - min * 60000000.00;
 
             String hours = Integer.toString(hr);
-            String mins = Integer.toString(min);
 
-            String secs = formatDouble(d / 1000000, 7, true);
+            String mins;
+            if (min < 10) {
+                mins = "0" + Integer.toString(min);
+            } else {
+                mins = Integer.toString(min);
+            }
 
+            String secs;
+            
+            if (hr >= 1 || min >= 1) {  
+                // don't show fractional seconds if there is at least a minute
+                secs = formatDouble(d / 1000000, 1, false);
+            } else {
+                secs = formatDouble(d / 1000000, 3, false);
+            }
+
+            if (secs.indexOf('E') != -1) {  // never show exponential notation for hh:mm:ss
+                secs = "00";
+            }
+            if (secs.length() == 1) {
+                secs = "0" + secs;
+            }
+            //System.out.println("secs = " + (d / 1000000) + ", out = " + secs);
             // remove the whitespace
             int idx = 0;
             for (int i = 0; i < secs.length(); i++) {
@@ -272,32 +304,32 @@ public class UtilFncs {
         }
     }
 
-//    public static String getValueTypeString(int type) {
-//        switch (type) {
-//        case 2:
-//            return "exclusive";
-//        case 4:
-//            return "inclusive";
-//        case 6:
-//            return "number of calls";
-//        case 8:
-//            return "number of subroutines";
-//        case 10:
-//            return "per call value";
-//        case 12:
-//            return "number of userEvents";
-//        case 14:
-//            return "minimum number of userEvents";
-//        case 16:
-//            return "maximum number of userEvents";
-//        case 18:
-//            return "mean number of userEvents";
-//        case 20:
-//            return "Standard Deviation of User Event Value";
-//        default:
-//            throw new RuntimeException("Unexpected string type: " + type);
-//        }
-//    }
+    //    public static String getValueTypeString(int type) {
+    //        switch (type) {
+    //        case 2:
+    //            return "exclusive";
+    //        case 4:
+    //            return "inclusive";
+    //        case 6:
+    //            return "number of calls";
+    //        case 8:
+    //            return "number of subroutines";
+    //        case 10:
+    //            return "per call value";
+    //        case 12:
+    //            return "number of userEvents";
+    //        case 14:
+    //            return "minimum number of userEvents";
+    //        case 16:
+    //            return "maximum number of userEvents";
+    //        case 18:
+    //            return "mean number of userEvents";
+    //        case 20:
+    //            return "Standard Deviation of User Event Value";
+    //        default:
+    //            throw new RuntimeException("Unexpected string type: " + type);
+    //        }
+    //    }
 
     //    public static int exists(int[] ref, int i) {
     //        if (ref == null)
