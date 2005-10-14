@@ -101,7 +101,6 @@ public class JVMDependent {
             Document document = domImpl.createDocument(null, "svg", null);
 
             // Create an instance of the SVG Generator
-            //SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
             SVGGraphics2D svgGenerator = new SVGGraphics2D(SVGGeneratorContext.createDefault(document), textAsShapes);
 
             
@@ -114,6 +113,7 @@ public class JVMDependent {
             Writer out = new OutputStreamWriter(fos, "UTF-8");
             svgGenerator.stream(out, useCSS);
         } else if (extension.compareTo("eps") == 0) {
+
             Dimension d = ie.getImageSize(optionsPanel.isFullScreen(), optionsPanel.isPrependHeader());
             EPSOutput g = new EPSOutput("ParaProf", file, d.width, d.height);
             ie.export(g, false, optionsPanel.isFullScreen(), optionsPanel.isPrependHeader());

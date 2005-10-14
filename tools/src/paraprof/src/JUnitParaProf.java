@@ -1,28 +1,23 @@
 package edu.uoregon.tau.paraprof;
 
-import junit.framework.TestCase;
-import junit.extensions.jfcunit.*;
-
-import junit.extensions.jfcunit.finder.NamedComponentFinder;
-
-import junit.extensions.jfcunit.*;
-import junit.extensions.jfcunit.finder.*;
-import junit.extensions.jfcunit.eventdata.*;
-
+import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.io.*;
-import java.util.*;
-import junit.framework.TestCase;
-import java.io.*;
-import junit.*;
-import junit.framework.*;
+import java.io.File;
+import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.Vector;
+
+import javax.swing.*;
+
+import junit.extensions.jfcunit.JFCTestCase;
+import junit.extensions.jfcunit.JFCTestHelper;
+import junit.extensions.jfcunit.TestHelper;
+import junit.extensions.jfcunit.finder.ComponentFinder;
+import junit.extensions.jfcunit.finder.JMenuItemFinder;
+import junit.extensions.jfcunit.finder.NamedComponentFinder;
+import junit.framework.Assert;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.perfdmf.*;
-
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
 
 public class JUnitParaProf extends JFCTestCase {
 

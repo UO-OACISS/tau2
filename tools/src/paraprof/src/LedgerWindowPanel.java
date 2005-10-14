@@ -16,11 +16,11 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.1 2005/09/26 21:12:06 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.2 2005/10/14 18:08:09 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -91,10 +91,6 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             break;
         case LedgerWindow.USEREVENT_LEDGER:
             jMenuItem = new JMenuItem("Show User Event Bar Chart");
-            jMenuItem.addActionListener(this);
-            popup.add(jMenuItem);
-
-            jMenuItem = new JMenuItem("Show New User Event Bar Chart");
             jMenuItem.addActionListener(this);
             popup.add(jMenuItem);
 

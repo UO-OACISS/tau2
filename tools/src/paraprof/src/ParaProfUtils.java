@@ -4,6 +4,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.print.*;
 import java.io.*;
+import java.text.FieldPosition;
+import java.text.NumberFormat;
+import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -521,10 +524,6 @@ public class ParaProfUtils {
                         FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
                         functionDataWindow.changeToPhaseDisplay(thread);
                         functionDataWindow.show();
-                    } else if (arg.equals("Show New Function Data over Phases")) {
-                        FunctionBarChartWindow window = new FunctionBarChartWindow(ppTrial, function, owner);
-                        window.changeToPhaseDisplay(thread);
-                        window.show();
                     } else if (arg.equals("Show Function Histogram")) {
                         HistogramWindow hw = new HistogramWindow(ppTrial, function, owner);
                         hw.show();
@@ -1185,5 +1184,27 @@ public class ParaProfUtils {
         height = Math.min(height,480);
         return new Dimension(width, height);
     }
+ 
     
+    
+    public static NumberFormat createNumberFormatter(final int units) {
+        return new NumberFormat() {
+
+            public Number parse(String source, ParsePosition parsePosition) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public StringBuffer format(double number, StringBuffer toAppendTo, FieldPosition pos) {
+                return toAppendTo.append(UtilFncs.getOutputString(units, number, 5));
+            }
+
+            public StringBuffer format(long number, StringBuffer toAppendTo, FieldPosition pos) {
+                return toAppendTo.append(UtilFncs.getOutputString(units, number, 5));
+            }
+        };
+        
+    }
+                                                                 
+                                                                
 }

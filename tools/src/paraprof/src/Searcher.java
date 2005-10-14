@@ -24,9 +24,9 @@ import edu.uoregon.tau.paraprof.interfaces.Searchable;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Searcher.java,v 1.1 2005/09/26 21:12:10 amorris Exp $</P>
+ * <P>CVS $Id: Searcher.java,v 1.2 2005/10/14 18:08:09 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class Searcher implements Searchable, MouseListener, MouseMotionListener, ClipboardOwner {
 
@@ -500,6 +500,9 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     }
 
     public void mouseReleased(MouseEvent e) {
+        if (lineHeight == 0) {
+            return;
+        }
         selectionEndX = e.getX();
         selectionEndY = e.getY()-topMargin;
 

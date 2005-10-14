@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for displaying all functions for one thread.
  * 
- * <P>CVS $Id: ThreadBarChartModel.java,v 1.1 2005/09/26 21:12:14 amorris Exp $</P>
+ * <P>CVS $Id: ThreadBarChartModel.java,v 1.2 2005/10/14 18:08:09 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class ThreadBarChartModel extends AbstractBarChartModel {
 
@@ -67,7 +67,7 @@ public class ThreadBarChartModel extends AbstractBarChartModel {
             return UtilFncs.getOutputString(0, value, 6) + "%";
 
         } else {
-            return UtilFncs.getOutputString(window.units(), value, ParaProf.defaultNumberPrecision);
+            return UtilFncs.getOutputString(window.units(), value, 6);
         }
     }
 

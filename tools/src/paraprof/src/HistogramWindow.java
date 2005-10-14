@@ -3,13 +3,31 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.*;
 import javax.swing.event.*;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.labels.XYToolTipGenerator;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.xy.ClusteredXYBarRenderer;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.data.statistics.HistogramDataset;
+import org.jfree.data.xy.XYDataset;
+
 import edu.uoregon.tau.paraprof.enums.ValueType;
+import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.perfdmf.Function;
@@ -19,23 +37,22 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.1 2005/09/26 21:12:05 amorris Exp $</P>
- * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.1 $
- * @see		HistogramWindowPanel
+ * <P>CVS $Id: HistogramWindow.java,v 1.2 2005/10/14 18:08:09 amorris Exp $</P>
+ * @author  Robert Bell, Alan Morris
+ * @version $Revision: 1.2 $
+ * @see     HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
-        UnitListener {
+        UnitListener, Printable, ImageExport {
 
-    private ParaProfTrial ppTrial = null;
-    private DataSorter dataSorter = null;
-    private Function function = null;
+    private ParaProfTrial ppTrial;
+    private DataSorter dataSorter;
+    private Function function;
+
+    private ChartPanel chartPanel;
 
     // hold on to these two for 'menuSelected'
     private JMenu unitsSubMenu = null;
-
-    private JScrollPane sp = null;
-    private HistogramWindowPanel panel = null;
 
     private List data = null;
 
@@ -55,7 +72,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
         setTitle("Histogram: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         setSize(ParaProfUtils.checkSize(new java.awt.Dimension(670, 630)));
-        setLocation(WindowPlacer.getNewLocation(this,invoker));
+        setLocation(WindowPlacer.getNewLocation(this, invoker));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -83,16 +100,15 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // panel and scrollpane definition
-        panel = new HistogramWindowPanel(ppTrial, this);
-        sp = new JScrollPane(panel);
-        this.setHeader();
+        JFreeChart chart = createChart();
+
+        chartPanel = new ChartPanel(chart);
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0.95;
         gbc.weighty = 0.98;
-        addCompItem(sp, gbc, 0, 0, 1, 1);
+        addCompItem(chartPanel, gbc, 0, 0, 1, 1);
 
         setupMenus();
 
@@ -156,7 +172,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         optionsMenu.addMenuListener(this);
 
         //Now, add all the menus to the main menu.
-        mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
+        mainMenu.add(ParaProfUtils.createFileMenu(this, this, this));
         mainMenu.add(optionsMenu);
         //mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
@@ -173,39 +189,28 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                 String arg = evt.getActionCommand();
                 if (arg.equals("Exclusive")) {
                     dataSorter.setValueType(ValueType.EXCLUSIVE);
-                    this.setHeader();
                     sortLocalData();
-                    panel.repaint();
                 } else if (arg.equals("Inclusive")) {
                     dataSorter.setValueType(ValueType.INCLUSIVE);
-                    this.setHeader();
                     sortLocalData();
-                    panel.repaint();
                 } else if (arg.equals("Number of Calls")) {
                     dataSorter.setValueType(ValueType.NUMCALLS);
-                    this.setHeader();
                     sortLocalData();
-                    panel.repaint();
                 } else if (arg.equals("Number of Child Calls")) {
                     dataSorter.setValueType(ValueType.NUMSUBR);
-                    this.setHeader();
                     sortLocalData();
-                    panel.repaint();
                 } else if (arg.equals("Inclusive per Call")) {
                     dataSorter.setValueType(ValueType.INCLUSIVE_PER_CALL);
-                    this.setHeader();
                     sortLocalData();
-                    panel.repaint();
                 } else if (arg.equals("Exclusive per Call")) {
                     dataSorter.setValueType(ValueType.EXCLUSIVE_PER_CALL);
-                    this.setHeader();
                     sortLocalData();
-                    panel.repaint();
                 } else if (arg.equals("Show Number of Bins Slider")) {
-                    if (slidersCheckBox.isSelected())
+                    if (slidersCheckBox.isSelected()) {
                         displaySliders(true);
-                    else
+                    } else {
                         displaySliders(false);
+                    }
                 } else {
                     throw new ParaProfException("The menu item '" + arg + "' is not implemented!");
                 }
@@ -219,7 +224,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         Container contentPane = this.getContentPane();
         GridBagConstraints gbc = new GridBagConstraints();
         if (displaySliders) {
-            contentPane.remove(sp);
+            contentPane.remove(chartPanel);
 
             gbc.fill = GridBagConstraints.NONE;
             gbc.anchor = GridBagConstraints.EAST;
@@ -237,17 +242,17 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1.0;
             gbc.weighty = 0.99;
-            addCompItem(sp, gbc, 0, 2, 2, 1);
+            addCompItem(chartPanel, gbc, 0, 2, 2, 1);
         } else {
             contentPane.remove(numBinsLabel);
             contentPane.remove(numBinsSlider);
-            contentPane.remove(sp);
+            contentPane.remove(chartPanel);
 
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1;
             gbc.weighty = 1;
-            addCompItem(sp, gbc, 0, 1, 1, 1);
+            addCompItem(chartPanel, gbc, 0, 1, 1, 1);
         }
 
         //Now call validate so that these component changes are displayed.
@@ -275,10 +280,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     // listener for the numBinsSlider
     public void stateChanged(ChangeEvent event) {
         try {
-            numBins = numBinsSlider.getValue();
-            if (numBins < 1)
-                numBins = 1;
-            panel.repaint();
+            setNumBins(numBinsSlider.getValue());
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -288,15 +290,13 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
         if (tmpString.equals("prefEvent")) {
-            this.setHeader();
-            panel.repaint();
+            redraw();
         } else if (tmpString.equals("colorEvent")) {
-            panel.repaint();
+            redraw();
         } else if (tmpString.equals("dataEvent")) {
             dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
             sortLocalData();
-            this.setHeader();
-            panel.repaint();
+            redraw();
         } else if (tmpString.equals("subWindowCloseEvent")) {
             closeThisWindow();
         }
@@ -316,26 +316,9 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     private void sortLocalData() {
         data = dataSorter.getFunctionData(function, false, false);
+        redraw();
     }
 
-    // This process is separated into two functions to provide the option of obtaining the current 
-    // header string being used for the panel without resetting the actual header. 
-    // Printing and image generation use this functionality for example.
-    public void setHeader() {
-        JTextArea jTextArea = new JTextArea();
-        jTextArea.setLineWrap(true);
-        jTextArea.setWrapStyleWord(true);
-        jTextArea.setEditable(false);
-        jTextArea.setMargin(new Insets(3,3,3,3));
-        jTextArea.setFont(ParaProf.preferencesWindow.getFont());
-        jTextArea.append(this.getHeaderString());
-        sp.setColumnHeaderView(jTextArea);
-    }
-
-    public JScrollPane getScrollPane() {
-        return sp;
-    }
-    
     public String getHeaderString() {
         if (ppTrial.getDataSource().getPhasesPresent()) {
             String starter;
@@ -406,18 +389,112 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public void setNumBins(int numBins) {
-        this.numBins = numBins;
-        panel.repaint();
+        this.numBins = Math.max(1, numBins);
+        redraw();
     }
 
     public int getNumBins() {
         return numBins;
     }
 
+    private JFreeChart createChart() {
+        HistogramDataset dataset = new HistogramDataset();
+
+        double maxValue = 0;
+        double minValue = 0;
+        boolean start = true;
+
+        for (int i = 0; i < data.size(); i++) {
+            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) data.get(i);
+            double value = ppFunctionProfile.getValue();
+            if (start) {
+                minValue = value;
+                start = false;
+            }
+            maxValue = Math.max(maxValue, value);
+            minValue = Math.min(minValue, value);
+        }
+
+        double[] values = new double[data.size()];
+        for (int i = 0; i < data.size(); i++) {
+            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) data.get(i);
+            values[i] = ppFunctionProfile.getValue();
+        }
+
+        dataset.addSeries(function.getName(), values, numBins, minValue, maxValue);
+        
+        String xAxis = dataSorter.getValueType().toString();
+
+        if ((dataSorter.getValueType() != ValueType.NUMCALLS && dataSorter.getValueType() != ValueType.NUMSUBR)) {
+            xAxis = xAxis + " " + ppTrial.getMetricName(dataSorter.getSelectedMetricID()) + " ("
+                    + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + ")";
+        }
+
+        JFreeChart chart = ChartFactory.createHistogram(function.getName(), xAxis, "Threads", dataset, PlotOrientation.VERTICAL,
+                false,  // legend
+                true,   // tooltips
+                false); // urls
+
+        chart.getXYPlot().getDomainAxis().setUpperBound(maxValue);
+        chart.getXYPlot().getDomainAxis().setLowerBound(minValue);
+
+        NumberAxis numberAxis = (NumberAxis) chart.getXYPlot().getDomainAxis();
+        numberAxis.setNumberFormatOverride(ParaProfUtils.createNumberFormatter(units()));
+        numberAxis.setTickLabelsVisible(true);
+
+
+        numberAxis.setTickUnit(new NumberTickUnit((maxValue - minValue) / 10));
+
+        final double binWidth = (maxValue - minValue) / numBins;
+
+        // create the tooltip generator
+        XYItemRenderer renderer = chart.getXYPlot().getRenderer();
+        renderer.setToolTipGenerator(new XYToolTipGenerator() {
+            public String generateToolTip(XYDataset dataset, int arg1, int arg2) {
+                String minString = UtilFncs.getOutputString(units(),dataset.getXValue(arg1, arg2) - (binWidth / 2), 5);
+                String maxString = UtilFncs.getOutputString(units(),dataset.getXValue(arg1, arg2) + (binWidth / 2), 5);
+
+                return "<html>Number of threads: " + (int)dataset.getYValue(arg1, arg2) + "<br>Range minimum: " + minString + "<br>Range maximum: "
+                + maxString + "</html>";
+            }
+        });
+
+
+        if (numBins < 25) { 
+            // it looks nicer with a margin, but only when we're at a low number of bars
+            ((XYBarRenderer)chart.getXYPlot().getRenderer()).setMargin(0.10);
+        }
+
+        ((XYBarRenderer)chart.getXYPlot().getRenderer()).setOutlinePaint(Color.black); 
+
+        return chart;
+    }
+
+    private void redraw() {
+        if (chartPanel != null) {
+            chartPanel.setChart(createChart());
+        }
+    }
+
     public void setUnits(int units) {
         this.units = units;
-        this.setHeader();
-        panel.repaint();
+
+        redraw();
     }
+
+    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+        return chartPanel.print(graphics, pageFormat, pageIndex);
+    }
+
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+        chartPanel.setDoubleBuffered(false);
+        chartPanel.paintAll(g2D);
+        chartPanel.setDoubleBuffered(true);
+    }
+
+    public Dimension getImageSize(boolean fullScreen, boolean header) {
+        return chartPanel.getSize();
+    }
+
 
 }
