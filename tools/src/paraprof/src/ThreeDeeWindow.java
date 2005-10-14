@@ -100,6 +100,21 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         DataSource dataSource = ppTrial.getDataSource();
         int numThreads = dataSource.getNumThreads();
 
+        
+        // initialize the scatterplot functions to the 4 most varying functions
+        // we just get the first four stddev functions
+        DataSorter dataSorter = new DataSorter(ppTrial);
+        dataSorter.setDescendingOrder(true);
+        List stdDevList = dataSorter.getFunctionProfiles(dataSource.getStdDevData());
+        int count = 0;
+        for (Iterator it = stdDevList.iterator(); it.hasNext() && count < 4;) {
+            PPFunctionProfile fp = (PPFunctionProfile) it.next();
+            settings.setScatterFunction(fp.getFunction(),count);
+            count++;
+        }
+        
+        // if the number of threads is above this threshold, we default to the 
+        // scatterplot
         if (numThreads > defaultToScatter) {
             settings.setVisType(VisType.SCATTER_PLOT);
         }
