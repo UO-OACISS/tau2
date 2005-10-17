@@ -10,9 +10,9 @@ package client;
 import common.*;
 import java.io.IOException;
 import java.util.List;
+import javax.swing.JFrame;
 import java.lang.Math;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartFrame;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
@@ -51,7 +51,10 @@ public class PerfExplorerHistogramChart {
         IntervalXYDataset dataset = createDataset(data);
         JFreeChart chart = createChart(dataset);
         
-		ChartFrame frame = new ChartFrame("Distributions of Significant Events", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Distributions of Significant Events");
+        frame.getContentPane().add(panel);
 		PerfExplorerChart.centerFrame(frame);
 
 		frame.pack();

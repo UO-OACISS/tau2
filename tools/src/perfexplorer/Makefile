@@ -1,8 +1,8 @@
 R_HOME = /Library/Frameworks/R.framework/Versions/Current/Resources
 TAUROOT = /Users/khuck/tau2
 CONFIG_ARCH = apple
-ENGINE_PACKAGE = weka
-ENGINE_DEFINE = WEKA
+ENGINE_PACKAGE = r
+ENGINE_DEFINE = R
 
 ##########################
 

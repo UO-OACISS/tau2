@@ -2,17 +2,23 @@ package client;
 
 import common.RMIChartData;
 import java.awt.*;
+import javax.swing.JFrame;
 import java.util.List;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartFrame;
+import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYDataset;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.StandardLegend;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.labels.XYToolTipGenerator;
+import org.jfree.chart.labels.StandardXYToolTipGenerator;
+import java.text.DecimalFormat;
 
 public class PerfExplorerChart {
 
@@ -47,7 +53,10 @@ public class PerfExplorerChart {
             true,                            // tooltips
             false                            // urls
         );
-		ChartFrame frame = new ChartFrame("Total Runtime Breakdown", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Total Runtime Breakdown");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 
 		frame.pack();
@@ -91,7 +100,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), false);
-		ChartFrame frame = new ChartFrame("Relative Efficiency", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Relative Efficiency");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -134,7 +146,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), false);
-		ChartFrame frame = new ChartFrame("Relative Efficiency by Event", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Relative Efficiency by Event");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -177,7 +192,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), false);
-		ChartFrame frame = new ChartFrame("Relative Efficiency for Event", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Relative Efficiency for Event");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -232,7 +250,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), true);
-		ChartFrame frame = new ChartFrame("Relative Speedup", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Relative Speedup");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -285,7 +306,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), true);
-		ChartFrame frame = new ChartFrame("Relative Speedup by Event", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Relative Speedup by Event");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -338,7 +362,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), true);
-		ChartFrame frame = new ChartFrame("Relative Speedup for Event", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Relative Speedup for Event");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -379,7 +406,10 @@ public class PerfExplorerChart {
         );
 
 		customizeChart(chart, rawData.getRows(), false);
-		ChartFrame frame = new ChartFrame("Timesteps per Second", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Timesteps per Second");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -425,7 +455,10 @@ public class PerfExplorerChart {
         );
 
 		customizeChart(chart, rawData1.getRows(), false);
-		ChartFrame frame = new ChartFrame("Transpose Time / Total Runtime", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Transpose Time / Total Runtime");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -468,7 +501,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), false);
-		ChartFrame frame = new ChartFrame("Relative Efficiency by Event", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Relative Efficiency by Event");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -522,7 +558,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), true);
-		ChartFrame frame = new ChartFrame("Relative Speedup by Event", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Relative Speedup by Event");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -560,7 +599,10 @@ public class PerfExplorerChart {
             true,                            // tooltips
             false                            // urls
         );
-		ChartFrame frame = new ChartFrame("Total Runtime Breakdown", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Total Runtime Breakdown");
+        frame.getContentPane().add(panel);
 		centerFrame(frame);
 		frame.pack();
 		frame.setVisible(true);
@@ -584,6 +626,18 @@ public class PerfExplorerChart {
         renderer.setDefaultShapesFilled(true);
         //renderer.setPlotShapes(true);
         renderer.setItemLabelsVisible(true);
+		renderer.setToolTipGenerator(
+			new StandardXYToolTipGenerator(
+				StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
+					new DecimalFormat("processors: #######"), new DecimalFormat("value: #,##0.00")));
+
+        //renderer.setToolTipGenerator(new XYToolTipGenerator() {
+            //public String generateToolTip(XYDataset dataset, int arg1, int arg2) {
+                //return "<html>Number of threads: " + (int)dataset.getXValue(arg1, arg2) + 
+                //"<BR>Value: " + dataset.getYValue(arg1, arg2) + "</html>";
+            //}
+        //});
+
 
 		for (int i = 0 ; i < rows ; i++) {
 			renderer.setSeriesStroke(i, new BasicStroke(2.0f));
@@ -601,7 +655,7 @@ public class PerfExplorerChart {
 
 	}
 
-	public static void centerFrame(ChartFrame frame) {
+	public static void centerFrame(JFrame frame) {
         //Window Stuff.
         int windowWidth = 700;
         int windowHeight = 450;

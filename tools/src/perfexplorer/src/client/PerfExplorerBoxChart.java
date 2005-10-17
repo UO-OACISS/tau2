@@ -9,11 +9,11 @@ package client;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import javax.swing.JFrame;
 import java.util.List;
 
 import javax.swing.JPanel;
 
-import org.jfree.chart.ChartFrame;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
@@ -59,7 +59,10 @@ public class PerfExplorerBoxChart {
 		BoxAndWhiskerCategoryDataset dataset = createDataset(data);
         JFreeChart chart = createChart(dataset);
         
-		ChartFrame frame = new ChartFrame("Distributions of Significant Events", chart);
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		JFrame frame = new JFrame("Distributions of Significant Events");
+        frame.getContentPane().add(panel);
 		PerfExplorerChart.centerFrame(frame);
 
 		frame.pack();
