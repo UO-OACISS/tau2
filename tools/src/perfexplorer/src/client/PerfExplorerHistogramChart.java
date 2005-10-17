@@ -20,6 +20,9 @@ import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.labels.XYToolTipGenerator;
+import org.jfree.data.xy.XYDataset;
 
 /**
  * A demo of the {@link HistogramDataset} class.
@@ -53,6 +56,15 @@ public class PerfExplorerHistogramChart {
         
 		ChartPanel panel = new ChartPanel(chart);
 		panel.setDisplayToolTips(true);
+		XYItemRenderer renderer = chart.getXYPlot().getRenderer();
+        renderer.setToolTipGenerator(new XYToolTipGenerator() {
+            public String generateToolTip(XYDataset dataset, int arg1, int arg2) {
+                return "<html>Event: " + dataset.getSeriesName(arg1) + 
+                "<BR>Count: " + dataset.getYValue(arg1, arg2) + "</html>";
+            }
+        });
+
+
 		JFrame frame = new JFrame("Distributions of Significant Events");
         frame.getContentPane().add(panel);
 		PerfExplorerChart.centerFrame(frame);

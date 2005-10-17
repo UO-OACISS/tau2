@@ -47,7 +47,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String CREATE_NEW_VIEW = "Create New View";
 	public final static String CREATE_NEW_SUB_VIEW = "Create New Sub-view";
 	public final static String DO_IQR_BOXCHART = "Create BoxChart";
-	public final static String DO_HISTOGRAM = "Create Histogrms";
+	public final static String DO_HISTOGRAM = "Create Histograms";
 
 	private PerfExplorerClient mainFrame;
 

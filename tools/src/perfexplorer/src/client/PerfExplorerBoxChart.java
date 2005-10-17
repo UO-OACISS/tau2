@@ -26,6 +26,9 @@ import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
 import common.RMIChartData;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.labels.CategoryToolTipGenerator;
+import org.jfree.data.category.CategoryDataset;
 
 /**
  * A simple demonstration application showing how to create a box-and-whisker
@@ -130,6 +133,20 @@ public class PerfExplorerBoxChart {
         CategoryAxis domainAxis = new CategoryAxis(null);
         NumberAxis rangeAxis = new NumberAxis("Value");
         CategoryItemRenderer renderer = new BoxAndWhiskerRenderer();
+        renderer.setToolTipGenerator(new CategoryToolTipGenerator() {
+            public String generateToolTip(CategoryDataset inDataset, int arg1, int arg2) {
+				BoxAndWhiskerCategoryDataset dataset = 
+					(BoxAndWhiskerCategoryDataset) inDataset;
+                return "<html>Min Outlier: " + dataset.getMinOutlier(arg1, arg2) + 
+                "<BR>Min Regular Value: " + dataset.getMinRegularValue(arg1, arg2) + 
+                "<BR>Q1 Value: " + dataset.getQ1Value(arg1, arg2) + 
+                "<BR>Mean Value: " + dataset.getMeanValue(arg1, arg2) + 
+                "<BR>Q3 Value: " + dataset.getQ3Value(arg1, arg2) + 
+                "<BR>Max Regular Value: " + dataset.getMaxRegularValue(arg1, arg2) + 
+                "<BR>Max Outlier: " + dataset.getMaxOutlier(arg1, arg2) + "</html>";
+            }
+        });
+
         CategoryPlot plot = new CategoryPlot(
             dataset, domainAxis, rangeAxis, renderer
         );
