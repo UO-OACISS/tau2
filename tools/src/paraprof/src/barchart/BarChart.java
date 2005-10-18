@@ -20,9 +20,9 @@ import edu.uoregon.tau.paraprof.interfaces.ImageExport;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.2 2005/09/30 01:44:18 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.3 2005/10/18 22:50:34 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, BarChartModelListener {
@@ -282,8 +282,8 @@ public class BarChart extends JPanel implements MouseListener, BarChartModelList
                 maxHeight = model.getNumRows() * rowHeight;
             }
         }
-        super.setSize(new Dimension(maxWidth, maxHeight));
-        super.setPreferredSize(new Dimension(maxWidth, maxHeight));
+        super.setSize(new Dimension(maxWidth, maxHeight+5));
+        super.setPreferredSize(new Dimension(maxWidth, maxHeight+5));
         preferredSizeSet = true;
         this.invalidate();
     }

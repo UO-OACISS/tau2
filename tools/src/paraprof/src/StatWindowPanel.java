@@ -26,7 +26,7 @@ import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.UserEvent;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
-public class StatWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ImageExport {
+public class StatWindowPanel extends JPanel implements MouseListener, Printable, ImageExport {
 
     //Instance data.
     private int xPanelSize = 800;
@@ -48,7 +48,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     private Font monoFont = null;
     private FontMetrics fmMonoFont = null;
 
-    private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
 
     private int lastHeaderEndPosition = 0;
@@ -76,20 +75,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         //Add this object as a mouse listener.
         addMouseListener(this);
 
-        //Add items to the popup menu.
-        if (userEventWindow) {
-            JMenuItem userEventDetailsItem = new JMenuItem("Show User Event Bar Chart");
-            userEventDetailsItem.addActionListener(this);
-            popup.add(userEventDetailsItem);
-
-            JMenuItem changeColorItem = new JMenuItem("Change User Event Color");
-            changeColorItem.addActionListener(this);
-            popup.add(changeColorItem);
-        }
-
-        JMenuItem maskColorItem = new JMenuItem("Reset to Generic Color");
-        maskColorItem.addActionListener(this);
-        popup.add(maskColorItem);
 
         this.repaint();
 
@@ -354,50 +339,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         }
     }
 
-    public void actionPerformed(ActionEvent evt) {
-        try {
-            Object EventSrc = evt.getSource();
-
-            PPUserEventProfile ppUserEventProfile = null;
-
-            if (EventSrc instanceof JMenuItem) {
-                String arg = evt.getActionCommand();
-                if (arg.equals("Show User Event Bar Chart")) {
-
-                    if (clickedOnObject instanceof PPUserEventProfile) {
-                        ppUserEventProfile = (PPUserEventProfile) clickedOnObject;
-                        //Bring up an expanded data window for this user event and highlight it
-                        ppTrial.setHighlightedUserEvent(ppUserEventProfile.getUserEvent());
-                        UserEventWindow tmpRef = new UserEventWindow(ppTrial, ppUserEventProfile.getUserEvent(),
-                                ppTrial.getFullDataWindow().getDataSorter(), this);
-                        tmpRef.show();
-                    }
-                } else if (arg.equals("Change User Event Color")) {
-                    UserEvent userEvent = null;
-                    if (clickedOnObject instanceof PPUserEventProfile)
-                        userEvent = ((PPUserEventProfile) clickedOnObject).getUserEvent();
-
-                    Color tmpCol = userEvent.getColor();
-                    tmpCol = JColorChooser.showDialog(this, "Please select a new color", tmpCol);
-                    if (tmpCol != null) {
-                        userEvent.setSpecificColor(tmpCol);
-                        userEvent.setColorFlag(true);
-
-                        ppTrial.updateRegisteredObjects("colorEvent");
-                    }
-                } else if (arg.equals("Reset to Generic Color")) {
-
-                    if (clickedOnObject instanceof PPUserEventProfile) {
-                        UserEvent ue = ((PPUserEventProfile) clickedOnObject).getUserEvent();
-                        ue.setColorFlag(false);
-                    }
-                    ppTrial.updateRegisteredObjects("colorEvent");
-                }
-            }
-        } catch (Exception e) {
-            ParaProfUtils.handleException(e);
-        }
-    }
+  
 
     public void mouseClicked(MouseEvent evt) {
         try {
@@ -415,8 +357,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
                         ppUserEventProfile = (PPUserEventProfile) list.get(tmpInt2);
                         if (ParaProfUtils.rightClick(evt)) {
-                            clickedOnObject = ppUserEventProfile;
-                            popup.show(this, evt.getX(), evt.getY());
+                            ParaProfUtils.handleUserEventClick(ppTrial, ppUserEventProfile.getUserEvent(), this, evt);
                         } else {
                             ppTrial.toggleHighlightedUserEvent(ppUserEventProfile.getUserEvent());
                         }

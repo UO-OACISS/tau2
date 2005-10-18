@@ -26,9 +26,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.2 2005/10/14 18:08:09 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.3 2005/10/18 22:50:34 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -311,7 +311,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         };
 
         if (function != null) {
-            sortByNCTCheckbox = new JCheckBoxMenuItem("Sort By N,C,T", true);
+            sortByNCTCheckbox = new JCheckBoxMenuItem("Sort By N,C,T", false);
             sortByNCTCheckbox.addActionListener(sortData);
             optionsMenu.add(sortByNCTCheckbox);
         } else {
@@ -320,7 +320,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             optionsMenu.add(sortByNameCheckBox);
         }
 
-        descendingOrderCheckBox = new JCheckBoxMenuItem("Descending Order", function == null);
+        descendingOrderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
         descendingOrderCheckBox.addActionListener(sortData);
         optionsMenu.add(descendingOrderCheckBox);
 

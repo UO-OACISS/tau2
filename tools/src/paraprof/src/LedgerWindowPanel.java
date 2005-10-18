@@ -16,11 +16,11 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.2 2005/10/14 18:08:09 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.3 2005/10/18 22:50:34 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -65,8 +65,8 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
     public void setupMenus() {
         JMenuItem jMenuItem = null;
-        switch (windowType) {
-        case LedgerWindow.GROUP_LEDGER:
+
+        if (windowType == LedgerWindow.GROUP_LEDGER) {
 
             jMenuItem = new JMenuItem("Change Group Color");
             jMenuItem.addActionListener(this);
@@ -88,21 +88,6 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             jMenuItem.addActionListener(this);
             popup.add(jMenuItem);
 
-            break;
-        case LedgerWindow.USEREVENT_LEDGER:
-            jMenuItem = new JMenuItem("Show User Event Bar Chart");
-            jMenuItem.addActionListener(this);
-            popup.add(jMenuItem);
-
-            jMenuItem = new JMenuItem("Change User Event Color");
-            jMenuItem.addActionListener(this);
-            popup.add(jMenuItem);
-
-            jMenuItem = new JMenuItem("Reset to Generic Color");
-            jMenuItem.addActionListener(this);
-            popup.add(jMenuItem);
-
-            break;
         }
 
     }
@@ -267,13 +252,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                 if (clickedOnObject instanceof LedgerDataElement) {
                     LedgerDataElement lde = (LedgerDataElement) clickedOnObject;
 
-                    if (arg.equals("Show User Event Bar Chart")) {
-                        // Highlight the user event and bring up the User Event Window
-                        ppTrial.setHighlightedUserEvent(lde.getUserEvent());
-                        UserEventWindow tmpRef = new UserEventWindow(ppTrial, lde.getUserEvent(),
-                                ppTrial.getFullDataWindow().getDataSorter(), this);
-                        tmpRef.show();
-                    } else if ((arg.equals("Change User Event Color")) || (arg.equals("Change Group Color"))) {
+                    if (arg.equals("Change Group Color")) {
 
                         Color color = lde.getColor();
                         color = JColorChooser.showDialog(this, "Please select a new color", color);
@@ -329,6 +308,8 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                             if (windowType == LedgerWindow.FUNCTION_LEDGER || windowType == LedgerWindow.PHASE_LEDGER) {
                                 (ParaProfUtils.createFunctionClickPopUp(ppTrial, lde.getFunction(),
                                         ppTrial.getDataSource().getTotalData(), this)).show(this, evt.getX(), evt.getY());
+                            } else if (windowType == LedgerWindow.USEREVENT_LEDGER) {
+                                ParaProfUtils.handleUserEventClick(ppTrial, lde.getUserEvent(), this, evt);
                             } else {
                                 popup.show(this, evt.getX(), evt.getY());
                             }

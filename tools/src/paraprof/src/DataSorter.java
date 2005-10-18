@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.1 2005/09/26 21:12:04 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.2 2005/10/18 22:50:34 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  */
 public class DataSorter {
 
@@ -329,12 +329,26 @@ public class DataSorter {
 
         PPUserEventProfile ppUserEventProfile;
 
+        Thread thread = ppTrial.getDataSource().getMeanData();
+        userEventProfile = thread.getUserEventProfile(userEvent);
+        if (userEventProfile != null) {
+            ppUserEventProfile = new PPUserEventProfile(this, thread, userEventProfile);
+            newList.add(ppUserEventProfile);
+        }
+
+        thread = ppTrial.getDataSource().getStdDevData();
+        userEventProfile = thread.getUserEventProfile(userEvent);
+        if (userEventProfile != null) {
+            ppUserEventProfile = new PPUserEventProfile(this, thread, userEventProfile);
+            newList.add(ppUserEventProfile);
+        }
+
+        
         for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+            thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
 
             userEventProfile = thread.getUserEventProfile(userEvent);
             if (userEventProfile != null) {
-                //Create a new thread data object.
                 ppUserEventProfile = new PPUserEventProfile(this, thread, userEventProfile);
                 newList.add(ppUserEventProfile);
             }

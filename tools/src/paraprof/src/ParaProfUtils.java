@@ -161,8 +161,6 @@ public class ParaProfUtils {
         return helpMenu;
     }
 
-    
-    
     public static JMenu createFileMenu(final ParaProfWindow window, final Printable printable, final Object panel) {
 
         if (printable == null) {
@@ -180,7 +178,7 @@ public class ParaProfUtils {
                         ParaProfUtils.print(printable);
                     } else if (arg.equals("Preferences...")) {
                         // this is just in case there is ever a ParaProfWindow that is not a JFrame (there shouldn't be)
-                        ParaProf.preferencesWindow.showPreferencesWindow(window instanceof JFrame ? (JFrame)window : null);
+                        ParaProf.preferencesWindow.showPreferencesWindow(window instanceof JFrame ? (JFrame) window : null);
                     } else if (arg.equals("Save as Bitmap Image")) {
 
                         if (panel instanceof ImageExport) {
@@ -194,9 +192,9 @@ public class ParaProfUtils {
 
                     } else if (arg.equals("Save as Vector Graphics")) {
                         if (panel instanceof ImageExport) {
-                            JVMDependent.exportVector((ImageExport)panel);
+                            JVMDependent.exportVector((ImageExport) panel);
                         } else if (panel instanceof ThreeDeeWindow) {
-                            JOptionPane.showMessageDialog((JFrame)window, "Can't save 3D visualization as vector graphics");
+                            JOptionPane.showMessageDialog((JFrame) window, "Can't save 3D visualization as vector graphics");
                         } else {
                             throw new ParaProfException("Don't know how to \"Save as Vector Graphics\" for " + panel.getClass());
                         }
@@ -306,13 +304,13 @@ public class ParaProfUtils {
                     if (arg.equals("ParaProf Manager")) {
                         (new ParaProfManagerWindow()).show();
                     } else if (arg.equals("Function Ledger")) {
-                        (new LedgerWindow(ppTrial, 0,owner)).show();
+                        (new LedgerWindow(ppTrial, 0, owner)).show();
                     } else if (arg.equals("Group Ledger")) {
-                        (new LedgerWindow(ppTrial, 1,owner)).show();
+                        (new LedgerWindow(ppTrial, 1, owner)).show();
                     } else if (arg.equals("User Event Ledger")) {
-                        (new LedgerWindow(ppTrial, 2,owner)).show();
+                        (new LedgerWindow(ppTrial, 2, owner)).show();
                     } else if (arg.equals("Phase Ledger")) {
-                        (new LedgerWindow(ppTrial, 3,owner)).show();
+                        (new LedgerWindow(ppTrial, 3, owner)).show();
                     } else if (arg.equals("3D Visualization")) {
 
                         if (JVMDependent.version.equals("1.3")) {
@@ -325,7 +323,7 @@ public class ParaProfUtils {
                         //(new Gears()).show();
 
                         try {
-                            (new ThreeDeeWindow(ppTrial,owner)).show();
+                            (new ThreeDeeWindow(ppTrial, owner)).show();
                             //(new ThreeDeeWindow()).show();
                         } catch (UnsatisfiedLinkError e) {
                             JOptionPane.showMessageDialog(owner, "Unable to load jogl library.  Possible reasons:\n"
@@ -412,7 +410,7 @@ public class ParaProfUtils {
                         FunctionBarChartWindow w = new FunctionBarChartWindow(ppTrial, selectedThread, null, owner);
                         w.setVisible(true);
                     } else if (arg.equals("Statistics Text")) {
-                        (new StatWindow(ppTrial, selectedThread, false, null,owner)).setVisible(true);
+                        (new StatWindow(ppTrial, selectedThread, false, null, owner)).setVisible(true);
                     } else if (arg.equals("Statistics Table")) {
                         (new TreeTableWindow(ppTrial, selectedThread, owner)).setVisible(true);
                     } else if (arg.equals("Call Graph")) {
@@ -420,7 +418,7 @@ public class ParaProfUtils {
                     } else if (arg.equals("Call Path Relations")) {
                         (new CallPathTextWindow(ppTrial, selectedThread, owner)).setVisible(true);
                     } else if (arg.equals("User Event Statistics")) {
-                        (new StatWindow(ppTrial, selectedThread, true, null,owner)).setVisible(true);
+                        (new StatWindow(ppTrial, selectedThread, true, null, owner)).setVisible(true);
                     }
                 }
             }
@@ -553,7 +551,6 @@ public class ParaProfUtils {
             functionPopup.add(functionDetailsItem);
         }
 
-
         JMenuItem functionDetailsItem = new JMenuItem("Show Function Bar Chart");
         functionDetailsItem.addActionListener(actionListener);
         functionPopup.add(functionDetailsItem);
@@ -645,7 +642,8 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
-    public static JMenuItem createComparisonMenuItem(String text, final ParaProfTrial ppTrial, final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
+    public static JMenuItem createComparisonMenuItem(String text, final ParaProfTrial ppTrial,
+            final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -661,11 +659,73 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
+    public static JMenuItem createUserEventBarChartMenuItem(String text, final ParaProfTrial ppTrial,
+            final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
+        JMenuItem jMenuItem = new JMenuItem(text);
+        jMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UserEventWindow w = new UserEventWindow(ppTrial, thread, owner);
+                w.show();
+            }
+
+        });
+        return jMenuItem;
+    }
+
+    public static void handleUserEventClick(final ParaProfTrial ppTrial, final UserEvent userEvent, final JComponent owner,
+            MouseEvent evt) {
+
+        ActionListener act = new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                Object EventSrc = e.getSource();
+                if (EventSrc instanceof JMenuItem) {
+                    String arg = e.getActionCommand();
+                    if (arg.equals("Show User Event Bar Chart")) {
+                        UserEventWindow tmpRef = new UserEventWindow(ppTrial, userEvent, owner);
+                        tmpRef.show();
+                    } else if (arg.equals("Change User Event Color")) {
+
+                        Color tmpCol = userEvent.getColor();
+                        tmpCol = JColorChooser.showDialog(owner, "Please select a new color", tmpCol);
+                        if (tmpCol != null) {
+                            userEvent.setSpecificColor(tmpCol);
+                            userEvent.setColorFlag(true);
+                            ppTrial.updateRegisteredObjects("colorEvent");
+                        }
+                    } else if (arg.equals("Reset to Generic Color")) {
+
+                        userEvent.setColorFlag(false);
+                        ppTrial.updateRegisteredObjects("colorEvent");
+                    }
+                }
+
+            }
+        };
+
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem menuItem;
+        menuItem = new JMenuItem("Show User Event Bar Chart");
+        menuItem.addActionListener(act);
+        popup.add(menuItem);
+
+        menuItem = new JMenuItem("Change User Event Color");
+        menuItem.addActionListener(act);
+        popup.add(menuItem);
+
+        menuItem = new JMenuItem("Reset to Generic Color");
+        menuItem.addActionListener(act);
+        popup.add(menuItem);
+
+        popup.show(owner, evt.getX(), evt.getY());
+
+    }
+
     public static void handleThreadClick(final ParaProfTrial ppTrial, final Function phase,
             final edu.uoregon.tau.perfdmf.Thread thread, JComponent owner, MouseEvent evt) {
 
         String ident;
-        
+
         if (thread.getNodeID() == -1) {
             ident = "Mean";
         } else if (thread.getNodeID() == -2) {
@@ -675,19 +735,21 @@ public class ParaProfUtils {
         } else {
             ident = "Thread";
         }
-        
+
         JPopupMenu threadPopup = new JPopupMenu();
-        threadPopup.add(createThreadDataMenuItem("Show "+ident+" Bar Chart", ppTrial, phase, thread, owner));
-        threadPopup.add(createStatisticsMenuItem("Show "+ident+" Statistics Text Window", ppTrial, phase, thread, false,owner));
-        threadPopup.add(createStatisticsTableMenuItem("Show "+ident+" Statistics Table", ppTrial, phase, thread, owner));
-        threadPopup.add(createCallGraphMenuItem("Show "+ident+" Call Graph", ppTrial, thread, owner));
-        threadPopup.add(createCallPathThreadRelationMenuItem("Show "+ident+" Call Path Relations", ppTrial, thread, owner));
-        if (thread.getNodeID() >= 0 && ppTrial.userEventsPresent()) {
-            threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true,owner));
-        }
-        threadPopup.add(createComparisonMenuItem("Add "+ident+" to Comparison Window", ppTrial, thread, owner));
+        threadPopup.add(createThreadDataMenuItem("Show " + ident + " Bar Chart", ppTrial, phase, thread, owner));
+        threadPopup.add(createStatisticsMenuItem("Show " + ident + " Statistics Text Window", ppTrial, phase, thread, false,
+                owner));
+        threadPopup.add(createStatisticsTableMenuItem("Show " + ident + " Statistics Table", ppTrial, phase, thread, owner));
+        threadPopup.add(createCallGraphMenuItem("Show " + ident + " Call Graph", ppTrial, thread, owner));
+        threadPopup.add(createCallPathThreadRelationMenuItem("Show " + ident + " Call Path Relations", ppTrial, thread, owner));
+        //if (thread.getNodeID() >= 0 && ppTrial.userEventsPresent()) {
+            threadPopup.add(createUserEventBarChartMenuItem("Show User Event Bar Chart", ppTrial, thread, owner));
+            threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
+        //}
+        threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
         threadPopup.show(owner, evt.getX(), evt.getY());
-        
+
     }
 
     public static int[] computeClipping(Rectangle clipRect, Rectangle viewRect, boolean toScreen, boolean fullWindow, int size,
@@ -926,11 +988,11 @@ public class ParaProfUtils {
 
                 if (uep != null) {
                     p.writeInt(i);
-                    p.writeInt(uep.getUserEventNumberValue());
-                    p.writeDouble(uep.getUserEventMinValue());
-                    p.writeDouble(uep.getUserEventMaxValue());
-                    p.writeDouble(uep.getUserEventMeanValue());
-                    p.writeDouble(uep.getUserEventSumSquared());
+                    p.writeInt((int)uep.getNumSamples());
+                    p.writeDouble(uep.getMinValue());
+                    p.writeDouble(uep.getMaxValue());
+                    p.writeDouble(uep.getMeanValue());
+                    p.writeDouble(uep.getSumSquared());
                 }
             }
         }
@@ -1052,11 +1114,11 @@ public class ParaProfUtils {
 
                     if (uep != null) {
                         bw.write('"' + userEvents[i].getName() + "\" ");
-                        bw.write(uep.getUserEventNumberValue() + " ");
-                        bw.write(uep.getUserEventMaxValue() + " ");
-                        bw.write(uep.getUserEventMinValue() + " ");
-                        bw.write(uep.getUserEventMeanValue() + " ");
-                        bw.write(uep.getUserEventSumSquared() + "\n");
+                        bw.write(uep.getNumSamples() + " ");
+                        bw.write(uep.getMaxValue() + " ");
+                        bw.write(uep.getMinValue() + " ");
+                        bw.write(uep.getMeanValue() + " ");
+                        bw.write(uep.getSumSquared() + "\n");
                     }
                 }
             }
@@ -1138,8 +1200,6 @@ public class ParaProfUtils {
 
     }
 
-   
-
     public static boolean rightClick(MouseEvent evt) {
         if ((evt.getModifiers() & InputEvent.BUTTON3_MASK) != 0) {
             return true;
@@ -1176,17 +1236,15 @@ public class ParaProfUtils {
         if (!ParaProf.demoMode) {
             return d;
         }
-        
+
         int width = d.width;
         int height = d.height;
-        
+
         width = Math.min(width, 640);
-        height = Math.min(height,480);
+        height = Math.min(height, 480);
         return new Dimension(width, height);
     }
- 
-    
-    
+
     public static NumberFormat createNumberFormatter(final int units) {
         return new NumberFormat() {
 
@@ -1203,8 +1261,7 @@ public class ParaProfUtils {
                 return toAppendTo.append(UtilFncs.getOutputString(units, number, 5));
             }
         };
-        
+
     }
-                                                                 
-                                                                
+
 }

@@ -8,9 +8,9 @@ import edu.uoregon.tau.perfdmf.*;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: UserEventValueType.java,v 1.1 2005/09/26 21:12:46 amorris Exp $</P>
+ * <P>CVS $Id: UserEventValueType.java,v 1.2 2005/10/18 22:50:35 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public abstract class UserEventValueType {
 
@@ -26,7 +26,7 @@ public abstract class UserEventValueType {
 
     public static final UserEventValueType NUMSAMPLES = new UserEventValueType("Number of Samples") {
         public double getValue(UserEventProfile uep) {
-            return uep.getUserEventNumberValue();
+            return uep.getNumSamples();
         }
         public double getMaxValue(UserEvent ue) {
             return ue.getMaxUserEventNumberValue();
@@ -35,7 +35,7 @@ public abstract class UserEventValueType {
 
     public static final UserEventValueType MAX = new UserEventValueType("Max Value") {
         public double getValue(UserEventProfile uep) {
-            return uep.getUserEventMaxValue();
+            return uep.getMaxValue();
         }
         public double getMaxValue(UserEvent ue) {
             return ue.getMaxUserEventMaxValue();
@@ -44,7 +44,7 @@ public abstract class UserEventValueType {
 
     public static final UserEventValueType MIN = new UserEventValueType("Min Value") {
         public double getValue(UserEventProfile uep) {
-            return uep.getUserEventMinValue();
+            return uep.getMinValue();
         }
         public double getMaxValue(UserEvent ue) {
             return ue.getMaxUserEventMinValue();
@@ -53,7 +53,7 @@ public abstract class UserEventValueType {
 
     public static final UserEventValueType MEAN = new UserEventValueType("Mean Value") {
         public double getValue(UserEventProfile uep) {
-            return uep.getUserEventMeanValue();
+            return uep.getMeanValue();
         }
         public double getMaxValue(UserEvent ue) {
             return ue.getMaxUserEventMeanValue();
@@ -62,7 +62,7 @@ public abstract class UserEventValueType {
 
     public static final UserEventValueType STDDEV = new UserEventValueType("Standard Deviation") {
         public double getValue(UserEventProfile uep) {
-            return uep.getUserEventStdDev();
+            return uep.getStdDev();
         }
         public double getMaxValue(UserEvent ue) {
             return ue.getMaxUserEventStdDev();

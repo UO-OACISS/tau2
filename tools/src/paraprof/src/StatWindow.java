@@ -77,10 +77,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         contextID = thread.getContextID();
         threadID = thread.getThreadID();
 
-        if (nodeID == -1 && userEventWindow) {
-            // There is no User Event data for mean
-            throw new ParaProfException("There is no User Event data for mean");
-        }
 
         String title;
         //Now set the title.

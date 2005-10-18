@@ -34,8 +34,6 @@ public class PPUserEventProfile implements Comparable {
     //Boolean indicating whether or not this object is highlighted.
     private boolean highlighted = false;
 
-    private int sortType;
-
     private edu.uoregon.tau.perfdmf.Thread thread;
 
     public PPUserEventProfile(DataSorter dataSorter, edu.uoregon.tau.perfdmf.Thread thread,
@@ -76,24 +74,24 @@ public class PPUserEventProfile implements Comparable {
         return userEventProfile;
     }
 
-    public int getUserEventNumberValue() {
-        return userEventProfile.getUserEventNumberValue();
+    public double getNumSamples() {
+        return userEventProfile.getNumSamples();
     }
 
-    public double getUserEventMinValue() {
-        return userEventProfile.getUserEventMinValue();
+    public double getMinValue() {
+        return userEventProfile.getMinValue();
     }
 
-    public double getUserEventMaxValue() {
-        return userEventProfile.getUserEventMaxValue();
+    public double getMaxValue() {
+        return userEventProfile.getMaxValue();
     }
 
-    public double getUserEventMeanValue() {
-        return userEventProfile.getUserEventMeanValue();
+    public double getMeanValue() {
+        return userEventProfile.getMeanValue();
     }
 
     public double getStdDev() {
-        return userEventProfile.getUserEventStdDev();
+        return userEventProfile.getStdDev();
     }
 
     public String getUserEventStatString(int precision) {
@@ -105,14 +103,15 @@ public class PPUserEventProfile implements Comparable {
 
         PPUserEventProfile.insertSpaces(statStringArray, 0, 90);
 
-        tmpArray = (Integer.toString(this.getUserEventNumberValue()).toCharArray());
+        tmpString = UtilFncs.getOutputString(0, this.getNumSamples(), precision);
+        tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
             statStringArray[position] = tmpArray[i];
             position++;
         }
 
         position = 18;
-        tmpString = UtilFncs.getOutputString(0, this.getUserEventMaxValue(), precision);
+        tmpString = UtilFncs.getOutputString(0, this.getMaxValue(), precision);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
             statStringArray[position] = tmpArray[i];
@@ -120,7 +119,7 @@ public class PPUserEventProfile implements Comparable {
         }
 
         position = 36;
-        tmpString = UtilFncs.getOutputString(0, this.getUserEventMinValue(), precision);
+        tmpString = UtilFncs.getOutputString(0, this.getMinValue(), precision);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
             statStringArray[position] = tmpArray[i];
@@ -128,7 +127,7 @@ public class PPUserEventProfile implements Comparable {
         }
 
         position = 54;
-        tmpString = UtilFncs.getOutputString(0, this.getUserEventMeanValue(), precision);
+        tmpString = UtilFncs.getOutputString(0, this.getMeanValue(), precision);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
             statStringArray[position] = tmpArray[i];
@@ -278,9 +277,7 @@ public class PPUserEventProfile implements Comparable {
         return highlighted;
     }
 
-    public void setSortType(int sortType) {
-        this.sortType = sortType;
-    }
+    
 
     public edu.uoregon.tau.perfdmf.Thread getThread() {
         return thread;

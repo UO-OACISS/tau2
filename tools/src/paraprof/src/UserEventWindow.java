@@ -11,60 +11,62 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 
-import edu.uoregon.tau.paraprof.barchart.BarChartPanel;
-import edu.uoregon.tau.paraprof.barchart.UserEventBarChartModel;
+import edu.uoregon.tau.paraprof.barchart.*;
+import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.UserEvent;
+import edu.uoregon.tau.perfdmf.Thread;
 
 /**
  * The UserEventWindow shows one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventWindow.java,v 1.21 2005/09/26 21:12:11 amorris Exp $</P>
+ * <P>CVS $Id: UserEventWindow.java,v 1.22 2005/10/18 22:50:34 amorris Exp $</P>
  * @author  Alan Morris, Robert Bell
- * @version $Revision: 1.21 $
+ * @version $Revision: 1.22 $
  * @see GlobalBarChartModel
  */
 public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
 
-    private ParaProfTrial ppTrial = null;
-    private DataSorter dataSorter = null;
-    private UserEvent userEvent = null;
+    private ParaProfTrial ppTrial;
+    private DataSorter dataSorter;
+    private UserEvent userEvent;
+    private Thread thread;
 
-    private JMenu optionsMenu = null;
+    private JMenu optionsMenu;
 
-    private JCheckBoxMenuItem descendingOrder = null;
-    private JCheckBoxMenuItem showPathTitleInReverse = null;
-    private JCheckBoxMenuItem showMetaData = null;
+    private JCheckBoxMenuItem descendingOrder;
+    private JCheckBoxMenuItem sortByNCT;
+    private JCheckBoxMenuItem sortByName;
+    private JCheckBoxMenuItem showMetaData;
     private JCheckBoxMenuItem displayWidthSlider;
 
     private JLabel barLengthLabel = new JLabel("Bar Width");
     private JSlider barLengthSlider = new JSlider(0, 2000, 400);
 
-    private GridBagLayout gbl = null;
-    private GridBagConstraints gbc = null;
+    private GridBagLayout gbl;
+    private GridBagConstraints gbc;
 
-    
     private BarChartPanel panel;
-    private UserEventBarChartModel model;
-    
+    private BarChartModel model;
+
     private List list = new ArrayList();
 
     private UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
-    
 
-    public UserEventWindow(ParaProfTrial ppTrial, UserEvent userEvent, DataSorter dataSorter, Component invoker) {
-        this.userEvent = userEvent;
+    public UserEventWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
+        this.thread = thread;
+
         this.ppTrial = ppTrial;
         ppTrial.addObserver(this);
 
-        this.dataSorter = dataSorter;
-
-        int windowWidth = 650;
-        int windowHeight = 550;
+        this.dataSorter = new DataSorter(ppTrial);
+        
+        int windowWidth = 750;
+        int windowHeight = 650;
 
         setSize(ParaProfUtils.checkSize(new java.awt.Dimension(windowWidth, windowHeight)));
-        setLocation(WindowPlacer.getNewLocation(this,invoker));
+        setLocation(WindowPlacer.getNewLocation(this, invoker));
 
         //Now set the title.
         this.setTitle("User Event Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
@@ -81,33 +83,118 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
             this.help(false);
         }
 
-        
-        model = new UserEventBarChartModel(this, dataSorter, userEvent);
-        
-        
-        //Sort the local data.
-        sortLocalData();
-        
+        model = new UserEventThreadBarChartModel(this, dataSorter, thread);
+
+
         panel = new BarChartPanel(model, null);
-        
+
         panel.getBarChart().setBarLength(barLengthSlider.getValue());
-        
-        
-        //####################################
-        //Code to generate the menus.
-        //####################################
+
+        setupMenus();
+
+        //Setting up the layout system for the main window.
+        gbl = new GridBagLayout();
+        getContentPane().setLayout(gbl);
+        gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        this.setHeader();
+
+        //######
+        //Slider setup.
+        //Do the slider stuff, but don't add. By default, sliders are off.
+        //######
+        barLengthSlider.setPaintTicks(true);
+        barLengthSlider.setMajorTickSpacing(400);
+        barLengthSlider.setMinorTickSpacing(50);
+        barLengthSlider.setPaintLabels(true);
+        barLengthSlider.setSnapToTicks(false);
+        barLengthSlider.addChangeListener(this);
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 0.95;
+        gbc.weighty = 0.98;
+        addCompItem(panel, gbc, 0, 1, 2, 1);
+        sortLocalData();
+
+        ParaProf.incrementNumWindows();
+
+    }
+
+    public UserEventWindow(ParaProfTrial ppTrial, UserEvent userEvent, Component invoker) {
+        this.userEvent = userEvent;
+        this.ppTrial = ppTrial;
+        ppTrial.addObserver(this);
+
+        this.dataSorter = new DataSorter(ppTrial);
+
+        int windowWidth = 650;
+        int windowHeight = 550;
+
+        setSize(ParaProfUtils.checkSize(new java.awt.Dimension(windowWidth, windowHeight)));
+        setLocation(WindowPlacer.getNewLocation(this, invoker));
+
+        //Now set the title.
+        this.setTitle("User Event Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+
+        //Add some window listener code
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                thisWindowClosing(evt);
+            }
+        });
+
+        //Set the help window text if required.
+        if (ParaProf.helpWindow.isVisible()) {
+            this.help(false);
+        }
+
+        model = new UserEventBarChartModel(this, dataSorter, userEvent);
+
+
+        panel = new BarChartPanel(model, null);
+
+        panel.getBarChart().setBarLength(barLengthSlider.getValue());
+        setupMenus();
+
+
+        //Setting up the layout system for the main window.
+        gbl = new GridBagLayout();
+        getContentPane().setLayout(gbl);
+        gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        this.setHeader();
+
+        //######
+        //Slider setup.
+        //Do the slider stuff, but don't add. By default, sliders are off.
+        //######
+        barLengthSlider.setPaintTicks(true);
+        barLengthSlider.setMajorTickSpacing(400);
+        barLengthSlider.setMinorTickSpacing(50);
+        barLengthSlider.setPaintLabels(true);
+        barLengthSlider.setSnapToTicks(false);
+        barLengthSlider.addChangeListener(this);
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 0.95;
+        gbc.weighty = 0.98;
+        addCompItem(panel, gbc, 0, 1, 2, 1);
+
+        sortLocalData();
+        ParaProf.incrementNumWindows();
+    }
+
+    private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
         JMenu subMenu = null;
-        JMenuItem menuItem = null;
 
-       
-
-
-        //Options menu.
         optionsMenu = new JMenu("Options");
 
         ButtonGroup group = null;
-        JCheckBoxMenuItem box = null;
         JRadioButtonMenuItem button = null;
 
         displayWidthSlider = new JCheckBoxMenuItem("Show Width Slider", false);
@@ -119,11 +206,21 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         optionsMenu.add(showMetaData);
 
         optionsMenu.add(new JSeparator());
-        
+
         descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
         descendingOrder.addActionListener(this);
         optionsMenu.add(descendingOrder);
 
+        if (thread == null) {
+            sortByNCT = new JCheckBoxMenuItem("Sort By N,C,T", false);
+            sortByNCT.addActionListener(this);
+            optionsMenu.add(sortByNCT);
+        } else {
+            sortByName = new JCheckBoxMenuItem("Sort By Name", false);
+            sortByName.addActionListener(this);
+            optionsMenu.add(sortByName);
+        }
+        
         //Set the value type options.
         subMenu = new JMenu("Select Value Type");
         group = new ButtonGroup();
@@ -155,9 +252,6 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
         optionsMenu.add(subMenu);
 
-
-
-       
         //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
@@ -166,37 +260,6 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
-
-        //####################################
-        //Create and add the components.
-        //####################################
-        //Setting up the layout system for the main window.
-        gbl = new GridBagLayout();
-        getContentPane().setLayout(gbl);
-        gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        this.setHeader();
-
-        //######
-        //Slider setup.
-        //Do the slider stuff, but don't add. By default, sliders are off.
-        //######
-        barLengthSlider.setPaintTicks(true);
-        barLengthSlider.setMajorTickSpacing(400);
-        barLengthSlider.setMinorTickSpacing(50);
-        barLengthSlider.setPaintLabels(true);
-        barLengthSlider.setSnapToTicks(false);
-        barLengthSlider.addChangeListener(this);
-
-        
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.weightx = 0.95;
-        gbc.weighty = 0.98;
-        addCompItem(panel, gbc, 0, 1, 2, 1);
-
-        ParaProf.incrementNumWindows();
     }
 
     public void actionPerformed(ActionEvent evt) {
@@ -232,7 +295,12 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
                     this.setHeader();
                     panel.repaint();
                 } else if (arg.equals("Descending Order")) {
-                    dataSorter.setDescendingOrder(((JCheckBoxMenuItem) optionsMenu.getItem(0)).isSelected());
+                    sortLocalData();
+                    panel.repaint();
+                } else if (arg.equals("Sort By N,C,T")) {
+                    sortLocalData();
+                    panel.repaint();
+                } else if (arg.equals("Sort By Name")) {
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Show Width Slider")) {
@@ -258,8 +326,6 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
             ParaProfUtils.handleException(e);
         }
     }
-
-   
 
     public void menuDeselected(MenuEvent evt) {
     }
@@ -300,7 +366,19 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     }
 
     public void sortLocalData() {
+        dataSorter.setDescendingOrder(descendingOrder.isSelected());
+        
+        if (sortByNCT != null && sortByNCT.isSelected()) {
+            dataSorter.setSortType(SortType.NCT);
+        } else {
+            dataSorter.setSortType(SortType.VALUE);
+        }
 
+        if (sortByName != null && sortByName.isSelected()) {
+            dataSorter.setSortType(SortType.NAME);
+        }
+
+        
         dataSorter.setUserEventValueType(userEventValueType);
         model.reloadData();
     }
@@ -338,7 +416,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
             JTextArea jTextArea = new JTextArea();
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
-            jTextArea.setMargin(new Insets(3,3,3,3));
+            jTextArea.setMargin(new Insets(3, 3, 3, 3));
             jTextArea.setEditable(false);
             jTextArea.append(this.getHeaderString());
             panel.setColumnHeaderView(jTextArea);
@@ -347,10 +425,13 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     }
 
     public String getHeaderString() {
-        return "Name: " + userEvent.getName() + "\n" + "Value Type: " + userEventValueType.toString()
-                + "\n";
+        if (userEvent != null) {
+            return "Name: " + userEvent.getName() + "\n" + "Value Type: " + userEventValueType.toString() + "\n";
+        } else {
+            return "Thread: " + ParaProfUtils.getThreadIdentifier(thread) + "\n" + "Value Type: " + userEventValueType.toString()
+                    + "\n";
+        }
     }
-
 
     private void displaySiders(boolean displaySliders) {
         GridBagConstraints gbc = new GridBagConstraints();
@@ -405,7 +486,5 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     public ParaProfTrial getPpTrial() {
         return ppTrial;
     }
-
- 
 
 }

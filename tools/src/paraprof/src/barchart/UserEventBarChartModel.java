@@ -13,9 +13,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for displaying one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventBarChartModel.java,v 1.1 2005/09/26 21:12:14 amorris Exp $</P>
+ * <P>CVS $Id: UserEventBarChartModel.java,v 1.2 2005/10/18 22:50:35 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class UserEventBarChartModel extends AbstractBarChartModel {
 
@@ -38,8 +38,7 @@ public class UserEventBarChartModel extends AbstractBarChartModel {
 
     public String getRowLabel(int row) {
         PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
-        return "n,c,t " + (ppUserEventProfile.getNodeID()) + "," + (ppUserEventProfile.getContextID()) + ","
-                + (ppUserEventProfile.getThreadID());
+        return ParaProfUtils.getThreadIdentifier(ppUserEventProfile.getThread());
     }
 
     public String getValueLabel(int row, int subIndex) {
@@ -52,13 +51,11 @@ public class UserEventBarChartModel extends AbstractBarChartModel {
 
     public double getValue(int row, int subIndex) {
         PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
-
         return window.getValueType().getValue(ppUserEventProfile.getUserEventProfile());
     }
 
     public Color getValueColor(int row, int subIndex) {
         PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
-
         return ppUserEventProfile.getColor();
     }
 
