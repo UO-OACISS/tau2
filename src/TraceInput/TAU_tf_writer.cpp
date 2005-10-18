@@ -317,7 +317,7 @@ extern "C" {
       tFile->traceBuffer[pos].ev = PCXX_EV_CLOSE;
       tFile->traceBuffer[pos].nid = nidtid.first;
       tFile->traceBuffer[pos].tid = nidtid.second;
-      tFile->traceBuffer[pos].ti = tFile->lastTimestamp;
+      tFile->traceBuffer[pos].ti = (x_uint64) tFile->lastTimestamp;
       tFile->traceBuffer[pos].par = 0;
       tFile->tracePosition++;
       
@@ -325,7 +325,7 @@ extern "C" {
       tFile->traceBuffer[pos].ev = PCXX_EV_WALL_CLOCK;
       tFile->traceBuffer[pos].nid = nidtid.first;
       tFile->traceBuffer[pos].tid = nidtid.second;
-      tFile->traceBuffer[pos].ti = tFile->lastTimestamp;
+      tFile->traceBuffer[pos].ti = (x_uint64) tFile->lastTimestamp;
       tFile->traceBuffer[pos].par = 0;
       tFile->tracePosition++;
     
@@ -405,7 +405,7 @@ extern "C" {
     tFile->traceBuffer[pos].ev = eventId;
     tFile->traceBuffer[pos].nid = sourceNodeToken;
     tFile->traceBuffer[pos].tid = sourceThreadToken;
-    tFile->traceBuffer[pos].ti = time;
+    tFile->traceBuffer[pos].ti = (x_uint64)time;
     tFile->traceBuffer[pos].par = parameter;
     tFile->tracePosition++;
     tFile->lastTimestamp = time;
@@ -473,7 +473,7 @@ extern "C" {
     tFile->traceBuffer[pos].ev = userEventToken;
     tFile->traceBuffer[pos].nid = nodeToken;
     tFile->traceBuffer[pos].tid = threadToken;
-    tFile->traceBuffer[pos].ti = (double) time;
+    tFile->traceBuffer[pos].ti = (x_uint64) time;
     // currently casting to x_uint64
     tFile->traceBuffer[pos].par = (x_uint64) userEventValue;
     tFile->tracePosition++;
