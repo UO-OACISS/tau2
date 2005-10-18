@@ -183,14 +183,14 @@ public class DBDataSource extends DataSource {
 
             if (userEventProfile == null) {
                 userEventProfile = new UserEventProfile(userEvent);
-                thread.addUserEvent(userEventProfile);
+                thread.addUserEventProfile(userEventProfile);
             }
 
-            userEventProfile.setUserEventNumberValue(alp.getSampleCount());
-            userEventProfile.setUserEventMaxValue(alp.getMaximumValue());
-            userEventProfile.setUserEventMinValue(alp.getMinimumValue());
-            userEventProfile.setUserEventMeanValue(alp.getMeanValue());
-            userEventProfile.setUserEventSumSquared(alp.getSumSquared());
+            userEventProfile.setNumSamples(alp.getSampleCount());
+            userEventProfile.setMaxValue(alp.getMaximumValue());
+            userEventProfile.setMinValue(alp.getMinimumValue());
+            userEventProfile.setMeanValue(alp.getMeanValue());
+            userEventProfile.setSumSquared(alp.getSumSquared());
             userEventProfile.updateMax();
 
         }

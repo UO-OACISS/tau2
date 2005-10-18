@@ -5,7 +5,7 @@ import java.util.*;
 public class UserEventProfile {
 
     private UserEvent userEvent = null;
-    private int numEvents;
+    private double numEvents;
     private double minValue;
     private double maxValue;
     private double meanValue;
@@ -43,39 +43,39 @@ public class UserEventProfile {
             userEvent.setMaxUserEventStdDev(stdDev);
     }
     
-    public void setUserEventNumberValue(int inInt) {
+    public void setNumSamples(double inInt) {
         numEvents = inInt;
     }
 
-    public int getUserEventNumberValue() {
+    public double getNumSamples() {
         return numEvents;
     }
 
-    public void setUserEventMinValue(double inDouble) {
+    public void setMinValue(double inDouble) {
         minValue = inDouble;
     }
 
-    public double getUserEventMinValue() {
+    public double getMinValue() {
         return minValue;
     }
 
-    public void setUserEventMaxValue(double inDouble) {
+    public void setMaxValue(double inDouble) {
         maxValue = inDouble;
     }
 
-    public double getUserEventMaxValue() {
+    public double getMaxValue() {
         return maxValue;
     }
 
-    public void setUserEventMeanValue(double inDouble) {
+    public void setMeanValue(double inDouble) {
         meanValue = inDouble;
     }
 
-    public double getUserEventMeanValue() {
+    public double getMeanValue() {
         return meanValue;
     }
 
-    public void setUserEventSumSquared(double inDouble) {
+    public void setSumSquared(double inDouble) {
         sumSqr = inDouble;
 
         stdDev = java.lang.Math.sqrt(java.lang.Math.abs((sumSqr / numEvents)
@@ -83,12 +83,19 @@ public class UserEventProfile {
     
     }
 
-    public double getUserEventSumSquared() {
+    public double getSumSquared() {
         return sumSqr;
     }
 
-    public double getUserEventStdDev() {
+    public double getStdDev() {
         return stdDev;
+    }
+    
+    public void setStdDev(double stdDev) {
+        this.stdDev = stdDev;
+        
+        this.sumSqr = (stdDev * stdDev) + (meanValue * meanValue) + numEvents;
+        
     }
     
     

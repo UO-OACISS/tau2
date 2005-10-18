@@ -10,9 +10,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.1 2005/09/26 20:24:26 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.2 2005/10/18 22:48:55 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  * @see		TrialData
  * @see		NCT
  */
@@ -365,6 +365,8 @@ public abstract class DataSource {
         this.totalData.setThreadDataAllMetrics();
         this.stddevData.setThreadDataAllMetrics();
 
+        this.generateUserEventStatistics();
+        
         finishPhaseAnalysis();
 
         //time = (System.currentTimeMillis()) - time;
@@ -372,6 +374,111 @@ public abstract class DataSource {
 
     }
 
+    
+    private double computeStdDev(double sumSqr, double mean, int count) {
+        double stdDev = 0;
+        if (count > 1) {
+            stdDev = java.lang.Math.sqrt(java.lang.Math.abs((sumSqr / count)
+                    - (mean * mean)));
+        }
+        
+        return stdDev;
+    }
+    
+    private void generateUserEventStatistics() {
+
+        for (Iterator it = this.getUserEvents(); it.hasNext();) {
+            UserEvent ue = (UserEvent) it.next();
+
+            // get/create the userEventProfile for mean
+            UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
+            if (meanProfile == null) {
+                meanProfile = new UserEventProfile(ue);
+                meanData.addUserEventProfile(meanProfile);
+            }
+            //ue.setMeanProfile(meanProfile);
+
+            // get/create the userEventProfile for total
+            UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
+            if (totalProfile == null) {
+                totalProfile = new UserEventProfile(ue);
+                totalData.addUserEventProfile(totalProfile);
+            }
+            //ue.setTotalProfile(totalProfile);
+
+            // get/create the userEventProfile for stddev
+            UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
+            if (stddevProfile == null) {
+                stddevProfile = new UserEventProfile(ue);
+                stddevData.addUserEventProfile(stddevProfile);
+            }
+            //ue.setStddevProfile(stddevProfile);
+
+
+            int numProfiles = 0;
+            double numSampSum = 0;
+            double numSampSumSqr = 0;
+            double maxSum = 0;
+            double maxSumSqr = 0;
+            double minSum = 0;
+            double minSumSqr = 0;
+            double meanSum = 0;
+            double meanSumSqr = 0;
+            double stdDevSum = 0;
+            double stdDevSumSqr = 0;
+
+            
+            int numThreads = allThreads.size();
+
+            for (int i = 0; i < numThreads; i++) { // for each thread
+                edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) allThreads.get(i);
+                UserEventProfile uep = thread.getUserEventProfile(ue);
+                if (uep != null) {
+                    numProfiles++;
+                    
+                    numSampSum += uep.getNumSamples();
+                    numSampSumSqr += uep.getNumSamples() * uep.getNumSamples();
+                    
+                    maxSum += uep.getMaxValue();
+                    maxSumSqr += uep.getMaxValue() * uep.getMaxValue();
+                    
+                    minSum += uep.getMinValue();
+                    minSumSqr += uep.getMinValue() * uep.getMinValue();
+
+                    meanSum += uep.getMeanValue();
+                    meanSumSqr += uep.getMeanValue() * uep.getMeanValue();
+
+                    stdDevSum += uep.getStdDev();
+                    stdDevSumSqr += uep.getStdDev() * uep.getStdDev();
+                }
+            }
+
+            if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
+                numThreads = numProfiles;
+            }
+
+            
+            totalProfile.setNumSamples((int)numSampSum);
+            totalProfile.setMaxValue(maxSum);
+            totalProfile.setMinValue(minSum);
+            totalProfile.setMeanValue(maxSum);
+            totalProfile.setStdDev(stdDevSum);
+            
+            meanProfile.setNumSamples((int)(numSampSum / numThreads));
+            meanProfile.setMaxValue(maxSum / numThreads);
+            meanProfile.setMinValue(minSum / numThreads);
+            meanProfile.setMeanValue(meanSum / numThreads);
+            meanProfile.setStdDev(stdDevSum / numThreads);
+            
+            stddevProfile.setNumSamples(computeStdDev(numSampSumSqr, meanProfile.getNumSamples(), numThreads));
+            stddevProfile.setMaxValue(computeStdDev(maxSumSqr, meanProfile.getMaxValue(), numThreads));
+            stddevProfile.setMinValue(computeStdDev(minSumSqr, meanProfile.getMinValue(), numThreads));
+            stddevProfile.setMeanValue(computeStdDev(meanSumSqr, meanProfile.getMeanValue(), numThreads));
+            stddevProfile.setStdDev(computeStdDev(stdDevSumSqr, meanProfile.getStdDev(), numThreads));
+        }
+
+    }
+    
     public void generateStatistics(int startMetric, int endMetric) {
 
         /*
@@ -517,14 +624,14 @@ public abstract class DataSource {
 
                 double stdDev = 0;
                 if (numThreads > 1) {
-                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (numThreads - 1))
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (numThreads))
                             - (meanProfile.getNumCalls() * meanProfile.getNumCalls())));
                 }
                 stddevProfile.setNumCalls(stdDev);
 
                 stdDev = 0;
                 if (numThreads > 1) {
-                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (numThreads - 1))
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (numThreads))
                             - (meanProfile.getNumSubr() * meanProfile.getNumSubr())));
                 }
                 stddevProfile.setNumSubr(stdDev);
@@ -555,7 +662,7 @@ public abstract class DataSource {
 
                 stdDev = 0;
                 if (numThreads > 1) {
-                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[i] / (numThreads - 1))
+                    stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[i] / (numThreads))
                             - (meanProfile.getInclusive(i) * meanProfile.getInclusive(i))));
                 }
                 stddevProfile.setInclusive(i, stdDev);

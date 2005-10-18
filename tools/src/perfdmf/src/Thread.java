@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.1 2005/09/26 20:24:33 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.2 2005/10/18 22:48:56 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -90,7 +90,7 @@ public class Thread implements Comparable {
         functionProfiles.set(id, fp);
     }
 
-    public void addUserEvent(UserEventProfile uep) {
+    public void addUserEventProfile(UserEventProfile uep) {
         int id = uep.getUserEvent().getID();
         // increase the userEventProfiles vector size if necessary
 

@@ -386,14 +386,14 @@ public class TauPprofDataSource extends DataSource {
 
                                 if (userEventProfile == null) {
                                     userEventProfile = new UserEventProfile(userEvent);
-                                    thread.addUserEvent(userEventProfile);
+                                    thread.addUserEventProfile(userEventProfile);
                                 }
 
-                                userEventProfile.setUserEventNumberValue(usereventDataLine.i0);
-                                userEventProfile.setUserEventMinValue(usereventDataLine.d1);
-                                userEventProfile.setUserEventMaxValue(usereventDataLine.d0);
-                                userEventProfile.setUserEventMeanValue(usereventDataLine.d2);
-                                userEventProfile.setUserEventSumSquared(usereventDataLine.d3);
+                                userEventProfile.setNumSamples(usereventDataLine.i0);
+                                userEventProfile.setMinValue(usereventDataLine.d1);
+                                userEventProfile.setMaxValue(usereventDataLine.d0);
+                                userEventProfile.setMeanValue(usereventDataLine.d2);
+                                userEventProfile.setSumSquared(usereventDataLine.d3);
 
                                 userEventProfile.updateMax();
 

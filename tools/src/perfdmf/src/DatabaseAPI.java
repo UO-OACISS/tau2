@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.1 2005/09/26 20:24:27 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.2 2005/10/18 22:48:55 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class DatabaseAPI {
 
@@ -821,11 +821,11 @@ public class DatabaseAPI {
                         udo.setNode(thread.getNodeID());
                         udo.setContext(thread.getContextID());
                         udo.setThread(thread.getThreadID());
-                        udo.setSampleCount(uep.getUserEventNumberValue());
-                        udo.setMaximumValue(uep.getUserEventMaxValue());
-                        udo.setMinimumValue(uep.getUserEventMinValue());
-                        udo.setMeanValue(uep.getUserEventMeanValue());
-                        udo.setSumSquared(uep.getUserEventSumSquared());
+                        udo.setSampleCount((int)uep.getNumSamples());
+                        udo.setMaximumValue(uep.getMaxValue());
+                        udo.setMinimumValue(uep.getMinValue());
+                        udo.setMeanValue(uep.getMeanValue());
+                        udo.setSumSquared(uep.getSumSquared());
                         atomicEventData.add(udo);
                     }
                 }
@@ -1157,11 +1157,11 @@ public class DatabaseAPI {
                             statement.setInt(2, thread.getNodeID());
                             statement.setInt(3, thread.getContextID());
                             statement.setInt(4, thread.getThreadID());
-                            statement.setInt(5, uep.getUserEventNumberValue());
-                            statement.setDouble(6, uep.getUserEventMaxValue());
-                            statement.setDouble(7, uep.getUserEventMinValue());
-                            statement.setDouble(8, uep.getUserEventMeanValue());
-                            statement.setDouble(9, uep.getUserEventSumSquared());
+                            statement.setInt(5, (int)uep.getNumSamples());
+                            statement.setDouble(6, uep.getMaxValue());
+                            statement.setDouble(7, uep.getMinValue());
+                            statement.setDouble(8, uep.getMeanValue());
+                            statement.setDouble(9, uep.getSumSquared());
                             statement.executeUpdate();
                             statement.close();
                         }

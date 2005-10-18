@@ -9,9 +9,9 @@ import java.util.zip.GZIPInputStream;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.1 2005/09/26 20:24:32 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.2 2005/10/18 22:48:55 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -162,13 +162,13 @@ public class PackedProfileDataSource extends DataSource {
                 int userEventID = p.readInt();
                 UserEventProfile uep = new UserEventProfile(userEvents[userEventID]);
 
-                uep.setUserEventNumberValue(p.readInt());
-                uep.setUserEventMinValue(p.readDouble());
-                uep.setUserEventMaxValue(p.readDouble());
-                uep.setUserEventMeanValue(p.readDouble());
-                uep.setUserEventSumSquared(p.readDouble());
+                uep.setNumSamples(p.readInt());
+                uep.setMinValue(p.readDouble());
+                uep.setMaxValue(p.readDouble());
+                uep.setMeanValue(p.readDouble());
+                uep.setSumSquared(p.readDouble());
                 uep.updateMax();
-                thread.addUserEvent(uep);
+                thread.addUserEventProfile(uep);
             }
         }
 
