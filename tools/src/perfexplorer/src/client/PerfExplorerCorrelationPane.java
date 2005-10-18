@@ -31,6 +31,8 @@ public class PerfExplorerCorrelationPane extends JScrollPane implements ActionLi
 		super(imagePanel);
 		this.imagePanel = imagePanel;
 		this.resultsHash = new Hashtable();
+		JScrollBar jScrollBar = this.getVerticalScrollBar();
+		jScrollBar.setUnitIncrement(35);
 	}
 
 	public JPanel getImagePanel () {

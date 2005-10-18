@@ -33,6 +33,8 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
 		super(imagePanel);
 		this.imagePanel = imagePanel;
 		this.resultsHash = new Hashtable();
+		JScrollBar jScrollBar = this.getVerticalScrollBar();
+		jScrollBar.setUnitIncrement(35);
 	}
 
 	public JPanel getImagePanel () {

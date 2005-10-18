@@ -29,6 +29,8 @@ public class PerfExplorerClient extends JFrame {
 		PerfExplorerJTree tree = PerfExplorerJTree.getTree();
 		// Create a scroll pane for the tree
 		JScrollPane treeView = new JScrollPane(tree);
+		JScrollBar jScrollBar = treeView.getVerticalScrollBar();
+		jScrollBar.setUnitIncrement(35);
 		treeView.setPreferredSize(new Dimension(300, 400));
 		// Create a tabbed pane
 		PerfExplorerJTabbedPane tabbedPane = PerfExplorerJTabbedPane.getPane();
@@ -97,6 +99,11 @@ public class PerfExplorerClient extends JFrame {
 	}
 
 	public static void main (String[] args) {
+
+		// set the tooltip delay to 20 seconds
+		ToolTipManager.sharedInstance().setDismissDelay(20000);
+
+		// Process the command line
 		CmdLineParser parser = new CmdLineParser();
 		CmdLineParser.Option helpOpt = parser.addBooleanOption('h',"help");
 		CmdLineParser.Option standaloneOpt = parser.addBooleanOption('s',"standalone");

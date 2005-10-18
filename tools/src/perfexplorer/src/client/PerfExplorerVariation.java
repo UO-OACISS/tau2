@@ -12,6 +12,7 @@ import java.awt.Dimension;
 import javax.swing.JFrame;
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
+import javax.swing.JScrollBar;
 import common.RMIVarianceData;
 
 /**
@@ -47,9 +48,11 @@ public class PerfExplorerVariation {
         TableSorter sorter = new TableSorter(new MyTableModel(columns, mydata)); //ADDED THIS
         JTable table = new JTable(sorter);             //NEW
         sorter.setTableHeader(table.getTableHeader()); //ADDED THIS
-        
+       
         // Make the table vertically scrollable
         JScrollPane scrollPane = new JScrollPane(table);
+		JScrollBar jScrollBar = scrollPane.getVerticalScrollBar();
+		jScrollBar.setUnitIncrement(35);
         
         //Window Stuff.
         int windowWidth = 800;

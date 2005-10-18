@@ -26,6 +26,8 @@ public class AnalysisManagementPane extends JScrollPane {
 	private AnalysisManagementPane (JTable dataTable) {
 		super(dataTable);
 		this.dataTable = dataTable;
+		JScrollBar jScrollBar = this.getVerticalScrollBar();
+		jScrollBar.setUnitIncrement(35);
     }
 
 	public JTable getTable () {
