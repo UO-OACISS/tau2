@@ -3028,6 +3028,11 @@ case $machine in
         fi
 	;;
 
+     sun386i)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine SUN386I $fixmakeargs"
+	;;
+
      sun4 | cm5)
 	echo Found a \"$machine\" configuration definition
         fixmakeargs="arch=$machine $fixmakeargs"

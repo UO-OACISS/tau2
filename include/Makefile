@@ -454,6 +454,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 # MALLINFO needs -lmalloc on sgi, sun 
 #SGIMP#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
 #SOL2#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
+#SUN386I#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
 
 # We need -lCio with SGI CC 7.4+
 #SGICC#TAU_LINKER_OPT7 = -lCio #ENDIF#
