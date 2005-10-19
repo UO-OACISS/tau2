@@ -1,15 +1,16 @@
 
-CONFIG_ARCH=i386_linux
-TAUROOT=/home/amorris/tau2
+CONFIG_ARCH=apple
+TAUROOT=/Users/khuck/tau2
 TOOLS_SRC=$(TAUROOT)/tools/src
 
 
 
 SOURCES = $(wildcard src/*.java)
 
+CLASSPATH = $(TAUROOT)/$(CONFIG_ARCH)/lib/batik-combined.jar
 
 bin/tau-common.jar: $(SOURCES) classes
-	javac -d ./classes $(SOURCES)
+	javac -d ./classes -classpath $(CLASSPATH) $(SOURCES)
 	jar -cvf bin/tau-common.jar -C ./classes edu
 	cp bin/tau-common.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 
