@@ -40,7 +40,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.3 2005/10/05 23:03:01 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.4 2005/10/19 21:17:53 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -620,25 +620,18 @@ public class AnalysisTaskWrapper extends TimerTask {
 						saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
 					}
 				} else {
-					System.out.println("Doing PCA...");
-					// create a PCA engine
-					PrincipalComponentsAnalysisInterface pca = 
-						factory.createPCAEngine(server.getCubeData(modelData));
-					pca.setInputData(reducedData);
-					pca.doPCA();
-					// get the components
-					RawDataInterface components = pca.getResults();
-					//RawDataInterface components = reducedData;
-					// do a scatterplot
+					System.out.println("Doing Correlation Analysis...");
+					// get the inclusive data
+					//reducedData;
 					chartType = AnalysisTaskWrapper.CORRELATION_SCATTERPLOT;
-					System.out.println(components.numDimensions());
-					for (int i = 0 ; i < components.numDimensions() ; i++) {
-						for (int j = 0 ; j < components.numDimensions() ; j++) {
-							File thumbnail = generateThumbnail(components, i, j);
-							File chart = generateImage(components, i, j);
-							saveAnalysisResult(components, components, thumbnail, chart);			
+					System.out.println(reducedData.numDimensions());
+					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
+						for (int j = 0 ; j < reducedData.numDimensions() ; j++) {
+							File thumbnail = generateThumbnail(reducedData, i, j);
+							File chart = generateImage(reducedData, i, j);
+							saveAnalysisResult(reducedData, reducedData, thumbnail, chart);			
 						}
-						System.out.println("Finished: " + (i+1) + " of " + components.numDimensions());
+						System.out.println("Finished: " + (i+1) + " of " + reducedData.numDimensions());
 					}
 				}
 			}catch (PerfExplorerException pee) {

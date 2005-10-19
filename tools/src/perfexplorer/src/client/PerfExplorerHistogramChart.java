@@ -27,23 +27,13 @@ import org.jfree.data.xy.XYDataset;
 /**
  * A demo of the {@link HistogramDataset} class.
  */
-public class PerfExplorerHistogramChart {
+public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
 
-    /**
-     * Creates a new demo.
-     * 
-     * @param title  the frame title.
-    public HistogramDemo1(String title) {
-        super(title);    
-        IntervalXYDataset dataset = createDataset();
-        JFreeChart chart = createChart(dataset);
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
-        setContentPane(chartPanel);
-    }
-     */
-    
-	public static void doHistogram() {
+	public PerfExplorerHistogramChart(JFreeChart chart, String name) {
+		super(chart, name);
+	}
+
+	public static JFrame doHistogram() {
 		// for each event, get the variation across all threads.
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -64,13 +54,7 @@ public class PerfExplorerHistogramChart {
             }
         });
 
-
-		JFrame frame = new JFrame("Distributions of Significant Events");
-        frame.getContentPane().add(panel);
-		PerfExplorerChart.centerFrame(frame);
-
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerHistogramChart (chart, "Distributions of Significant Events");
 	}
 
     private static IntervalXYDataset createDataset(RMIChartData inData) {
