@@ -85,8 +85,8 @@ static struct trcdescr
   void  *last;      /* -- last event record in buffer               -- */
 
 
-  int           format;    // see above
-  int           eventSize; // sizeof() the corresponding format struct
+  int           format;    /* see above */
+  int           eventSize; /* sizeof() the corresponding format struct */
 
 
 
@@ -108,8 +108,8 @@ struct trcrecv
   void  *first;     /* -- first event record in buffer               -- */
 
 
-  int           format;    // see above
-  int           eventSize; // sizeof() the corresponding format struct
+  int           format;    /* see above */
+  int           eventSize; /* sizeof() the corresponding format struct */
 
 };
 
@@ -167,7 +167,7 @@ static int numUsedEvent;
 
 
 
-#define FORMAT_NATIVE  0   // as a fallback
+#define FORMAT_NATIVE  0   /* as a fallback */
 #define FORMAT_32      1
 #define FORMAT_64      2
 #define FORMAT_32_SWAP 3
@@ -476,7 +476,7 @@ void determineFormat(struct trcdescr *tdes) {
   bytesRead = read(tdes->fd, &event64, sizeof(PCXX_EV64));
   lseek(tdes->fd, 0, SEEK_SET);
 
-  // 32 bit regular
+  /* 32 bit regular */
   if (event32.par == 3) {
     tdes->format = FORMAT_32;
     tdes->eventSize = sizeof(PCXX_EV32);
@@ -485,9 +485,9 @@ void determineFormat(struct trcdescr *tdes) {
   }
 
 
-  // 32 bit swapped
+  /* 32 bit swapped */
   if (swap64(event32.par) == 3) {
-    if (formatFound == 1) { // shouldn't happen, if it does, go to native
+    if (formatFound == 1) { /* shouldn't happen, if it does, go to native */
       tdes->format = FORMAT_NATIVE;
       tdes->eventSize = sizeof(PCXX_EV_NATIVE);
       return;
@@ -498,9 +498,9 @@ void determineFormat(struct trcdescr *tdes) {
 /*     printf ("32 swapped!\n"); */
   }
 
-  // 64 bit regular
+  /* 64 bit regular */
   if (event64.par == 3) {
-    if (formatFound == 1) { // shouldn't happen, if it does, go to native
+    if (formatFound == 1) { /* shouldn't happen, if it does, go to native */
       tdes->format = FORMAT_NATIVE;
       tdes->eventSize = sizeof(PCXX_EV_NATIVE);
       return;
@@ -512,9 +512,9 @@ void determineFormat(struct trcdescr *tdes) {
   }
 
 
-  // 64 bit swapped
+  /* 64 bit swapped */
   if (swap64(event64.par) == 3) {
-    if (formatFound == 1) { // shouldn't happen, if it does, go to native
+    if (formatFound == 1) { /* shouldn't happen, if it does, go to native */
       tdes->format = FORMAT_NATIVE;
       tdes->eventSize = sizeof(PCXX_EV_NATIVE);
       return;
@@ -605,7 +605,7 @@ static void AddEvent (int id, char *name, char *p, char *state, int tag)
   {
     newev->param = (char *) malloc (strlen(p) + 5);
     if ( outFormat == alog ) {
-      // sprintf (newev->param, "%s: %%d", p);
+      /* sprintf (newev->param, "%s: %%d", p); */
     } else {
       sprintf (newev->param, "%s", p);
     }
@@ -2308,7 +2308,7 @@ int main (int argc, char *argv[])
       ptr = GetEventName (event_GetEv(&intrc,erec,0), &hasParam);
       if ( hasParam ) {
 
-	if (IsDoubleParam(event_GetEv(&intrc,erec,0))) { // user events parameter is a double
+	if (IsDoubleParam(event_GetEv(&intrc,erec,0))) { /* user events parameter is a double */
 #ifdef TAU_WINDOWS
         fprintf (outfp, "%5ld %30.30s %12I64u %6d %6d %12G\n",
                  intrc.numrec, ptr, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), event_GetPar(&intrc,erec,0));

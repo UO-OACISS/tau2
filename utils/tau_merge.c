@@ -108,8 +108,8 @@ struct trcdescr
   void  *next;      /* -- next available event record in buffer     -- */
   void  *last;      /* -- last event record in buffer               -- */
 
-  int           format;    // see above
-  int           eventSize; // sizeof() the corresponding format struct
+  int           format;    /* see above */
+  int           eventSize; /* sizeof() the corresponding format struct */
 
 } *trcdes;
 
@@ -124,7 +124,7 @@ static void output_flush(int fd);
 
 
 
-#define FORMAT_NATIVE  0   // as a fallback
+#define FORMAT_NATIVE  0   /* as a fallback */
 #define FORMAT_32      1
 #define FORMAT_64      2
 #define FORMAT_32_SWAP 3
@@ -469,7 +469,7 @@ void determineFormat(struct trcdescr *tdes) {
   bytesRead = read(tdes->fd, &event64, sizeof(PCXX_EV64));
   lseek(tdes->fd, 0, SEEK_SET);
 
-  // 32 bit regular
+  /* 32 bit regular */
   if (event32.par == 3) {
     tdes->format = FORMAT_32;
     tdes->eventSize = sizeof(PCXX_EV32);
@@ -478,9 +478,9 @@ void determineFormat(struct trcdescr *tdes) {
   }
 
 
-  // 32 bit swapped
+  /* 32 bit swapped */
   if (swap64(event32.par) == 3) {
-    if (formatFound == 1) { // shouldn't happen, if it does, go to native
+    if (formatFound == 1) { /* shouldn't happen, if it does, go to native */
       tdes->format = FORMAT_NATIVE;
       tdes->eventSize = sizeof(PCXX_EV_NATIVE);
       return;
@@ -491,9 +491,9 @@ void determineFormat(struct trcdescr *tdes) {
 /*     printf ("32 swapped!\n"); */
   }
 
-  // 64 bit regular
+  /* 64 bit regular*/
   if (event64.par == 3) {
-    if (formatFound == 1) { // shouldn't happen, if it does, go to native
+    if (formatFound == 1) { /* shouldn't happen, if it does, go to native*/
       tdes->format = FORMAT_NATIVE;
       tdes->eventSize = sizeof(PCXX_EV_NATIVE);
       return;
@@ -505,9 +505,9 @@ void determineFormat(struct trcdescr *tdes) {
   }
 
 
-  // 64 bit swapped
+  /* 64 bit swapped*/
   if (swap64(event64.par) == 3) {
-    if (formatFound == 1) { // shouldn't happen, if it does, go to native
+    if (formatFound == 1) { /* shouldn't happen, if it does, go to native*/
       tdes->format = FORMAT_NATIVE;
       tdes->eventSize = sizeof(PCXX_EV_NATIVE);
       return;
@@ -571,7 +571,7 @@ static void *get_next_rec(struct trcdescr *tdes)
   if ( (tdes->last == NULL) || (tdes->next > tdes->last) )
   {
     /* -- input buffer empty: read new records from file -------------------- */
-    //if ( (no = read (tdes->fd, tdes->buffer, INMAX * sizeof(PCXX_EV))) != (INMAX * sizeof(PCXX_EV)) )
+    /*if ( (no = read (tdes->fd, tdes->buffer, INMAX * sizeof(PCXX_EV))) != (INMAX * sizeof(PCXX_EV)) )*/
     if ( (no = read (tdes->fd, tdes->buffer, INMAX * tdes->eventSize)) != (INMAX * tdes->eventSize) ) {
       if ( no == 0 ) {
 		
@@ -583,7 +583,7 @@ static void *get_next_rec(struct trcdescr *tdes)
 #ifdef DEBUG
 	  printf("Last rec not null\n");	
 #endif /* DEBUG */
-	  //last_event_name = get_event_name(tdes->last->ev);
+	  /*last_event_name = get_event_name(tdes->last->ev);*/
 	  last_event_name = get_event_name(event_GetEv(tdes,tdes->last,0));
 	  if (last_event_name != NULL)
 	  { /* the last event in the trace file is WALL_CLOCK. Is it EOF? */
@@ -633,9 +633,9 @@ static void *get_next_rec(struct trcdescr *tdes)
 #endif /* DEBUG */
                 /* -- we got some event records ------------------------- */
     		tdes->next = tdes->buffer;
-    		//tdes->last = tdes->buffer + (no / tdes->eventSize) - 1;
+    		/*tdes->last = tdes->buffer + (no / tdes->eventSize) - 1;*/
 		tdes->last = (char*)tdes->buffer + no - tdes->eventSize;
-  		//return (tdes->erec = tdes->next++);
+  		/*return (tdes->erec = tdes->next++);*/
 
 		tdes->erec = tdes->next;
 		tdes->next = (void*)(((char*)tdes->next) + tdes->eventSize);
@@ -663,12 +663,12 @@ static void *get_next_rec(struct trcdescr *tdes)
 
     /* -- we got some event records ----------------------------------------- */
     tdes->next = tdes->buffer;
-    //tdes->last = tdes->buffer + (no / tdes->eventSize) - 1;
+    /*tdes->last = tdes->buffer + (no / tdes->eventSize) - 1;*/
     tdes->last = (char*)tdes->buffer + no - tdes->eventSize;
 
   }
 
-  //  return (tdes->erec = tdes->next++);
+  /*  return (tdes->erec = tdes->next++);*/
   tdes->erec = tdes->next;
   tdes->next = ((char*)tdes->next) + tdes->eventSize;
 
@@ -724,7 +724,7 @@ static void output(int fd, char *data, size_t l)
 int cannot_get_enough_fd(int need)
 {
 #ifdef TAU_WINDOWS
-  return false; // no getdtablesize() in windows
+  return false; /* no getdtablesize() in windows*/
 #else	
 # if defined(__hpux) || defined(sun)
   /* -- system supports get/setrlimit (RLIMIT_NOFILE) -- */
@@ -925,16 +925,16 @@ int main(int argc, char *argv[])
         trcdes[numtrc].numrec = 1L;
         if ( event_GetEv(trcdes+numtrc, erec, 0) == PCXX_EV_INIT ) {
 	  if (!dynamic) { /* for dynamic trace, don't change this to INITM */
-            //erec->ev = PCXX_EV_INITM;
+            /*erec->ev = PCXX_EV_INITM;*/
 	    event_SetEv(trcdes+numtrc, erec, 0, PCXX_EV_INITM);
 	  }
-          //trcdes[numtrc].nid = erec->nid;
+          /*trcdes[numtrc].nid = erec->nid;*/
           trcdes[numtrc].nid = event_GetNid(trcdes+numtrc, erec, 0);
         } else {
           trcdes[numtrc].nid = -1;
 	}
 
-        //trcdes[numtrc].lasttime = erec->ti;
+        /*trcdes[numtrc].lasttime = erec->ti;*/
         trcdes[numtrc].lasttime = event_GetTi(trcdes+numtrc,erec,0);
         trcdes[numtrc].offset   = 0L;
 
@@ -1214,10 +1214,10 @@ int main(int argc, char *argv[])
 
     if ( adjust ) {
       if ( numrec == 0 ) {
-	//first_time = trcdes[source].erec->ti;
+	/*first_time = trcdes[source].erec->ti;*/
 	first_time = event_GetTi(trcdes+source,erec,0);
       }
-      //trcdes[source].erec->ti -= first_time;
+      /*trcdes[source].erec->ti -= first_time;*/
       event_SetTi(trcdes+source,erec,0,event_GetTi(trcdes+source,erec,0)-first_time);
     }
     /* -- correct event id to be global event id ---------------------------- */
@@ -1227,7 +1227,7 @@ int main(int argc, char *argv[])
 
     /* OLD : trcdes[source].erec->ev = GID(trcdes[source].nid, trcdes[source].erec->ev);
      */
-    //trcdes[source].erec->ev = GID(source, trcdes[source].erec->ev);
+    /*trcdes[source].erec->ev = GID(source, trcdes[source].erec->ev);*/
     event_SetEv(trcdes+source,trcdes[source].erec,0,GID(source, event_GetEv(trcdes+source,trcdes[source].erec,0)));
 
 #ifdef DEBUG
@@ -1235,7 +1235,7 @@ int main(int argc, char *argv[])
 #endif /* DEBUG */
 
 
-    //    output (outfd, (char *) trcdes[source].erec, sizeof(PCXX_EV));
+    /*    output (outfd, (char *) trcdes[source].erec, sizeof(PCXX_EV));*/
 
     nativeEvent.ev = event_GetEv(trcdes+source,trcdes[source].erec,0);
     nativeEvent.nid = event_GetNid(trcdes+source,trcdes[source].erec,0);
@@ -1269,31 +1269,31 @@ int main(int argc, char *argv[])
 
           /* -- correct nid event field (only the first time) --------------- */
           if ( trcdes[source].nid != -1 ) {
-	    //erec->nid = trcdes[source].nid;
+	    /*erec->nid = trcdes[source].nid;*/
 
 	    event_SetNid(trcdes+source,erec,0,trcdes[source].nid);
 	  }
 
           /* -- correct clock ----------------------------------------------- */
-          //erec->ti += trcdes[source].offset;
+          /*erec->ti += trcdes[source].offset;*/
 	  event_SetTi(trcdes+source,erec,0,event_GetTi(trcdes+source,erec,0)+trcdes[source].offset);
 
           /* -- check clock overflow ---------------------------------------- */
-          //if ( erec->ti < trcdes[source].lasttime ) {
+          /*if ( erec->ti < trcdes[source].lasttime ) {*/
           if ( event_GetTi(trcdes+source,erec,0) < trcdes[source].lasttime ) {
 	    trcdes[source].overflows++;
 	  }
 
-          //trcdes[source].lasttime = erec->ti;
+          /*trcdes[source].lasttime = erec->ti;*/
           trcdes[source].lasttime = event_GetTi(trcdes+source,erec,0);
 
           /* -- remember continuation event length -------------------------- */
-          //trcdes[source].contlen = erec->par;
+          /*trcdes[source].contlen = erec->par;*/
           trcdes[source].contlen = event_GetPar(trcdes+source,erec,0);
 
       }
     }
-    //while ( erec->ev == PCXX_EV_CONT_EVENT );
+    /*while ( erec->ev == PCXX_EV_CONT_EVENT );*/
     while ( event_GetEv(trcdes+source,erec,0) == PCXX_EV_CONT_EVENT );
   }
   while ( active > 0 );
