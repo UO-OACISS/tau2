@@ -26,7 +26,7 @@ public class EPSWriter {
             sdf.setTimeZone(TimeZone.getDefault());
 
             output("%!PS-Adobe-3.0 EPSF-3.0\n");
-            output("%%Creator: ParaProf 3.0\n");
+            output("%%Creator: TAU\n");
             output("%%Title: " + name + "\n");
             output("%%CreationDate: " + sdf.format(cal.getTime()) + "\n");
             output("%%BoundingBox: 0 0 " + width + " " + height + "\n");
