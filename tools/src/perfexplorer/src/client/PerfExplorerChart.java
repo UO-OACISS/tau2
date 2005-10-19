@@ -2,27 +2,48 @@ package client;
 
 import common.RMIChartData;
 import java.awt.*;
+import java.awt.event.*;
 import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import java.util.List;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartFrame;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.StandardLegend;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import java.text.DecimalFormat;
+import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.VectorExport;
 
-public class PerfExplorerChart {
+public class PerfExplorerChart extends JFrame implements ActionListener, ImageExport {
 
-	public static void doFractionChart () {
+	public final static String ABOUT = "About PerfExplorer";
+	public final static String SEARCH = "Search For Help On...";
+	public final static String SAVE = "Save As Vector Image";
+	public final static String CLOSE = "Close Window";
+
+	private ChartPanel panel = null;
+
+	public PerfExplorerChart (JFreeChart chart, String name) {
+		super(name);
+		this.panel = new ChartPanel(chart);
+		this.panel.setDisplayToolTips(true);
+        this.getContentPane().add(this.panel);
+		ActionListener listener = this;
+		this.setJMenuBar(new PerfExplorerChartJMenuBar(listener));
+		centerFrame(this);
+		this.pack();
+		this.setVisible(true);
+	}
+
+	public static PerfExplorerChart doFractionChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -53,17 +74,11 @@ public class PerfExplorerChart {
             true,                            // tooltips
             false                            // urls
         );
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Total Runtime Breakdown");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
 
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Total Runtime Breakdown");
 	}
 
-	public static void doEfficiencyChart () {
+	public static PerfExplorerChart doEfficiencyChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -100,16 +115,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), false);
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Relative Efficiency");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Relative Efficiency");
 	}
 
-	public static void doEfficiencyEventsChart () {
+	public static PerfExplorerChart doEfficiencyEventsChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -146,16 +155,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), false);
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Relative Efficiency by Event");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Relative Efficiency by Event");
 	}
 
-	public static void doEfficiencyOneEventChart () {
+	public static PerfExplorerChart doEfficiencyOneEventChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -192,16 +195,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), false);
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Relative Efficiency for Event");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Relative Efficiency for Event");
 	}
 
-	public static void doSpeedupChart () {
+	public static PerfExplorerChart doSpeedupChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -250,16 +247,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), true);
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Relative Speedup");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Relative Speedup");
 	}
 
-	public static void doSpeedupEventsChart () {
+	public static PerfExplorerChart doSpeedupEventsChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -306,16 +297,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), true);
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Relative Speedup by Event");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Relative Speedup by Event");
 	}
 
-	public static void doSpeedupOneEventChart () {
+	public static PerfExplorerChart doSpeedupOneEventChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -362,17 +347,11 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), true);
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Relative Speedup for Event");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Relative Speedup for Event");
 	}
 
 
-	public static void doTimestepsChart () {
+	public static PerfExplorerChart doTimestepsChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -406,16 +385,10 @@ public class PerfExplorerChart {
         );
 
 		customizeChart(chart, rawData.getRows(), false);
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Timesteps per Second");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Timesteps per Second");
 	}
 
-	public static void doCommunicationChart () {
+	public static PerfExplorerChart doCommunicationChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -455,16 +428,10 @@ public class PerfExplorerChart {
         );
 
 		customizeChart(chart, rawData1.getRows(), false);
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Transpose Time / Total Runtime");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Transpose Time / Total Runtime");
 	}
 
-	public static void doEfficiencyPhasesChart () {
+	public static PerfExplorerChart doEfficiencyPhasesChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -501,16 +468,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), false);
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Relative Efficiency by Event");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Relative Efficiency by Event");
 	}
 
-	public static void doSpeedupPhasesChart () {
+	public static PerfExplorerChart doSpeedupPhasesChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -558,16 +519,10 @@ public class PerfExplorerChart {
             false                            // urls
         );
 		customizeChart(chart, rawData.getRows(), true);
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Relative Speedup by Event");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Relative Speedup by Event");
 	}
 
-	public static void doFractionPhasesChart () {
+	public static PerfExplorerChart doFractionPhasesChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
@@ -599,13 +554,7 @@ public class PerfExplorerChart {
             true,                            // tooltips
             false                            // urls
         );
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Total Runtime Breakdown");
-        frame.getContentPane().add(panel);
-		centerFrame(frame);
-		frame.pack();
-		frame.setVisible(true);
+		return new PerfExplorerChart(chart, "Total Runtime Breakdown");
 	}
 
 
@@ -676,5 +625,66 @@ public class PerfExplorerChart {
         frame.setLocation(xPosition, yPosition);
         frame.setSize(new java.awt.Dimension(windowWidth, windowHeight));
  	}
+
+	public void saveThyself() {
+		//System.out.println("Daemon come out!");
+		try {
+			VectorExport.promptForVectorExport (this, "PerfExplorer");
+		} catch (Exception e) {
+			System.out.println("File Export Failed!");
+		}
+		return;
+	}
+
+	public void actionPerformed (ActionEvent event) {
+		try {
+			Object EventSrc = event.getSource();
+			if(EventSrc instanceof JMenuItem) {
+				String arg = event.getActionCommand();
+				if (arg.equals(ABOUT)) {
+					createAboutWindow();
+				} else if (arg.equals(SEARCH)) {
+					createHelpWindow();
+				} else if (arg.equals(SAVE)) {
+					saveThyself();
+				} else if (arg.equals(CLOSE)) {
+					dispose();
+				} else {
+					System.out.println("unknown event! " + arg);
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("actionPerformed Exception: " + e.getMessage());
+			e.printStackTrace();
+		} 
+	}
+
+	public void createAboutWindow() {
+		long memUsage = (Runtime.getRuntime().totalMemory() -
+			Runtime.getRuntime().freeMemory()) / 1024;
+
+		String message = new String("PerfExplorer 1.0\n" +
+					PerfExplorerActionListener.getVersionString() + "\nJVM Heap Size: " + memUsage
+					+ "kb\n");
+		JOptionPane.showMessageDialog(this, message, 
+			"About PerfExplorer", JOptionPane.PLAIN_MESSAGE);
+	}
+
+	public void createHelpWindow() {
+		JOptionPane.showMessageDialog(this, 
+			"Help not implemented.\nFor the most up-to-date documentation, please see\n<html><a href='http://www.cs.uoregon.edu/research/tau/'>http://www.cs.uoregon.edu/research/tau/</a></html>",
+			"PerfExplorer Help", JOptionPane.PLAIN_MESSAGE);
+	}
+
+    public Dimension getImageSize(boolean fullScreen, boolean header) {
+        return panel.getSize();
+    }
+
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+        panel.setDoubleBuffered(false);
+        panel.paintAll(g2D);
+        panel.setDoubleBuffered(true);
+    }
+
 
 }
