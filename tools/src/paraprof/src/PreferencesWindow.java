@@ -480,6 +480,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             ParaProf.paraProfManagerWindow.recomputeStats();
         }
 
+        this.font = null;
         setSavedPreferences();
         Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
         for (Iterator it = trials.iterator(); it.hasNext();) {
