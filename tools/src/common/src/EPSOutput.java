@@ -424,7 +424,7 @@ public class EPSOutput extends Graphics2D {
 
     public void setFont(Font font) {
         g2d.setFont(font);
-        output("/" + font.getName() + " findfont " + font.getSize() + " scalefont setfont\n");
+        output("/" + font.getName().replace(' ','-') + " findfont " + font.getSize() + " scalefont setfont\n");
     }
 
     public Graphics create() {
