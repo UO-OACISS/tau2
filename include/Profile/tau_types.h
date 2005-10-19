@@ -15,7 +15,8 @@
 **	Contact		: amorris@cs.uoregon.edu 	                   **
 ****************************************************************************/
 
-
+#ifndef _TAU_TYPES_H_
+#define _TAU_TYPES_H_
 
 #ifdef TAU_WINDOWS
 typedef char x_uint8;
@@ -38,3 +39,5 @@ typedef unsigned short x_uint16;
 typedef unsigned int x_uint32;
 typedef unsigned long long x_uint64;
 #endif
+
+#endif /* _TAU_TYPES_H_ */
