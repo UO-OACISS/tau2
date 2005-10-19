@@ -34,23 +34,11 @@ import org.jfree.data.category.CategoryDataset;
  * A simple demonstration application showing how to create a box-and-whisker
  * chart.
  */
-public class PerfExplorerBoxChart {
+public class PerfExplorerBoxChart extends PerfExplorerChartWindow {
 
-    /**
-     * Creates a new demo instance.
-     *
-     * @param title  the frame title.
-    public PerfExplorerBoxChart(String title) {
-
-        super(title);
-        BoxAndWhiskerCategoryDataset dataset = createDataset();
-        JFreeChart chart = createChart(dataset);
-        ChartPanel chartPanel = new ChartPanel(chart, false);
-        chartPanel.setPreferredSize(new Dimension(500, 270));
-        setContentPane(chartPanel);
-
-    }
-     */
+	public PerfExplorerBoxChart (JFreeChart chart, String name) {
+		super (chart, name);
+	}
 
 	public static void doIQRBoxChart() {
 		// for each event, get the variation across all threads.
@@ -61,15 +49,7 @@ public class PerfExplorerBoxChart {
 		// build the chart
 		BoxAndWhiskerCategoryDataset dataset = createDataset(data);
         JFreeChart chart = createChart(dataset);
-        
-		ChartPanel panel = new ChartPanel(chart);
-		panel.setDisplayToolTips(true);
-		JFrame frame = new JFrame("Distributions of Significant Events");
-        frame.getContentPane().add(panel);
-		PerfExplorerChart.centerFrame(frame);
-
-		frame.pack();
-		frame.setVisible(true);
+		JFrame frame = new PerfExplorerBoxChart(chart, "Distributions of Significant Events");
 	}
 
     /**

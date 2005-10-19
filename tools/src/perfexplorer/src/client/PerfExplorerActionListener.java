@@ -11,7 +11,7 @@ import common.RMIPerfExplorerModel;
 
 public class PerfExplorerActionListener implements ActionListener {
 
-	private static final String VERSION = "Tue Oct 18 16:23:55 PDT 2005";
+	private static final String VERSION = "XXXXX";
 	public final static String QUIT = "Quit PerfExplorer";
 	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
 	public final static String ABOUT = "About PerfExplorer";
