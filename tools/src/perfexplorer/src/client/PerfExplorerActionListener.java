@@ -6,12 +6,12 @@ import java.awt.event.*;
 import java.util.List;
 import java.util.ListIterator;
 import edu.uoregon.tau.perfdmf.*;
+import constants.Constants;
 import common.RMIView;
 import common.RMIPerfExplorerModel;
 
 public class PerfExplorerActionListener implements ActionListener {
 
-	private static final String VERSION = "Wed Oct 19 13:09:26 PDT 2005";
 	public final static String QUIT = "Quit PerfExplorer";
 	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
 	public final static String ABOUT = "About PerfExplorer";
@@ -165,7 +165,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	}
 
     public static String getVersionString() {
-		return new String(VERSION);
+		return new String(Constants.VERSION);
 	}
 
 	public void createAboutWindow() {

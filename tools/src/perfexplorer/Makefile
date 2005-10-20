@@ -1,8 +1,8 @@
 R_HOME = /Library/Frameworks/R.framework/Versions/Current/Resources
 TAUROOT = /Users/khuck/tau2
 CONFIG_ARCH = apple
-ENGINE_PACKAGE = weka
-ENGINE_DEFINE = WEKA
+ENGINE_PACKAGE = r
+ENGINE_DEFINE = R
 
 ##########################
 
@@ -22,17 +22,17 @@ RMIC = rmic
 
 WEKA_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/weka.jar
 PERFDMF_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/perfdmf.jar
-XMLSAX_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
 JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
 JDBC_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/postgresql.jar
 JOGL_JAR =${TAUROOT}/${CONFIG_ARCH}/lib/jogl.jar
 JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
-PARAPROF_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/vis.jar
+VIS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/vis.jar
 OMEGAHAT_JARS = ${OMEGAHAT_HOME}:${OMEGAHAT_JARPATH}/Environment.jar:${OMEGAHAT_JARPATH}/antlr.jar:${OMEGAHAT_JARPATH}/jas.jar:${OMEGAHAT_JARPATH}/jhall.jar
 JFREECHART_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jfreechart-0.9.21.jar
 JCOMMON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jcommon-0.9.6.jar
 TAUCOMMON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/tau-common.jar
 BATIK_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/batik-combined.jar
+BATCH_SCRIPT = ${TAUROOT}/${CONFIG_ARCH}/bin/perfexplorer
 
 ##########################
 
@@ -41,19 +41,20 @@ SERVER_DYLD_LIBRARY_PATH=${OMEGAHAT_HOME}/libs:${R_HOME}/lib:${R_HOME}/bin:${R_H
 
 ##########################
 
-BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JOGL_JAR}:${PARAPROF_JAR}:${JARGS_JAR}
-CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${PARAPROF_JAR}:${JARGS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}
+BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}
+CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}
 CLUSTERING_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${WEKA_JAR}:${OMEGAHAT_JARS}
 SERVER_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}
-CLIENT_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${PARAPROF_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}
-SERVER_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}
-STANDALONE_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${JFREECHART_JAR}:${JCOMMON_JAR}:${WEKA_JAR}:${JOGL_JAR}:${PARAPROF_JAR}
+CLIENT_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${JDBC_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}
+SERVER_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}
+STANDALONE_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${JFREECHART_JAR}:${JCOMMON_JAR}:${WEKA_JAR}:${JOGL_JAR}:${VIS_JAR}
 
 ##########################
 
 SERVER_CPP_INPUT = ${wildcard src/server/*.cpp}
 SERVER_CPP_OUTPUT = ${patsubst %.cpp, %.java, ${SERVER_CPP_INPUT}}
 
+CONSTANT_SOURCES = ${wildcard src/constants/*.java}
 COMMON_SOURCES = ${wildcard src/common/*.java}
 CLUSTERING_SOURCES = ${wildcard src/clustering/*.java} ${wildcard src/clustering/${ENGINE_PACKAGE}/*.java} 
 CLIENT_SOURCES = ${wildcard src/client/*.java}
@@ -61,6 +62,7 @@ SERVER_SOURCES_TMP = ${wildcard src/server/*.java}
 SERVER_SOURCES = ${subst ${SERVER_CPP_OUTPUT}, , ${SERVER_SOURCES_TMP}} ${SERVER_CPP_OUTPUT} 
 SOURCES = ${COMMON_SOURCES} ${SERVER_SOURCES} ${CLIENT_SOURCES} ${CLUSTERING_SOURCES}
 
+CONSTANT_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CONSTANT_SOURCES}}} 
 COMMON_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${COMMON_SOURCES}}} 
 CLUSTERING_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CLUSTERING_SOURCES}}} 
 SERVER_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${SERVER_SOURCES}}} 
@@ -76,6 +78,8 @@ default: perfexplorer.jar
 
 # all: perfexplorer.jar
 
+constants: ${CONSTANT_CLASSES}
+
 common: ${COMMON_CLASSES}
 
 clustering: ${CLUSTERING_CLASSES}
@@ -84,7 +88,7 @@ server: ${SERVER_CLASSES} ${RMIC_CLASSES}
 
 client: ${CLIENT_CLASSES}
 
-perfexplorer.jar: ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${SERVER_CPP_CLASSES} ${RMIC_CLASSES}
+perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${SERVER_CPP_CLASSES} ${RMIC_CLASSES}
 	jar -cvf perfexplorer.jar -C classes .
 	cp perfexplorer.jar ${TAUROOT}/${CONFIG_ARCH}/lib/.
 
@@ -93,32 +97,38 @@ perfexplorer.jar: ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SE
 # otherwise specify -source 1.4 to enable assertions.
 ########################
 
-${COMMON_CLASSES}: Makefile ${COMMON_SOURCES}
+${CONSTANT_CLASSES}: Makefile ${CONSTANT_SOURCES}
 	mkdir -p classes
+	/bin/mv src/constants/Constants.java src/constants/Constants.java.orig
+	sed "s/XXXXX/$(NOW)/" src/constants/Constants.java.orig > src/constants/Constants.java
+	${JAVAC} -d classes ${CONSTANT_SOURCES}
+	/bin/mv src/constants/Constants.java.orig src/constants/Constants.java
+
+${COMMON_CLASSES}: Makefile ${COMMON_SOURCES} ${CONSTANT_CLASSES}
 	${JAVAC} -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
 
-${CLUSTERING_CLASSES}: Makefile ${CLUSTERING_SOURCES} ${COMMON_CLASSES}
+${CLUSTERING_CLASSES}: Makefile ${CLUSTERING_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES}
 	${JAVAC} -classpath ${CLUSTERING_BUILD_CLASSPATH} -d classes ${CLUSTERING_SOURCES}
 
 ${SERVER_CPP_OUTPUT}: Makefile ${SERVER_CPP_INPUT}
 	${CPP} ${SERVER_CPP_INPUT} ${SERVER_CPP_OUTPUT}
 
-${SERVER_CLASSES}: Makefile ${SERVER_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES}
+${SERVER_CLASSES}: Makefile ${SERVER_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES}
 	${JAVAC} -classpath ${SERVER_BUILD_CLASSPATH} -d classes ${SERVER_SOURCES}
 
 ${RMIC_CLASSES}: Makefile ${SERVER_SOURCES} ${SERVER_CLASSES}
 	${RMIC} -classpath ${SERVER_BUILD_CLASSPATH} -d classes server.PerfExplorerServer
 
-${CLIENT_CLASSES}: Makefile ${CLIENT_SOURCES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
-	/bin/mv src/client/PerfExplorerActionListener.java src/client/PerfExplorerActionListener.java.orig
-	sed "s/XXXXX/$(NOW)/" src/client/PerfExplorerActionListener.java.orig > src/client/PerfExplorerActionListener.java
+${CLIENT_CLASSES}: Makefile ${CLIENT_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
 	${JAVAC} -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
-	/bin/mv src/client/PerfExplorerActionListener.java.orig src/client/PerfExplorerActionListener.java
 	cp src/client/resources/*.gif classes/client/.
 
 ###
 ### THESE COMMANDS ARE FOR CLEANING
 ###
+
+cleanconstants:
+	rm -rf classes/constants
 
 cleanclient:
 	rm -rf classes/client
@@ -133,7 +143,7 @@ cleancommon:
 cleanclustering:
 	rm -rf classes/clustering
 
-clean: cleanclient cleanserver cleancommon cleanclustering
+clean: cleanclient cleanserver cleancommon cleanclustering cleanconstants
 	rm -f perfexplorer.jar
 	rm -rf PerfExplorer-0.1/*.jar PerfExplorer-0.1/java.policy
 	rm -f PerfExplorer-0.1.tgz
@@ -158,15 +168,15 @@ runstandalone: perfexplorer.jar
 	perfexplorer
 
 install: perfexplorer.jar
+	mkdir -p PerfExplorer-0.1
 	rm -rf PerfExplorer-0.1/*.jar PerfExplorer-0.1/java.policy
 	rm -f PerfExplorer-0.1.tgz
 	cp perfexplorer.jar PerfExplorer-0.1/.
 	cp ${PERFDMF_JAR} PerfExplorer-0.1/.
-	cp ${XMLSAX_JAR} PerfExplorer-0.1/.
 	cp ${JARGS_JAR} PerfExplorer-0.1/.
 	cp ${JDBC_JAR} PerfExplorer-0.1/.
 	cp ${JOGL_JAR} PerfExplorer-0.1/.
-	cp ${PARAPROF_JAR} PerfExplorer-0.1/.
+	cp ${VIS_JAR} PerfExplorer-0.1/.
 	cp ${JFREECHART_JAR} PerfExplorer-0.1/.
 	cp ${JCOMMON_JAR} PerfExplorer-0.1/.
 	cp ${WEKA_JAR} PerfExplorer-0.1/.
@@ -180,10 +190,9 @@ install: perfexplorer.jar
 	cp ${BATIK_JAR} PerfExplorer-0.1/.
 	cp etc/java.policy PerfExplorer-0.1/.
 	chmod 444 PerfExplorer-0.1/*.jar
-	chmod 775 PerfExplorer-0.1/pe.sh
+	cp ${BATCH_SCRIPT} PerfExplorer-0.1/.
 	tar -cvf PerfExplorer-0.1.tar PerfExplorer-0.1
-	# cp PerfExplorer-0.1.tgz ~/tmp/.
-	scp PerfExplorer-0.1.tar ix.cs.uoregon.edu:public_html/PerfExplorer-0.1.tar
+	scp PerfExplorer-0.1.tar utonium.cs.uoregon.edu:/Library/WebServer/Documents/perfexplorer/PerfExplorer-0.1.tar
 
 webstart: perfexplorer.jar
 	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer perfexplorer.jar khuck
@@ -194,12 +203,16 @@ webstart: perfexplorer.jar
 	cp ${JARGS_JAR} ${WEBSTART_DIR}
 	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JOGL_JAR} khuck
 	cp ${JOGL_JAR} ${WEBSTART_DIR}
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${PARAPROF_JAR} khuck
-	cp ${PARAPROF_JAR} ${WEBSTART_DIR}
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${VIS_JAR} khuck
+	cp ${VIS_JAR} ${WEBSTART_DIR}
 	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JFREECHART_JAR} khuck
 	cp ${JFREECHART_JAR} ${WEBSTART_DIR}
 	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JCOMMON_JAR} khuck
 	cp ${JCOMMON_JAR} ${WEBSTART_DIR}
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${TAUCOMMON_JAR} khuck
+	cp ${TAUCOMMON_JAR} ${WEBSTART_DIR}
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${BATIK_JAR} khuck
+	cp ${BATIK_JAR} ${WEBSTART_DIR}
 	cp etc/java.policy ${WEBSTART_DIR}
 	chmod 755 ${WEBSTART_DIR}/*.jar
 

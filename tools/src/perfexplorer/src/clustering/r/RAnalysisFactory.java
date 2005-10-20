@@ -27,6 +27,8 @@ public class RAnalysisFactory extends AnalysisFactory {
 	 */
 	public RawDataInterface createRawData(String name, List attributes,
 			int vectors, int dimensions) {
+		Object[] objects = attributes.toArray();
+		//String[] eventNames = (String[])(objects);
 		// do something with the name and attributes?
 		return new RRawData(vectors, dimensions);
 	}

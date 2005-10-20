@@ -86,6 +86,7 @@ JOGL_JAR=$TAUROOT/$CONFIG_ARCH/lib/jogl.jar
 VIS_JAR=$TAUROOT/$CONFIG_ARCH/lib/vis.jar
 TAUCOMMON_JAR=$TAUROOT/$CONFIG_ARCH/lib/tau-common.jar
 BATIK_JAR=$TAUROOT/$CONFIG_ARCH/lib/batik-combined.jar
+
 OMEGAHAT_JARS=$OMEGAHAT_HOME:$OMEGAHAT_JARPATH/Environment.jar:$OMEGAHAT_JARPATH/antlr.jar:$OMEGAHAT_JARPATH/jas.jar:$OMEGAHAT_JARPATH/jhall.jar
 
 
@@ -111,7 +112,7 @@ if [ $mode == "server" ] ; then
 	-Djava.security.policy=$TAUROOT/tools/src/perfexplorer/etc/java.policy \
 	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
 	-Dsun.rmi.server.exceptionTrace=true \
-	server.PerfExplorerServer -c $CONFIGFILE -e weka -p $SERVER_OBJECT_PORT
+	server.PerfExplorerServer -c $CONFIGFILE -e $ANALYSIS_ENGINE -p $SERVER_OBJECT_PORT
 
 	# Add these options to the RMI server start call if you need some
 	# additional debugging information...
