@@ -40,7 +40,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.4 2005/10/19 21:17:53 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.5 2005/10/20 20:49:44 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -421,9 +421,9 @@ public class AnalysisTaskWrapper extends TimerTask {
 				sql.append(threads);
                 
                 if (db.getDBType().compareTo("oracle") == 0) {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.excl ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.excl/1000000 ");
                 } else {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive/1000000 ");
                 }
 
 				sql.append("from interval_event e ");

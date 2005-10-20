@@ -30,7 +30,12 @@ public class RAnalysisFactory extends AnalysisFactory {
 		Object[] objects = attributes.toArray();
 		//String[] eventNames = (String[])(objects);
 		// do something with the name and attributes?
-		return new RRawData(vectors, dimensions);
+		String[] eventNames = new String[attributes.size()];
+		for (int i = 0 ; i < attributes.size() ; i++) {
+			eventNames[i] = (String) attributes.get(i);
+		}
+
+		return new RRawData(vectors, dimensions, eventNames);
 	}
 
 	/* (non-Javadoc)
