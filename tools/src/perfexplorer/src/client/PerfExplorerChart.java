@@ -72,19 +72,19 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			PerfExplorerModel.getModel(), RMIChartData.CORRELATION_DATA);
 
         XYDataset dataset = new CorrelationPlotDataset(rawData);
-	        //JFreeChart chart = ChartFactory.createScatterPlot(
-	        JFreeChart chart = ChartFactory.createXYLineChart(
-	            "Correlation Results: r = ?",
-	            "Inclusive Time for " + (String)rawData.getRowLabels().get(0),
-	            "Exclusive Time for Event",
-	            dataset,
-	            PlotOrientation.VERTICAL,
-	            true,
-	            false,
-	            false
-	        );
+        //JFreeChart chart = ChartFactory.createScatterPlot(
+        JFreeChart chart = ChartFactory.createXYLineChart(
+            "Correlation Results",  // chart title
+            "Inclusive Time for " + (String)rawData.getRowLabels().get(0), //domain axis
+            "Exclusive Time for Event",  // range axis
+            dataset,					// data
+            PlotOrientation.VERTICAL,		// the orientation
+            true,						// legend
+            false,						// tooltips
+            false						// urls
+        );
 
-
+		customizeChart(chart, rawData.getRows(), true);
 		return new PerfExplorerChart(chart, "Total Runtime Breakdown");
 	}
 
