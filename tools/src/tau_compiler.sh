@@ -486,6 +486,10 @@ while [ $tempCounter -lt $numFiles ]; do
 	  base=${base}.pomp
 	  cmdToExecute="${optOpariTool} $optOpariOpts ${arrFileName[$tempCounter]} $base$suf"
 	  evalWithDebugMessage "$cmdToExecute" "Parsing with Opari" 
+          if [ ! -f $base$suf ]; then
+            echoIfVerbose "ERROR: Did not generate .pomp file"
+	    printError "$optOpariTool" "$cmdToExecute"
+          fi
 	  arrFileName[$tempCounter]=$base$suf
 	fi
 	newFile=${base}.inst${suf}
