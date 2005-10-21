@@ -75,9 +75,7 @@ public interface RawDataInterface {
 
 	public void addMainValue(int threadIndex, int eventIndex, double value);
 
-	public void setMains(boolean useMains);
-
-	public boolean getMains();
+	public double getMainValue(int threadIndex);
 
 	public String getMainEventName();
 }

@@ -8,7 +8,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.6 2005/10/05 23:03:01 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.7 2005/10/21 19:42:59 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -46,6 +46,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected String metricName = null;
 	protected String eventName = null;
 	protected String totalTimesteps = null;
+	protected Boolean constantProblem = null;
 
 	// more cluster settings
 	protected String clusterMethod = null;
@@ -430,4 +431,11 @@ public class RMIPerfExplorerModel implements Serializable {
 		return view.getField("id");
 	}
 	
+	public void setConstantProblem(boolean constantProblem) {
+		this.constantProblem = new Boolean(constantProblem);
+	}
+
+	public Boolean getConstantProblem() {
+		return this.constantProblem;
+	}
 }

@@ -24,7 +24,6 @@ public class RRawData implements RawDataInterface {
 	private String[] eventNames = null;
 	private double maximum = 0.0;
 	private double[] mainData = null;
-	private boolean useMains = false;
 	private int mainEvent = 0;
 	
 	/**
@@ -93,10 +92,7 @@ public class RRawData implements RawDataInterface {
 	public double getValue(int vectorIndex, int dimensionIndex) {
 		// assert vectorIndex > 0 && vectorIndex < vectors : vectorIndex;
 		// assert dimensionIndex > 0 && dimensionIndex < dimensions : dimensionIndex;
-		if (useMains)
-			return mainData[vectorIndex];
-		else
-			return data[vectorIndex][dimensionIndex];
+		return data[vectorIndex][dimensionIndex];
 	}
 
 	/* (non-Javadoc)
@@ -221,14 +217,10 @@ public class RRawData implements RawDataInterface {
 		this.mainEvent = eventIndex;
 	}
 
-	public void setMains (boolean useMains) {
-		this.useMains = useMains;
+	public double getMainValue(int vectorIndex) {
+		return mainData[vectorIndex];
 	}
-
-	public boolean getMains() {
-		return this.useMains;
-	}
-
+		
 	public String getMainEventName() {
 		return new String(eventNames[this.mainEvent] + "(inclusive)");
 	}

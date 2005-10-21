@@ -148,11 +148,8 @@ public class WekaRawData implements RawDataInterface {
 	public void addMainValue(int threadIndex, int eventIndex, double value) {
 	}
 
-	public void setMains(boolean useMains) {
-	}
-
-	public boolean getMains() {
-		return false;
+	public double getMainValue(int threadIndex) {
+		return 0.0;
 	}
 
 	public String getMainEventName() {

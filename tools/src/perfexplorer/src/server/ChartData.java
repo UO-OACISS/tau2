@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.15 2005/10/05 23:03:02 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.16 2005/10/21 19:42:59 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -25,7 +25,7 @@ public class ChartData extends RMIChartData {
 	private String groupName = null;
 	private String eventName = null;
 	private String groupByColumn = null;
-	
+	private boolean preQuery = false;
 	
 	/**
 	 * Constructor
@@ -72,18 +72,43 @@ public class ChartData extends RMIChartData {
 		PerfExplorerServer.getServer().getControl().WAIT("doQuery");
 		PreparedStatement statement = null;
 		try {
-			// all query results are organized the same, only the selection
-			// parameters are different.
-			statement = buildStatement();
-			//System.out.println(statement.toString());
-			ResultSet results = statement.executeQuery();
-			// TODO - this query assumes a scalability study...!
 			String groupingName = null;
 			String threadName = null;
 			double value = 0.0;
 			double numThreads = 0;
 			String currentExperiment = "";
 			int experimentIndex = -1;
+			if (dataType == CORRELATION_DATA) {
+				preQuery = true;
+				// do a pre-query to get the event with inclusive value
+				// of 100.0.
+				statement = buildStatement();
+				//System.out.println(statement.toString());
+				ResultSet results = statement.executeQuery();
+				// TODO - this query assumes a scalability study...!
+				while (results.next() != false) {
+					groupingName = results.getString(1);
+					threadName = results.getString(2);
+					numThreads = results.getDouble(2);
+					value = results.getDouble(3);
+	
+					if (!currentExperiment.equals(groupingName)) {
+						experimentIndex++;
+						currentExperiment = groupingName;
+						addRow(groupingName);
+					}
+					addColumn(experimentIndex, numThreads, value);
+				} 
+				results.close();
+				statement.close();
+				preQuery = false;
+			}
+			// all query results are organized the same, only the selection
+			// parameters are different.
+			statement = buildStatement();
+			//System.out.println(statement.toString());
+			ResultSet results = statement.executeQuery();
+			// TODO - this query assumes a scalability study...!
 			while (results.next() != false) {
 				groupingName = results.getString(1);
 				threadName = results.getString(2);
@@ -155,14 +180,19 @@ public class ChartData extends RMIChartData {
 		PreparedStatement statement = null;
 		StringBuffer buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
-		if (dataType == FRACTION_OF_TOTAL) {
+		if ((dataType == FRACTION_OF_TOTAL) ||
+			(dataType == CORRELATION_DATA && preQuery)) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
 
 			buf.append("select ie.name, ");
 
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-			buf.append("ims.exclusive_percentage from interval_mean_summary ims ");
+			if (preQuery)
+				buf.append("ims.inclusive/1000000 ");
+			else
+				buf.append("ims.exclusive_percentage ");
+			buf.append("from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie ");
 			buf.append("on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
@@ -176,15 +206,15 @@ public class ChartData extends RMIChartData {
 
 			buf.append(" and m.name = ? ");
 			
+			if (preQuery)
+				buf.append("and ims.inclusive_percentage = 100.0 ");
+			else
+				buf.append("and ims.exclusive_percentage > 1.0 ");
 
-//			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ims.exclusive_percentage > 1.0 ");
 			buf.append("and (ie.group_name is null or (");
-
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) order by 1, 2");
 
-			
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == RELATIVE_EFFICIENCY) {
@@ -311,7 +341,8 @@ public class ChartData extends RMIChartData {
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 			statement.setString(2, groupName);
-		} else if (dataType == RELATIVE_EFFICIENCY_EVENTS) {
+		} else if ((dataType == RELATIVE_EFFICIENCY_EVENTS) ||
+			(dataType == CORRELATION_DATA && !preQuery)) {
 			// The user wants to know the relative efficiency or speedup
 			// of all the events for one experiment, as the number of threads of 
 			// execution increases.
@@ -366,10 +397,18 @@ public class ChartData extends RMIChartData {
 			buf.append("ie.name, ");
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
 
-			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("ims.excl from interval_mean_summary ims ");
+			if (dataType == CORRELATION_DATA) {
+				if (db.getDBType().compareTo("oracle") == 0) {
+					buf.append("ims.excl/1000000 from interval_mean_summary ims ");
+				} else {
+					buf.append("ims.exclusive/1000000 from interval_mean_summary ims ");
+				}
 			} else {
-				buf.append("ims.exclusive from interval_mean_summary ims ");
+				if (db.getDBType().compareTo("oracle") == 0) {
+					buf.append("ims.excl from interval_mean_summary ims ");
+				} else {
+					buf.append("ims.exclusive from interval_mean_summary ims ");
+				}
 			}
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
@@ -457,7 +496,8 @@ public class ChartData extends RMIChartData {
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt (1, model.getExperiment().getID());
 			statement.setString(2, metricName);
-		} else if (dataType == FRACTION_OF_TOTAL_PHASES) {
+		} else if ((dataType == FRACTION_OF_TOTAL_PHASES) || 
+			(dataType == CORRELATION_DATA)) {
 			// The user wants to know the runtime breakdown by phases 
 			// of one experiment as the number of threads of execution
 			// increases.

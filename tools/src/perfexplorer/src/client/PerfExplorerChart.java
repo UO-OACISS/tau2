@@ -14,6 +14,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYDataset;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.StandardLegend;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -63,6 +64,30 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		return new PerfExplorerChart(chart, "Total Runtime Breakdown");
 	}
 
+	public static PerfExplorerChart doCorrelationChart () {
+		// get the server
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		// get the data
+		RMIChartData rawData = server.requestChartData(
+			PerfExplorerModel.getModel(), RMIChartData.CORRELATION_DATA);
+
+        XYDataset dataset = new CorrelationPlotDataset(rawData);
+	        //JFreeChart chart = ChartFactory.createScatterPlot(
+	        JFreeChart chart = ChartFactory.createXYLineChart(
+	            "Correlation Results: r = ?",
+	            "Inclusive Time for " + (String)rawData.getRowLabels().get(0),
+	            "Exclusive Time for Event",
+	            dataset,
+	            PlotOrientation.VERTICAL,
+	            true,
+	            false,
+	            false
+	        );
+
+
+		return new PerfExplorerChart(chart, "Total Runtime Breakdown");
+	}
+
 	public static PerfExplorerChart doEfficiencyChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
@@ -77,13 +102,16 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
         	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
-			double[] baseline = (double[])(row.get(0));
-			for (int x = 0 ; x < row.size() ; x++) {
-				double[] values = (double[])(row.get(x));
-				ratio = baseline[0]/values[0];
-				ideal = baseline[1] * ratio;
-        		s.add(values[0], ideal/values[1]);
-			}
+				double[] baseline = (double[])(row.get(0));
+				for (int x = 0 ; x < row.size() ; x++) {
+					double[] values = (double[])(row.get(x));
+					ratio = baseline[0]/values[0];
+					if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
+						ideal = baseline[1] * ratio;
+					else 
+						ideal = baseline[1];
+        			s.add(values[0], ideal/values[1]);
+				}
         	dataset.addSeries(s);
 		}
 
@@ -121,7 +149,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
 				ratio = baseline[0]/values[0];
-				ideal = baseline[1] * ratio;
+				if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
+					ideal = baseline[1] * ratio;
+				else 
+					ideal = baseline[1];
         		s.add(values[0], ideal/values[1]);
 			}
         	dataset.addSeries(s);
@@ -161,7 +192,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
 				ratio = baseline[0]/values[0];
-				ideal = baseline[1] * ratio;
+				if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
+					ideal = baseline[1] * ratio;
+				else 
+					ideal = baseline[1];
         		s.add(values[0], ideal/values[1]);
 			}
         	dataset.addSeries(s);
@@ -203,7 +237,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
 				ratio = baseline[0]/values[0];
-				ideal = baseline[1] * ratio;
+				if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
+					ideal = baseline[1] * ratio;
+				else 
+					ideal = baseline[1];
 				efficiency = ideal/values[1];
 				// System.out.println("adding: " + values[0] + ", " + efficiency/ratio);
         		s.add(values[0], efficiency / ratio);
@@ -254,7 +291,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
 				ratio = baseline[0]/values[0];
-				ideal = baseline[1] * ratio;
+				if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
+					ideal = baseline[1] * ratio;
+				else 
+					ideal = baseline[1];
 				efficiency = ideal/values[1];
         		s.add(values[0], efficiency / ratio);
 				if (maxx < values[0])
@@ -304,7 +344,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
 				ratio = baseline[0]/values[0];
-				ideal = baseline[1] * ratio;
+				if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
+					ideal = baseline[1] * ratio;
+				else 
+					ideal = baseline[1];
 				efficiency = ideal/values[1];
         		s.add(values[0], efficiency / ratio);
 				if (maxx < values[0])

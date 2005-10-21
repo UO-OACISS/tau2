@@ -174,6 +174,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		chartMenu.add(timestepItem);
 
 		//Add a menu item.
+		JMenuItem problemItem = new JMenuItem(
+			PerfExplorerActionListener.SET_PROBLEM_SIZE);
+		problemItem.addActionListener(listener);
+		chartMenu.add(problemItem);
+
+		//Add a menu item.
 		JMenuItem timesteps = new JMenuItem(
 			PerfExplorerActionListener.TIMESTEPS_CHART);
 		timesteps.addActionListener(listener);
@@ -226,6 +232,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 			PerfExplorerActionListener.FRACTION_CHART);
 		fraction.addActionListener(listener);
 		chartMenu.add(fraction);
+
+		//Add a menu item.
+		JMenuItem correlation = new JMenuItem(
+			PerfExplorerActionListener.CORRELATION_CHART);
+		correlation.addActionListener(listener);
+		chartMenu.add(correlation);
 
 		//Add a menu item.
 		JMenuItem efficiencyPhase = new JMenuItem(

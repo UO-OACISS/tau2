@@ -4,6 +4,7 @@ import javax.swing.*;
 
 import java.awt.event.*;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.ListIterator;
 import edu.uoregon.tau.perfdmf.*;
 import constants.Constants;
@@ -27,6 +28,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String DO_VARIATION_ANALYSIS = "Show Data Summary";
 	// chart menu items
 	public final static String SET_GROUPNAME = "Set Group Name";
+	public final static String SET_PROBLEM_SIZE = "Set Problem Size (Scaling)";
 	public final static String SET_METRICNAME = "Set Metric of Interest";
 	public final static String SET_TIMESTEPS = "Set Total Number of Timesteps";
 	public final static String SET_EVENTNAME = "Set Event of Interest";
@@ -39,6 +41,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String SPEEDUP_ONE_EVENT_CHART = "Relative Speedup for One Event";
 	public final static String COMMUNICATION_CHART = "Group % of Total Runtime";
 	public final static String FRACTION_CHART = "Runtime Breakdown";
+	public final static String CORRELATION_CHART = "Correlate Events with Total Runtime";
 	// phase chart menu items
 	public final static String EFFICIENCY_PHASE_CHART = "Relative Efficiency per Phase";
 	public final static String SPEEDUP_PHASE_CHART = "Relative Speedup per Phase";
@@ -100,6 +103,8 @@ public class PerfExplorerActionListener implements ActionListener {
 					if (valid3DSelection())
 						PerfExplorerVariation.doVariationAnalysis();
 			// chart items
+				} else if (arg.equals(SET_PROBLEM_SIZE)) {
+					checkAndSetProblemSize(true);
 				} else if (arg.equals(SET_GROUPNAME)) {
 					checkAndSetGroupName(true);
 				} else if (arg.equals(SET_METRICNAME)) {
@@ -114,23 +119,29 @@ public class PerfExplorerActionListener implements ActionListener {
 							PerfExplorerChart.doTimestepsChart();
 				} else if (arg.equals(EFFICIENCY_CHART)) {
 					if (checkAndSetMetricName(false))
-						PerfExplorerChart.doEfficiencyChart();
+						if (checkAndSetProblemSize(false))
+							PerfExplorerChart.doEfficiencyChart();
 				} else if (arg.equals(EFFICIENCY_EVENTS_CHART)) {
 					if (checkAndSetMetricName(false))
+						if (checkAndSetProblemSize(false))
 						PerfExplorerChart.doEfficiencyEventsChart();
 				} else if (arg.equals(EFFICIENCY_ONE_EVENT_CHART)) {
 					if (checkAndSetMetricName(false))
 						if (checkAndSetEventName(false))
+						if (checkAndSetProblemSize(false))
 							PerfExplorerChart.doEfficiencyOneEventChart();
 				} else if (arg.equals(SPEEDUP_CHART)) {
 					if (checkAndSetMetricName(false))
+						if (checkAndSetProblemSize(false))
 						PerfExplorerChart.doSpeedupChart();
 				} else if (arg.equals(SPEEDUP_EVENTS_CHART)) {
 					if (checkAndSetMetricName(false))
+						if (checkAndSetProblemSize(false))
 						PerfExplorerChart.doSpeedupEventsChart();
 				} else if (arg.equals(SPEEDUP_ONE_EVENT_CHART)) {
 					if (checkAndSetMetricName(false))
 						if (checkAndSetEventName(false))
+						if (checkAndSetProblemSize(false))
 							PerfExplorerChart.doSpeedupOneEventChart();
 				} else if (arg.equals(COMMUNICATION_CHART)) {
 					if (checkAndSetMetricName(false))
@@ -139,11 +150,16 @@ public class PerfExplorerActionListener implements ActionListener {
 				} else if (arg.equals(FRACTION_CHART)) {
 					if (checkAndSetMetricName(false))
 						PerfExplorerChart.doFractionChart();
+				} else if (arg.equals(CORRELATION_CHART)) {
+					if (checkAndSetMetricName(false))
+						PerfExplorerChart.doCorrelationChart();
 				} else if (arg.equals(EFFICIENCY_PHASE_CHART)) {
 					if (checkAndSetMetricName(false))
+						if (checkAndSetProblemSize(false))
 						PerfExplorerChart.doEfficiencyPhasesChart();
 				} else if (arg.equals(SPEEDUP_PHASE_CHART)) {
 					if (checkAndSetMetricName(false))
+						if (checkAndSetProblemSize(false))
 						PerfExplorerChart.doSpeedupPhasesChart();
 				} else if (arg.equals(FRACTION_PHASE_CHART)) {
 					if (checkAndSetMetricName(false))
@@ -540,5 +556,22 @@ public class PerfExplorerActionListener implements ActionListener {
 			theModel.setTotalTimesteps(timesteps);
 		}
 		return (!forceIt && timesteps == null) ? false : true;
+	}
+
+	private boolean checkAndSetProblemSize (boolean forceIt) {
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Boolean constantProblem = theModel.getConstantProblem();
+		if (forceIt || constantProblem == null) {
+			List answers = new ArrayList();
+			answers.add("Yes, the problem size remains constant.");
+			answers.add("No, the problem increases as the processor count increases.");
+			Object[] options = answers.toArray();
+			String response = (String)JOptionPane.showInputDialog (mainFrame,
+				"Does the problem size remain constant, or does it scale with the number of processors?",
+				"Problem Scaling", JOptionPane.PLAIN_MESSAGE,
+				null, options, options[0]);
+			theModel.setConstantProblem(response.startsWith("Y") ? true : false);
+		}
+		return (!forceIt && constantProblem == null) ? false : true;
 	}
 }

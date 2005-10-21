@@ -54,7 +54,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.6 2005/10/21 00:26:00 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.7 2005/10/21 19:42:59 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -91,6 +91,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 	private double maximum = 0.0;
 	private List eventIDs = null;
 	private double rCorrelation = 0.0;
+	private boolean correlateToMain = false;
 
 	/**
 	 * Constructor.  The engine parameter passed in specifies which analysis
@@ -436,15 +437,16 @@ public class AnalysisTaskWrapper extends TimerTask {
 				sql.append(threads);
                 
                 if (db.getDBType().compareTo("oracle") == 0) {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.excl/1000000, p.inclusive, s.inclusive_percentage ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.excl/1000000, ");
                 } else {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive/1000000, p.inclusive, s.inclusive_percentage ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive/1000000, ");
                 }
-
+				sql.append("p.inclusive/1000000, s.inclusive_percentage, s.exclusive_percentage ");
 				sql.append("from interval_event e ");
 				sql.append("inner join interval_mean_summary s ");
-				sql.append("on e.id = s.interval_event and s.exclusive_percentage > ");
+				sql.append("on e.id = s.interval_event and (s.exclusive_percentage > ");
 				sql.append(modelData.getXPercent());
+				sql.append("or s.inclusive_percentage = 100.0) ");
 				sql.append(" left outer join interval_location_profile p ");
 				sql.append("on e.id = p.interval_event ");
 				sql.append("and p.metric = s.metric where e.trial = ? ");
@@ -453,11 +455,12 @@ public class AnalysisTaskWrapper extends TimerTask {
 				sql.append(") + (p.context*" + threads + "");
                 
                 if (db.getDBType().compareTo("oracle") == 0) {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.excl ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.excl, ");
                 } else {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive, ");
                 }
 
+				sql.append("p.inclusive/1000000, p.inclusive_percentage ");
 				sql.append("from interval_event e ");
 				sql.append("left outer join interval_location_profile p ");
 				sql.append("on e.id = p.interval_event where e.trial = ? ");
@@ -481,15 +484,19 @@ public class AnalysisTaskWrapper extends TimerTask {
 
 			// get the rows
 			while (results.next() != false) {
-				if (currentFunction != results.getInt(importantIndex)) {
-					functionIndex++;
-				}
-				currentFunction = results.getInt(importantIndex);
-				threadIndex = results.getInt(2);
-				rawData.addValue(threadIndex, functionIndex, results.getDouble(4));
-				if (maximum < results.getDouble(4))
-					maximum = results.getDouble(4);
-				// this is dangerous, I know
+				if (!(modelData.getDimensionReduction().equals(
+					RMIPerfExplorerModel.OVER_X_PERCENT)) || 
+					(results.getDouble(7) > modelData.getXPercent())) {
+					if (currentFunction != results.getInt(importantIndex)) {
+						functionIndex++;
+					}
+					currentFunction = results.getInt(importantIndex);
+					threadIndex = results.getInt(2);
+					rawData.addValue(threadIndex, functionIndex, results.getDouble(4));
+					if (maximum < results.getDouble(4))
+						maximum = results.getDouble(4);
+				} 
+				// if this is the main method, save its values
 				if (results.getDouble(6) == 100.0) {
 					rawData.addMainValue(threadIndex, functionIndex, results.getDouble(5));
 				}
@@ -643,15 +650,14 @@ public class AnalysisTaskWrapper extends TimerTask {
 					// get the inclusive data
 					//reducedData;
 					chartType = AnalysisTaskWrapper.CORRELATION_SCATTERPLOT;
-					System.out.println(reducedData.numDimensions());
 					/*
 					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
-						reducedData.setMains(true);
+						correlateToMain = true;
 						rCorrelation = reducedData.getCorrelation(i,i);
 						File thumbnail = generateThumbnail(reducedData, i, i);
 						File chart = generateImage(reducedData, i, i);
 						saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
-						reducedData.setMains(false);
+						correlateToMain = false;
 					}
 					*/
 					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
@@ -661,7 +667,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 							File chart = generateImage(reducedData, i, j);
 							saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
 						}
-						System.out.println("Finished: " + (i+1) + " of " + reducedData.numDimensions());
+						//System.out.println("Finished: " + (i+1) + " of " + reducedData.numDimensions());
 					}
 				}
 			}catch (PerfExplorerException pee) {
@@ -799,7 +805,8 @@ public class AnalysisTaskWrapper extends TimerTask {
 	public File generateThumbnail(RawDataInterface pcaData, int i, int j) {
 		File outfile = null;
 		if (chartType == CORRELATION_SCATTERPLOT) {
-	        XYDataset data = new ScatterPlotDataset(pcaData, modelData.toString(), i, j);
+	        XYDataset data = new ScatterPlotDataset(pcaData,
+			modelData.toString(), i, j, correlateToMain);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
 	            null, null, null, data, PlotOrientation.VERTICAL, false, false, false);
 	        outfile = new File("/tmp/thumbnail." + modelData.toShortString() + ".png");
@@ -819,7 +826,8 @@ public class AnalysisTaskWrapper extends TimerTask {
 	public File generateImage(RawDataInterface pcaData, int i, int j) {
 		File outfile = null;
 		if (chartType == CORRELATION_SCATTERPLOT) {
-	        XYDataset data = new ScatterPlotDataset(pcaData, modelData.toString(), i, j);
+	        XYDataset data = new ScatterPlotDataset(pcaData,
+			modelData.toString(), i, j, correlateToMain);
 			/*
 	        JFreeChart chart = ChartFactory.createScatterPlot(
 	            "Correlation Results: r = " + rCorrelation,
@@ -836,13 +844,15 @@ public class AnalysisTaskWrapper extends TimerTask {
 			NumberAxis xAxis = new NumberAxis((String)(pcaData.getEventNames().get(i)));
 			xAxis.setAutoRangeIncludesZero(false);
 			NumberAxis yAxis = null;
-			if (pcaData.getMains())
+			if (correlateToMain)
 				yAxis = new NumberAxis(pcaData.getMainEventName());
 			else
 				yAxis = new NumberAxis((String)(pcaData.getEventNames().get(j)));
 			yAxis.setAutoRangeIncludesZero(false);
 			StandardXYItemRenderer dotRenderer = new StandardXYItemRenderer(StandardXYItemRenderer.SHAPES);
 			dotRenderer.setShapesFilled(true);
+			if (correlateToMain)
+				dotRenderer.setSeriesPaint(0,Color.green);
 			XYPlot plot = new XYPlot(data, xAxis, yAxis, dotRenderer);
 
 			// linear regression
