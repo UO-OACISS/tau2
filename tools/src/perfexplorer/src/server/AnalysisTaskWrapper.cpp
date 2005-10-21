@@ -29,6 +29,20 @@ import java.io.IOException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
+import org.jfree.chart.renderer.xy.DefaultXYItemRenderer;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.Range;
+import org.jfree.data.statistics.Regression;
+import org.jfree.data.function.Function2D;
+import org.jfree.data.function.LineFunction2D;
+import org.jfree.data.function.PowerFunction2D;
+import org.jfree.data.general.DatasetUtilities;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+
+import java.awt.Color;
+
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.chart.ChartUtilities;
@@ -40,7 +54,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.5 2005/10/20 20:49:44 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.6 2005/10/21 00:26:00 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -76,6 +90,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 	private RawDataInterface rawData = null;
 	private double maximum = 0.0;
 	private List eventIDs = null;
+	private double rCorrelation = 0.0;
 
 	/**
 	 * Constructor.  The engine parameter passed in specifies which analysis
@@ -421,9 +436,9 @@ public class AnalysisTaskWrapper extends TimerTask {
 				sql.append(threads);
                 
                 if (db.getDBType().compareTo("oracle") == 0) {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.excl/1000000 ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.excl/1000000, p.inclusive, s.inclusive_percentage ");
                 } else {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive/1000000 ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive/1000000, p.inclusive, s.inclusive_percentage ");
                 }
 
 				sql.append("from interval_event e ");
@@ -474,6 +489,10 @@ public class AnalysisTaskWrapper extends TimerTask {
 				rawData.addValue(threadIndex, functionIndex, results.getDouble(4));
 				if (maximum < results.getDouble(4))
 					maximum = results.getDouble(4);
+				// this is dangerous, I know
+				if (results.getDouble(6) == 100.0) {
+					rawData.addMainValue(threadIndex, functionIndex, results.getDouble(5));
+				}
 				rowIndex++;
 			}
 			results.close();
@@ -625,11 +644,22 @@ public class AnalysisTaskWrapper extends TimerTask {
 					//reducedData;
 					chartType = AnalysisTaskWrapper.CORRELATION_SCATTERPLOT;
 					System.out.println(reducedData.numDimensions());
+					/*
 					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
-						for (int j = 0 ; j < reducedData.numDimensions() ; j++) {
+						reducedData.setMains(true);
+						rCorrelation = reducedData.getCorrelation(i,i);
+						File thumbnail = generateThumbnail(reducedData, i, i);
+						File chart = generateImage(reducedData, i, i);
+						saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
+						reducedData.setMains(false);
+					}
+					*/
+					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
+						for (int j = i+1 ; j < reducedData.numDimensions() ; j++) {
+							rCorrelation = reducedData.getCorrelation(i,j);
 							File thumbnail = generateThumbnail(reducedData, i, j);
 							File chart = generateImage(reducedData, i, j);
-							saveAnalysisResult(reducedData, reducedData, thumbnail, chart);			
+							saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
 						}
 						System.out.println("Finished: " + (i+1) + " of " + reducedData.numDimensions());
 					}
@@ -743,7 +773,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			*/
 	        XYDataset data = new PCAPlotDataset(clusters);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
-	            "PCA Results",
+	            "Correlation Results: r = " + rCorrelation,
 	            (String)(pcaData.getEventNames().get(0)),
 	            (String)(pcaData.getEventNames().get(1)),
 	            data,
@@ -790,8 +820,9 @@ public class AnalysisTaskWrapper extends TimerTask {
 		File outfile = null;
 		if (chartType == CORRELATION_SCATTERPLOT) {
 	        XYDataset data = new ScatterPlotDataset(pcaData, modelData.toString(), i, j);
+			/*
 	        JFreeChart chart = ChartFactory.createScatterPlot(
-	            "PCA Results",
+	            "Correlation Results: r = " + rCorrelation,
 	            (String)(pcaData.getEventNames().get(i)),
 	            (String)(pcaData.getEventNames().get(j)),
 	            data,
@@ -800,6 +831,47 @@ public class AnalysisTaskWrapper extends TimerTask {
 	            false,
 	            false
 	        );
+			*/
+			// Create the chart the hard way, to include a linear regression
+			NumberAxis xAxis = new NumberAxis((String)(pcaData.getEventNames().get(i)));
+			xAxis.setAutoRangeIncludesZero(false);
+			NumberAxis yAxis = null;
+			if (pcaData.getMains())
+				yAxis = new NumberAxis(pcaData.getMainEventName());
+			else
+				yAxis = new NumberAxis((String)(pcaData.getEventNames().get(j)));
+			yAxis.setAutoRangeIncludesZero(false);
+			StandardXYItemRenderer dotRenderer = new StandardXYItemRenderer(StandardXYItemRenderer.SHAPES);
+			dotRenderer.setShapesFilled(true);
+			XYPlot plot = new XYPlot(data, xAxis, yAxis, dotRenderer);
+
+			// linear regression
+			double[] coefficients = Regression.getOLSRegression(data, 0);
+			Function2D curve = new LineFunction2D(coefficients[0], coefficients[1]);
+			Range range = DatasetUtilities.findDomainExtent(data);
+			XYDataset regressionData = DatasetUtilities.sampleFunction2D(
+				curve, range.getLowerBound(), range.getUpperBound(), 
+				100, "Fitted Linear Regression Line");
+			plot.setDataset(1, regressionData);
+			XYItemRenderer lineRenderer = new DefaultXYItemRenderer();
+			lineRenderer.setSeriesPaint(0,Color.blue);
+			plot.setRenderer(1, lineRenderer);
+
+			// power regression
+			double[] powerCoefficients = Regression.getPowerRegression(data, 0);
+			Function2D powerCurve = new PowerFunction2D(powerCoefficients[0], powerCoefficients[1]);
+			XYDataset powerRegressionData = DatasetUtilities.sampleFunction2D(
+				powerCurve, range.getLowerBound(), range.getUpperBound(), 
+				100, "Fitted Power Regression Line");
+			plot.setDataset(2, powerRegressionData);
+			XYItemRenderer powerLineRenderer = new DefaultXYItemRenderer();
+			powerLineRenderer.setSeriesPaint(0,Color.black);
+			plot.setRenderer(2, powerLineRenderer);
+
+			JFreeChart chart = new JFreeChart("Correlation Results: r = " + 
+				rCorrelation, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
+
+
 	        outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
 	        try {
 	        		ChartUtilities.saveChartAsPNG(outfile, chart, 800, 800);

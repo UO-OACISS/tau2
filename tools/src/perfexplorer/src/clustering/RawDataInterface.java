@@ -70,4 +70,14 @@ public interface RawDataInterface {
 	public double getMaximum();
 
 	public double[] getVector(int i);
+	
+	public double getCorrelation(int x, int y);
+
+	public void addMainValue(int threadIndex, int eventIndex, double value);
+
+	public void setMains(boolean useMains);
+
+	public boolean getMains();
+
+	public String getMainEventName();
 }

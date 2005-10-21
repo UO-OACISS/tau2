@@ -23,6 +23,9 @@ public class RRawData implements RawDataInterface {
 	private double[][] data = null;
 	private String[] eventNames = null;
 	private double maximum = 0.0;
+	private double[] mainData = null;
+	private boolean useMains = false;
+	private int mainEvent = 0;
 	
 	/**
 	 * Default constructor.
@@ -33,6 +36,7 @@ public class RRawData implements RawDataInterface {
 		this.dimensions = dimensions;
 		this.data = new double[vectors][dimensions];
 		this.eventNames = new String[dimensions];
+		this.mainData = new double[vectors];
 		//initialize();
 	}
 
@@ -42,6 +46,7 @@ public class RRawData implements RawDataInterface {
 		this.dimensions = dimensions;
 		this.data = new double[vectors][dimensions];
 		this.eventNames = eventNames;
+		this.mainData = new double[vectors];
 		//initialize();
 	}
 
@@ -51,6 +56,7 @@ public class RRawData implements RawDataInterface {
 		this.dimensions = dimensions;
 		this.eventNames = new String[dimensions];
 		this.data = new double[vectors][dimensions];
+		this.mainData = new double[vectors];
 		int i = 0;
 		for (int x = 0 ; x < vectors ; x++) {
 			for (int y = 0 ; y < dimensions ; y++) {
@@ -87,7 +93,10 @@ public class RRawData implements RawDataInterface {
 	public double getValue(int vectorIndex, int dimensionIndex) {
 		// assert vectorIndex > 0 && vectorIndex < vectors : vectorIndex;
 		// assert dimensionIndex > 0 && dimensionIndex < dimensions : dimensionIndex;
-		return data[vectorIndex][dimensionIndex];
+		if (useMains)
+			return mainData[vectorIndex];
+		else
+			return data[vectorIndex][dimensionIndex];
 	}
 
 	/* (non-Javadoc)
@@ -156,5 +165,71 @@ public class RRawData implements RawDataInterface {
 
 	public double[] getVector(int i) {
 		return data[i];
+	}
+
+	public double getCorrelation (int x, int y) {
+		double r = 0.0;
+		double xAvg = 0.0;
+		double yAvg = 0.0;
+		double xStDev = 0.0;
+		double yStDev = 0.0;
+		double sum = 0.0;
+
+		for (int i = 0 ; i < vectors ; i++ ) {
+			xAvg += data[i][x];
+			yAvg += data[i][y];
+		}
+
+		// find the average for the first vector
+		xAvg = xAvg / vectors;
+		// find the average for the second vector
+		yAvg = yAvg / vectors;
+
+
+		for (int i = 0 ; i < vectors ; i++ ) {
+			xStDev += (data[i][x] - xAvg) * (data[i][x] - xAvg);
+			yStDev += (data[i][y] - yAvg) * (data[i][y] - yAvg);
+		}
+
+		// find the standard deviation for the first vector
+		xStDev = xStDev / (vectors - 1);
+		xStDev = Math.sqrt(xStDev);
+		// find the standard deviation for the second vector
+		yStDev = yStDev / (vectors - 1);
+		yStDev = Math.sqrt(yStDev);
+
+
+		// solve for r
+		double tmp1 = 0.0;
+		double tmp2 = 0.0;
+		for (int i = 0 ; i < vectors ; i++ ) {
+			tmp1 = (data[i][x] - xAvg) / xStDev;
+			tmp2 = (data[i][y] - yAvg) / yStDev;
+			r += tmp1 * tmp2;
+		}
+		r = r / (vectors - 1);
+
+		//System.out.println("Avg(x) = " + xAvg + ", Avg(y) = " + yAvg);
+		//System.out.println("Stddev(x) = " + xStDev + ", Stddev(y) = " + yStDev);
+		//System.out.println("r = " + r);
+
+		return r;
+	}
+
+    public void addMainValue(int vectorIndex, int eventIndex, double value) {
+		mainData[vectorIndex] = value;
+		this.mainEvent = eventIndex;
+	}
+
+	public void setMains (boolean useMains) {
+		this.useMains = useMains;
+	}
+
+	public boolean getMains() {
+		return this.useMains;
+	}
+
+	public String getMainEventName() {
+		return new String(eventNames[this.mainEvent] + "(inclusive)");
 	}
 }

@@ -140,4 +140,23 @@ public class WekaRawData implements RawDataInterface {
 		return data;
 	}
 
+	public double getCorrelation (int x, int y) {
+		double r = 0;
+		return r;
+	}
+
+	public void addMainValue(int threadIndex, int eventIndex, double value) {
+	}
+
+	public void setMains(boolean useMains) {
+	}
+
+	public boolean getMains() {
+		return false;
+	}
+
+	public String getMainEventName() {
+		String name = new String("");
+		return name;
+	}
 }
