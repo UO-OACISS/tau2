@@ -524,7 +524,7 @@ if [ $numFiles == 0 ]; then
 
 	if [ $hasMpi == $FALSE ]; then
 		echoIfDebug "Before filtering -l*mpi* options command is: $regularCmd"
-		regularCmd=`echo $regularCmd | sed -e 's/-l[a-zA-Z0-9]*mpi[a-zA-Z0-9+_]*//g'`
+		regularCmd=`echo $regularCmd | sed -e 's/-l[a-zA-Z0-9]*mpi[a-zA-Z.0-9+_]*//g'`
 		echoIfDebug "After filtering -l*mpi* options command is: $regularCmd"
 	fi
 
