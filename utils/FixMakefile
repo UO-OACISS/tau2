@@ -139,6 +139,11 @@ fi
 	echo "s,^VTFDIR=.*$,VTFDIR=$vtfdir,g" >> $sedout
 	;;
 
+     otfdir=*)
+        otfdir=`echo $1 | sed -e 's/^otfdir=//'`
+	echo "s,^OTFDIR=.*$,OTFDIR=$otfdir,g" >> $sedout
+	;;
+
      slog2dir=*)
         slog2dir=`echo $1 | sed -e 's/^slog2dir=//'`
 	echo "s,^SLOG2DIR=.*$,SLOG2DIR=$slog2dir,g" >> $sedout
@@ -785,6 +790,10 @@ fi
 	;;
      VTF)
 	echo "NOTE: Using VTF3 library to build tau2vtf trace converter ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     OTF)
+	echo "NOTE: Using OTF library to build tau2otf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      TAU2EPILOG)

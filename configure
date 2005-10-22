@@ -203,6 +203,7 @@ tauoptions=
 pdt_root_dir="."
 pdt=no
 vtf=no
+otf=no
 slog2=no
 internalslog2=no
 opari=no
@@ -489,6 +490,18 @@ do
       if [ ! -d $vtfdir ]
       then
         echo "Error: Cannot access VTF3 directory $vtfdir"
+        exit 1
+      fi
+    shift
+    ;;
+
+  -otf=*)
+      otf=yes
+      trace=yes
+      otfdir=`echo $arg | sed -e 's/-otf=//'`
+      if [ ! -d $otfdir ]
+      then
+        echo "Error: Cannot access OTF directory $otfdir"
         exit 1
       fi
     shift
@@ -864,6 +877,7 @@ do
     echo "-jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+)."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
+    echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-slog2=<dir> .......... Specify location of SLOG2 SDK/Jumpshot Package."
     echo "-slog2 ......... Specify use of TAU internal SLOG2 SDK/Jumpshot Package"
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -3239,6 +3253,11 @@ fi
 if [ $vtf = yes ]
 then
   fixmakeargs="$fixmakeargs VTF vtfdir=$vtfdir"
+fi
+
+if [ $otf = yes ]
+then
+  fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
 fi
 
 if [ $slog2 = yes ]
