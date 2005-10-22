@@ -54,7 +54,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.7 2005/10/21 19:42:59 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.8 2005/10/22 00:01:53 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -805,6 +805,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 	public File generateThumbnail(RawDataInterface pcaData, int i, int j) {
 		File outfile = null;
 		if (chartType == CORRELATION_SCATTERPLOT) {
+			pcaData.normalizeData(true);
 	        XYDataset data = new ScatterPlotDataset(pcaData,
 			modelData.toString(), i, j, correlateToMain);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
@@ -826,6 +827,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 	public File generateImage(RawDataInterface pcaData, int i, int j) {
 		File outfile = null;
 		if (chartType == CORRELATION_SCATTERPLOT) {
+			pcaData.normalizeData(true);
 	        XYDataset data = new ScatterPlotDataset(pcaData,
 			modelData.toString(), i, j, correlateToMain);
 			/*
@@ -877,6 +879,9 @@ public class AnalysisTaskWrapper extends TimerTask {
 			XYItemRenderer powerLineRenderer = new DefaultXYItemRenderer();
 			powerLineRenderer.setSeriesPaint(0,Color.black);
 			plot.setRenderer(2, powerLineRenderer);
+
+			plot.getDomainAxis().setRange(range);
+			plot.getRangeAxis().setRange(range);
 
 			JFreeChart chart = new JFreeChart("Correlation Results: r = " + 
 				rCorrelation, JFreeChart.DEFAULT_TITLE_FONT, plot, true);

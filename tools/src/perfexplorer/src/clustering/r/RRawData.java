@@ -25,6 +25,8 @@ public class RRawData implements RawDataInterface {
 	private double maximum = 0.0;
 	private double[] mainData = null;
 	private int mainEvent = 0;
+	private boolean normalize = false;
+	private double ranges[][] = null;
 	
 	/**
 	 * Default constructor.
@@ -92,7 +94,16 @@ public class RRawData implements RawDataInterface {
 	public double getValue(int vectorIndex, int dimensionIndex) {
 		// assert vectorIndex > 0 && vectorIndex < vectors : vectorIndex;
 		// assert dimensionIndex > 0 && dimensionIndex < dimensions : dimensionIndex;
-		return data[vectorIndex][dimensionIndex];
+		if (normalize) {
+			double tmp = data[vectorIndex][dimensionIndex];
+			// subtract the min
+			tmp = tmp - ranges[dimensionIndex][0];
+			// divide by the range
+			tmp = tmp / ranges[dimensionIndex][1];
+			return tmp;
+		} else {
+			return data[vectorIndex][dimensionIndex];
+		}
 	}
 
 	/* (non-Javadoc)
@@ -223,5 +234,28 @@ public class RRawData implements RawDataInterface {
 		
 	public String getMainEventName() {
 		return new String(eventNames[this.mainEvent] + "(inclusive)");
+	}
+
+	public void normalizeData(boolean normalize) {
+		this.normalize = normalize;
+		if (normalize) {
+			// calcuate the ranges
+			ranges = new double[dimensions][2];		
+
+			for (int i = 0 ; i < dimensions ; i++ ) {
+				ranges[i][0] = data[0][i];
+				ranges[i][1] = data[0][i];
+				for (int j = 0 ; j < vectors ; j++ ) {
+					// check against the min
+					if (ranges[i][0] > data[j][i])
+						ranges[i][0] = data[j][i];
+					// check against the max
+					if (ranges[i][1] < data[j][i])
+						ranges[i][1] = data[j][i];
+				}
+				// subtract the min from the max
+				ranges[i][1] = ranges[i][1] - ranges[i][0];
+			}
+		}
 	}
 }

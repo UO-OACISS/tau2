@@ -78,4 +78,6 @@ public interface RawDataInterface {
 	public double getMainValue(int threadIndex);
 
 	public String getMainEventName();
+	
+	public void normalizeData(boolean normalize);
 }

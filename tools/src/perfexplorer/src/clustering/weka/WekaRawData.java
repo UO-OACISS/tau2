@@ -141,7 +141,51 @@ public class WekaRawData implements RawDataInterface {
 	}
 
 	public double getCorrelation (int x, int y) {
-		double r = 0;
+		double r = 0.0;
+		double xAvg = 0.0;
+		double yAvg = 0.0;
+		double xStDev = 0.0;
+		double yStDev = 0.0;
+		double sum = 0.0;
+
+		for (int i = 0 ; i < vectors ; i++ ) {
+			xAvg += instances.instance(i).value(x);
+			yAvg += instances.instance(i).value(y);
+		}
+
+		// find the average for the first vector
+		xAvg = xAvg / vectors;
+		// find the average for the second vector
+		yAvg = yAvg / vectors;
+
+
+		for (int i = 0 ; i < vectors ; i++ ) {
+			xStDev += (instances.instance(i).value(x) - xAvg) * (instances.instance(i).value(x) - xAvg);
+			yStDev += (instances.instance(i).value(y) - yAvg) * (instances.instance(i).value(y) - yAvg);
+		}
+
+		// find the standard deviation for the first vector
+		xStDev = xStDev / (vectors - 1);
+		xStDev = Math.sqrt(xStDev);
+		// find the standard deviation for the second vector
+		yStDev = yStDev / (vectors - 1);
+		yStDev = Math.sqrt(yStDev);
+
+
+		// solve for r
+		double tmp1 = 0.0;
+		double tmp2 = 0.0;
+		for (int i = 0 ; i < vectors ; i++ ) {
+			tmp1 = (instances.instance(i).value(x) - xAvg) / xStDev;
+			tmp2 = (instances.instance(i).value(y) - yAvg) / yStDev;
+			r += tmp1 * tmp2;
+		}
+		r = r / (vectors - 1);
+
+		//System.out.println("Avg(x) = " + xAvg + ", Avg(y) = " + yAvg);
+		//System.out.println("Stddev(x) = " + xStDev + ", Stddev(y) = " + yStDev);
+		//System.out.println("r = " + r);
+
 		return r;
 	}
 
