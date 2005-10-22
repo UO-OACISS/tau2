@@ -200,4 +200,7 @@ public class WekaRawData implements RawDataInterface {
 		String name = new String("");
 		return name;
 	}
+
+	public void normalizeData(boolean normalize) {
+	}
 }
