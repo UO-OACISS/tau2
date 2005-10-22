@@ -1,0 +1,48 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU2OTF" "1" "08/31/2005" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau2otf \- convert TAU tracefiles to OTF tracefiles for Vampir/VNG
+.SH "SYNOPSIS"
+.HP 8
+\fBtau2otf\fR {\fItau_tracefile\fR} {\fItau_eventfile\fR} {\fIotf_tracefile\fR}  [\fB-n streams\fR] [\fB\-nomessage\fR] [\fB\-v\fR]  
+.SH "DESCRIPTION"
+.PP
+This program is generated when TAU is configured with the \-otf=<otf_dir> option.
+
+.PP
+The tau2otf trace converter takes a TAU formatted tracefile (*.trc) and a TAU event description file (*.edf) and produces an output trace file in the Open Trace Format (OTF). The user may specify the number of output streams for OTF. The input files and output file must be specified in that order. TAU traces should be merged using tau_merge prior to conversion. 
+.PP
+.SH "OPTIONS"
+.PP
+\fB\-n streams\fR
+Specifies the number of output streams (default is 1). 
+.PP
+\fB\-nomessage\fR
+Suppresses printing of message information in the trace.
+.PP
+\fB\-v\fR
+Verbose mode sends trace event descriptions to the standard output as they are converted.
+.PP
+.SH "EXAMPLES"
+.PP
+The program must be run with the tau trace, tau event and otf output files specified in the command line in that order. Any additional arguments follow. The following will produced an OTF file, app.otf and other related event and definition files, from the TAU trace and event files merged.trc and tau.edf trace file:
+.sp
+.nf
+tau2otf merged.trc tau.edf app.otf
+      
+.fi
+.sp
+.sp
+.SH "SEE ALSO"
+.PP
+tau2vtf(1),
+vtf2profile(1),
+tau_merge(1),
+tau_convert(1)
