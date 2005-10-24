@@ -871,16 +871,16 @@ int main(int argc, char *argv[])
   trcdes = (struct trcdescr *) malloc (active * sizeof(struct trcdescr));
 
   for (i=optind; i<argc-1; i++) {
-/*     printf ("opening %s!\n", argv[i]);  */
+    /*     printf ("opening %s!\n", argv[i]);  */
     /* -- open input trace -------------------------------------------------- */
     if ( (trcdes[numtrc].fd = open (argv[i], O_RDONLY | O_BINARY | LARGEFILE_OPTION )) < 0 ) {
-/*       printf ("failed!\n"); */
+      /*       printf ("failed!\n"); */
       perror (argv[i]);
       errflag = TRUE;
     } else {
-/*       printf ("success!\n"); */
+      /*       printf ("success!\n"); */
       
-
+      
       /* determine format */
       determineFormat(&trcdes[numtrc]);
 
@@ -900,9 +900,6 @@ int main(int argc, char *argv[])
         trcdes[numtrc].numrec = 0L;
         active--;
       }
-
-
-
 
       /* We can't do this check because the event is EV_INIT, but its ev id
        * is different from original creation time after merging */
@@ -1029,19 +1026,15 @@ int main(int argc, char *argv[])
     /* -- store sequence number --------------------------------------------- */
     for (i=0; i<numtrc; i++)
     {
-      if ( trcdes[i].nid == (PCXX_MAXPROCS-1) )  /* master */
-      {
+      if ( trcdes[i].nid == (PCXX_MAXPROCS-1) ) {
+	/* master */
         num_pthreads = numtrc - 1;
         last_pthread = numtrc - 2;
-      }
-      else
-      {
-        do
-        {
+      } else {
+        do {
           erec = get_next_rec (trcdes + i);
-        }
-        while ( (erec != NULL) && (erec->ev != PCXX_IN_BARRIER) );
-
+        } while ( (erec != NULL) && (erec->ev != PCXX_IN_BARRIER) );
+	
         if ( erec == NULL )
           break;
         else
@@ -1049,26 +1042,21 @@ int main(int argc, char *argv[])
       }
     }
 
-    if ( erec != NULL )
-    {
+    if ( erec != NULL )  {
       /* -- the first at this barrier must at least arrived later than the -- */
       /* -- last at the last barrier ---------------------------------------- */
-      if ( timestamp(0) <= last_time )
-      {
+      if ( timestamp(0) <= last_time ) {
         trcdes[sequence[0]].offset += last_time - timestamp(0) + STEP;
       }
 
-      for (i=1; i<num_pthreads; i++)
-      {
-        if ( timestamp(i) <= timestamp(i-1) )
-        {
+      for (i=1; i<num_pthreads; i++) {
+        if ( timestamp(i) <= timestamp(i-1) ) {
           trcdes[sequence[i]].offset += timestamp(i-1) - timestamp(i) + STEP;
         }
       }
       last_time = timestamp(last_pthread);
     }
-  }
-  while ( erec != NULL );
+  } while ( erec != NULL );
 
   /* -- only on the first worker pthread trace we should run into EndOfTrace  */
   /* -- This is normally trace 0 unless trace 0 is the master pthread trace - */
@@ -1221,18 +1209,12 @@ int main(int argc, char *argv[])
       event_SetTi(trcdes+source,erec,0,event_GetTi(trcdes+source,erec,0)-first_time);
     }
     /* -- correct event id to be global event id ---------------------------- */
-#ifdef DEBUG 
-    printf("Before conv event %ld ", trcdes[source].erec->ev);
-#endif /* DEBUG */
 
     /* OLD : trcdes[source].erec->ev = GID(trcdes[source].nid, trcdes[source].erec->ev);
      */
     /*trcdes[source].erec->ev = GID(source, trcdes[source].erec->ev);*/
     event_SetEv(trcdes+source,trcdes[source].erec,0,GID(source, event_GetEv(trcdes+source,trcdes[source].erec,0)));
 
-#ifdef DEBUG
-    printf("Output: node %d event %d\n", source, trcdes[source].erec->ev);
-#endif /* DEBUG */
 
 
     /*    output (outfd, (char *) trcdes[source].erec, sizeof(PCXX_EV));*/
