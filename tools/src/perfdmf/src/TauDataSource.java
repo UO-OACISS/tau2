@@ -15,6 +15,7 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.*;
@@ -63,6 +64,14 @@ public class TauDataSource extends DataSource {
 
     public void load() throws FileNotFoundException, IOException, DataSourceException {
         long time = System.currentTimeMillis();
+
+        boolean modernJava = false;
+        try {
+            Method m = FileInputStream.class.getMethod("getChannel", null);
+            modernJava = true;
+        } catch (NoSuchMethodException nsme) {
+            // way to go java 1.3
+        }
 
         // first count the files (for progressbar)
         for (Iterator e = dirs.iterator(); e.hasNext();) {
@@ -166,8 +175,14 @@ public class TauDataSource extends DataSource {
                         foundValidFile = true;
 
                         FileInputStream fileIn = new FileInputStream(files[i]);
-                        FileChannel channel = fileIn.getChannel();
-                        FileLock lock = channel.lock(0, Long.MAX_VALUE, true);
+                        FileChannel channel;
+                        FileLock lock = null;
+
+                        if (modernJava) {
+                            channel = fileIn.getChannel();
+                            lock = channel.lock(0, Long.MAX_VALUE, true);
+
+                        }
                         InputStreamReader inReader = new InputStreamReader(fileIn);
                         BufferedReader br = new BufferedReader(inReader);
 
@@ -337,16 +352,20 @@ public class TauDataSource extends DataSource {
                             }
                         }
 
-                        lock.release();
+                        if (lock != null) {
+                            lock.release();
+                        }
                         br.close();
                         inReader.close();
                         fileIn.close();
 
                         finished = true;
                     } catch (Exception ex) {
-
+                        ex.printStackTrace();
+                        //System.out.println("ex:);
                         if (!(ex instanceof IOException || ex instanceof FileNotFoundException)) {
-                            throw new RuntimeException(ex);
+                            //throw new RuntimeException(ex == null ? null : ex.toString());
+                            throw new RuntimeException("fuck!");
                         }
 
                         //if (!reloading) {

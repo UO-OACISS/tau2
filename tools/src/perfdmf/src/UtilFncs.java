@@ -141,9 +141,9 @@ public class UtilFncs {
                 }
             }
 
-//            DecimalFormat bil = new DecimalFormat("#,###,###,##0");
-//            DecimalFormat mil = new DecimalFormat("#,###,##0");
-//            DecimalFormat thou = new DecimalFormat("#,##0");
+            //            DecimalFormat bil = new DecimalFormat("#,###,###,##0");
+            //            DecimalFormat mil = new DecimalFormat("#,###,##0");
+            //            DecimalFormat thou = new DecimalFormat("#,##0");
 
             // now we reduce that format string as follows
 
@@ -237,15 +237,15 @@ public class UtilFncs {
             }
 
             String secs;
-            
-            if (hr >= 1 || min >= 1) {  
+
+            if (hr >= 1 || min >= 1) {
                 // don't show fractional seconds if there is at least a minute
                 secs = formatDouble(d / 1000000, 1, false);
             } else {
                 secs = formatDouble(d / 1000000, 3, false);
             }
 
-            if (secs.indexOf('E') != -1) {  // never show exponential notation for hh:mm:ss
+            if (secs.indexOf('E') != -1) { // never show exponential notation for hh:mm:ss
                 secs = "00";
             }
             if (secs.length() == 1) {
@@ -456,6 +456,13 @@ public class UtilFncs {
             if (sourceFiles[0].isDirectory()) {
                 throw new DataSourceException("Cube type: you must specify a file, not a directory");
             }
+
+            try {
+                Class c = Class.forName("org/xml/sax/SAXException");
+            } catch (ClassNotFoundException cnfe) {
+                throw new DataSourceException("Sorry, cube format requires Java 1.4");
+            }
+
             dataSource = new CubeDataSource(sourceFiles[0]);
             break;
         case 9:
@@ -465,6 +472,14 @@ public class UtilFncs {
             if (sourceFiles[0].isDirectory()) {
                 throw new DataSourceException("HPCToolkit type: you must specify a file, not a directory");
             }
+
+            try {
+                Class c = Class.forName("org/xml/sax/SAXException");
+            } catch (ClassNotFoundException cnfe) {
+                throw new DataSourceException("Sorry, HPCToolkit format requires Java 1.4");
+            }
+
+            
             dataSource = new HPCToolkitDataSource(sourceFiles[0]);
             break;
         default:
