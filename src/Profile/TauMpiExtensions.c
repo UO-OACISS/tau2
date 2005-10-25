@@ -12,6 +12,12 @@
 /******************************************************/
 
 
+/* We need to do different things on BGL! */
+#ifdef __blrts__
+#define TAU_BGL
+#undef TAU_MPIOREQUEST
+#endif
+
 
 /******************************************************
 ***      MPI_Type_get_envelope wrapper function 
@@ -670,6 +676,7 @@ void mpi_type_get_extent__( MPI_Fint *  datatype, MPI_Aint * lb, MPI_Aint * exte
 /******************************************************/
 
 #ifdef TAU_MPITYPEEX
+#ifndef TAU_BGL
 
 /******************************************************
 ***      MPI_Type_create_f90_real wrapper function 
@@ -834,6 +841,10 @@ void mpi_type_create_f90_integer__( MPI_Fint *  r, MPI_Fint * newtype, MPI_Fint 
 
 /******************************************************/
 /******************************************************/
+
+#endif 
+/* TAU_BGL */
+
 
 
 /******************************************************
@@ -1877,7 +1888,7 @@ void mpi_win_fence__( MPI_Fint *  assert, MPI_Fint *  win, MPI_Fint * ierr)
 /******************************************************/
 /******************************************************/
 
-
+#ifndef TAU_BGL
 /******************************************************
 ***      MPI_Win_start wrapper function 
 ******************************************************/
@@ -1930,6 +1941,7 @@ void mpi_win_start__( MPI_Fint *  group, MPI_Fint *  assert, MPI_Fint *  win, MP
 /******************************************************/
 /******************************************************/
 
+#endif /* TAU_BGL */
 
 /******************************************************
 ***      MPI_Win_complete wrapper function 
