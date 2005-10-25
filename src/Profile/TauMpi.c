@@ -1426,6 +1426,7 @@ int * flag;
 }
 */
 
+#ifdef TAU_ENABLE_MPI_WTIME
 double  MPI_Wtick(  )
 {
   double  returnVal;
@@ -1454,6 +1455,7 @@ double  MPI_Wtime(  )
 
   return returnVal;
 }
+#endif
 
 int  MPI_Address( location, address )
 void * location;
