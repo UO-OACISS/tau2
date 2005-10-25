@@ -8,20 +8,22 @@ import edu.uoregon.tau.perfdmf.*;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: ValueType.java,v 1.1 2005/09/26 21:12:46 amorris Exp $</P>
+ * <P>CVS $Id: ValueType.java,v 1.2 2005/10/25 00:04:24 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public abstract class ValueType {
 
     private final String name;
+
     public abstract double getValue(FunctionProfile functionProfile, int metric);
+
     public abstract double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric);
+
     public abstract String getSuffix(int units, ParaProfMetric ppMetric);
+
     public abstract int getUnits(int units, ParaProfMetric ppMetric);
-        
-    
 
     private ValueType(String name) {
         this.name = name;
@@ -49,10 +51,17 @@ public abstract class ValueType {
 
         default:
             throw new ParaProfException("Unexpected unit type: " + units);
-        }   
+        }
         return string;
     }
-    
+
+    public static boolean isTimeUnits(ValueType value) {
+        if (value == EXCLUSIVE || value == INCLUSIVE || value == INCLUSIVE_PER_CALL || value == EXCLUSIVE_PER_CALL) {
+            return true;
+        }
+        return false;
+    }
+
     public static final ValueType EXCLUSIVE = new ValueType("Exclusive") {
 
         public double getValue(FunctionProfile functionProfile, int metric) {
@@ -64,7 +73,7 @@ public abstract class ValueType {
         }
 
         public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-        	return thread.getMaxExclusive(metric);
+            return thread.getMaxExclusive(metric);
         }
 
         public String getSuffix(int units, ParaProfMetric ppMetric) {
@@ -88,8 +97,9 @@ public abstract class ValueType {
                 return functionProfile.getExclusivePercent(metric);
             }
         }
+
         public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-        	return thread.getMaxExclusivePercent(metric);
+            return thread.getMaxExclusivePercent(metric);
         }
 
         public String getSuffix(int units, ParaProfMetric ppMetric) {
@@ -105,14 +115,17 @@ public abstract class ValueType {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getInclusive(metric);
         }
+
         public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-        	return thread.getMaxInclusive(metric);
+            return thread.getMaxInclusive(metric);
         }
+
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             if (!ppMetric.isTimeMetric())
                 return " counts";
             return timeUnits(units);
         }
+
         public int getUnits(int units, ParaProfMetric ppMetric) {
             if (ppMetric.isTimeMetric())
                 return units;
@@ -124,12 +137,15 @@ public abstract class ValueType {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getInclusivePercent(metric);
         }
+
         public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-        	return thread.getMaxInclusivePercent(metric);
+            return thread.getMaxInclusivePercent(metric);
         }
+
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             return " %";
         }
+
         public int getUnits(int units, ParaProfMetric ppMetric) {
             return 0;
         }
@@ -139,12 +155,15 @@ public abstract class ValueType {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getNumCalls();
         }
+
         public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-        	return thread.getMaxNumCalls();
+            return thread.getMaxNumCalls();
         }
+
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             return " calls";
         }
+
         public int getUnits(int units, ParaProfMetric ppMetric) {
             return 0;
         }
@@ -154,48 +173,57 @@ public abstract class ValueType {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getNumSubr();
         }
+
         public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-        	return thread.getMaxNumSubr();
+            return thread.getMaxNumSubr();
         }
+
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             return " calls";
         }
+
         public int getUnits(int units, ParaProfMetric ppMetric) {
             return 0;
         }
     };
-    
+
     public static final ValueType INCLUSIVE_PER_CALL = new ValueType("Inclusive per Call") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getInclusivePerCall(metric);
         }
+
         public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-        	return thread.getMaxInclusivePerCall(metric);
+            return thread.getMaxInclusivePerCall(metric);
         }
+
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             if (!ppMetric.isTimeMetric())
                 return " counts per call";
             return timeUnits(units) + " per call";
         }
+
         public int getUnits(int units, ParaProfMetric ppMetric) {
             if (ppMetric.isTimeMetric())
                 return units;
             return 0;
         }
     };
-    
+
     public static final ValueType EXCLUSIVE_PER_CALL = new ValueType("Exclusive per Call") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getExclusivePerCall(metric);
         }
+
         public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-        	return thread.getMaxExclusivePerCall(metric);
+            return thread.getMaxExclusivePerCall(metric);
         }
+
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             if (!ppMetric.isTimeMetric())
                 return " counts per call";
             return timeUnits(units) + " per call";
         }
+
         public int getUnits(int units, ParaProfMetric ppMetric) {
             if (ppMetric.isTimeMetric())
                 return units;
@@ -203,7 +231,7 @@ public abstract class ValueType {
         }
     };
 
-    public static ValueType[] VALUES = { EXCLUSIVE, INCLUSIVE, EXCLUSIVE_PERCENT, INCLUSIVE_PERCENT, NUMCALLS, NUMSUBR, INCLUSIVE_PER_CALL, EXCLUSIVE_PER_CALL };
+    public static ValueType[] VALUES = { EXCLUSIVE, INCLUSIVE, EXCLUSIVE_PERCENT, INCLUSIVE_PERCENT, NUMCALLS, NUMSUBR,
+            INCLUSIVE_PER_CALL, EXCLUSIVE_PER_CALL };
 
 }
-

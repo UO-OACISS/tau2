@@ -724,9 +724,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         int units = this.units;
         ParaProfMetric ppMetric = ppTrial.getMetric(settings.getHeightMetricID());
-        if (!ppMetric.isTimeMetric()) {
+        if (!ppMetric.isTimeMetric() || !ValueType.isTimeUnits(settings.getHeightValue())) {
             units = 0;
         }
+        
 
         return UtilFncs.getOutputString(units, settings.getHeightValue().getValue(fp, settings.getHeightMetricID()), 6).trim()
                 + getUnitsString(units, settings.getHeightValue(), ppMetric);
@@ -753,7 +754,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         int units = this.units;
         ParaProfMetric ppMetric = ppTrial.getMetric(settings.getColorMetricID());
-        if (!ppMetric.isTimeMetric()) {
+        if (!ppMetric.isTimeMetric() || !ValueType.isTimeUnits(settings.getColorValue())) {
             units = 0;
         }
 
