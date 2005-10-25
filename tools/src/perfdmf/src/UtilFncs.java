@@ -458,7 +458,7 @@ public class UtilFncs {
             }
 
             try {
-                Class c = Class.forName("org/xml/sax/SAXException");
+                Class c = Class.forName("org.xml.sax.SAXException");
             } catch (ClassNotFoundException cnfe) {
                 throw new DataSourceException("Sorry, cube format requires Java 1.4");
             }
@@ -474,7 +474,7 @@ public class UtilFncs {
             }
 
             try {
-                Class c = Class.forName("org/xml/sax/SAXException");
+                Class c = Class.forName("org.xml.sax.SAXException");
             } catch (ClassNotFoundException cnfe) {
                 throw new DataSourceException("Sorry, HPCToolkit format requires Java 1.4");
             }
