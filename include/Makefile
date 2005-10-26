@@ -74,6 +74,9 @@ TAU_PREFIX_INSTALL_DIR=
 #IBM64#IBM_GNU_ABI	     = -maix64 		  #ENDIF#
 #IBM64LINUX#IBM_XLC_ABI	     = -q64 		  #ENDIF#
 #IBM64LINUX#IBM_GNU_ABI	     = -m64 		  #ENDIF#
+#SUNX86_64#SUN_GNU_ABI       = -m64		  #ENDIF#
+#SUNX86_64#SUN_CC_ABI        = -xarch=amd64       #ENDIF#
+
 #USE_IBMXLC#IBM_ABI    	     = $(IBM_XLC_ABI) 	  #ENDIF#
 #GNU#IBM_ABI	     	     = $(IBM_GNU_ABI) 	  #ENDIF#
 #SP1# ABI		     = $(IBM_ABI)	  #ENDIF#
@@ -83,6 +86,7 @@ TAU_PREFIX_INSTALL_DIR=
 #SOL2CC#SUN_ABI	     	     = $(SUN_CC_ABI)	  #ENDIF#
 #GNU#SUN_ABI	     	     = $(SUN_GNU_ABI)	  #ENDIF#
 #SOL2#ABI	     	     = $(SUN_ABI)	  #ENDIF#
+#SUNX86_64#ABI		     = $(SUN_ABI)	  #ENDIF#
 #######################################################################
 F90_ABI	= $(ABI) 
 #IBM64_FORTRAN#F90_ABI	     = -q64 		  #ENDIF#
@@ -501,6 +505,8 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SGICC#AR_SHFLAGS               = -shared       #ENDIF#
 #APPLECXX#AR_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
 #SOL2#AR_SHFLAGS                = -G            #ENDIF#
+#SUN386I#AR_SHFLAGS                = -G            #ENDIF#
+#SUNX86_64#AR_SHFLAGS                = -G            #ENDIF#
 #USE_IBMXLC#AR_SHFLAGS          = -G                #ENDIF#
 #USE_DECCXX#AR_SHFLAGS          = -shared               #ENDIF#
 #USE_INTELCXX#AR_SHFLAGS        = -shared               #ENDIF#

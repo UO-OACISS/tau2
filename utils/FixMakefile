@@ -706,6 +706,10 @@ fi
      SUN386I)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SUNX86_64)
+	echo "NOTE: *** Using Solaris 64 bit options.  ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      CNXSPP)
 	echo "NOTE: *** Convex SPP development environment found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
