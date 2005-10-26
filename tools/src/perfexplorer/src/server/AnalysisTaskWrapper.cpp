@@ -54,7 +54,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.8 2005/10/22 00:01:53 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.9 2005/10/26 21:16:56 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -628,22 +628,21 @@ public class AnalysisTaskWrapper extends TimerTask {
 						String nail = vt.getThumbnail();
 						saveAnalysisResult("Virtual Topology", filename, nail, false);
 						
-						// do maxes
-						thumbnail = generateThumbnail(clusterer.getClusterMaximums(), deviations, eventIDs);
-						chart = generateImage(clusterer.getClusterMaximums(), deviations, eventIDs);
-						chartType = CLUSTER_AVERAGES;
-						saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart);
+						// do mins
+						chartType = CLUSTER_MINIMUMS;
+						thumbnail = generateThumbnail(clusterer.getClusterMinimums(), deviations, eventIDs);
+						chart = generateImage(clusterer.getClusterMinimums(), deviations, eventIDs);
+						saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
 						// do averages
+						chartType = CLUSTER_AVERAGES;
 						thumbnail = generateThumbnail(centroids, deviations, eventIDs);
 						chart = generateImage(centroids, deviations, eventIDs);
-						chartType = CLUSTER_MAXIMUMS;
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
-						// do mins
-						thumbnail =
-						generateThumbnail(clusterer.getClusterMinimums(), deviations, eventIDs);
-						chart = generateImage(clusterer.getClusterMinimums(), deviations, eventIDs);
-						chartType = CLUSTER_MINIMUMS;
-						saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
+						// do maxes
+						chartType = CLUSTER_MAXIMUMS;
+						thumbnail = generateThumbnail(clusterer.getClusterMaximums(), deviations, eventIDs);
+						chart = generateImage(clusterer.getClusterMaximums(), deviations, eventIDs);
+						saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart);
 					}
 				} else {
 					System.out.println("Doing Correlation Analysis...");
@@ -939,8 +938,18 @@ public class AnalysisTaskWrapper extends TimerTask {
 				dataset.addValue(centroids.getValue(x,y), (String) rowLabels.get(y), new String(Integer.toString(x)));
 			}
 		}
+		String chartTitle = modelData.toString();
+		if (chartType == CLUSTER_AVERAGES) {
+            chartTitle = chartTitle + " Average Values";
+		}
+		if (chartType == CLUSTER_MAXIMUMS) {
+            chartTitle = chartTitle + " Maximum Values";
+		}
+		if (chartType == CLUSTER_MINIMUMS) {
+            chartTitle = chartTitle + " Minimum Values";
+		}
         JFreeChart chart = ChartFactory.createStackedBarChart(
-            modelData.toString(),  // chart title
+            chartTitle,  // chart title
             "Cluster Number",          // domain axis label
             "Total Runtime",     // range axis label
             dataset,                         // data

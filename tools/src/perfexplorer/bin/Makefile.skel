@@ -17,6 +17,7 @@ WEBSTART_DIR = /Library/WebServer/Documents/perfexplorer
 CPP = cpp -P -CC -D=USE_${ENGINE_DEFINE}_ENGINE
 JAVAC = javac -target 1.3 
 RMIC = rmic
+SED = sed
 
 ##########################
 
@@ -53,8 +54,10 @@ STANDALONE_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:$
 
 SERVER_CPP_INPUT = ${wildcard src/server/*.cpp}
 SERVER_CPP_OUTPUT = ${patsubst %.cpp, %.java, ${SERVER_CPP_INPUT}}
+CONSTANT_CPP_INPUT = ${wildcard src/constants/*.cpp}
+CONSTANT_CPP_OUTPUT = ${patsubst %.cpp, %.java, ${CONSTANT_CPP_INPUT}} 
 
-CONSTANT_SOURCES = ${wildcard src/constants/*.java}
+CONSTANT_SOURCES = ${CONSTANT_CPP_OUTPUT}
 COMMON_SOURCES = ${wildcard src/common/*.java}
 CLUSTERING_SOURCES = ${wildcard src/clustering/*.java} ${wildcard src/clustering/${ENGINE_PACKAGE}/*.java} 
 CLIENT_SOURCES = ${wildcard src/client/*.java}
@@ -97,12 +100,12 @@ perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUS
 # otherwise specify -source 1.4 to enable assertions.
 ########################
 
+${CONSTANT_CPP_OUTPUT}: Makefile ${CONSTANT_CPP_INPUT}
+	${SED} "s/XXXXX/$(NOW)/" ${CONSTANT_CPP_INPUT} > ${CONSTANT_CPP_OUTPUT}
+
 ${CONSTANT_CLASSES}: Makefile ${CONSTANT_SOURCES}
 	mkdir -p classes
-	/bin/mv src/constants/Constants.java src/constants/Constants.java.orig
-	sed "s/XXXXX/$(NOW)/" src/constants/Constants.java.orig > src/constants/Constants.java
 	${JAVAC} -d classes ${CONSTANT_SOURCES}
-	/bin/mv src/constants/Constants.java.orig src/constants/Constants.java
 
 ${COMMON_CLASSES}: Makefile ${COMMON_SOURCES} ${CONSTANT_CLASSES}
 	${JAVAC} -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
@@ -129,6 +132,7 @@ ${CLIENT_CLASSES}: Makefile ${CLIENT_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASS
 
 cleanconstants:
 	rm -rf classes/constants
+	rm -rf ${CONSTANT_CPP_OUTPUT}
 
 cleanclient:
 	rm -rf classes/client
