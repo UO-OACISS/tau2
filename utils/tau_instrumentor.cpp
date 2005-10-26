@@ -1035,7 +1035,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
 int CPDB_GetSubstringCol(const char *haystack, const char *needle)
 {
-  char *res = strstr(haystack, needle);
+  const char *res = strstr(haystack, needle);
   int diff = 0;
   if (res)
   {
@@ -1714,9 +1714,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.71 $   $Date: 2005/09/26 17:27:30 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.71 2005/09/26 17:27:30 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.72 $   $Date: 2005/10/26 21:57:58 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.72 2005/10/26 21:57:58 amorris Exp $
  ***************************************************************************/
 
 
