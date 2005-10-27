@@ -164,7 +164,7 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
   
 
 #ifdef DEBUG_PROF
-  printf("Inside tau_profile_timer_ fname=%s\n", infname);
+  printf("Inside tau_profile_timer_ fname=%s\n", fname);
 #endif /* DEBUG_PROF */
   if (*ptr == 0) 
   {
@@ -1297,6 +1297,6 @@ void TAU_PHASE_STOP(void **profiler)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.45 $   $Date: 2005/08/22 17:02:05 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.45 2005/08/22 17:02:05 amorris Exp $ 
+ * $Revision: 1.46 $   $Date: 2005/10/27 18:10:23 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.46 2005/10/27 18:10:23 amorris Exp $ 
  ***************************************************************************/
