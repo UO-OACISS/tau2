@@ -831,6 +831,8 @@ void pomp_master_end(struct ompregdescr* r) {
 
 void pomp_parallel_begin(struct ompregdescr* r) {
 
+/* if there is no top level timer, create it */
+  Tau_create_top_level_timer_if_necessary();
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tparallelb);
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
@@ -1244,8 +1246,8 @@ int  pomp_test_nest_lock(omp_nest_lock_t *s) {
 
 /***************************************************************************
  * $RCSfile: TauOpari.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 2002/05/08 11:10:55 $
- * POOMA_VERSION_ID: $Id: TauOpari.cpp,v 1.8 2002/05/08 11:10:55 sameer Exp $
+ * $Revision: 1.9 $   $Date: 2005/10/31 23:45:00 $
+ * POOMA_VERSION_ID: $Id: TauOpari.cpp,v 1.9 2005/10/31 23:45:00 sameer Exp $
  ***************************************************************************/
 
 
