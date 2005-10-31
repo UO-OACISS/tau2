@@ -113,7 +113,7 @@ public:
 	Profiler(const Profiler& X);
 	Profiler& operator= (const Profiler& X);
 	// Clean up data from this invocation.
-	void Stop(int tid = RtsLayer::myThread());
+	void Stop(int tid = RtsLayer::myThread(), bool useLastTimeStamp = false);
 	~Profiler();
 #ifdef TAU_CALLPATH
         void CallPathStart(int tid);
@@ -235,6 +235,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.59 $   $Date: 2005/05/27 22:09:47 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.59 2005/05/27 22:09:47 sameer Exp $ 
+ * $Revision: 1.60 $   $Date: 2005/10/31 23:47:12 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.60 2005/10/31 23:47:12 sameer Exp $ 
  ***************************************************************************/
