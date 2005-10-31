@@ -5,6 +5,8 @@
  */
 
 package tau_conf;
+import java.util.HashMap;
+import java.util.Vector;
 import javax.swing.*;
 import java.io.*;
 /**
@@ -20,6 +22,12 @@ public class TAU_Conf extends javax.swing.JFrame {
     
     String configureline = "./configure";
     String instline = "./installtau";
+    Vector cbholder=new Vector();
+    Vector comholder = new Vector();
+    Vector savedconf = new Vector();
+    Vector allconf= new Vector();
+    HashMap commap = new HashMap(64);
+    HashMap fieldmap= new HashMap(64);
     
     /** This method is called from within the constructor to
      * initialize the form.
@@ -33,83 +41,83 @@ public class TAU_Conf extends javax.swing.JFrame {
         jFileChooser1 = new javax.swing.JFileChooser();
         tabPane = new javax.swing.JTabbedPane();
         installationPanel = new javax.swing.JPanel();
-        compilerPanel = new javax.swing.JPanel();
-        cccompLabel = new javax.swing.JLabel();
-        cppcompLabel = new javax.swing.JLabel();
-        fortrancompLabel = new javax.swing.JLabel();
-        String[] ccCompStrings = { "Default","cc","gcc","KCC","pgcc","guidec","xlc","ecc","pathcc" };
-        ccCombo = new javax.swing.JComboBox(ccCompStrings);
-        String[] cppCompStrings = { "Default","CC","KCC","g++","xlC","cxx","pgCC","FCC","guidec++","aCC","c++","ecpc","icpc","pathCC" };
-        cppCombo = new javax.swing.JComboBox(cppCompStrings);
-        String[] fortranCompStrings = {"Default","gnu","sgi","ibm","ibm64","hp","cray","pgi","absoft","fujitsu","sun","compaq","kai","nec","hitachi","intel","absoft","lahey","nagware","pathscale"};
-        fortranCombo = new javax.swing.JComboBox(fortranCompStrings);
-        defccTextField = new javax.swing.JTextField();
-        defcppTextField = new javax.swing.JTextField();
-        deffortranTextField = new javax.swing.JTextField();
-        defccCheckBox = new javax.swing.JCheckBox();
-        defcppCheckBox = new javax.swing.JCheckBox();
-        deffortranCheckBox = new javax.swing.JCheckBox();
-        cQjButton = new javax.swing.JButton();
-        cppQjButton = new javax.swing.JButton();
-        fortQjButton = new javax.swing.JButton();
-        pdtPanel = new javax.swing.JPanel();
+        papijPanel = new javax.swing.JPanel();
+        papiQjButton = new javax.swing.JButton();
+        papiCheckBox = new javax.swing.JCheckBox();
+        papiButton = new javax.swing.JButton();
+        papiTextField = new javax.swing.JTextField();
+        papiwallQjButton = new javax.swing.JButton();
+        papiwallCheckBox = new javax.swing.JCheckBox();
+        papivirtQjButton = new javax.swing.JButton();
+        papivirtCheckBox = new javax.swing.JCheckBox();
+        multcountQjButton = new javax.swing.JButton();
+        multiplecountCheckBox = new javax.swing.JCheckBox();
+        pdtjPanel = new javax.swing.JPanel();
+        pdtQjButton = new javax.swing.JButton();
         pdtCheckBox = new javax.swing.JCheckBox();
+        pdtButton = new javax.swing.JButton();
+        pdtdirField = new javax.swing.JTextField();
+        pdtcppQjButton = new javax.swing.JButton();
         pdtCompilerLabel = new javax.swing.JLabel();
         String[] pdtcCompStrings = { "Default","CC","KCC","g++","xlC","cxx","pgCC","FCC","guidec++","aCC","c++","ecpc","icpc" };
         pdtcppCombo = new javax.swing.JComboBox(pdtcCompStrings);
-        pdtdirField = new javax.swing.JTextField();
-        pdtButton = new javax.swing.JButton();
         defpdtCheckBox = new javax.swing.JCheckBox();
         defpdtTextField = new javax.swing.JTextField();
-        pdtQjButton = new javax.swing.JButton();
-        pdtcppQjButton = new javax.swing.JButton();
-        papiPanel = new javax.swing.JPanel();
-        papiCheckBox = new javax.swing.JCheckBox();
-        papiTextField = new javax.swing.JTextField();
-        papiwallCheckBox = new javax.swing.JCheckBox();
-        papivirtCheckBox = new javax.swing.JCheckBox();
-        multiplecountCheckBox = new javax.swing.JCheckBox();
-        papiButton = new javax.swing.JButton();
-        papiQjButton = new javax.swing.JButton();
-        papiwallQjButton = new javax.swing.JButton();
-        papivirtQjButton = new javax.swing.JButton();
-        multcountQjButton = new javax.swing.JButton();
+        compilerjPanel = new javax.swing.JPanel();
+        cppQjButton = new javax.swing.JButton();
+        cppcompLabel = new javax.swing.JLabel();
+        String[] cppCompStrings = { "Default","CC","KCC","g++","xlC","cxx","pgCC","FCC","guidec++","aCC","c++","ecpc","icpc","pathCC" };
+        cppCombo = new javax.swing.JComboBox(cppCompStrings);
+        defcppCheckBox = new javax.swing.JCheckBox();
+        defcppTextField = new javax.swing.JTextField();
+        cQjButton = new javax.swing.JButton();
+        cccompLabel = new javax.swing.JLabel();
+        String[] ccCompStrings = { "Default","cc","gcc","KCC","pgcc","guidec","xlc","ecc","pathcc" };
+        ccCombo = new javax.swing.JComboBox(ccCompStrings);
+        defccCheckBox = new javax.swing.JCheckBox();
+        fortQjButton = new javax.swing.JButton();
+        defccTextField = new javax.swing.JTextField();
+        fortrancompLabel = new javax.swing.JLabel();
+        String[] fortranCompStrings = {"Default","gnu","sgi","ibm","ibm64","hp","cray","pgi","absoft","fujitsu","sun","compaq","kai","nec","hitachi","intel","absoft","lahey","nagware","pathscale"};
+        fortranCombo = new javax.swing.JComboBox(fortranCompStrings);
+        deffortranCheckBox = new javax.swing.JCheckBox();
+        deffortranTextField = new javax.swing.JTextField();
         messagePannel = new javax.swing.JPanel();
-        mpiPanel = new javax.swing.JPanel();
+        mpijPanel = new javax.swing.JPanel();
+        mpiQjButton = new javax.swing.JButton();
         mpiCheckBox = new javax.swing.JCheckBox();
+        mpiincQjButton = new javax.swing.JButton();
         mpiincCheckBox = new javax.swing.JCheckBox();
+        mpiincButton = new javax.swing.JButton();
         mpiincTextField = new javax.swing.JTextField();
+        mpilibQjButton = new javax.swing.JButton();
         mpilibCheckBox = new javax.swing.JCheckBox();
+        mpilibButton = new javax.swing.JButton();
         mpilibTextField = new javax.swing.JTextField();
+        altmpiQjButton = new javax.swing.JButton();
         altmpiCheckBox = new javax.swing.JCheckBox();
         altmpiTextField = new javax.swing.JTextField();
+        tagQjButton = new javax.swing.JButton();
         tagCheckBox = new javax.swing.JCheckBox();
         tagTextField = new javax.swing.JTextField();
-        nocomCheckBox = new javax.swing.JCheckBox();
-        mpitraceCheckBox = new javax.swing.JCheckBox();
-        mpiincButton = new javax.swing.JButton();
-        mpilibButton = new javax.swing.JButton();
-        mpiQjButton = new javax.swing.JButton();
-        mpiincQjButton = new javax.swing.JButton();
-        mpilibQjButton = new javax.swing.JButton();
-        altmpiQjButton = new javax.swing.JButton();
-        tagQjButton = new javax.swing.JButton();
         nocommQjButton = new javax.swing.JButton();
+        nocomCheckBox = new javax.swing.JCheckBox();
         mpitraceQjButton = new javax.swing.JButton();
-        shmemPanel = new javax.swing.JPanel();
+        mpitraceCheckBox = new javax.swing.JCheckBox();
+        shmemjPanel = new javax.swing.JPanel();
+        shmemQjButton = new javax.swing.JButton();
         shmemCheckBox = new javax.swing.JCheckBox();
+        shmemincQjButton = new javax.swing.JButton();
         shmemincCheckBox = new javax.swing.JCheckBox();
+        shmemincButton = new javax.swing.JButton();
         shmemincTextField = new javax.swing.JTextField();
+        shmemlibQjButton = new javax.swing.JButton();
         shmemlibCheckBox = new javax.swing.JCheckBox();
+        shmemlibButton = new javax.swing.JButton();
         shmemlibTextField = new javax.swing.JTextField();
+        altshmemQjButton = new javax.swing.JButton();
         altshmemCheckBox = new javax.swing.JCheckBox();
         altshmemTextField = new javax.swing.JTextField();
-        shmemincButton = new javax.swing.JButton();
-        shmemlibButton = new javax.swing.JButton();
-        shmemQjButton = new javax.swing.JButton();
-        shmemincQjButton = new javax.swing.JButton();
-        shmemlibQjButton = new javax.swing.JButton();
-        altshmemQjButton = new javax.swing.JButton();
         outputPanel = new javax.swing.JPanel();
         profilePanel = new javax.swing.JPanel();
         profileCheckBox = new javax.swing.JCheckBox();
@@ -139,6 +147,10 @@ public class TAU_Conf extends javax.swing.JFrame {
         slog2QjButton = new javax.swing.JButton();
         vtfQjButton = new javax.swing.JButton();
         slog2eQjButton = new javax.swing.JButton();
+        otfQjButton = new javax.swing.JButton();
+        otfCheckBox = new javax.swing.JCheckBox();
+        jButton1 = new javax.swing.JButton();
+        otfTextField = new javax.swing.JTextField();
         jPanel5 = new javax.swing.JPanel();
         profphaseCheckBox = new javax.swing.JCheckBox();
         depthlimitCheckBox = new javax.swing.JCheckBox();
@@ -212,7 +224,6 @@ public class TAU_Conf extends javax.swing.JFrame {
         pythonlibButton = new javax.swing.JButton();
         pythonincQjButton = new javax.swing.JButton();
         pythonlibQjButton = new javax.swing.JButton();
-        jLabel3 = new javax.swing.JLabel();
         jdkPanel = new javax.swing.JPanel();
         usejdkCheckBox = new javax.swing.JCheckBox();
         jdkField = new javax.swing.JTextField();
@@ -239,6 +250,17 @@ public class TAU_Conf extends javax.swing.JFrame {
         archQjButton = new javax.swing.JButton();
         useroptQjButton = new javax.swing.JButton();
         noexQjButton = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        jPanel3 = new javax.swing.JPanel();
+        allconfComboBox = new javax.swing.JComboBox(allconf);
+        loadallconfButton = new javax.swing.JButton();
+        savedconfComboBox = new javax.swing.JComboBox(savedconf);
+        loadsavedconfButton = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        removeconfButton = new javax.swing.JButton();
+        saveconfButton = new javax.swing.JButton();
+        custconfTextField = new javax.swing.JTextField();
         commandPanel = new javax.swing.JPanel();
         confButton = new javax.swing.JButton();
         confjScrollPane = new javax.swing.JScrollPane(commandTextArea);
@@ -255,323 +277,9 @@ public class TAU_Conf extends javax.swing.JFrame {
         profstatsCheckBox.setText("Profile Stats [-PROFILESTATS]");
         jFileChooser1.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
 
-        getContentPane().setLayout(null);
-
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("tau_setup");
-        setResizable(false);
-        installationPanel.setLayout(null);
-
-        compilerPanel.setLayout(null);
-
-        compilerPanel.setBorder(new javax.swing.border.EtchedBorder());
-        cccompLabel.setText("C Compiler [-cc=]:");
-        compilerPanel.add(cccompLabel);
-        cccompLabel.setBounds(10, 70, 280, 15);
-
-        cppcompLabel.setText("C++ Compiler [-c++=]:");
-        compilerPanel.add(cppcompLabel);
-        cppcompLabel.setBounds(10, 10, 280, 15);
-
-        fortrancompLabel.setText("Fortran Compiler [-fortran=]:");
-        compilerPanel.add(fortrancompLabel);
-        fortrancompLabel.setBounds(10, 130, 280, 15);
-
-        ccCombo.setToolTipText("Specifies the name of the C compiler");
-        ccCombo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ccComboActionPerformed(evt);
-            }
-        });
-
-        compilerPanel.add(ccCombo);
-        ccCombo.setBounds(300, 70, 90, 24);
-
-        cppCombo.setToolTipText("Specifies the name of the C++ compiler");
-        cppCombo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cppComboActionPerformed(evt);
-            }
-        });
-
-        compilerPanel.add(cppCombo);
-        cppCombo.setBounds(300, 10, 90, 24);
-
-        fortranCombo.setToolTipText("Specifies the name of the Fortran compiler");
-        fortranCombo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                fortranComboActionPerformed(evt);
-            }
-        });
-
-        compilerPanel.add(fortranCombo);
-        fortranCombo.setBounds(300, 130, 90, 24);
-
-        defccTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        defccTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                defccTextFieldActionPerformed(evt);
-            }
-        });
-
-        compilerPanel.add(defccTextField);
-        defccTextField.setBounds(300, 100, 200, 19);
-
-        defcppTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        defcppTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                defcppTextFieldActionPerformed(evt);
-            }
-        });
-
-        compilerPanel.add(defcppTextField);
-        defcppTextField.setBounds(300, 40, 200, 19);
-
-        deffortranTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        deffortranTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                deffortranTextFieldActionPerformed(evt);
-            }
-        });
-
-        compilerPanel.add(deffortranTextField);
-        deffortranTextField.setBounds(300, 160, 200, 19);
-
-        defccCheckBox.setText("User Defined");
-        defccCheckBox.setToolTipText("Specify an alternate C compiler (e.g. *xlc*)");
-        defccCheckBox.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                defccCheckBoxItemStateChanged(evt);
-            }
-        });
-
-        compilerPanel.add(defccCheckBox);
-        defccCheckBox.setBounds(10, 90, 280, 23);
-
-        defcppCheckBox.setText("User Defined");
-        defcppCheckBox.setToolTipText("Specify an alternate C++ compiler (e.g. *xlC*)");
-        defcppCheckBox.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                defcppCheckBoxItemStateChanged(evt);
-            }
-        });
-
-        compilerPanel.add(defcppCheckBox);
-        defcppCheckBox.setBounds(10, 30, 280, 23);
-
-        deffortranCheckBox.setText("User Defined");
-        deffortranCheckBox.setToolTipText("Specify an alternate Fortran compiler");
-        deffortranCheckBox.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                deffortranCheckBoxItemStateChanged(evt);
-            }
-        });
-
-        compilerPanel.add(deffortranCheckBox);
-        deffortranCheckBox.setBounds(10, 150, 280, 23);
-
-        cQjButton.setText("?");
-        cQjButton.setToolTipText("More Info");
-        cQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
-        cQjButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cQjButtonActionPerformed(evt);
-            }
-        });
-
-        compilerPanel.add(cQjButton);
-        cQjButton.setBounds(600, 70, 20, 20);
-
-        cppQjButton.setText("?");
-        cppQjButton.setToolTipText("More Info");
-        cppQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
-        cppQjButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cppQjButtonActionPerformed(evt);
-            }
-        });
-
-        compilerPanel.add(cppQjButton);
-        cppQjButton.setBounds(600, 10, 20, 20);
-
-        fortQjButton.setText("?");
-        fortQjButton.setToolTipText("More Info");
-        fortQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
-        fortQjButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                fortQjButtonActionPerformed(evt);
-            }
-        });
-
-        compilerPanel.add(fortQjButton);
-        fortQjButton.setBounds(600, 130, 20, 20);
-
-        installationPanel.add(compilerPanel);
-        compilerPanel.setBounds(10, 10, 630, 190);
-
-        pdtPanel.setLayout(null);
-
-        pdtPanel.setBorder(new javax.swing.border.EtchedBorder());
-        pdtCheckBox.setText("PDT [-pdt=]:");
-        pdtCheckBox.setToolTipText("Specify location of PDT (Program Database Toolkit)");
-        pdtCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                pdtCheckBoxStateChanged(evt);
-            }
-        });
-
-        pdtPanel.add(pdtCheckBox);
-        pdtCheckBox.setBounds(5, 4, 290, 23);
-
-        pdtCompilerLabel.setText("PDT C++ Compiler [-pdt_c++=]:");
-        pdtPanel.add(pdtCompilerLabel);
-        pdtCompilerLabel.setBounds(10, 50, 280, 15);
-
-        pdtcppCombo.setToolTipText("Specify a different PDT C++ compiler");
-        pdtcppCombo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pdtcppComboActionPerformed(evt);
-            }
-        });
-
-        pdtPanel.add(pdtcppCombo);
-        pdtcppCombo.setBounds(300, 50, 90, 24);
-
-        pdtdirField.setPreferredSize(new java.awt.Dimension(200, 19));
-        pdtdirField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pdtdirFieldActionPerformed(evt);
-            }
-        });
-
-        pdtPanel.add(pdtdirField);
-        pdtdirField.setBounds(300, 10, 200, 19);
-
-        pdtButton.setText("Browse");
-        pdtButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pdtButtonActionPerformed(evt);
-            }
-        });
-
-        pdtPanel.add(pdtButton);
-        pdtButton.setBounds(510, 10, 80, 25);
-
-        defpdtCheckBox.setText("User Defined");
-        defpdtCheckBox.setToolTipText("Specify an alternate C++ compiler (e.g. *xlC*)");
-        defpdtCheckBox.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                defpdtCheckBoxItemStateChanged(evt);
-            }
-        });
-
-        pdtPanel.add(defpdtCheckBox);
-        defpdtCheckBox.setBounds(10, 80, 280, 23);
-
-        defpdtTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        defpdtTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                defpdtTextFieldActionPerformed(evt);
-            }
-        });
-
-        pdtPanel.add(defpdtTextField);
-        defpdtTextField.setBounds(300, 80, 200, 19);
-
-        pdtQjButton.setText("?");
-        pdtQjButton.setToolTipText("More Info");
-        pdtQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
-        pdtQjButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pdtQjButtonActionPerformed(evt);
-            }
-        });
-
-        pdtPanel.add(pdtQjButton);
-        pdtQjButton.setBounds(600, 10, 20, 20);
-
-        pdtcppQjButton.setText("?");
-        pdtcppQjButton.setToolTipText("More Info");
-        pdtcppQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
-        pdtcppQjButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pdtcppQjButtonActionPerformed(evt);
-            }
-        });
-
-        pdtPanel.add(pdtcppQjButton);
-        pdtcppQjButton.setBounds(600, 50, 20, 20);
-
-        installationPanel.add(pdtPanel);
-        pdtPanel.setBounds(10, 210, 630, 110);
-
-        papiPanel.setLayout(null);
-
-        papiPanel.setBorder(new javax.swing.border.EtchedBorder());
-        papiCheckBox.setText("PAPI [-papi=]:");
-        papiCheckBox.setToolTipText("Specify location of PAPI (Performance API)");
-        papiCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                papiCheckBoxStateChanged(evt);
-            }
-        });
-
-        papiPanel.add(papiCheckBox);
-        papiCheckBox.setBounds(10, 10, 290, 23);
-
-        papiTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        papiTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                papiTextFieldActionPerformed(evt);
-            }
-        });
-
-        papiPanel.add(papiTextField);
-        papiTextField.setBounds(300, 10, 200, 19);
-
-        papiwallCheckBox.setText("PAPI Wallclock [-PAPIWALLCLOCK]");
-        papiwallCheckBox.setToolTipText("Use PAPI to access wallclock time. Needs -papi");
-        papiwallCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                papiwallCheckBoxStateChanged(evt);
-            }
-        });
-
-        papiPanel.add(papiwallCheckBox);
-        papiwallCheckBox.setBounds(20, 30, 350, 23);
-
-        papivirtCheckBox.setText("PAPI Virtual [-PAPIVIRTUAL]");
-        papivirtCheckBox.setToolTipText("Use PAPI for virtual (user) time calculation");
-        papivirtCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                papivirtCheckBoxStateChanged(evt);
-            }
-        });
-
-        papiPanel.add(papivirtCheckBox);
-        papivirtCheckBox.setBounds(20, 50, 330, 23);
-
-        multiplecountCheckBox.setText("Multiple Counters [-MULTIPLECOUNTERS]");
-        multiplecountCheckBox.setToolTipText("Use multiple hardware counters and time");
-        multiplecountCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                multiplecountCheckBoxStateChanged(evt);
-            }
-        });
-
-        papiPanel.add(multiplecountCheckBox);
-        multiplecountCheckBox.setBounds(10, 80, 330, 23);
-
-        papiButton.setText("Browse");
-        papiButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                papiButtonActionPerformed(evt);
-            }
-        });
-
-        papiPanel.add(papiButton);
-        papiButton.setBounds(510, 10, 80, 25);
-
+        setTitle("TAU_Conf");
+        papijPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         papiQjButton.setText("?");
         papiQjButton.setToolTipText("More Info");
         papiQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -581,8 +289,27 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        papiPanel.add(papiQjButton);
-        papiQjButton.setBounds(600, 10, 20, 20);
+        papiCheckBox.setText("PAPI [-papi=]:");
+        papiCheckBox.setToolTipText("Specify location of PAPI (Performance API)");
+        papiCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                papiCheckBoxStateChanged(evt);
+            }
+        });
+
+        papiButton.setText("Browse");
+        papiButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                papiButtonActionPerformed(evt);
+            }
+        });
+
+        papiTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        papiTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                papiTextFieldActionPerformed(evt);
+            }
+        });
 
         papiwallQjButton.setText("?");
         papiwallQjButton.setToolTipText("More Info");
@@ -593,8 +320,13 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        papiPanel.add(papiwallQjButton);
-        papiwallQjButton.setBounds(600, 30, 20, 20);
+        papiwallCheckBox.setText("PAPI Wallclock [-PAPIWALLCLOCK]");
+        papiwallCheckBox.setToolTipText("Use PAPI to access wallclock time. Needs -papi");
+        papiwallCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                papiwallCheckBoxStateChanged(evt);
+            }
+        });
 
         papivirtQjButton.setText("?");
         papivirtQjButton.setToolTipText("More Info");
@@ -605,8 +337,13 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        papiPanel.add(papivirtQjButton);
-        papivirtQjButton.setBounds(600, 50, 20, 20);
+        papivirtCheckBox.setText("PAPI Virtual [-PAPIVIRTUAL]");
+        papivirtCheckBox.setToolTipText("Use PAPI for virtual (user) time calculation");
+        papivirtCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                papivirtCheckBoxStateChanged(evt);
+            }
+        });
 
         multcountQjButton.setText("?");
         multcountQjButton.setToolTipText("More Info");
@@ -617,158 +354,380 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        papiPanel.add(multcountQjButton);
-        multcountQjButton.setBounds(600, 80, 20, 20);
+        multiplecountCheckBox.setText("Multiple Counters [-MULTIPLECOUNTERS]");
+        multiplecountCheckBox.setToolTipText("Use multiple hardware counters and time");
+        multiplecountCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                multiplecountCheckBoxStateChanged(evt);
+            }
+        });
 
-        installationPanel.add(papiPanel);
-        papiPanel.setBounds(10, 330, 630, 110);
+        org.jdesktop.layout.GroupLayout papijPanelLayout = new org.jdesktop.layout.GroupLayout(papijPanel);
+        papijPanel.setLayout(papijPanelLayout);
+        papijPanelLayout.setHorizontalGroup(
+            papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+                        .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(papiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(papiwallQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(papiCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 112, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(papiButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(papiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 393, Short.MAX_VALUE))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+                                .add(23, 23, 23)
+                                .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(papivirtCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 197, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(papiwallCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 239, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
+                    .add(papivirtQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+                        .add(multcountQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(multiplecountCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 284, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
+        );
+        papijPanelLayout.setVerticalGroup(
+            papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(papiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(papiCheckBox)
+                    .add(papiButton)
+                    .add(papiTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(papiwallQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(papiwallCheckBox))
+                .add(1, 1, 1)
+                .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(papivirtQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(papivirtCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(multcountQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(multiplecountCheckBox))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
+        pdtjPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        pdtQjButton.setText("?");
+        pdtQjButton.setToolTipText("More Info");
+        pdtQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        pdtQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pdtQjButtonActionPerformed(evt);
+            }
+        });
+
+        pdtCheckBox.setText("PDT [-pdt=]:");
+        pdtCheckBox.setToolTipText("Specify location of PDT (Program Database Toolkit)");
+        pdtCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                pdtCheckBoxStateChanged(evt);
+            }
+        });
+
+        pdtButton.setText("Browse");
+        pdtButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pdtButtonActionPerformed(evt);
+            }
+        });
+
+        pdtdirField.setPreferredSize(new java.awt.Dimension(200, 19));
+        pdtdirField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pdtdirFieldActionPerformed(evt);
+            }
+        });
+
+        pdtcppQjButton.setText("?");
+        pdtcppQjButton.setToolTipText("More Info");
+        pdtcppQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        pdtcppQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pdtcppQjButtonActionPerformed(evt);
+            }
+        });
+
+        pdtCompilerLabel.setText("PDT C++ Compiler [-pdt_c++=]:");
+
+        pdtcppCombo.setToolTipText("Specify a different PDT C++ compiler");
+        pdtcppCombo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pdtcppComboActionPerformed(evt);
+            }
+        });
+
+        defpdtCheckBox.setText("User Defined");
+        defpdtCheckBox.setToolTipText("Specify an alternate C++ compiler (e.g. *xlC*)");
+        defpdtCheckBox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                defpdtCheckBoxItemStateChanged(evt);
+            }
+        });
+
+        defpdtTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        defpdtTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                defpdtTextFieldActionPerformed(evt);
+            }
+        });
+
+        org.jdesktop.layout.GroupLayout pdtjPanelLayout = new org.jdesktop.layout.GroupLayout(pdtjPanel);
+        pdtjPanel.setLayout(pdtjPanelLayout);
+        pdtjPanelLayout.setHorizontalGroup(
+            pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, pdtjPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, pdtjPanelLayout.createSequentialGroup()
+                        .add(pdtQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(pdtCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 104, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(31, 31, 31)
+                        .add(pdtButton))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, pdtjPanelLayout.createSequentialGroup()
+                        .add(pdtcppQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(pdtCompilerLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 205, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(defpdtCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 106, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(defpdtTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 366, Short.MAX_VALUE)
+                    .add(pdtcppCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(pdtdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 366, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        pdtjPanelLayout.setVerticalGroup(
+            pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, pdtjPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(pdtQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(pdtCheckBox)
+                    .add(pdtButton)
+                    .add(pdtdirField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(pdtcppQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(pdtCompilerLabel)
+                    .add(pdtcppCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(defpdtCheckBox)
+                    .add(defpdtTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        compilerjPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        cppQjButton.setText("?");
+        cppQjButton.setToolTipText("More Info");
+        cppQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        cppQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cppQjButtonActionPerformed(evt);
+            }
+        });
+
+        cppcompLabel.setText("C++ Compiler [-c++=]:");
+
+        cppCombo.setToolTipText("Specifies the name of the C++ compiler");
+        cppCombo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cppComboActionPerformed(evt);
+            }
+        });
+
+        defcppCheckBox.setText("User Defined");
+        defcppCheckBox.setToolTipText("Specify an alternate C++ compiler (e.g. *xlC*)");
+        defcppCheckBox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                defcppCheckBoxItemStateChanged(evt);
+            }
+        });
+
+        defcppTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        defcppTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                defcppTextFieldActionPerformed(evt);
+            }
+        });
+
+        cQjButton.setText("?");
+        cQjButton.setToolTipText("More Info");
+        cQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        cQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cQjButtonActionPerformed(evt);
+            }
+        });
+
+        cccompLabel.setText("C Compiler [-cc=]:");
+
+        ccCombo.setToolTipText("Specifies the name of the C compiler");
+        ccCombo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ccComboActionPerformed(evt);
+            }
+        });
+
+        defccCheckBox.setText("User Defined");
+        defccCheckBox.setToolTipText("Specify an alternate C compiler (e.g. *xlc*)");
+        defccCheckBox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                defccCheckBoxItemStateChanged(evt);
+            }
+        });
+
+        fortQjButton.setText("?");
+        fortQjButton.setToolTipText("More Info");
+        fortQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        fortQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fortQjButtonActionPerformed(evt);
+            }
+        });
+
+        defccTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        defccTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                defccTextFieldActionPerformed(evt);
+            }
+        });
+
+        fortrancompLabel.setText("Fortran Compiler [-fortran=]:");
+
+        fortranCombo.setToolTipText("Specifies the name of the Fortran compiler");
+        fortranCombo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fortranComboActionPerformed(evt);
+            }
+        });
+
+        deffortranCheckBox.setText("User Defined");
+        deffortranCheckBox.setToolTipText("Specify an alternate Fortran compiler");
+        deffortranCheckBox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                deffortranCheckBoxItemStateChanged(evt);
+            }
+        });
+
+        deffortranTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        deffortranTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deffortranTextFieldActionPerformed(evt);
+            }
+        });
+
+        org.jdesktop.layout.GroupLayout compilerjPanelLayout = new org.jdesktop.layout.GroupLayout(compilerjPanel);
+        compilerjPanel.setLayout(compilerjPanelLayout);
+        compilerjPanelLayout.setHorizontalGroup(
+            compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+                        .add(cppQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(cppcompLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 149, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(defcppCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 106, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+                        .add(cQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(defccCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 106, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(cccompLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 115, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+                        .add(fortQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(deffortranCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 106, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(fortrancompLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 182, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(cppCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(ccCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(defcppTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 389, Short.MAX_VALUE)))
+                    .add(fortranCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(defccTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 389, Short.MAX_VALUE)
+                    .add(deffortranTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 389, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        compilerjPanelLayout.setVerticalGroup(
+            compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(cppQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(cppcompLabel)
+                    .add(cppCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(defcppCheckBox)
+                    .add(defcppTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(cQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(cccompLabel)
+                    .add(ccCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(defccCheckBox)
+                    .add(defccTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(4, 4, 4)
+                .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(fortQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(fortrancompLabel)
+                    .add(fortranCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(deffortranCheckBox)
+                    .add(deffortranTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        org.jdesktop.layout.GroupLayout installationPanelLayout = new org.jdesktop.layout.GroupLayout(installationPanel);
+        installationPanel.setLayout(installationPanelLayout);
+        installationPanelLayout.setHorizontalGroup(
+            installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, installationPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(papijPanel)
+                    .add(compilerjPanel)
+                    .add(pdtjPanel))
+                .addContainerGap())
+        );
+        installationPanelLayout.setVerticalGroup(
+            installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, installationPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(compilerjPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pdtjPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(papijPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(315, 315, 315))
+        );
         tabPane.addTab("Compilers", installationPanel);
-
-        messagePannel.setLayout(null);
 
         messagePannel.setMinimumSize(new java.awt.Dimension(600, 300));
         messagePannel.setPreferredSize(new java.awt.Dimension(600, 300));
-        mpiPanel.setLayout(null);
-
-        mpiPanel.setBorder(new javax.swing.border.EtchedBorder());
-        mpiCheckBox.setText("MPI [-mpi]");
-        mpiCheckBox.setToolTipText("Specify use of TAU MPI wrapper library");
-        mpiCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                mpiCheckBoxStateChanged(evt);
-            }
-        });
-
-        mpiPanel.add(mpiCheckBox);
-        mpiCheckBox.setBounds(10, 10, 290, 23);
-
-        mpiincCheckBox.setText("MPI Includes  [-mpiinc=]:");
-        mpiincCheckBox.setToolTipText("Specify location of MPI include dir and use the TAU MPI Profiling and Tracing Interface");
-        mpiincCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                mpiincCheckBoxStateChanged(evt);
-            }
-        });
-
-        mpiPanel.add(mpiincCheckBox);
-        mpiincCheckBox.setBounds(10, 40, 290, 23);
-
-        mpiincTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        mpiincTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mpiincTextFieldActionPerformed(evt);
-            }
-        });
-
-        mpiPanel.add(mpiincTextField);
-        mpiincTextField.setBounds(300, 40, 200, 19);
-
-        mpilibCheckBox.setText("MPI Librararies [-mpilib=]:");
-        mpilibCheckBox.setToolTipText("Specify location of MPI library dir and use the TAU MPI Profiling and Tracing Interface.");
-        mpilibCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                mpilibCheckBoxStateChanged(evt);
-            }
-        });
-
-        mpiPanel.add(mpilibCheckBox);
-        mpilibCheckBox.setBounds(10, 70, 290, 23);
-
-        mpilibTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        mpilibTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mpilibTextFieldActionPerformed(evt);
-            }
-        });
-
-        mpiPanel.add(mpilibTextField);
-        mpilibTextField.setBounds(300, 70, 200, 19);
-
-        altmpiCheckBox.setToolTipText("Specify a different MPI library e.g., -mpilibrary=-lmpi_r");
-        altmpiCheckBox.setLabel("Alt. MPI LIbrary [-mpilibrary=]:");
-        altmpiCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                altmpiCheckBoxStateChanged(evt);
-            }
-        });
-
-        mpiPanel.add(altmpiCheckBox);
-        altmpiCheckBox.setBounds(10, 100, 290, 23);
-
-        altmpiTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        altmpiTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                altmpiTextFieldActionPerformed(evt);
-            }
-        });
-
-        mpiPanel.add(altmpiTextField);
-        altmpiTextField.setBounds(300, 100, 200, 19);
-
-        tagCheckBox.setText("Tag [-tag=]:");
-        tagCheckBox.setToolTipText("Specify a tag to identify the installation");
-        tagCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                tagCheckBoxStateChanged(evt);
-            }
-        });
-
-        mpiPanel.add(tagCheckBox);
-        tagCheckBox.setBounds(10, 130, 290, 23);
-
-        tagTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        tagTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                tagTextFieldActionPerformed(evt);
-            }
-        });
-
-        mpiPanel.add(tagTextField);
-        tagTextField.setBounds(300, 130, 200, 19);
-
-        nocomCheckBox.setText("nocomm [-nocomm]");
-        nocomCheckBox.setToolTipText("Disable tracking communication events in MPI library");
-        nocomCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                nocomCheckBoxStateChanged(evt);
-            }
-        });
-
-        mpiPanel.add(nocomCheckBox);
-        nocomCheckBox.setBounds(10, 160, 290, 23);
-
-        mpitraceCheckBox.setText("MPI Trace [-MPITRACE]");
-        mpitraceCheckBox.setToolTipText("Generate event traces for MPI events and their ancestors");
-        mpitraceCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                mpitraceCheckBoxStateChanged(evt);
-            }
-        });
-
-        mpiPanel.add(mpitraceCheckBox);
-        mpitraceCheckBox.setBounds(10, 190, 290, 23);
-
-        mpiincButton.setText("Browse");
-        mpiincButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mpiincButtonActionPerformed(evt);
-            }
-        });
-
-        mpiPanel.add(mpiincButton);
-        mpiincButton.setBounds(510, 40, 80, 25);
-
-        mpilibButton.setText("Browse");
-        mpilibButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mpilibButtonActionPerformed(evt);
-            }
-        });
-
-        mpiPanel.add(mpilibButton);
-        mpilibButton.setBounds(510, 70, 80, 25);
-
+        mpijPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         mpiQjButton.setText("?");
         mpiQjButton.setToolTipText("More Info");
         mpiQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -778,8 +737,13 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        mpiPanel.add(mpiQjButton);
-        mpiQjButton.setBounds(600, 10, 20, 20);
+        mpiCheckBox.setText("MPI [-mpi]");
+        mpiCheckBox.setToolTipText("Specify use of TAU MPI wrapper library");
+        mpiCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                mpiCheckBoxStateChanged(evt);
+            }
+        });
 
         mpiincQjButton.setText("?");
         mpiincQjButton.setToolTipText("More Info");
@@ -790,8 +754,27 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        mpiPanel.add(mpiincQjButton);
-        mpiincQjButton.setBounds(600, 40, 20, 20);
+        mpiincCheckBox.setText("MPI Includes  [-mpiinc=]:");
+        mpiincCheckBox.setToolTipText("Specify location of MPI include dir and use the TAU MPI Profiling and Tracing Interface");
+        mpiincCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                mpiincCheckBoxStateChanged(evt);
+            }
+        });
+
+        mpiincButton.setText("Browse");
+        mpiincButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mpiincButtonActionPerformed(evt);
+            }
+        });
+
+        mpiincTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        mpiincTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mpiincTextFieldActionPerformed(evt);
+            }
+        });
 
         mpilibQjButton.setText("?");
         mpilibQjButton.setToolTipText("More Info");
@@ -802,8 +785,27 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        mpiPanel.add(mpilibQjButton);
-        mpilibQjButton.setBounds(600, 70, 20, 20);
+        mpilibCheckBox.setText("MPI Librararies [-mpilib=]:");
+        mpilibCheckBox.setToolTipText("Specify location of MPI library dir and use the TAU MPI Profiling and Tracing Interface.");
+        mpilibCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                mpilibCheckBoxStateChanged(evt);
+            }
+        });
+
+        mpilibButton.setText("Browse");
+        mpilibButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mpilibButtonActionPerformed(evt);
+            }
+        });
+
+        mpilibTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        mpilibTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mpilibTextFieldActionPerformed(evt);
+            }
+        });
 
         altmpiQjButton.setText("?");
         altmpiQjButton.setToolTipText("More Info");
@@ -814,8 +816,20 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        mpiPanel.add(altmpiQjButton);
-        altmpiQjButton.setBounds(600, 100, 20, 20);
+        altmpiCheckBox.setToolTipText("Specify a different MPI library e.g., -mpilibrary=-lmpi_r");
+        altmpiCheckBox.setLabel("Alt. MPI LIbrary [-mpilibrary=]:");
+        altmpiCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                altmpiCheckBoxStateChanged(evt);
+            }
+        });
+
+        altmpiTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        altmpiTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                altmpiTextFieldActionPerformed(evt);
+            }
+        });
 
         tagQjButton.setText("?");
         tagQjButton.setToolTipText("More Info");
@@ -826,8 +840,20 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        mpiPanel.add(tagQjButton);
-        tagQjButton.setBounds(600, 130, 20, 20);
+        tagCheckBox.setText("Tag [-tag=]:");
+        tagCheckBox.setToolTipText("Specify a tag to identify the installation");
+        tagCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                tagCheckBoxStateChanged(evt);
+            }
+        });
+
+        tagTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        tagTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tagTextFieldActionPerformed(evt);
+            }
+        });
 
         nocommQjButton.setText("?");
         nocommQjButton.setToolTipText("More Info");
@@ -838,8 +864,13 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        mpiPanel.add(nocommQjButton);
-        nocommQjButton.setBounds(600, 160, 20, 20);
+        nocomCheckBox.setText("nocomm [-nocomm]");
+        nocomCheckBox.setToolTipText("Disable tracking communication events in MPI library");
+        nocomCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                nocomCheckBoxStateChanged(evt);
+            }
+        });
 
         mpitraceQjButton.setText("?");
         mpitraceQjButton.setToolTipText("More Info");
@@ -850,109 +881,107 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        mpiPanel.add(mpitraceQjButton);
-        mpitraceQjButton.setBounds(600, 190, 20, 20);
-
-        messagePannel.add(mpiPanel);
-        mpiPanel.setBounds(10, 10, 630, 220);
-
-        shmemPanel.setLayout(null);
-
-        shmemPanel.setBorder(new javax.swing.border.EtchedBorder());
-        shmemCheckBox.setText("SHMEM [-shmem]");
-        shmemCheckBox.setToolTipText("Specify use of TAU SHMEM wrapper library");
-        shmemCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+        mpitraceCheckBox.setText("MPI Trace [-MPITRACE]");
+        mpitraceCheckBox.setToolTipText("Generate event traces for MPI events and their ancestors");
+        mpitraceCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                shmemCheckBoxStateChanged(evt);
+                mpitraceCheckBoxStateChanged(evt);
             }
         });
 
-        shmemPanel.add(shmemCheckBox);
-        shmemCheckBox.setBounds(10, 10, 290, 23);
+        org.jdesktop.layout.GroupLayout mpijPanelLayout = new org.jdesktop.layout.GroupLayout(mpijPanel);
+        mpijPanel.setLayout(mpijPanelLayout);
+        mpijPanelLayout.setHorizontalGroup(
+            mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                        .add(mpiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(mpiCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 91, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                        .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                                .add(mpilibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(mpilibCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 190, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                                .add(mpiincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(mpiincCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 182, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                                .add(mpiincButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(mpiincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 315, Short.MAX_VALUE))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                                .add(mpilibButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(mpilibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 315, Short.MAX_VALUE)
+                                    .add(altmpiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 315, Short.MAX_VALUE)
+                                    .add(tagTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 315, Short.MAX_VALUE)))))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                        .add(altmpiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(altmpiCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 216, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                        .add(tagQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(tagCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 101, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                        .add(nocommQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(nocomCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 153, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                        .add(mpitraceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(mpitraceCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 167, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
+        );
+        mpijPanelLayout.setVerticalGroup(
+            mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(mpiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(mpiCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(mpiincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(mpiincCheckBox)
+                    .add(mpiincButton)
+                    .add(mpiincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(mpilibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(mpilibCheckBox)
+                    .add(mpilibButton)
+                    .add(mpilibTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(altmpiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(altmpiCheckBox)
+                    .add(altmpiTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(tagQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(tagCheckBox)
+                    .add(tagTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(nocommQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(nocomCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(mpitraceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(mpitraceCheckBox))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
-        shmemincCheckBox.setText("Shmem Includes [-shmeminc=]:");
-        shmemincCheckBox.setToolTipText("Specify location of SHMEM include dir and use the TAU SHMEM Profiling and Tracing Interface");
-        shmemincCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                shmemincCheckBoxStateChanged(evt);
-            }
-        });
-
-        shmemPanel.add(shmemincCheckBox);
-        shmemincCheckBox.setBounds(10, 40, 290, 23);
-
-        shmemincTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        shmemincTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                shmemincTextFieldActionPerformed(evt);
-            }
-        });
-
-        shmemPanel.add(shmemincTextField);
-        shmemincTextField.setBounds(300, 40, 200, 19);
-
-        shmemlibCheckBox.setText("Shmem Libraries [-shmemlib=]:");
-        shmemlibCheckBox.setToolTipText("Specify location of SHMEM library dir and use the TAU MPI Profiling and Tracing Interface");
-        shmemlibCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                shmemlibCheckBoxStateChanged(evt);
-            }
-        });
-
-        shmemPanel.add(shmemlibCheckBox);
-        shmemlibCheckBox.setBounds(10, 70, 290, 23);
-
-        shmemlibTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        shmemlibTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                shmemlibTextFieldActionPerformed(evt);
-            }
-        });
-
-        shmemPanel.add(shmemlibTextField);
-        shmemlibTextField.setBounds(300, 70, 200, 19);
-
-        altshmemCheckBox.setText("Alt. Shmem Library [-shmemlibrary=]:");
-        altshmemCheckBox.setToolTipText("Specify a different SHMEM library e.g., -shmemlibrary=-lsmac");
-        altshmemCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                altshmemCheckBoxStateChanged(evt);
-            }
-        });
-
-        shmemPanel.add(altshmemCheckBox);
-        altshmemCheckBox.setBounds(10, 100, 290, 23);
-
-        altshmemTextField.setPreferredSize(new java.awt.Dimension(200, 19));
-        altshmemTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                altshmemTextFieldActionPerformed(evt);
-            }
-        });
-
-        shmemPanel.add(altshmemTextField);
-        altshmemTextField.setBounds(300, 100, 200, 19);
-
-        shmemincButton.setText("Browse");
-        shmemincButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                shmemincButtonActionPerformed(evt);
-            }
-        });
-
-        shmemPanel.add(shmemincButton);
-        shmemincButton.setBounds(510, 40, 80, 25);
-
-        shmemlibButton.setText("Browse");
-        shmemlibButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                shmemlibButtonActionPerformed(evt);
-            }
-        });
-
-        shmemPanel.add(shmemlibButton);
-        shmemlibButton.setBounds(510, 70, 80, 25);
-
+        shmemjPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         shmemQjButton.setText("?");
         shmemQjButton.setToolTipText("More Info");
         shmemQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -962,8 +991,13 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        shmemPanel.add(shmemQjButton);
-        shmemQjButton.setBounds(603, 10, 20, 20);
+        shmemCheckBox.setText("SHMEM [-shmem]");
+        shmemCheckBox.setToolTipText("Specify use of TAU SHMEM wrapper library");
+        shmemCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                shmemCheckBoxStateChanged(evt);
+            }
+        });
 
         shmemincQjButton.setText("?");
         shmemincQjButton.setToolTipText("More Info");
@@ -974,8 +1008,27 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        shmemPanel.add(shmemincQjButton);
-        shmemincQjButton.setBounds(603, 40, 20, 20);
+        shmemincCheckBox.setText("Shmem Includes [-shmeminc=]:");
+        shmemincCheckBox.setToolTipText("Specify location of SHMEM include dir and use the TAU SHMEM Profiling and Tracing Interface");
+        shmemincCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                shmemincCheckBoxStateChanged(evt);
+            }
+        });
+
+        shmemincButton.setText("Browse");
+        shmemincButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                shmemincButtonActionPerformed(evt);
+            }
+        });
+
+        shmemincTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        shmemincTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                shmemincTextFieldActionPerformed(evt);
+            }
+        });
 
         shmemlibQjButton.setText("?");
         shmemlibQjButton.setToolTipText("More Info");
@@ -986,8 +1039,27 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        shmemPanel.add(shmemlibQjButton);
-        shmemlibQjButton.setBounds(603, 70, 20, 20);
+        shmemlibCheckBox.setText("Shmem Libraries [-shmemlib=]:");
+        shmemlibCheckBox.setToolTipText("Specify location of SHMEM library dir and use the TAU MPI Profiling and Tracing Interface");
+        shmemlibCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                shmemlibCheckBoxStateChanged(evt);
+            }
+        });
+
+        shmemlibButton.setText("Browse");
+        shmemlibButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                shmemlibButtonActionPerformed(evt);
+            }
+        });
+
+        shmemlibTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        shmemlibTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                shmemlibTextFieldActionPerformed(evt);
+            }
+        });
 
         altshmemQjButton.setText("?");
         altshmemQjButton.setToolTipText("More Info");
@@ -998,19 +1070,111 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        shmemPanel.add(altshmemQjButton);
-        altshmemQjButton.setBounds(603, 100, 20, 20);
+        altshmemCheckBox.setText("Alt. Shmem Library [-shmemlibrary=]:");
+        altshmemCheckBox.setToolTipText("Specify a different SHMEM library e.g., -shmemlibrary=-lsmac");
+        altshmemCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                altshmemCheckBoxStateChanged(evt);
+            }
+        });
 
-        messagePannel.add(shmemPanel);
-        shmemPanel.setBounds(10, 240, 630, 130);
+        altshmemTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        altshmemTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                altshmemTextFieldActionPerformed(evt);
+            }
+        });
 
+        org.jdesktop.layout.GroupLayout shmemjPanelLayout = new org.jdesktop.layout.GroupLayout(shmemjPanel);
+        shmemjPanel.setLayout(shmemjPanelLayout);
+        shmemjPanelLayout.setHorizontalGroup(
+            shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                        .add(shmemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(shmemCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 136, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                        .add(shmemincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(shmemincCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 224, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(shmemincButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(shmemincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 281, Short.MAX_VALUE))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                        .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                                .add(shmemlibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(shmemlibCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 224, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(shmemlibButton))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                                .add(altshmemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(altshmemCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 262, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(altshmemTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 281, Short.MAX_VALUE)
+                            .add(shmemlibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 281, Short.MAX_VALUE))))
+                .addContainerGap())
+        );
+        shmemjPanelLayout.setVerticalGroup(
+            shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(shmemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(shmemCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(shmemincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(shmemincCheckBox)
+                    .add(shmemincButton)
+                    .add(shmemincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(shmemlibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(shmemlibCheckBox))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(shmemlibButton)
+                        .add(shmemlibTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(altshmemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(altshmemCheckBox))
+                    .add(altshmemTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        org.jdesktop.layout.GroupLayout messagePannelLayout = new org.jdesktop.layout.GroupLayout(messagePannel);
+        messagePannel.setLayout(messagePannelLayout);
+        messagePannelLayout.setHorizontalGroup(
+            messagePannelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, messagePannelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(messagePannelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(mpijPanel)
+                    .add(shmemjPanel))
+                .addContainerGap())
+        );
+        messagePannelLayout.setVerticalGroup(
+            messagePannelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, messagePannelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(mpijPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(shmemjPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(142, 142, 142))
+        );
         tabPane.addTab("Message Passing", messagePannel);
 
-        outputPanel.setLayout(null);
-
-        profilePanel.setLayout(null);
-
-        profilePanel.setBorder(new javax.swing.border.EtchedBorder());
+        profilePanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         profileCheckBox.setSelected(true);
         profileCheckBox.setText("Profile [-PROFILE]");
         profileCheckBox.setToolTipText("Generate profiles (summary statistics) (default)");
@@ -1020,9 +1184,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        profilePanel.add(profileCheckBox);
-        profileCheckBox.setBounds(10, 10, 260, 23);
-
         compensateCheckBox.setText("Compensate [-COMPENSATE]");
         compensateCheckBox.setToolTipText("Compensate for profiling measurement perturbation");
         compensateCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1030,9 +1191,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 compensateCheckBoxStateChanged(evt);
             }
         });
-
-        profilePanel.add(compensateCheckBox);
-        compensateCheckBox.setBounds(10, 30, 280, 23);
 
         profcallpathCheckBox.setText("Callpath Profiling [-PROFILECALLPATH]");
         profcallpathCheckBox.setToolTipText("Generate call path profiles");
@@ -1042,9 +1200,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        profilePanel.add(profcallpathCheckBox);
-        profcallpathCheckBox.setBounds(10, 50, 280, 23);
-
         profheadroomCheckBox.setText("Profile Headroom [-PROFILEHEADROOM]");
         profheadroomCheckBox.setToolTipText("Track memory free (or headroom) at each func entry");
         profheadroomCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1053,9 +1208,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        profilePanel.add(profheadroomCheckBox);
-        profheadroomCheckBox.setBounds(10, 70, 290, 23);
-
         profmemoryCheckBox.setText("Profile Memory [-PROFILEMEMORY]");
         profmemoryCheckBox.setToolTipText("Track heap memory utilization at each function entry");
         profmemoryCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1063,9 +1215,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 profmemoryCheckBoxStateChanged(evt);
             }
         });
-
-        profilePanel.add(profmemoryCheckBox);
-        profmemoryCheckBox.setBounds(10, 90, 280, 23);
 
         memorypQjButton.setText("?");
         memorypQjButton.setToolTipText("More Info");
@@ -1076,9 +1225,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        profilePanel.add(memorypQjButton);
-        memorypQjButton.setBounds(600, 90, 20, 20);
-
         profileQjButton.setText("?");
         profileQjButton.setToolTipText("More Info");
         profileQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1087,9 +1233,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 profileQjButtonActionPerformed(evt);
             }
         });
-
-        profilePanel.add(profileQjButton);
-        profileQjButton.setBounds(600, 10, 20, 20);
 
         compensateQjButton.setText("?");
         compensateQjButton.setToolTipText("More Info");
@@ -1100,9 +1243,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        profilePanel.add(compensateQjButton);
-        compensateQjButton.setBounds(600, 30, 20, 20);
-
         callpathQjButton.setText("?");
         callpathQjButton.setToolTipText("More Info");
         callpathQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1111,9 +1251,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 callpathQjButtonActionPerformed(evt);
             }
         });
-
-        profilePanel.add(callpathQjButton);
-        callpathQjButton.setBounds(600, 50, 20, 20);
 
         headroomQjButton.setText("?");
         headroomQjButton.setToolTipText("More Info");
@@ -1124,15 +1261,62 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        profilePanel.add(headroomQjButton);
-        headroomQjButton.setBounds(600, 70, 20, 20);
+        org.jdesktop.layout.GroupLayout profilePanelLayout = new org.jdesktop.layout.GroupLayout(profilePanel);
+        profilePanel.setLayout(profilePanelLayout);
+        profilePanelLayout.setHorizontalGroup(
+            profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+                        .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(profileQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(compensateQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(callpathQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(headroomQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(profileCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 135, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+                                .add(2, 2, 2)
+                                .add(compensateCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 207, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(profcallpathCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 269, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(profheadroomCheckBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 280, Short.MAX_VALUE)))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+                        .add(memorypQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(profmemoryCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 244, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .add(325, 325, 325))
+        );
+        profilePanelLayout.setVerticalGroup(
+            profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(profileQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(profileCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(compensateQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(compensateCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(callpathQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(profcallpathCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(headroomQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(profheadroomCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(memorypQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(profmemoryCheckBox))
+                .addContainerGap())
+        );
 
-        outputPanel.add(profilePanel);
-        profilePanel.setBounds(10, 10, 630, 120);
-
-        tracePanel.setLayout(null);
-
-        tracePanel.setBorder(new javax.swing.border.EtchedBorder());
+        tracePanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         traceCheckBox.setText("Trace [-TRACE]");
         traceCheckBox.setToolTipText("Generate TAU event traces");
         traceCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1140,9 +1324,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 traceCheckBoxStateChanged(evt);
             }
         });
-
-        tracePanel.add(traceCheckBox);
-        traceCheckBox.setBounds(10, 10, 290, 23);
 
         epilogCheckBox.setText("Epilog [-epilog=]:");
         epilogCheckBox.setToolTipText("Specify location of EPILOG Tracing package");
@@ -1152,18 +1333,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tracePanel.add(epilogCheckBox);
-        epilogCheckBox.setBounds(10, 40, 290, 23);
-
         epilogTextField.setPreferredSize(new java.awt.Dimension(200, 19));
         epilogTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 epilogTextFieldActionPerformed(evt);
             }
         });
-
-        tracePanel.add(epilogTextField);
-        epilogTextField.setBounds(300, 40, 200, 19);
 
         slog2CheckBox.setText("SLOG2 [-slog2]:");
         slog2CheckBox.setToolTipText("Specify use of TAU internal SLOG2 SDK/Jumpshot Package");
@@ -1173,9 +1348,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tracePanel.add(slog2CheckBox);
-        slog2CheckBox.setBounds(10, 70, 290, 23);
-
         slog2exCheckBox.setText("Use External SLOG2SDK [-slog2=]:");
         slog2exCheckBox.setToolTipText("Specify location of SLOG2 SDK/Jumpshot Package");
         slog2exCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1184,18 +1356,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tracePanel.add(slog2exCheckBox);
-        slog2exCheckBox.setBounds(20, 90, 280, 23);
-
         slog2TextField.setPreferredSize(new java.awt.Dimension(200, 19));
         slog2TextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 slog2TextFieldActionPerformed(evt);
             }
         });
-
-        tracePanel.add(slog2TextField);
-        slog2TextField.setBounds(300, 90, 200, 19);
 
         vtfCheckBox.setText("VTF [-vtf=]:");
         vtfCheckBox.setToolTipText("Specify location of VTF3 Trace Generation Package");
@@ -1205,18 +1371,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tracePanel.add(vtfCheckBox);
-        vtfCheckBox.setBounds(10, 120, 290, 23);
-
         vtfTextField.setPreferredSize(new java.awt.Dimension(200, 19));
         vtfTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 vtfTextFieldActionPerformed(evt);
             }
         });
-
-        tracePanel.add(vtfTextField);
-        vtfTextField.setBounds(300, 120, 200, 19);
 
         epilogButton.setText("Browse");
         epilogButton.addActionListener(new java.awt.event.ActionListener() {
@@ -1225,9 +1385,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tracePanel.add(epilogButton);
-        epilogButton.setBounds(510, 40, 80, 25);
-
         slog2Button.setText("Browse");
         slog2Button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1235,18 +1392,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tracePanel.add(slog2Button);
-        slog2Button.setBounds(510, 90, 80, 25);
-
         vtfButton.setText("Browse");
         vtfButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 vtfButtonActionPerformed(evt);
             }
         });
-
-        tracePanel.add(vtfButton);
-        vtfButton.setBounds(510, 120, 80, 25);
 
         traceQjButton.setText("?");
         traceQjButton.setToolTipText("More Info");
@@ -1257,9 +1408,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tracePanel.add(traceQjButton);
-        traceQjButton.setBounds(600, 10, 20, 20);
-
         epilogQjButton.setText("?");
         epilogQjButton.setToolTipText("More Info");
         epilogQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1268,9 +1416,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 epilogQjButtonActionPerformed(evt);
             }
         });
-
-        tracePanel.add(epilogQjButton);
-        epilogQjButton.setBounds(600, 40, 20, 20);
 
         slog2QjButton.setText("?");
         slog2QjButton.setToolTipText("More Info");
@@ -1281,9 +1426,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tracePanel.add(slog2QjButton);
-        slog2QjButton.setBounds(600, 70, 20, 20);
-
         vtfQjButton.setText("?");
         vtfQjButton.setToolTipText("More Info");
         vtfQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1292,9 +1434,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 vtfQjButtonActionPerformed(evt);
             }
         });
-
-        tracePanel.add(vtfQjButton);
-        vtfQjButton.setBounds(600, 120, 20, 20);
 
         slog2eQjButton.setText("?");
         slog2eQjButton.setToolTipText("More Info");
@@ -1305,15 +1444,122 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tracePanel.add(slog2eQjButton);
-        slog2eQjButton.setBounds(600, 90, 20, 20);
+        otfQjButton.setText("?");
+        otfQjButton.setToolTipText("More Info");
+        otfQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        otfQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                otfQjButtonActionPerformed(evt);
+            }
+        });
 
-        outputPanel.add(tracePanel);
-        tracePanel.setBounds(10, 140, 630, 160);
+        otfCheckBox.setText("OTF [-otf=]:");
+        otfCheckBox.setToolTipText("Specify location of OTF Trace Generation Package");
+        otfCheckBox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        otfCheckBox.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        otfCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                otfCheckBoxStateChanged(evt);
+            }
+        });
 
-        jPanel5.setLayout(null);
+        jButton1.setText("Browse");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
-        jPanel5.setBorder(new javax.swing.border.EtchedBorder());
+        org.jdesktop.layout.GroupLayout tracePanelLayout = new org.jdesktop.layout.GroupLayout(tracePanel);
+        tracePanel.setLayout(tracePanelLayout);
+        tracePanelLayout.setHorizontalGroup(
+            tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                        .add(traceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(traceCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 119, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                        .add(epilogQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                        .add(epilogCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 136, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                            .add(slog2QjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                            .add(slog2eQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                            .add(slog2CheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 124, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                                .add(21, 21, 21)
+                                                .add(slog2exCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 241, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                                    .add(epilogButton)
+                                                    .add(slog2Button)
+                                                    .add(vtfButton)
+                                                    .add(jButton1))))))
+                                .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                    .add(vtfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                    .add(vtfCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 98, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                .add(otfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(otfCheckBox)))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(vtfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE)
+                            .add(slog2TextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE)
+                            .add(epilogTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE)
+                            .add(otfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE))))
+                .addContainerGap())
+        );
+        tracePanelLayout.setVerticalGroup(
+            tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, tracePanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(traceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(traceCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(epilogQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(epilogButton)
+                    .add(epilogCheckBox)
+                    .add(epilogTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(slog2QjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(slog2CheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(slog2eQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(slog2exCheckBox)
+                    .add(slog2Button)
+                    .add(slog2TextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(vtfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(vtfCheckBox)
+                    .add(vtfButton)
+                    .add(vtfTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(otfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(otfCheckBox)
+                    .add(jButton1)
+                    .add(otfTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
+
+        jPanel5.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         profphaseCheckBox.setText("Phase Profiling [-PROFILEPHASE]");
         profphaseCheckBox.setToolTipText("Generate phase based profiles");
         profphaseCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1322,9 +1568,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        jPanel5.add(profphaseCheckBox);
-        profphaseCheckBox.setBounds(10, 10, 290, 23);
-
         depthlimitCheckBox.setText("Depth Limit [-DEPTHLIMIT]:");
         depthlimitCheckBox.setToolTipText("Disable instrumentation beyond a certain depth");
         depthlimitCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1332,9 +1575,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 depthlimitCheckBoxStateChanged(evt);
             }
         });
-
-        jPanel5.add(depthlimitCheckBox);
-        depthlimitCheckBox.setBounds(10, 30, 290, 23);
 
         phaseQjButton.setText("?");
         phaseQjButton.setToolTipText("More Info");
@@ -1345,9 +1585,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        jPanel5.add(phaseQjButton);
-        phaseQjButton.setBounds(600, 10, 20, 20);
-
         depthQjButton.setText("?");
         depthQjButton.setToolTipText("More Info");
         depthQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1357,21 +1594,65 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        jPanel5.add(depthQjButton);
-        depthQjButton.setBounds(600, 30, 20, 20);
+        org.jdesktop.layout.GroupLayout jPanel5Layout = new org.jdesktop.layout.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel5Layout.createSequentialGroup()
+                        .add(phaseQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(profphaseCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 227, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel5Layout.createSequentialGroup()
+                        .add(depthQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(depthlimitCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 197, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .add(378, 378, 378))
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(phaseQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(profphaseCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(depthQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(depthlimitCheckBox))
+                .addContainerGap())
+        );
 
-        outputPanel.add(jPanel5);
-        jPanel5.setBounds(10, 310, 630, 60);
-
+        org.jdesktop.layout.GroupLayout outputPanelLayout = new org.jdesktop.layout.GroupLayout(outputPanel);
+        outputPanel.setLayout(outputPanelLayout);
+        outputPanelLayout.setHorizontalGroup(
+            outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, outputPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(tracePanel)
+                    .add(profilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        outputPanelLayout.setVerticalGroup(
+            outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, outputPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(profilePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tracePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(32, Short.MAX_VALUE))
+        );
         tabPane.addTab("Tracing/Profiling", outputPanel);
-
-        threadPanel.setLayout(null);
 
         threadPanel.setMinimumSize(new java.awt.Dimension(600, 300));
         threadPanel.setPreferredSize(new java.awt.Dimension(600, 300));
-        ompPanel.setLayout(null);
-
-        ompPanel.setBorder(new javax.swing.border.EtchedBorder());
+        ompPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         ompCheckBox.setText("openMP [-openmp]");
         ompCheckBox.setToolTipText("Use OpenMP threads");
         ompCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1379,9 +1660,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 ompCheckBoxStateChanged(evt);
             }
         });
-
-        ompPanel.add(ompCheckBox);
-        ompCheckBox.setBounds(10, 10, 290, 23);
 
         opariCheckBox.setText("Use Opari [-opari=]:");
         opariCheckBox.setToolTipText("Specify location of Opari OpenMP tool (use with above)");
@@ -1391,18 +1669,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        ompPanel.add(opariCheckBox);
-        opariCheckBox.setBounds(10, 40, 290, 23);
-
         opariTextField.setPreferredSize(new java.awt.Dimension(200, 19));
         opariTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 opariTextFieldActionPerformed(evt);
             }
         });
-
-        ompPanel.add(opariTextField);
-        opariTextField.setBounds(300, 40, 200, 19);
 
         opariregionCheckBox.setText("Region [-opari_region]");
         opariregionCheckBox.setToolTipText("Report performance data for all OpenMP regions");
@@ -1412,9 +1684,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        ompPanel.add(opariregionCheckBox);
-        opariregionCheckBox.setBounds(30, 60, 270, 23);
-
         opariconstructCheckBox.setText("Construct [-opari_construct]");
         opariconstructCheckBox.setToolTipText("Report performance data for all OpenMP constructs");
         opariconstructCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1423,18 +1692,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        ompPanel.add(opariconstructCheckBox);
-        opariconstructCheckBox.setBounds(30, 80, 270, 23);
-
         opariButton.setText("Browse");
         opariButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 opariButtonActionPerformed(evt);
             }
         });
-
-        ompPanel.add(opariButton);
-        opariButton.setBounds(510, 40, 80, 25);
 
         openmpQjButton.setText("?");
         openmpQjButton.setToolTipText("More Info");
@@ -1445,9 +1708,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        ompPanel.add(openmpQjButton);
-        openmpQjButton.setBounds(600, 10, 20, 20);
-
         opariQjButton.setText("?");
         opariQjButton.setToolTipText("More Info");
         opariQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1456,9 +1716,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 opariQjButtonActionPerformed(evt);
             }
         });
-
-        ompPanel.add(opariQjButton);
-        opariQjButton.setBounds(600, 40, 20, 20);
 
         opariregionQjButton.setText("?");
         opariregionQjButton.setToolTipText("More Info");
@@ -1469,9 +1726,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        ompPanel.add(opariregionQjButton);
-        opariregionQjButton.setBounds(600, 60, 20, 20);
-
         opariconstructQjButton.setText("?");
         opariconstructQjButton.setToolTipText("More Info");
         opariconstructQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1481,15 +1735,61 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        ompPanel.add(opariconstructQjButton);
-        opariconstructQjButton.setBounds(600, 80, 20, 20);
+        org.jdesktop.layout.GroupLayout ompPanelLayout = new org.jdesktop.layout.GroupLayout(ompPanel);
+        ompPanel.setLayout(ompPanelLayout);
+        ompPanelLayout.setHorizontalGroup(
+            ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, ompPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(openmpQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(opariQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(opariregionQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(opariconstructQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, ompPanelLayout.createSequentialGroup()
+                        .add(23, 23, 23)
+                        .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(opariconstructCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 202, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, ompPanelLayout.createSequentialGroup()
+                                .add(opariCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 151, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(opariButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(opariTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE))
+                            .add(opariregionCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 166, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, ompPanelLayout.createSequentialGroup()
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(ompCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 145, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
+        );
+        ompPanelLayout.setVerticalGroup(
+            ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, ompPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(openmpQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(ompCheckBox))
+                .add(6, 6, 6)
+                .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(opariQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(opariCheckBox)
+                    .add(opariButton)
+                    .add(opariTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(8, 8, 8)
+                .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(opariregionQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(opariregionCheckBox))
+                .add(40, 40, 40))
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, ompPanelLayout.createSequentialGroup()
+                .add(99, 99, 99)
+                .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(opariconstructQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(opariconstructCheckBox))
+                .add(12, 12, 12))
+        );
 
-        threadPanel.add(ompPanel);
-        ompPanel.setBounds(10, 60, 630, 110);
-
-        charmPanel.setLayout(null);
-
-        charmPanel.setBorder(new javax.swing.border.EtchedBorder());
+        charmPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         charmCheckBox.setText("charm++ [-charm=]:");
         charmCheckBox.setToolTipText("Use charm++ thread package");
         charmCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1498,9 +1798,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        charmPanel.add(charmCheckBox);
-        charmCheckBox.setBounds(10, 10, 290, 23);
-
         charmTextField.setPreferredSize(new java.awt.Dimension(200, 19));
         charmTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1508,18 +1805,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        charmPanel.add(charmTextField);
-        charmTextField.setBounds(300, 10, 200, 19);
-
         charmButton.setText("Browse");
         charmButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 charmButtonActionPerformed(evt);
             }
         });
-
-        charmPanel.add(charmButton);
-        charmButton.setBounds(510, 10, 80, 25);
 
         charmQjButton.setText("?");
         charmQjButton.setToolTipText("More Info");
@@ -1530,15 +1821,34 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        charmPanel.add(charmQjButton);
-        charmQjButton.setBounds(600, 10, 20, 20);
+        org.jdesktop.layout.GroupLayout charmPanelLayout = new org.jdesktop.layout.GroupLayout(charmPanel);
+        charmPanel.setLayout(charmPanelLayout);
+        charmPanelLayout.setHorizontalGroup(
+            charmPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, charmPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(charmQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(charmCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 160, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(charmButton)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(charmTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 345, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        charmPanelLayout.setVerticalGroup(
+            charmPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, charmPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(charmPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(charmQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(charmCheckBox)
+                    .add(charmButton)
+                    .add(charmTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(18, 18, 18))
+        );
 
-        threadPanel.add(charmPanel);
-        charmPanel.setBounds(10, 180, 630, 40);
-
-        tulipthreadsPanel.setLayout(null);
-
-        tulipthreadsPanel.setBorder(new javax.swing.border.EtchedBorder());
+        tulipthreadsPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         tulipCheckBox.setText("tulip threads [-tulipthread=]:");
         tulipCheckBox.setToolTipText("Specify location of Tulip/Smarts package");
         tulipCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1547,18 +1857,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tulipthreadsPanel.add(tulipCheckBox);
-        tulipCheckBox.setBounds(10, 10, 290, 23);
-
         tulipTextField.setPreferredSize(new java.awt.Dimension(200, 19));
         tulipTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tulipTextFieldActionPerformed(evt);
             }
         });
-
-        tulipthreadsPanel.add(tulipTextField);
-        tulipTextField.setBounds(300, 10, 200, 19);
 
         smartCheckBox.setText("Use smart API [-smart]");
         smartCheckBox.setToolTipText("Use SMARTS API for threads (use with above)");
@@ -1568,18 +1872,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tulipthreadsPanel.add(smartCheckBox);
-        smartCheckBox.setBounds(20, 30, 280, 23);
-
         tulipButton.setText("Browse");
         tulipButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tulipButtonActionPerformed(evt);
             }
         });
-
-        tulipthreadsPanel.add(tulipButton);
-        tulipButton.setBounds(510, 10, 80, 25);
 
         tulipQjButton.setText("?");
         tulipQjButton.setToolTipText("More Info");
@@ -1590,9 +1888,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tulipthreadsPanel.add(tulipQjButton);
-        tulipQjButton.setBounds(600, 10, 20, 20);
-
         smartQjButton.setText("?");
         smartQjButton.setToolTipText("More Info");
         smartQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1602,15 +1897,45 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        tulipthreadsPanel.add(smartQjButton);
-        smartQjButton.setBounds(600, 30, 20, 20);
+        org.jdesktop.layout.GroupLayout tulipthreadsPanelLayout = new org.jdesktop.layout.GroupLayout(tulipthreadsPanel);
+        tulipthreadsPanel.setLayout(tulipthreadsPanelLayout);
+        tulipthreadsPanelLayout.setHorizontalGroup(
+            tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, tulipthreadsPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(tulipQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(smartQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, tulipthreadsPanelLayout.createSequentialGroup()
+                        .add(tulipCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 207, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(tulipButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(tulipTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 298, Short.MAX_VALUE))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, tulipthreadsPanelLayout.createSequentialGroup()
+                        .add(21, 21, 21)
+                        .add(smartCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 168, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
+        );
+        tulipthreadsPanelLayout.setVerticalGroup(
+            tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, tulipthreadsPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(tulipQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(tulipCheckBox)
+                    .add(tulipButton)
+                    .add(tulipTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(smartCheckBox)
+                    .add(smartQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
-        threadPanel.add(tulipthreadsPanel);
-        tulipthreadsPanel.setBounds(10, 280, 630, 70);
-
-        pthreadsPanel.setLayout(null);
-
-        pthreadsPanel.setBorder(new javax.swing.border.EtchedBorder());
+        pthreadsPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         pthreadsCheckBox.setText("pthreads [-pthread]");
         pthreadsCheckBox.setToolTipText("Use pthread thread package");
         pthreadsCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1618,9 +1943,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 pthreadsCheckBoxStateChanged(evt);
             }
         });
-
-        pthreadsPanel.add(pthreadsCheckBox);
-        pthreadsCheckBox.setBounds(10, 10, 290, 23);
 
         pthreadsQjButton.setText("?");
         pthreadsQjButton.setToolTipText("More Info");
@@ -1631,15 +1953,28 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        pthreadsPanel.add(pthreadsQjButton);
-        pthreadsQjButton.setBounds(600, 10, 20, 20);
+        org.jdesktop.layout.GroupLayout pthreadsPanelLayout = new org.jdesktop.layout.GroupLayout(pthreadsPanel);
+        pthreadsPanel.setLayout(pthreadsPanelLayout);
+        pthreadsPanelLayout.setHorizontalGroup(
+            pthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, pthreadsPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(pthreadsQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pthreadsCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 148, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(457, 457, 457))
+        );
+        pthreadsPanelLayout.setVerticalGroup(
+            pthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, pthreadsPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(pthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(pthreadsQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(pthreadsCheckBox))
+                .add(10, 10, 10))
+        );
 
-        threadPanel.add(pthreadsPanel);
-        pthreadsPanel.setBounds(10, 10, 630, 40);
-
-        sprocPanel.setLayout(null);
-
-        sprocPanel.setBorder(new javax.swing.border.EtchedBorder());
+        sprocPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         sprocCheckBox.setText("sproc [-sproc]");
         sprocCheckBox.setToolTipText("Use SGI sproc thread package");
         sprocCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1647,9 +1982,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 sprocCheckBoxStateChanged(evt);
             }
         });
-
-        sprocPanel.add(sprocCheckBox);
-        sprocCheckBox.setBounds(10, 10, 290, 23);
 
         sprocQjButton.setText("?");
         sprocQjButton.setToolTipText("More Info");
@@ -1660,21 +1992,61 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        sprocPanel.add(sprocQjButton);
-        sprocQjButton.setBounds(600, 10, 20, 20);
+        org.jdesktop.layout.GroupLayout sprocPanelLayout = new org.jdesktop.layout.GroupLayout(sprocPanel);
+        sprocPanel.setLayout(sprocPanelLayout);
+        sprocPanelLayout.setHorizontalGroup(
+            sprocPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, sprocPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(sprocQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(sprocCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 113, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(492, 492, 492))
+        );
+        sprocPanelLayout.setVerticalGroup(
+            sprocPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, sprocPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(sprocPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(sprocQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(sprocCheckBox))
+                .add(10, 10, 10))
+        );
 
-        threadPanel.add(sprocPanel);
-        sprocPanel.setBounds(10, 230, 630, 40);
-
+        org.jdesktop.layout.GroupLayout threadPanelLayout = new org.jdesktop.layout.GroupLayout(threadPanel);
+        threadPanel.setLayout(threadPanelLayout);
+        threadPanelLayout.setHorizontalGroup(
+            threadPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, threadPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(threadPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(pthreadsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE)
+                    .add(ompPanel)
+                    .add(charmPanel)
+                    .add(sprocPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE)
+                    .add(tulipthreadsPanel))
+                .addContainerGap())
+        );
+        threadPanelLayout.setVerticalGroup(
+            threadPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, threadPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(pthreadsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(7, 7, 7)
+                .add(ompPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 135, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(charmPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 59, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(sprocPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tulipthreadsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(74, Short.MAX_VALUE))
+        );
         tabPane.addTab("Threads", threadPanel);
-
-        generalPanel.setLayout(null);
 
         generalPanel.setMinimumSize(new java.awt.Dimension(600, 300));
         generalPanel.setPreferredSize(new java.awt.Dimension(600, 300));
-        dyninstPanel.setLayout(null);
-
-        dyninstPanel.setBorder(new javax.swing.border.EtchedBorder());
+        dyninstPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         dyninstCheckBox.setText("Dyninst [-dyninst=]:");
         dyninstCheckBox.setToolTipText("Specify location of DynInst Package");
         dyninstCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1683,9 +2055,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dyninstPanel.add(dyninstCheckBox);
-        dyninstCheckBox.setBounds(10, 10, 280, 23);
-
         dyninstTextField.setPreferredSize(new java.awt.Dimension(200, 19));
         dyninstTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1693,18 +2062,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dyninstPanel.add(dyninstTextField);
-        dyninstTextField.setBounds(300, 10, 200, 19);
-
         dyninstButton.setText("Browse");
         dyninstButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 dyninstButtonActionPerformed(evt);
             }
         });
-
-        dyninstPanel.add(dyninstButton);
-        dyninstButton.setBounds(510, 10, 80, 25);
 
         dyninstQjButton.setText("?");
         dyninstQjButton.setToolTipText("More Info");
@@ -1715,15 +2078,34 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dyninstPanel.add(dyninstQjButton);
-        dyninstQjButton.setBounds(600, 10, 20, 20);
+        org.jdesktop.layout.GroupLayout dyninstPanelLayout = new org.jdesktop.layout.GroupLayout(dyninstPanel);
+        dyninstPanel.setLayout(dyninstPanelLayout);
+        dyninstPanelLayout.setHorizontalGroup(
+            dyninstPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, dyninstPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(dyninstQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(dyninstCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 154, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(dyninstButton)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(dyninstTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 351, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        dyninstPanelLayout.setVerticalGroup(
+            dyninstPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, dyninstPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(dyninstPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(dyninstQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(dyninstCheckBox)
+                    .add(dyninstButton)
+                    .add(dyninstTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
 
-        generalPanel.add(dyninstPanel);
-        dyninstPanel.setBounds(10, 60, 630, 40);
-
-        pclPanel.setLayout(null);
-
-        pclPanel.setBorder(new javax.swing.border.EtchedBorder());
+        pclPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         pclCheckBox.setText("PCL [-pcl=]:");
         pclCheckBox.setToolTipText("Specify location of PCL (Performance Counter Library)");
         pclCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1732,9 +2114,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        pclPanel.add(pclCheckBox);
-        pclCheckBox.setBounds(10, 10, 280, 23);
-
         pclTextField.setPreferredSize(new java.awt.Dimension(200, 19));
         pclTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1742,18 +2121,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        pclPanel.add(pclTextField);
-        pclTextField.setBounds(300, 10, 200, 19);
-
         pclButton.setText("Browse");
         pclButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 pclButtonActionPerformed(evt);
             }
         });
-
-        pclPanel.add(pclButton);
-        pclButton.setBounds(510, 10, 80, 25);
 
         pclQjButton.setText("?");
         pclQjButton.setToolTipText("More Info");
@@ -1764,15 +2137,34 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        pclPanel.add(pclQjButton);
-        pclQjButton.setBounds(600, 10, 20, 20);
+        org.jdesktop.layout.GroupLayout pclPanelLayout = new org.jdesktop.layout.GroupLayout(pclPanel);
+        pclPanel.setLayout(pclPanelLayout);
+        pclPanelLayout.setHorizontalGroup(
+            pclPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, pclPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(pclQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pclCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 99, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pclButton)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pclTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 406, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        pclPanelLayout.setVerticalGroup(
+            pclPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, pclPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(pclPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(pclQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(pclCheckBox)
+                    .add(pclButton)
+                    .add(pclTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
 
-        generalPanel.add(pclPanel);
-        pclPanel.setBounds(10, 10, 630, 40);
-
-        timePanel.setLayout(null);
-
-        timePanel.setBorder(new javax.swing.border.EtchedBorder());
+        timePanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         cputimeCheckBox.setText("CPU Time [-CPUTIME]");
         cputimeCheckBox.setToolTipText("Use usertime+system time instead of wallclock time");
         cputimeCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1780,9 +2172,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 cputimeCheckBoxStateChanged(evt);
             }
         });
-
-        timePanel.add(cputimeCheckBox);
-        cputimeCheckBox.setBounds(10, 30, 280, 23);
 
         craytimeCheckBox.setText("Cray Timers [-CRAYTIMERS]");
         craytimeCheckBox.setToolTipText("Use fast nanosecond timers on Cray X1 systems");
@@ -1792,9 +2181,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        timePanel.add(craytimeCheckBox);
-        craytimeCheckBox.setBounds(10, 60, 290, 23);
-
         linuxtimeCheckBox.setText("Linux Timers [-LINUXTIMERS]");
         linuxtimeCheckBox.setToolTipText("Use low overhead TSC Counter for wallclock time");
         linuxtimeCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1802,9 +2188,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 linuxtimeCheckBoxStateChanged(evt);
             }
         });
-
-        timePanel.add(linuxtimeCheckBox);
-        linuxtimeCheckBox.setBounds(10, 80, 300, 23);
 
         sgitimeCheckBox.setText("SGI Timers [-SGITIMERS]");
         sgitimeCheckBox.setToolTipText("Use fast nanosecond timers on SGI R10000 systems");
@@ -1814,12 +2197,7 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        timePanel.add(sgitimeCheckBox);
-        sgitimeCheckBox.setBounds(10, 100, 300, 23);
-
         jLabel2.setText("Timer Type");
-        timePanel.add(jLabel2);
-        jLabel2.setBounds(70, 10, 120, 15);
 
         cputQjButton.setText("?");
         cputQjButton.setToolTipText("More Info");
@@ -1830,9 +2208,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        timePanel.add(cputQjButton);
-        cputQjButton.setBounds(600, 30, 20, 20);
-
         craytQjButton.setText("?");
         craytQjButton.setToolTipText("More Info");
         craytQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1841,9 +2216,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 craytQjButtonActionPerformed(evt);
             }
         });
-
-        timePanel.add(craytQjButton);
-        craytQjButton.setBounds(600, 60, 20, 20);
 
         linuxtQjButton.setText("?");
         linuxtQjButton.setToolTipText("More Info");
@@ -1854,9 +2226,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        timePanel.add(linuxtQjButton);
-        linuxtQjButton.setBounds(600, 80, 20, 20);
-
         sgitQjButton.setText("?");
         sgitQjButton.setToolTipText("More Info");
         sgitQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1866,15 +2235,58 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        timePanel.add(sgitQjButton);
-        sgitQjButton.setBounds(600, 100, 20, 20);
+        org.jdesktop.layout.GroupLayout timePanelLayout = new org.jdesktop.layout.GroupLayout(timePanel);
+        timePanel.setLayout(timePanelLayout);
+        timePanelLayout.setHorizontalGroup(
+            timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, timePanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, timePanelLayout.createSequentialGroup()
+                        .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(craytQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(linuxtQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(sgitQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(craytimeCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 290, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, timePanelLayout.createSequentialGroup()
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(sgitimeCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 300, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(linuxtimeCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 300, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, timePanelLayout.createSequentialGroup()
+                        .add(22, 22, 22)
+                        .add(cputimeCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 280, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jLabel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 120, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(cputQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(305, 305, 305))
+        );
+        timePanelLayout.setVerticalGroup(
+            timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, timePanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(jLabel2)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 6, Short.MAX_VALUE)
+                .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(cputimeCheckBox)
+                    .add(cputQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(craytQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(craytimeCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(linuxtimeCheckBox)
+                    .add(linuxtQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(sgitimeCheckBox)
+                    .add(sgitQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
 
-        generalPanel.add(timePanel);
-        timePanel.setBounds(10, 210, 630, 130);
-
-        musePanel.setLayout(null);
-
-        musePanel.setBorder(new javax.swing.border.EtchedBorder());
+        musePanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         museCheckBox.setText("Muse [-muse]");
         museCheckBox.setToolTipText("Specify the use of MAGNET/MUSE");
         museCheckBox.addActionListener(new java.awt.event.ActionListener() {
@@ -1882,9 +2294,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 museCheckBoxActionPerformed(evt);
             }
         });
-
-        musePanel.add(museCheckBox);
-        museCheckBox.setBounds(5, 5, 300, 23);
 
         museeventCheckBox.setText("Muse Event [-muse_event]");
         museeventCheckBox.setToolTipText("Specify the use of MAGNET/MUSE w/ non-monotonically increasing values");
@@ -1894,9 +2303,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        musePanel.add(museeventCheckBox);
-        museeventCheckBox.setBounds(20, 30, 290, 23);
-
         musemultCheckBox.setText(" Muse Multiple [-muse_multiple]");
         musemultCheckBox.setToolTipText("Specify the use of MAGNET/MUSE w/ monotonically increasing values");
         musemultCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1904,9 +2310,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 musemultCheckBoxStateChanged(evt);
             }
         });
-
-        musePanel.add(musemultCheckBox);
-        musemultCheckBox.setBounds(20, 50, 290, 23);
 
         musemQjButton.setText("?");
         musemQjButton.setToolTipText("More Info");
@@ -1917,9 +2320,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        musePanel.add(musemQjButton);
-        musemQjButton.setBounds(600, 50, 20, 20);
-
         museeQjButton.setText("?");
         museeQjButton.setToolTipText("More Info");
         museeQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -1928,9 +2328,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 museeQjButtonActionPerformed(evt);
             }
         });
-
-        musePanel.add(museeQjButton);
-        museeQjButton.setBounds(600, 30, 20, 20);
 
         museQjButton.setText("?");
         museQjButton.setToolTipText("More Info");
@@ -1941,19 +2338,75 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        musePanel.add(museQjButton);
-        museQjButton.setBounds(600, 10, 20, 20);
+        org.jdesktop.layout.GroupLayout musePanelLayout = new org.jdesktop.layout.GroupLayout(musePanel);
+        musePanel.setLayout(musePanelLayout);
+        musePanelLayout.setHorizontalGroup(
+            musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, musePanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(musemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, musePanelLayout.createSequentialGroup()
+                        .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(museQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(museeQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(museCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 112, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, musePanelLayout.createSequentialGroup()
+                                .add(21, 21, 21)
+                                .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(musemultCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 229, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(museeventCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 190, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))))
+                .add(355, 355, 355))
+        );
+        musePanelLayout.setVerticalGroup(
+            musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, musePanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(museQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(museCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(museeQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(museeventCheckBox))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 6, Short.MAX_VALUE)
+                .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(musemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(musemultCheckBox))
+                .add(23, 23, 23))
+        );
 
-        generalPanel.add(musePanel);
-        musePanel.setBounds(10, 110, 630, 90);
-
+        org.jdesktop.layout.GroupLayout generalPanelLayout = new org.jdesktop.layout.GroupLayout(generalPanel);
+        generalPanel.setLayout(generalPanelLayout);
+        generalPanelLayout.setHorizontalGroup(
+            generalPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, generalPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(generalPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(pclPanel)
+                    .add(dyninstPanel)
+                    .add(musePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE)
+                    .add(timePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 643, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        generalPanelLayout.setVerticalGroup(
+            generalPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, generalPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(pclPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(dyninstPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(musePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(timePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(78, Short.MAX_VALUE))
+        );
         tabPane.addTab("Data Tools", generalPanel);
 
-        jPanel1.setLayout(null);
-
-        pythonPanel.setLayout(null);
-
-        pythonPanel.setBorder(new javax.swing.border.EtchedBorder());
+        pythonPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         usepythonCheckBox.setText("Use Python [-pythoninc=]:");
         usepythonCheckBox.setToolTipText("Specify location of Python include directory");
         usepythonCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -1962,18 +2415,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        pythonPanel.add(usepythonCheckBox);
-        usepythonCheckBox.setBounds(10, 30, 290, 23);
-
         pythonincField.setPreferredSize(new java.awt.Dimension(200, 19));
         pythonincField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 pythonincFieldActionPerformed(evt);
             }
         });
-
-        pythonPanel.add(pythonincField);
-        pythonincField.setBounds(300, 30, 200, 19);
 
         pythonlibCheckBox.setText("Python Libraries [-pythonlib=]:");
         pythonlibCheckBox.setToolTipText("Specify location of Python lib directory");
@@ -1983,18 +2430,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        pythonPanel.add(pythonlibCheckBox);
-        pythonlibCheckBox.setBounds(10, 60, 290, 23);
-
         pythonlibField.setPreferredSize(new java.awt.Dimension(200, 19));
         pythonlibField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 pythonlibFieldActionPerformed(evt);
             }
         });
-
-        pythonPanel.add(pythonlibField);
-        pythonlibField.setBounds(300, 60, 200, 19);
 
         pythonincButton.setText("Browse");
         pythonincButton.addActionListener(new java.awt.event.ActionListener() {
@@ -2003,18 +2444,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        pythonPanel.add(pythonincButton);
-        pythonincButton.setBounds(510, 30, 80, 25);
-
         pythonlibButton.setText("Browse");
         pythonlibButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 pythonlibButtonActionPerformed(evt);
             }
         });
-
-        pythonPanel.add(pythonlibButton);
-        pythonlibButton.setBounds(510, 60, 80, 25);
 
         pythonincQjButton.setText("?");
         pythonincQjButton.setToolTipText("More Info");
@@ -2025,9 +2460,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        pythonPanel.add(pythonincQjButton);
-        pythonincQjButton.setBounds(600, 30, 20, 20);
-
         pythonlibQjButton.setText("?");
         pythonlibQjButton.setToolTipText("More Info");
         pythonlibQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -2037,19 +2469,48 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        pythonPanel.add(pythonlibQjButton);
-        pythonlibQjButton.setBounds(600, 60, 20, 20);
+        org.jdesktop.layout.GroupLayout pythonPanelLayout = new org.jdesktop.layout.GroupLayout(pythonPanel);
+        pythonPanel.setLayout(pythonPanelLayout);
+        pythonPanelLayout.setHorizontalGroup(
+            pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, pythonPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(pythonincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(pythonlibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(usepythonCheckBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, pythonlibCheckBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 219, Short.MAX_VALUE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(pythonincButton)
+                    .add(pythonlibButton))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(pythonincField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE)
+                    .add(pythonlibField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        pythonPanelLayout.setVerticalGroup(
+            pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, pythonPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(pythonincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(usepythonCheckBox)
+                    .add(pythonincButton)
+                    .add(pythonincField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(6, 6, 6)
+                .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(pythonlibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(pythonlibCheckBox)
+                    .add(pythonlibButton)
+                    .add(pythonlibField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
 
-        jLabel3.setText("For use only when measuring the performance of python programs.");
-        pythonPanel.add(jLabel3);
-        jLabel3.setBounds(10, 10, 590, 15);
-
-        jPanel1.add(pythonPanel);
-        pythonPanel.setBounds(10, 10, 630, 90);
-
-        jdkPanel.setLayout(null);
-
-        jdkPanel.setBorder(new javax.swing.border.EtchedBorder());
+        jdkPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         usejdkCheckBox.setText("Use JDK [-jdk=]:");
         usejdkCheckBox.setToolTipText("Specify location of JAVA 2 Development Kit (jdk1.2+)");
         usejdkCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -2058,18 +2519,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        jdkPanel.add(usejdkCheckBox);
-        usejdkCheckBox.setBounds(10, 30, 280, 23);
-
         jdkField.setPreferredSize(new java.awt.Dimension(200, 19));
         jdkField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jdkFieldActionPerformed(evt);
             }
         });
-
-        jdkPanel.add(jdkField);
-        jdkField.setBounds(300, 30, 200, 19);
 
         usejavatimersCheckBox.setText("Java Timers [-JAVACPUTIME]");
         usejavatimersCheckBox.setToolTipText("Use JVMPI thread specific cpu time");
@@ -2079,9 +2534,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        jdkPanel.add(usejavatimersCheckBox);
-        usejavatimersCheckBox.setBounds(10, 60, 290, 23);
-
         jdkButton.setText("Browse");
         jdkButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2089,12 +2541,7 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        jdkPanel.add(jdkButton);
-        jdkButton.setBounds(510, 30, 80, 25);
-
-        jLabel1.setText("For use only when measuring the performance of Java programs with JVMPI.");
-        jdkPanel.add(jLabel1);
-        jLabel1.setBounds(10, 10, 580, 15);
+        jLabel1.setText("For use only when measuring the performance of Java programs.");
 
         jdkQjButton.setText("?");
         jdkQjButton.setToolTipText("More Info");
@@ -2105,9 +2552,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        jdkPanel.add(jdkQjButton);
-        jdkQjButton.setBounds(600, 30, 20, 20);
-
         javatQjButton.setText("?");
         javatQjButton.setToolTipText("More Info");
         javatQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -2117,15 +2561,49 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        jdkPanel.add(javatQjButton);
-        javatQjButton.setBounds(600, 60, 20, 20);
+        org.jdesktop.layout.GroupLayout jdkPanelLayout = new org.jdesktop.layout.GroupLayout(jdkPanel);
+        jdkPanel.setLayout(jdkPanelLayout);
+        jdkPanelLayout.setHorizontalGroup(
+            jdkPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, jdkPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(jdkPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jdkPanelLayout.createSequentialGroup()
+                        .add(jdkPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, jdkPanelLayout.createSequentialGroup()
+                                .add(jdkQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(usejdkCheckBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 204, Short.MAX_VALUE))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, jdkPanelLayout.createSequentialGroup()
+                                .add(javatQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(usejavatimersCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 204, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jdkButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jdkField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 301, Short.MAX_VALUE))
+                    .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 405, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
+        jdkPanelLayout.setVerticalGroup(
+            jdkPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, jdkPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(jLabel1)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jdkPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jdkQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(usejdkCheckBox)
+                    .add(jdkButton)
+                    .add(jdkField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jdkPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(javatQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(usejavatimersCheckBox))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
-        jPanel1.add(jdkPanel);
-        jdkPanel.setBounds(10, 110, 630, 90);
-
-        dirarcPanel.setLayout(null);
-
-        dirarcPanel.setBorder(new javax.swing.border.EtchedBorder());
+        dirarcPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         installdirCheckBox.setText("Custom Installation Directory [-prefix=]:");
         installdirCheckBox.setToolTipText("Specify a target installation directory");
         installdirCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -2134,18 +2612,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dirarcPanel.add(installdirCheckBox);
-        installdirCheckBox.setBounds(10, 10, 290, 23);
-
         installdirField.setPreferredSize(new java.awt.Dimension(200, 19));
         installdirField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 installdirFieldActionPerformed(evt);
             }
         });
-
-        dirarcPanel.add(installdirField);
-        installdirField.setBounds(300, 10, 200, 19);
 
         archdirCheckBox.setText("Custom Arch Directory [-exec-prefix=]:");
         archdirCheckBox.setToolTipText("Specify a target architecture directory");
@@ -2155,9 +2627,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dirarcPanel.add(archdirCheckBox);
-        archdirCheckBox.setBounds(10, 40, 290, 23);
-
         archdirField.setPreferredSize(new java.awt.Dimension(200, 19));
         archdirField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2165,12 +2634,7 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dirarcPanel.add(archdirField);
-        archdirField.setBounds(300, 40, 200, 19);
-
         archLabel.setText("Architecture [-arch=]:");
-        dirarcPanel.add(archLabel);
-        archLabel.setBounds(10, 70, 280, 15);
 
         archCombo.setToolTipText("Specify a target architecture");
         archCombo.addActionListener(new java.awt.event.ActionListener() {
@@ -2178,9 +2642,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 archComboActionPerformed(evt);
             }
         });
-
-        dirarcPanel.add(archCombo);
-        archCombo.setBounds(300, 70, 90, 24);
 
         useroptCheckBox.setText("Use User Options [-useropt=]:");
         useroptCheckBox.setToolTipText("list of commandline parameters");
@@ -2190,18 +2651,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dirarcPanel.add(useroptCheckBox);
-        useroptCheckBox.setBounds(10, 100, 280, 23);
-
         useroptField.setPreferredSize(new java.awt.Dimension(200, 19));
         useroptField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 useroptFieldActionPerformed(evt);
             }
         });
-
-        dirarcPanel.add(useroptField);
-        useroptField.setBounds(300, 100, 200, 19);
 
         noexceptCheckBox.setText("No Exceptions [-noex]");
         noexceptCheckBox.setToolTipText("Use no exceptions while compiling the library");
@@ -2211,9 +2666,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dirarcPanel.add(noexceptCheckBox);
-        noexceptCheckBox.setBounds(10, 130, 280, 23);
-
         installdirButton.setText("Browse");
         installdirButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2221,18 +2673,12 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dirarcPanel.add(installdirButton);
-        installdirButton.setBounds(510, 10, 80, 25);
-
         archdirButton.setText("Browse");
         archdirButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 archdirButtonActionPerformed(evt);
             }
         });
-
-        dirarcPanel.add(archdirButton);
-        archdirButton.setBounds(510, 40, 80, 25);
 
         custinstQjButton.setText("?");
         custinstQjButton.setToolTipText("More Info");
@@ -2243,9 +2689,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dirarcPanel.add(custinstQjButton);
-        custinstQjButton.setBounds(600, 10, 20, 20);
-
         custarchQjButton.setText("?");
         custarchQjButton.setToolTipText("More Info");
         custarchQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -2254,9 +2697,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 custarchQjButtonActionPerformed(evt);
             }
         });
-
-        dirarcPanel.add(custarchQjButton);
-        custarchQjButton.setBounds(600, 40, 20, 20);
 
         archQjButton.setText("?");
         archQjButton.setToolTipText("More Info");
@@ -2267,9 +2707,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dirarcPanel.add(archQjButton);
-        archQjButton.setBounds(600, 70, 20, 20);
-
         useroptQjButton.setText("?");
         useroptQjButton.setToolTipText("More Info");
         useroptQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
@@ -2278,9 +2715,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                 useroptQjButtonActionPerformed(evt);
             }
         });
-
-        dirarcPanel.add(useroptQjButton);
-        useroptQjButton.setBounds(600, 100, 20, 20);
 
         noexQjButton.setText("?");
         noexQjButton.setToolTipText("More Info");
@@ -2291,20 +2725,216 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        dirarcPanel.add(noexQjButton);
-        noexQjButton.setBounds(600, 130, 20, 20);
+        org.jdesktop.layout.GroupLayout dirarcPanelLayout = new org.jdesktop.layout.GroupLayout(dirarcPanel);
+        dirarcPanel.setLayout(dirarcPanelLayout);
+        dirarcPanelLayout.setHorizontalGroup(
+            dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                        .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                                .add(custinstQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(installdirCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 279, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                                .add(useroptQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(useroptCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 215, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                                    .add(archQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                    .add(archLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 261, Short.MAX_VALUE))
+                                .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                                    .add(custarchQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                    .add(archdirCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 271, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                                .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(installdirButton)
+                                    .add(archdirButton))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(installdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
+                                    .add(archdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
+                            .add(archCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(useroptField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE)))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                        .add(noexQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(noexceptCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 163, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
+        );
+        dirarcPanelLayout.setVerticalGroup(
+            dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(custinstQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(installdirCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 23, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(installdirButton)
+                    .add(installdirField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                        .add(6, 6, 6)
+                        .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(custarchQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(archdirCheckBox)
+                            .add(archdirButton)))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(archdirField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .add(7, 7, 7)
+                .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(archQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(archLabel)
+                    .add(archCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(10, 10, 10)
+                .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(useroptQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(useroptCheckBox)
+                    .add(useroptField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(noexQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(noexceptCheckBox))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
-        jPanel1.add(dirarcPanel);
-        dirarcPanel.setBounds(10, 210, 630, 160);
-
+        org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(dirarcPanel)
+                    .add(pythonPanel)
+                    .add(jdkPanel))
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(pythonPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jdkPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(dirarcPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(100, Short.MAX_VALUE))
+        );
         tabPane.addTab("Misc", jPanel1);
 
-        getContentPane().add(tabPane);
-        tabPane.setBounds(10, 10, 660, 480);
+        jPanel3.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        getConfs(allconf,".all_configs");
+        allconfComboBox.setSelectedIndex(allconf.size()-1);
 
-        commandPanel.setLayout(null);
+        loadallconfButton.setText("Load");
+        loadallconfButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadallconfButtonActionPerformed(evt);
+            }
+        });
 
-        commandPanel.setBorder(new javax.swing.border.EtchedBorder());
+        getConfs(savedconf,".saved_configs");
+        savedconfComboBox.setSelectedIndex(savedconf.size()-1);
+
+        loadsavedconfButton.setText("Load");
+        loadsavedconfButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadsavedconfButtonActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setText("all_configs");
+
+        jLabel4.setText("saved_configs");
+
+        removeconfButton.setText("Remove Selected");
+        removeconfButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                removeconfButtonActionPerformed(evt);
+            }
+        });
+
+        saveconfButton.setText("Save Current Configuration As: ");
+        saveconfButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveconfButtonActionPerformed(evt);
+            }
+        });
+
+        org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(allconfComboBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 615, Short.MAX_VALUE)
+                    .add(savedconfComboBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 615, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3Layout.createSequentialGroup()
+                        .add(loadsavedconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(removeconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jLabel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(loadallconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jLabel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3Layout.createSequentialGroup()
+                        .add(saveconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(custconfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jLabel3)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(allconfComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(loadallconfButton)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jLabel4)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(savedconfComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(loadsavedconfButton)
+                    .add(removeconfButton))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(saveconfButton)
+                    .add(custconfTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
+
+        org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel3)
+                .addContainerGap())
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
+                .add(10, 10, 10)
+                .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(253, Short.MAX_VALUE))
+        );
+        tabPane.addTab("Configurations", jPanel2);
+
+        commandPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         confButton.setText("Configure Tau");
         confButton.setToolTipText("Run the generated TAU configure command");
         confButton.addActionListener(new java.awt.event.ActionListener() {
@@ -2313,18 +2943,11 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        commandPanel.add(confButton);
-        confButton.setBounds(10, 50, 150, 25);
-
         confjScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         confjScrollPane.setAutoscrolls(true);
-        confjScrollPane.setPreferredSize(new java.awt.Dimension(600, 35));
         confjScrollPane.setRequestFocusEnabled(false);
         commandTextArea.setText("./configure");
         confjScrollPane.setViewportView(commandTextArea);
-
-        commandPanel.add(confjScrollPane);
-        confjScrollPane.setBounds(10, 10, 630, 35);
 
         makejButton.setText("Make Tau");
         makejButton.setToolTipText("Clean TAU and install the most recent configuration specified");
@@ -2334,18 +2957,11 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        commandPanel.add(makejButton);
-        makejButton.setBounds(170, 50, 150, 25);
-
         instjScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         instjScrollPane.setAutoscrolls(true);
-        instjScrollPane.setPreferredSize(new java.awt.Dimension(600, 35));
         instjScrollPane.setRequestFocusEnabled(false);
         instTextArea.setText("./installtau");
         instjScrollPane.setViewportView(instTextArea);
-
-        commandPanel.add(instjScrollPane);
-        instjScrollPane.setBounds(10, 90, 630, 35);
 
         instButton.setText("Install Tau");
         instButton.setToolTipText("Install TAU with the indicated command");
@@ -2355,11 +2971,37 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        commandPanel.add(instButton);
-        instButton.setBounds(10, 130, 150, 25);
-
-        getContentPane().add(commandPanel);
-        commandPanel.setBounds(10, 500, 650, 170);
+        org.jdesktop.layout.GroupLayout commandPanelLayout = new org.jdesktop.layout.GroupLayout(commandPanel);
+        commandPanel.setLayout(commandPanelLayout);
+        commandPanelLayout.setHorizontalGroup(
+            commandPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, commandPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(commandPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(instjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 644, Short.MAX_VALUE)
+                    .add(confjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 644, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, commandPanelLayout.createSequentialGroup()
+                        .add(confButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(makejButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(instButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
+        commandPanelLayout.setVerticalGroup(
+            commandPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, commandPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(confjScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 38, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(commandPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(confButton)
+                    .add(makejButton))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(instjScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 38, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(instButton)
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
         resetButton.setText("Reset");
         resetButton.setToolTipText("Returns settings to default");
@@ -2369,9 +3011,6 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        getContentPane().add(resetButton);
-        resetButton.setBounds(350, 680, 150, 25);
-
         exitButton.setText("Exit");
         exitButton.setToolTipText("Exits the program");
         exitButton.addActionListener(new java.awt.event.ActionListener() {
@@ -2380,13 +3019,127 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        getContentPane().add(exitButton);
-        exitButton.setBounds(510, 680, 150, 25);
-
+        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                        .addContainerGap()
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(commandPanel)
+                            .add(tabPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 672, Short.MAX_VALUE)))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                        .add(378, 378, 378)
+                        .add(resetButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(exitButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                .addContainerGap()
+                .add(tabPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 507, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(commandPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(exitButton)
+                    .add(resetButton))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
         java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        setBounds((screenSize.width-693)/2, (screenSize.height-747)/2, 693, 747);
+        setBounds((screenSize.width-706)/2, (screenSize.height-769)/2, 706, 769);
+    }// </editor-fold>
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
+	int returnVal = jFileChooser1.showOpenDialog(null);
+	
+	if (returnVal == JFileChooser.APPROVE_OPTION) {
+	    File file = jFileChooser1.getSelectedFile();
+	    String filename = file.getAbsolutePath();
+	    otfTextField.setText(filename);
+	}
     }
-    // </editor-fold>
+
+    private void otfCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {
+	if(otfCheckBox.isSelected()){
+	    if(configureline.indexOf(" -otf=")==-1){
+		configureline+=" -otf=";
+		configureline+=otfTextField.getText()+" ";
+	    }
+	    
+	    if(!traceCheckBox.isSelected()){
+		traceCheckBox.doClick();
+	    }
+	}
+	
+	else{
+	    int start = configureline.indexOf(" -otf=");
+	    if(start>-1){
+		int end = configureline.indexOf(" ",  start+1);
+		if(end==-1){
+		    configureline = configureline.substring(0, start);
+		} else{
+		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
+		}
+		
+	    }
+	}
+	
+	commandTextArea.setText(configureline); updateITCommand();
+    }
+
+    private void otfQjButtonActionPerformed(java.awt.event.ActionEvent evt) {
+JOptionPane.showMessageDialog(null,
+"Specifies the location of the Open Trace Format (OTF) package.",
+	"-otf=<directory>",JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void loadallconfButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                  
+// TODO add your handling code here:
+        parseConf((String)(this.allconfComboBox.getSelectedItem()));
+    }                                                 
+
+    private void loadsavedconfButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                    
+// TODO add your handling code here:
+        String saved=(String)(this.savedconfComboBox.getSelectedItem());
+        System.out.println(saved.substring(saved.indexOf(" :> ")+3));
+        parseConf(saved.substring(saved.indexOf(" :> ")+3));
+    }                                                   
+
+    private void removeconfButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+// TODO add your handling code here:
+        savedconf.remove(this.savedconfComboBox.getSelectedIndex()); //.getSelected();
+        this.savedconfComboBox.setSelectedIndex(this.savedconfComboBox.getItemCount()-1);
+        try{
+          //fos = new FileOutputStream(filename,true);
+            BufferedWriter bw=new BufferedWriter(new FileWriter(".saved_configs"));
+            //if(confs.size()>1)bw.newLine();
+            for(int i=0;i<savedconf.size();i++){
+                bw.write((String)(savedconf.get(i)));
+                if(i<savedconf.size()-1){
+                    bw.newLine();
+                }
+            }
+            //System.out.println((String)(confs.get(confs.size()-1)));
+            bw.close();
+        }catch(IOException e){e.printStackTrace();}
+    }                                                
+
+    private void saveconfButtonActionPerformed(java.awt.event.ActionEvent evt) {                                               
+// TODO add your handling code here:
+        if(configureline.equals("./configure")){
+            this.savedconf.add(this.custconfTextField.getText()+" :> ");}
+        else
+        savedconf.add(this.custconfTextField.getText()+" :> "+configureline.substring(configureline.indexOf(" ")+1));
+        //+System.out.println( "A"+ configureline.substring(configureline.indexOf(" ")+1) +"B" );
+        writeConfs(savedconf,".saved_configs");
+        //this.savedconfComboBox.addItem(savedconf.get(savedconf.size()-1));
+        this.savedconfComboBox.setSelectedIndex(savedconfComboBox.getItemCount()-1);
+    }                                              
 
     private void useroptFieldActionPerformed(java.awt.event.ActionEvent evt) {                                             
 	if(this.useroptCheckBox.isSelected()){
@@ -2940,197 +3693,9 @@ private void updateITCommand(){
     }                                          
 
     private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {                                            
-        if(this.defcppCheckBox.isSelected())    
-            this.defcppCheckBox.setSelected(false);
-            
-        if(this.cppCombo.getSelectedIndex()!=0)
-                this.cppCombo.setSelectedIndex(0);
-        
-        if(this.defccCheckBox.isSelected())    
-            this.defccCheckBox.setSelected(false);
-            
-        if(this.ccCombo.getSelectedIndex()!=0)
-            this.ccCombo.setSelectedIndex(0);
-      
-        if(this.deffortranCheckBox.isSelected())    
-            this.deffortranCheckBox.setSelected(false);
-            
-        if(this.fortranCombo.getSelectedIndex()!=0)
-                this.fortranCombo.setSelectedIndex(0);        
-        
-        if(pdtCheckBox.isSelected())    
-            pdtCheckBox.setSelected(false);
-            
-        if(pdtcppCombo.getSelectedIndex()!=0)
-                pdtcppCombo.setSelectedIndex(0); 
-       
-        if(defpdtCheckBox.isSelected())    
-            defpdtCheckBox.setSelected(false);
-
-        if(papiwallCheckBox.isSelected())    
-            papiwallCheckBox.setSelected(false);        
-
-        if(papivirtCheckBox.isSelected())
-            papivirtCheckBox.setSelected(false);
-
-        if(papiCheckBox.isSelected())    
-            papiCheckBox.setSelected(false);
-
-        if(multiplecountCheckBox.isSelected())    
-            multiplecountCheckBox.setSelected(false);        
-
-	if(mpiCheckBox.isSelected())
-            mpiCheckBox.setSelected(false);
+	//System.out.println(this.);
+        this.reset();
 	
-	if(mpiincCheckBox.isSelected())    
-            mpiincCheckBox.setSelected(false);
-	
-	if(mpilibCheckBox.isSelected())    
-            mpilibCheckBox.setSelected(false);
-
-	if(altmpiCheckBox.isSelected())    
-            altmpiCheckBox.setSelected(false);
-	
-	if(tagCheckBox.isSelected())    
-            tagCheckBox.setSelected(false);
-	
-	if(nocomCheckBox.isSelected())    
-            nocomCheckBox.setSelected(false);
-	
-	if(mpitraceCheckBox.isSelected())    
-            mpitraceCheckBox.setSelected(false);
-	
-	if(shmemCheckBox.isSelected())    
-            shmemCheckBox.setSelected(false);
-	
-	if(shmemincCheckBox.isSelected())    
-            shmemincCheckBox.setSelected(false);
-	
-	if(shmemlibCheckBox.isSelected())    
-            shmemlibCheckBox.setSelected(false);
-	
-	if(altshmemCheckBox.isSelected())    
-            altshmemCheckBox.setSelected(false);
-	
-	if(profphaseCheckBox.isSelected())    
-            profphaseCheckBox.setSelected(false);
-	
-	if(depthlimitCheckBox.isSelected())    
-            depthlimitCheckBox.setSelected(false);
-	
-	if(!profileCheckBox.isSelected())
-            profileCheckBox.setSelected(true);
-	
-	if(profcallpathCheckBox.isSelected())
-            profcallpathCheckBox.setSelected(false);
-	
-	if(compensateCheckBox.isSelected())
-            compensateCheckBox.setSelected(false);
-	
-	if(profmemoryCheckBox.isSelected())
-            profmemoryCheckBox.setSelected(false);
-	
-	if(profheadroomCheckBox.isSelected())
-            profheadroomCheckBox.setSelected(false);
-	
-	if(epilogCheckBox.isSelected())
-            epilogCheckBox.setSelected(false);
-	
-	if(slog2CheckBox.isSelected())
-            slog2CheckBox.setSelected(false);
-	
-	if(slog2exCheckBox.isSelected())
-            slog2exCheckBox.setSelected(false);
-	
-	if(vtfCheckBox.isSelected())
-            vtfCheckBox.setSelected(false);
-	
-	if(traceCheckBox.isSelected())
-            traceCheckBox.setSelected(false);
-	
-	if(pthreadsCheckBox.isSelected())
-            pthreadsCheckBox.setSelected(false);
-	
-	if(opariregionCheckBox.isSelected())
-            opariregionCheckBox.setSelected(false);
-	
-	if(opariconstructCheckBox.isSelected())
-            opariconstructCheckBox.setSelected(false);
-	
-	if(opariCheckBox.isSelected())
-            opariCheckBox.setSelected(false);
-	
-	if(ompCheckBox.isSelected())
-            ompCheckBox.setSelected(false);
-	
-	if(charmCheckBox.isSelected())
-            sprocCheckBox.setSelected(false);
-	
-	if(sprocCheckBox.isSelected())
-            sprocCheckBox.setSelected(false);
-	
-	if(tulipCheckBox.isSelected())
-            tulipCheckBox.setSelected(false);
-	
-	if(smartCheckBox.isSelected())
-            smartCheckBox.setSelected(false);
-	
-	if(pclCheckBox.isSelected())
-            pclCheckBox.setSelected(false);
-	
-	if(dyninstCheckBox.isSelected())
-            dyninstCheckBox.setSelected(false);
-	
-	if(museeventCheckBox.isSelected())
-            museeventCheckBox.setSelected(false);
-	
-	if(musemultCheckBox.isSelected())
-            musemultCheckBox.setSelected(false);
-	
-	if(museCheckBox.isSelected())
-            museCheckBox.setSelected(false);
-	
-	if(cputimeCheckBox.isSelected())
-            cputimeCheckBox.setSelected(false);
-	
-	if(craytimeCheckBox.isSelected())
-            craytimeCheckBox.setSelected(false);
-	
-	if(sgitimeCheckBox.isSelected())
-            sgitimeCheckBox.setSelected(false);
-	
-	if(linuxtimeCheckBox.isSelected())
-            linuxtimeCheckBox.setSelected(false);
-	
-	if(usepythonCheckBox.isSelected())
-            usepythonCheckBox.setSelected(false);
-	
-	if(pythonlibCheckBox.isSelected())
-            pythonlibCheckBox.setSelected(false);
-	
-	if(usejdkCheckBox.isSelected())
-            usejdkCheckBox.setSelected(false);
-	
-	if(usejavatimersCheckBox.isSelected())
-            usejavatimersCheckBox.setSelected(false);
-	
-	if(installdirCheckBox.isSelected())
-            installdirCheckBox.setSelected(false);
-	
-	if(archdirCheckBox.isSelected())
-            archdirCheckBox.setSelected(false);
-	
-	 if(archCombo.getSelectedIndex()!=0)
-                archCombo.setSelectedIndex(0);
-	
-	if(useroptCheckBox.isSelected())
-            useroptCheckBox.setSelected(false);
-	
-	if(noexceptCheckBox.isSelected())
-            noexceptCheckBox.setSelected(false);
-	
-	configureline="./configure";
-	commandTextArea.setText(configureline); updateITCommand();
     }                                           
 
     private void instButtonActionPerformed(java.awt.event.ActionEvent evt) {                                           
@@ -3757,6 +4322,12 @@ JOptionPane.showMessageDialog(null,"This is the default option; it specifies sum
 	} catch (Exception e) {
 	e.printStackTrace();}
 	confButton.setEnabled(true);
+        
+        //getConfs(allconf,".all_configs");
+        if(configureline.equals("./configure")){
+            this.allconfComboBox.addItem("");}
+        else
+        this.allconfComboBox.addItem(configureline.substring(configureline.indexOf(" ")));
     }                                          
 
     private void deffortranCheckBoxItemStateChanged(java.awt.event.ItemEvent evt) {                                                    
@@ -4277,11 +4848,6 @@ String entry=" -JAVACPUTIME ";
     private void charmCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                           
 	String entry =" -charm=";
 	if(charmCheckBox.isSelected()){
-        if(ompCheckBox.isSelected()||pthreadsCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
-        {
-           charmCheckBox.setSelected(false);
-           return;
-        }             
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
 		configureline+=charmTextField.getText()+" ";
@@ -4307,11 +4873,7 @@ String entry=" -JAVACPUTIME ";
     private void smartCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                           
 String entry=" -smart ";
 	if(smartCheckBox.isSelected()){
-        if(ompCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||pthreadsCheckBox.isSelected())
-        {
-           smartCheckBox.setSelected(false);
-           return;
-        } 
+
     	    if(!tulipCheckBox.isSelected()){
 		tulipCheckBox.doClick();
 	    }    
@@ -4339,12 +4901,6 @@ String entry=" -smart ";
     private void tulipCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                           
 String entry=" -tulipthread=";
 	if(tulipCheckBox.isSelected()){
-        if(ompCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||pthreadsCheckBox.isSelected())
-        {
-           tulipCheckBox.setSelected(false);
-           return;
-        }    
-    
     
     if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
@@ -4374,13 +4930,6 @@ String entry=" -tulipthread=";
     private void sprocCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                           
 String entry=" -sproc ";
 	if(sprocCheckBox.isSelected()){
-    
-        if(pthreadsCheckBox.isSelected()||charmCheckBox.isSelected()||ompCheckBox.isSelected()||tulipCheckBox.isSelected())
-        {
-           sprocCheckBox.setSelected(false);
-           return;
-        }
-    
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
 	    }
@@ -4405,12 +4954,6 @@ String entry=" -sproc ";
 String entry=" -opari_construct ";
 	if(opariconstructCheckBox.isSelected()){
 
-        if(pthreadsCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
-        {
-           opariconstructCheckBox.setSelected(false);
-           return;
-        }
-    
     	    if(!opariCheckBox.isSelected()){
 		opariCheckBox.doClick();
 	    }    
@@ -4428,12 +4971,6 @@ String entry=" -opari_construct ";
     private void opariregionCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                                 
 String entry=" -opari_region ";
 	if(opariregionCheckBox.isSelected()){
-    
-        if(pthreadsCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
-        {
-           opariregionCheckBox.setSelected(false);
-           return;
-        }
     
     	    if(!opariCheckBox.isSelected()){
 		opariCheckBox.doClick();
@@ -4462,11 +4999,6 @@ String entry=" -opari_region ";
     private void opariCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                           
 String entry=" -opari=";
 	if(opariCheckBox.isSelected()){
-        if(pthreadsCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
-        {
-           opariCheckBox.setSelected(false);
-           return;
-        }
     
 	    if(!ompCheckBox.isSelected()){
 		ompCheckBox.doClick();
@@ -4499,13 +5031,6 @@ String entry=" -opari=";
     private void ompCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                         
 String entry=" -openmp ";
 	if(ompCheckBox.isSelected()){
-    
-        if(pthreadsCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
-        {
-           ompCheckBox.setSelected(false);
-           return;
-        }
-    
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
 	    }
@@ -4525,17 +5050,9 @@ String entry=" -openmp ";
     private void pthreadsCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {                                              
 String entry=" -pthread ";
 	if(pthreadsCheckBox.isSelected()){
-    
-        if(ompCheckBox.isSelected()||charmCheckBox.isSelected()||sprocCheckBox.isSelected()||tulipCheckBox.isSelected())
-        {
-           pthreadsCheckBox.setSelected(false);
-           return;
-        }
-    
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
 	    }
-            
 	} else{
 	    if(configureline.indexOf(entry)>-1)
 		configureline = configureline.replaceFirst(entry,"");
@@ -5457,7 +5974,301 @@ if(pclCheckBox.isSelected()){
         });
     }
     
+    private void initcb(){
+        cbholder.add(altmpiCheckBox);
+        cbholder.add(altshmemCheckBox);
+        cbholder.add(archdirCheckBox);
+        cbholder.add(charmCheckBox);
+        cbholder.add(compensateCheckBox);
+        cbholder.add(cputimeCheckBox);
+        cbholder.add(craytimeCheckBox);
+        cbholder.add(defccCheckBox);
+        cbholder.add(defcppCheckBox);
+        cbholder.add(deffortranCheckBox);
+        cbholder.add(defpdtCheckBox);
+        cbholder.add(depthlimitCheckBox);
+        cbholder.add(dyninstCheckBox);
+        cbholder.add(epilogCheckBox);
+        cbholder.add(installdirCheckBox);
+        cbholder.add(linuxtimeCheckBox);
+        cbholder.add(mpiCheckBox);
+        cbholder.add(mpiincCheckBox);
+        cbholder.add(mpilibCheckBox);
+        cbholder.add(mpitraceCheckBox);
+        cbholder.add(multiplecountCheckBox);
+        
+        cbholder.add(museeventCheckBox);
+        cbholder.add(musemultCheckBox);
+        
+        cbholder.add(museCheckBox);
+        
+        cbholder.add(nocomCheckBox);
+        cbholder.add(noexceptCheckBox);
+        
+        
+        cbholder.add(opariconstructCheckBox);
+        cbholder.add(opariregionCheckBox);
+        
+        cbholder.add(opariCheckBox);
+        
+        cbholder.add(ompCheckBox);
+        
+        cbholder.add(papiCheckBox);
+        cbholder.add(papivirtCheckBox);
+        cbholder.add(papiwallCheckBox);
+        cbholder.add(pclCheckBox);
+        cbholder.add(pdtCheckBox);
+        cbholder.add(profcallpathCheckBox);
+        cbholder.add(profheadroomCheckBox);
+        cbholder.add(profileCheckBox);
+        cbholder.add(profmemoryCheckBox);
+        cbholder.add(profphaseCheckBox);
+        cbholder.add(profstatsCheckBox);
+        cbholder.add(pthreadsCheckBox);
+        cbholder.add(pythonlibCheckBox);
+        cbholder.add(sgitimeCheckBox);
+        cbholder.add(shmemCheckBox);
+        cbholder.add(shmemincCheckBox);
+        cbholder.add(shmemlibCheckBox);
+        cbholder.add(slog2CheckBox);
+        cbholder.add(slog2exCheckBox);
+        cbholder.add(smartCheckBox);
+        cbholder.add(sprocCheckBox);
+        cbholder.add(tagCheckBox);
+        
+        cbholder.add(vtfCheckBox);
+        cbholder.add(otfCheckBox);
+        
+        cbholder.add(traceCheckBox);
+        cbholder.add(tulipCheckBox);
+        cbholder.add(usejavatimersCheckBox);
+        cbholder.add(usejdkCheckBox);
+        cbholder.add(usepythonCheckBox);
+        cbholder.add(useroptCheckBox);
+   
+        cbholder.add(opariCheckBox);
+        cbholder.add(opariconstructCheckBox);
+        cbholder.add(opariregionCheckBox);
+        cbholder.add(papiCheckBox);
+        cbholder.add(papivirtCheckBox);
+        //Set up the mapping between commands and checkboxes
+        commap.put(" -mpilibrary=",altmpiCheckBox);
+        commap.put(" -shmemlibrary=",altshmemCheckBox);
+        commap.put(" -exec-prefix=",archdirCheckBox);
+        commap.put(" -charm=",charmCheckBox);
+        commap.put(" -COMPENSATE",compensateCheckBox);
+        commap.put(" -CPUTIME",cputimeCheckBox);
+        commap.put(" -CRAYTIME",craytimeCheckBox);
+        commap.put(" -cc=",defccCheckBox);
+        commap.put(" -c++=",defcppCheckBox);
+        commap.put(" -fortran=",deffortranCheckBox);
+        commap.put(" -pdt_c++",defpdtCheckBox);
+        commap.put(" -DEPTHLIMIT",depthlimitCheckBox);
+        commap.put(" -dyninst=",dyninstCheckBox);
+        commap.put(" -epilog=",epilogCheckBox);
+        commap.put(" -prefix=",installdirCheckBox);
+        commap.put(" -LINUXTIMERS",linuxtimeCheckBox);
+        commap.put(" -mpi",mpiCheckBox);
+        commap.put(" -mpiinc=",mpiincCheckBox);
+        commap.put(" -mpilib=",mpilibCheckBox);
+        commap.put(" -MPITRACE",mpitraceCheckBox);
+        commap.put(" -MULTIPLECOUNTERS",multiplecountCheckBox);
+        
+        commap.put(" -muse_event",museeventCheckBox);
+        commap.put(" -muse_multiple",musemultCheckBox);
+        
+        commap.put(" -muse",museCheckBox);
+        
+        commap.put(" -nocomm",nocomCheckBox);
+        commap.put(" -noex",noexceptCheckBox);
+        
+        
+        commap.put(" -opari_construct",opariconstructCheckBox);
+        commap.put(" -opari_region",opariregionCheckBox);
+        
+        commap.put(" -opari=",opariCheckBox);
+        
+        commap.put(" -openmp",ompCheckBox);
+        
+        commap.put(" -papi=",papiCheckBox);
+        commap.put(" -PAPIVIRTUAL",papivirtCheckBox);
+        commap.put(" -PAPIWALLCLOCK",papiwallCheckBox);
+        commap.put(" -pcl=",pclCheckBox);
+        commap.put(" -pdt=",pdtCheckBox);
+        commap.put(" -PROFILECALLPATH",profcallpathCheckBox);
+        commap.put(" -PROFILEHEADROOM",profheadroomCheckBox);
+        commap.put(" -profile",profileCheckBox);
+        commap.put(" -PROFILEMEMORY",profmemoryCheckBox);
+        commap.put(" -PROFILEPHASE",profphaseCheckBox);
+        commap.put(" -PROFILESTATS",profstatsCheckBox);
+        commap.put(" -pthread",pthreadsCheckBox);
+        commap.put(" -pythonlib=",pythonlibCheckBox);
+        commap.put(" -SGITIMERS",sgitimeCheckBox);
+        commap.put(" -shmem",shmemCheckBox);
+        commap.put(" -shemeinc=",shmemincCheckBox);
+        commap.put(" -shmemlib=",shmemlibCheckBox);
+        commap.put(" -slog2",slog2CheckBox);
+        commap.put(" -slog2=",slog2exCheckBox);
+        commap.put(" -smart",smartCheckBox);
+        commap.put(" -sproc",sprocCheckBox);
+        commap.put(" -tag=",tagCheckBox);
+        
+        commap.put(" -vtf=",vtfCheckBox);
+        commap.put(" -otf=",otfCheckBox);
+        
+        commap.put(" -TRACE",traceCheckBox);
+        commap.put(" -tulipthread=",tulipCheckBox);
+        commap.put(" -JAVACPUTIME",usejavatimersCheckBox);
+        commap.put(" -jdk=",usejdkCheckBox);
+        commap.put(" -pythoninc=",usepythonCheckBox);
+        commap.put(" -useropt=",useroptCheckBox);
+   
+        commap.put(" -opari=",opariCheckBox);
+        commap.put(" -opari_construct",opariconstructCheckBox);
+        commap.put(" -opari_region",opariregionCheckBox);
+        commap.put(" -papi=",papiCheckBox);
+        commap.put(" -PAPIVIRTUAL",papivirtCheckBox);
+        //map the command names to the field objects where required
+        fieldmap.put(" -c++=",defcppTextField);
+	fieldmap.put(" -cc=",defccTextField);
+        fieldmap.put(" -fortran=",deffortranTextField);
+        fieldmap.put(" -pdt=",pdtdirField);
+        fieldmap.put(" -pdt_c++",defpdtTextField);
+        fieldmap.put(" -papi=",papiTextField);
+        fieldmap.put(" -mpiinc=",mpiincTextField);
+        fieldmap.put(" -mpilib=",mpilibTextField);
+        fieldmap.put(" -mpilibrary=",altmpiTextField);
+        fieldmap.put(" -tag=",tagTextField);
+        fieldmap.put(" -shemeinc=",shmemincTextField);
+        fieldmap.put(" -shmemlib=",shmemlibTextField);
+        fieldmap.put(" -shmemlibrary=",altshmemTextField);
+        fieldmap.put(" -epilog=",epilogTextField);
+        fieldmap.put(" -slog2=",slog2TextField);
+        fieldmap.put(" -vtf=",vtfTextField);
+        fieldmap.put(" -otf=",otfTextField);
+        fieldmap.put(" -opari=",opariTextField);
+        fieldmap.put(" -charm=",charmTextField);
+        fieldmap.put(" -tulipthread=",tulipTextField);
+        fieldmap.put(" -pcl=",pclTextField);
+        fieldmap.put(" -dyninst=",dyninstTextField);
+        fieldmap.put(" -pythoninc=",pythonincField);
+        fieldmap.put(" -pythonlib=",pythonlibField);
+        fieldmap.put(" -jdk=",jdkField);
+        fieldmap.put(" -prefix=",installdirField);
+        fieldmap.put(" -exec-prefix=",archdirField);
+        fieldmap.put(" -useropt=",useroptField);
+        
+    }
+    
+    private void initcom(){
+        comholder.add(archCombo);
+        comholder.add(ccCombo);
+        comholder.add(cppCombo);
+        comholder.add(fortranCombo);
+        comholder.add(pdtcppCombo);
+    }
+    
+    private void reset(){
+        //Component[] allcomps = this.getComponents();
+        //this.get
+        
+        if(cbholder.size()==0){initcb();}
+        
+        if(comholder.size()==0){initcom();}
+        
+        for(int i=0;i<cbholder.size();i++){
+            if(((JCheckBox)cbholder.get(i)).isSelected())
+                ((JCheckBox)cbholder.get(i)).doClick();
+        }
+        
+        for(int i=0;i<comholder.size();i++){
+            ((JComboBox)comholder.get(i)).setSelectedIndex(0);
+        }
+    }
+    
+    private void parseConf(String confline){
+        reset();
+        confline=" "+confline;
+        String[] commands=confline.split(" -");
+        for(int i=0;i<commands.length;i++){
+            //System.out.println(commands[i]);
+            confBuild(" -"+commands[i]);
+        }
+    }
+    
+    /*Run programatically activate the command in String 'command'*/
+    private void confBuild(String command){
+        String remainder = null;
+        //String raw=command;
+        System.out.println(command+" 1");
+        if(command.contains("=")){
+            remainder=command.substring(command.indexOf('=')+1);
+            command=command.substring(0,command.indexOf('=')+1);
+        }
+        System.out.println(command);
+        System.out.println(remainder);
+        javax.swing.JCheckBox box = (JCheckBox) commap.get(command);
+        if(box!=null){
+            javax.swing.JTextField field = (JTextField) fieldmap.get(command);
+            if(field!=null){
+                field.setText(remainder);
+            }
+            box.doClick();
+        }
+        else{
+            if(command.indexOf(" -arch=")==0){
+                System.out.println(remainder);
+                this.archCombo.setSelectedItem(remainder);
+            }
+             /*else if(command.indexOf(" -c++=")==0){
+                if(comboHas(this.cppCombo,remainder))
+                    this.cppCombo.setSelectedItem(remainder);
+            }*/
+        }
+    }
+    
+    
+    private boolean comboHas(javax.swing.JComboBox cbox, String item){
+        for(int i=0;i<cbox.getItemCount();i++)
+        {
+            if(((String)cbox.getItemAt(i)).equals(item))
+                return true;
+        }
+        return false;
+    }
+    
+    /*Add each line of the file 'filename' as an entry to vector 'holdconfs'*/
+    private void getConfs(Vector holdconfs, String filename){
+        FileInputStream fin;
+        try{
+            fin=new FileInputStream(filename);
+            BufferedReader br = new BufferedReader(new InputStreamReader(fin));
+            while(br.ready()){
+                holdconfs.add(br.readLine());
+            }
+            fin.close();
+        }catch(IOException e){holdconfs.add(filename+" unavailable.");}
+    }
+    
+    private void writeConfs(Vector confs,String filename){
+        //FileOutputStream fos;
+        try{
+          //  fos = new FileOutputStream(filename,true);
+            
+            BufferedWriter bw=new BufferedWriter(new FileWriter(filename,true));
+            if(confs.size()>1)bw.newLine();
+            bw.write((String)(confs.get(confs.size()-1)));
+            //System.out.println((String)(confs.get(confs.size()-1)));
+            bw.close();
+        }catch(IOException e){e.printStackTrace();}
+    }
+    
+/*    private void getSavedConfs(){
+        
+    }*/
+    
     // Variables declaration - do not modify
+    private javax.swing.JComboBox allconfComboBox;
     private javax.swing.JCheckBox altmpiCheckBox;
     private javax.swing.JButton altmpiQjButton;
     private javax.swing.JTextField altmpiTextField;
@@ -5484,7 +6295,7 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JTextArea commandTextArea;
     private javax.swing.JCheckBox compensateCheckBox;
     private javax.swing.JButton compensateQjButton;
-    private javax.swing.JPanel compilerPanel;
+    private javax.swing.JPanel compilerjPanel;
     private javax.swing.JButton confButton;
     private javax.swing.JScrollPane confjScrollPane;
     private javax.swing.JComboBox cppCombo;
@@ -5495,6 +6306,7 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JButton craytQjButton;
     private javax.swing.JCheckBox craytimeCheckBox;
     private javax.swing.JButton custarchQjButton;
+    private javax.swing.JTextField custconfTextField;
     private javax.swing.JButton custinstQjButton;
     private javax.swing.JCheckBox defccCheckBox;
     private javax.swing.JTextField defccTextField;
@@ -5529,11 +6341,15 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JCheckBox installdirCheckBox;
     private javax.swing.JTextField installdirField;
     private javax.swing.JScrollPane instjScrollPane;
+    private javax.swing.JButton jButton1;
     private javax.swing.JFileChooser jFileChooser1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JButton javatQjButton;
     private javax.swing.JButton jdkButton;
@@ -5542,16 +6358,18 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JButton jdkQjButton;
     private javax.swing.JButton linuxtQjButton;
     private javax.swing.JCheckBox linuxtimeCheckBox;
+    private javax.swing.JButton loadallconfButton;
+    private javax.swing.JButton loadsavedconfButton;
     private javax.swing.JButton makejButton;
     private javax.swing.JButton memorypQjButton;
     private javax.swing.JPanel messagePannel;
     private javax.swing.JCheckBox mpiCheckBox;
-    private javax.swing.JPanel mpiPanel;
     private javax.swing.JButton mpiQjButton;
     private javax.swing.JButton mpiincButton;
     private javax.swing.JCheckBox mpiincCheckBox;
     private javax.swing.JButton mpiincQjButton;
     private javax.swing.JTextField mpiincTextField;
+    private javax.swing.JPanel mpijPanel;
     private javax.swing.JButton mpilibButton;
     private javax.swing.JCheckBox mpilibCheckBox;
     private javax.swing.JButton mpilibQjButton;
@@ -5582,12 +6400,15 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JCheckBox opariregionCheckBox;
     private javax.swing.JButton opariregionQjButton;
     private javax.swing.JButton openmpQjButton;
+    private javax.swing.JCheckBox otfCheckBox;
+    private javax.swing.JButton otfQjButton;
+    private javax.swing.JTextField otfTextField;
     private javax.swing.JPanel outputPanel;
     private javax.swing.JButton papiButton;
     private javax.swing.JCheckBox papiCheckBox;
-    private javax.swing.JPanel papiPanel;
     private javax.swing.JButton papiQjButton;
     private javax.swing.JTextField papiTextField;
+    private javax.swing.JPanel papijPanel;
     private javax.swing.JCheckBox papivirtCheckBox;
     private javax.swing.JButton papivirtQjButton;
     private javax.swing.JCheckBox papiwallCheckBox;
@@ -5600,11 +6421,11 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JButton pdtButton;
     private javax.swing.JCheckBox pdtCheckBox;
     private javax.swing.JLabel pdtCompilerLabel;
-    private javax.swing.JPanel pdtPanel;
     private javax.swing.JButton pdtQjButton;
     private javax.swing.JComboBox pdtcppCombo;
     private javax.swing.JButton pdtcppQjButton;
     private javax.swing.JTextField pdtdirField;
+    private javax.swing.JPanel pdtjPanel;
     private javax.swing.JButton phaseQjButton;
     private javax.swing.JCheckBox profcallpathCheckBox;
     private javax.swing.JCheckBox profheadroomCheckBox;
@@ -5625,16 +6446,19 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JCheckBox pythonlibCheckBox;
     private javax.swing.JTextField pythonlibField;
     private javax.swing.JButton pythonlibQjButton;
+    private javax.swing.JButton removeconfButton;
     private javax.swing.JButton resetButton;
+    private javax.swing.JButton saveconfButton;
+    private javax.swing.JComboBox savedconfComboBox;
     private javax.swing.JButton sgitQjButton;
     private javax.swing.JCheckBox sgitimeCheckBox;
     private javax.swing.JCheckBox shmemCheckBox;
-    private javax.swing.JPanel shmemPanel;
     private javax.swing.JButton shmemQjButton;
     private javax.swing.JButton shmemincButton;
     private javax.swing.JCheckBox shmemincCheckBox;
     private javax.swing.JButton shmemincQjButton;
     private javax.swing.JTextField shmemincTextField;
+    private javax.swing.JPanel shmemjPanel;
     private javax.swing.JButton shmemlibButton;
     private javax.swing.JCheckBox shmemlibCheckBox;
     private javax.swing.JButton shmemlibQjButton;
