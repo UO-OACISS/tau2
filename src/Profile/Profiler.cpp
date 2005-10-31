@@ -97,6 +97,16 @@ Profiler * Profiler::CurrentProfiler[] = {0}; // null to start with
 //int RtsLayer::Node = -1;
 
 //////////////////////////////////////////////////////////////////////
+// For OpenMP
+//////////////////////////////////////////////////////////////////////
+#ifdef TAU_OPENMP 
+#ifndef TAU_MULTIPLE_COUNTERS
+double TheLastTimeStamp[TAU_MAX_THREADS]; 
+#else /* FOR MULTIPLE COUNTERS */
+double TheLastTimeStamp[TAU_MAX_THREADS][MAX_TAU_COUNTERS]; 
+#endif /* MULTIPLE_COUNTERS */
+#endif /* TAU_OPENMP */
+//////////////////////////////////////////////////////////////////////
 // Explicit Instantiations for templated entities needed for ASCI Red
 //////////////////////////////////////////////////////////////////////
 
@@ -455,7 +465,7 @@ Profiler& Profiler::operator= (const Profiler& X)
 
 //////////////////////////////////////////////////////////////////////
 
-void Profiler::Stop(int tid)
+void Profiler::Stop(int tid, bool useLastTimeStamp)
 {
       x_uint64 TimeStamp = 0L; 
       if (CurrentProfiler[tid] == NULL) return;
@@ -491,9 +501,23 @@ void Profiler::Stop(int tid)
 #endif /* TAU_COMPENSATE */
 
 #ifndef TAU_MULTIPLE_COUNTERS
-	double CurrentTime = RtsLayer::getUSecD(tid);
+        double CurrentTime; 
+	if (useLastTimeStamp) /* for openmp parallel regions */
+        { /* .TAU Application needs to be stopped */
+#ifdef TAU_OPENMP 
+          CurrentTime = TheLastTimeStamp[tid]; 
+#endif /* TAU_OPENMP */
+        }
+	else
+	{ /* use the usual mechanism */
+	  CurrentTime = RtsLayer::getUSecD(tid);
+        }
 	double TotalTime = CurrentTime - StartTime;
 	TimeStamp += (x_uint64) CurrentTime; 
+        
+#ifdef TAU_OPENMP
+        TheLastTimeStamp[tid] = CurrentTime;
+#endif /* TAU_OPENMP */
 
 
 #if (defined(TAU_COMPENSATE ) && defined(PROFILING_ON))
@@ -512,7 +536,23 @@ void Profiler::Stop(int tid)
 	  CurrentTime[i] = 0;
 	}
 	//Get the current counter values.
-	RtsLayer::getUSecD(tid, CurrentTime);
+	if (useLastTimeStamp) /* for openmp parallel regions */
+        { /* .TAU Application needs to be stopped */
+#ifdef TAU_OPENMP 
+	  for (i=0; i < MAX_TAU_COUNTERS; i++)
+            CurrentTime[i] = TheLastTimeStamp[tid][i]; 
+#endif /* TAU_OPENMP */
+        }
+	else
+	{ /* use the usual mechanism */
+	  RtsLayer::getUSecD(tid, CurrentTime);
+        }
+#ifdef TAU_OPENMP
+        for (i=0; i < MAX_TAU_COUNTERS; i++)
+        {
+          TheLastTimeStamp[tid][i] = CurrentTime[i]; 
+        }
+#endif /* TAU_OPENMP */
 
 #ifdef PROFILING_ON
 #ifdef TAU_COMPENSATE
@@ -728,6 +768,22 @@ void Profiler::Stop(int tid)
               << ThisFunction->GetName() <<endl;);
   
               StoreData(tid);
+#ifdef TAU_OPENMP /* Check if we need to shut off .TAU applications on other tids */
+              if (tid == 0) 
+              {
+                 int i; 
+                 for (i = 1; i < TAU_MAX_THREADS; i++)
+		 {  /* for all other threads */
+	           Profiler *cp = CurrentProfiler[i];
+                   if (cp && strncmp(cp->ThisFunction->GetName(),".TAU", 4) == 0)
+		   {
+		     bool uselasttimestamp = true;
+                     cp->Stop(i,uselasttimestamp); /* force it to write the data*/
+                   }
+                 }
+              }
+	     
+#endif /* TAU_OPENMP */
 	    }
         // dump data here. Dump it only at the exit of top level profiler.
 	  }
@@ -2924,8 +2980,8 @@ void Profiler::SetDepthLimit(int value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.120 $   $Date: 2005/09/26 17:58:09 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.120 2005/09/26 17:58:09 sameer Exp $ 
+ * $Revision: 1.121 $   $Date: 2005/10/31 23:46:23 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.121 2005/10/31 23:46:23 sameer Exp $ 
  ***************************************************************************/
 
 	
