@@ -57,6 +57,10 @@
 #define TAU_MAX_THREADS 1
 #endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS || OPENMP || SPROC */
 
+/* We should throttle if number n > a && percall < b .a and b are given below */
+#define TAU_THROTTLE_NUMCALLS_DEFAULT 100000
+#define TAU_THROTTLE_PERCALL_DEFAULT  10
+
 #include <Profile/TauAPI.h>
 
 #if (defined(PROFILING_ON) || defined(TRACING_ON))
@@ -205,6 +209,9 @@ public:
 #ifdef TAU_MPITRACE
 	void EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* TAU_MPITRACE */
+	bool& TheTauThrottle(void);
+	double& TheTauThrottlePerCall(void);
+	double& TheTauThrottleNumCalls(void);
 
 private:
 	TauGroup_t MyProfileGroup_;
@@ -235,6 +242,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.60 $   $Date: 2005/10/31 23:47:12 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.60 2005/10/31 23:47:12 sameer Exp $ 
+ * $Revision: 1.61 $   $Date: 2005/11/01 01:23:50 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.61 2005/11/01 01:23:50 sameer Exp $ 
  ***************************************************************************/
