@@ -720,12 +720,23 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 	}
 
 /* if the frequency of events is high, disable them */
-        if (TheTauThrottle() && (ThisFunction->GetCalls(tid) > TheTauThrottleNumCalls()) && (ThisFunction->GetInclTime(tid)/ThisFunction->GetCalls(tid) < TheTauThrottlePerCall()))
+#ifndef TAU_DISABLE_THROTTLE /* unless we are overriding the throttle */
+	double inclusiveTime; 
+#ifdef TAU_MULTIPLE_COUNTERS
+	inclusiveTime = ThisFunction->GetInclTime(tid)[0]; 
+	/* here we get the array of double values representing the double 
+           metrics. We choose the first counter */
+#else  /* TAU_MULTIPLE_COUNTERS */
+        inclusiveTime = ThisFunction->GetInclTime(tid); 
+	/* when multiple counters are not used, it is a single metric or double */
+#endif /* MULTIPLE_COUNTERS */
+        if (TheTauThrottle() && (ThisFunction->GetCalls(tid) > TheTauThrottleNumCalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TheTauThrottlePerCall()))
 	{
 	  ThisFunction->SetProfileGroup(TAU_DISABLE);
 	  ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
 	  cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
 	}
+#endif /* TAU_DISABLE_THROTTLE */
       
 	
 #endif //PROFILING_ON
@@ -3082,8 +3093,8 @@ double& Profiler::TheTauThrottlePerCall(void)
 }
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.124 $   $Date: 2005/11/01 01:41:50 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.124 2005/11/01 01:41:50 sameer Exp $ 
+ * $Revision: 1.125 $   $Date: 2005/11/01 18:41:03 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.125 2005/11/01 18:41:03 sameer Exp $ 
  ***************************************************************************/
 
 	
