@@ -718,17 +718,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /* TAU_COMPENSATE */
 
 	}
-#define TAU_THROTTLE 1 
 
-#ifdef TAU_THROTTLE
 /* if the frequency of events is high, disable them */
-        if ((ThisFunction->GetCalls(tid) > 100000) && (ThisFunction->GetInclTime(tid)/ThisFunction->GetCalls(tid) < 10))
+        if (TheTauThrottle() && (ThisFunction->GetCalls(tid) > TheTauThrottleNumCalls()) && (ThisFunction->GetInclTime(tid)/ThisFunction->GetCalls(tid) < TheTauThrottlePerCall()))
 	{
 	  ThisFunction->SetProfileGroup(TAU_DISABLE);
 	  ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
-	  cout <<"TAU: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
+	  cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
 	}
-#endif /* TAU_THROTTLE */
       
 	
 #endif //PROFILING_ON
@@ -2964,12 +2961,21 @@ void Profiler::AddNumChildren(long value)
 }
 #endif /* TAU_COMPENSATE */
 
+//////////////////////////////////////////////////////////////////////
+//  Profiler::GetPhase(void)
+//  Description: Returns if a profiler is a phase or not 
+//////////////////////////////////////////////////////////////////////
 #ifdef TAU_PROFILEPHASE
 bool Profiler::GetPhase(void)
 {
   return PhaseFlag;
 }
 
+//////////////////////////////////////////////////////////////////////
+//  Profiler::GetPhase(bool flag)
+//  Description: SetPhase sets a phase to be true or false based on the 
+//               parameter flag
+//////////////////////////////////////////////////////////////////////
 void Profiler::SetPhase(bool flag)
 {
   PhaseFlag = flag;
@@ -2978,22 +2984,104 @@ void Profiler::SetPhase(bool flag)
 #endif /* TAU_PROFILEPHASE */
 
 #ifdef TAU_DEPTH_LIMIT 
+//////////////////////////////////////////////////////////////////////
+//  Profiler::GetDepthLimit(void)
+//  Description: GetDepthLimit returns the callstack depth beyond which
+//               all instrumentation is disabled
+//////////////////////////////////////////////////////////////////////
 int Profiler::GetDepthLimit(void)
 {
   return profiledepth;
 }
 
+//////////////////////////////////////////////////////////////////////
+//  Profiler::SetDepthLimit(int value)
+//  Description: SetDepthLimit sets the callstack instrumentation depth
+//////////////////////////////////////////////////////////////////////
 void Profiler::SetDepthLimit(int value)
 {
   profiledepth = value;
 }
 #endif /* TAU_DEPTH_LIMIT */ 
 
+//////////////////////////////////////////////////////////////////////
+//  TauGetThrottle(void)
+//  Description: Returns whether throttling is enabled or disabled 
+//////////////////////////////////////////////////////////////////////
+bool TauGetThrottle(void)
+{
+  if (getenv("TAU_THROTTLE") == (char *) NULL)
+   return false;
+  else
+   return true;
+}
 
+
+//////////////////////////////////////////////////////////////////////
+//  TauGetThrottleNumCalls(void)
+//  Description: Returns (as a double) the number of calls for throttle
+//               based control of instrumentation. 
+//////////////////////////////////////////////////////////////////////
+double TauGetThrottleNumCalls(void)
+{
+  char *numcalls = getenv("TAU_THROTTLE_NUMCALLS"); 
+  double d = TAU_THROTTLE_NUMCALLS_DEFAULT;  /* default numcalls */
+  if (numcalls)
+  {
+    sscanf(numcalls,"%f", &d);
+  }
+  return d;
+}
+
+//////////////////////////////////////////////////////////////////////
+//  TauGetThrottlePerCall(void)
+//  Description: Returns (as a double) the per call value for throttle
+//               based control of instrumentation. 
+//////////////////////////////////////////////////////////////////////
+double TauGetThrottlePerCall(void)
+{
+  char *percall = getenv("TAU_THROTTLE_PERCALL"); 
+  double d = TAU_THROTTLE_PERCALL_DEFAULT;  /* default numcalls */
+  if (percall)
+  {
+    sscanf(percall,"%f", &d);
+  }
+  return d;
+}
+
+//////////////////////////////////////////////////////////////////////
+//  Profiler::TheTauThrottle(void)
+//  Description: Returns whether throttling is enabled or disabled
+//////////////////////////////////////////////////////////////////////
+bool& Profiler::TheTauThrottle(void)
+{
+  static bool throttle = TauGetThrottle();
+  return throttle;
+}
+
+//////////////////////////////////////////////////////////////////////
+//  Profiler::TauGetThrottlePerCall(void)
+//  Description: Returns the number of calls for throttling
+//////////////////////////////////////////////////////////////////////
+double& Profiler::TheTauThrottleNumCalls(void)
+{
+  static double throttleNumcalls = TauGetThrottleNumCalls();
+  return throttleNumcalls;
+}
+
+//////////////////////////////////////////////////////////////////////
+//  Profiler::TauGetThrottlePerCall(void)
+//  Description: Returns the per call value for throttling
+//////////////////////////////////////////////////////////////////////
+double& Profiler::TheTauThrottlePerCall(void)
+{
+  static double throttleNumcalls = TauGetThrottlePerCall();
+  return throttleNumcalls;
+}
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.122 $   $Date: 2005/11/01 00:16:40 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.122 2005/11/01 00:16:40 sameer Exp $ 
+ * $Revision: 1.123 $   $Date: 2005/11/01 01:24:49 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.123 2005/11/01 01:24:49 sameer Exp $ 
  ***************************************************************************/
 
 	
