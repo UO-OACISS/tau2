@@ -205,6 +205,7 @@ extern "C" {
       //checkFlush(tFile);
       tFile->initialized = true;
     }
+    return 0;
   }
   
 
@@ -243,6 +244,7 @@ extern "C" {
 //       (*(tFile->GroupIdMap))[stateGroupName] = groupid;
 //     }
     
+    return 0;
   }
 
 
@@ -271,6 +273,7 @@ extern "C" {
 
     tFile->needsEdfFlush = true;
 
+    return 0;
   }
 
   
@@ -333,6 +336,7 @@ extern "C" {
     }
     Ttf_FlushTrace(file);
     close(tFile->Fid);
+    return 0;
   }
 
 
@@ -353,7 +357,7 @@ extern "C" {
     tFile->traceBuffer[pos].par = parameter;
     tFile->tracePosition++;
     tFile->lastTimestamp = time;
-
+    return 0;
   }
 
   int Ttf_EnterState(Ttf_FileHandleT file, x_uint64 time, 
@@ -410,7 +414,7 @@ extern "C" {
     tFile->tracePosition++;
     tFile->lastTimestamp = time;
 
-
+    return 0;
   }
 
   int Ttf_SendMessage(Ttf_FileHandleT file, double time, unsigned int sourceNodeToken,
@@ -455,7 +459,7 @@ extern "C" {
     (*tFile->EventIdMap)[userEventToken] = newEventDesc;
 
     tFile->needsEdfFlush = true;
-
+    return 0;
   }
 
   int Ttf_EventTrigger(Ttf_FileHandleT file, double time, 
@@ -478,7 +482,7 @@ extern "C" {
     tFile->traceBuffer[pos].par = (x_uint64) userEventValue;
     tFile->tracePosition++;
     tFile->lastTimestamp = time;
-
+    return 0;
   }
 
 
