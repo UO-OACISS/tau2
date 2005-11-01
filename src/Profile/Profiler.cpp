@@ -3028,8 +3028,9 @@ double TauGetThrottleNumCalls(void)
   double d = TAU_THROTTLE_NUMCALLS_DEFAULT;  /* default numcalls */
   if (numcalls)
   {
-    sscanf(numcalls,"%f", &d);
+    d = strtod(numcalls,0); 
   }
+  DEBUGPROFMSG("TauGetThrottleNumCalls: Returning "<<d <<" as numcalls value"<<endl;);
   return d;
 }
 
@@ -3044,8 +3045,9 @@ double TauGetThrottlePerCall(void)
   double d = TAU_THROTTLE_PERCALL_DEFAULT;  /* default numcalls */
   if (percall)
   {
-    sscanf(percall,"%f", &d);
+    d = strtod(percall,0); 
   }
+  DEBUGPROFMSG("TauGetThrottlePerCall: Returning "<<d <<" as per-call value"<<endl;);
   return d;
 }
 
@@ -3075,13 +3077,13 @@ double& Profiler::TheTauThrottleNumCalls(void)
 //////////////////////////////////////////////////////////////////////
 double& Profiler::TheTauThrottlePerCall(void)
 {
-  static double throttleNumcalls = TauGetThrottlePerCall();
-  return throttleNumcalls;
+  static double throttlePercall = TauGetThrottlePerCall();
+  return throttlePercall;
 }
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.123 $   $Date: 2005/11/01 01:24:49 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.123 2005/11/01 01:24:49 sameer Exp $ 
+ * $Revision: 1.124 $   $Date: 2005/11/01 01:41:50 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.124 2005/11/01 01:41:50 sameer Exp $ 
  ***************************************************************************/
 
 	
