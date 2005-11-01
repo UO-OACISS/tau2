@@ -718,6 +718,18 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /* TAU_COMPENSATE */
 
 	}
+#define TAU_THROTTLE 1 
+
+#ifdef TAU_THROTTLE
+/* if the frequency of events is high, disable them */
+        if ((ThisFunction->GetCalls(tid) > 100000) && (ThisFunction->GetInclTime(tid)/ThisFunction->GetCalls(tid) < 10))
+	{
+	  ThisFunction->SetProfileGroup(TAU_DISABLE);
+	  ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
+	  cout <<"TAU: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
+	}
+#endif /* TAU_THROTTLE */
+      
 	
 #endif //PROFILING_ON
 	// First check if timers are overlapping.
@@ -2980,8 +2992,8 @@ void Profiler::SetDepthLimit(int value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.121 $   $Date: 2005/10/31 23:46:23 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.121 2005/10/31 23:46:23 sameer Exp $ 
+ * $Revision: 1.122 $   $Date: 2005/11/01 00:16:40 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.122 2005/11/01 00:16:40 sameer Exp $ 
  ***************************************************************************/
 
 	
