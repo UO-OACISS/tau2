@@ -364,8 +364,7 @@ public class TauDataSource extends DataSource {
                         ex.printStackTrace();
                         //System.out.println("ex:);
                         if (!(ex instanceof IOException || ex instanceof FileNotFoundException)) {
-                            //throw new RuntimeException(ex == null ? null : ex.toString());
-                            throw new RuntimeException("fuck!");
+                            throw new RuntimeException(ex == null ? null : ex.toString());
                         }
 
                         //if (!reloading) {
