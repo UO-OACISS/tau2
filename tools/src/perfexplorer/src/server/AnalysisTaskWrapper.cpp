@@ -54,7 +54,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.9 2005/10/26 21:16:56 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.10 2005/11/02 22:16:53 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -401,6 +401,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			PerfExplorerServer.getServer().getControl().SIGNAL("getConstants");
 			throw new PerfExplorerException(error, e);
 		}
+		/*
 		System.out.println("\nnumRows: " + numRows);
 		System.out.println("numCenterRows: " + numCenterRows);
 		System.out.println("nodes: " + nodes);
@@ -409,6 +410,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 		System.out.println("numTotalThreads: " + numTotalThreads);
 		System.out.println("numEvents: " + numEvents);
 		System.out.println(" Done!");
+		*/
 	}
 
 	/**
@@ -660,7 +662,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 					}
 					*/
 					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
-						for (int j = i+1 ; j < reducedData.numDimensions() ; j++) {
+						for (int j = 0 ; j < reducedData.numDimensions() ; j++) {
 							rCorrelation = reducedData.getCorrelation(i,j);
 							File thumbnail = generateThumbnail(reducedData, i, j);
 							File chart = generateImage(reducedData, i, j);

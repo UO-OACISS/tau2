@@ -131,17 +131,16 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 			int[] counters = new int[k];
 			
 			for (int i = 0 ; i < k ; i++) {
-				instances[i] = new
-				Instances((Instances)(transformed.getData()), clusterSizes[i]);
+				instances[i] = new Instances((Instances)(transformed.getData()), clusterSizes[i]);
 				counters[i] = 0;
 			}
 
-			double values[] = new double[2];
 			//int x = transformed.numDimensions() - 1;
 			//int y = transformed.numDimensions() - 2;
 			//int x = 0;
 			//int y = 1;
 			for (int i = 0 ; i < inputData.numVectors() ; i++) {
+				double values[] = new double[2];
 				int location = clusterer.clusterInstance(i);
 				values[0] = transformed.getValue(0, i);
 				values[1] = transformed.getValue(1, i);

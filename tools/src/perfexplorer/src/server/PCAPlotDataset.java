@@ -9,7 +9,7 @@ import clustering.RawDataInterface;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper around the RawDataInterface class.
  * 
- * <P>CVS $Id: PCAPlotDataset.java,v 1.3 2005/09/27 19:46:32 khuck Exp $</P>
+ * <P>CVS $Id: PCAPlotDataset.java,v 1.4 2005/11/02 22:16:53 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -95,6 +95,7 @@ public class PCAPlotDataset extends AbstractXYDataset {
 	 * @see org.jfree.data.xy.XYDataset#getX(int, int)
 	 */
 	public Number getX(int arg0, int arg1) {
+		//System.out.print("point[" + arg0 + "/" + arg1 + "]: (" + clusters[arg0].getValue(arg1,0));
 		return new Double(clusters[arg0].getValue(arg1,0));
 		//return new Double(data.getValue(arg1, x));
 	}
@@ -103,7 +104,7 @@ public class PCAPlotDataset extends AbstractXYDataset {
 	 * @see org.jfree.data.xy.XYDataset#getY(int, int)
 	 */
 	public Number getY(int arg0, int arg1) {
-		//System.out.println("Getting Y: " + arg0 + ", " + arg1 + ", " + y);
+		//System.out.println("," + clusters[arg0].getValue(arg1,1) + ")");
 		return new Double(clusters[arg0].getValue(arg1,1));
 		//return new Double(clusters[arg0].instance(arg1).value(y));
 		//return new Double(data.getValue(arg1, y));

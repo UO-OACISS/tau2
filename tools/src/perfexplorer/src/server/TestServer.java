@@ -9,7 +9,7 @@ import common.*;
 /**
  * This class exists as a unit test of the PerfExplorerServer class.
  *
- * <P>CVS $Id: TestServer.java,v 1.3 2005/10/05 23:03:02 khuck Exp $</P>
+ * <P>CVS $Id: TestServer.java,v 1.4 2005/11/02 22:16:53 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -29,7 +29,7 @@ public class TestServer {
 			Application app = null;
 			while (apps.hasNext()) {
 				app = (Application)apps.next();
-				if (app.getID() == 12) {
+				if (app.getID() == 2) {
 					objects[0] = app;
 					break;
 				}
@@ -39,7 +39,7 @@ public class TestServer {
 			Experiment exp = null;
 			while (exps.hasNext()) {
 				exp = (Experiment)exps.next();
-				if (exp.getID() == 66) {
+				if (exp.getID() == 2) {
 					objects[1] = exp;
 					break;
 				}
@@ -49,7 +49,7 @@ public class TestServer {
 			Trial trial = null;
 			while (trials.hasNext()) {
 				trial = (Trial)trials.next();
-				if (trial.getID() == 430) {
+				if (trial.getID() == 3) {
 					objects[2] = trial;
 					break;
 				}
@@ -57,12 +57,16 @@ public class TestServer {
 			Vector metrics = trial.getMetrics();
 			for (int i = 0 ; i < metrics.size() ; i++) {
 				Metric metric = (Metric)metrics.elementAt(i);
-				if (metric.getID() == 1271) {
+				if (metric.getID() == 3) {
 					objects[3] = metric;
 					break;
 				}
 			}
 			RMIPerfExplorerModel model = new RMIPerfExplorerModel();
+			//model.setClusterMethod(RMIPerfExplorerModel.CORRELATION_ANALYSIS);
+			model.setDimensionReduction(RMIPerfExplorerModel.OVER_X_PERCENT);
+			model.setNumberOfClusters("2");
+			model.setXPercent("2");
 			model.setCurrentSelection(objects);
 			String status = server.requestAnalysis(model, true);
 			System.out.println(status);
