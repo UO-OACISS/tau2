@@ -21,9 +21,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * The UserEventWindow shows one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventWindow.java,v 1.22 2005/10/18 22:50:34 amorris Exp $</P>
+ * <P>CVS $Id: UserEventWindow.java,v 1.23 2005/11/02 00:39:33 amorris Exp $</P>
  * @author  Alan Morris, Robert Bell
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  * @see GlobalBarChartModel
  */
 public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -337,6 +337,8 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         String tmpString = (String) arg;
         if (tmpString.equals("prefEvent")) {
             panel.repaint();
+        } else if (tmpString.equals("dataEvent")) {
+            sortLocalData();
         } else if (tmpString.equals("colorEvent")) {
             panel.repaint();
         } else if (tmpString.equals("subWindowCloseEvent")) {
