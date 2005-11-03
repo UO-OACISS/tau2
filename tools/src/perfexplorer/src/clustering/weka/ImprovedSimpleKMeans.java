@@ -43,7 +43,7 @@ import weka.classifiers.rules.DecisionTable;
  *
  * @author Mark Hall (mhall@cs.waikato.ac.nz)
  * @author Eibe Frank (eibe@cs.waikato.ac.nz)
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see Clusterer
  * @see OptionHandler
  */
@@ -65,8 +65,10 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
    * holds the cluster centroids
    */
   private Instances m_ClusterCentroids;
-  private Instances m_ClusterMaximums;
-  private Instances m_ClusterMinimums;
+  private Instances m_ClusterMaximums = null;
+  private Instances m_ClusterMinimums = null;
+  private Instances m_InputData;
+  private int[] m_ClusterAssignments;
 
   /**
    * Holds the standard deviations of the numeric attributes in each cluster
@@ -147,6 +149,7 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
   }
   
   public void buildClusterer(Instances data) throws Exception {
+    m_InputData = data;
 
     m_Iterations = 0;
     if (data.checkForStringAttributes()) {
@@ -164,8 +167,6 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
     }
     
     m_ClusterCentroids = new Instances(instances, m_NumClusters);
-    m_ClusterMaximums = new Instances(instances, m_NumClusters);
-    m_ClusterMinimums = new Instances(instances, m_NumClusters);
     int[] clusterAssignments = new int [instances.numInstances()];
 
     for (int i = 0; i < instances.numInstances(); i++) {
@@ -215,26 +216,20 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
         }
         clusterAssignments[i] = newC;
       }
+
+	  m_ClusterAssignments = clusterAssignments;
       
       // update centroids
       m_ClusterCentroids = new Instances(instances, m_NumClusters);
-	  //Instances[] temp2 = null;
-	  //Instances[] temp3 = null;
       for (i = 0; i < m_NumClusters; i++) {
         tempI[i] = new Instances(instances, 0);
-        //temp2[i] = new Instances(instances, 0);
-        //temp3[i] = new Instances(instances, 0);
       }
       for (i = 0; i < instances.numInstances(); i++) {
         tempI[clusterAssignments[i]].add(instances.instance(i));
-        //temp2[clusterAssignments[i]].add(new Instance(1.0, instances.instance(i).toDoubleArray()));
-        //temp3[clusterAssignments[i]].add(new Instance(1.0, instances.instance(i).toDoubleArray()));
       }
 	  // iterate over the clusters
       for (i = 0; i < m_NumClusters; i++) {
         double [] vals = new double[instances.numAttributes()];
-        //double [] vals2 = new double[instances.numAttributes()];
-        //double [] vals3 = new double[instances.numAttributes()];
         if (tempI[i].numInstances() == 0) {
           // empty cluster
           emptyClusterCount++;
@@ -242,16 +237,10 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
 		  // iterate over the dimensions
           for (int j = 0; j < instances.numAttributes(); j++) {
             vals[j] = tempI[i].meanOrMode(j);
-            m_ClusterNominalCounts[i][j] = 
-              tempI[i].attributeStats(j).nominalCounts;
-			// note - calling these methods changes the order of the data!
-            //vals2[j] = temp2[i].kthSmallestValue(j,1);
-            //vals3[j] = temp3[i].kthSmallestValue(j,instances.numInstances());
+            m_ClusterNominalCounts[i][j] = tempI[i].attributeStats(j).nominalCounts;
           }
 		  // assign the new centroid value
           m_ClusterCentroids.add(new Instance(1.0, vals));
-          //m_ClusterMinimums.add(new Instance(1.0, vals2));
-          //m_ClusterMaximums.add(new Instance(1.0, vals3));
         }
       }
 
@@ -658,11 +647,65 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
   }
 
   public Instances getClusterMaximums() {
-    return m_ClusterCentroids;
-  }
+    if (m_ClusterMaximums == null) {
+	  try {
+        Instances instances = Filter.useFilter(m_InputData, m_ReplaceMissingFilter);
+        m_ClusterMaximums = new Instances(instances, 0);
+        Instances [] temp = new Instances[m_NumClusters];
+        for (int i = 0; i < m_NumClusters; i++) {
+          temp[i] = new Instances(instances, 0);
+        }
+        for (int i = 0; i < instances.numInstances(); i++) {
+          temp[m_ClusterAssignments[i]].add(new Instance(1.0, instances.instance(i).toDoubleArray()));
+        }
+	    // iterate over the clusters
+        for (int i = 0; i < m_NumClusters; i++) {
+          double [] vals = new double[instances.numAttributes()];
+		  // iterate over the dimensions
+          for (int j = 0; j < instances.numAttributes(); j++) {
+		    // note - calling this method changes the order of the data!
+            vals[j] = temp[i].kthSmallestValue(j,temp[i].numInstances()-1);
+          }
+		  // assign the new centroid value
+          m_ClusterMaximums.add(new Instance(1.0, vals));
+        }
+      } catch (Exception e) {
+        System.err.println("getServer exception: " + e.getMessage());
+        e.printStackTrace();
+	  }
+    }
+    return m_ClusterMaximums;
+   }
 
   public Instances getClusterMinimums() {
-    return m_ClusterCentroids;
+    if (m_ClusterMinimums == null) {
+	  try {
+        Instances instances = Filter.useFilter(m_InputData, m_ReplaceMissingFilter);
+        m_ClusterMinimums = new Instances(instances, 0);
+        Instances [] temp = new Instances[m_NumClusters];
+        for (int i = 0; i < m_NumClusters; i++) {
+          temp[i] = new Instances(instances, 0);
+        }
+        for (int i = 0; i < instances.numInstances(); i++) {
+          temp[m_ClusterAssignments[i]].add(new Instance(1.0, instances.instance(i).toDoubleArray()));
+        }
+	    // iterate over the clusters
+        for (int i = 0; i < m_NumClusters; i++) {
+          double [] vals = new double[instances.numAttributes()];
+		  // iterate over the dimensions
+          for (int j = 0; j < instances.numAttributes(); j++) {
+		    // note - calling this method changes the order of the data!
+            vals[j] = temp[i].kthSmallestValue(j,0);
+          }
+		  // assign the new centroid value
+          m_ClusterMinimums.add(new Instance(1.0, vals));
+        }
+      } catch (Exception e) {
+        System.err.println("getServer exception: " + e.getMessage());
+        e.printStackTrace();
+	  }
+    }
+    return m_ClusterMinimums;
   }
 
   public Instances getClusterStandardDevs() {
