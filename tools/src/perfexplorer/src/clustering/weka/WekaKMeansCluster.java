@@ -12,7 +12,7 @@ import weka.attributeSelection.PrincipalComponents;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaKMeansCluster.java,v 1.2 2005/09/28 01:06:58 khuck Exp $</P>
+ * <P>CVS $Id: WekaKMeansCluster.java,v 1.3 2005/11/03 00:49:04 khuck Exp $</P>
  * @author khuck
  *
  */
@@ -25,6 +25,8 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 	// the cluster descriptions
 	private Instances instances = null;
 	private Instances clusterCentroids = null;
+	private Instances clusterMaximums = null;
+	private Instances clusterMinimums = null;
 	private Instances clusterStandardDeviations = null;
 	private ImprovedSimpleKMeans kmeans = null;
 	
@@ -43,6 +45,8 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 	 */
 	public void reset() {
 		this.clusterCentroids = null;
+		this.clusterMaximums = null;
+		this.clusterMinimums = null;
 		this.clusterStandardDeviations = null;
 	}
 

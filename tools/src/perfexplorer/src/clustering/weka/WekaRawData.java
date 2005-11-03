@@ -23,6 +23,8 @@ public class WekaRawData implements RawDataInterface {
 	private int vectors = 0;
 	private int dimensions = 0;
 	private double maximum = 0.0;
+	private boolean normalize = false;
+	private double ranges[][] = null;
 	
 	public WekaRawData (String name, List attributes, int vectors, int dimensions) {
 		this.vectors = vectors;
@@ -61,7 +63,16 @@ public class WekaRawData implements RawDataInterface {
 	 * @see clustering.RawDataInterface#getValue(int, int)
 	 */
 	public double getValue(int vectorIndex, int dimensionIndex) {
-		return instances.instance(vectorIndex).value(dimensionIndex);
+		if (normalize) {
+			double tmp = instances.instance(vectorIndex).value(dimensionIndex);
+			// subtract the min
+			tmp = tmp - ranges[dimensionIndex][0];
+			// divide by the range
+			tmp = tmp / ranges[dimensionIndex][1];
+			return tmp;
+		} else {
+			return instances.instance(vectorIndex).value(dimensionIndex);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -202,5 +213,25 @@ public class WekaRawData implements RawDataInterface {
 	}
 
 	public void normalizeData(boolean normalize) {
+		this.normalize = normalize;
+		if (normalize) {
+			// calcuate the ranges
+			ranges = new double[dimensions][2];		
+
+			for (int i = 0 ; i < dimensions ; i++ ) {
+				ranges[i][0] = instances.instance(0).value(i);
+				ranges[i][1] = instances.instance(0).value(i);
+				for (int j = 0 ; j < vectors ; j++ ) {
+					// check against the min
+					if (ranges[i][0] > instances.instance(j).value(i))
+						ranges[i][0] = instances.instance(j).value(i);
+					// check against the max
+					if (ranges[i][1] < instances.instance(j).value(i))
+						ranges[i][1] = instances.instance(j).value(i);
+				}
+				// subtract the min from the max
+				ranges[i][1] = ranges[i][1] - ranges[i][0];
+			}
+		}
 	}
 }
