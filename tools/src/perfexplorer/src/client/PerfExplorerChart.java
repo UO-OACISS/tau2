@@ -3,6 +3,7 @@ package client;
 import common.RMIChartData;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.BasicStroke;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -15,6 +16,9 @@ import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.StandardLegend;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -71,11 +75,12 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), RMIChartData.CORRELATION_DATA);
 
-        XYDataset dataset = new CorrelationPlotDataset(rawData);
+        XYDataset dataset = new CorrelationPlotDataset(rawData, false);
         //JFreeChart chart = ChartFactory.createScatterPlot(
         JFreeChart chart = ChartFactory.createXYLineChart(
             "Correlation Results",  // chart title
-            "Inclusive Time for " + (String)rawData.getRowLabels().get(0), //domain axis
+            //"Inclusive Time for " + (String)rawData.getRowLabels().get(0), //domain axis
+            "Processors", //domain axis
             "Exclusive Time for Event",  // range axis
             dataset,					// data
             PlotOrientation.VERTICAL,		// the orientation
@@ -85,6 +90,28 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         );
 
 		customizeChart(chart, rawData.getRows(), true);
+        XYPlot plot = chart.getXYPlot();
+        NumberAxis axis2 = new NumberAxis("Inclusive Time for " + (String)rawData.getRowLabels().get(0));
+        axis2.setAutoRangeIncludesZero(false);
+        plot.setRangeAxis(1, axis2);
+        XYDataset dataset2 = new CorrelationPlotDataset(rawData, true);
+        plot.setDataset(1, dataset2);
+        plot.mapDatasetToRangeAxis(1, 1);
+        StandardXYItemRenderer renderer2 = new StandardXYItemRenderer();
+        renderer2.setSeriesPaint(0, Color.black);
+        renderer2.setPlotShapes(true);
+        renderer2.setSeriesStroke(
+            0, new BasicStroke(
+                2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                1.0f, new float[] {10.0f, 6.0f}, 0.0f
+            )
+        );
+		renderer2.setToolTipGenerator(new StandardXYToolTipGenerator(
+			StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
+			new DecimalFormat("processors: #######"), 
+			new DecimalFormat("value: #,##0.00")));
+
+        plot.setRenderer(1, renderer2);
 		return new PerfExplorerChart(chart, "Total Runtime Breakdown");
 	}
 

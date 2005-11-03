@@ -14,7 +14,7 @@ import java.text.FieldPosition;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: CorrelationPlotDataset.java,v 1.2 2005/10/21 20:44:20 khuck Exp $</P>
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.3 2005/11/03 19:40:14 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -25,7 +25,7 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 	private List seriesNames = null;
 	private int x = 0;
 	private int y = 1;
-	private boolean useMainValue = false;
+	private boolean main = false;
 	
 	/**
 	 * Constructor.
@@ -33,13 +33,13 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 	 * @param data
 	 * @param seriesNames
 	 */
-	public CorrelationPlotDataset(RMIChartData data) {
+	public CorrelationPlotDataset(RMIChartData data, boolean main) {
 		super();
 		this.data = data;
 		this.seriesNames = data.getRowLabels();
 		this.x = x;
 		this.y = y;
-		this.useMainValue = useMainValue;
+		this.main = main;
 	}
 
 	/* (non-Javadoc)
@@ -48,26 +48,28 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 	public int getSeriesCount() {
 		// we have n rows, but the first row is the data we are
 		// correlating against.
-		//return data.getRows() - 1;
-		return data.getRows();
-		//return 1;
+		if (main)
+			return 1;
+		else
+			return data.getRows() - 1;
 	}
 
 	/* (non-Javadoc)
 	 * @see org.jfree.data.general.SeriesDataset#getSeriesName(int)
 	 */
 	public String getSeriesName(int arg0) {
-		//return (String)(seriesNames.get(arg0+1));
-		String tmp = (String)(seriesNames.get(arg0));
-		return tmp + ", r = " + getCorrelation(0, arg0);
+		if (main) {
+			return (String)(seriesNames.get(arg0));
+		} else {
+			String tmp = (String)(seriesNames.get(arg0+1));
+			return tmp + ", r = " + getCorrelation(0, arg0+1);
+		}
 	}
 
 	/* (non-Javadoc)
 	 * @see org.jfree.data.xy.XYDataset#getItemCount(int)
 	 */
 	public int getItemCount(int arg0) {
-		//System.out.println("Item " + arg0 + " Count: " + data.getRowData(arg0+1).size());
-		//return data.getRowData(arg0+1).size();
 		return data.getRowData(arg0).size();
 	}
 
@@ -75,19 +77,12 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 	 * @see org.jfree.data.xy.XYDataset#getX(int, int)
 	 */
 	public Number getX(int arg0, int arg1) {
-	/*
-		// get the n+1 row
-		List row = data.getRowData(0);
-		// get the mth column from that row
-		double[] values = (double[])row.get(arg1);
-		System.out.println("x values (" + arg0 + "," + arg1 + "): " + values[0] + ", " + values[1]);
-		return new Double(values[y]);
-		*/
-		// get the n+1 row
+		if (!main)
+			arg0++;
+		// get the row
 		List row = data.getRowData(arg0);
 		// get the mth column from that row
 		double[] values = (double[])row.get(arg1);
-		//System.out.println("x values (" + arg0 + "," + arg1 + "): " + values[0] + ", " + values[1]);
 		return new Double(values[x]);
 	}
 
@@ -95,19 +90,12 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 	 * @see org.jfree.data.xy.XYDataset#getY(int, int)
 	 */
 	public Number getY(int arg0, int arg1) {
-	/*
-		// get the data for the main function
-		List row = data.getRowData(arg0+1);
-		// get the mth column from that row
-		double[] values = (double[])row.get(arg1);
-		System.out.println("y values (" + arg0 + "," + arg1 + "): " + values[0] + ", " + values[1]);
-		return new Double(values[y]);
-		*/
-		// get the data for the main function
+		if (!main)
+			arg0++;
+		// get the row
 		List row = data.getRowData(arg0);
 		// get the mth column from that row
 		double[] values = (double[])row.get(arg1);
-		//System.out.println("y values (" + arg0 + "," + arg1 + "): " + values[0] + ", " + values[1]);
 		return new Double(values[y]);
 	}
 
@@ -160,10 +148,6 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 			r += tmp1 * tmp2;
 		}
 		r = r / (xRow.size() - 1);
-
-		//System.out.println("Avg(x) = " + xAvg + ", Avg(y) = " + yAvg);
-		//System.out.println("Stddev(x) = " + xStDev + ", Stddev(y) = " + yStDev);
-		//System.out.println("r = " + r);
 
 		DecimalFormat format = new DecimalFormat("0.00");
 		FieldPosition f = new FieldPosition(0);

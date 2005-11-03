@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.16 2005/10/21 19:42:59 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.17 2005/11/03 19:40:14 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -145,7 +145,8 @@ public class ChartData extends RMIChartData {
 				} 
 				results.close();
 				statement.close();
-				if (dataType == RELATIVE_EFFICIENCY_EVENTS) {
+				if ((dataType == RELATIVE_EFFICIENCY_EVENTS) || 
+					(dataType == CORRELATION_DATA)) {
 					DB db = PerfExplorerServer.getServer().getDB();
 					if (db.getDBType().compareTo("oracle") == 0) {
 						statement = db.prepareStatement("truncate table working_table");
