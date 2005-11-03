@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.17 2005/11/03 19:40:14 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.18 2005/11/03 23:58:33 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -145,6 +145,9 @@ public class ChartData extends RMIChartData {
 				} 
 				results.close();
 				statement.close();
+			}
+
+			try {
 				if ((dataType == RELATIVE_EFFICIENCY_EVENTS) || 
 					(dataType == CORRELATION_DATA)) {
 					DB db = PerfExplorerServer.getServer().getDB();
@@ -157,6 +160,8 @@ public class ChartData extends RMIChartData {
 					statement.execute();
 					statement.close();
 				}
+			} catch (Exception e) {
+				// do nothing, as all we did was truncate & drop the table
 			}
 		} catch (Exception e) {
 			System.out.println(statement.toString());
@@ -440,7 +445,7 @@ public class ChartData extends RMIChartData {
 				buf.append(" e.name, ");
 			}
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-			buf.append("inclusive from interval_mean_summary ims ");
+			buf.append("exclusive from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
