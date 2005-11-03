@@ -12,7 +12,7 @@ import weka.attributeSelection.PrincipalComponents;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaKMeansCluster.java,v 1.3 2005/11/03 00:49:04 khuck Exp $</P>
+ * <P>CVS $Id: WekaKMeansCluster.java,v 1.4 2005/11/03 01:56:25 khuck Exp $</P>
  * @author khuck
  *
  */
@@ -85,6 +85,8 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 
 			kmeans.buildClusterer(localInstances);
 			this.clusterCentroids = kmeans.getClusterCentroids();
+			this.clusterMaximums = kmeans.getClusterMaximums();
+			this.clusterMinimums = kmeans.getClusterMinimums();
 			this.clusterStandardDeviations = kmeans.getClusterStandardDevs();
 			evaluateCluster();
 		} catch (Exception e) {
@@ -130,12 +132,12 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 	}
 
 	public RawDataInterface getClusterMaximums() {
-		WekaRawData maximums = new WekaRawData(clusterCentroids);
+		WekaRawData maximums = new WekaRawData(clusterMaximums);
 		return maximums;
 	}
 
 	public RawDataInterface getClusterMinimums() {
-		WekaRawData minimums = new WekaRawData(clusterCentroids);
+		WekaRawData minimums = new WekaRawData(clusterMinimums);
 		return minimums;
 	}
 

@@ -43,13 +43,13 @@ import weka.classifiers.rules.DecisionTable;
  *
  * @author Mark Hall (mhall@cs.waikato.ac.nz)
  * @author Eibe Frank (eibe@cs.waikato.ac.nz)
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see Clusterer
  * @see OptionHandler
  */
 public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer 
   implements weka.clusterers.NumberOfClustersRequestable,
-	     OptionHandler, WeightedInstancesHandler {
+             OptionHandler, WeightedInstancesHandler {
 
   /**
    * replace missing values in training instances
@@ -65,6 +65,8 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
    * holds the cluster centroids
    */
   private Instances m_ClusterCentroids;
+  private Instances m_ClusterMaximums;
+  private Instances m_ClusterMinimums;
 
   /**
    * Holds the standard deviations of the numeric attributes in each cluster
@@ -126,22 +128,22 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
    */
   
   public void setInitialCenters(int[] initialCenters) {
-  	java.util.Arrays.sort(initialCenters);
-  	int j = initialCenters.length;
-  	this.m_initialCenters = new int[initialCenters.length];
-  	for (int i = 0 ; i < initialCenters.length ; i++) { 
-  		// the passed-in initialCenters are 1 indexed, instead of 0, so subtract 1
-  		this.m_initialCenters[--j] = (initialCenters[i] - 1);
-  		System.out.println(initialCenters[i]);
-  	}
-	if (initialCenters.length == 6) {
-		this.m_initialCenters[0] = 253;
-		this.m_initialCenters[1] = 241;
-		this.m_initialCenters[2] = 177;
-		this.m_initialCenters[3] = 161;
-		this.m_initialCenters[4] = 124;
-		this.m_initialCenters[5] = 65;
-	}
+    java.util.Arrays.sort(initialCenters);
+    int j = initialCenters.length;
+    this.m_initialCenters = new int[initialCenters.length];
+    for (int i = 0 ; i < initialCenters.length ; i++) { 
+      // the passed-in initialCenters are 1 indexed, instead of 0, so subtract 1
+      this.m_initialCenters[--j] = (initialCenters[i] - 1);
+      System.out.println(initialCenters[i]);
+    }
+    if (initialCenters.length == 6) {
+      this.m_initialCenters[0] = 253;
+      this.m_initialCenters[1] = 241;
+      this.m_initialCenters[2] = 177;
+      this.m_initialCenters[3] = 161;
+      this.m_initialCenters[4] = 124;
+      this.m_initialCenters[5] = 65;
+    }
   }
   
   public void buildClusterer(Instances data) throws Exception {
@@ -162,6 +164,8 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
     }
     
     m_ClusterCentroids = new Instances(instances, m_NumClusters);
+    m_ClusterMaximums = new Instances(instances, m_NumClusters);
+    m_ClusterMinimums = new Instances(instances, m_NumClusters);
     int[] clusterAssignments = new int [instances.numInstances()];
 
     for (int i = 0; i < instances.numInstances(); i++) {
@@ -174,23 +178,22 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
     DecisionTable.hashKey hk = null;
 
     int centerIndex = 0;
-	for (int j = instances.numInstances() - 1; j >= 0; j--) {
-		if (m_initialCenters == null)
-      		instIndex = RandomO.nextInt(j+1);
-		else
-      		instIndex = m_initialCenters[centerIndex++];
-		hk = new DecisionTable.hashKey(instances.instance(instIndex), 
-			instances.numAttributes(), true);
-		if (!initC.containsKey(hk)) {
-			m_ClusterCentroids.add(instances.instance(instIndex));
-			initC.put(hk, null);
-		}
-		instances.swap(j, instIndex);
-		if (m_ClusterCentroids.numInstances() == m_NumClusters) {
-			break;
-		}
-	}
-
+    for (int j = instances.numInstances() - 1; j >= 0; j--) {
+      if (m_initialCenters == null)
+        instIndex = RandomO.nextInt(j+1);
+      else
+        instIndex = m_initialCenters[centerIndex++];
+      hk = new DecisionTable.hashKey(instances.instance(instIndex), 
+            instances.numAttributes(), true);
+      if (!initC.containsKey(hk)) {
+        m_ClusterCentroids.add(instances.instance(instIndex));
+        initC.put(hk, null);
+      }
+      instances.swap(j, instIndex);
+      if (m_ClusterCentroids.numInstances() == m_NumClusters) {
+        break;
+      }
+    }
     
     m_NumClusters = m_ClusterCentroids.numInstances();
     
@@ -205,44 +208,60 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
       m_Iterations++;
       converged = true;
       for (i = 0; i < instances.numInstances(); i++) {
-	Instance toCluster = instances.instance(i);
-	int newC = clusterProcessedInstance(toCluster, true);
-	if (newC != clusterAssignments[i]) {
-	  converged = false;
-	}
-	clusterAssignments[i] = newC;
+        Instance toCluster = instances.instance(i);
+        int newC = clusterProcessedInstance(toCluster, true);
+        if (newC != clusterAssignments[i]) {
+          converged = false;
+        }
+        clusterAssignments[i] = newC;
       }
       
       // update centroids
       m_ClusterCentroids = new Instances(instances, m_NumClusters);
+	  //Instances[] temp2 = null;
+	  //Instances[] temp3 = null;
       for (i = 0; i < m_NumClusters; i++) {
-	tempI[i] = new Instances(instances, 0);
+        tempI[i] = new Instances(instances, 0);
+        //temp2[i] = new Instances(instances, 0);
+        //temp3[i] = new Instances(instances, 0);
       }
       for (i = 0; i < instances.numInstances(); i++) {
-	tempI[clusterAssignments[i]].add(instances.instance(i));
+        tempI[clusterAssignments[i]].add(instances.instance(i));
+        //temp2[clusterAssignments[i]].add(new Instance(1.0, instances.instance(i).toDoubleArray()));
+        //temp3[clusterAssignments[i]].add(new Instance(1.0, instances.instance(i).toDoubleArray()));
       }
+	  // iterate over the clusters
       for (i = 0; i < m_NumClusters; i++) {
-	double [] vals = new double[instances.numAttributes()];
-	if (tempI[i].numInstances() == 0) {
-	  // empty cluster
-	  emptyClusterCount++;
-	} else {
-	  for (int j = 0; j < instances.numAttributes(); j++) {
-	    vals[j] = tempI[i].meanOrMode(j);
-	    m_ClusterNominalCounts[i][j] = 
-	      tempI[i].attributeStats(j).nominalCounts;
-	  }
-	  m_ClusterCentroids.add(new Instance(1.0, vals));
-	}
+        double [] vals = new double[instances.numAttributes()];
+        //double [] vals2 = new double[instances.numAttributes()];
+        //double [] vals3 = new double[instances.numAttributes()];
+        if (tempI[i].numInstances() == 0) {
+          // empty cluster
+          emptyClusterCount++;
+        } else {
+		  // iterate over the dimensions
+          for (int j = 0; j < instances.numAttributes(); j++) {
+            vals[j] = tempI[i].meanOrMode(j);
+            m_ClusterNominalCounts[i][j] = 
+              tempI[i].attributeStats(j).nominalCounts;
+			// note - calling these methods changes the order of the data!
+            //vals2[j] = temp2[i].kthSmallestValue(j,1);
+            //vals3[j] = temp3[i].kthSmallestValue(j,instances.numInstances());
+          }
+		  // assign the new centroid value
+          m_ClusterCentroids.add(new Instance(1.0, vals));
+          //m_ClusterMinimums.add(new Instance(1.0, vals2));
+          //m_ClusterMaximums.add(new Instance(1.0, vals3));
+        }
       }
 
       if (emptyClusterCount > 0) {
-	m_NumClusters -= emptyClusterCount;
-	tempI = new Instances[m_NumClusters];
+        m_NumClusters -= emptyClusterCount;
+        tempI = new Instances[m_NumClusters];
       }
       if (!converged) {
-	m_squaredErrors = new double [m_NumClusters];
-	m_ClusterNominalCounts = new int [m_NumClusters][instances.numAttributes()][0];
+        m_squaredErrors = new double [m_NumClusters];
+        m_ClusterNominalCounts = new int [m_NumClusters][instances.numAttributes()][0];
       }
     }
     m_ClusterStdDevs = new Instances(instances, m_NumClusters);
@@ -250,11 +269,11 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
     for (i = 0; i < m_NumClusters; i++) {
       double [] vals2 = new double[instances.numAttributes()];
       for (int j = 0; j < instances.numAttributes(); j++) {
-	if (instances.attribute(j).isNumeric()) {
-	  vals2[j] = Math.sqrt(tempI[i].variance(j));
-	} else {
-	  vals2[j] = Instance.missingValue();
-	}	
+        if (instances.attribute(j).isNumeric()) {
+          vals2[j] = Math.sqrt(tempI[i].variance(j));
+        } else {
+          vals2[j] = Instance.missingValue();
+        }        
       }
       m_ClusterStdDevs.add(new Instance(1.0, vals2));
       m_ClusterSizes[i] = tempI[i].numInstances();
@@ -274,8 +293,8 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
     for (int i = 0; i < m_NumClusters; i++) {
       double dist = distance(instance, m_ClusterCentroids.instance(i));
       if (dist < minDist) {
-	minDist = dist;
-	bestCluster = i;
+        minDist = dist;
+        bestCluster = i;
       }
     }
     if (updateSquaredErrors) {
@@ -314,37 +333,37 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
     int firstI, secondI;
 
     for (int p1 = 0, p2 = 0; 
-	 p1 < first.numValues() || p2 < second.numValues();) {
+         p1 < first.numValues() || p2 < second.numValues();) {
       if (p1 >= first.numValues()) {
-	firstI = m_ClusterCentroids.numAttributes();
+        firstI = m_ClusterCentroids.numAttributes();
       } else {
-	firstI = first.index(p1); 
+        firstI = first.index(p1); 
       }
       if (p2 >= second.numValues()) {
-	secondI = m_ClusterCentroids.numAttributes();
+        secondI = m_ClusterCentroids.numAttributes();
       } else {
-	secondI = second.index(p2);
+        secondI = second.index(p2);
       }
       if (firstI == m_ClusterCentroids.classIndex()) {
-	p1++; continue;
+        p1++; continue;
       } 
       if (secondI == m_ClusterCentroids.classIndex()) {
-	p2++; continue;
+        p2++; continue;
       } 
       double diff;
       if (firstI == secondI) {
-	diff = difference(firstI, 
-			  first.valueSparse(p1),
-			  second.valueSparse(p2));
-	p1++; p2++;
+        diff = difference(firstI, 
+                          first.valueSparse(p1),
+                          second.valueSparse(p2));
+        p1++; p2++;
       } else if (firstI > secondI) {
-	diff = difference(secondI, 
-			  0, second.valueSparse(p2));
-	p2++;
+        diff = difference(secondI, 
+                          0, second.valueSparse(p2));
+        p2++;
       } else {
-	diff = difference(firstI, 
-			  first.valueSparse(p1), 0);
-	p1++;
+        diff = difference(firstI, 
+                          first.valueSparse(p1), 0);
+        p1++;
       }
       distance += diff * diff;
     }
@@ -364,34 +383,34 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
       
       // If attribute is nominal
       if (Instance.isMissingValue(val1) || 
-	  Instance.isMissingValue(val2) ||
-	  ((int)val1 != (int)val2)) {
-	return 1;
+          Instance.isMissingValue(val2) ||
+          ((int)val1 != (int)val2)) {
+        return 1;
       } else {
-	return 0;
+        return 0;
       }
     case Attribute.NUMERIC:
 
       // If attribute is numeric
       if (Instance.isMissingValue(val1) || 
-	  Instance.isMissingValue(val2)) {
-	if (Instance.isMissingValue(val1) && 
-	    Instance.isMissingValue(val2)) {
-	  return 1;
-	} else {
-	  double diff;
-	  if (Instance.isMissingValue(val2)) {
-	    diff = norm(val1, index);
-	  } else {
-	    diff = norm(val2, index);
-	  }
-	  if (diff < 0.5) {
-	    diff = 1.0 - diff;
-	  }
-	  return diff;
-	}
+          Instance.isMissingValue(val2)) {
+        if (Instance.isMissingValue(val1) && 
+            Instance.isMissingValue(val2)) {
+          return 1;
+        } else {
+          double diff;
+          if (Instance.isMissingValue(val2)) {
+            diff = norm(val1, index);
+          } else {
+            diff = norm(val2, index);
+          }
+          if (diff < 0.5) {
+            diff = 1.0 - diff;
+          }
+          return diff;
+        }
       } else {
-	return norm(val1, index) - norm(val2, index);
+        return norm(val1, index) - norm(val2, index);
       }
     default:
       return 0;
@@ -423,18 +442,18 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
 
     for (int j = 0;j < m_ClusterCentroids.numAttributes(); j++) {
       if (!instance.isMissing(j)) {
-	if (Double.isNaN(m_Min[j])) {
-	  m_Min[j] = instance.value(j);
-	  m_Max[j] = instance.value(j);
-	} else {
-	  if (instance.value(j) < m_Min[j]) {
-	    m_Min[j] = instance.value(j);
-	  } else {
-	    if (instance.value(j) > m_Max[j]) {
-	      m_Max[j] = instance.value(j);
-	    }
-	  }
-	}
+        if (Double.isNaN(m_Min[j])) {
+          m_Min[j] = instance.value(j);
+          m_Max[j] = instance.value(j);
+        } else {
+          if (instance.value(j) < m_Min[j]) {
+            m_Min[j] = instance.value(j);
+          } else {
+            if (instance.value(j) > m_Max[j]) {
+              m_Max[j] = instance.value(j);
+            }
+          }
+        }
       }
     }
   }
@@ -470,9 +489,9 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
     Vector newVector = new Vector(2);
 
      newVector.addElement(new Option("\tnumber of clusters. (default = 2)." 
-				    , "N", 1, "-N <num>"));
+                                    , "N", 1, "-N <num>"));
      newVector.addElement(new Option("\trandom number seed.\n (default 10)"
-				     , "S", 1, "-S <num>"));
+                                     , "S", 1, "-S <num>"));
 
      return  newVector.elements();
   }
@@ -588,14 +607,14 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
     int maxWidth = 0;
     for (int i = 0; i < m_NumClusters; i++) {
       for (int j = 0 ;j < m_ClusterCentroids.numAttributes(); j++) {
-	if (m_ClusterCentroids.attribute(j).isNumeric()) {
-	  double width = Math.log(Math.abs(m_ClusterCentroids.instance(i).value(j))) /
-	    Math.log(10.0);
-	  width += 1.0;
-	  if ((int)width > maxWidth) {
-	    maxWidth = (int)width;
-	  }
-	}
+        if (m_ClusterCentroids.attribute(j).isNumeric()) {
+          double width = Math.log(Math.abs(m_ClusterCentroids.instance(i).value(j))) /
+            Math.log(10.0);
+          width += 1.0;
+          if ((int)width > maxWidth) {
+            maxWidth = (int)width;
+          }
+        }
       }
     }
     StringBuffer temp = new StringBuffer();
@@ -612,22 +631,22 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
       temp.append("\nCluster "+i+"\n\t");
       temp.append("Mean/Mode: ");
       for (int j = 0; j < m_ClusterCentroids.numAttributes(); j++) {
-	if (m_ClusterCentroids.attribute(j).isNominal()) {
-	  temp.append(" "+m_ClusterCentroids.attribute(j).
-		      value((int)m_ClusterCentroids.instance(i).value(j)));
-	} else {
-	  temp.append(" "+Utils.doubleToString(m_ClusterCentroids.instance(i).value(j),
-					       maxWidth+5, 4));
-	}
+        if (m_ClusterCentroids.attribute(j).isNominal()) {
+          temp.append(" "+m_ClusterCentroids.attribute(j).
+                      value((int)m_ClusterCentroids.instance(i).value(j)));
+        } else {
+          temp.append(" "+Utils.doubleToString(m_ClusterCentroids.instance(i).value(j),
+                                               maxWidth+5, 4));
+        }
       }
       temp.append("\n\tStd Devs:  ");
       for (int j = 0; j < m_ClusterStdDevs.numAttributes(); j++) {
-	if (m_ClusterStdDevs.attribute(j).isNumeric()) {
-	  temp.append(" "+Utils.doubleToString(m_ClusterStdDevs.instance(i).value(j), 
-					       maxWidth+5, 4));
-	} else {
-	  temp.append(" "+naString);
-	}
+        if (m_ClusterStdDevs.attribute(j).isNumeric()) {
+          temp.append(" "+Utils.doubleToString(m_ClusterStdDevs.instance(i).value(j), 
+                                               maxWidth+5, 4));
+        } else {
+          temp.append(" "+naString);
+        }
       }
     }
     temp.append("\n\n");
@@ -635,6 +654,14 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
   }
 
   public Instances getClusterCentroids() {
+    return m_ClusterCentroids;
+  }
+
+  public Instances getClusterMaximums() {
+    return m_ClusterCentroids;
+  }
+
+  public Instances getClusterMinimums() {
     return m_ClusterCentroids;
   }
 
@@ -651,23 +678,23 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
   }
 
   public double getBetweenError() {
-	// get the mean of the centroids
-	Instance centroidMean = new
-	Instance(m_ClusterCentroids.numAttributes());
-	for (int x = 0 ; x < m_ClusterCentroids.numInstances() ; x++) {
-	Instance tmpInst = m_ClusterCentroids.instance(x);
-		for (int y = 0 ; y < tmpInst.numAttributes() ; y++) {
-			double tmp = centroidMean.value(y) + tmpInst.value(y);
-			centroidMean.setValue(y,tmp);
-		}
-	}
-	// get the squared error for the centroids
-	double betweenError = 0.0;
-	for (int x = 0 ; x < m_ClusterCentroids.numInstances() ; x++) {
-		betweenError += distance(centroidMean,
-		m_ClusterCentroids.instance(x));
-	}
-	return betweenError;
+    // get the mean of the centroids
+    Instance centroidMean = new
+    Instance(m_ClusterCentroids.numAttributes());
+    for (int x = 0 ; x < m_ClusterCentroids.numInstances() ; x++) {
+      Instance tmpInst = m_ClusterCentroids.instance(x);
+      for (int y = 0 ; y < tmpInst.numAttributes() ; y++) {
+        double tmp = centroidMean.value(y) + tmpInst.value(y);
+        centroidMean.setValue(y,tmp);
+      }
+    }
+    // get the squared error for the centroids
+    double betweenError = 0.0;
+    for (int x = 0 ; x < m_ClusterCentroids.numInstances() ; x++) {
+      betweenError += distance(centroidMean,
+      m_ClusterCentroids.instance(x));
+    }
+    return betweenError;
   }
 
   public int [] getClusterSizes() {
@@ -683,7 +710,7 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
   public static void main (String[] argv) {
     try {
       System.out.println(weka.clusterers.ClusterEvaluation.
-			 evaluateClusterer(new ImprovedSimpleKMeans(), argv));
+                         evaluateClusterer(new ImprovedSimpleKMeans(), argv));
     }
     catch (Exception e) {
       System.out.println(e.getMessage());
