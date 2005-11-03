@@ -54,7 +54,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.12 2005/11/03 00:49:04 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.13 2005/11/03 22:10:24 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -834,18 +834,6 @@ public class AnalysisTaskWrapper extends TimerTask {
 			pcaData.normalizeData(true);
 	        XYDataset data = new ScatterPlotDataset(pcaData,
 			modelData.toString(), i, j, correlateToMain);
-			/*
-	        JFreeChart chart = ChartFactory.createScatterPlot(
-	            "Correlation Results: r = " + rCorrelation,
-	            (String)(pcaData.getEventNames().get(i)),
-	            (String)(pcaData.getEventNames().get(j)),
-	            data,
-	            PlotOrientation.VERTICAL,
-	            true,
-	            false,
-	            false
-	        );
-			*/
 			// Create the chart the hard way, to include a linear regression
 			NumberAxis xAxis = new NumberAxis((String)(pcaData.getEventNames().get(i)));
 			xAxis.setAutoRangeIncludesZero(false);

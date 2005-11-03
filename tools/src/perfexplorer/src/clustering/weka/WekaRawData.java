@@ -37,7 +37,11 @@ public class WekaRawData implements RawDataInterface {
 		instances = new Instances(name, fastAttributes, vectors);
 		
 		for (int i = 0 ; i < vectors ; i++) {
-			instances.add(new Instance(dimensions));
+			double[] values = new double[dimensions];
+			for (int j = 0 ; j < dimensions ; j++) {
+				values[j] = 0.0;
+			}
+			instances.add(new Instance(1.0, values));
 		}
 		
 	}
@@ -53,6 +57,7 @@ public class WekaRawData implements RawDataInterface {
 	 * @see clustering.RawDataInterface#addValue(int, int, double)
 	 */
 	public void addValue(int vectorIndex, int dimensionIndex, double value) {
+		//System.out.println("RawData: " + vectorIndex + ", " + dimensionIndex + ", " + value);
 		Instance i = instances.instance(vectorIndex);
 		i.setValue(dimensionIndex, value);
 		if (maximum < value)

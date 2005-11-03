@@ -11,7 +11,7 @@ import clustering.RawDataInterface;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: ScatterPlotDataset.java,v 1.2 2005/10/21 19:43:00 khuck Exp $</P>
+ * <P>CVS $Id: ScatterPlotDataset.java,v 1.3 2005/11/03 22:10:24 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -23,6 +23,7 @@ public class ScatterPlotDataset extends AbstractXYDataset implements XYDataset {
 	private int x = 0;
 	private int y = 1;
 	private boolean useMainValue = false;
+	private String debug = null;
 	
 	/**
 	 * Constructor.
@@ -67,6 +68,8 @@ public class ScatterPlotDataset extends AbstractXYDataset implements XYDataset {
 	 * @see org.jfree.data.xy.XYDataset#getX(int, int)
 	 */
 	public Number getX(int arg0, int arg1) {
+		//if (x == 0) 
+			//debug = new String ("Value [" + arg0 + "/" + arg1 + "]: " + data.getValue(arg1,x));
 		return new Double(data.getValue(arg1, x));
 	}
 
@@ -74,6 +77,10 @@ public class ScatterPlotDataset extends AbstractXYDataset implements XYDataset {
 	 * @see org.jfree.data.xy.XYDataset#getY(int, int)
 	 */
 	public Number getY(int arg0, int arg1) {
+		//if (y == 0 && debug != null) {
+			//String debug2 = new String ("Value [" + arg0 + "/" + arg1 + "]: " + data.getValue(arg1,y));
+			//System.out.println(debug + ", " + debug2);
+		//}
 		if (useMainValue)
 			return new Double(data.getMainValue(arg1));
 		else
