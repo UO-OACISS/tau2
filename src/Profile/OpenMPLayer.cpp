@@ -56,6 +56,13 @@ using namespace std;
 omp_lock_t OpenMPLayer::tauDBmutex;
 omp_lock_t OpenMPLayer::tauEnvmutex;
 
+#ifdef TAU_OPENMP_NESTED
+static int threadId = -1;
+#pragma omp threadprivate(threadId)
+static int threadCount = 0;
+#endif /* TAU_OPENMP_NESTED */
+
+
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
@@ -80,9 +87,18 @@ int OpenMPLayer::RegisterThread(void)
 int OpenMPLayer::GetThreadId(void) 
 {
 #ifdef TAU_OPENMP
+#ifdef TAU_OPENMP_NESTED
+  if (threadId == -1) {
+#pragma omp critical(threadLock)
+    {
+      threadId = threadCount++;
+    }
+  }
+  return threadId;
+#else
   return omp_get_thread_num();
+#endif /* TAU_OPENMP_NESTED */
 #endif /* TAU_OPENMP */
-
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -93,6 +109,7 @@ int OpenMPLayer::GetThreadId(void)
 int OpenMPLayer::TotalThreads(void) 
 {
 #ifdef TAU_OPENMP
+  // Note: this doesn't work for nested parallelism
   return omp_get_num_threads();
 #endif /* TAU_OPENMP */
 
@@ -180,9 +197,9 @@ int OpenMPLayer::UnLockEnv(void)
 
 
 /***************************************************************************
- * $RCSfile: OpenMPLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2005/01/05 01:59:17 $
- * POOMA_VERSION_ID: $Id: OpenMPLayer.cpp,v 1.3 2005/01/05 01:59:17 sameer Exp $
+ * $RCSfile: OpenMPLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.4 $   $Date: 2005/11/04 00:41:09 $
+ * POOMA_VERSION_ID: $Id: OpenMPLayer.cpp,v 1.4 2005/11/04 00:41:09 amorris Exp $
  ***************************************************************************/
 
 
