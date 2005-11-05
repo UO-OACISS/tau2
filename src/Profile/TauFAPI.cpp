@@ -168,6 +168,13 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
 #endif /* DEBUG_PROF */
   if (*ptr == 0) 
   {
+
+#ifdef TAU_OPENMP
+#pragma omp critical
+    {
+      if (*ptr == 0) {
+#endif /* TAU_OPENMP */
+
     // make a copy so that we can null terminate it
     char *localname = (char *) malloc((size_t)flen+1);
     // hold on to the original pointer to free it since EXTRACT_GROUP
@@ -187,6 +194,12 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
     EXTRACT_GROUP(localname, flen, gr, gr_name)
     *ptr = Tau_get_profiler(localname, (char *)" ", gr, gr_name);
     free(tmp); 
+
+#ifdef TAU_OPENMP
+      }
+    }
+#endif /* TAU_OPENMP */
+
   }
 
 #ifdef DEBUG_PROF 
@@ -1297,6 +1310,6 @@ void TAU_PHASE_STOP(void **profiler)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.46 $   $Date: 2005/10/27 18:10:23 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.46 2005/10/27 18:10:23 amorris Exp $ 
+ * $Revision: 1.47 $   $Date: 2005/11/05 00:32:04 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.47 2005/11/05 00:32:04 amorris Exp $ 
  ***************************************************************************/
