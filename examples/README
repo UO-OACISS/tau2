@@ -1,6 +1,12 @@
 This directory contains example programs that illustrate the use of TAU
 instrumentation and measurement options.
 
+taututorial     - This MPI C++ example shows how to integerate TAU in your
+                  build system. This requires TAU to be configured with 
+                  -mpiinc=<dir> -mpilib=<dir> -pdt=<dir> options. Please 
+                  refer to the README file in this subdirectory for more 
+                  information. 
+
 instrument 	- This contains a simple C++ example that shows how TAU's
 		  API can be used for manually instrumenting a C++ program.
 
