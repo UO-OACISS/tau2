@@ -313,8 +313,8 @@ do
     ;;
 
   -ibm)
-      c_compiler=cc
-      cxx_compiler=xlC
+      c_compiler=xlc_r
+      cxx_compiler=xlC_r
     shift
     ;;
 
@@ -1145,8 +1145,8 @@ case $machine in
          # If it has the IBM xlC compiler, use it
 	 if [ -f /usr/bin/xlC -o -f /usr/vacpp/bin/xlC ]
            then
-             cxx_compiler=xlC
-             c_compiler=xlc
+             cxx_compiler=xlC_r
+             c_compiler=xlc_r
            else
              cxx_compiler=g++
          fi
