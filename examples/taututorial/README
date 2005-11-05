@@ -1,2 +1,72 @@
-The files in this directory are for use with the TAU Tutorial document, which
-can be found on the TAU homepage.
+This tutorial example is documented in the TAU homepage. 
+
+
+TAU provides shell scripts tau_cxx.sh, tau_f90.sh and tau_cc.sh for C++,F90 and
+C compilers. These are typically installed in <taudir>/<arch>/bin directory. 
+You may replace the compiler in your Makefiles with these scripts. These 
+scripts may also be used on the command line. Each configuration of TAU has 
+a stub makefile associated with it. For instance, 
+tau-2.x/ibm64/lib/Makefile.tau-mpi-pdt
+This makefile specifies the measurement components that have been configured
+with it. In this case it shows that TAU's MPI wrapper interposition library
+and PDT have been configured. You need to set the environment variable:
+TAU_MAKEFILE 
+to point to this stub makefile. You can also pass arguments to the four
+stages of compilation using the environment variable
+TAU_OPTIONS. 
+For a complete list of options that tau_compiler.sh takes (these scripts invoke
+tau_compiler.sh) please see
+% tau_compiler.sh -help
+
+To keep intermediate files, turn on the verbose mode and use a selective
+instrumentation file select.tau, we can set:
+
+% set path=($path <taudir>/<arch>/bin)
+% setenv TAU_MAKEFILE <taudir>/<arch>/lib/Makefile.tau-mpi-pdt
+% setenv TAU_OPTIONS  '-optKeepFiles -optVerbose -optTauSelectFile="select.tau"'
+
+and then use:
+% tau_f90.sh foo.f90 -o foo
+to compiler foo.f90 and create an executable called foo.
+
+or in this case,
+% tau_cxx.sh computePi.cpp -o computePi
+
+
+TAU also has an environment variable TAU_THROTTLE which may be turned on to 
+enable runtime throttling of events that are lightweight. TAU uses a default
+rule of 
+numcalls > 100000 && usecs/call < 10
+which means that if a function executes greater than 100000 times and has 
+an inclusive time per call of less than 10 microseconds, that function will
+be disabled after that threshold is reached. To change the values of numcalls
+and usecs/call the user may optionally set environment variables:
+% setenv TAU_THROTTLE 1
+% setenv TAU_THROTTLE_NUMCALLS 2000000
+% setenv TAU_THROTTLE_PERCALL  5
+to change the values to 2 million and 5 microseconds per call.  
+
+Throttling is disabled by default and will not take effect unless the 
+TAU_THROTTLE environment variable is set to some value. 
+
+Instead of using the shell scripts tau_f90.sh, tau_cxx.sh and tau_cc.sh, the
+user may directly invoke the tau_compiler.sh shell script by first including
+the TAU stub makefile and then using a prefix $(TAU_COMPILER) for the name of
+the compiler.  For e.g.,
+
+include <taudir>/<arch>/lib/Makefile.tau-mpi-pdt
+
+F90 = $(TAU_COMPILER) mpxlf90_r
+
+or 
+
+include <taudir>/<arch>/lib/Makefile.tau-mpi-pdt
+OPTIONS = '-optVerbose -optTauSelectFile="select.tau"'
+CXX = $(TAU_COMPILER) $(OPTIONS) icpc
+
+The <taudir>/include/Makefile always points to the last configured version
+of TAU. To see all configurations, please refer to the
+<taudir>/.all_configs file. 
+
+
+
