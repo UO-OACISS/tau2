@@ -6,14 +6,14 @@
  */
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-
-import edu.uoregon.tau.perfdmf.*;
-
+import java.awt.Color;
+import java.awt.Component;
+import java.io.Serializable;
 import java.util.*;
 
 import javax.swing.JColorChooser;
-import java.io.Serializable;
+
+import edu.uoregon.tau.perfdmf.Function;
 
 public class ColorMap extends Observable implements Serializable {
 
@@ -57,10 +57,7 @@ public class ColorMap extends Observable implements Serializable {
     }
 
     void removeColor(Function f) {
-        colors.remove(f.getName());
-        reassignColors();
-        setChanged();
-        notifyObservers("colorMap");
+        removeColor(f.getName());
     }
 
     void removeColor(String functionName) {
@@ -71,16 +68,11 @@ public class ColorMap extends Observable implements Serializable {
     }
 
     void assignColor(Component component, Function f) {
-
         Color color = f.getColor();
         color = JColorChooser.showDialog(component, "Please select a new color", color);
         if (color != null) {
             this.putColor(f, color);
         }
-
-        reassignColors();
-        setChanged();
-        notifyObservers("colorMap");
     }
 
     public Iterator getFunctions() {

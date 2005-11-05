@@ -51,11 +51,9 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
     private JButton deleteColorButton;
     private JButton updateColorButton;
     private JButton restoreDefaultsButton;
-    private int numberOfColors = -1;
    
     public ColorDefaultsWindow(ColorChooser colorChooser, Component invoker) {
         this.colorChooser = colorChooser;
-        numberOfColors = colorChooser.getNumberOfColors();
 
         //Window Stuff.
         setSize(new Dimension(855, 450));

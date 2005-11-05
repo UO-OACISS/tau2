@@ -37,7 +37,6 @@ public class PPFunctionProfile implements Comparable {
         this.dataSorter = dataSorter;
         this.thread = thread;
         this.functionProfile = fp;
-
         // prefetch this
         this.meanProfile = functionProfile.getFunction().getMeanProfile();
     }

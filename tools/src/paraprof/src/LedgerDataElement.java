@@ -11,9 +11,9 @@ import java.awt.*;
  * This provides the ledger window classes a uniform interface to dealing with these objects.
  * It also holds draw coordinates for mouse events.
  * 
- * <P>CVS $Id: LedgerDataElement.java,v 1.1 2005/09/26 21:12:05 amorris Exp $</P>
+ * <P>CVS $Id: LedgerDataElement.java,v 1.2 2005/11/05 01:36:23 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  * @see		LedgerWindow
  * @see		LedgerWindowPanel
  */
@@ -116,9 +116,7 @@ public class LedgerDataElement {
     }
 
     public void setColorFlag(boolean colorFlag) {
-        if (elementType == FUNCTION) {
-            function.setColorFlag(colorFlag);
-        } else if (elementType == GROUP) {
+        if (elementType == GROUP) {
             group.setColorFlag(colorFlag);
         } else if (elementType == USEREVENT) {
             userEvent.setColorFlag(colorFlag);
@@ -126,9 +124,7 @@ public class LedgerDataElement {
     }
 
     public boolean isColorFlagSet() {
-        if (elementType == FUNCTION) {
-            return function.isColorFlagSet();
-        } else if (elementType == GROUP) {
+        if (elementType == GROUP) {
             return group.isColorFlagSet();
         } else if (elementType == USEREVENT) {
             return userEvent.isColorFlagSet();
@@ -137,9 +133,7 @@ public class LedgerDataElement {
     }
     
     public void setSpecificColor(Color color) {
-        if (elementType == FUNCTION) {
-            function.setSpecificColor(color);
-        } else if (elementType == GROUP) {
+        if (elementType == GROUP) {
             group.setSpecificColor(color);
         } else if (elementType == USEREVENT) {
             userEvent.setSpecificColor(color);
