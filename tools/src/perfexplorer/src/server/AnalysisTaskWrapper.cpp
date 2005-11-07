@@ -54,7 +54,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.13 2005/11/03 22:10:24 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.14 2005/11/07 23:20:23 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -589,7 +589,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				if (modelData.getClusterMethod().equals(RMIPerfExplorerModel.K_MEANS)) {
 					int maxClusters = (numTotalThreads <= modelData.getNumberOfClusters()) ? (numTotalThreads-1) : modelData.getNumberOfClusters();
 					for (int i = 2 ; i <= maxClusters ; i++) {
-						System.out.println("Doing " + i + " clusters...");
+						System.out.println("Doing " + i + " clusters:" + modelData.toString());
 						// create a cluster engine
 						KMeansClusterInterface clusterer = factory.createKMeansEngine();
 						clusterer.setInputData(reducedData);

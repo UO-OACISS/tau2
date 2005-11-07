@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.18 2005/11/03 23:58:33 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.19 2005/11/07 23:20:23 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -219,7 +219,8 @@ public class ChartData extends RMIChartData {
 
 			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) order by 1, 2");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
+			buf.append("order by 1, 2");
 
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -272,7 +273,9 @@ public class ChartData extends RMIChartData {
 
 			buf.append(" and m.name = ? and ims.inclusive_percentage = 100.0 ");
 
-			buf.append(" and ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append(" and (ie.group_name is null or (");
+			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
 			//}
 			buf.append(" order by 1, 2");
 			statement = db.prepareStatement(buf.toString());
@@ -565,7 +568,9 @@ public class ChartData extends RMIChartData {
 			buf.append("on ie.id = p.interval_event ");
 			buf.append("and p.metric = s.metric where ie.trial = ? ");
 			buf.append(" and p.metric = ? ");
-			buf.append(" and ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append(" and (ie.group_name is null or (");
+			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
 			buf.append(" order by 1,2 ");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());

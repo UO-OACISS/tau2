@@ -8,7 +8,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.9 2005/10/21 21:04:12 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.10 2005/11/07 23:20:23 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -417,14 +417,18 @@ public class RMIPerfExplorerModel implements Serializable {
 		StringBuffer buf = new StringBuffer();
 		int i = fullPath.length - 1;
 		RMIView view = (RMIView) fullPath[i];
-		if (view.getField("table_name").equalsIgnoreCase("Application")) {
-			buf.append (" a.");
-		} else if (view.getField("table_name").equalsIgnoreCase("Experiment")) {
-			buf.append (" e.");
-		} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
-			buf.append (" t.");
+		if (view.getField("operator").equalsIgnoreCase("like")) {
+			buf.append(" '" + view.getField("value").replaceAll("%","") + "'");
+		} else {
+			if (view.getField("table_name").equalsIgnoreCase("Application")) {
+				buf.append (" a.");
+			} else if (view.getField("table_name").equalsIgnoreCase("Experiment")) {
+				buf.append (" e.");
+			} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
+				buf.append (" t.");
+			}
+			buf.append (view.getField("column_name"));
 		}
-		buf.append (view.getField("column_name"));
 		return buf.toString();
 	}
 
