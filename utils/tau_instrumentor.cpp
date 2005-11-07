@@ -1166,7 +1166,15 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
 
 		WRITE_TAB(ostr,(*it)->col);
+
+#ifdef TAU_ALIGN_FORTRAN_INSTRUMENTATION
+		// alignment issues on solaris2-64 require a value
+		// that will be properly aligned
+		ostr <<"DOUBLE PRECISION profiler / 0 /"<<endl;
+		//ostr <<"integer*8 profiler / 0 /"<<endl;
+#else
 		ostr <<"integer profiler(2) / 0, 0 /"<<endl;
+#endif
 		/* spaces */
      		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
@@ -1715,8 +1723,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.72 $   $Date: 2005/10/26 21:57:58 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.72 2005/10/26 21:57:58 amorris Exp $
+ * $Revision: 1.73 $   $Date: 2005/11/07 18:45:11 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.73 2005/11/07 18:45:11 amorris Exp $
  ***************************************************************************/
 
 
