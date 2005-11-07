@@ -9,7 +9,7 @@ import java.io.*;
  * This code generates a thumbnail image from a larger JPG or PNG file.
  * This code was taken from http://www.geocities.com/marcoschmidt.geo/java-save-jpeg-thumbnail.html
  *
- * <P>CVS $Id: Thumbnail.java,v 1.1 2005/07/05 22:29:54 amorris Exp $</P>
+ * <P>CVS $Id: Thumbnail.java,v 1.2 2005/11/07 20:20:17 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -62,7 +62,7 @@ public class Thumbnail {
 			encoder.setJPEGEncodeParam(param);
 			encoder.encode(thumbImage);
 			out.close(); 
-			System.out.println("Done.");
+			//System.out.println("Done.");
 		} catch (Exception e) {
 			System.out.println("\nError making Thumbnail!");
 			e.printStackTrace();

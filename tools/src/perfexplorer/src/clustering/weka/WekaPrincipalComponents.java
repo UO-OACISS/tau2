@@ -131,7 +131,12 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 			int[] counters = new int[k];
 			
 			for (int i = 0 ; i < k ; i++) {
-				instances[i] = new Instances((Instances)(transformed.getData()), clusterSizes[i]);
+				// we have to do this chec, because sometimes Weka creates
+				// empty clusters, and removes them.
+				if (i >= clusterSizes.length)
+					instances[i] = new Instances((Instances)(transformed.getData()), 0);
+				else
+					instances[i] = new Instances((Instances)(transformed.getData()), clusterSizes[i]);
 				counters[i] = 0;
 			}
 

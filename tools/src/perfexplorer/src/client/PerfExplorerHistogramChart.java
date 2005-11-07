@@ -82,7 +82,7 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
 				bins = 200;
 				//bins = Math.max(200, doubles.size() / 100);
 			else if (doubles.size() >= 256)
-				bins = doubles.size() / 10;
+				bins = 50;
 			else if (doubles.size() >= 16)
 				bins = 20;
          	dataset.addSeries((String)names.get(i), values, bins);
