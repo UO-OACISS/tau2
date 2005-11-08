@@ -470,7 +470,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		}
 
         JFreeChart chart = ChartFactory.createXYLineChart(
-            "Communication Time / Total Runtime" +   // chart title
+            PerfExplorerModel.getModel().getGroupName() + " Time / Total Runtime" +   // chart title
 			PerfExplorerModel.getModel().toString() + ":" +
 			PerfExplorerModel.getModel().getMetricName(),
             "Number of Processors",          // domain axis label
@@ -483,7 +483,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         );
 
 		customizeChart(chart, rawData1.getRows(), false);
-		return new PerfExplorerChart(chart, "Transpose Time / Total Runtime");
+		return new PerfExplorerChart(chart, PerfExplorerModel.getModel().getGroupName() + " Time / Total Runtime");
 	}
 
 	public static PerfExplorerChart doEfficiencyPhasesChart () {

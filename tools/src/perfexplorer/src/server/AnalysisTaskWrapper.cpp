@@ -54,7 +54,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.14 2005/11/07 23:20:23 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.15 2005/11/08 03:09:00 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -619,8 +619,8 @@ public class AnalysisTaskWrapper extends TimerTask {
 						// do a scatterplot
 						rCorrelation = 0.0;
 						chartType = AnalysisTaskWrapper.PCA_SCATTERPLOT;
-						for (int m = 0 ; m < i ; m++)
-							clusters[m].normalizeData(true);
+						//for (int m = 0 ; m < i ; m++)
+							//clusters[m].normalizeData(true);
 						//System.out.println("PCA Dimensions: " + components.numDimensions());
 						thumbnail = generateThumbnail(clusters);
 						chart = generateImage(components, clusters);
