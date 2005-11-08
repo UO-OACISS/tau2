@@ -979,7 +979,7 @@ void tau_context_event(int **ptr, double *data)
 //#endif /* TAU_XLC || TAU_AIX || HP_FORTRAN */
 
 
-#if (defined (TAU_GNU) || defined (TAU_PATHSCALE))
+#if (defined (TAU_GNU) || defined (TAU_PATHSCALE) || defined (TAU_OPEN64ORC))
 
 void tau_profile_timer__(void **ptr, char *fname, int flen)
 {
@@ -1309,7 +1309,7 @@ void TAU_PHASE_STOP(void **profiler)
 } /* extern "C" */
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.47 $   $Date: 2005/11/05 00:32:04 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.47 2005/11/05 00:32:04 amorris Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.48 $   $Date: 2005/11/08 04:46:22 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.48 2005/11/08 04:46:22 sameer Exp $ 
  ***************************************************************************/
