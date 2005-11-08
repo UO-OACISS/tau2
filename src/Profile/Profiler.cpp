@@ -384,7 +384,9 @@ Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup,
 {
 
       StartStopUsed_ = StartStop; // will need it later in ~Profiler
-      MyProfileGroup_ = ProfileGroup ;
+      MyProfileGroup_ = function->GetProfileGroup() ;
+      //MyProfileGroup_ = ProfileGroup;
+      /* Get the latest profile group from the function. For throttling. */
       ThisFunction = function ; 
 #ifdef TAU_MPITRACE
       RecordEvent = false; /* by default, we don't record this event */
@@ -730,8 +732,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
         inclusiveTime = ThisFunction->GetInclTime(tid); 
 	/* when multiple counters are not used, it is a single metric or double */
 #endif /* MULTIPLE_COUNTERS */
-        if (TheTauThrottle() && (ThisFunction->GetCalls(tid) > TheTauThrottleNumCalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TheTauThrottlePerCall()))
-	{
+        if (TheTauThrottle() && (ThisFunction->GetCalls(tid) > TheTauThrottleNumCalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TheTauThrottlePerCall()) && AddInclFlag)
+	{ /* Putting AddInclFlag means we can't throttle recursive calls */
 	  ThisFunction->SetProfileGroup(TAU_DISABLE);
 	  ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
 	  cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
@@ -3093,8 +3095,8 @@ double& Profiler::TheTauThrottlePerCall(void)
 }
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.125 $   $Date: 2005/11/01 18:41:03 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.125 2005/11/01 18:41:03 sameer Exp $ 
+ * $Revision: 1.126 $   $Date: 2005/11/08 17:49:14 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.126 2005/11/08 17:49:14 sameer Exp $ 
  ***************************************************************************/
 
 	
