@@ -21,7 +21,7 @@ CC		= $(TAU_CC)
 
 FFLAGS        	= $(TAU_INCLUDE) $(TAU_F90_FIXED)
 
-LIBS            = $(TAU_LIBS) $(TAU_CXXLIBS)
+LIBS            = $(TAU_LIBS) $(TAU_FORTRANLIBS)
 
 LDFLAGS	      	= $(USER_OPT) 
 
@@ -44,13 +44,10 @@ all:		$(TARGET)
 install: 	$(TARGET)
 
 $(TARGET):	$(TARGET).o  
-	$(F90) $(LDFLAGS) $(TARGET).o  -o $@ $(LIBS)
+	$(CXX) $(LDFLAGS) $(TARGET).o  -o $@ $(LIBS)
 
 $(TARGET).o : $(TARGET).f
 	$(F90) $(FFLAGS) -c $(TARGET).f
-
-main.o : main.C
-	$(CXX) $(CFLAGS) -c main.C
 
 clean: 	
 	$(RM) $(TARGET).o $(TARGET)
