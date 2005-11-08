@@ -1692,6 +1692,7 @@ case $cxx_compiler in
    orCC)
       echo "Default C++ compiler will ORC Open64 orCC compiler"
       fixmakeargs="$fixmakeargs OPEN64ORC"
+      tauoptions="${tauoptions}-orcc"
       if [ $c_compiler = default ] 
       then
         c_compiler=orcc
@@ -1886,6 +1887,11 @@ case $fortran_compiler in
       fixmakeargs="$fixmakeargs KAI_FORTRAN"
       guidef90=yes
       ;;
+
+   open64)
+      echo "Default Fortran compiler will be ORC Open64 orf90"
+      fixmakeargs="$fixmakeargs OPEN64ORC_FORTRAN"
+      ;;  
 
    intel)
       if [ $cxx_compiler = ecpc ]
