@@ -49,6 +49,31 @@ TAU_GLOBAL_TIMER(tworkshare, "workshare enter/exit", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER(tregion, "inst region begin/end", "[OpenMP]", OpenMP); 
 
 
+#define NUM_OMP_TYPES 15
+
+static char* omp_names[15] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
+			     "critical enter/exit", "for enter/exit", "master begin/end",
+			     "parallel begin/end", "parallel fork/join", "section begin/end",
+			     "sections enter/exit", "single begin/end", "single enter/exit",
+			      "workshare enter/exit", "inst region begin/end", "flush enter/exit" };
+
+
+#define OMP_ATOMIC      0
+#define OMP_BARRIER     1
+#define OMP_CRITICAL_BE 2
+#define OMP_CRITICAL_EE 3
+#define OMP_FOR_EE      4
+#define OMP_MASTER_BE   5
+#define OMP_PAR_BE      6
+#define OMP_PAR_FJ      7
+#define OMP_SECTION_BE  8
+#define OMP_SECTION_EE  9
+#define OMP_SINGLE_BE  10
+#define OMP_SINGLE_EE  11
+#define OMP_WORK_EE    12
+#define OMP_INST_BE    13
+#define OMP_FLUSH_EE   14
+
 static int omp_tracing    = 1;
 static int omp_fin_called = 0;
 
@@ -682,63 +707,71 @@ int tau_openmp_init(void)
 }
 
 
-void TauStartOpenMPRegionTimer(struct ompregdescr *r)
+void TauStartOpenMPRegionTimer(struct ompregdescr *r, int index)
 {
   static int tau_openmp_initialized = tau_openmp_init();
 /* For any region, create a mapping between a region r and timer t and
    start the timer. */
 
   omp_set_lock(&tau_ompregdescr_lock);
-  if (r->data)
-  {
-    FunctionInfo *f = (FunctionInfo *)r->data;
-    TauGroup_t gr = f->GetProfileGroup();
-    if (gr & RtsLayer::TheProfileMask())
-    {
-      Profiler *p = new Profiler((FunctionInfo *) r->data, OpenMP, true, RtsLayer::myThread());
-      p->Start();
+
+  if (!r->data) {
+#ifdef TAU_OPENMP_PARTITION_REGION
+    FunctionInfo **flist = new FunctionInfo*[NUM_OMP_TYPES];
+    for (int i=0; i < NUM_OMP_TYPES; i++) {
+      char rname[1024], rtype[1024];
+      sprintf(rname, "%s %s (%s)", r->name, r->sub_name, omp_names[i]);
+      sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
+	      r->file_name, r->begin_first_line, r->end_last_line);
+      
+      FunctionInfo *f = new FunctionInfo(rname, rtype, OpenMP, "OpenMP");
+      flist[i] = f;
     }
-  }
-  else
-  {
-    char rname[256], rtype[1024];
+    r->data = (void*)flist;
+#else
+    char rname[1024], rtype[1024];
     sprintf(rname, "%s %s", r->name, r->sub_name);
     sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
-        r->file_name, r->begin_first_line, r->end_last_line);
-
+	    r->file_name, r->begin_first_line, r->end_last_line);
+    
     FunctionInfo *f = new FunctionInfo(rname, rtype, OpenMP, "OpenMP");
-    r->data = (void *) f;
-    Profiler *p = new Profiler (f, OpenMP, true, RtsLayer::myThread());
+    r->data = (void*)f;
+#endif
+  }
+  
+#ifdef TAU_OPENMP_PARTITION_REGION
+  FunctionInfo *f = ((FunctionInfo **)r->data)[index];
+#else 
+  FunctionInfo *f = (FunctionInfo *)r->data;
+#endif
+  TauGroup_t gr = f->GetProfileGroup();
+  if (gr & RtsLayer::TheProfileMask()) {
+    Profiler *p = new Profiler(f, OpenMP, true, RtsLayer::myThread());
     p->Start();
   }
+  
   omp_unset_lock(&tau_ompregdescr_lock);
 }
 
 
-void TauStopOpenMPRegionTimer(struct ompregdescr *r)
+void TauStopOpenMPRegionTimer(struct ompregdescr *r, int index)
 {
+
+#ifdef TAU_OPENMP_PARTITION_REGION
+    FunctionInfo *f = ((FunctionInfo **)r->data)[index];
+#else
     FunctionInfo *f = (FunctionInfo *)r->data;
+#endif
     TauGroup_t gr = f->GetProfileGroup();
-//     if (gr & RtsLayer::TheProfileMask())
-//     {
-      
-      
-      //TAU_GLOBAL_TIMER_STOP();
 
-      int tau_threadid = RtsLayer::myThread(); 
-      Profiler *p = Profiler::CurrentProfiler[tau_threadid]; 
-      if (p->ThisFunction == f) {
-	p->Stop(tau_threadid);
-	delete p;
-      } else {
-// 	printf ("%d: p->ThisFunction(%s %s) = %p, f(%s %s) = %p\n", tau_threadid, 
-// 		p->ThisFunction->GetName(), 
-// 		p->ThisFunction->GetType(), p->ThisFunction, f->GetName(), f->GetType(), f);
-      }
-
-
-
-//     }
+    int tau_threadid = RtsLayer::myThread(); 
+    Profiler *p = Profiler::CurrentProfiler[tau_threadid]; 
+    if (p->ThisFunction == f) {
+      p->Stop(tau_threadid);
+      delete p;
+    } else {
+      // nothing, it must have been disabled/throttled
+    }
 }
 
 
@@ -792,7 +825,7 @@ void POMP_Atomic_enter(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r,OMP_ATOMIC); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -805,7 +838,7 @@ void POMP_Atomic_enter(struct ompregdescr* r) {
 void POMP_Atomic_exit(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_ATOMIC);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -826,7 +859,7 @@ void POMP_Barrier_enter(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_BARRIER); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -843,7 +876,7 @@ void POMP_Barrier_enter(struct ompregdescr* r) {
 void POMP_Barrier_exit(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_BARRIER);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -869,7 +902,7 @@ void POMP_Critical_begin(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_CRITICAL_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -883,7 +916,7 @@ void POMP_Critical_begin(struct ompregdescr* r) {
 void POMP_Critical_end(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_CRITICAL_BE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -906,7 +939,7 @@ void POMP_Critical_enter(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_CRITICAL_EE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -920,7 +953,7 @@ void POMP_Critical_enter(struct ompregdescr* r) {
 void POMP_Critical_exit(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_CRITICAL_EE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -944,7 +977,7 @@ void POMP_For_enter(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_FOR_EE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -957,7 +990,7 @@ void POMP_For_enter(struct ompregdescr* r) {
 void POMP_For_exit(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_FOR_EE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -980,7 +1013,7 @@ void POMP_Master_begin(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_MASTER_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -993,7 +1026,7 @@ void POMP_Master_begin(struct ompregdescr* r) {
 void POMP_Master_end(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_MASTER_BE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -1017,7 +1050,7 @@ void POMP_Parallel_begin(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_PAR_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -1030,7 +1063,7 @@ void POMP_Parallel_begin(struct ompregdescr* r) {
 void POMP_Parallel_end(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_PAR_BE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -1052,7 +1085,7 @@ void POMP_Parallel_fork(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_PAR_FJ); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 
@@ -1066,7 +1099,7 @@ void POMP_Parallel_fork(struct ompregdescr* r) {
 void POMP_Parallel_join(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_PAR_FJ);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -1088,7 +1121,7 @@ void POMP_Section_begin(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_SECTION_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -1101,7 +1134,7 @@ void POMP_Section_begin(struct ompregdescr* r) {
 void POMP_Section_end(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_SECTION_BE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -1123,7 +1156,7 @@ void POMP_Sections_enter(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_SECTION_EE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -1136,7 +1169,7 @@ void POMP_Sections_enter(struct ompregdescr* r) {
 void POMP_Sections_exit(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_SECTION_EE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -1158,7 +1191,7 @@ void POMP_Single_begin(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_SINGLE_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -1171,7 +1204,7 @@ void POMP_Single_begin(struct ompregdescr* r) {
 void POMP_Single_end(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_SINGLE_BE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -1193,7 +1226,7 @@ void POMP_Single_enter(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_SINGLE_EE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -1206,7 +1239,7 @@ void POMP_Single_enter(struct ompregdescr* r) {
 void POMP_Single_exit(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_SINGLE_EE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -1227,7 +1260,7 @@ void POMP_Workshare_enter(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_WORK_EE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -1241,7 +1274,7 @@ void POMP_Workshare_exit(struct ompregdescr* r) {
 
   
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_WORK_EE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -1262,7 +1295,7 @@ void POMP_Begin(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r); 
+  TauStartOpenMPRegionTimer(r, OMP_INST_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -1276,7 +1309,7 @@ void POMP_Begin(struct ompregdescr* r) {
 void POMP_End(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_INST_BE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -1300,7 +1333,7 @@ void POMP_Flush_enter(struct ompregdescr* r) {
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(r);
+  TauStartOpenMPRegionTimer(r, OMP_FLUSH_EE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
@@ -1314,7 +1347,7 @@ void POMP_Flush_enter(struct ompregdescr* r) {
 void POMP_Flush_exit(struct ompregdescr* r) {
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(r);
+  TauStopOpenMPRegionTimer(r, OMP_FLUSH_EE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -1434,8 +1467,8 @@ int  POMP_Test_nest_lock(omp_nest_lock_t *s) {
 
 /***************************************************************************
  * $RCSfile: TauKojakOpari.cpp,v $   $Author: amorris $
- * $Revision: 1.4 $   $Date: 2005/11/04 00:33:03 $
- * POOMA_VERSION_ID: $Id: TauKojakOpari.cpp,v 1.4 2005/11/04 00:33:03 amorris Exp $
+ * $Revision: 1.5 $   $Date: 2005/11/08 01:25:18 $
+ * POOMA_VERSION_ID: $Id: TauKojakOpari.cpp,v 1.5 2005/11/08 01:25:18 amorris Exp $
  ***************************************************************************/
 
 
