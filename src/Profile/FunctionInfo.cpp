@@ -165,7 +165,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #endif //PROFILE_CALLS
 	// Make this a ptr to a list so that ~FunctionInfo doesn't destroy it.
 	
-        MyProfileGroup_ = ProfileGroup ;
+	for (int i=0; i<TAU_MAX_THREADS; i++) {
+	  MyProfileGroup_[i] = ProfileGroup;
+	}
 	// While accessing the global function database, lock it to ensure
 	// an atomic operation in the push_back and size() operations. 
 	// Important in the presence of concurrent threads.
@@ -407,7 +409,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
   }
 }
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.38 $   $Date: 2005/05/17 19:33:23 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.38 2005/05/17 19:33:23 sameer Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
+ * $Revision: 1.39 $   $Date: 2005/11/08 19:14:20 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.39 2005/11/08 19:14:20 amorris Exp $ 
  ***************************************************************************/

@@ -205,8 +205,8 @@ public:
         }
 #endif//TAU_MULTIPLE_COUNTERS
 
-	TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
-	void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
+	TauGroup_t GetProfileGroup(int tid = RtsLayer::myThread()) const {return MyProfileGroup_[tid]; }
+	void SetProfileGroup(TauGroup_t gr, int tid) {MyProfileGroup_[tid] = gr; }
 #ifdef PROFILE_STATS 
 	double GetSumExclSqr(int tid) { return SumExclSqr[tid]; }
 	void SetSumExclSqr(int tid, double s) { SumExclSqr[tid] = s; }
@@ -215,7 +215,7 @@ public:
 #endif // PROFILE_STATS 
 
 private:
-	TauGroup_t MyProfileGroup_;
+	TauGroup_t MyProfileGroup_[TAU_MAX_THREADS];
 };
 
 // Global variables
@@ -307,7 +307,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 2005/05/17 19:32:10 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.31 2005/05/17 19:32:10 sameer Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
+ * $Revision: 1.32 $   $Date: 2005/11/08 19:13:00 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.32 2005/11/08 19:13:00 amorris Exp $ 
  ***************************************************************************/
