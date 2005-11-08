@@ -235,14 +235,14 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc ]
       then
         c_compiler=$myarg
       else
         testxlc=`echo $myarg | sed -e 's/xlc//'`
         if [ "y$testxlc" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', and 'pgcc' "
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', and 'pgcc' "
 #       exit 1
         else
           c_compiler=$myarg
@@ -253,14 +253,14 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC ]
       then
         cxx_compiler=$myarg
       else
         testxlc=`echo $myarg | sed -e 's/xl//'`
 	if [ "y$testxlc" = "y$myarg" ]
         then
-          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', and 'c++'"
+          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', and 'orCC'"
 #       exit 1
         else
           cxx_compiler=$myarg
@@ -272,14 +272,14 @@ do
   -pdt_c++=*)
     pdt_cxx_full_path=`echo $arg | sed 's@-pdt_c++=@@g'`
     myarg=`echo $arg |  echo $arg | sed 's@-pdt_c++=@@g' | sed 's@.*/@@g'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = orCC ]
       then
         pdt_cxx_compiler=$myarg
       else
         testxlc=`echo $myarg | sed -e 's/xl//'`
         if [ "y$testxlc" = "y$myarg" ]
         then
-          echo "WARNING: valid options for pdt_c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC' and 'c++'"
+          echo "WARNING: valid options for pdt_c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'c++', and 'orCC'"
 #       exit 1
         else
           pdt_cxx_compiler=$myarg
@@ -290,11 +290,11 @@ do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = pathscale -o $myarg = gfortran ] 
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = pathscale -o $myarg = gfortran -o $myarg = open64 ] 
     then
       fortran_compiler=$myarg
     else
-      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nagware', 'pathscale', and 'gfortran' "
+      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nagware', 'pathscale', 'gfortran', and 'open64'"
       exit 1
     fi
     shift
@@ -849,14 +849,15 @@ do
     echo "  where [OPTIONS] are:"
     echo "-c++=<compiler>  ............................ specify the C++ compiler."
     echo "         options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
-    echo "                                                          icpc|pathCC]."
+    echo "                                                     icpc|pathCC|orCC]."
     echo "-cc=<compiler> ................................ specify the C compiler."
-    echo "                     options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc]."
+    echo "                options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
-    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc]."
+    echo "         options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
+    echo "                                                     icpc|pathCC|orCC]."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
-    echo "                  kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]"
+    echo "           open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]"
     echo "-useropt='<parameters>' ............... list of commandline parameters."
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
@@ -1688,6 +1689,27 @@ case $cxx_compiler in
       fi
         
       ;;
+   orCC)
+      echo "Default C++ compiler will ORC Open64 orCC compiler"
+      fixmakeargs="$fixmakeargs OPEN64ORC"
+      if [ $c_compiler = default ] 
+      then
+        c_compiler=orcc
+      fi
+
+      if [ $fortran_compiler = no ] 
+      then
+        fixmakeargs="$fixmakeargs OPEN64ORC_FORTRAN"
+        fortran_compiler=yes
+      fi
+     
+      if [ $openmp = yes ]
+      then
+	fixmakeargs="$fixmakeargs OPEN64_OPENMP"
+      fi
+
+      ;;
+
    c++)
         if [ $machine = nec ]
 	then

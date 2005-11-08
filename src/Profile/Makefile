@@ -139,6 +139,7 @@ TAU_SHLIBX		= .so
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
+#OPEN64ORC#AR_SHFLAGS 		= -shared -fpic 	#ENDIF#
 #APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
 #PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
 #APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)     #ENDIF#
@@ -156,6 +157,8 @@ TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
 #CRAYCC#TAU_NULL=X#ENDIF#
 #CRAYX1CC#TAU_NULL=X#ENDIF#
 #USE_NECCXX#TAU_SHLIB	= #ENDIF#
+#OPEN64ORC#TAU_SHLIB	= #ENDIF#
+
 #BGL#TAU_SHLIB	= #ENDIF#
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
 

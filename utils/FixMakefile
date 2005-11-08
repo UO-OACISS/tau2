@@ -480,6 +480,10 @@ fi
 	echo NOTE: Using the Pathscale C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     OPEN64ORC)
+	echo NOTE: Using the Open64 C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      HITACHI)
 	echo NOTE: Using the HITACHI SR8000 MPP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -488,12 +492,20 @@ fi
 	echo NOTE: Using the HITACHI Fortran 90 compiler options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     OPEN64ORC_FORTRAN)
+	echo NOTE: Using the Open64 ORC Fortran compiler options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PATHSCALE_FORTRAN)
 	echo NOTE: Using the Pathscale Fortran 90 compiler options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      HITACHI_OPENMP)
 	echo NOTE: Using HITACHI OpenMP options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     OPEN64_OPENMP)
+	echo NOTE: Using Open64 ORC OpenMP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      IBMXLC_OPENMP)
