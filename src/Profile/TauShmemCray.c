@@ -10025,6 +10025,7 @@ void shmem_fence__( )
 /******************************************************/
 
 
+#ifndef TAU_CATAMOUNT
 /******************************************************
 ***      shmem_swap wrapper function 
 ******************************************************/
@@ -10901,3 +10902,5 @@ void shmem_wait_until__( long * var, int cond, long value)
   return ; 
 }
 
+#endif /* TAU_CATAMOUNT: Cray has used #define for these symbols instead of 
+          defining them independently */
