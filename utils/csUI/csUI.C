@@ -197,7 +197,7 @@ void GlobalFileInfo::checkForFiles()
   // look in directory for all callstack
 
   DIR *dirp;
-  struct direct *direntp;
+  struct dirent *direntp;
   NCT * nct;
   int   bFirstFileFound = TRUE;
 
@@ -254,7 +254,7 @@ void GlobalFileInfo::findMinTime()
   char *fname;
   int nfilesfound = 0;
   DIR *dirp;
-  struct direct *direntp;
+  struct dirent *direntp;
   double t1, t2;
   int j;
   

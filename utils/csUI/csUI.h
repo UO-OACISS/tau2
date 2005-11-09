@@ -16,23 +16,15 @@
 #include <stdio.h>
 #include <iostream.h>
 #include <sys/types.h>
-#include <sys/dir.h>
+#include <dirent.h>
 
 // include appropriate string libs
-#if (defined(POOMA_KAI) || defined (TAU_STDCXXLIB))
 #include <string>
 using std::string;
 #include <vector>
 using std::vector;
 #include <map>
 using std::map;
-#else
-#define __BOOL_DEFINED 
-#include "Profile/bstring.h"
-#include <vector.h>
-#include <map.h>
-#endif /* POOMA_KAI */
-
 
 
 
