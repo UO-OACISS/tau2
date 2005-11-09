@@ -2581,7 +2581,13 @@ then
         gpshmem=yes
       fi
     fi
+  else
+    if [ $catamount = yes ] 
+    then
+      shmemincargs="-I/opt/xt-mpt/default/include/mpp"
+    fi
   fi
+  
   if [ $shmemlibrary = no ]
   then 
     shmemlibrary=-lsma
@@ -2596,6 +2602,11 @@ then
     then
     #echo "Lib dir found. adding -L$shmemlib to LIB"
       shmemlibargs="$shmemlibargs -L$shmemlib"
+    fi
+  else
+    if [ $catamount = yes ] 
+    then
+      shmemlibargs="$shmemlibargs -L/opt/xt-mpt/default/lib/cnos64"
     fi
   fi
 
