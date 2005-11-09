@@ -146,7 +146,7 @@ extern "C" void Tau_set_context(int context)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_callstack(void)
+extern "C" void Tau_profile_callstack(void)
 {
   TAU_PROFILE_CALLSTACK();
 }
@@ -692,7 +692,7 @@ extern "C" void Tau_mark_group_as_phase(void **ptr)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.52 $   $Date: 2005/08/11 02:23:45 $
- * VERSION: $Id: TauCAPI.cpp,v 1.52 2005/08/11 02:23:45 sameer Exp $
+ * $Revision: 1.53 $   $Date: 2005/11/09 19:13:24 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.53 2005/11/09 19:13:24 sameer Exp $
  ***************************************************************************/
 

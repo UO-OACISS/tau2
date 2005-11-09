@@ -80,6 +80,7 @@ void Tau_track_memory_headroom_here(void);
 void Tau_enable_tracking_memory_headroom(void);
 void Tau_disable_tracking_memory_headroom(void);
 void Tau_mark_group_as_phase(void **ptr);
+void Tau_profile_callstack(void );
 
 
 
@@ -1306,10 +1307,31 @@ void TAU_PHASE_STOP(void **profiler)
   tau_phase_stop_(profiler);
 }
 
+void tau_profile_callstack_(void)
+{
+  Tau_profile_callstack();
+}
+
+void tau_profile_callstack(void)
+{
+  tau_profile_callstack_();
+}
+
+void tau_profile_callstack__(void)
+{
+  tau_profile_callstack_();
+}
+
+void TAU_PROFILE_CALLSTACK(void)
+{
+  tau_profile_callstack_();
+}
+
 } /* extern "C" */
+
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.48 $   $Date: 2005/11/08 04:46:22 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.48 2005/11/08 04:46:22 sameer Exp $ 
+ * $Revision: 1.49 $   $Date: 2005/11/09 19:13:24 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.49 2005/11/09 19:13:24 sameer Exp $ 
  ***************************************************************************/
