@@ -107,6 +107,7 @@
 #define TAU_MAPPING_PROFILE_GET_TYPE(timer)
 
 
+#define TAU_PHASE(name, type, group) 
 #define TAU_PHASE_CREATE_STATIC(var, name, type, group) 
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) 
 #define TAU_PHASE_START(var) 
