@@ -338,7 +338,7 @@ FWRAPPER	       = TauFMpi.o
 #BGLPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.rts.a -L/bgl/BlueLight/ppcfloor/bglsys/lib -lbgl_perfctr.rts -lrts.rts -ldevices.rts #ENDIF#
 #X86_64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR)/ -lpapi -lperfctr #ENDIF#
 #IBM64PAPI#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a -L/usr/lpp/pmtoolkit/lib  -L/usr/pmapi/lib -lpmapi #ENDIF#
-#IBM64PAPILINUX#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a #ENDIF#
+#IBM64PAPILINUX#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
 #SGI64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi64 #ENDIF#
 #ALPHAPAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a /usr/lib/dcpi/dadd.a -lclu -lrt #ENDIF#
 
