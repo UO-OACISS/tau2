@@ -217,6 +217,7 @@ ibmxlc=no
 ibmxlc_r=no 
 fortran_compiler=no
 catamount=no
+gpshmem=no
 
 # debug:
 # echo $arguments
@@ -2941,7 +2942,7 @@ case $machine in
 	    fixmakeargs="$fixmakeargs IA64PAPI"
 	fi
 	;;
-     x86_64)
+     x86_64|xt3)
 	echo "Found an AMD Opteron configuration definition"
 	fixmakeargs="arch=$machine $fixmakeargs"
 	
