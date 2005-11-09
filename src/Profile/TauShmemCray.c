@@ -5008,6 +5008,7 @@ long shmem_long_swap__( long * addr, long value, int pe)
 /******************************************************/
 
 
+#ifndef TAU_CATAMOUNT
 /******************************************************
 ***      shmem_float_swap wrapper function 
 ******************************************************/
@@ -5311,6 +5312,7 @@ long shmem_long_cswap__( long * addr, long match, long value, int pe)
 /******************************************************/
 /******************************************************/
 
+#endif /* TAU_CATAMOUNT */
 
 /******************************************************
 ***      shmem_int_finc wrapper function 
@@ -5831,6 +5833,7 @@ void shmem_quiet__( )
 /******************************************************/
 /******************************************************/
 
+#ifndef TAU_CATAMOUNT 
 
 /******************************************************
 ***      shmem_set_lock wrapper function 
@@ -6050,6 +6053,8 @@ int shmem_test_lock__( long * lock)
 
 /******************************************************/
 /******************************************************/
+
+#endif /* TAU_CATAMOUNT */
 
 
 /******************************************************
@@ -9909,6 +9914,7 @@ int SHMEM_MY_PE( )
 #else /* !TAU_P_SHMEM */ 
   retvalue = pshmem_my_pe( ) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_PROFILE_SET_NODE(retvalue);
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
@@ -9927,6 +9933,7 @@ int shmem_my_pe_( )
 #else /* !TAU_P_SHMEM */ 
   retvalue = pshmem_my_pe( ) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_PROFILE_SET_NODE(retvalue);
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
@@ -9945,6 +9952,7 @@ int shmem_my_pe__( )
 #else /* !TAU_P_SHMEM */ 
   retvalue = pshmem_my_pe( ) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_PROFILE_SET_NODE(retvalue);
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
