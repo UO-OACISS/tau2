@@ -48,6 +48,7 @@ ARFLAGS         = rcv
 
 ##############################################
 #PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
+#PGINOPRELINK#PRELINK_PHASE = #ENDIF#
 #############################################
 
 
@@ -106,6 +107,6 @@ clean:
 ##############################################
 #/***************************************************************************
 # * $RCSfile: Makefile,v $   $Author: amorris $
-# * $Revision: 1.7 $   $Date: 2005/09/27 20:07:30 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.7 2005/09/27 20:07:30 amorris Exp $ 
+# * $Revision: 1.8 $   $Date: 2005/11/09 03:43:02 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.8 2005/11/09 03:43:02 amorris Exp $ 
 # ***************************************************************************/

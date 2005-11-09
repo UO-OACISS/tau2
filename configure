@@ -216,6 +216,7 @@ openmp=no
 ibmxlc=no
 ibmxlc_r=no 
 fortran_compiler=no
+catamount=no
 
 # debug:
 # echo $arguments
@@ -235,14 +236,14 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc ]
       then
         c_compiler=$myarg
       else
         testxlc=`echo $myarg | sed -e 's/xlc//'`
         if [ "y$testxlc" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', and 'pgcc' "
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', and 'pgcc' "
 #       exit 1
         else
           c_compiler=$myarg
@@ -253,14 +254,14 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC ]
       then
         cxx_compiler=$myarg
       else
         testxlc=`echo $myarg | sed -e 's/xl//'`
 	if [ "y$testxlc" = "y$myarg" ]
         then
-          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', and 'orCC'"
+          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', and 'orCC'"
 #       exit 1
         else
           cxx_compiler=$myarg
@@ -862,8 +863,8 @@ do
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
-    echo "       options         [bgl|ibm64|ibm64linux|sunx86_64                 "
-    echo "                        |solaris2-64|sgin32|sgi64|sgio32]             "
+    echo "       options         [xt3|bgl|ibm64|ibm64linux|sunx86_64             "
+    echo "                        |solaris2-64|sgin32|sgi64|sgio32]              "
     echo "-pthread .................................. Use pthread thread package."
     echo "-charm=<dir> .............................. Use charm++ thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
@@ -1167,6 +1168,16 @@ case $machine in
     fi
     ;;
 
+    xt3)
+    if [ $cxx_compiler = default ]
+    then
+      cxx_compiler=qk-pgCC
+      c_compiler=qk-pgcc
+      fortran_compiler=pgi
+      catamount=yes
+    fi
+    ;;
+
    hitachi)
      if [ $cxx_compiler = default ]
        then
@@ -1331,7 +1342,7 @@ if [ $profilecallstack = yes ]
       fixmakeargs="$fixmakeargs CALLSTACK"
 fi
 
-if [ $trace = yes ]
+if [ $trace = yes -a $catamount = no -a ! $machine = bgl ]
   then
     cat <<EOF > tau_type_test.c
   #include <include/Profile/tau_types.h>
@@ -1770,6 +1781,20 @@ case $cxx_compiler in
 
       ;;
 
+    qk-pgCC)
+      echo "Default C++ compiler will be PGI pgCC C++ Compiler"
+      pgi=yes
+      fixmakeargs="$fixmakeargs PGI PGICC"
+      fixmakeargs="$fixmakeargs PGINOPRELINK"
+
+      if [ $fortran_compiler = no ]
+      then 
+        extradir=`which pgCC | sed s/pgCC/../`
+        fixmakeargs="$fixmakeargs PGI_FORTRAN PGI_CATAMOUNT"
+        fortran_compiler=yes
+      fi
+      ;;
+
    *)
       echo "ERROR Unknown C++ compiler"
       exit 1
@@ -1950,6 +1975,9 @@ then
 	;;
   t3e|crayx1|craysv1)
 	mpiinc=/opt/ctl/mpt/mpt/include
+	;;
+  xt3)
+	mpiinc=/opt/xt-mpt/default/mpich2-64/P2/include
 	;;
   solaris2*)
 	mpiinc=/opt/SUNWhpc/include
@@ -2310,6 +2338,9 @@ then
 	;;
   t3e|crayx1|craysv1)  
 	mpilib=/opt/ctl/mpt/mpt/lib/
+	;;
+  xt3)
+	mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
 	;;
   alpha)  
 	mpilib=/usr/lib 
@@ -2813,10 +2844,15 @@ fi
 
 
 ######################################################################
-if [ $machine = x86_64 -a ! -f /usr/lib/libc.a ] 
+if [ $machine = x86_64 -a ! -f /usr/lib/libc.a -o $catamount = yes ] 
 then
   #echo "This looks like a CATAMOUNT Cray RS system..."
   fixmakeargs="$fixmakeargs CATAMOUNT"
+
+  if [ $fortran_compiler = pgi ] 
+  then
+      fixmakeargs="$fixmakeargs PGI_CATAMOUNT"
+  fi
 fi
 
 ######################################################################

@@ -34,6 +34,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 TAU_CC_FE=$(CONFIG_CC)
 #BGL#TAU_CC_FE=xlc #ENDIF#
+#CATAMOUNT#TAU_CC_FE=gcc #ENDIF#
 PCXX_OPT=-g
 USER_OPT=-g
 EXTRADIR=
@@ -170,6 +171,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #CRAY_FORTRAN#TAU_F90        = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #CRAY_X1_FORTRAN#TAU_F90     = ftn              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #PGI_FORTRAN#TAU_F90         = pgf90            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#PGI_CATAMOUNT#TAU_F90         = qk-pgf90         $(F90_ABI) $(TAU_F90_OPT) #ENDIF#
 #ABSOFT_FORTRAN#TAU_F90      = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #LAHEY_FORTRAN#TAU_F90      = lf95              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #NAGWARE_FORTRAN#TAU_F90      = f95              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -186,6 +188,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #PATHSCALE_FORTRAN#TAU_F90     = pathf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #OPEN64ORC_FORTRAN#TAU_F90     = orf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #NEC_FORTRAN#TAU_F90         = f90 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+
 
 ############# Portable F90 Options #############
 #IBM64_FORTRAN#TAU_F90_FIXED      = -qfixed  #ENDIF#

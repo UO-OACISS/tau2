@@ -161,6 +161,7 @@ TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
 
 #BGL#TAU_SHLIB	= #ENDIF#
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
+#CATAMOUNT#TAU_SHLIB = #ENDIF#
 
 ##############################################
 # If JAVA or DYNINST is defined, TAU_DSO is defined
