@@ -65,7 +65,7 @@ extern "C" {
 #define TAU_INIT(argc, argv)			Tau_init_ref(argc, argv);
 #define TAU_PROFILE_SET_NODE(node) 		Tau_set_node(node);
 #define TAU_PROFILE_SET_CONTEXT(context)	Tau_set_context(context);
-#define TAU_PROFILE_CALLSTACK()			Tau_callstack();
+#define TAU_PROFILE_CALLSTACK()			Tau_profile_callstack();
 #define TAU_DB_DUMP()                           Tau_dump();
 #define TAU_DB_DUMP_PREFIX(prefix)              Tau_dump_prefix(prefix);
 #define TAU_DB_DUMP_INCR()                      Tau_dump_incr();
@@ -354,8 +354,8 @@ extern char * Tau_phase_enable_once(const char *group, void **ptr);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.41 $   $Date: 2005/09/14 17:35:38 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.41 2005/09/14 17:35:38 amorris Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: sameer $
+ * $Revision: 1.42 $   $Date: 2005/11/09 19:14:29 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.42 2005/11/09 19:14:29 sameer Exp $
  ***************************************************************************/
 
