@@ -1342,7 +1342,7 @@ if [ $profilecallstack = yes ]
       fixmakeargs="$fixmakeargs CALLSTACK"
 fi
 
-if [ $trace = yes -a $catamount = no -a ! $machine = bgl ]
+if [ $trace = yes ]
   then
     cat <<EOF > tau_type_test.c
   #include <include/Profile/tau_types.h>
@@ -1357,11 +1357,19 @@ if [ $trace = yes -a $catamount = no -a ! $machine = bgl ]
     return 0;
   }
 EOF
-
-    $echo "Checking type sizes... ${nnl}"
-    if $c_compiler -I. $orig_useropt tau_type_test.c -o tau_type_test 1> /dev/null 2>&1 ; then
-	if ./tau_type_test 1> /dev/null 2>&1 ; then
-	    echo "ok"
+    
+    if [ $catamount = no -a ! $machine = bgl ] ; then
+	$echo "Checking type sizes... ${nnl}"
+	if $c_compiler -I. $orig_useropt tau_type_test.c -o tau_type_test 1> /dev/null 2>&1 ; then
+	    if ./tau_type_test 1> /dev/null 2>&1 ; then
+		echo "ok"
+	    else
+		echo ""
+		echo ""
+		echo "Warning: couldn't find correct type sizes!"
+		echo "Please contact tau-bugs@cs.uoregon.edu with your system details"
+		echo ""
+	    fi
 	else
 	    echo ""
 	    echo ""
@@ -1369,14 +1377,9 @@ EOF
 	    echo "Please contact tau-bugs@cs.uoregon.edu with your system details"
 	    echo ""
 	fi
-    else
-	echo ""
-	echo ""
-	echo "Warning: couldn't find correct type sizes!"
-	echo "Please contact tau-bugs@cs.uoregon.edu with your system details"
-	echo ""
+	rm -f tau_type_test.c tau_type_test
     fi
-    rm -f tau_type_test.c tau_type_test
+    
     fixmakeargs="$fixmakeargs TRACE"
 fi
 
