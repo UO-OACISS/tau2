@@ -2884,7 +2884,7 @@ void Profiler::CallStackTrace(int tid)
     if (curr->AddInclFlag == true)
     {
       // calculate inclusive time for profiler's FunctionInfo
-      curr->ThisFunction->InclTime_cs = curr->ThisFunction->GetInclTime()  
+      curr->ThisFunction->InclTime_cs = curr->ThisFunction->GetInclTime(tid)  
                                       + totalTime;
     }
     
@@ -3094,9 +3094,9 @@ double& Profiler::TheTauThrottlePerCall(void)
   return throttlePercall;
 }
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.127 $   $Date: 2005/11/08 19:14:20 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.127 2005/11/08 19:14:20 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.128 $   $Date: 2005/11/09 19:09:09 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.128 2005/11/09 19:09:09 sameer Exp $ 
  ***************************************************************************/
 
 	
