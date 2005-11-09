@@ -25678,6 +25678,7 @@ int shmem_my_pe( )
 #else /* !TAU_P_SHMEM */ 
   retvalue = pshmem_my_pe( ) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_PROFILE_SET_NODE(retvalue);
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
@@ -27145,6 +27146,7 @@ void shmem_group_delete_jw__( int handle)
 /******************************************************/
 /******************************************************/
 
+#ifndef TAU_CATAMOUNT /* XT3 doesn't have some of these calls */
 
 /******************************************************
 ***      shmem_group_inquire wrapper function 
@@ -29928,3 +29930,4 @@ void shmem_wait_until__( long * var, int cond, long value)
   return ; 
 }
 
+#endif /* TAU_CATAMOUNT */
