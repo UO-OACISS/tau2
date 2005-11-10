@@ -406,6 +406,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #SUN_FORTRAN#TAU_FORTRANLIBS_SUN_OPTERON   = -lfsu -lsunmath #ENDIF#
 #SUN386I#TAU_FORTRANLIBS	       = $(TAU_FORTRANLIBS_SUN_OPTERON) #ENDIF#
 #SOL2#EXTRALIBS = -lsocket -lnsl      #ENDIF#
+#SUN386I#EXTRALIBS = -lsocket -lnsl -lrt     #ENDIF#
 #COMPAQ_FORTRAN#TAU_FORTRANLIBS =  $(EXTRADIR)/lib/cmplrs/fort90/for_main.o -L$(EXTRADIR)/lib -L$(EXTRADIR)/lib/cmplrs/fort90 -L$(EXTRADIR)/lib/cmplrs/fort90 -lUfor -lfor -lFutil -lm -lmld -lexc -lc #ENDIF#
 #ABSOFT_FORTRAN#TAU_FORTRANLIBS =  -L$(EXTRADIR)/lib -lfio -lf90math -lU77 -lf77math -lfio #ENDIF#
 #LAHEY_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/fj90rt0.o -L$(EXTRADIR)/lib -lfj9i6 -lfj9f6 -lfj9e6 -lfccx86_6a #ENDIF#
@@ -478,6 +479,9 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 
 # charm
 #TAU_CHARM#TAU_LINKER_OPT8 = -lconv-core #ENDIF#
+
+# extra libs
+#SUN386I#TAU_LINKER_OPT9 = $(EXTRALIBS) #ENDIF#
 
 #USE_IBMXLC#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
 #GNU#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
@@ -567,7 +571,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 
 TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT4) $(TAU_LINKER_OPT5) $(TAU_LINKER_OPT6) \
-                  $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8)
+                  $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8) $(TAU_LINKER_OPT9)
 
 ##############################################
 
