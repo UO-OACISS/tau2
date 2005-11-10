@@ -20,9 +20,11 @@
 #include <fstream>
 #include <list>
 #include <string>
+#include <vector> 
+#include "tau_instrument.h"
+
 using namespace std;
 
-#define INBUF_SIZE 2048
 #define BEGIN_EXCLUDE_TOKEN      "BEGIN_EXCLUDE_LIST"
 #define END_EXCLUDE_TOKEN        "END_EXCLUDE_LIST"
 #define BEGIN_INCLUDE_TOKEN      "BEGIN_INCLUDE_LIST"
@@ -31,6 +33,8 @@ using namespace std;
 #define END_FILE_INCLUDE_TOKEN   "END_FILE_INCLUDE_LIST"
 #define BEGIN_FILE_EXCLUDE_TOKEN "BEGIN_FILE_EXCLUDE_LIST"
 #define END_FILE_EXCLUDE_TOKEN   "END_FILE_EXCLUDE_LIST"
+#define BEGIN_INSTRUMENT_SECTION "BEGIN_INSTRUMENT_SECTION"
+#define END_INSTRUMENT_SECTION	 "END_INSTRUMENT_SECTION"
 
 list<string> excludelist;
 list<string> includelist;
@@ -39,6 +43,8 @@ list<string> fileexcludelist;
 
 /* prototypes used in this file */
 bool wildcardCompare(char *wild, char *string, char kleenestar);
+void parseInstrumentationCommand(char *command, int lineno);
+void printInstrumentList(void);
 /* -------------------------------------------------------------------------- */
 /* -- Read the instrumentation requests file. ------------------------------- */
 
@@ -47,6 +53,7 @@ int processInstrumentationRequests(char *fname)
 {
   ifstream input(fname); 
   char inbuf[INBUF_SIZE];
+  int lineno = 0; 
 
   if (!input)
   {
@@ -57,11 +64,13 @@ int processInstrumentationRequests(char *fname)
   printf("Inside processInstrumentationRequests\n");
 #endif /* DEBUG */
   while (input.getline(inbuf, INBUF_SIZE) || input.gcount()) {  
+    lineno++;
     if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
     if (strcmp(inbuf,BEGIN_EXCLUDE_TOKEN) == 0) 
     {
       while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
       {
+        lineno++;
 	if (strcmp(inbuf, END_EXCLUDE_TOKEN) == 0)
 	  break; /* Found the end of exclude list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -72,6 +81,7 @@ int processInstrumentationRequests(char *fname)
     {
       while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
       {
+        lineno++;
 	if (strcmp(inbuf, END_INCLUDE_TOKEN) == 0)
 	  break; /* Found the end of exclude list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -82,6 +92,7 @@ int processInstrumentationRequests(char *fname)
     {
       while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
       {
+        lineno++;
 	if (strcmp(inbuf, END_FILE_INCLUDE_TOKEN) == 0)
 	  break; /* Found the end of file include list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -95,15 +106,28 @@ int processInstrumentationRequests(char *fname)
     {
       while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
       {
+        lineno++;
 	if (strcmp(inbuf, END_FILE_EXCLUDE_TOKEN) == 0)
 	  break; /* Found the end of file exclude list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
         fileexcludelist.push_back(string(inbuf)); 
       }
     }
+    if (strcmp(inbuf,BEGIN_INSTRUMENT_SECTION) == 0) 
+    {
+      while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
+      {
+        lineno++;
+	if (strcmp(inbuf, END_INSTRUMENT_SECTION) == 0)
+	  break; /* Found the end of file exclude list. */  
+        if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
+        parseInstrumentationCommand(inbuf, lineno);    
+      }
+    }
     /* next token */
   }
   input.close();
+  printInstrumentList();
   return 0;
 }
 
@@ -369,6 +393,6 @@ bool processFileForInstrumentation(const string& file_name)
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 2004/05/31 17:19:22 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.8 2004/05/31 17:19:22 sameer Exp $
+ * $Revision: 1.9 $   $Date: 2005/11/10 02:00:58 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.9 2005/11/10 02:00:58 sameer Exp $
  ***************************************************************************/

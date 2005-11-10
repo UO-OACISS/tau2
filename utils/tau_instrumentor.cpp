@@ -34,10 +34,10 @@
 extern int processInstrumentationRequests(char *fname);
 extern bool instrumentEntity(const string& function_name);
 extern bool processFileForInstrumentation(const string& file_name);
+extern bool isInstrumentListEmpty(void);
 
-/* For C instrumentation */
-enum itemKind_t { ROUTINE, BODY_BEGIN, FIRST_EXECSTMT, BODY_END, RETURN, EXIT};
-enum tau_language_t { tau_c, tau_cplusplus, tau_fortran };
+#include "tau_datatypes.h"
+
 
 /* For Pooma, add a -noinline flag */
 bool noinline_flag = false; /* instrument inlined functions by default */
@@ -48,13 +48,13 @@ char exit_keyword[256] = "exit"; /* You can define your own exit keyword */
 bool using_exit_keyword = false; /* By default, we don't use the exit keyword */
 tau_language_t tau_language; /* language of the file */
 
-struct itemRef {
-  itemRef(const pdbItem *i, bool isT) : item(i), isTarget(isT) {
+/* implementation of struct itemRef */
+itemRef::itemRef(const pdbItem *i, bool isT) : item(i), isTarget(isT) {
     line = i->location().line();
     col  = i->location().col();
     kind = ROUTINE; /* for C++, only routines are listed */ 
   }
-  itemRef(const pdbItem *i, itemKind_t k, int l, int c) : 
+itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c) : 
 	line (l), col(c), item(i), kind(k) {
 #ifdef DEBUG
     cout <<"Added: "<<i->name() <<" line " << l << " col "<< c <<" kind " 
@@ -62,25 +62,36 @@ struct itemRef {
 #endif /* DEBUG */
     isTarget = true; 
   }
-  itemRef(const pdbItem *i, bool isT, int l, int c)
+itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code) : 
+	line (l), col(c), item(i), kind(k), snippet(code) {
+#ifdef DEBUG
+    if (i)
+      cout <<"Added: "<<i->name() <<" line " << l << " col "<< c <<" kind " 
+	 << k << " snippet " << snippet << endl;
+#endif /* DEBUG */
+    isTarget = true; 
+  }
+itemRef::itemRef(const pdbItem *i, bool isT, int l, int c)
          : item(i), isTarget(isT), line(l), col(c) {
     kind = ROUTINE; 
   }
+/* not needed anymore */
+#ifdef OLD
   const pdbItem *item;
   itemKind_t kind; /* For C instrumentation */ 
   bool     isTarget;
   int      line;
   int      col;
-};
+  string   snippet;
+#endif /* OLD */
+
+/* Prototypes for selective instrumentation */
+extern int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& itemvec);
+
 
 void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *i, pdbRoutine::callvec & c); /* in this file below */
 
 static bool locCmp(const itemRef* r1, const itemRef* r2) {
-
-  if (r1 == r2) { // strict weak ordering requires false on equal elements
-    return false;
-  }
-
   if ( r1->line == r2->line )
   {
     if (r1->col == r2->col)
@@ -102,7 +113,7 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
 
 static bool itemEqual(const itemRef* r1, const itemRef* r2) {
   return ( (r1->line == r2->line) &&
-           (r1->col  == r2->col)); 
+           (r1->col  == r2->col) && (r1->kind == r2->kind)); 
 }
  
 /* -------------------------------------------------------------------------- */
@@ -110,6 +121,12 @@ static bool itemEqual(const itemRef* r1, const itemRef* r2) {
 /* -------------------------------------------------------------------------- */
 void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
+
+  if (!isInstrumentListEmpty()) 
+  { /* there are finite instrumentation requests, add requests for this file */
+    addFileInstrumentationRequests(pdb, file, itemvec);
+  }
+
   PDB::croutinevec routines = pdb.getCRoutineVec();
   for (PDB::croutinevec::const_iterator rit=routines.begin();
        rit!=routines.end(); ++rit) 
@@ -219,7 +236,6 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
       }
     }
   }
-
   sort(itemvec.begin(), itemvec.end(), locCmp);
 }
 
@@ -228,6 +244,12 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* -------------------------------------------------------------------------- */
 /* Create a vector of items that need action: such as BODY_BEGIN, RETURN etc.*/
 void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
+
+  if (!isInstrumentListEmpty()) 
+  { /* there are finite instrumentation requests, add requests for this file */
+    addFileInstrumentationRequests(pdb, file, itemvec);
+  }
+
   PDB::croutinevec routines = pdb.getCRoutineVec();
   for (PDB::croutinevec::const_iterator rit=routines.begin();
        rit!=routines.end(); ++rit)
@@ -291,6 +313,13 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
   PDB::froutinevec routines = pdb.getFRoutineVec();
+
+
+  /* check if the given file has line/routine level instrumentation requests */
+  if (!isInstrumentListEmpty()) 
+  { /* there are finite instrumentation requests, add requests for this file */
+    addFileInstrumentationRequests(pdb, file, itemvec);
+  }
 
   for (PDB::froutinevec::const_iterator rit=routines.begin();
        rit!=routines.end(); ++rit) 
@@ -457,6 +486,8 @@ void defineTauGroup(ofstream& ostr, string& group_name)
 int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string &header_file)
 {
   int inbufLength, k;
+  bool print_cr; 
+  int write_upto, i; 
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
   // open outfile for instrumented version of source file
@@ -492,9 +523,13 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
   {
     // Read one line each till we reach the desired line no. 
 #ifdef DEBUG
-    cout <<"S: "<< (*it)->item->fullName() << " line "<< (*it)->line << " col " << (*it)->col << endl;
+    if ((*it) && (*it)->item)
+      cout <<"S: "<< (*it)->item->fullName() << " line "<< (*it)->line << " col " << (*it)->col << endl;
 #endif 
     bool instrumented = false;
+    /* NOTE: We need to change this for line level instrumentation. It can 
+     * happen that the routine's entry line is also specified for line level
+     * instrumentation */
     if (lastInstrumentedLineNo >= (*it)->line )
     {
       // Hey! This line has already been instrumented. Go to the next
@@ -506,7 +541,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
     }
 
     while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
-    {
+    { /* This assumes only one instrumentation request per line. Not so! */
       inputLineNo ++;
       if (inputLineNo < (*it)->line) 
       {
@@ -620,7 +655,46 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
                 }
             break;
 
+	  case INSTRUMENTATION_POINT:
+#ifdef DEBUG
+	    cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
+#endif /* DEBUG */
+	    ostr << (*it)->snippet<<endl;
+	    /* We need to add code to write the rest of the buffer */
+	    if ((it+1) != itemvec.end())
+	    { /* there are other instrumentation requests */
+		if ((*it)->line == (*(it+1))->line)
+		{
+                  write_upto = (*(it+1))->col ; 
+#ifdef DEBUG
+		  cout <<"There were other requests for the same line write_upto = "<<write_upto<<endl;
+#endif /* DEBUG */
+		  print_cr = false;
+		  instrumented = true; /* let it get instrumented in the next round */
+		}
+                else
+		{
+#ifdef DEBUG
+		  cout <<"There were no other requests for the same line write_upto = "<<write_upto<<endl;
+#endif /* DEBUG */
+                  write_upto = strlen(inbuf);
+		  print_cr = true;
+		  instrumented = true; /* let it get instrumented in the next round */
+		}
+	    } 
+	    else 
+	    { /* this was the last request - flush the inbuf */
+	      write_upto = strlen(inbuf);
+	      print_cr = true;
+              instrumented = true; 
+            }
+	    for (i = 0; i < write_upto; i++)
+              ostr << inbuf[i]; 
+	    if (print_cr) ostr <<endl; 
+	    break;
 	  default:
+	    cout <<"Unknown option in instrumentCXXFile:"<<(*it)->kind<<endl;
+	    instrumented = true;
 	    break;
         }
       } // else      
@@ -767,7 +841,8 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
   {
     // Read one line each till we reach the desired line no.
 #ifdef DEBUG
-    cout <<"S: "<< (*lit)->item->fullName() << " line "<< (*lit)->line << " col " << (*lit)->col << endl;
+    if ((*lit) && (*lit)->item)
+      cout <<"S: "<< (*lit)->item->fullName() << " line "<< (*lit)->line << " col " << (*lit)->col << endl;
 #endif
     bool instrumented = false;
     while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
@@ -973,6 +1048,13 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
                 }
 		break; 
                 
+	    case INSTRUMENTATION_POINT:
+#ifdef DEBUG
+		cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
+#endif /* DEBUG */
+		ostr << (*it)->snippet<<endl;
+		instrumented = true;
+		break;
 	    default:
 		cout <<"Unknown option in instrumentCFile:"<<(*it)->kind<<endl;
 		instrumented = true; 
@@ -1035,7 +1117,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
 int CPDB_GetSubstringCol(const char *haystack, const char *needle)
 {
-  const char *res = strstr(haystack, needle);
+  char *res = strstr(haystack, needle);
   int diff = 0;
   if (res)
   {
@@ -1092,7 +1174,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   {
     // Read one line each till we reach the desired line no.
 #ifdef DEBUG
-    cout <<"S: "<< (*lit)->item->fullName() << " line "<< (*lit)->line << " col " << (*lit)->col << endl;
+    if ((*lit) && (*lit)->item)
+      cout <<"S: "<< (*lit)->item->fullName() << " line "<< (*lit)->line << " col " << (*lit)->col << endl;
 #endif
     bool instrumented = false;
 
@@ -1166,15 +1249,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
 
 		WRITE_TAB(ostr,(*it)->col);
-
-#ifdef TAU_ALIGN_FORTRAN_INSTRUMENTATION
-		// alignment issues on solaris2-64 require a value
-		// that will be properly aligned
-		ostr <<"DOUBLE PRECISION profiler / 0 /"<<endl;
-		//ostr <<"integer*8 profiler / 0 /"<<endl;
-#else
 		ostr <<"integer profiler(2) / 0, 0 /"<<endl;
-#endif
 		/* spaces */
      		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
@@ -1279,18 +1354,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 { /* only if the earlier clause was false will this be executed */
 		  is_if_stmt = true;
                 }
-		/* Before we declare that we should insert the then clause,
-		 * we need to ensure that a then does not appear in the 
-		 * statement already */
-		if (is_if_stmt == true)
- 		{
-		  /* does a then appear? */
-		  if (strstr(checkbuf, "THEN") != NULL) 
-		    is_if_stmt = false;
-		  if (strstr(checkbuf, "then") != NULL) 
-		    is_if_stmt = false;
-		}
-		  
+
 		/* Check to see if return is in a continuation line */
 		/* such as :
 		 *     if(  (ii/=jj  .or. kk<=0)  .and. &
@@ -1379,6 +1443,16 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
 		break;
 		 
+	    case INSTRUMENTATION_POINT:
+#ifdef DEBUG
+		cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
+#endif /* DEBUG */
+		ostr << (*it)->snippet<<endl;
+		for (i=0; i < write_upto; i++)
+		  ostr <<inbuf[i];
+                if (print_cr) ostr<<endl;
+		instrumented = true;
+		break;
 	    default:
 		cout <<"Unknown option in instrumentFFile:"<<(*it)->kind<<endl;
 		instrumented = true;
@@ -1722,9 +1796,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.73 $   $Date: 2005/11/07 18:45:11 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.73 2005/11/07 18:45:11 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.74 $   $Date: 2005/11/10 02:00:57 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.74 2005/11/10 02:00:57 sameer Exp $
  ***************************************************************************/
 
 
