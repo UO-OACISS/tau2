@@ -2,14 +2,16 @@ Eclipse Tau CDT System:
 
 Installation:
 
-1:  Copy the plugins folder in the taucdt directory to the location of your eclipse installation.  You may have to restart eclipse if it is running when this is done.
+1:  Be certain that the CDT or FDT plugins are installed and running properly in your eclipse installation.
 
-2:  In eclipse go to the Window menu, select Preferences and go to the TauCDT Preferences section.  Enter the location of the desired architecture directory in your tau installation in the Tau Arch Directory field.  Select a makefile either by choosing one from the dropdown menu or by selecting 'Specify Makefile Manually' from the menu and entering a TAU makefile in the field below.  Normally to generate auto-instrumented code the tau makefile selected should have been generated with the '-pdt' flag.  Other options may also be selected at this time.
+2:  Copy the plugins folder in the taucdt directory to the location of your eclipse installation.  You may have to restart eclipse if it is running when this is done.
+
+3:  In eclipse go to the Window menu, select Preferences and go to the TauCDT Preferences section.  Enter the location of the desired architecture directory in your tau installation in the Tau Arch Directory field.  Select a makefile either by choosing one from the dropdown menu or by selecting 'Specify Makefile Manually' from the menu and entering a TAU makefile in the field below.  Normally to generate auto-instrumented code the tau makefile selected should have been generated with the '-pdt' flag.  Other options may also be selected at this time.
 
 
 Adding a TAU Configuration:
 
-To add a TAU Build configuration to a Managed Make C or C++ project right click on the project and select Add Tau Configuration.  You will be presented with a list of existing configurations.  The configuration you select will be copied and modified to automatically apply TAU instrumentation to the resulting program.  A parenthetical statement indicating the TAU makefile type used with the new TAU build will be appended to the name of the configuration.  TAU Configurations generated in this way may be manipulated as standard Eclipse build configurations.
+To add a TAU Build configuration to a Managed Make C, C++ or FDT Make project right click on the project and select Add Tau Configuration.  You will be presented with a list of existing configurations.  The configuration you select will be copied and modified to automatically apply TAU instrumentation to the resulting program.  A parenthetical statement indicating the TAU makefile type used with the new TAU build will be appended to the name of the configuration.  TAU Configurations generated in this way may be manipulated as standard Eclipse build configurations.
 
 
 Running A TAU Instrumented Binary:
