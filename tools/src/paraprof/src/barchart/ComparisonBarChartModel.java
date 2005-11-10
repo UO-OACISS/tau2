@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.1 2005/09/26 21:12:13 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.2 2005/11/10 01:29:07 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -134,6 +134,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                         blob.add(i, fp);
                     } else {
                         blob = new RowBlob(fp.getFunctionName());
+                        rows.add(blob);
                         rowMap.put(fp.getFunction(), blob);
                         blob.add(i, fp);
 
@@ -151,7 +152,8 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     }
 
     public int getSubSize() {
-        return ((List) rows.get(0)).size();
+        return ppTrials.size();
+        //return ((List) rows.get(0)).size();
     }
 
     public String getLabel(int row) {
