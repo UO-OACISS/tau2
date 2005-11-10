@@ -301,6 +301,8 @@ public class LoadTrial {
                 fileType = 8;
             } else if (fileTypeString.equals("hpc")) {
                 fileType = 9;
+            } else if (fileTypeString.equals("gyro")) {
+                fileType = 100;
             } else {
                 System.err.println("Please enter a valid file type.");
                 LoadTrial.usage();

@@ -482,6 +482,10 @@ public class UtilFncs {
             
             dataSource = new HPCToolkitDataSource(sourceFiles[0]);
             break;
+        case 100:
+            v.add(sourceFiles);
+            dataSource = new GyroDataSource(v);
+            break;
         default:
             break;
         }
