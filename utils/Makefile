@@ -131,7 +131,8 @@ LDFLAGS	      = $(PCXX_OPT)
 MAKEFILE      = Makefile
 
 OBJS	      = tau_reduce.o pprof.o  tau_events.o tau_merge.o tau_selective.o \
-		tau_instrumentor.o user_event_data.o function_data.o pprof_elem.o tau_run.o
+		tau_instrumentor.o tau_instrument.o user_event_data.o \
+		function_data.o pprof_elem.o tau_run.o
 
 PRINT	      = pr
 
@@ -186,14 +187,16 @@ tau_merge.o: 	tau_merge.c
 tau_events.o: 	tau_events.cpp
 		$(CXX) $(CFLAGS)  -c tau_events.cpp
 
-tau_instrumentor: tau_instrumentor.o tau_selective.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a 
-		$(PDT_CXX_COMP) $(PDT_CFLAGS) tau_instrumentor.o tau_selective.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+tau_instrumentor: tau_instrumentor.o tau_instrument.o tau_selective.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a 
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) tau_instrumentor.o tau_instrument.o tau_selective.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
 
 tau_instrumentor.o: tau_instrumentor.cpp 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_instrumentor.cpp
 
+tau_instrument.o: tau_instrument.cpp 
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_instrument.cpp
 tau_selective.o: tau_selective.cpp 
-		$(PDT_CXX_COMP) $(PDT_CFLAGS) -c tau_selective.cpp
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_selective.cpp
 
 tau_run: 	tau_run.o tau_selective.o  
 		$(CXX) $(CFLAGS) tau_run.o tau_selective.o -o $@ $(DYNLIBS) $(LEXTRA) 
