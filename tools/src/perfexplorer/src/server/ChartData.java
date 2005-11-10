@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.19 2005/11/07 23:20:23 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.20 2005/11/10 02:56:40 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -308,7 +308,7 @@ public class ChartData extends RMIChartData {
 
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.trial = t.id ");
+			buf.append("inner join metric m on m.id = ims.metric ");
 			buf.append("inner join experiment e on t.experiment = e.id ");
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, false));
@@ -497,7 +497,7 @@ public class ChartData extends RMIChartData {
 			buf.append("ims.inclusive from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.trial = t.id ");
+			buf.append("inner join metric m on m.id = ims.metric ");
 			buf.append("where t.experiment = ? and m.name = ? ");
 
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
@@ -524,7 +524,7 @@ public class ChartData extends RMIChartData {
 			buf.append("ims.inclusive_percentage from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.trial = t.id ");
+			buf.append("inner join metric m on m.id = ims.metric ");
 			statement = null;
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true));

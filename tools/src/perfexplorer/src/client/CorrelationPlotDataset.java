@@ -14,7 +14,7 @@ import java.text.FieldPosition;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: CorrelationPlotDataset.java,v 1.3 2005/11/03 19:40:14 khuck Exp $</P>
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.4 2005/11/10 02:56:40 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -26,6 +26,7 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 	private int x = 0;
 	private int y = 1;
 	private boolean main = false;
+	private boolean constantProblem = false;
 	
 	/**
 	 * Constructor.
@@ -37,9 +38,19 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		super();
 		this.data = data;
 		this.seriesNames = data.getRowLabels();
-		this.x = x;
-		this.y = y;
 		this.main = main;
+		/*
+		this.constantProblem = PerfExplorerModel.getModel().getConstantProblem().booleanValue();
+		if (constantProblem) {
+			for (int i = 0 ; i < data.getRows() ; i++) {
+				List row = data.getRowData(i);
+				for (int j = 0 ; j < row.size() ; j++ ) {
+					double[] tmp = (double[])row.get(j);
+					tmp[y] = tmp[y]*tmp[x];
+				}
+			}
+		}
+		*/
 	}
 
 	/* (non-Javadoc)
@@ -83,6 +94,7 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		List row = data.getRowData(arg0);
 		// get the mth column from that row
 		double[] values = (double[])row.get(arg1);
+		//return new Double(java.lang.Math.log(values[x])/java.lang.Math.log(2));
 		return new Double(values[x]);
 	}
 
@@ -96,7 +108,14 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		List row = data.getRowData(arg0);
 		// get the mth column from that row
 		double[] values = (double[])row.get(arg1);
-		return new Double(values[y]);
+		//if (constantProblem) {
+			//return new Double(java.lang.Math.log(values[y]));
+			//double[] values2 = (double[])row.get(0);
+			//return new Double(values[y]*(values[x]/values2[x]));
+		//}else {
+			//return new Double(java.lang.Math.log(values[y])/java.lang.Math.log(2));
+			return new Double(values[y]);
+		//}
 	}
 
 	public String getCorrelation (int x, int y) {
