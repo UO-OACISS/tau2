@@ -152,7 +152,8 @@ public class PerfExplorerActionListener implements ActionListener {
 						PerfExplorerChart.doFractionChart();
 				} else if (arg.equals(CORRELATION_CHART)) {
 					if (checkAndSetMetricName(false))
-						PerfExplorerChart.doCorrelationChart();
+						//if (checkAndSetProblemSize(false))
+							PerfExplorerChart.doCorrelationChart();
 				} else if (arg.equals(EFFICIENCY_PHASE_CHART)) {
 					if (checkAndSetMetricName(false))
 						if (checkAndSetProblemSize(false))

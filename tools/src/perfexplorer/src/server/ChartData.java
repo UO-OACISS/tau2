@@ -13,7 +13,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.20 2005/11/10 02:56:40 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.21 2005/11/10 19:42:48 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -91,6 +91,8 @@ public class ChartData extends RMIChartData {
 					threadName = results.getString(2);
 					numThreads = results.getDouble(2);
 					value = results.getDouble(3);
+					if (metricName.toLowerCase().indexOf("time") != -1)
+						value = value/1000000;
 	
 					if (!currentExperiment.equals(groupingName)) {
 						experimentIndex++;
@@ -114,6 +116,9 @@ public class ChartData extends RMIChartData {
 				threadName = results.getString(2);
 				numThreads = results.getDouble(2);
 				value = results.getDouble(3);
+				if ((metricName.toLowerCase().indexOf("time") != -1) 
+					&& (dataType != FRACTION_OF_TOTAL))
+					value = value/1000000;
 
 				if (!currentExperiment.equals(groupingName)) {
 					experimentIndex++;
@@ -135,6 +140,9 @@ public class ChartData extends RMIChartData {
 					threadName = results.getString(1);
 					numThreads = results.getDouble(1);
 					value = results.getDouble(2);
+					if ((metricName.toLowerCase().indexOf("time") != -1) 
+						&& (dataType != FRACTION_OF_TOTAL))
+						value = value/1000000;
 	
 					if (!currentExperiment.equals(groupingName)) {
 						experimentIndex++;
@@ -195,7 +203,7 @@ public class ChartData extends RMIChartData {
 
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
 			if (preQuery)
-				buf.append("ims.inclusive/1000000 ");
+				buf.append("ims.inclusive ");
 			else
 				buf.append("ims.exclusive_percentage ");
 			buf.append("from interval_mean_summary ims ");
@@ -213,11 +221,13 @@ public class ChartData extends RMIChartData {
 			buf.append(" and m.name = ? ");
 			
 			if (preQuery)
-				buf.append("and ims.inclusive_percentage = 100.0 ");
-			else
-				buf.append("and ims.exclusive_percentage > 1.0 ");
+				buf.append("and ims.inclusive_percentage = 100.0");
+			else {
+				buf.append("and ims.exclusive_percentage > ");
+				buf.append(model.getXPercent());
+			}
 
-			buf.append("and (ie.group_name is null or (");
+			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
 			buf.append("order by 1, 2");
@@ -384,8 +394,9 @@ public class ChartData extends RMIChartData {
 				buf.append(model.getExperiment().getID() + " ");
 			}
 			buf.append(" and m.name = ? ");
-			buf.append("and ims.exclusive_percentage > 1.0 ");
-			buf.append("and (ie.group_name is null or (");
+			buf.append("and ims.exclusive_percentage > ");
+			buf.append(model.getXPercent());
+			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%'))) ");
 
@@ -408,9 +419,9 @@ public class ChartData extends RMIChartData {
 
 			if (dataType == CORRELATION_DATA) {
 				if (db.getDBType().compareTo("oracle") == 0) {
-					buf.append("ims.excl/1000000 from interval_mean_summary ims ");
+					buf.append("ims.excl from interval_mean_summary ims ");
 				} else {
-					buf.append("ims.exclusive/1000000 from interval_mean_summary ims ");
+					buf.append("ims.exclusive from interval_mean_summary ims ");
 				}
 			} else {
 				if (db.getDBType().compareTo("oracle") == 0) {
@@ -563,8 +574,9 @@ public class ChartData extends RMIChartData {
 
 			buf.append("from interval_event ie ");
 			buf.append("inner join interval_mean_summary s ");
-			buf.append("on ie.id = s.interval_event and s.exclusive_percentage > 2.0 ");
-			buf.append("left outer join interval_location_profile p ");
+			buf.append("on ie.id = s.interval_event and s.exclusive_percentage > ");
+			buf.append(model.getXPercent());
+			buf.append(" left outer join interval_location_profile p ");
 			buf.append("on ie.id = p.interval_event ");
 			buf.append("and p.metric = s.metric where ie.trial = ? ");
 			buf.append(" and p.metric = ? ");
@@ -603,8 +615,9 @@ public class ChartData extends RMIChartData {
 			}
 			buf.append(" and m.name = ? ");
 			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ims.exclusive_percentage < 1.0 ");
-			buf.append("and (ie.group_name is null or (");
+			buf.append("and ims.exclusive_percentage < ");
+			buf.append(model.getXPercent());
+			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1");
 			
@@ -628,8 +641,9 @@ public class ChartData extends RMIChartData {
 				buf.append(model.getExperiment().getID() + " ");
 			}
 			buf.append(" and m.name = ? ");
-			buf.append("and ims.exclusive_percentage > 1.0 ");
-			buf.append("and (ie.group_name is null or (");
+			buf.append("and ims.exclusive_percentage > ");
+			buf.append(model.getXPercent());
+			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%'));");
 			*/

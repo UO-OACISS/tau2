@@ -470,7 +470,8 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		}
 
         JFreeChart chart = ChartFactory.createXYLineChart(
-            PerfExplorerModel.getModel().getGroupName() + " Time / Total Runtime" +   // chart title
+            PerfExplorerModel.getModel().getGroupName() + 
+			" Time / Total Runtime - " +   // chart title
 			PerfExplorerModel.getModel().toString() + ":" +
 			PerfExplorerModel.getModel().getMetricName(),
             "Number of Processors",          // domain axis label

@@ -8,7 +8,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.11 2005/11/10 02:56:40 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.12 2005/11/10 19:42:47 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -358,6 +358,13 @@ public class RMIPerfExplorerModel implements Serializable {
 	}
 
 	public String getMetricName () {
+		if (metricName != null)
+			return metricName;
+		if (currentSelection instanceof Metric) {
+			Metric met = (Metric)currentSelection;
+			return met.getName();
+		}
+		// otherwise, just return the null String
 		return metricName;
 	}
 

@@ -14,7 +14,7 @@ import java.text.FieldPosition;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: CorrelationPlotDataset.java,v 1.4 2005/11/10 02:56:40 khuck Exp $</P>
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.5 2005/11/10 19:42:47 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -39,14 +39,15 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		this.data = data;
 		this.seriesNames = data.getRowLabels();
 		this.main = main;
-		/*
 		this.constantProblem = PerfExplorerModel.getModel().getConstantProblem().booleanValue();
+		/*
 		if (constantProblem) {
 			for (int i = 0 ; i < data.getRows() ; i++) {
 				List row = data.getRowData(i);
+				double[] tmp0 = (double[])row.get(0);
 				for (int j = 0 ; j < row.size() ; j++ ) {
 					double[] tmp = (double[])row.get(j);
-					tmp[y] = tmp[y]*tmp[x];
+					tmp[y] = tmp[y]*(tmp[x]/tmp0[x]);
 				}
 			}
 		}
@@ -109,7 +110,6 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		// get the mth column from that row
 		double[] values = (double[])row.get(arg1);
 		//if (constantProblem) {
-			//return new Double(java.lang.Math.log(values[y]));
 			//double[] values2 = (double[])row.get(0);
 			//return new Double(values[y]*(values[x]/values2[x]));
 		//}else {
