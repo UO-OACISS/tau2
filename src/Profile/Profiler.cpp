@@ -725,7 +725,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #ifndef TAU_DISABLE_THROTTLE /* unless we are overriding the throttle */
 	double inclusiveTime; 
 #ifdef TAU_MULTIPLE_COUNTERS
-	inclusiveTime = ThisFunction->GetInclTime(tid)[0]; 
+	inclusiveTime = ThisFunction->GetInclTimeForCounter(tid, 0); 
 	/* here we get the array of double values representing the double 
            metrics. We choose the first counter */
 #else  /* TAU_MULTIPLE_COUNTERS */
@@ -3095,8 +3095,8 @@ double& Profiler::TheTauThrottlePerCall(void)
 }
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.128 $   $Date: 2005/11/09 19:09:09 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.128 2005/11/09 19:09:09 sameer Exp $ 
+ * $Revision: 1.129 $   $Date: 2005/11/10 23:49:28 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.129 2005/11/10 23:49:28 sameer Exp $ 
  ***************************************************************************/
 
 	
