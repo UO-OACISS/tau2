@@ -195,6 +195,8 @@ public:
 	//Returns the array of inclusive counter values.
 	//double * GetInclTime(int tid) { return InclTime[tid]; }
 	double * GetInclTime(int tid);
+	double GetInclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
+	double GetExclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
 	void SetInclTime(int tid, double *incltime) { 
 	  for(int i=0;i<MAX_TAU_COUNTERS;i++)
 	    InclTime[tid][i] = incltime[i];
@@ -307,7 +309,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.32 $   $Date: 2005/11/08 19:13:00 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.32 2005/11/08 19:13:00 amorris Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
+ * $Revision: 1.33 $   $Date: 2005/11/10 23:48:54 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.33 2005/11/10 23:48:54 sameer Exp $ 
  ***************************************************************************/
