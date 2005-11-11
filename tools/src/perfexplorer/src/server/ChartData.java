@@ -7,13 +7,14 @@ import common.*;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.database.*;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * The ChartData class is used to select data from the database which 
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.22 2005/11/11 03:08:25 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.23 2005/11/11 17:32:13 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -26,6 +27,7 @@ public class ChartData extends RMIChartData {
 	private String eventName = null;
 	private String groupByColumn = null;
 	private boolean preQuery = false;
+	private List columnValues = null;
 	
 	/**
 	 * Constructor
@@ -79,6 +81,7 @@ public class ChartData extends RMIChartData {
 			String currentExperiment = "";
 			int experimentIndex = -1;
 			if (dataType == CORRELATION_DATA) {
+				columnValues = new ArrayList();
 				preQuery = true;
 				// do a pre-query to get the event with inclusive value
 				// of 100.0.
@@ -100,6 +103,7 @@ public class ChartData extends RMIChartData {
 						addRow(groupingName);
 					}
 					addColumn(experimentIndex, numThreads, value);
+					columnValues.add(new Double(numThreads));
 				} 
 				results.close();
 				statement.close();
@@ -111,6 +115,7 @@ public class ChartData extends RMIChartData {
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			// TODO - this query assumes a scalability study...!
+			int columnCounter = 0;
 			while (results.next() != false) {
 				groupingName = results.getString(1);
 				threadName = results.getString(2);
@@ -124,6 +129,19 @@ public class ChartData extends RMIChartData {
 					experimentIndex++;
 					currentExperiment = groupingName;
 					addRow(groupingName);
+					columnCounter = 0;
+				}
+				// some methods may not have been called in the
+				// base case - MPI methods, for example
+				// add 0 values for those processor counts.
+				if (dataType == CORRELATION_DATA) {
+					Double mainThreads = (Double)columnValues.get(columnCounter);
+					while (mainThreads.doubleValue() < numThreads) {
+						addColumn(experimentIndex, mainThreads.doubleValue(), 0.0);
+						columnCounter++;
+						mainThreads = (Double)columnValues.get(columnCounter);
+					}
+					columnCounter++;
 				}
 				addColumn(experimentIndex, numThreads, value);
 			} 
@@ -372,6 +390,7 @@ public class ChartData extends RMIChartData {
 			}
 			try {
 				statement = db.prepareStatement(buf.toString());
+				//System.out.println(statement.toString());
 				statement.execute();
 				statement.close();
 			} catch (Exception e) {
@@ -404,6 +423,7 @@ public class ChartData extends RMIChartData {
 			try {
 				statement = db.prepareStatement(buf.toString());
 				statement.setString(1, metricName);
+				//System.out.println(statement.toString());
 				statement.execute();
 				statement.close();
 			} catch (Exception e) {

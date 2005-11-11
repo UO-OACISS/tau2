@@ -14,7 +14,7 @@ import java.text.FieldPosition;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: CorrelationPlotDataset.java,v 1.6 2005/11/11 03:08:25 khuck Exp $</P>
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.7 2005/11/11 17:32:13 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -39,15 +39,18 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		this.data = data;
 		this.seriesNames = data.getRowLabels();
 		this.main = main;
+		
 		/*
 		this.constantProblem = PerfExplorerModel.getModel().getConstantProblem().booleanValue();
 		if (constantProblem) {
 			for (int i = 0 ; i < data.getRows() ; i++) {
 				List row = data.getRowData(i);
-				double[] tmp0 = (double[])row.get(0);
+				double[] tmp0 = (double[])row.get(row.size()-1);
 				for (int j = 0 ; j < row.size() ; j++ ) {
 					double[] tmp = (double[])row.get(j);
-					tmp[y] = tmp[y]*(tmp[x]/tmp0[x]);
+					//tmp[y] = tmp[y]*(tmp[x]/tmp0[x]);
+					tmp[y] = java.lang.Math.log(tmp[y]*10)/java.lang.Math.log(2);
+					tmp[x] = java.lang.Math.log(tmp[x])/java.lang.Math.log(2);
 				}
 			}
 		}
@@ -89,31 +92,28 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 	 * @see org.jfree.data.xy.XYDataset#getX(int, int)
 	 */
 	public Number getX(int arg0, int arg1) {
+		//System.out.println("getX(" + arg0 + ", " + arg1 + ")");
 		if (!main)
 			arg0++;
 		// get the row
 		List row = data.getRowData(arg0);
 		// get the mth column from that row
-		if (arg1 < row.size()) {
-			double[] values = (double[])row.get(arg1);
-			//return new Double(java.lang.Math.log(values[x])/java.lang.Math.log(2));
-			return new Double(values[x]);
-		} else {
-			return new Double(0.0);
-		}
+		double[] values = (double[])row.get(arg1);
+		//return new Double(java.lang.Math.log(values[x])/java.lang.Math.log(2));
+		return new Double(values[x]);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.jfree.data.xy.XYDataset#getY(int, int)
 	 */
 	public Number getY(int arg0, int arg1) {
+		//System.out.println("getY(" + arg0 + ", " + arg1 + ")");
 		if (!main)
 			arg0++;
 		// get the row
 		List row = data.getRowData(arg0);
 		// get the mth column from that row
-		if (arg1 < row.size()) {
-			double[] values = (double[])row.get(arg1);
+		double[] values = (double[])row.get(arg1);
 		//if (constantProblem) {
 			//double[] values2 = (double[])row.get(0);
 			//return new Double(values[y]*(values[x]/values2[x]));
@@ -121,9 +121,6 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 			//return new Double(java.lang.Math.log(values[y])/java.lang.Math.log(2));
 			return new Double(values[y]);
 		//}
-		} else {
-			return new Double(0.0);
-		}
 	}
 
 	public String getCorrelation (int x, int y) {
@@ -136,7 +133,7 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		List xRow = data.getRowData(x);
 		List yRow = data.getRowData(y);
 
-		for (int i = 0 ; i < xRow.size() ; i++ ) {
+		for (int i = 0 ; (i < xRow.size() && i < yRow.size()) ; i++ ) {
 			double[] tmp = (double[])xRow.get(i);
 			xAvg += tmp[1];
 			tmp = (double[])yRow.get(i);
@@ -149,7 +146,7 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		yAvg = yAvg / yRow.size();
 
 
-		for (int i = 0 ; i < xRow.size() ; i++ ) {
+		for (int i = 0 ; (i < xRow.size() && i < yRow.size()) ; i++ ) {
 			double[] tmp = (double[])xRow.get(i);
 			xStDev += (tmp[1] - xAvg) * (tmp[1] - xAvg);
 			tmp = (double[])yRow.get(i);
@@ -167,7 +164,7 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		// solve for r
 		double tmp1 = 0.0;
 		double tmp2 = 0.0;
-		for (int i = 0 ; i < xRow.size() ; i++ ) {
+		for (int i = 0 ; (i < xRow.size() && i < yRow.size()) ; i++ ) {
 			double[] tmp = (double[])xRow.get(i);
 			tmp1 = (tmp[1] - xAvg) / xStDev;
 			tmp = (double[])yRow.get(i);
