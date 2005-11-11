@@ -405,8 +405,10 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #SUN_FORTRAN#TAU_FORTRANLIBS	       = -lfui -lfsumai -lfprodai -lfminlai -lfmaxlai -lfminvai -lfmaxvai -lfsu -lsunmath        #ENDIF#
 #SUN_FORTRAN#TAU_FORTRANLIBS_SUN_OPTERON   = -lfsu -lsunmath #ENDIF#
 #SUN386I#TAU_FORTRANLIBS	       = $(TAU_FORTRANLIBS_SUN_OPTERON) #ENDIF#
+#SUNX86_64#TAU_FORTRANLIBS	       = $(TAU_FORTRANLIBS_SUN_OPTERON) #ENDIF#
 #SOL2#EXTRALIBS = -lsocket -lnsl      #ENDIF#
 #SUN386I#EXTRALIBS = -lsocket -lnsl -lrt     #ENDIF#
+#SUNX86_64#EXTRALIBS = -lsocket -lnsl -lrt     #ENDIF#
 #COMPAQ_FORTRAN#TAU_FORTRANLIBS =  $(EXTRADIR)/lib/cmplrs/fort90/for_main.o -L$(EXTRADIR)/lib -L$(EXTRADIR)/lib/cmplrs/fort90 -L$(EXTRADIR)/lib/cmplrs/fort90 -lUfor -lfor -lFutil -lm -lmld -lexc -lc #ENDIF#
 #ABSOFT_FORTRAN#TAU_FORTRANLIBS =  -L$(EXTRADIR)/lib -lfio -lf90math -lU77 -lf77math -lfio #ENDIF#
 #LAHEY_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/fj90rt0.o -L$(EXTRADIR)/lib -lfj9i6 -lfj9f6 -lfj9e6 -lfccx86_6a #ENDIF#
@@ -437,6 +439,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SOL2#TAU_CXXLIBS               = -lCstd -lCrun #ENDIF#
 #SOL2CC#TAU_CXXLIBS_SUN_OPTERON   = -lCstd -lCrun #ENDIF#
 #SUN386I#TAU_CXXLIBS   = $(TAU_CXXLIBS_SUN_OPTERON) #ENDIF#
+#SUNX86_64#TAU_CXXLIBS   = $(TAU_CXXLIBS_SUN_OPTERON) #ENDIF#
 #FUJITSU_SOLARIS#TAU_CXXLIBS               = -lstd -lstdm #ENDIF#
 #PPC64#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #IBMXLCAPPLE#TAU_FORLIBDIR =lib       #ENDIF#
@@ -473,6 +476,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SGIMP#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
 #SOL2#TAU_LINKER_OPT6 = #ENDIF#
 #SUN386I#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
+#SUNX86_64#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
 
 # We need -lCio with SGI CC 7.4+
 #SGICC#TAU_LINKER_OPT7 = -lCio #ENDIF#
@@ -482,6 +486,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 
 # extra libs
 #SUN386I#TAU_LINKER_OPT9 = $(EXTRALIBS) #ENDIF#
+#SUNX86_64#TAU_LINKER_OPT9 = $(EXTRALIBS) #ENDIF#
 
 #USE_IBMXLC#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
 #GNU#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
