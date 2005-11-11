@@ -11,7 +11,7 @@
 **	Description 	: TAU Profiling Package				  **
 **	Author		: Sameer Shende					  **
 **	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
@@ -241,7 +241,7 @@ int TauGetFreeMemory(void)
 }
 
 /***************************************************************************
- * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 2005/05/13 00:11:55 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.8 2005/05/13 00:11:55 sameer Exp $ 
+ * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
+ * $Revision: 1.9 $   $Date: 2005/11/11 03:46:50 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.9 2005/11/11 03:46:50 amorris Exp $ 
  ***************************************************************************/

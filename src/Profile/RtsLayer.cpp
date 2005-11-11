@@ -1,6 +1,6 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1997  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -23,7 +23,7 @@
 **			  -DPOOMA_KAI for KCC compiler 			  **
 **			  -DDEBUG_PROF  for internal debugging messages   **
 **                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 
@@ -1295,7 +1295,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.68 $   $Date: 2005/09/26 17:58:09 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.68 2005/09/26 17:58:09 sameer Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.69 $   $Date: 2005/11/11 03:46:49 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.69 2005/11/11 03:46:49 amorris Exp $ 
  ***************************************************************************/

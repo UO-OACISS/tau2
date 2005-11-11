@@ -1,6 +1,6 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1999  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -12,7 +12,7 @@
 **                        TAU.                                            **
 **	Author		: Sameer Shende					  **
 **	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 #include <stdio.h>
@@ -392,7 +392,7 @@ bool processFileForInstrumentation(const string& file_name)
 
 
 /***************************************************************************
- * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2005/11/10 02:00:58 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.9 2005/11/10 02:00:58 sameer Exp $
+ * $RCSfile: tau_selective.cpp,v $   $Author: amorris $
+ * $Revision: 1.10 $   $Date: 2005/11/11 03:46:51 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.10 2005/11/11 03:46:51 amorris Exp $
  ***************************************************************************/

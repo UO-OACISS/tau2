@@ -27,7 +27,7 @@ Makefile  TauWrapper.cpp  TauWrapper.h	app.cpp  processing.cpp  thr.cpp
 [sameer@neutron mixedmode]$ head -15 Makefile
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
-#*			http://www.acl.lanl.gov/tau		           **
+#*			http://www.cs.uoregon.edu/research/tau	           **
 #****************************************************************************
 #*    Copyright 2001  						   	   **
 #*    Department of Computer and Information Science, University of Oregon **
@@ -194,7 +194,7 @@ Commenting USE_TAU variable in Makefile to disable TAU instrumentation
 [sameer@neutron mixedmode]$ head -15 Makefile
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
-#*			http://www.acl.lanl.gov/tau		           **
+#*			http://www.cs.uoregon.edu/research/tau	           **
 #****************************************************************************
 #*    Copyright 2001  						   	   **
 #*    Department of Computer and Information Science, University of Oregon **

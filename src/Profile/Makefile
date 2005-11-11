@@ -1,6 +1,6 @@
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
-#*			http://www.acl.lanl.gov/tau		           **
+#*			http://www.cs.uoregon.edu/research/tau	           **
 #****************************************************************************
 #*    Copyright 1997-99  						   **
 #*    Department of Computer and Information Science, University of Oregon **
@@ -22,7 +22,7 @@
 #**                        -DUSE_STDCXXLIB for KCC compiler                **
 #**                        -DDEBUG_PROF  for internal debugging messages   **
 #**			   These flags are set by configure script	   **
-#**      Documentation   : See http://www.acl.lanl.gov/tau	           **
+#**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
 TAUROOT=

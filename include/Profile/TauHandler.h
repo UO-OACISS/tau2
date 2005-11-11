@@ -11,7 +11,7 @@
 **	Description 	: TAU Profiling Package				  **
 **	Author		: Sameer Shende					  **
 **	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
@@ -37,9 +37,9 @@ int TauDisableTrackingMemoryHeadroom(void);
 #endif /* _TAU_HANDLER_H_ */
   
 /***************************************************************************
- * $RCSfile: TauHandler.h,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2005/05/17 23:51:24 $
- * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.6 2005/05/17 23:51:24 sameer Exp $ 
+ * $RCSfile: TauHandler.h,v $   $Author: amorris $
+ * $Revision: 1.7 $   $Date: 2005/11/11 03:46:47 $
+ * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.7 2005/11/11 03:46:47 amorris Exp $ 
  ***************************************************************************/
 
 	

@@ -1,4 +1,13 @@
-/******************************************************************************                      TAU Portable Profiling Package                     ****                      http://www.acl.lanl.gov/tau                        *********************************************************************************    Copyright 1997                                                       ****    Department of Computer and Information Science, University of Oregon ****    Advanced Computing Laboratory, Los Alamos National Laboratory        ******************************************************************************/
+/****************************************************************************
+ * **                      TAU Portable Profiling Package                     **
+ * **                      http://www.cs.uoregon.edu/research/tau             **
+ * *****************************************************************************
+ * **    Copyright 2003                                                       **
+ * **    Department of Computer and Information Science, University of Oregon **
+ * **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+ * ****************************************************************************/
+
+
 /********************************************************************/
 /* What used to be pcxx_timers.c 				    */
 /********************************************************************/

@@ -1,6 +1,6 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1997  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -2694,7 +2694,7 @@ int main (int argc, char *argv[]){
   exit (0);
 }//main()
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.45 $   $Date: 2004/10/15 00:23:16 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.45 2004/10/15 00:23:16 sameer Exp $                                
+ * $RCSfile: pprof.cpp,v $   $Author: amorris $
+ * $Revision: 1.46 $   $Date: 2005/11/11 03:46:51 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.46 2005/11/11 03:46:51 amorris Exp $                                
  ***************************************************************************/

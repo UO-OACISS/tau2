@@ -1,6 +1,6 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1997  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -23,7 +23,7 @@
 **			  -DPOOMA_KAI for KCC compiler 			  **
 **			  -DDEBUG_PROF  for internal debugging messages   **
 **                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 #ifndef _FUNCTIONINFO_H_
@@ -311,7 +311,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.34 $   $Date: 2005/11/11 02:05:40 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.34 2005/11/11 02:05:40 sameer Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
+ * $Revision: 1.35 $   $Date: 2005/11/11 03:46:47 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.35 2005/11/11 03:46:47 amorris Exp $ 
  ***************************************************************************/

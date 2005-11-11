@@ -1,6 +1,6 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1999  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -23,7 +23,7 @@
 **			  -DPOOMA_KAI for KCC compiler 			  **
 **			  -DDEBUG_PROF  for internal debugging messages   **
 **                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
@@ -253,6 +253,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: amorris $
- * $Revision: 1.21 $   $Date: 2004/09/01 18:52:35 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.21 2004/09/01 18:52:35 amorris Exp $ 
+ * $Revision: 1.22 $   $Date: 2005/11/11 03:46:50 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.22 2005/11/11 03:46:50 amorris Exp $ 
  ***************************************************************************/

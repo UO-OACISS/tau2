@@ -11,7 +11,7 @@
 **	Description 	: TAU Profiling Package				  **
 **	Author		: Sameer Shende					  **
 **	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
@@ -358,8 +358,8 @@ void TauTrackMuseEvents(void)
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
- * $Revision: 1.13 $   $Date: 2005/10/27 20:23:14 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.13 2005/10/27 20:23:14 amorris Exp $ 
+ * $Revision: 1.14 $   $Date: 2005/11/11 03:46:50 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.14 2005/11/11 03:46:50 amorris Exp $ 
  ***************************************************************************/
 
 	

@@ -1,6 +1,6 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1997  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -23,7 +23,7 @@
 **			  -DPOOMA_KAI for KCC compiler 			  **
 **			  -DDEBUG_PROF  for internal debugging messages   **
 **                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 #ifndef PROFILER_H
 #define PROFILER_H
@@ -241,7 +241,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.61 $   $Date: 2005/11/01 01:23:50 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.61 2005/11/01 01:23:50 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: amorris $
+ * $Revision: 1.62 $   $Date: 2005/11/11 03:46:47 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.62 2005/11/11 03:46:47 amorris Exp $ 
  ***************************************************************************/

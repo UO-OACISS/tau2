@@ -1,6 +1,6 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1997  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -23,7 +23,7 @@
 **			  -DPOOMA_KAI for KCC compiler 			  **
 **			  -DDEBUG_PROF  for internal debugging messages   **
 **                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 #ifndef _RTSLAYER_H_
@@ -147,7 +147,7 @@ class RtsLayer
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
- * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.21 $   $Date: 2005/01/05 01:57:47 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.21 2005/01/05 01:57:47 sameer Exp $ 
+ * $RCSfile: RtsLayer.h,v $   $Author: amorris $
+ * $Revision: 1.22 $   $Date: 2005/11/11 03:46:47 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.22 2005/11/11 03:46:47 amorris Exp $ 
  ***************************************************************************/

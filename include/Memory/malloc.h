@@ -11,7 +11,7 @@
 **      Description     : TAU Profiling Package                           **
 **      Author          : Sameer Shende                                   **
 **      Contact         : sameer@cs.uoregon.edu sameer@acl.lanl.gov       **
-**      Documentation   : See http://www.acl.lanl.gov/tau                 **
+**      Documentation   : See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 

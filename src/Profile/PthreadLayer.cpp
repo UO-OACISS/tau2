@@ -1,6 +1,6 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1997  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -24,7 +24,7 @@
 **			  -DPOOMA_KAI for KCC compiler 			  **
 **			  -DDEBUG_PROF  for internal debugging messages   **
 **                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 
@@ -215,8 +215,8 @@ int PthreadLayer::UnLockEnv(void)
 }  
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.9 $   $Date: 2005/04/15 22:04:10 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.9 2005/04/15 22:04:10 amorris Exp $
+ * $Revision: 1.10 $   $Date: 2005/11/11 03:46:49 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.10 2005/11/11 03:46:49 amorris Exp $
  ***************************************************************************/
 
 

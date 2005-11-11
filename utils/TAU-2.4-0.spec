@@ -19,7 +19,7 @@ Compaq Alpha Linux clusters, HP workstations and Cray T3E. The current release
 (v2.6) supports C++, C and Fortran90. It works  with KAI KCC, PGI, g++, egcs, 
 Fujitsu and vendor supplied C++ compilers. See INSTALL and README files 
 included with the distribution. Documentation can be found at 
-http://www.acl.lanl.gov/tau
+http://www.cs.uoregon.edu/research/tau
 
 - Sameer Shende (University of Oregon)
 Report bugs to tau-bugs@cs.uoregon.edu

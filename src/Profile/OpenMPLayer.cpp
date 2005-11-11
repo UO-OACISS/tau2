@@ -1,6 +1,6 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1997  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -24,7 +24,7 @@
 **			  -DPOOMA_KAI for KCC compiler 			  **
 **			  -DDEBUG_PROF  for internal debugging messages   **
 **                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 
@@ -198,8 +198,8 @@ int OpenMPLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: OpenMPLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.4 $   $Date: 2005/11/04 00:41:09 $
- * POOMA_VERSION_ID: $Id: OpenMPLayer.cpp,v 1.4 2005/11/04 00:41:09 amorris Exp $
+ * $Revision: 1.5 $   $Date: 2005/11/11 03:46:49 $
+ * POOMA_VERSION_ID: $Id: OpenMPLayer.cpp,v 1.5 2005/11/11 03:46:49 amorris Exp $
  ***************************************************************************/
 
 

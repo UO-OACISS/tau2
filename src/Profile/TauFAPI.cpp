@@ -1,6 +1,6 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1997  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
@@ -23,7 +23,7 @@
 **			  -DPOOMA_KAI for KCC compiler 			  **
 **			  -DDEBUG_PROF  for internal debugging messages   **
 **                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 /* Fortran Wrapper layer for TAU Portable Profiling */
@@ -1331,7 +1331,7 @@ void TAU_PROFILE_CALLSTACK(void)
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.49 $   $Date: 2005/11/09 19:13:24 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.49 2005/11/09 19:13:24 sameer Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.50 $   $Date: 2005/11/11 03:46:49 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.50 2005/11/11 03:46:49 amorris Exp $ 
  ***************************************************************************/

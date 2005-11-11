@@ -1,7 +1,7 @@
 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
-#*			http://www.acl.lanl.gov/tau		           **
+#*			http://www.cs.uoregon.edu/research/tau	           **
 #****************************************************************************
 #*    Copyright 1997  						   	   **
 #*    Department of Computer and Information Science, University of Oregon **

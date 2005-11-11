@@ -1,6 +1,6 @@
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
-#*			http://www.acl.lanl.gov/tau		           **
+#*			http://www.cs.uoregon.edu/research/tau	           **
 #****************************************************************************
 #*    Copyright 1997  						   	   **
 #*    Department of Computer and Information Science, University of Oregon **
@@ -15,7 +15,7 @@
 #**      Author          : Mike Kaufman	                                   **
 #**      Contact         : {mikek,sameer}@cs.uoregon.edu       		   **
 #**      Flags           : Compile with -DDEBUG for debugging info         **
-#**      Documentation   : See http://www.acl.lanl.gov/tau	           **
+#**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
 ########### Automatically modified by the configure script ############

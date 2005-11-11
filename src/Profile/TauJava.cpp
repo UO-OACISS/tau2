@@ -1,6 +1,6 @@
 /****************************************************************************
 **                      TAU Portable Profiling Package                     **
-**                      http://www.acl.lanl.gov/tau                        **
+**                      http://www.cs.uoregon.edu/research/tau             **
 *****************************************************************************
 **    Copyright 1997-2000                                                  **
 **    Department of Computer and Information Science, University of Oregon **
@@ -23,7 +23,7 @@
 **                        -DPOOMA_KAI for KCC compiler                    **
 **                        -DDEBUG_PROF  for internal debugging messages   **
 **                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**      Documentation   : See http://www.acl.lanl.gov/tau                 **
+**      Documentation   : See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
@@ -439,7 +439,7 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: amorris $
- * $Revision: 1.27 $   $Date: 2005/06/29 18:56:38 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.27 2005/06/29 18:56:38 amorris Exp $
+ * $Revision: 1.28 $   $Date: 2005/11/11 03:46:50 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.28 2005/11/11 03:46:50 amorris Exp $
  ***************************************************************************/
 
