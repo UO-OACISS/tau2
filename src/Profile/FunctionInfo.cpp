@@ -317,12 +317,33 @@ long FunctionInfo::GetFunctionId(void)
 	return FunctionId;
 }
 	    
+
 //////////////////////////////////////////////////////////////////////
+void FunctionInfo::ResetExclTimeIfNegative(int tid) 
+{ /* if exclusive time is negative (at Stop) we set it to zero during
+     compensation. This function is used to reset it to zero for single
+     and multiple counters */
+  	int i;
+#ifndef TAU_MULTIPLE_COUNTERS
+	if (ExclTime[tid] < 0)
+        {
+          ExclTime[tid] = 0.0;
+        }
+#else /* TAU_MULTIPLE_COUNTERS */
+	for (i=0; i < MAX_TAU_COUNTERS; i++)
+	{
+	  if (ExclTime[tid][i] < 0)
+          {
+            ExclTime[tid][i] = 0.0; /* set each negative counter to zero */
+          }
+        }
+#endif /* TAU_MULTIPLE_COUNTERS */
+        return; 
+}
 
 
 
-
-
+//////////////////////////////////////////////////////////////////////
 void tauCreateFI(FunctionInfo **ptr, const char *name, const char *type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
   if (*ptr == 0) {
@@ -409,7 +430,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
   }
 }
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.40 $   $Date: 2005/11/11 03:46:48 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.40 2005/11/11 03:46:48 amorris Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
+ * $Revision: 1.41 $   $Date: 2005/11/11 18:27:00 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.41 2005/11/11 18:27:00 sameer Exp $ 
  ***************************************************************************/

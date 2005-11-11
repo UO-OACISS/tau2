@@ -672,40 +672,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 	// In either case we need to add time to the exclusive time.
 
 #ifdef TAU_COMPENSATE
-#ifndef TAU_MULTIPLE_COUNTERS
-	if (ThisFunction->GetExclTime(tid) < 0) 
-	{
- 	  ThisFunction->SetExclTime(tid, 0.0);
-	}
-#else /* TAU_MULTIPLE_COUNTERS */
- 	/* Lets get the vector of exclusive times for each counter */
-	double * exclcounters= ThisFunction->GetExclTime(tid);
-        for(i = 0; i < MAX_TAU_COUNTERS; i++)	
-	{
-	  if (exclcounters[i] < 0)
-	    exclcounters[i] = 0.0; 
-	}
- 	ThisFunction->SetExclTime(tid, exclcounters);
-#endif /* TAU_MULTIPLE_COUNTERS */
+        ThisFunction->ResetExclTimeIfNegative(tid); 
 #ifdef TAU_CALLPATH
-
-
-#ifndef TAU_MULTIPLE_COUNTERS
-	if ((ParentProfiler != NULL) && (CallPathFunction->GetExclTime(tid) < 0)) 
-	{
- 	  CallPathFunction->SetExclTime(tid, 0.0);
-	}
-#else /* TAU_MULTIPLE_COUNTERS */
 	if (ParentProfiler != NULL) {
-	  double *exclcounters = CallPathFunction->GetExclTime(tid);
-	  for(i = 0; i < MAX_TAU_COUNTERS; i++)	
-	    {
-	      if (exclcounters[i] < 0)
-		exclcounters[i] = 0.0; 
-	    }
-	  CallPathFunction->SetExclTime(tid, exclcounters);
+          CallPathFunction->ResetExclTimeIfNegative(tid); 
 	}
-#endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_CALLPATH */
 #endif /* TAU_COMPENSATE */
 
@@ -3142,9 +3113,9 @@ double& Profiler::TheTauThrottlePerCall(void)
   return throttlePercall;
 }
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.131 $   $Date: 2005/11/11 03:46:49 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.131 2005/11/11 03:46:49 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.132 $   $Date: 2005/11/11 18:27:00 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.132 2005/11/11 18:27:00 sameer Exp $ 
  ***************************************************************************/
 
 	
