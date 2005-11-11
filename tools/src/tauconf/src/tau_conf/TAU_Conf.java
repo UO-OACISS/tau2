@@ -238,7 +238,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         archdirCheckBox = new javax.swing.JCheckBox();
         archdirField = new javax.swing.JTextField();
         archLabel = new javax.swing.JLabel();
-        String[] archStrings = { "Default","bgl","ibm64","ibm64linux","solaris2-64","sgin32","sgi64","sgio32","xt3" };
+        String[] archStrings = { "Default","bgl","ibm64","ibm64linux","solaris2-64","sgin32","sgi64","sgio32","xt3","sunx86_64" };
         archCombo = new javax.swing.JComboBox(archStrings);
         useroptCheckBox = new javax.swing.JCheckBox();
         useroptField = new javax.swing.JTextField();
@@ -6200,7 +6200,7 @@ if(pclCheckBox.isSelected()){
         String remainder = null;
         //String raw=command;
         System.out.println(command+" 1");
-        if(command.indexOf("=")!=-1){
+        if(command.contains("=")){
             remainder=command.substring(command.indexOf('=')+1);
             command=command.substring(0,command.indexOf('=')+1);
         }
