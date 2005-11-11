@@ -7,6 +7,7 @@
 
 package edu.uoregon.tau.vis;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,9 +16,9 @@ import java.util.List;
  *    
  * TODO: Implement other factory methods.
  *
- * <P>CVS $Id: PlotFactory.java,v 1.2 2005/07/16 00:21:07 amorris Exp $</P>
+ * <P>CVS $Id: PlotFactory.java,v 1.3 2005/11/11 02:55:17 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 public class PlotFactory {
 
@@ -67,16 +68,16 @@ public class PlotFactory {
             axisStrings[i] = new ArrayList();
             
             if (scatterPlot.getNormalized()) {
-                axisStrings[i].add(Float.toString(minScatterValues[i]));
-                axisStrings[i].add(Double.toString(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .25));
-                axisStrings[i].add(Double.toString(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .50));
-                axisStrings[i].add(Double.toString(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .75));
-                axisStrings[i].add(Double.toString(maxScatterValues[i]));
+                axisStrings[i].add(getSaneDoubleString(minScatterValues[i]));
+                axisStrings[i].add(getSaneDoubleString(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .25));
+                axisStrings[i].add(getSaneDoubleString(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .50));
+                axisStrings[i].add(getSaneDoubleString(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .75));
+                axisStrings[i].add(getSaneDoubleString(maxScatterValues[i]));
             } else {
                 axisStrings[i].add("0");
-                axisStrings[i].add(Double.toString(maxScatterValues[i] * .25));
-                axisStrings[i].add(Double.toString(maxScatterValues[i] * .50));
-                axisStrings[i].add(Double.toString(maxScatterValues[i] * .75));
+                axisStrings[i].add(getSaneDoubleString(maxScatterValues[i] * .25));
+                axisStrings[i].add(getSaneDoubleString(maxScatterValues[i] * .50));
+                axisStrings[i].add(getSaneDoubleString(maxScatterValues[i] * .75));
                 axisStrings[i].add(Float.toString(maxScatterValues[i]));
             }
         }
@@ -93,4 +94,107 @@ public class PlotFactory {
         return scatterPlot;
     }
 
+    
+    private static String getSaneDoubleString(double d) {
+        return formatDouble(d, 4, false);
+    }
+    
+    // this has been temporarily transplanted here
+    // left pad : pad string 's' up to length plen, but put the whitespace on
+    // the left
+    public static String lpad(String s, int plen) {
+        int len = plen - s.length();
+        if (len <= 0)
+            return s;
+        char padchars[] = new char[len];
+        for (int i = 0; i < len; i++)
+            padchars[i] = ' ';
+        String str = new String(padchars, 0, len);
+        return str.concat(s);
+    }
+    
+    public static String formatDouble(double d, int width, boolean pad) {
+
+        // first check if the regular toString is in exponential form
+        boolean exp = false;
+        String str = Double.toString(d);
+        for (int i = 0; i < str.length(); i++) {
+            if (str.charAt(i) == 'E') {
+                exp = true;
+                break;
+            }
+        }
+
+        if (!exp) {
+            // not exponential form
+            String formatString = "";
+
+            // create a format string of the same length, (e.g. ###.### for 123.456)
+            for (int i = 0; i < str.length(); i++) {
+                if (str.charAt(i) != '.') {
+                    formatString = formatString + "#";
+                } else {
+                    formatString = formatString + ".";
+                }
+            }
+
+            //            DecimalFormat bil = new DecimalFormat("#,###,###,##0");
+            //            DecimalFormat mil = new DecimalFormat("#,###,##0");
+            //            DecimalFormat thou = new DecimalFormat("#,##0");
+
+            // now we reduce that format string as follows
+
+            // first, do the minimum of 'width' or the length of the regular toString
+
+            int min = width;
+            if (formatString.length() < min) {
+                min = formatString.length();
+            }
+
+            // we don't want more than 4 digits past the decimal point
+            // this 4 would be the old ParaProf.defaultNumberPrecision
+            if (formatString.indexOf('.') + 4 < min) {
+                min = formatString.indexOf('.') + 4;
+            }
+
+            formatString = formatString.substring(0, min);
+
+            // remove trailing dot
+            if (formatString.charAt(formatString.length() - 1) == '.')
+                formatString = formatString.substring(0, formatString.length() - 2);
+
+            DecimalFormat dF = new DecimalFormat(formatString);
+
+            str = dF.format(d);
+            //System.out.println("value: " + d + ", width: " + width + ", returning: '" + lpad(str, width) + "'");
+            if (pad) {
+                return lpad(str, width);
+            } else {
+                return str;
+            }
+
+        }
+
+        // toString used exponential form, so we ought to also
+
+        String formatString;
+        if (d < 0.1) {
+            formatString = "0.0";
+        } else {
+            // we want up to four significant digits
+            formatString = "0.0###";
+        }
+
+        formatString = formatString + "E0";
+        DecimalFormat dF = new DecimalFormat(formatString);
+
+        str = dF.format(d);
+        if (pad) {
+            return lpad(str, width);
+        } else {
+            return str;
+        }
+    }
+
+    
 }
