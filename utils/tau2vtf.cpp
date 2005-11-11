@@ -547,14 +547,16 @@ int main(int argc, char **argv)
     int *threadnumarray = new int[nodes]; 
     //offset = new int[nodes+1];
     //offset[0] = 0; /* no offset for node 0 */
-    /*for (i=0; i < nodes; i++)
+    
+    for (i=0; i < nodes; i++)
     {
       // one for each node 
       threadnumarray[i] = numthreads[i]; 
-      offset[i+1] = offset[i] + numthreads[i]; 
-    }*/
+      //offset[i+1] = offset[i] + numthreads[i]; 
+    }
     unsigned int *cpuidarray = new unsigned int[totalnidtids]; /* max */
     /* next, we write the cpu name and a group name for node/threads */
+    
     for (i=0; i < nodes; i++)
     {
       char name[64];
@@ -672,8 +674,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2vtf.cpp,v $   $Author: wspear $
- * $Revision: 1.14 $   $Date: 2005/10/11 18:03:00 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.14 2005/10/11 18:03:00 wspear Exp $
+ * $Revision: 1.15 $   $Date: 2005/11/11 20:08:02 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.15 2005/11/11 20:08:02 wspear Exp $
  ***************************************************************************/
 
 
