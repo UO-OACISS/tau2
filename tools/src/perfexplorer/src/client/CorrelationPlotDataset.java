@@ -14,7 +14,7 @@ import java.text.FieldPosition;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: CorrelationPlotDataset.java,v 1.5 2005/11/10 19:42:47 khuck Exp $</P>
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.6 2005/11/11 03:08:25 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -39,8 +39,8 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		this.data = data;
 		this.seriesNames = data.getRowLabels();
 		this.main = main;
-		this.constantProblem = PerfExplorerModel.getModel().getConstantProblem().booleanValue();
 		/*
+		this.constantProblem = PerfExplorerModel.getModel().getConstantProblem().booleanValue();
 		if (constantProblem) {
 			for (int i = 0 ; i < data.getRows() ; i++) {
 				List row = data.getRowData(i);
@@ -94,9 +94,13 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		// get the row
 		List row = data.getRowData(arg0);
 		// get the mth column from that row
-		double[] values = (double[])row.get(arg1);
-		//return new Double(java.lang.Math.log(values[x])/java.lang.Math.log(2));
-		return new Double(values[x]);
+		if (arg1 < row.size()) {
+			double[] values = (double[])row.get(arg1);
+			//return new Double(java.lang.Math.log(values[x])/java.lang.Math.log(2));
+			return new Double(values[x]);
+		} else {
+			return new Double(0.0);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -108,7 +112,8 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		// get the row
 		List row = data.getRowData(arg0);
 		// get the mth column from that row
-		double[] values = (double[])row.get(arg1);
+		if (arg1 < row.size()) {
+			double[] values = (double[])row.get(arg1);
 		//if (constantProblem) {
 			//double[] values2 = (double[])row.get(0);
 			//return new Double(values[y]*(values[x]/values2[x]));
@@ -116,6 +121,9 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 			//return new Double(java.lang.Math.log(values[y])/java.lang.Math.log(2));
 			return new Double(values[y]);
 		//}
+		} else {
+			return new Double(0.0);
+		}
 	}
 
 	public String getCorrelation (int x, int y) {
