@@ -19,6 +19,9 @@ Version 2.15 changes (from 2.14):
 7. Added support for Solaris on x86_64 (Opterons) [SUN]
 8. Added support for nested OpenMP calls [SUN, Aachen]
 9. Added support for Cray XT3 and SHMEM wrapper [PSC] 
+10. Added support for multi-platform traces and a trace writer library [UFL, ORNL]
+11. Added support for top level timer in OpenMP [UCAR]
+12. Added support for PAPI on BGL and XT3 [ANL, PSC]
 
 Version 2.14 changes (from 2.13):
 1. MPI-2 support and Fortran wrappers added. 
