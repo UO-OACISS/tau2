@@ -92,6 +92,11 @@ extern int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef 
 void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *i, pdbRoutine::callvec & c); /* in this file below */
 
 static bool locCmp(const itemRef* r1, const itemRef* r2) {
+
+  if (r1 == r2) { // strict weak ordering requires false on equal elements
+    return false;
+  }
+
   if ( r1->line == r2->line )
   {
     if (r1->col == r2->col)
@@ -1249,7 +1254,15 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
 
 		WRITE_TAB(ostr,(*it)->col);
+
+#ifdef TAU_ALIGN_FORTRAN_INSTRUMENTATION
+		// alignment issues on solaris2-64 require a value
+		// that will be properly aligned
+		ostr <<"DOUBLE PRECISION profiler / 0 /"<<endl;
+		//ostr <<"integer*8 profiler / 0 /"<<endl;
+#else
 		ostr <<"integer profiler(2) / 0, 0 /"<<endl;
+#endif
 		/* spaces */
      		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
@@ -1354,6 +1367,17 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 { /* only if the earlier clause was false will this be executed */
 		  is_if_stmt = true;
                 }
+		/* Before we declare that we should insert the then clause,
+		 * we need to ensure that a then does not appear in the 
+		 * statement already */
+		if (is_if_stmt == true)
+ 		{
+		  /* does a then appear? */
+		  if (strstr(checkbuf, "THEN") != NULL) 
+		    is_if_stmt = false;
+		  if (strstr(checkbuf, "then") != NULL) 
+		    is_if_stmt = false;
+		}
 
 		/* Check to see if return is in a continuation line */
 		/* such as :
@@ -1796,9 +1820,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.75 $   $Date: 2005/11/10 22:42:28 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.75 2005/11/10 22:42:28 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.76 $   $Date: 2005/11/11 19:46:57 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.76 2005/11/11 19:46:57 amorris Exp $
  ***************************************************************************/
 
 
