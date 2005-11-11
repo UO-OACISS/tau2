@@ -324,9 +324,29 @@ void Profiler::Start(int tid)
 #endif /* TAU_MPITRACE */
 #endif /* TRACING_ON */
 
+/* What do we maintain if PROFILING is turned off and tracing is turned on and
+   throttling is not disabled? We need to maintain enough info to generate 
+   inclusive time and keep information about AddInclFlag */
+#ifndef PROFILING_ON
+#ifdef  TRACING_ON
+#ifndef TAU_DISABLE_THROTTLE
+        if (TheTauThrottle() && (ThisFunction->GetAlreadyOnStack(tid)== false))
+        {
+          /* Set the callstack flag */
+          AddInclFlag = true; 
+	  ThisFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
+
+	  // Next, increment the number of calls
+	  ThisFunction->IncrNumCalls(tid);
+        }
+#endif /* TAU_DISABLE_THROTTLE is off */
+#endif /* TRACING is on */
+#endif /* PROFILING is off */
+
 #ifdef PROFILING_ON
 	// First, increment the number of calls
 	ThisFunction->IncrNumCalls(tid);
+
         // now increment parent's NumSubrs()
 	if (ParentProfiler != 0)
           ParentProfiler->ThisFunction->IncrNumSubrs(tid);	
@@ -599,6 +619,28 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /* TAU_EPILOG */
 #endif //TRACING_ON
 
+/* What should we do while exiting when profiling is off, tracing is on and 
+   throttling is on? */
+#ifndef PROFILING_ON
+#ifdef  TRACING_ON
+#ifndef TAU_DISABLE_THROTTLE
+        if (TheTauThrottle() && AddInclFlag)
+        {
+	  ThisFunction->SetAlreadyOnStack(false, tid); // while exiting
+
+	  // Next, compute inclusive time for counter 0
+#ifdef TAU_MULTIPLE_COUNTERS
+          double TimeTaken = CurrentTime[0] - StartTime[0];
+	  ThisFunction->AddInclTimeForCounter(TimeTaken, tid, 0);
+#else /* single counter */
+          double TimeTaken = CurrentTime - StartTime;
+	  ThisFunction->AddInclTime(TimeTaken, tid);
+#endif /* TAU_MULTIPLE_COUNTERS */ /* we only maintain inclusive time for counter 0 */
+        }
+#endif /* TAU_DISABLE_THROTTLE is off */
+#endif /* TRACING is on */
+#endif /* PROFILING is off */
+
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
 
 #ifdef TAU_CALLPATH
@@ -721,6 +763,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 
 	}
 
+#endif //PROFILING_ON
+
 /* if the frequency of events is high, disable them */
 #ifndef TAU_DISABLE_THROTTLE /* unless we are overriding the throttle */
 	double inclusiveTime; 
@@ -732,6 +776,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
         inclusiveTime = ThisFunction->GetInclTime(tid); 
 	/* when multiple counters are not used, it is a single metric or double */
 #endif /* MULTIPLE_COUNTERS */
+        DEBUGPROFMSG("Calls = "<<ThisFunction->GetCalls(tid)
+          <<" inclusiveTime = "<<inclusiveTime
+          <<" TheTauThrottle = "<<TheTauThrottle() 
+          <<" ThrCalls = "<<TheTauThrottleNumCalls()
+	  <<" PerCall = " <<TheTauThrottlePerCall()<<endl;);
         if (TheTauThrottle() && (ThisFunction->GetCalls(tid) > TheTauThrottleNumCalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TheTauThrottlePerCall()) && AddInclFlag)
 	{ /* Putting AddInclFlag means we can't throttle recursive calls */
 	  ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
@@ -741,7 +790,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /* TAU_DISABLE_THROTTLE */
       
 	
-#endif //PROFILING_ON
 	// First check if timers are overlapping.
 	if (CurrentProfiler[tid] != this) {
 	  DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
@@ -3095,8 +3143,8 @@ double& Profiler::TheTauThrottlePerCall(void)
 }
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.129 $   $Date: 2005/11/10 23:49:28 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.129 2005/11/10 23:49:28 sameer Exp $ 
+ * $Revision: 1.130 $   $Date: 2005/11/11 02:04:51 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.130 2005/11/11 02:04:51 sameer Exp $ 
  ***************************************************************************/
 
 	
