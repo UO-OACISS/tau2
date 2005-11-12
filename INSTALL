@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.14                          *
+ *                           Version 2.15                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -64,19 +64,21 @@ Usage: configure [OPTIONS]
   where [OPTIONS] are:
 -c++=<compiler>  ............................ specify the C++ compiler.
          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
-                                                          icpc|pathCC].
+                                                     icpc|pathCC|orCC].
 -cc=<compiler> ................................ specify the C compiler.
-                     options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc].
+                options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc].
 -pdt_c++=<compiler>  ............ specify a different PDT C++ compiler.
-    options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc].
+         options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
+                                                     icpc|pathCC|orCC].
 -fortran=<compiler> ..................... specify the Fortran compiler.
    options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
-                  kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]
+           open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]
 -useropt='<parameters>' ............... list of commandline parameters.
 -prefix=<dir> ................ Specify a target installation directory.
 -exec-prefix=<arch> .......... Specify a target architecture directory.
 -arch=<architecture> ................... Specify a target architecture.
-   options       [bgl|ibm64|ibm64linux|solaris2-64|sgin32|sgi64|sgio32]
+       options         [xt3|bgl|ibm64|ibm64linux|sunx86_64             
+                        |solaris2-64|sgin32|sgi64|sgio32]              
 -pthread .................................. Use pthread thread package.
 -charm=<dir> .............................. Use charm++ thread package.
 -sproc .................................. Use SGI sproc thread package.
@@ -92,6 +94,7 @@ Usage: configure [OPTIONS]
 -jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+).
 -dyninst=<dir> ................... Specify location of DynInst Package.
 -vtf=<dir> ......... Specify location of VTF3 Trace Generation Package.
+-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package.
 -slog2=<dir> .......... Specify location of SLOG2 SDK/Jumpshot Package.
 -slog2 ......... Specify use of TAU internal SLOG2 SDK/Jumpshot Package
 -mpi .......................... Specify use of TAU MPI wrapper library.
@@ -166,6 +169,7 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    /usr/bin/g++ for 32 bits and /opt/cross/bin/powerpc64-linux-g++ for 64 bit g++ 
    respectively. Under IBM Linux Power4, we use xlf90 as the default Fortran compiler with 
    g++/gcc and xlC/xlc. For IBM BlueGene/L, we recommend using the -arch=bgl option. 
+
 
    
 -c++=<C++ compiler>
@@ -547,6 +551,10 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
 
    Examples:
 
+   % configure -arch=bgl -mpi -pdt=<dir> -pdt_c++=xlC 
+	configures TAU with MPI and PDT on BGL. Use -arch=xt3 -pdt_c++=g++ on
+	Cray XT3. Then configure for the frontend using % ./configure 
+
    % ./configure -c++=KCC 
    Use TAU with KCC
  
@@ -575,7 +583,7 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
 
 ***********************************************************************
    To install *multiple* (typical) configurations of TAU at a site, you may use the 
-   script 'installtau'. It takes options similar to those described above. It 
+   script 'installtau' or 'tau_setup'. Installtau takes options similar to those described above. It 
    invokes ./configure <opts>; make clean install;  to create multiple libraries that 
    may be requested by the users at a site. 
    % installtau -help
@@ -590,11 +598,23 @@ Usage: installtau [OPTIONS]
 -c++=<compiler>   
 -useropt=<options>  
 -pdt=<pdtdir>  
+-pdtcompdir=<compdir>  
+-pdt_c++=<C++ Compiler>  
 -papi=<papidir>  
+-vtf=<vtfdir>  
+-slog2=<dir> (for external slog2 dir)
+-slog2 (for using slog2 bundled with TAU)
+-dyninst=<dyninstdir>  
 -mpiinc=<mpiincdir>  
 -mpilib=<mpilibdir>  
 -mpilibrary=<mpilibrary>  
+-mpi
+-tag=<unique name> 
+-nocomm
 -opari=<oparidir>  
+-epilog=<epilogdir>  
+-prefix=<dir>  
+-exec-prefix=<dir>  
 ***********************************************************************
 
 
@@ -637,22 +657,18 @@ Usage: installtau [OPTIONS]
    % paraprof
 
    To use tau_instrumentor, the C++ source code instrumentor: 
-   a. Install pdtoolkit. [ Ref: http://www.cs.uoregon.edu/research/pdtoolkit ]
+   a. Install pdtoolkit. [ Ref: http://www.cs.uoregon.edu/research/pdt ]
       % ./configure -arch=IRIX64 -KCC
 
    b. Install TAU using the -pdt configuration option.
       % ./configure -pdt=/usr/local/packages/pdtoolkit-1.0 -c++=KCC -arch=sgi64 
 
-   c. Modify the makefile to invoke cxxparse from PDT which generates a 
+   c. Modify the makefile to invoke tau_cxx.sh as the compiler. It generates a 
       program database file (.pdb) that contains program  entities (such as 
       routine locations) and tau_instrumentor that uses the .pdb file and the 
       C++ source code to generate an instrumented version of the source code.  
-      See examples/autoinstrument/Makefile. 
+      See examples/taututorial/Makefile. 
       
-      % cd examples/autoinstrument; make
-      % klargest 
-      % pprof
-
    d. tau_reduce is a utility that can determine which routines should not
       be instrumented. Instrumentation in frequently called light-weight routines
       may introduce undue perturbation and distort the performance data. tau_reduce
@@ -664,6 +680,16 @@ Usage: installtau [OPTIONS]
       format for specifying the rules for removing instrumentation. 
       % cd examples/reduce
       % make 
+
+      IMPORTANT NOTE:
+      ***************
+      You may also set TAU_THROTTLE, an environment variable to turn on 
+      throttling of events. The default rule used is if a function is called
+      over 100000 times and it takes less than 10 microseconds per call of 
+      inclusive time, it is disabled at runtime, when TAU_THROTTLE is set. You
+      may set environment variables TAU_THROTTLE_NUMCALLS and 
+      TAU_THROTTLE_PERCALL to change the default values of 100000 and 10 
+      respectively. See the TAU wiki on the TAU webpage for more details. 
 
    To illustrate the use of TAU Fortran 90 instrumentation API, we have 
    included the NAS Parallel Benchmarks 2.3 LU and SP suites in the 
@@ -678,7 +704,7 @@ Usage: installtau [OPTIONS]
  
 4. Paraprof.
 
-   Paraprof is the GUI for TAU performance analysis. It requires Java 1.2+. An
+   Paraprof is the GUI for TAU performance analysis. It requires Java 1.4+. An
    earlier version of the profile browser, racy, was implemented using Tcl/Tk.
    It is also available in this distribution but support for racy will be 
    gradually phased out. Users are encouraged to use paraprof instead. Paraprof 
@@ -688,7 +714,7 @@ Usage: installtau [OPTIONS]
    NOTE: If paraprof does not work properly, please rebuild Paraprof.jar file by
    % cd tau-xxx/tools/src/paraprof
    % make clean; make
-   Before you do this, please ensure that javac (1.2+) is in your path. 
+   Before you do this, please ensure that javac (1.4+) is in your path. 
 
    IMPORTANT NOTE:
    ***************
@@ -764,13 +790,15 @@ II) Platforms :
         p) Cray SV-1 with Cray Compilers.
         q) Cray X1 with Cray compilers.
         r) AMD Opteron (Cray RedStorm) and IA-64 Linux systems with GNU compilers.
+        s) Cray XT3 with PGI compilers.
+	t) Sun Opteron Solaris with Sun CC compilers. 
 	   
 
    TAU may work with minor modifications on other platforms.
 	
 III) Software Requirements :
    a) java
-   paraprof requires Java 1.2+. Java can be downloaded from http://www.sun.com
+   paraprof requires Java 1.4+. Java can be downloaded from http://www.sun.com
 
    b) Tcl/Tk
    TAU's GUI racy needs Tcl 6.4/Tk 4.0 or better. The default is 8.0. 
@@ -782,16 +810,23 @@ III) Software Requirements :
 7. Modifying user's Makefile for Tracing/Profiling.
 
    TAU provides a makefile stub file which is placed in the installation
-   directory <prefix>/<arch>/lib/Makefile.tau[-optionlist]. Users need to 
-   include this makefile and use the make variables TAU_INCLUDE TAU_LIBS
-   and TAU_DEFS appropriately in their makefiles. See (examples/instrument/
-   Makefile)  
+   directory <prefix>/<arch>/lib/Makefile.tau[-optionlist]. 
 
    [NEW] To ease the process of instrumentation of source code, users can 
    use the $(TAU_COMPILER) makefile variable to parse, instrument, compile
    and link the applications. This option should be used with PDT. See 
    examples/taucompiler and tools/doc/tau_compiler.txt files for options. 
    <arch>/bin/tau_compiler.sh can be used without TAU's stub Makefiles as well. 
+
+   You may also use tau_f90.sh, tau_cxx.sh and tau_cc.sh as names of your 
+   compiler and set the TAU_MAKEFILE and TAU_OPTIONS environment variables 
+   to point to the TAU stub makefiles and options to tau_compiler.sh. See
+   tau_compiler.sh -help to see a full list of options. For e.g.,
+   % setenv TAU_MAKEFILE <taudir>/<arch>/lib/Makefile.tau-mpi-pdt
+   % setenv TAU_OPTIONS '-optTauSelectFile=select.tau -optVerbose'
+   % tau_f90.sh -c foo.f90
+   % tau_f90.sh foo.o -o foo
+ 
  
 
 8. Examples of configuration and usage on the IBM SP
