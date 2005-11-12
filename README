@@ -2,21 +2,10 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.cs.uoregon.edu/research/paracomp/tau    **
 *****************************************************************************
-**    Copyright 1997-2005 				   	           **
+**    Copyright 1997-2006 				   	           **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **	
-*****************************************************************************
-*****************************************************************************
-**  Authors :    Sameer Shende (sameer@cs.uoregon.edu) (UO)
-**		 Robert Michael Ansell-Bell (UO)		
-**		 Kathleen Lindlan, Ariya Lohavanichbutr, Nick Trebon,
-**		 Peter Beckman, Steve Karmesin  
-**  Principal Investigator : 
-**		 Allen Malony (UO)
-**  TAU project was developed by Bernd Mohr, Lars Hansen, Kurt Windisch, 
-**  Darryl Brown, et. al. and directed by Allen Malony at University of Oregon.
-**  The TAU Portable Profiling Package uses part of TAU.
 *****************************************************************************
 
 ***************************************************************************
@@ -71,5 +60,5 @@ traces that can be displayed with the Vampir trace visualization tool.
 TAU is being developed jointly by the University of Oregon, Los Alamos National
 Laboratory, and Research Centre Jülich, ZAM, Germany.  It can be found at:
 
-        http://www.cs.uoregon.edu/research/paracomp/tau
+        http://www.cs.uoregon.edu/research/tau
 
