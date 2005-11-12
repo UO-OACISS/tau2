@@ -842,7 +842,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
   int inputLineNo = 0;
   vector<itemRef *>::iterator lit = itemvec.begin();
-  while (lit != itemvec.end())
+  while (lit != itemvec.end() & !istr.eof())
   {
     // Read one line each till we reach the desired line no.
 #ifdef DEBUG
@@ -1175,7 +1175,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   vector<itemRef *>::iterator lit = itemvec.begin();
 
   /* Iterate through the list of instrumentation requests */
-  while (lit != itemvec.end())
+  while (lit != itemvec.end() & !istr.eof())
   {
     // Read one line each till we reach the desired line no.
 #ifdef DEBUG
@@ -1821,8 +1821,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.76 $   $Date: 2005/11/11 19:46:57 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.76 2005/11/11 19:46:57 amorris Exp $
+ * $Revision: 1.77 $   $Date: 2005/11/12 00:13:25 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.77 2005/11/12 00:13:25 amorris Exp $
  ***************************************************************************/
 
 
