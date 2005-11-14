@@ -76,4 +76,4 @@ $(TOOLS_SRC)/paraprof/bin/paraprof.jar: $(NEW_SOURCES)
 	cp $(TOOLS_SRC)/paraprof/bin/paraprof-1.3.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 
 clean:
-	rm -rf classes bin/paraprof.jar bin/paraprof-1.3.jar
+	rm -rf classes wrapper/ParaProf.java bin/paraprof.jar bin/paraprof-1.3.jar
