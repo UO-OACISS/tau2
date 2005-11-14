@@ -48,7 +48,7 @@ public class Configure {
 	super();
 	this.tau_root = tauroot;
 	this.arch = arch;
-	this.perfdmf_home = tauroot + "/tools/src/dms";
+	this.perfdmf_home = tauroot + "/tools/src/perfdmf";
     }
 
     public void errorPrint(String msg) {
@@ -166,19 +166,19 @@ public class Configure {
 		    // if the user has chosen postgresql and the config file is not already set for it
 		    jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "postgresql.jar";
 		    jdbc_db_driver = "org.postgresql.Driver";
-		    db_schemafile = perfdmf_home + "/data/" +"dbschema.txt";
+		    db_schemafile = perfdmf_home + "/etc/" +"dbschema.txt";
 		    db_portnum = "5432";
 		} else if (jdbc_db_type.compareTo("mysql") == 0 && old_jdbc_db_type.compareTo("mysql") != 0) {
 		    // if the user has chosen mysql and the config file is not already set for it
 		    jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "mysql.jar";
 		    jdbc_db_driver = "org.gjt.mm.mysql.Driver";
-		    db_schemafile = perfdmf_home + "/data/" + "dbschema.mysql.txt";
+		    db_schemafile = perfdmf_home + "/etc/" + "dbschema.mysql.txt";
 		    db_portnum = "3306";
 		} else if (jdbc_db_type.compareTo("oracle") == 0 && old_jdbc_db_type.compareTo("oracle") != 0) {
 		    // if the user has chosen oracle and the config file is not already set for it
 		    jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "ojdbc14.jar";
 		    jdbc_db_driver = "oracle.jdbc.OracleDriver";
-		    db_schemafile = perfdmf_home + "/data/" + "dbschema.oracle.txt";
+		    db_schemafile = perfdmf_home + "/etc/" + "dbschema.oracle.txt";
 		    db_portnum = "1521";
 		}
 
@@ -288,11 +288,11 @@ public class Configure {
 	    if (configFileFound)
 		System.out.print("Please enter the PerfDMF schema file.\n(" + db_schemafile + "):");
 	    else
-		System.out.print("Please enter the PerfDMF schema file.\n(" + perfdmf_home + "/data/" + db_schemafile + "):");
+		System.out.print("Please enter the PerfDMF schema file.\n(" + perfdmf_home + "/etc/" + db_schemafile + "):");
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) db_schemafile = tmpString;
 	    else if (!configFileFound)
-		db_schemafile = perfdmf_home + "/data/" + db_schemafile;
+		db_schemafile = perfdmf_home + "/etc/" + db_schemafile;
 
 						
 	    // Prompt for XML Parser jar file
