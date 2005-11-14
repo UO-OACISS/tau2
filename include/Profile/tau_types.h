@@ -26,7 +26,7 @@ typedef __int64 x_int64;
 
 typedef unsigned char x_uint8;
 typedef unsigned short x_uint16;
-typedef unsigned int32 x_uint32;
+typedef unsigned int x_uint32;
 typedef unsigned __int64 x_uint64;
 #else
 typedef char x_int8;
