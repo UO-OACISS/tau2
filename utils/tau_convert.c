@@ -19,8 +19,6 @@
 
 #ifdef TAU_WINDOWS
   #include <io.h>
-  typedef __int64 x_int64;
-  typedef unsigned __int64 x_uint64;
 #else
   #include <unistd.h>
   #include <sys/time.h>
