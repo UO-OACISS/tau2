@@ -7,7 +7,7 @@ EXPORTS
   Tau_init_ref
   Tau_set_node
   Tau_set_context
-  Tau_callstack
+  Tau_profile_callstack
   Tau_dump
   Tau_dump_incr
   Tau_purge
