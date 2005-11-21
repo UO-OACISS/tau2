@@ -90,7 +90,7 @@ typedef int (*Ttf_EventTriggerT)( void *userData,
 				 unsigned int nodeToken,
 				 unsigned int threadToken,
 				 unsigned int userEventToken,
-				 // double userEventValue
+				 /* double userEventValue*/
 				 long long userEventValue
 				);
 
@@ -156,9 +156,9 @@ Ttf_FileHandleT Ttf_CloseFile( Ttf_FileHandleT fileHandle );
 
 
 /***************************************************************************
- * $RCSfile: TAU_tf.h,v $   $Author: amorris $
- * $Revision: 1.6 $   $Date: 2005/10/11 16:18:07 $
- * TAU_VERSION_ID: $Id: TAU_tf.h,v 1.6 2005/10/11 16:18:07 amorris Exp $ 
+ * $RCSfile: TAU_tf.h,v $   $Author: wspear $
+ * $Revision: 1.7 $   $Date: 2005/11/21 22:45:36 $
+ * TAU_VERSION_ID: $Id: TAU_tf.h,v 1.7 2005/11/21 22:45:36 wspear Exp $ 
  ***************************************************************************/
 
 

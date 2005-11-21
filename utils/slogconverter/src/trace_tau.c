@@ -455,7 +455,7 @@ int EndTrace( void *userData, unsigned int nodeToken, unsigned int threadToken)
 {
   dprintf("EndTrace nid %d tid %d\n", nodeToken, threadToken);
   countstops += 1; /*/Count the total number of eof markers (first pass)*/
-  numstops -= 1;  /*//Count down through all eof markers (second pass)*/
+  numstops -= 1;  /*Count down through all eof markers (second pass)*/
   if(numstops <= 0)
   {
 	currentkind = (int)TRACE_EOF; 
@@ -1194,7 +1194,7 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid,
 	       unsigned int stateid)
 {
   
-  //printf("I\n");
+
   
 	struct event_stack *temp = top;
 	int found = 0;
@@ -1285,7 +1285,7 @@ enters--;
   
   currentkind = (int)TRACE_PRIMITIVE_DRAWABLE;
   thispeak = 1;
-  //dprintf("Left!\n");
+
   return 0;
 }
 
@@ -1912,7 +1912,6 @@ int TRACE_Peek_next_kind( const TRACE_file fp, TRACE_Rec_Kind_t *next_kind )
 		thispeak = 0;
 		while(thispeak == 0)
 		{
-			//printf("Goodie!:%d\n",next_kind);
 			recs_read = Ttf_ReadNumEvents(fp->fd,cb, 1);
 			if(recs_read==0){break;}
 		}
@@ -1927,8 +1926,7 @@ int TRACE_Peek_next_kind( const TRACE_file fp, TRACE_Rec_Kind_t *next_kind )
 	/*If the trace ends with unresolved enters call LeaveState directly so
 	the events are shown.   */
 	if(enters>0&&posteof==1){
-		//debugPrint = 1;
-		//dprintf("Enter %d.  nid:%d tid:%d time:%d\n",enters,top->nid,top->tid,finexit);
+
 		LeaveState(fp,finexit,top->nid,top->tid,0);
 		*next_kind = (TRACE_Rec_Kind_t)currentkind;
 		return 0;
@@ -1943,7 +1941,7 @@ int TRACE_Peek_next_kind( const TRACE_file fp, TRACE_Rec_Kind_t *next_kind )
 	
 	if(posteof==1)
 	{
-		*next_kind = (int)TRACE_EOF;//(TRACE_Rec_Kind_t)currentkind;
+		*next_kind = (int)TRACE_EOF;
 
 		return 0;
 	}
@@ -2557,41 +2555,7 @@ int TRACE_Peek_next_ycoordmap( TRACE_file fp,
 		}
 	}	
 	
-    /*    sscanf( newline, "( %d %n", &map_elems[ idx++ ], &line_pos ); 
-        //newline = (char *) (newline+line_pos);
-#if defined( DEBUG )
-        printf( "%d -> ", map_elems[ idx-1 ] );
-#endif
-        for ( icol = 1; icol < Ncols-1; icol++ ) {
-            sscanf( newline, "%d %n", &map_elems[ idx++ ], &line_pos );
-            //newline = (char *) (newline+line_pos);
-#if defined( DEBUG )
-            printf( "%d ", map_elems[ idx-1] );
-#endif
-        }
-        sscanf( newline, "%d ) %n", &map_elems[ idx++ ], &line_pos ); 
-        //newline = (char *) (newline+line_pos);
-#if defined( DEBUG )
-        printf( "%d\n", map_elems[ idx-1 ] );
-#endif*/
-    
-
-    /* Set Methods 
-    info_A = NULL;
-    info_B = NULL;
-    if (    ( info_A = strstr( newline, "{ " ) ) != NULL
-         && ( info_B = strstr( info_A, " }" ) ) != NULL ) {
-        info_A = (char *) (info_A + 2);
-        sprintf( info_B, "%c", '\0' );
-        strncpy( str4methods, info_A, MAX_LABEL_LEN );
-#if defined( DEBUG )
-        printf( "{%s}", str4methods );
-#endif
-        newline = (char *) (info_B + 2);
-        // Assume only 1 method ID 
-        methods_len = 1;
-    }
-    else*/
+ 
         methods_len = 0;
 #if defined( DEBUG )
     printf( "\n" );
