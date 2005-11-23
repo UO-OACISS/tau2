@@ -20,9 +20,9 @@ import net.java.games.jogl.*;
  *
  * @author Alan Morris
  *
- * <P>CVS $Id: ScatterPlot.java,v 1.2 2005/07/16 00:21:07 amorris Exp $</P>
+ * <P>CVS $Id: ScatterPlot.java,v 1.3 2005/11/23 23:45:48 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class ScatterPlot implements Plot {
 
@@ -214,8 +214,9 @@ public class ScatterPlot implements Plot {
         Vec direction = visRenderer.getViewDirection();
 
 //    public void render(GLDrawable glDrawable, Vec direction) {
-        if (axes != null)
+        if (axes != null) {
             axes.render(visRenderer);
+        }
 
         if (!visible)
             return;

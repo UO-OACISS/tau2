@@ -24,9 +24,9 @@ import net.java.games.jogl.util.GLUT;
  * allowing them to query values (0..1) and get colors in the current
  * color set. 
  *    
- * <P>CVS $Id: ColorScale.java,v 1.2 2005/07/16 00:21:07 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.3 2005/11/23 23:45:48 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 
 /* TODO: Provide control over font size perhaps? */
@@ -260,13 +260,16 @@ public class ColorScale extends Observable implements Shape {
     public void render(VisRenderer visRenderer) {
         GLDrawable glDrawable = visRenderer.getGLDrawable();
 
-        if (!enabled)
+        if (!enabled) {
             return;
+        }
 
-        dirty = true;
         GL gl = glDrawable.getGL();
 
         if (dirty || displayList == 0) {
+            if (displayList != 0) {
+                gl.glDeleteLists(displayList, 1);
+            }
             displayList = gl.glGenLists(1);
             gl.glNewList(displayList, GL.GL_COMPILE);
             privateRender(visRenderer);
