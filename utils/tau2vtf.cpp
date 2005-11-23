@@ -384,6 +384,21 @@ int ResetEOFTrace(void)
   return 0;
 }
 
+
+
+void usage(char *s) 
+{
+  fprintf(stderr,"Usage: %s <TAU trace> <edf file> <out file> [-a|-fa] [-nomessage]  [-v]\n", 
+	  s);
+  fprintf(stderr," -a         : ASCII VTF3 file format\n");
+  fprintf(stderr," -fa        : FAST ASCII VTF3 file format\n");
+  fprintf(stderr," -nomessage : Suppress printing of message information in the trace\n");
+  fprintf(stderr," -v         : Verbose\n");
+  fprintf(stderr," Default trace format of <out file> is VTF3 binary\n");
+  fprintf(stderr," e.g.,\n");
+  fprintf(stderr," %s merged.trc tau.edf app.vpt.gz\n\n", s);
+}
+
 /***************************************************************************
  * Description: The main entrypoint. 
  ***************************************************************************/
@@ -392,24 +407,15 @@ int main(int argc, char **argv)
   Ttf_FileHandleT fh;
   int recs_read, pos;
   char *trace_file;
-  char *edf_file;
-  char *out_file; 
+  char *edf_file = NULL;
+  char *out_file = NULL; 
   int output_format = VTF3_FILEFORMAT_STD_BINARY; /* Binary by default */
   int no_state_flag=0, no_message_flag=0;
   int i; 
   /* main program: Usage app <trc> <edf> [-a] [-nomessage] */
-  if (argc < 3)
+  if (argc < 4)
   {
-    printf("Usage: %s <TAU trace> <edf file> <out file> [-a|-fa] [-nomessage]  [-v]\n", 
-		    argv[0]);
-    printf(" -a         : ASCII VTF3 file format\n");
-    printf(" -fa        : FAST ASCII VTF3 file format\n");
-    printf(" -nomessage : Suppress printing of message information in the trace\n");
-    printf(" -v         : Verbose\n");
-    printf(" Default trace format of <out file> is VTF3 binary\n");
-
-    printf(" e.g.,\n");
-    printf(" %s merged.trc tau.edf app.vpt.gz\n", argv[0]);
+    usage(argv[0]);
     exit(1);
   }
   
@@ -454,7 +460,14 @@ int main(int argc, char **argv)
 
   if (!fh)
   {
-    printf("ERROR:Ttf_OpenFileForInput fails");
+    fprintf(stderr,"ERROR:Ttf_OpenFileForInput failed\n");
+    exit(1);
+  }
+
+  if (out_file == NULL) 
+  {
+    fprintf(stderr,"ERROR: Please specify an output file\n");
+    usage(argv[0]);
     exit(1);
   }
 
@@ -673,9 +686,9 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau2vtf.cpp,v $   $Author: wspear $
- * $Revision: 1.15 $   $Date: 2005/11/11 20:08:02 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.15 2005/11/11 20:08:02 wspear Exp $
+ * $RCSfile: tau2vtf.cpp,v $   $Author: amorris $
+ * $Revision: 1.16 $   $Date: 2005/11/23 19:27:59 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.16 2005/11/23 19:27:59 amorris Exp $
  ***************************************************************************/
 
 
