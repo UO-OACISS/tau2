@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=
+TAUROOT=/home2/anataraj/devel/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -135,7 +135,7 @@ TAU_SHLIBX		= .so
 #APPLECXX#TAU_APPLE_SHLIBX  = .dylib		#ENDIF#
 #PYTHON#TAU_APPLE_SHLIBX    = .so		#ENDIF#
 #APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)	#ENDIF#
-#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
@@ -375,6 +375,9 @@ TauHandler.o : TauHandler.cpp $(HDRS)
 
 TauMemory.o : TauMemory.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+ktau_proc_interface.o : ktau_proc_interface.c $(HDRS)
+	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
 
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
