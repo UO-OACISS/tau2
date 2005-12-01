@@ -1,0 +1,489 @@
+/****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.acl.lanl.gov/tau		           **
+*****************************************************************************
+**    Copyright 1999  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+****************************************************************************/
+/***************************************************************************
+**	File 		: TauKtau.cpp					  **
+**	Description 	: TAU Kernel Profiling 				  **
+**	Author		: Surave Suthikulpanit				  **
+**			: Aroon Nataraj					  **
+**	Contact		: suravee@cs.uoregon.edu		 	  **
+**			: anataraj@cs.uoregon.edu		 	  **
+**	Flags		: Compile with				          **
+**			  -DTAUKTAU -DTAUKTAU_MERGE                       **
+**	Documentation	:                                                 **
+***************************************************************************/
+
+#include <iostream>
+#include <fstream>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <linux/unistd.h>
+
+#include "Profile/Profiler.h"
+#include "Profile/TauKtau.h"
+#include "Profile/ktau_proc_interface.h"
+#include "Profile/KtauProfiler.h"
+
+using namespace std;
+
+#define LINE_SIZE		1024	
+#define OUTPUT_NAME_SIZE	100
+
+#define DEBUG			1
+#define maxof(x,y)		((x>=y)?x:y)
+
+/*-------------------------- CON/DESTRUCTOR ---------------------------*/
+/* 
+ * Function 		: TauKtau::TauKtau
+ * Description		: Constructor
+ */
+TauKtau::TauKtau(KtauSymbols& sym):KtauSym(sym)
+{
+        startBuf = NULL;
+        stopBuf  = NULL;
+        startSize= 0;
+        stopSize = 0;
+	//ThisKtauOutputInfo.pid = gettid();
+	ThisKtauOutputInfo.pid = getpid();
+	ThisKtauOutputInfo.templ_fun_counter = 0;
+	ThisKtauOutputInfo.user_ev_counter = 0;
+	
+}
+
+/* 
+ * Function 		: TauKtau::~TauKtau
+ * Description		: Destructor
+ */
+TauKtau::~TauKtau()
+{
+	free(startBuf);
+	free(stopBuf);
+
+	for(int i=0 ; i<outSize ; i++) 
+		free((diffOutput+i)->ent_lst);
+	free(diffOutput);
+
+        startSize= 0;
+        stopSize = 0;
+}
+
+/*----------------------------- PUBLIC --------------------------------*/
+
+/* 
+ * Function 		: TauKtau::StartKprofile
+ * Description		: Read the start profile
+ */
+int TauKtau::StartKProfile()
+{
+	int selfpid = -1;
+	startSize = read_size(KTAU_PROFILE, 1, &selfpid, 1, 0, NULL, -1);
+	if(startSize <= 0) {
+		return -1;
+	}
+	startBuf = (char*)malloc(startSize*sizeof(ktau_output));
+	if(!startBuf) {
+		perror("TauKtau::StartKProfile: malloc");
+		return -1;
+	}
+	startSize = read_data(KTAU_PROFILE, 1, &selfpid, 1, startBuf, startSize, 0, NULL);
+	if(startSize <= 0) {
+		free(startBuf);
+		startBuf = NULL;
+		return -1;
+	}
+	return startSize;
+}
+
+/* 
+ * Function 		: TauKtau::StartKprofile
+ * Description		: Read the stop, diff, and dump profile
+ */
+int TauKtau::StopKProfile()
+{
+	int i=0;
+	int ret = 0;
+	int selfpid = -1;
+
+	stopSize = read_size(KTAU_PROFILE, 1, &selfpid, 1, 0, NULL, -1);
+	if(stopSize <= 0) {
+		return -1;
+	}
+	stopBuf = (char*)malloc(stopSize*sizeof(ktau_output));
+	if(!stopBuf) {
+		perror("TauKtau::StopKProfile: malloc");
+		return -1;
+	}
+	stopSize = read_data(KTAU_PROFILE, 1, &selfpid, 1, stopBuf, stopSize, 0, NULL);
+	if(stopSize <= 0) {
+		free(stopBuf);
+		stopBuf = NULL;
+		return -1;
+	}
+
+	if((outSize = DiffKProfile()) < 0){
+		return(-1);	
+	}
+	/*
+	if((ret = DumpKProfile()) < 0){
+		return(-1);	
+	};
+	*/
+	return(ret);
+}
+
+/* 
+ * Function 		: TauKtau::DumpKprofile
+ * Description		: Dump the profile to Kprofile.<nodeid>/
+ */
+int TauKtau::DumpKProfile(void)
+{
+	int i=0,j=0;
+	char output_path[OUTPUT_NAME_SIZE];
+	o_ent *ptr;
+	unsigned int cur_index = 0;
+	unsigned int user_ev_counter = 0;
+	unsigned int templ_fun_counter = 0;
+
+       
+	if((outSize <= 0) || (stopSize <= 0) || (startSize <= 0)) {
+		return -1;
+	}
+
+	/* 
+	 * Create output directory ./Kprofile 
+	 */
+	sprintf(output_path,"./Kprofile.%d", RtsLayer::myNode());
+	if(mkdir(output_path,777) == -1){
+		perror("TauKtau::DumpKProfile: mkdir");
+		return(-1);
+	}
+	if(chmod(output_path, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH ) != 0) {
+		perror("TauKtau::DumpKProfile: chmod");
+		return(-1);
+	}
+
+	/*
+	 * Dumping output to the output file "./Kprofile.<rank>/profile.<pid>.0.0"
+	 */
+	// Data format :
+        // %d templated_functions
+        // "%s %s" %ld %G %G  
+        //  funcname type numcalls Excl Incl
+        // %d aggregates
+        // <aggregate info>
+	
+	/* For Each Process */
+	for(i=0;i<outSize;i++){
+		user_ev_counter = 0;
+		templ_fun_counter = 0;
+		
+		/* Counting Profile */
+		for(j=0;j < (diffOutput+i)->size; j++){
+			ptr = (((diffOutput)+i)->ent_lst)+j;
+			if(ptr->index < 300 || ptr->index > 399){
+				templ_fun_counter++;			
+			}else{
+				user_ev_counter++;
+			}
+		}
+		
+		sprintf(output_path,"./Kprofile.%d/profile.%u.0.0",RtsLayer::myNode(),(diffOutput+i)->pid);
+		ofstream fs_output (output_path , ios::out);
+		if(!fs_output.is_open()){
+			cout << "Error opening file: " << output_path << "\n";
+			return(-1);
+		}
+		
+		/* OUTPUT: Templated function */
+		fs_output << templ_fun_counter << " templated_functions" << endl;
+		fs_output << "# Name Calls Subrs Excl Incl ProfileCalls" << endl;
+
+		for(j=0;j < (diffOutput+i)->size; j++){
+			ptr = (((diffOutput)+i)->ent_lst)+j;
+			string& func_name = KtauSym.MapSym(ptr->entry.addr);
+			if(ptr->index < 300 || ptr->index > 399){
+				fs_output << "\"" << 
+					  func_name << "()\" " 	//Name
+					  << ptr->entry.data.timer.count << " "		//Calls
+					  << 0 << " "					//Subrs
+					  << (double)ptr->entry.data.timer.excl/KTauGetMHz() //Excl
+					  //<< (double)ptr->entry.data.timer.excl //Excl
+					  << " "		
+					  << (double)ptr->entry.data.timer.incl/KTauGetMHz() //Incl
+					  //<< (double)ptr->entry.data.timer.incl //Incl
+					  << " "	
+					  << 0 << " ";					//ProfileCalls
+				if(!strcmp("schedule",func_name.c_str())){
+					fs_output << "GROUP=\"KTAU_SCHEDULE\"" << endl;
+				}else if(!strcmp("__run_timers",func_name.c_str())){
+					fs_output << "GROUP=\"KTAU_RUN_TIMERS\"" << endl;
+				}else if(!strcmp("__do_softirq",func_name.c_str())){
+					fs_output << "GROUP=\"KTAU_DO_SOFTIRQ\"" << endl;
+				}else if(strstr(func_name.c_str(), "sys_")){
+					fs_output << "GROUP=\"KTAU_SYSCALL\"" << endl;
+				}else{
+					fs_output << "GROUP=\"KTAU_DEFAULT\"" << endl;
+				}
+			}
+		}
+		/* OUTPUT: Aggregates*/	
+		fs_output << 0 << " aggregates" << endl;
+		
+		/* OUTPUT: User-events*/
+		fs_output << user_ev_counter  << " userevents" << endl;
+		fs_output << "# eventname numevents max min mean sumsqr"<< endl;
+
+		for(j=0;j < (diffOutput+i)->size; j++){
+			ptr = (((diffOutput)+i)->ent_lst)+j;
+			string& ev_name = KtauSym.MapSym(ptr->entry.addr);
+			if(ptr->index >= 300 && ptr->index <= 399 ){
+				if(ptr->entry.data.timer.count != 0){
+					fs_output << "\"Event_"
+					  << ev_name << "()\" " 	//eventname
+					  << ptr->entry.data.timer.count << " "		//numevents
+					  << 1 << " "					//max
+					  << 1 << " "					//min
+					  << 1 << " "					//mean
+					  << 1 << " "					//sumsqr
+					  << endl;
+				}else{
+					fs_output << "\"Event_"
+					  << ev_name << "()\" " 	//eventname
+					  << ptr->entry.data.timer.count << " "		//numevents
+					  << 0 << " "					//max
+					  << 0 << " "					//min
+					  << 0 << " "					//mean
+					  << 0 << " "					//sumsqr
+					  << endl;
+
+				}
+			}
+		}
+			
+		fs_output.close();
+	}
+	return 0;
+}
+/*----------------------------- PRIVATE -------------------------------*/
+
+/*
+ * Function		: diff_h_ent
+ * Description		: Diffing h_ent for each o_ent 
+ */
+int diff_h_ent(o_ent *o1, o_ent *o2){
+
+	/*
+	 * Comparing h_ent of KTAU_TIMER type.
+	 */
+	if(o1->entry.type == o2->entry.type && o1->entry.type == KTAU_TIMER){
+		if(o1->entry.addr == o2->entry.addr){
+
+			o2->entry.data.timer.count -= o1->entry.data.timer.count;
+			o2->entry.data.timer.incl -= o1->entry.data.timer.incl;
+			o2->entry.data.timer.excl -= o1->entry.data.timer.excl;
+
+			return(0);
+		}
+	}
+	return(-1);
+}
+
+/*
+ * Function		: diff_ktau_output
+ * Description		: Diffing stop and start of each ktau_output and 
+ * 			  store the result in out.
+ */
+int diff_ktau_output(ktau_output *start, ktau_output *stop, ktau_output *out){
+	int i,j,k;
+	o_ent *st;
+	o_ent *sp;
+
+	out->ent_lst = (o_ent*)malloc(sizeof(o_ent)*stop->size);
+	/*
+	 * For each o_ent, we have to check the hash-index. If the index
+	 * doesn't exist in out, then just diff with 0.
+	 * */
+	for(i=0,j=0,k=0; i<start->size || j<stop->size;){
+		st=(start->ent_lst+i);
+		sp=(stop->ent_lst+j);
+		if(st->index == sp->index){
+			if(diff_h_ent(st,sp)){
+				return(-1);
+			}
+			memcpy(((out->ent_lst)+k), ((stop->ent_lst)+j), sizeof(o_ent));
+			i++;j++;k++;
+		}else{
+			memcpy(((out->ent_lst)+k), ((stop->ent_lst)+j), sizeof(o_ent));
+			j++;k++;
+		}
+	}
+	return(k);
+}
+
+/*
+ * Function		: TauKtau::DiffKProfile
+ * Description		: Diffing profile for each matched pid in startOutput and 
+ * 			  stopOutput. If no match is found, discard the pid.
+ * Note			: Might want a different scheme
+ */
+int TauKtau::DiffKProfile(void)
+{
+	int i,j,k,diff_count;
+	ktau_output *startOutput;
+	ktau_output *stopOutput;
+	long startProcNum =  0;
+	long stopProcNum  = 0;
+
+	if((startBuf==NULL) || (stopBuf==NULL) || (startSize<=0) || (stopSize<=0)) {
+		return -1;
+	}
+
+	startProcNum = unpack_bindata(KTAU_PROFILE, startBuf, startSize, &startOutput);
+	if(startProcNum < 0) {
+		return -1;
+	}
+
+	stopProcNum  = unpack_bindata(KTAU_PROFILE, stopBuf, stopSize, &stopOutput);
+	if(stopProcNum < 0) {
+		return -1;
+	}
+
+	if(DEBUG)printf("DiffKProfile: startProcNum = %u\n",startProcNum);
+	if(DEBUG)printf("DiffKProfile: stopProcNum = %u\n",stopProcNum);
+	diffOutput = (ktau_output*)malloc(sizeof(ktau_output)*maxof(startProcNum,stopProcNum));
+	
+	/*
+	 * For each ktau_output, we have to check pid if it is the same.
+	 * Otherwise, we just ignore that one.
+	 */
+	for(i=0,j=0,k=0; i<startProcNum & j<stopProcNum;){
+		if((startOutput+i)->pid == (stopOutput+j)->pid){
+			if(DEBUG)printf("DiffKProfile: Diffing pid %d\n",(startOutput+i)->pid);
+			if(DEBUG)printf("DiffKProfile: start size = %d\n",(startOutput+i)->size);
+			if(DEBUG)printf("DiffKProfile: stop size  = %d\n",(stopOutput+i)->size);
+			diff_count = diff_ktau_output((startOutput+i),(stopOutput+j),((diffOutput)+k));
+			(diffOutput+k)->size = diff_count;
+			(diffOutput+k)->pid = (startOutput+i)->pid;
+
+			if((diffOutput+k)->pid == ThisKtauOutputInfo.pid){
+				/* Keep track of information of ktau_output
+				 * for this pid
+				 */
+				for(int x=0;x < (diffOutput+k)->size; x++){
+					o_ent *ptr = (((diffOutput)+k)->ent_lst)+x;
+					if(ptr->index < 300 || ptr->index > 399){
+						ThisKtauOutputInfo.templ_fun_counter++;			
+					}else{
+						ThisKtauOutputInfo.user_ev_counter++;
+					}
+				}
+			}
+
+			i++;j++;k++;
+		}else if((startOutput+i)->pid < (stopOutput+j)->pid){
+			if(DEBUG)printf("DiffKProfile: pid unmatch. Increment start.\n");
+			diffOutput[k] = startOutput[i];
+			i++;k++;
+		}else{
+			if(DEBUG)printf("DiffKProfile: pid unmatch. Increment stop.\n");
+			diffOutput[k] = stopOutput[j];
+			j++;k++;
+		}
+	}
+	return(k);
+}
+
+int TauKtau::GetNumKProfileFunc(){
+	return ThisKtauOutputInfo.templ_fun_counter;
+}
+
+int TauKtau::GetNumKProfileEvent(){
+	return ThisKtauOutputInfo.user_ev_counter;
+}
+
+int TauKtau::MergingKProfileFunc(FILE* fp){
+	int i=0,j=0,k=0;
+	unsigned int cur_index = 0;
+
+	if(outSize <= 0) {
+		return -1;
+	}
+
+	for(i=0;i<outSize;i++){
+		if(ThisKtauOutputInfo.pid == (diffOutput+i)->pid){
+			for(j=0;j < (diffOutput+i)->size; j++){
+				o_ent* ptr = (((diffOutput)+i)->ent_lst)+j;
+				string& func_name = KtauSym.MapSym(ptr->entry.addr);
+				if(ptr->index < 300 || ptr->index > 399){
+					fprintf(fp,"\"%s()  \" %u %u %g %g %u ", 
+						  func_name.c_str(), //Name
+						  ptr->entry.data.timer.count,	//Calls
+						  0,				//Subrs
+						  (double)(ptr->entry.data.timer.excl)/KTauGetMHz(),	//Excl
+						  (double)(ptr->entry.data.timer.incl)/KTauGetMHz(),	//Incl
+						  0);				//ProfileCalls
+					if(!strcmp("schedule",func_name.c_str())){
+						fprintf(fp,"GROUP=\"KTAU_SCHEDULE\"\n");
+					}else if(!strcmp("__run_timers",func_name.c_str())){
+						fprintf(fp,"GROUP=\"KTAU_RUN_TIMERS\"\n");
+					}else if(!strcmp("__do_softirq",func_name.c_str())){
+						fprintf(fp,"GROUP=\"KTAU_DO_SOFTIRQ\"\n");
+					}else{
+						fprintf(fp,"GROUP=\"KTAU_DEFAULT\"\n");
+					}
+				}
+			}
+		}
+		
+	}
+	return(0);
+}
+
+int TauKtau::MergingKProfileEvent(FILE* fp){
+	int i=0,j=0,k=0;
+	unsigned int cur_index = 0;
+
+	if(outSize <= 0) {
+		return -1;
+	}
+
+	for(i=0;i<outSize;i++){
+		if(ThisKtauOutputInfo.pid == (diffOutput+i)->pid){
+			for(j=0;j < (diffOutput+i)->size; j++){
+				o_ent* ptr = (((diffOutput)+i)->ent_lst)+j;
+				string& ev_name = KtauSym.MapSym(ptr->entry.addr);
+				if(ptr->index >= 300 && ptr->index <= 399)
+					fprintf(fp,"\"Event_%s()\" %u %u %u %u %u\n",
+					  ev_name.c_str(), 	//eventname
+					  ptr->entry.data.timer.count,		//numevents
+					  1,					//max
+					  1,					//min
+					  1,					//mean
+					  1);					//sumsqr
+					  
+			}
+		}
+	}
+	return(0);
+}
+
+
+/***************************************************************************
+ * $RCSfile: TauKtau.cpp,v $   $Author: anataraj $
+ * $Revision: 1.1 $   $Date: 2005/12/01 02:55:09 $
+ ***************************************************************************/
+
+	
+
+
+
+
+
