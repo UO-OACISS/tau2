@@ -203,6 +203,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #ifdef TAU_PROFILEMEMORY
 	MemoryEvent = new TauUserEvent(string(Name+" "+Type+" - Heap Memory Used (KB)").c_str());
 #endif /* TAU_PROFILEMEMORY */
+
 #ifdef TAU_PROFILEHEADROOM
 	HeadroomEvent = new TauUserEvent(string(Name+" "+Type+" - Memory Headroom Available (MB)").c_str());
 #endif /* TAU_PROFILEHEADROOM */
@@ -430,7 +431,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
   }
 }
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.41 $   $Date: 2005/11/11 18:27:00 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.41 2005/11/11 18:27:00 sameer Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: anataraj $
+ * $Revision: 1.42 $   $Date: 2005/12/01 02:46:35 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.42 2005/12/01 02:46:35 anataraj Exp $ 
  ***************************************************************************/

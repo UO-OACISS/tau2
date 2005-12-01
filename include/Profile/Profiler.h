@@ -95,6 +95,14 @@
 
 #include <Profile/TauHandler.h>
 
+#if defined(TAUKTAU)
+class KtauProfiler;
+#ifdef TAUKTAU_MERGE
+#include <Profile/KtauMergeInfo.h>
+#endif /* defined(TAUKTAU_MERGE) */
+#endif /* defined(TAUKTAU) */
+
+
 //////////////////////////////////////////////////////////////////////
 //
 // class Profiler
@@ -213,6 +221,13 @@ public:
 	double& TheTauThrottlePerCall(void);
 	double& TheTauThrottleNumCalls(void);
 
+#if defined(TAUKTAU)
+	KtauProfiler* ThisKtauProfiler;
+#if defined(TAUKTAU_MERGE)
+	KtauMergeInfo ThisKtauMergeInfo;
+#endif /* TAUKTAU_MERGE */
+#endif /* TAUKTAU */
+
 private:
 	TauGroup_t MyProfileGroup_;
 	bool	StartStopUsed_;
@@ -241,7 +256,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.62 $   $Date: 2005/11/11 03:46:47 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.62 2005/11/11 03:46:47 amorris Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: anataraj $
+ * $Revision: 1.63 $   $Date: 2005/12/01 02:46:34 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.63 2005/12/01 02:46:34 anataraj Exp $ 
  ***************************************************************************/

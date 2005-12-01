@@ -47,6 +47,10 @@
 #define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][MAX_TAU_COUNTERS]
 #endif//TAU_MULTIPLE_COUNTERS
 
+#if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
+#include <Profile/KtauFuncInfo.h>
+#endif /* TAUKTAU && TAUKTAU_MERGE */
+
 class TauUserEvent; 
 
 class FunctionInfo
@@ -77,7 +81,11 @@ public:
 
 	void FunctionInfoInit(TauGroup_t PGroup, const char *PGroupName, 
 	  bool InitData, int tid );
-        
+
+#if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
+	KtauFuncInfo* GetKtauFuncInfo(int tid) { return &(KernelFunc[tid]); }
+#endif /* TAUKTAU && TAUKTAU_MERGE */
+
 #ifndef TAU_MULTIPLE_COUNTERS 
 	// Tell it about a function call finishing.
 	inline void ExcludeTime(double t, int tid);
@@ -129,6 +137,11 @@ public:
 private:
 	// A record of the information unique to this function.
 	// Statistics about calling this function.
+	
+#if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
+	TAU_STORAGE(KtauFuncInfo, KernelFunc);
+#endif /* KTAU && KTAU_MERGE */
+
 	TAU_STORAGE(long, NumCalls);
 	TAU_STORAGE(long, NumSubrs);
 #ifndef TAU_MULTIPLE_COUNTERS
@@ -149,6 +162,7 @@ public:
 	string GroupName;
 	string AllGroups;
 	long   FunctionId;
+
 	// Cough up the information about this function.
 	void SetName(string& str) { Name = str; }
 	const char* GetName() const { return Name.c_str(); }
@@ -280,7 +294,6 @@ FunctionInfo::IncrNumCalls(int tid)
 	NumCalls[tid] ++; // Increment number of calls
 } 
 
-
 inline void
 FunctionInfo::IncrNumSubrs(int tid)
 {
@@ -312,7 +325,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.36 $   $Date: 2005/11/11 18:22:46 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.36 2005/11/11 18:22:46 sameer Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: anataraj $
+ * $Revision: 1.37 $   $Date: 2005/12/01 02:46:34 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.37 2005/12/01 02:46:34 anataraj Exp $ 
  ***************************************************************************/

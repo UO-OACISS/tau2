@@ -79,7 +79,7 @@ OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		TauHooks.o TauHandler.o TauMemory.o $(EVENTS_O) $(THR_O) \
 		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(CALLPATH_O) $(PYTHON_O) $(MUSE_O) \
-		$(COMPENSATE_O)
+		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O)
 
 PRINT	      = pr
 

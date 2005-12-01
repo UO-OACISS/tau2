@@ -186,6 +186,11 @@ fi
 	echo "s,^TULIPDIR=.*$,TULIPDIR=$tulipdir,g" >> $sedout
 	;;
 
+     ktauinc=*)
+        ktauinc=`echo $1 | sed -e 's/^ktauinc=//'`
+	echo "s,^KTAU_INCDIR=.*$,KTAU_INCDIR=$ktauinc,g" >> $sedout
+	;;
+
 ###############################################################
 # Set the default optimization flags for compiling pcxx und user programs
 ###############################################################
@@ -522,6 +527,14 @@ fi
 	;;
      COMPENSATE)
 	echo NOTE: Using the TAU instrumentation perturbation compensation scheme
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     KTAU)
+	echo NOTE: Using Kernel Profiling
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     KTAU_MERGE)
+	echo NOTE: Using Kernel Profiling with merging user-space profile
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      MUSE)

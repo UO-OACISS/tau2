@@ -90,6 +90,11 @@ using namespace std;
 // No need to initialize FunctionDB. using TheFunctionDB() instead.
 // vector<FunctionInfo*> FunctionInfo::FunctionDB[TAU_MAX_THREADS] ;
 Profiler * Profiler::CurrentProfiler[] = {0}; // null to start with
+
+#if defined(TAUKTAU)
+#include <Profile/KtauProfiler.h>
+#endif /* TAUKTAU */
+
 // The rest of CurrentProfiler entries are initialized to null automatically
 //TauGroup_t RtsLayer::ProfileMask = TAU_DEFAULT;
 
@@ -388,6 +393,12 @@ void Profiler::Start(int tid)
 	ExclTimeThisCall = 0;
 #endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
 
+/********* KTAU CODE *************************/
+
+#if defined(TAUKTAU)
+	ThisKtauProfiler->Start(this);
+#endif /* TAUKTAU */
+
       }  
       else
       { /* If instrumentation is disabled, set the CurrentProfiler */
@@ -403,6 +414,10 @@ Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup,
 	bool StartStop, int tid)
 {
 
+#if defined(TAUKTAU) 
+	ThisKtauProfiler = KtauProfiler::GetKtauProfiler(tid);
+#endif /* defined(TAUKTAU) */
+
       StartStopUsed_ = StartStop; // will need it later in ~Profiler
       MyProfileGroup_ = function->GetProfileGroup(tid) ;
       //MyProfileGroup_ = ProfileGroup;
@@ -417,7 +432,6 @@ Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup,
       DEBUGPROFMSG("Profiler::Profiler: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       
-
       if(!StartStopUsed_) { // Profiler ctor/dtor interface used
 	Start(tid); 
       }
@@ -432,6 +446,10 @@ Profiler::Profiler( const Profiler& X)
   MyProfileGroup_(X.MyProfileGroup_),
   StartStopUsed_(X.StartStopUsed_)
 {
+#if defined(TAUKTAU)
+	ThisKtauProfiler = KtauProfiler::GetKtauProfiler();
+#endif /* defined(TAUKTAU) */
+
 #ifndef TAU_MULTIPLE_COUNTERS	
   StartTime = X.StartTime;
 #else //TAU_MULTIPLE_COUNTERS
@@ -453,6 +471,7 @@ Profiler::Profiler( const Profiler& X)
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall = X.ExclTimeThisCall;
 #endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
+
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -523,6 +542,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /* TAU_COMPENSATE */
 
 #ifndef TAU_MULTIPLE_COUNTERS
+
+#if defined(TAUKTAU)
+#ifdef KTAU_DEBUGPROF
+        printf("Profiler::Stop: --EXIT-- %s \n", CurrentProfiler[tid]->ThisFunction->GetName());
+#endif /*KTAU_DEBUGPROF*/
+	ThisKtauProfiler->Stop(this, AddInclFlag);
+#endif /* TAUKTAU */
+
         double CurrentTime; 
 	if (useLastTimeStamp) /* for openmp parallel regions */
         { /* .TAU Application needs to be stopped */
@@ -534,13 +561,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 	{ /* use the usual mechanism */
 	  CurrentTime = RtsLayer::getUSecD(tid);
         }
+
 	double TotalTime = CurrentTime - StartTime;
 	TimeStamp += (x_uint64) CurrentTime; 
         
 #ifdef TAU_OPENMP
         TheLastTimeStamp[tid] = CurrentTime;
 #endif /* TAU_OPENMP */
-
 
 #if (defined(TAU_COMPENSATE ) && defined(PROFILING_ON))
 	/* To compensate for timing overhead, shrink the totaltime! */
@@ -671,6 +698,32 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 	ThisFunction->AddExclTime(TotalTime, tid);
 	// In either case we need to add time to the exclusive time.
 
+#if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
+#ifdef KTAU_DEBUGPROF
+	/* Checking to see if kern_time is less than tot-time (user + kern time) */
+	double org_time     = ThisFunction->GetExclTime(tid); 
+	double kern_time     = (double)(ThisFunction->GetKtauFuncInfo(tid)->GetExclTicks())/KTauGetMHz();
+	
+	if(org_time > mod_time){
+	  cout <<"GOOD!!! Kernel space time is less than ExclTime: org_time:"<<
+		  org_time << " mod_time:"<< mod_time << endl;
+	}else{ 
+	  cout <<"ERROR!! Kernel space time is greater than ExclTime: org_time:"<<
+		  org_time << " mod_time:"<< mod_time << endl;
+
+	  cout << "KTauGetMHz:" << KTauGetMHz() <<
+		  " , Kernel Inc-ticks:" << ThisFunction->GetKtauFuncInfo(tid)->GetInclTicks() <<
+		  " , Kernel IncTime:" << (double)(ThisFunction->GetKtauFuncInfo(tid)->GetInclTicks())/KTauGetMHz()<<
+		  " , Kernel ExclTicks:" << ThisFunction->GetKtauFuncInfo(tid)->GetExclTicks()<<
+		  " , Kernel ExclTime:" << (double)(ThisFunction->GetKtauFuncInfo(tid)->GetExclTicks())/KTauGetMHz()<<
+		  " , User-ExclTime:" << ThisFunction->GetExclTime(tid)<<
+		  " , User-InclTime:" << ThisFunction->GetInclTime(tid)<<
+		  " , FuncName: " << ThisFunction->GetName() << endl;
+
+	}	
+#endif /*KTAU_DEBUGPROF*/
+#endif /*TAUKTAU && TAUKTAU_MERGE*/
+
 #ifdef TAU_COMPENSATE
         ThisFunction->ResetExclTimeIfNegative(tid); 
 #ifdef TAU_CALLPATH
@@ -793,7 +846,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 	    << this<<endl;);
 
         if (ParentProfiler == (Profiler *) NULL) {
-
 	  // For Dyninst. tcf gets called after main and all the data structures may not be accessible
 	  // after main exits. Still needed on Linux - we use TauProgramTermination()
 	  if (strcmp(ThisFunction->GetName(), "_fini") == 0) TheSafeToDumpData() = 0;
@@ -809,6 +861,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
               << ThisFunction->GetName() <<endl;);
   
               StoreData(tid);
+
+#if defined(TAUKTAU) 
+	      ThisKtauProfiler->KernProf.DumpKProfile();
+#endif /*TAUKTAU */
+
 #ifdef TAU_OPENMP /* Check if we need to shut off .TAU applications on other tids */
               if (tid == 0) 
               {
@@ -825,8 +882,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
               }
 	     
 #endif /* TAU_OPENMP */
+
 	    }
-        // dump data here. Dump it only at the exit of top level profiler.
+            // dump data here. Dump it only at the exit of top level profiler.
 	  }
         }
 
@@ -846,7 +904,9 @@ Profiler::~Profiler() {
       } // If ctor dtor interface is used then call Stop. 
 	// If the Profiler object is going out of scope without Stop being
 	// called, call it now!
-
+#if defined(TAUKTAU)
+     KtauProfiler::PutKtauProfiler();
+#endif /* TAUKTAU */
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1416,6 +1476,9 @@ int Profiler::StoreData(int tid)
 	long listSize, numCalls;
 	list<pair<double,double> >::iterator iter;
 #endif // PROFILE_CALLS
+#ifdef TAUKTAU
+	KtauProfiler* CurrentKtauProfiler = KtauProfiler::GetKtauProfiler(tid);
+#endif /* TAUKTAU */
 
 	DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
 
@@ -1450,6 +1513,13 @@ int Profiler::StoreData(int tid)
 		return 0;
 	}
 
+#ifdef TAUKTAU_MERGE
+	FILE* ktau_fp = NULL;
+	if((ktau_fp = KtauProfiler::OpenOutStream(dirname, RtsLayer::myNode(), RtsLayer::myContext(), tid)) == NULL) {
+		return 0;
+	}
+#endif
+
 	// Data format :
 	// %d templated_functions
 	// "%s %s" %ld %G %G  
@@ -1472,10 +1542,21 @@ int Profiler::StoreData(int tid)
 	numFunc = TheFunctionDB().size();
 	header = new char[256];
 
+#if defined(TAUKTAU_MERGE)
+	char* ktau_header = NULL;
+	ktau_header = new char[256];
+	sprintf(ktau_header,"%d %s\n", numFunc+(CurrentKtauProfiler->KernProf.GetNumKProfileFunc()), 
+			TauGetCounterString());
+#endif /*TAUKTAU_MERGE*/
 	sprintf(header,"%d %s\n", numFunc, TauGetCounterString());
-	
+
 	// Send out the format string
 	strcat(header,"# Name Calls Subrs Excl Incl ");
+#if defined(TAUKTAU_MERGE)
+	// Send out the format string
+	strcat(ktau_header,"# Name Calls Subrs Excl Incl ");
+#endif /* TAUKTAU_MERGE */
+
 #ifdef PROFILE_STATS
 	strcat(header,"SumExclSqr ");
 #endif //PROFILE_STATS
@@ -1483,6 +1564,14 @@ int Profiler::StoreData(int tid)
 	int sz = strlen(header);
 	int ret = fprintf(fp, "%s",header);	
 	ret = fflush(fp);
+
+#if defined(TAUKTAU_MERGE)
+	strcat(ktau_header,"ProfileCalls\n");
+	int ktau_sz = strlen(ktau_header);
+	int ktau_ret = fprintf(ktau_fp, "%s",ktau_header);	
+	ktau_ret = fflush(ktau_fp);
+#endif /* TAUKTAU_MERGE */
+
 	/*
 	if (ret != sz) {
 	  cout <<"ret not equal to strlen "<<endl;
@@ -1535,11 +1624,35 @@ int Profiler::StoreData(int tid)
   	    fprintf(fp,"0 "); // Indicating - profile calls is turned off
 	    fprintf(fp,"GROUP=\"%s\" \n", (*it)->GetAllGroups());
 #endif // PROFILE_CALLS
+
+#ifdef TAUKTAU_MERGE
+	    KtauFuncInfo* pKFunc = (*it)->GetKtauFuncInfo(tid);
+	    if(pKFunc) {
+		    fprintf(ktau_fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
+		      (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid), 
+		      (*it)->GetExclTime(tid) - (pKFunc->GetExclTicks()/KTauGetMHz()), (*it)->GetInclTime(tid));
+		    fprintf(ktau_fp,"0 "); // Indicating - profile calls is turned off
+		    fprintf(ktau_fp,"GROUP=\"%s\" ", (*it)->GetAllGroups());
+		    fprintf(ktau_fp,"%.16G \n", pKFunc->GetExclTicks()/KTauGetMHz());
+	    }
+#endif /* TAUKTAU_MERGE */
+
 	    /*
 	  } // ProfileGroup test 
 	  */
 	} // for loop. End of FunctionInfo data
+
+#if defined(TAUKTAU_MERGE)
+	/*Merging templated_function*/
+	CurrentKtauProfiler->KernProf.MergingKProfileFunc(ktau_fp);	
+#endif /*TAUKTAU_MERGE*/
+
+
 	fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
+#if defined(TAUKTAU_MERGE)
+	/*Merging aggregates*/
+	fprintf(ktau_fp,"0 aggregates\n"); // For now there are no aggregates
+#endif /*TAUKTAU_MERGE*/
 	RtsLayer::UnLockDB();
 	// Change this when aggregate profiling in introduced in Pooma 
 
@@ -1557,7 +1670,12 @@ int Profiler::StoreData(int tid)
     	// Data format 
     	// # % userevents
     	// # name numsamples max min mean sumsqr 
+#if defined(TAUKTAU_MERGE)
+    	  fprintf(ktau_fp, "%d userevents\n", numEvents+(CurrentKtauProfiler->KernProf.GetNumKProfileEvent()));
+    	  fprintf(ktau_fp, "# eventname numevents max min mean sumsqr\n");
+#endif /*TAUKTAU_MERGE*/
     	  fprintf(fp, "%d userevents\n", numEvents);
+
     	  fprintf(fp, "# eventname numevents max min mean sumsqr\n");
 
     	  vector<TauUserEvent*>::iterator it;
@@ -1575,12 +1693,32 @@ int Profiler::StoreData(int tid)
      	      fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
 	        (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
 	        (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+
+#if defined(TAUKTAU_MERGE)
+     	      fprintf(ktau_fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
+	        (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+	        (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+#endif /*TAUKTAU_MERGE*/
+
             }
     	  }
+#if defined(TAUKTAU_MERGE)
+	/*Merging events*/
+	CurrentKtauProfiler->KernProf.MergingKProfileEvent(ktau_fp);	
+#endif /*TAUKTAU_MERGE*/
+
 	}
 	// End of userevents data 
 
 	fclose(fp);
+#if defined(TAUKTAU_MERGE)
+	KtauProfiler::CloseOutStream(ktau_fp);
+#endif /*TAUKTAU_MERGE*/
+
+#ifdef TAUKTAU
+	KtauProfiler::PutKtauProfiler(tid);
+	CurrentKtauProfiler = NULL;
+#endif /* TAUKTAU */
 
 #endif //PROFILING_ON
 	return 1;
@@ -3113,9 +3251,9 @@ double& Profiler::TheTauThrottlePerCall(void)
   return throttlePercall;
 }
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.132 $   $Date: 2005/11/11 18:27:00 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.132 2005/11/11 18:27:00 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: anataraj $
+ * $Revision: 1.133 $   $Date: 2005/12/01 02:46:35 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.133 2005/12/01 02:46:35 anataraj Exp $ 
  ***************************************************************************/
 
 	

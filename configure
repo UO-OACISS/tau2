@@ -216,6 +216,9 @@ openmp=no
 ibmxlc=no
 ibmxlc_r=no 
 fortran_compiler=no
+ktau=no
+ktau_merge=no
+ktauinc=
 catamount=no
 gpshmem=no
 
@@ -374,6 +377,26 @@ do
 
   -COMPENSATE)
      compensate=yes
+    shift
+    ;;
+
+  -ktau)
+      ktau=yes
+    shift
+    ;;
+
+  -ktau_merge)
+      ktau_merge=yes
+    shift
+    ;;
+
+  -ktauinc=*)
+    ktauinc=`echo $arg | sed -e 's/-ktauinc=//' -e 's/ /#/g'`
+    if [ ! -d $ktauinc ]
+    then
+      echo "Error: Cannot access KTAU include directory $ktauinc"
+      exit 1
+    fi
     shift
     ;;
 
@@ -903,6 +926,10 @@ do
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
+    echo "-ktau ........................................... Kernel TAU Profiling."
+    echo "-ktau_merge ........................ Kernel TAU Profiling with merging."
+    echo "                                                    user-space profile."
+    echo "-ktauinc=<dir> ............... Specify location of Linux Kernel source."
     echo "-muse ................................. Specify the use of MAGNET/MUSE." 
     echo "-muse_event ............................Specify the use of MAGNET/MUSE."
     echo "                                w/ non-monotonically increasing values." 
@@ -3308,7 +3335,6 @@ if [ $compensate = yes ]
     tauoptions="${tauoptions}-compensate"
 fi
    
-
 if [ $muse = yes ]
   then
     fixmakeargs="$fixmakeargs MUSE"
@@ -3361,6 +3387,18 @@ if [ $python = yes ]
       echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
       exit 1
     fi
+fi
+
+if [ $ktau = yes ]
+  then
+    fixmakeargs="$fixmakeargs KTAU ktauinc=$ktauinc"
+    tauoptions="${tauoptions}-ktau"
+fi
+
+if [ $ktau_merge = yes ]
+  then
+    fixmakeargs="$fixmakeargs KTAU_MERGE ktauinc=$ktauinc"
+    tauoptions="${tauoptions}-ktau_merge"
 fi
 
 if [ $vtf = yes ]
