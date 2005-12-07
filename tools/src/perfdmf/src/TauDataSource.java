@@ -25,8 +25,6 @@ public class TauDataSource extends DataSource {
     private volatile boolean abort = false;
     private volatile int totalFiles = 0;
     private volatile int filesRead = 0;
-    private LineData functionDataLine = new LineData();
-    private LineData usereventDataLine = new LineData();
     private boolean profileStatsPresent = false;
     private boolean groupCheck = false;
     private List dirs; // list of directories (e.g. MULTI__PAPI_FP_INS, MULTI__PAPI_L1_DCM)
@@ -91,11 +89,6 @@ public class TauDataSource extends DataSource {
         //Reference bug08.
 
         boolean metricNameProcessed = false;
-
-        Function func = null;
-        FunctionProfile functionProfile = null;
-
-        UserEventProfile userEventProfile = null;
 
         int nodeID = -1;
         int contextID = -1;
@@ -234,44 +227,7 @@ public class TauDataSource extends DataSource {
                                         + (j - 2) + " of " + numFunctions + " Function Lines");
                             }
 
-                            this.getFunctionDataLine(inputString);
-                            String groupNames = this.getGroupNames(inputString);
-
-                            if (functionDataLine.i0 != 0) {
-                                func = this.addFunction(functionDataLine.s0, 1);
-
-                                functionProfile = thread.getFunctionProfile(func);
-
-                                if (functionProfile == null) {
-                                    functionProfile = new FunctionProfile(func);
-                                    thread.addFunctionProfile(functionProfile);
-                                }
-
-                                //When we encounter duplicate names in the profile.x.x.x file, treat as additional
-                                //data for the name (that is, don't just overwrite what was there before).
-                                functionProfile.setExclusive(metric, functionProfile.getExclusive(metric) + functionDataLine.d0);
-                                functionProfile.setInclusive(metric, functionProfile.getInclusive(metric) + functionDataLine.d1);
-                                if (metric == 0) {
-                                    functionProfile.setNumCalls(functionProfile.getNumCalls() + functionDataLine.i0);
-                                    functionProfile.setNumSubr(functionProfile.getNumSubr() + functionDataLine.i1);
-                                }
-
-                                if (metric == 0 && groupNames != null) {
-                                    StringTokenizer st = new StringTokenizer(groupNames, "|");
-                                    while (st.hasMoreTokens()) {
-                                        String groupName = st.nextToken();
-                                        if (groupName != null) {
-                                            // The potential new group is added here. If the group is already present,
-                                            // then the addGroup function will just return the
-                                            // already existing group id. See the TrialData
-                                            // class for more details.
-                                            Group group = this.addGroup(groupName.trim());
-                                            func.addGroup(group);
-                                        }
-                                    }
-                                }
-
-                            }
+                            this.processFunctionLine(inputString, thread, metric);
 
                             // unused profile calls
 
@@ -326,28 +282,8 @@ public class TauDataSource extends DataSource {
                                                 + "\nOnly found " + (j - 2) + " of " + numUserEvents + " User Event Lines");
                                     }
 
-                                    this.getUserEventData(inputString);
+                                    this.processUserEventLine(inputString, thread);
 
-                                    // User events
-                                    if (usereventDataLine.i0 != 0) {
-
-                                        UserEvent userEvent = this.addUserEvent(usereventDataLine.s0);
-                                        userEventProfile = thread.getUserEventProfile(userEvent);
-
-                                        if (userEventProfile == null) {
-                                            userEventProfile = new UserEventProfile(userEvent);
-                                            thread.addUserEventProfile(userEventProfile);
-                                        }
-
-                                        userEventProfile.setNumSamples(usereventDataLine.i0);
-                                        userEventProfile.setMaxValue(usereventDataLine.d0);
-                                        userEventProfile.setMinValue(usereventDataLine.d1);
-                                        userEventProfile.setMeanValue(usereventDataLine.d2);
-                                        userEventProfile.setSumSquared(usereventDataLine.d3);
-
-                                        userEventProfile.updateMax();
-
-                                    }
                                 }
                             }
                         }
@@ -473,7 +409,17 @@ public class TauDataSource extends DataSource {
 
     }
 
-    private void getFunctionDataLine(String string) throws DataSourceException {
+    private void processFunctionLine(String string, Thread thread, int metric) throws DataSourceException {
+
+        String name;
+        double numcalls;
+        double numsubr;
+        double exclusive;
+        double inclusive;
+        double profileCalls;
+        double sumExclSqr;
+
+        String groupNames = this.getGroupNames(string);
 
         // first, count the number of double-quotes to determine if the
         // function contains a double-quote
@@ -491,7 +437,7 @@ public class TauDataSource extends DataSource {
 
         if (quoteCount == 2 || quoteCount == 4) { // assume all is well
             StringTokenizer st1 = new StringTokenizer(string, "\"");
-            functionDataLine.s0 = st1.nextToken(); //Name
+            name = st1.nextToken(); //Name
 
             st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
         } else {
@@ -507,25 +453,63 @@ public class TauDataSource extends DataSource {
                 i++;
             }
 
-            functionDataLine.s0 = string.substring(1, i - 1);
+            name = string.substring(1, i - 1);
             st2 = new StringTokenizer(string.substring(i + 1), " \t\n\r");
         }
 
-        functionDataLine.i0 = Integer.parseInt(st2.nextToken()); //Calls
-        functionDataLine.i1 = Integer.parseInt(st2.nextToken()); //Subroutines
-        functionDataLine.d0 = Double.parseDouble(st2.nextToken()); //Exclusive
-        functionDataLine.d1 = Double.parseDouble(st2.nextToken()); //Inclusive
-        if (this.getProfileStatsPresent())
-            functionDataLine.d2 = Double.parseDouble(st2.nextToken()); //SumExclSqr
-        functionDataLine.i2 = Integer.parseInt(st2.nextToken()); //ProfileCalls
-
-        if (functionDataLine.d0 < 0) {
-            System.err.println("Warning, negative values found in profile, ignoring!");
-            System.err.println("string = " + string);
-
-            functionDataLine.d0 = 0;
+        numcalls = Double.parseDouble(st2.nextToken()); //Calls
+        numsubr = Double.parseDouble(st2.nextToken()); //Subroutines
+        exclusive = Double.parseDouble(st2.nextToken()); //Exclusive
+        inclusive = Double.parseDouble(st2.nextToken()); //Inclusive
+        if (this.getProfileStatsPresent()) {
+            sumExclSqr = Double.parseDouble(st2.nextToken()); //SumExclSqr
         }
 
+        profileCalls = Integer.parseInt(st2.nextToken()); //ProfileCalls
+
+        if (inclusive < 0) {
+            System.err.println("Warning, negative values found in profile, ignoring!");
+            inclusive = 0;
+        }
+        if (exclusive < 0) {
+            System.err.println("Warning, negative values found in profile, ignoring!");
+            exclusive = 0;
+        }
+
+        if (numcalls != 0) {
+            Function func = this.addFunction(name, 1);
+
+            FunctionProfile functionProfile = thread.getFunctionProfile(func);
+
+            if (functionProfile == null) {
+                functionProfile = new FunctionProfile(func);
+                thread.addFunctionProfile(functionProfile);
+            }
+
+            //When we encounter duplicate names in the profile.x.x.x file, treat as additional
+            //data for the name (that is, don't just overwrite what was there before).
+            functionProfile.setExclusive(metric, functionProfile.getExclusive(metric) + exclusive);
+            functionProfile.setInclusive(metric, functionProfile.getInclusive(metric) + inclusive);
+            if (metric == 0) {
+                functionProfile.setNumCalls(functionProfile.getNumCalls() + numcalls);
+                functionProfile.setNumSubr(functionProfile.getNumSubr() + numsubr);
+            }
+
+            if (metric == 0 && groupNames != null) {
+                StringTokenizer st = new StringTokenizer(groupNames, "|");
+                while (st.hasMoreTokens()) {
+                    String groupName = st.nextToken();
+                    if (groupName != null) {
+                        // The potential new group is added here. If the group is already present,
+                        // then the addGroup function will just return the
+                        // already existing group id. See the TrialData
+                        // class for more details.
+                        Group group = this.addGroup(groupName.trim());
+                        func.addGroup(group);
+                    }
+                }
+            }
+        }
     }
 
     private String getGroupNames(String string) {
@@ -575,7 +559,14 @@ public class TauDataSource extends DataSource {
         return null;
     }
 
-    private void getUserEventData(String string) {
+    private void processUserEventLine(String string, Thread thread) {
+
+        String name;
+        double numSamples;
+        double sampleMax;
+        double sampleMin;
+        double sampleMean;
+        double sampleSumSquared;
 
         // first, count the number of double-quotes to determine if the
         // user event contains a double-quote
@@ -589,7 +580,7 @@ public class TauDataSource extends DataSource {
 
         if (quoteCount == 2) { // proceed as usual
             StringTokenizer st1 = new StringTokenizer(string, "\"");
-            usereventDataLine.s0 = st1.nextToken();
+            name = st1.nextToken();
             st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
         } else {
 
@@ -602,15 +593,32 @@ public class TauDataSource extends DataSource {
                 i++;
             }
 
-            usereventDataLine.s0 = string.substring(1, i - 1);
+            name = string.substring(1, i - 1);
             st2 = new StringTokenizer(string.substring(i + 1), " \t\n\r");
         }
 
-        usereventDataLine.i0 = (int) Double.parseDouble(st2.nextToken()); //Number of calls
-        usereventDataLine.d0 = Double.parseDouble(st2.nextToken()); //Max
-        usereventDataLine.d1 = Double.parseDouble(st2.nextToken()); //Min
-        usereventDataLine.d2 = Double.parseDouble(st2.nextToken()); //Mean
-        usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard Deviation
+        numSamples = Double.parseDouble(st2.nextToken()); //Number of calls
+        sampleMax = Double.parseDouble(st2.nextToken()); //Max
+        sampleMin = Double.parseDouble(st2.nextToken()); //Min
+        sampleMean = Double.parseDouble(st2.nextToken()); //Mean
+        sampleSumSquared = Double.parseDouble(st2.nextToken()); //Standard Deviation
+
+        if (numSamples != 0) {
+            UserEvent userEvent = this.addUserEvent(name);
+            UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);
+
+            if (userEventProfile == null) {
+                userEventProfile = new UserEventProfile(userEvent);
+                thread.addUserEventProfile(userEventProfile);
+            }
+
+            userEventProfile.setNumSamples(numSamples);
+            userEventProfile.setMaxValue(sampleMax);
+            userEventProfile.setMinValue(sampleMin);
+            userEventProfile.setMeanValue(sampleMean);
+            userEventProfile.setSumSquared(sampleSumSquared);
+            userEventProfile.updateMax();
+        }
     }
 
     protected void setProfileStatsPresent(boolean profileStatsPresent) {
