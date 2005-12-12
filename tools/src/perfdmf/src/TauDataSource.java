@@ -173,8 +173,12 @@ public class TauDataSource extends DataSource {
 
                         if (modernJava) {
                             channel = fileIn.getChannel();
-                            lock = channel.lock(0, Long.MAX_VALUE, true);
-
+			    try {
+				lock = channel.lock(0, Long.MAX_VALUE, true);
+			    } catch (IOException ioe) {
+				modernJava = false;
+				lock = null;
+			    }
                         }
                         InputStreamReader inReader = new InputStreamReader(fileIn);
                         BufferedReader br = new BufferedReader(inReader);
