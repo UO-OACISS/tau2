@@ -2328,10 +2328,20 @@ else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi
 
+
+
   
 
 if [ "x$mpiinc" != "x" ]
 then 
+
+    # Check for OpenMPI and add additional include directory
+    if [ -d $mpiinc/openmpi ]
+	then
+	echo "NOTE: Using OpenMPI"
+	additional_mpiincs="-I$mpiinc/openmpi/ompi"
+    fi
+
   if [ -d $mpiinc ]
   then
     #echo "Include dir found. adding -I$mpiinc to INC"
@@ -2413,6 +2423,8 @@ then
   fi 
      
   mpilibargs=$wrapperlib
+
+
   if [ -d $mpilib ]
   then
     #echo "Lib dir found. adding -L$mpilib to LIB"
