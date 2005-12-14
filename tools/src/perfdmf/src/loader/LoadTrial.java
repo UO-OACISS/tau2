@@ -46,7 +46,7 @@ public class LoadTrial {
                 + "Examples:\n\n" + "  perfdmf_loadtrial -e 12 -n \"Batch 001\"\n"
                 + "    This will load profile.* (or multiple counters directories MULTI_*) into\n"
                 + "    experiment 12 and give the trial the name \"Batch 001\"\n\n"
-                + "  perfdmf_loadtrial -e 12 -n \"HPM data 01\" perfhpm*\n"
+                + "  perfdmf_loadtrial -e 12 -n \"HPM data 01\" -f hpm perfhpm*\n"
                 + "    This will load perfhpm* files of type HPMToolkit into experiment 12 and give\n"
                 + "    the trial the name \"HPM data 01\"\n");
     }

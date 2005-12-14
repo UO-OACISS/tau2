@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.1 2005/09/26 20:24:28 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.2 2005/12/14 01:30:54 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  * @see		FunctionProfile
  */
 /**
@@ -197,10 +197,11 @@ public class Function implements Serializable, Comparable {
     }
 
     public Color getColor() {
-        if (colorFlag)
+        if (colorFlag) {
             return specificColor;
-        else
+        } else {
             return color;
+        }
     }
 
     public void setColorFlag(boolean colorFlag) {

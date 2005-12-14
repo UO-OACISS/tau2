@@ -10,9 +10,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.2 2005/10/18 22:48:55 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.3 2005/12/14 01:30:54 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see		TrialData
  * @see		NCT
  */
@@ -183,6 +183,7 @@ public abstract class DataSource {
     }
     
     public Group addGroup(String name) {
+        name = name.trim();
         Object obj = groups.get(name);
 
         if (obj != null)

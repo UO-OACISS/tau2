@@ -1,7 +1,9 @@
 /*
  * TauOutputSession.java
  * 
- * Title: ParaProf Author: Robert Bell Description:
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description:
  */
 
 /*
@@ -173,12 +175,12 @@ public class TauDataSource extends DataSource {
 
                         if (modernJava) {
                             channel = fileIn.getChannel();
-			    try {
-				lock = channel.lock(0, Long.MAX_VALUE, true);
-			    } catch (IOException ioe) {
-				modernJava = false;
-				lock = null;
-			    }
+                            try {
+                                lock = channel.lock(0, Long.MAX_VALUE, true);
+                            } catch (IOException ioe) {
+                                modernJava = false;
+                                lock = null;
+                            }
                         }
                         InputStreamReader inReader = new InputStreamReader(fileIn);
                         BufferedReader br = new BufferedReader(inReader);
