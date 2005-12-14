@@ -20,11 +20,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.1 2005/10/14 18:39:17 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.2 2005/12/14 01:32:15 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class ParaProf implements ActionListener {
 
@@ -43,7 +43,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Mon Sep 26 14:17:05 PDT 2005";
+    private final static String VERSION = "Tue Dec 13 17:30:39 PST 2005";
 
     static ColorMap colorMap = new ColorMap();
 
@@ -467,7 +467,7 @@ public class ParaProf implements ActionListener {
                 System.out.println("Loading data...");
                 dataSource.load();
                 System.out.println("Creating TAU Profile data...");
-                ParaProfUtils.writeProfiles(dataSource, new File("."));
+                UtilFncs.writeProfiles(dataSource, new File("."));
 
             } catch (Exception e) {
                 e.printStackTrace();

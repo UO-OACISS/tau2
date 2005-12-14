@@ -5,7 +5,7 @@
 ##########################
 
 CONFIG_ARCH=i386_linux
-TAUROOT=
+TAUROOT=/home/amorris/tau2
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java \
              ParaProfTreeCellRenderer.java \

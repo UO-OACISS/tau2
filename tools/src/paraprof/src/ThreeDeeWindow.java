@@ -23,7 +23,7 @@ import edu.uoregon.tau.vis.*;
 public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListener, Observer, Printable, ParaProfWindow,
         UnitListener {
 
-    private final int defaultToScatter = 4000;
+    private final int defaultToScatter = 15000;
 
     private VisCanvas visCanvas;
     private VisRenderer visRenderer = new VisRenderer();
