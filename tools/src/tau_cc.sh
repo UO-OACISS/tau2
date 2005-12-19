@@ -14,7 +14,7 @@ then
   echo "% tau_cc.sh -tau_makefile=/usr/local/tau-2.x/ia64/lib/Makefile.tau-mpi-pdt  -tau_options=-optVerbose -c foo.c"
   echo " 	or"
   echo "% setenv TAU_MAKEFILE /usr/local/tau-2.x/include/Makefile"
-  echo "% setenv TAU_OPTIONS -optVerbose -optSelectTauFile=select.tau"
+  echo "% setenv TAU_OPTIONS -optVerbose -optTauSelectFile=select.tau"
   echo "% tau_cc.sh -c foo.c"
   exit 1
 fi
