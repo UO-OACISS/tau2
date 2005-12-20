@@ -75,6 +75,8 @@ CWARNING	= $(WARNINGSOPT)
 #PDT#PDTOPTS 	= -L$(PDTDIR)/$(PDTARCHDIR)/lib -lpdb #ENDIF#
 #PDT#INSTR 		= tau_instrumentor #ENDIF#
 #DYNINST#TAURUN 	= tau_run #ENDIF#
+#TRACE#TAU2PROFILE	= tau2profile #ENDIF#
+#TRACE#INSTALLTAU2PROFILE	= $(INSTALLDEST)/tau2profile #ENDIF#
 #VTF#TAU2VTF 	= tau2vtf #ENDIF#
 #OTF#TAU2OTF 	= tau2otf #ENDIF#
 #VTF#VTF2PROFILE 	= vtfconverter/vtf2profile #ENDIF#
@@ -132,7 +134,7 @@ MAKEFILE      = Makefile
 
 OBJS	      = tau_reduce.o pprof.o  tau_events.o tau_merge.o tau_selective.o \
 		tau_instrumentor.o tau_instrument.o user_event_data.o \
-		function_data.o pprof_elem.o tau_run.o
+		function_data.o pprof_elem.o tau_run.o tau2profile.o
 
 PRINT	      = pr
 
@@ -140,7 +142,7 @@ SRCS	      = pcxx_merge.c \
 		pcxx_convert.c
 
 EXECUTABLES =	tau_reduce pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
-		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN) $(TAU2VTF) $(VTF2PROFILE) $(TAU2OTF) $(TAU2ELG)
+		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN) $(TAU2PROFILE) $(TAU2VTF) $(VTF2PROFILE) $(TAU2OTF) $(TAU2ELG)
 
 all:		$(EXECUTABLES)
 
@@ -160,6 +162,12 @@ pcxx2ar : pcxx2ar.c $(EVHEADER)
 tau_convert: 	tau_convert.c 
 		$(CXX) $(CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRA)
 
+tau2profile:	tau2profile.o
+		$(CXX) $(CFLAGS) tau2profile.o -o tau2profile -lm $(LEXTRA) $(TAU_TRACE_INPUT_LIB)
+
+tau2profile.o:	tau2profile.cpp
+		$(CXX) $(CFLAGS) tau2profile.cpp -c
+		
 tau2vtf: 	tau2vtf.o
 		$(CXX) $(CFLAGS) tau2vtf.o -o tau2vtf -lm $(LEXTRA) -L$(VTFDIR)/$(TAU_ARCH)/lib -lvtf3 $(TAU_TRACE_INPUT_LIB)
 
@@ -167,7 +175,7 @@ tau2vtf.o:	tau2vtf.cpp
 		$(CXX) $(CFLAGS)  tau2vtf.cpp -c -I$(VTFDIR)/include 
 
 tau2otf: 	tau2otf.o
-		$(CXX) $(CFLAGS) tau2otf.o -o tau2otf -lm $(LEXTRA) -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_TRACE_INPUT_LIB)
+		$(CXX) $(CFLAGS) tau2otf.o -o tau2otf -lm $(LEXTRA) -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_T./RACE_INPUT_LIB)
 
 tau2otf.o:	tau2otf.cpp
 		$(CXX) $(CFLAGS)  tau2otf.cpp -c -I$(OTFDIR)/include 
@@ -270,6 +278,12 @@ $(INSTALLDEST)/tau_convert: tau_convert
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 
+$(INSTALLDEST)/tau2profile: tau2profile
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) $? $(INSTALLDEST)
+
 $(INSTALLDEST)/tau_instrumentor: tau_instrumentor
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -281,7 +295,7 @@ $(INSTALLDEST)/tau_run: tau_run
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
-
+		
 $(INSTALLDEST)/tau2vtf: tau2vtf
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -340,7 +354,7 @@ $(INSTALLDEST)/tau2elg: elgconverter/tau2elg
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
-install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) $(INSTALLTAU2ELG)
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLTAU2PROFILE) $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) $(INSTALLTAU2ELG)
 
 program:        $(PROGRAM)
 

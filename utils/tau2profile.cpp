@@ -655,7 +655,6 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 		sprintf(filename,"profile.%d.0.%d",((*it).first).first,((*it).first).second);
 		s_prefix=s_out+filename;
 		profile.open(s_prefix.c_str());
-		cout << s_prefix << endl;
 		profile.precision(16);
 		profile << countFunc << " templated_functions";
 		if(miecount>0)
@@ -738,7 +737,6 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 				sprintf(filename,"profile.%d.0.%d",((*it).first).first,((*it).first).second);
 				s_prefix=s_out+filename;
 				profile.open(s_prefix.c_str());
-				cout << s_prefix << endl;
 				profile.precision(16);
 				profile << countFunc << " templated_functions_" << "MULTI_" << eventname << endl;
 				profile << "# Name Calls Subrs Excl Incl ProfileCalls" << endl;
