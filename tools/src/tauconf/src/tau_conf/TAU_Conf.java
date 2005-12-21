@@ -6200,7 +6200,7 @@ if(pclCheckBox.isSelected()){
         String remainder = null;
         //String raw=command;
         System.out.println(command+" 1");
-        if(command.contains("=")){
+        if(command.indexOf("=")>=0){//Formerly contains
             remainder=command.substring(command.indexOf('=')+1);
             command=command.substring(0,command.indexOf('=')+1);
         }
