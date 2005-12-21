@@ -37,8 +37,10 @@
 #if defined(TAUKTAU_MERGE)
 #include <Profile/KtauFuncInfo.h>
 #include <Profile/KtauMergeInfo.h>
-#include <Profile/ktau_atomic.h>
+// DONT #include <Profile/ktau_atomic.h>
 #include <Profile/ktau_proc_interface.h>
+//decl
+int read_kstate(ktau_state* pstate, volatile int cur_active, unsigned long long* ptime, unsigned long long* pcalls);
 #endif /* defined(TAUKTAU_MERGE) */
 
 
@@ -229,6 +231,7 @@ KtauProfiler::KtauProfiler(int threadid):KernProf(KtauSym) {
 	tid = threadid;
 #ifdef TAUKTAU_MERGE
 	current_ktau_state = NULL;
+	active_merge_index = 0;
 #endif /* TAUKTAU_MERGE */
 	//KernProf(KtauSym);
 	DEBUGPROFMSG(" Leaving Constructor: thread: "<< threadid 
@@ -241,6 +244,7 @@ KtauProfiler::~KtauProfiler() {
 			<< endl; );
 #ifdef TAUKTAU_MERGE
 	current_ktau_state = NULL;
+	active_merge_index = 0;
 #endif /* TAUKTAU_MERGE */
 
 	DEBUGPROFMSG(" Leaving Destructor: thred: "<< tid 
@@ -259,8 +263,11 @@ int KtauProfiler::SetStartState(ktau_state* pstate, Profiler* pProfiler) {
 
 #if defined TAUKTAU_MERGE
 	if(pProfiler) {
-		unsigned long long s_ticks = read_ktime(pstate);
-		unsigned long long s_calls = read_kcalls(pstate);
+		unsigned long long s_ticks = 0;
+		unsigned long long s_calls = 0;
+
+		active_merge_index = read_kstate(pstate, active_merge_index, &s_ticks, &s_calls);
+
 		KtauMergeInfo* ThisMergeInfo = &(pProfiler->ThisKtauMergeInfo);
 
 		DEBUGPROFMSG(" Previous MergeInfo State: StartTicks: "<< ThisMergeInfo->GetStartTicks()
@@ -302,7 +309,10 @@ int KtauProfiler::SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* p
 			<< endl;)
 
 	//inclusive kernel-mode ticks
-	unsigned long long inclticks = read_ktime(pstate);
+	unsigned long long inclticks = 0;
+	unsigned long long inclcalls = 0;
+
+	active_merge_index = read_kstate(pstate, active_merge_index, &inclticks, &inclcalls);
 
 	DEBUGPROFMSG(" Stop-Ticks: "<< inclticks
 			<< endl;)
@@ -330,7 +340,6 @@ int KtauProfiler::SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* p
 			<< exclticks << "  Incl: " << inclticks << endl;
 
 	//inclusive kernel-mode calls
-	unsigned long long inclcalls = read_kcalls(pstate);
 	inclcalls = inclcalls -  ThisMergeInfo->GetStartCalls();
 	//exclusive kernel-mode ticks (without children's kernel-mode ticks)
 	unsigned long long exclcalls = inclcalls - ThisMergeInfo->GetChildCalls();
@@ -426,10 +435,36 @@ void KtauProfiler::CloseOutStream(FILE* ktau_fp) {
 		fclose(ktau_fp);
 }
 
+
+/* returns the updated last active_index value */
+int read_kstate(ktau_state* pstate, volatile int cur_active, unsigned long long* ptime, unsigned long long* pcalls) {
+
+        //1st change the active_index value atomically
+        pstate->active_index = 1 - cur_active;
+
+        //now read in the values from the 'old' cur_active index
+        *ptime = pstate->state[cur_active].ktime;
+        *pcalls = pstate->state[cur_active].knumcalls;
+
+        //make cur_active into new cur_actice
+        cur_active = 1 - cur_active;
+
+        //now add in the values from the other buffer after changing the active_index
+        pstate->active_index = 1 - cur_active;
+
+        //now read in the values from the 'old' cur_active index
+        *ptime += pstate->state[cur_active].ktime;
+        *pcalls += pstate->state[cur_active].knumcalls;
+
+        //return the chaged cur_state
+        return (1 - cur_active);
+}
+
+
 #endif /* TAUKTAU */
 
 /***************************************************************************
  * $RCSfile: KtauProfiler.cpp,v $   $Author: anataraj $
- * $Revision: 1.1 $   $Date: 2005/12/01 02:55:08 $
+ * $Revision: 1.2 $   $Date: 2005/12/21 02:51:50 $
  ***************************************************************************/
 
