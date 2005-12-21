@@ -67,6 +67,7 @@ class KtauProfiler {
 #ifdef  TAUKTAU_MERGE 
 	//merge related
 	ktau_state* current_ktau_state;
+	volatile int active_merge_index;
 #endif /* TAUKTAU_MERGE */
 
 	//statics
@@ -81,7 +82,7 @@ class KtauProfiler {
 #endif /* _KTAUPROFILER_H_ */
 /***************************************************************************
  * $RCSfile: KtauProfiler.h,v $   $Author: anataraj $
- * $Revision: 1.1 $   $Date: 2005/12/01 02:50:56 $
- * POOMA_VERSION_ID: $Id: KtauProfiler.h,v 1.1 2005/12/01 02:50:56 anataraj Exp $ 
+ * $Revision: 1.2 $   $Date: 2005/12/21 02:55:59 $
+ * POOMA_VERSION_ID: $Id: KtauProfiler.h,v 1.2 2005/12/21 02:55:59 anataraj Exp $ 
  ***************************************************************************/
 
