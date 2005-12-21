@@ -75,6 +75,7 @@ map<int,UserEvent>allevents;
 map<unsigned int,const char*> groupids;
 
 void ReadFile();
+void Usage();
 void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > > mainmap);
 void PrintSnapshot(double time);
 void SnapshotControl(double time);
@@ -619,6 +620,9 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 	string s_out="";
 	string s_prefix="";
 	string cmd="";
+	double mean=0;
+	double sum=0;
+	double num=0;
 	if(out!=NULL)
 	{
 		s_out=out;
@@ -680,10 +684,12 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 			for(map<int,UserEvent>::iterator st = ((*it).second).second.allevents.begin(); 
 			st !=((*it).second).second.allevents.end();st++)
 			{
-				long long mean = 0;
+				mean = 0;
 				if(((*st).second).numevents>0)
 				{
-					mean = ((*st).second).sum/((*st).second).numevents;
+					sum=((*st).second).sum;
+					num=((*st).second).numevents;
+					mean = sum/num;
 				}
 				profile << ((*st).second).userEventName << " " 
 				<< ((*st).second).numevents << " " << ((*st).second).max 
@@ -757,10 +763,12 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 					for(map<int,UserEvent>::iterator st = ((*it).second).second.allevents.begin(); 
 					st !=((*it).second).second.allevents.end();st++)
 					{
-						long long mean = 0;
+						mean = 0;
 						if(((*st).second).numevents>0)
 						{
-							mean = ((*st).second).sum/((*st).second).numevents;
+							sum=((*st).second).sum;
+							num=((*st).second).numevents;
+							mean = sum/num;
 						}
 						profile << ((*st).second).userEventName << " " 
 						<< ((*st).second).numevents << " " << ((*st).second).max 
@@ -809,6 +817,17 @@ void SnapshotControl(double time)
 	}
 }
 
+void Usage()
+{
+	cout << "You must specify a valid .trc and .edf file for conversion."<<endl;
+	cout << "These may be followed by any of the arguments:\n "<<endl;
+	cout << "-d <directory>:  Output profile files to the directory "
+		 << "specified rather than the current directory.\n"<< endl;
+	cout << "-s <interger n>: Output a profile snapshot of the trace every n "
+		 << "time units.\n" << endl;
+	cout << "e.g. $tau2profile tau.trc tau.edf -s 25000"  << endl;
+}
+
 /*
  * The main function reads user input and starts conversion procedure.
  */
@@ -818,7 +837,7 @@ int main(int argc, char **argv)
 	/* main program: Usage app <trc> <edf> [-a] [-nomessage] */
 	if (argc < 2)
 	{
-		cout << "Specify .trc and .edf files for conversion" << endl;
+		Usage();
 		exit(1);
 	}
 	for (i = 0; i < argc ; i++)
@@ -826,20 +845,22 @@ int main(int argc, char **argv)
 		switch(i) 
 		{
 			case 0:
+			break;
+			case 1:
 			/*trace_file*/ 
 			trc = argv[1];
 			break;
-			case 1:
+			case 2:
 			/*edf_file*/ 
 			edf = argv[2];
-			break;
+			break;			
 			default:
-			if (strcmp(argv[i], "-v") == 0)
+			/*if (strcmp(argv[i], "-v") == 0)
 			{
 				debugPrint = 1;
 				break;
 			}
-			else
+			else*/
 			if(strcmp(argv[i],"-s")==0)
 			{
 				if(argc>i+1)
@@ -858,6 +879,11 @@ int main(int argc, char **argv)
 					out=argv[i];
 				}
 				break;
+			}
+			else
+			{
+				Usage();
+				exit(1);
 			}
 			break;
 		}
