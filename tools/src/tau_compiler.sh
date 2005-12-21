@@ -373,8 +373,10 @@ for arg in "$@"
 			fi
 			echoIfDebug "Using Fortran Parser"
 			if [ $optResetUsed == $FALSE ]; then
-			  optCompile="`echo $optCompile | sed -e 's/ -D[^ ]*//g'`"
-			  echoIfDebug "Resetting optCompile (removing -D* ): $optCompile"
+			  #optCompile="`echo $optCompile | sed -e 's/ -D[^ ]*//g'`"
+			  #echoIfDebug "Resetting optCompile (removing -D* ): $optCompile"
+			  optCompile="`echo $optCompile | sed -e 's/-[^I][^ ]*//g'`"
+			  echoIfDebug "Resetting optCompile (removing everything but -I* ): $optCompile"
 			fi
 			groupType=$group_f_F
 			;;
