@@ -1114,7 +1114,7 @@ case $machine in
    apple) 
      if [ $cxx_compiler = default ]
        then
-         cxx_compiler=c++
+         cxx_compiler=g++
      fi
 
      # To fix the  make install  clash with INSTALL file in file systems 
@@ -1126,7 +1126,7 @@ case $machine in
 
      if [ $c_compiler = default ]
        then
-         c_compiler=cc             
+         c_compiler=gcc             
      fi
      ;;
 
@@ -2910,7 +2910,7 @@ then
 fi
 
 ######################################################################
-if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ ]   
+if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ ]   
   then
     fixmakeargs="$fixmakeargs GNU"
     if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = ibm64linux ]
