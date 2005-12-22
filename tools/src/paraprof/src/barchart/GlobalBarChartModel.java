@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.1 2005/09/26 21:12:13 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.2 2005/12/22 00:37:42 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -56,8 +56,6 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         // TODO Auto-generated method stub
         return "value";
     }
-
-   
 
     public double getValue(int row, int subIndex) {
         PPThread ppThread = (PPThread) threads.get(row);
@@ -136,7 +134,10 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         if (ppTrial.getDataSource().getPhasesPresent()) {
 
             //return "Other Patches";
-            return UtilFncs.getRightSide(ppFunctionProfile.getFunctionName());
+            
+            // we can't use PPFunctionProfile's getFunctionName since the callpath might be reversed
+            //return UtilFncs.getRightSide(ppFunctionProfile.getFunctionName());
+            return UtilFncs.getRightSide(ppFunctionProfile.getFunction().getName());
         } else {
             //Return the name of the function
             return ppFunctionProfile.getFunctionName();
