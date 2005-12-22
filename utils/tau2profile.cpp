@@ -19,7 +19,13 @@
 
 using namespace std;
 
+/*
+ * This holds a single monotonically increasing event
+ */
 struct MonIncEvent {
+	/*Observed values must be held
+	 * until all events are encountered
+	 * so they can be processed at the same time*/
 	long long holdvalue;
 	long long inclusive;
 	long long exclusive;
@@ -29,6 +35,11 @@ struct MonIncEvent {
 	const char * eventName;
 };
 
+/*
+ * This holds a single state description
+ * including any monotonically increasing
+ * events defined in the trace
+ */
 struct State {
 	double inclusive;
 	double exclusive;
@@ -47,6 +58,9 @@ struct State {
 	double holdvalue;/**/
 };
 
+/*
+ * This holds a single non-monotonically increasing event
+ */
 struct UserEvent{
 	const char * userEventName;
 	int userEventToken;
@@ -58,20 +72,34 @@ struct UserEvent{
 	long long sumsqr;
 };
 
+/*
+ * This represents a single thread
+ * It holds a representation of each (possible) state
+ * and each non-monotonically increasing event
+ */
 struct Thread {
 	map<int,State>allstate;
 	map<int,UserEvent>allevents;
 	int nodeToken;
 	int threadToken;
-	int lastState;
+	int lastState;/*The last state entered in this thread*/
 	stack<unsigned int> callstack;/*State IDs*/
 	const char * threadName;
 };
 
+/*Each thread in the trace is held here, mapped to the node and thread ids
+ * The number indicating if the thread has exited is also mapped here*/
 map<pair<int,int>,pair<int,Thread>, less<pair<int,int> > > EOF_Trace;
+/*Each state in the trace is held here, mapped to its thread id.  
+ * This is copied into each thread once it is initialized*/
 map<int,State> allstate;
+/*Each monotonically increasing event is held here, mapped to its
+ * event id.  This is copied to each state once initialized.*/
 map<int,MonIncEvent> allmoninc;
+/*Each user event is held here, mapped to its event id.
+ * This is copied to each thread after it is initialized.*/
 map<int,UserEvent>allevents;
+/*This maps group ids to group names*/
 map<unsigned int,const char*> groupids;
 
 void ReadFile();
@@ -249,7 +277,8 @@ int EventTrigger( void *userData, double time,
 	SnapshotControl(time);
 	/* write the sample data */
 	if(allevents.count(userEventToken)>0)
-	{
+	{	/*not monotonically increasing*/
+		/*Each NMI event is between two '0' events which are ignored. (every 2nd of 3 events is used)*/
 		if(EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].tricount==0)
 		{
 			EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].tricount++;
@@ -260,6 +289,7 @@ int EventTrigger( void *userData, double time,
 			EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].tricount=0;
 			return(0);
 		}
+		/*Update the event data*/
 		EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].tricount++;
 		EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].numevents++;
 		EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].sum+=userEventValue;
@@ -269,7 +299,6 @@ int EventTrigger( void *userData, double time,
 		{
 			EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].max=userEventValue;
 		}
-		
 		if(userEventValue<EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].min
 		||EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].min==0)
 		{
@@ -287,7 +316,7 @@ int EventTrigger( void *userData, double time,
 		EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].countMIE++;
 		/*If we have encountered every event associated with this state we can process all at once*/
 		if(EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].countMIE==(miecount+1))
-		{
+		{/*lastaction indicates if we should batch process a state exit or a state enter*/
 			if(EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].lastaction==1)
 			{
 				EOF_Trace[pair<int,int>(nid,tid)].second=StateEnter(time,EOF_Trace[pair<int,int>(nid,tid)].second,stateid);
@@ -322,7 +351,6 @@ int EnterState(void *userData, double time,
 	
 	/*
 	 * If we are recording user defined events, all state control is managed by 'EventTrigger'
-	 * TBD: Reduce redundancy between Enter/Exit state and EventTrigger
 	 */
 	if(miecount>0)
 	{
@@ -346,6 +374,7 @@ int EnterState(void *userData, double time,
 /***************************************************************************
  * 
  * This routine registers the entry into state 'stateid' from thread 'threadin' at time 'time'.
+ * It returns 'threadin' with these modifications.
  * 
  ***************************************************************************/
 Thread StateEnter(double time, Thread threadin, unsigned int stateid)
@@ -422,7 +451,6 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, 
 	
 	/*
 	 * If we are recording user defined events, all state control is managed by 'EventTrigger'
-	 * TBD: Reduce redundancy between Enter/Exit state and EventTrigger
 	 */
 	if(miecount>0)
 	{
@@ -446,6 +474,7 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, 
 /***************************************************************************
  * 
  * This routine registers the exit of state 'stateid' from thread 'threadin' at time 'time'.
+ * It returns 'threadin' with these modifications.
  * 
  ***************************************************************************/
 Thread StateLeave(double time, Thread threadin, unsigned int stateid)
@@ -612,7 +641,7 @@ void ReadFile()
 }
 
 /*
- * Given a map conforming to the 'whole trace' data structure, this routine will cycle
+ * Given a map 'mainmap' conforming to the 'whole trace' data structure, this routine will cycle
  * through each thread and state to print out the profile statistics for the whole program
  */
 void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > > mainmap){
