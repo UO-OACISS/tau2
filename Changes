@@ -22,6 +22,10 @@ Version 2.15 changes (from 2.14):
 10. Added support for multi-platform traces and a trace writer library [UFL, ORNL]
 11. Added support for top level timer in OpenMP [UCAR]
 12. Added support for PAPI on BGL and XT3 [ANL, PSC]
+13. Added support for converting TAU traces to profiles. 
+14. Added support for converting TAU callpath profiles to phase profiles [LLNL].
+15. Enhancements to Paraprof. 
+16. Better support for Intel compilers for linking C and Fortran codes to TAU [NOAA]. 
 
 Version 2.14 changes (from 2.13):
 1. MPI-2 support and Fortran wrappers added. 
