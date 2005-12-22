@@ -748,7 +748,18 @@ Usage: installtau [OPTIONS]
 	refer to tools/src/perfexplorer/doc/README file for installation and usage 
 	instructions. 
 
-6. TAU System Requirements :
+6. Eclipse Integration: TAU JDT & CDT Plugins for Eclipse
+   
+   The TAU plugins for Eclipse allow TAU instrumentation and execution of Java, 
+   C/C++ and Fortran programs within the Eclipse IDE.  To install the plugin
+   for java copy the plugins folder in tools/src/taujava to your Eclipse main
+   directory.  To install the plugin for C/C++ and Fortran the Eclipse CDT
+   [http://www.eclipse.org/cdt/] or FDT [http://www.eclipse.org/ptp/] plugins
+   should be installed as well.  Copy the plugins folder in tools/src/taucdt
+   to your Eclipse main directory.  The respective plugins folders contain
+   README files with more information.
+
+7. TAU System Requirements :
    -------------------------
 I) The Profiling Library needs a recent C++ compiler. Our recommended list:
 	a) Kuck and Associates' (http://www.kai.com) KCC compiler
@@ -807,7 +818,7 @@ III) Software Requirements :
    current version of TAU supports the new Java based paraprof profile browser that
    replaces the Tcl/Tk based racy. 
     
-7. Modifying user's Makefile for Tracing/Profiling.
+8. Modifying user's Makefile for Tracing/Profiling.
 
    TAU provides a makefile stub file which is placed in the installation
    directory <prefix>/<arch>/lib/Makefile.tau[-optionlist]. 
@@ -829,7 +840,7 @@ III) Software Requirements :
  
  
 
-8. Examples of configuration and usage on the IBM SP
+9. Examples of configuration and usage on the IBM SP
         
      % cd tau-2.x
      Example I:
