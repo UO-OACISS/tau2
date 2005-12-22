@@ -1,0 +1,48 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU2PROFILE" "1" "12/22/2005" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau2profile \- convert TAU tracefiles to TAU profile files
+.SH "SYNOPSIS"
+.HP 13
+\fBtau2vprofile\fR [\fB\-d\fR\ \fIdirectory\fR] [\fB\-s\fR\ \fIsnapshot_interval\fR] {\fItau_tracefile\fR} {\fItau_eventfile\fR}
+.SH "DESCRIPTION"
+.PP
+This program is generated when TAU is configured with the \-TRACE option.
+.PP
+The tau2profile converter takes a single tau_tracefile (*.trc) and tau_eventfile (*.edf) and produces a corresponding series of profile files. The input files must be specified in that order, with optinal parameters coming afterward. Multi\-file TAU traces must be merged before conversion.
+.SH "OPTIONS"
+.PP
+\fB\-d\fR
+Output profile files to the specified 'directory' rather than the current directory.
+.PP
+\fB\-s\fR
+Output a profile snapshot showing the state of the profile data accumulated from the trace every 'snapshot_interval' time units. The snapshot profiles are placed sequentially in directories labled 'snapshot_n' where 'n' is an integer ranging from 0 to to the total number of snapshots \-1.
+.SH "EXAMPLES"
+.PP
+The program must be run with the tau trace and tau event files specified in the command line in that order. Any additional arguments follow. The following will produce a profile file array, from the TAU trace and event files merged.trc and tau.edf trace file:
+.sp
+.nf
+tau2profile merged.trc tau.edf
+      
+.fi
+.sp
+The following will convert merged.trc and tau.edf to a series of profiles one directory higher. It will also produce a profile snapshot every 250,000 time units:
+.sp
+.nf
+tau2profile merged.trc tau.edf \-d ./.. \-s 250000
+      
+.fi
+.sp
+.SH "SEE ALSO"
+.PP
+vtf2profile(1),
+tau2vtf(1),
+tau_merge(1),
+tau_convert(1)
