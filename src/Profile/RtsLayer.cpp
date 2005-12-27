@@ -433,7 +433,7 @@ double KTauGetMHz(void)
 #ifdef KTAU_WALLCLOCK
   static double ktau_ratings = 1; //(microsec resolution from kernel)
 #else
-  static double ktau_ratings = TauGetMHz()/1000000; //we need ratings per microsec to match tau's reporting
+  static double ktau_ratings = TauGetMHz(); //we need ratings per microsec to match tau's reporting
 #endif
   return ktau_ratings;
 }
@@ -1309,6 +1309,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.71 $   $Date: 2005/12/27 23:19:03 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.71 2005/12/27 23:19:03 sameer Exp $ 
+ * $Revision: 1.72 $   $Date: 2005/12/27 23:24:18 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.72 2005/12/27 23:24:18 sameer Exp $ 
  ***************************************************************************/
