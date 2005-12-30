@@ -37,7 +37,7 @@ using namespace std;
 #define LINE_SIZE		1024	
 #define OUTPUT_NAME_SIZE	100
 
-#define DEBUG			1
+#define DEBUG			0
 #define maxof(x,y)		((x>=y)?x:y)
 
 /*-------------------------- CON/DESTRUCTOR ---------------------------*/
@@ -477,8 +477,8 @@ int TauKtau::MergingKProfileEvent(FILE* fp){
 
 
 /***************************************************************************
- * $RCSfile: TauKtau.cpp,v $   $Author: anataraj $
- * $Revision: 1.1 $   $Date: 2005/12/01 02:55:09 $
+ * $RCSfile: TauKtau.cpp,v $   $Author: suravee $
+ * $Revision: 1.2 $   $Date: 2005/12/30 04:25:28 $
  ***************************************************************************/
 
 	
