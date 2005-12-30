@@ -22,8 +22,6 @@
 
 #ifdef TAUKTAU
 
-#define KALLSYMS_PATH "/boot/System.map-tau2"
-
 #include <Profile/KtauProfiler.h>
 #include <Profile/Profiler.h>
 #include <Profile/KtauSymbols.h>
@@ -81,8 +79,8 @@ class KtauProfiler {
 
 #endif /* _KTAUPROFILER_H_ */
 /***************************************************************************
- * $RCSfile: KtauProfiler.h,v $   $Author: anataraj $
- * $Revision: 1.2 $   $Date: 2005/12/21 02:55:59 $
- * POOMA_VERSION_ID: $Id: KtauProfiler.h,v 1.2 2005/12/21 02:55:59 anataraj Exp $ 
+ * $RCSfile: KtauProfiler.h,v $   $Author: suravee $
+ * $Revision: 1.3 $   $Date: 2005/12/30 04:22:06 $
+ * POOMA_VERSION_ID: $Id: KtauProfiler.h,v 1.3 2005/12/30 04:22:06 suravee Exp $ 
  ***************************************************************************/
 
