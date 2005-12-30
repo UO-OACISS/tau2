@@ -191,6 +191,11 @@ fi
 	echo "s,^KTAU_INCDIR=.*$,KTAU_INCDIR=$ktauinc,g" >> $sedout
 	;;
 
+     ktausym=*)
+        ktausym=`echo $1 | sed -e 's/^ktausym=//'`
+      echo "s,^KTAU_KALLSYMS_PATH=.*$,KTAU_KALLSYMS_PATH=$ktausym,g" >> $sedout
+      ;;
+
 ###############################################################
 # Set the default optimization flags for compiling pcxx und user programs
 ###############################################################
