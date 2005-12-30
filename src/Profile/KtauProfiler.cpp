@@ -53,7 +53,7 @@ KtauProfiler * KtauProfiler::CurrentKtauProfiler[TAU_MAX_THREADS] = {0};
 
 long long KtauProfiler::refCount[TAU_MAX_THREADS] = {0};
 
-KtauSymbols KtauProfiler::KtauSym(KALLSYMS_PATH);
+KtauSymbols KtauProfiler::KtauSym(KTAU_KALLSYMS_PATH);
 
 
 KtauProfiler* KtauProfiler::GetKtauProfiler(int tid) {
@@ -464,7 +464,7 @@ int read_kstate(ktau_state* pstate, volatile int cur_active, unsigned long long*
 #endif /* TAUKTAU */
 
 /***************************************************************************
- * $RCSfile: KtauProfiler.cpp,v $   $Author: anataraj $
- * $Revision: 1.2 $   $Date: 2005/12/21 02:51:50 $
+ * $RCSfile: KtauProfiler.cpp,v $   $Author: suravee $
+ * $Revision: 1.3 $   $Date: 2005/12/30 04:23:06 $
  ***************************************************************************/
 
