@@ -219,6 +219,7 @@ fortran_compiler=no
 ktau=no
 ktau_merge=no
 ktauinc=
+ktausym=
 catamount=no
 gpshmem=no
 
@@ -400,6 +401,16 @@ do
     shift
     ;;
 
+  -ktausym=*)
+    ktausym=`echo $arg | sed -e 's/-ktausym=//' -e 's/ /#/g'`
+    if [ ! -e $ktausym ]
+    then
+      echo "Error: Cannot access KTAU Linux Kernel Symbol Table $ktausym"
+      exit 1
+    fi
+    shift
+    ;;
+ 
   -muse)
       muse=yes
     shift
@@ -930,6 +941,8 @@ do
     echo "-ktau_merge ........................ Kernel TAU Profiling with merging."
     echo "                                                    user-space profile."
     echo "-ktauinc=<dir> ............... Specify location of Linux Kernel source."
+    echo "-ktausym=<path to System.map>  ...... Specify location of Linux Kernel."
+    echo "                                                          Symbol Table."
     echo "-muse ................................. Specify the use of MAGNET/MUSE." 
     echo "-muse_event ............................Specify the use of MAGNET/MUSE."
     echo "                                w/ non-monotonically increasing values." 
@@ -3403,13 +3416,13 @@ fi
 
 if [ $ktau = yes ]
   then
-    fixmakeargs="$fixmakeargs KTAU ktauinc=$ktauinc"
+    fixmakeargs="$fixmakeargs KTAU ktauinc=$ktauinc ktausym=$ktausym"
     tauoptions="${tauoptions}-ktau"
 fi
 
 if [ $ktau_merge = yes ]
   then
-    fixmakeargs="$fixmakeargs KTAU_MERGE ktauinc=$ktauinc"
+    fixmakeargs="$fixmakeargs KTAU_MERGE ktauinc=$ktauinc ktausym=$ktausym"
     tauoptions="${tauoptions}-ktau_merge"
 fi
 
