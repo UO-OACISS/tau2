@@ -399,7 +399,7 @@ double getUserTimeInSec(void)
   return current_time; 
 }
 
-#if defined(TAU_LINUX_TIMERS) || defined(TAUKTAU) || defined(TAUKTAU_MERGE)
+#ifdef TAU_LINUX_TIMERS
 
 ///////////////////////////////////////////////////////////////////////////
 inline double TauGetMHzRatings(void)
@@ -419,7 +419,6 @@ inline double TauGetMHzRatings(void)
 #endif /* DEBUG_PROF */
   return rating;
 }
-
   
 ///////////////////////////////////////////////////////////////////////////
 inline double TauGetMHz(void)
@@ -427,22 +426,25 @@ inline double TauGetMHz(void)
   static double ratings = TauGetMHzRatings();
   return ratings;
 }
+///////////////////////////////////////////////////////////////////////////
+extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
+// Moved to TauLinuxTimers.c 
 
+#endif /* TAU_LINUX_TIMERS */
+
+#if defined(TAUKTAU) || defined(TAUKTAU_MERGE)
+///////////////////////////////////////////////////////////////////////////
 double KTauGetMHz(void)
 {
 #ifdef KTAU_WALLCLOCK
   static double ktau_ratings = 1; //(microsec resolution from kernel)
 #else
-  static double ktau_ratings = TauGetMHz(); //we need ratings per microsec to match tau's reporting
+  static double ktau_ratings = cycles_per_sec()/1000000; //we need ratings per microsec to match tau's reporting
+  //static double ktau_ratings = TauGetMHz(); //we need ratings per microsec to match tau's reporting
 #endif
   return ktau_ratings;
 }
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
-// Moved to TauLinuxTimers.c 
-
-#endif /* TAU_LINUX_TIMERS || TAUKTAU || TAUKTAU_MERGE */
+#endif /* TAUKTAU || TAUKTAU_MERGE */
 
 ///////////////////////////////////////////////////////////////////////////
 double TauWindowsUsecD(void)
@@ -1308,7 +1310,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.72 $   $Date: 2005/12/27 23:24:18 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.72 2005/12/27 23:24:18 sameer Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: suravee $
+ * $Revision: 1.73 $   $Date: 2005/12/30 04:24:47 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.73 2005/12/30 04:24:47 suravee Exp $ 
  ***************************************************************************/
