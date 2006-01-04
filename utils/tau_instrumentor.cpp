@@ -658,8 +658,8 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
 		  ostr <<endl;
 		  instrumented = true; 
 		} else {
-		  fprintf (stderr, "Warning: exit was found at line=%d, col=%d, but wasn't found in the source code\n",(*it)->line, (*it)->col);
-		  fprintf (stderr, "if the exit occurs in a macro, make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear\n");
+		  fprintf (stderr, "Warning: exit was found at line %d, column %d, but wasn't found in the source code.\n",(*it)->line, (*it)->col);
+		  fprintf (stderr, "If the exit call occurs in a macro (likely), make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear)\n");
 		  instrumented = true;
 		  // write the input line in the output stream
 		  ostr << inbuf <<endl;
@@ -1827,8 +1827,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.78 $   $Date: 2006/01/03 23:06:33 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.78 2006/01/03 23:06:33 amorris Exp $
+ * $Revision: 1.79 $   $Date: 2006/01/04 00:30:59 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.79 2006/01/04 00:30:59 amorris Exp $
  ***************************************************************************/
 
 
