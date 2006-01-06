@@ -11,7 +11,8 @@ import java.io.*;
 
 public class ParaProfErrorDialog extends JFrame implements ActionListener {
 
-    public ParaProfErrorDialog(Exception obj) {
+    
+    public ParaProfErrorDialog(Object obj) {
 
         String errorString = null;
 
@@ -44,8 +45,11 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
             pw.close();
             errorString = dbe.getMessage() + "\n\n" + sw.toString();
 
+        } else if (obj instanceof String) {
+            errorString = (String) obj;
+            
         } else {
-            Exception e = obj;
+            Exception e = (Exception) obj;
             e.printStackTrace();
 
             StringWriter sw = new StringWriter();
@@ -82,6 +86,9 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
         } else if (obj instanceof DatabaseException) {
             headerTextArea = new JTextArea(
                     "\nAn error occurred during a database transaction.\nBelow is the full error message.\n");
+        } else if (obj instanceof String) {
+            headerTextArea = new JTextArea(
+            "\nThe following error occurred.\n");
         } else {
             headerTextArea = new JTextArea(
                     "\nAn unexpected error has occurred.\nPlease email us at: tau-bugs@cs.uoregon.edu with the message given below.\nIf possible, please also send the profile files that caused this error as well as a brief description of your sequence of actions.\nThanks for your help!\n");
@@ -96,7 +103,7 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
 
         headerTextArea.setBackground(lbl.getBackground());
 
-        JTextArea errorTextArea = new JTextArea("Version: " + ParaProf.getVersionString() + "\n" + errorString);
+        JTextArea errorTextArea = new JTextArea("ParaProf Build: " + ParaProf.getVersionString() + "\n" + errorString);
 
         JButton closeButton = new JButton("Close");
         closeButton.addActionListener(this);

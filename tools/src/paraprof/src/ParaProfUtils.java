@@ -323,6 +323,7 @@ public class ParaProfUtils {
                         //(new Gears()).show();
 
                         try {
+                            
                             (new ThreeDeeWindow(ppTrial, owner)).show();
                             //(new ThreeDeeWindow()).show();
                         } catch (UnsatisfiedLinkError e) {
@@ -332,7 +333,11 @@ public class ParaProfUtils {
                                     + "Jogl is available at jogl.dev.java.net");
                         } catch (UnsupportedClassVersionError e) {
                             JOptionPane.showMessageDialog(owner, "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
+                        } catch (Exception gle) {
+                            new ParaProfErrorDialog("Unable to initialize OpenGL: " + gle.getMessage());
                         }
+                        
+                        
                     } else if (arg.equals("Close All Sub-Windows")) {
                         ppTrial.updateRegisteredObjects("subWindowCloseEvent");
                     }
