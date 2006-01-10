@@ -32,7 +32,7 @@ do
       options_specified=yes
       shift
       ;;
-    -MM | -M)
+    -MM | -M | -MD | -MF )
       makedepend_specified=yes	
 # hack to get proper .d generation support for eclipse
       ;;
