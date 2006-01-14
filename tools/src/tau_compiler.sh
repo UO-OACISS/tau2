@@ -433,13 +433,15 @@ for arg in "$@"
 			;;
 
 		-o*)
-			hasAnOutputFile=$TRUE
-			passedOutputFile="${arg#"-o"}"
-			echoIfDebug "\tHas an output file = $passedOutputFile"
+ 			if [ "x$arg" != "x-openmp" ]; then
+			    hasAnOutputFile=$TRUE
+			    passedOutputFile="${arg#"-o"}"
+			    echoIfDebug "\tHas an output file = $passedOutputFile"
 			#With compilation, a new output file is created and is written with -o
 			#options, so no need to append it to argsRemaining. WIth
 			#others it is simply added to the command.
 			#-o is added later
+ 			fi
 			;;
 
 		$CMD)
