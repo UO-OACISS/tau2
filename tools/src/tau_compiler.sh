@@ -381,6 +381,17 @@ for arg in "$@"
 			groupType=$group_f_F
 			;;
 
+		-WF,-D*)
+		        theDefine=`echo "$arg" | sed s/-WF,//` 
+		        echo "arg = $arg"
+			optPdtCFlags="$theDefine $optPdtCFlags"
+			optPdtCxxFlags="$theDefine $optPdtCxxFlags"
+			optPdtF95="$theDefine $optPdtF95"
+			optCompile="$arg $optCompile"
+			optIncludeDefs="$theDefine $optIncludeDefs"
+			argsRemaining="$arg $argsRemaining"
+			;;
+
 		-I*|-D*)
 			optPdtCFlags="$arg $optPdtCFlags"
 			optPdtCxxFlags="$arg $optPdtCxxFlags"
