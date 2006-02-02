@@ -108,6 +108,13 @@ if ($ARCH == unknown) then
   endif
 endif
 
+if ($ARCH == unknown) then
+  if (`uname -s` == FreeBSD) then
+    set ARCH=freebsd
+  endif
+endif
+
+
 if ( $#argv == 1 ) then
   if ( "$argv[1]" == "-x" ) then
     if ( "$XDEV" == "" ) then
