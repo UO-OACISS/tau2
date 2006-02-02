@@ -1514,6 +1514,11 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
   fi
 fi
 
+if [ $machine = freebsd ]
+then
+    fixmakeargs="$fixmakeargs FREEBSD"
+fi
+    
 if [ $machine = apple ]
   then
   if [ $cxx_compiler = g++ -o $cxx_compiler = c++ ]

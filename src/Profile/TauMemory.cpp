@@ -23,7 +23,11 @@
 #if (defined(__APPLE_CC__) || defined(TAU_APPLE_XLC))
 #include <malloc/malloc.h>
 #else
+#ifdef TAU_FREEBSD
+#include <stdlib.h> 
+#else /* TAU_FREEBSD */
 #include <malloc.h> 
+#endif /* TAU_FREEBSD */
 #endif /* apple */
 
 #ifdef TAU_DOT_H_LESS_HEADERS
@@ -241,7 +245,7 @@ int TauGetFreeMemory(void)
 }
 
 /***************************************************************************
- * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
- * $Revision: 1.9 $   $Date: 2005/11/11 03:46:50 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.9 2005/11/11 03:46:50 amorris Exp $ 
+ * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
+ * $Revision: 1.10 $   $Date: 2006/02/02 02:30:59 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.10 2006/02/02 02:30:59 sameer Exp $ 
  ***************************************************************************/

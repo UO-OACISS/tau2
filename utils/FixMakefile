@@ -630,6 +630,10 @@ fi
 	echo NOTE: Using Fujitsu FCC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     FREEBSD)
+	echo NOTE: FreeBSD options will be used
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      FUJITSU_SOLARIS) 
 	echo NOTE: Using Fujitsu f90 Fortran compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
