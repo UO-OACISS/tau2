@@ -11,6 +11,13 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.cpp,v $
+// Revision 1.5  2006/02/03 03:03:08  amorris
+// Fixed error with PyArg_ParseTuple:
+//
+// Exception exceptions.TypeError: 'function takes exactly 1 argument (0 given)' in 'garbage collection' ignored
+// Fatal Python error: unexpected exception during garbage collection
+// Aborted (core dumped)
+//
 // Revision 1.4  2003/07/18 18:48:19  sameer
 // Added support for TAU_DB_DUMP(prefix). In python you can optionally specify
 // an argument:
@@ -63,12 +70,7 @@ PyObject * pytau_dbDump(PyObject *self, PyObject *args)
     int len = 4;
 
     // Check to see if a prefix is specified
-    if (!PyArg_ParseTuple(args, "s#", &prefix, &len))
-    {
-      // No arguments are specified. Call Dump routine
-      TAU_DB_DUMP(); 
-    }
-    else 
+    if (PyArg_ParseTuple(args, "|s", &prefix, &len))
     {
       // extracted the prefix, call dump routine
 #ifdef DEBUG
@@ -76,7 +78,6 @@ PyObject * pytau_dbDump(PyObject *self, PyObject *args)
 #endif /* DEBUG */
       TAU_DB_DUMP_PREFIX(prefix);
     }
-
 
     // return
     Py_INCREF(Py_None);
@@ -306,7 +307,7 @@ PyObject * pytau_dumpFuncValsIncr(PyObject *, PyObject * args)
 
 
 // version
-// $Id: PyDatabase.cpp,v 1.4 2003/07/18 18:48:19 sameer Exp $
+// $Id: PyDatabase.cpp,v 1.5 2006/02/03 03:03:08 amorris Exp $
 
 // End of file
   
