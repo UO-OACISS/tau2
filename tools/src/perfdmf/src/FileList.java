@@ -63,6 +63,20 @@ class MultiFileFilter implements FilenameFilter {
     }
 }
 
+
+class TimeSeriesFileFilter implements FilenameFilter {
+    public TimeSeriesFileFilter() {
+    }
+
+    public boolean accept(File okplace, String name) {
+        if (name.startsWith("snapshot_")) {
+            return true;
+        }
+        return false;
+    }
+}
+
+
 public class FileList {
 
 
@@ -80,7 +94,7 @@ public class FileList {
         File files[] = file.listFiles(prefixFilter);
 
         if (files.length == 0) {
-            // we didn't find any profile files here, now look for MULTI_ directories
+            //we didn't find any profile files here, now look for MULTI_ directories
             //FilenameFilter multiFilter = new FileFilter("MULTI__.*");
             FilenameFilter multiFilter = new MultiFileFilter();
             File multiDirs[] = file.listFiles(multiFilter);
@@ -93,12 +107,50 @@ public class FileList {
             v.add(files);
             return v;
         }
-        
-        
-        
         return v;
     }
 
+    public List helperFindTimeSeriesProfilesPrefix(String path, String prefix) {
+
+        List v = new ArrayList();
+
+        File file = new File(path);
+        if (file.isDirectory() == false) {
+            return v;
+        }
+        FilenameFilter prefixFilter = new ProfileFileFilter(prefix);
+        File files[] = file.listFiles(prefixFilter);
+
+        if (files.length == 0) {
+            //we didn't find any profile files here, now look for MULTI_ directories
+            //FilenameFilter multiFilter = new FileFilter("MULTI__.*");
+            FilenameFilter timeSeriesFilter = new TimeSeriesFileFilter();
+            File timeSeriesDirs[] = file.listFiles(timeSeriesFilter);
+
+            List list = Arrays.asList(timeSeriesDirs);
+            Collections.sort(list);
+            timeSeriesDirs = (File[]) list.toArray(timeSeriesDirs);
+            
+            for (int i = 0; i < timeSeriesDirs.length; i++) {
+                File finalFiles[] = timeSeriesDirs[i].listFiles(prefixFilter);
+                v.add(finalFiles);
+            }
+        } else {
+            v.add(files);
+            return v;
+        }
+        return v;
+    }
+
+    public List helperFindTimeSeriesProfiles(String path) {
+        List v = helperFindTimeSeriesProfilesPrefix(path, "profile");
+        if (v.size() == 0) {
+            v = helperFindTimeSeriesProfilesPrefix(path, "dump");
+        }
+        return v;
+    }
+
+    
     public List helperFindProfiles(String path) {
 
         List v = helperFindProfilesPrefix(path, "profile");

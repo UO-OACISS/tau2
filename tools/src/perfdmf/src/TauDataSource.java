@@ -143,7 +143,7 @@ public class TauDataSource extends DataSource {
                             return;
                         }
 
-                        int[] nct = this.getNCT(files[i].getName());
+                        int[] nct = getNCT(files[i].getName());
 
                         if (nct == null && dirs.size() == 1 && files.length == 1) {
                             throw new DataSourceException(
@@ -162,10 +162,7 @@ public class TauDataSource extends DataSource {
 
                         Node node = this.addNode(nodeID);
                         Context context = node.addContext(contextID);
-                        thread = context.getThread(threadID);
-                        if (thread == null) {
-                            thread = context.addThread(threadID);
-                        }
+                        thread = context.addThread(threadID);
 
                         foundValidFile = true;
 
@@ -372,7 +369,7 @@ public class TauDataSource extends DataSource {
     }
 
     //profile.*.*.* string processing methods.
-    private int[] getNCT(String string) {
+    public static int[] getNCT(String string) {
         try {
             int[] nct = new int[3];
             StringTokenizer st = new StringTokenizer(string, ".\t\n\r");
