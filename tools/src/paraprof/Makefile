@@ -28,7 +28,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
 	     Searcher.java SearchPanel.java FunctionSelectorDialog.java WindowPlacer.java
 
 VIS_SOURCES = ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java  
-OTHER_SRC = $(wildcard src/enums/*.java) $(wildcard src/interfaces/*.java) $(wildcard src/treetable/*.java) $(wildcard src/barchart/*.java) $(wildcard src/util/*.java)
+OTHER_SRC = $(wildcard src/enums/*.java) $(wildcard src/interfaces/*.java) $(wildcard src/treetable/*.java) $(wildcard src/barchart/*.java) $(wildcard src/util/*.java) $(wildcard src/script/*.java)
 
 BASE_SRC=$(addprefix src/, $(BASE_SOURCES)) wrapper/ParaProf.java
 VIS_SRC=$(addprefix src/, $(VIS_SOURCES))
@@ -46,7 +46,7 @@ CC-OLD=javac
 NOW = $(shell date)
 
 
-CP_CORE = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar:$(TOOLS_SRC)/contrib/jfreechart-0.9.21.jar:$(TOOLS_SRC)/contrib/jcommon-0.9.6.jar
+CP_CORE = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar:$(TOOLS_SRC)/contrib/jfreechart-0.9.21.jar:$(TOOLS_SRC)/contrib/jcommon-0.9.6.jar:$(TOOLS_SRC)/contrib/jython.jar
 CP13 = $(CP_CORE):$(TOOLS_SRC)/contrib/jgraph-1.3.jar
 CP14 = $(CP_CORE):$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/vis/bin/vis.jar
 
