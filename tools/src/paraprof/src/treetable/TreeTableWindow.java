@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.1 2005/09/26 21:12:51 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.2 2006/02/04 01:23:59 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -51,6 +51,9 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     private List columns;
     private ColumnChooser columnChooser;
 
+    public TreeTableWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread) {
+        this(ppTrial, thread, null);
+    }
     public TreeTableWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread, Component invoker) {
 
         this.ppTrial = ppTrial;

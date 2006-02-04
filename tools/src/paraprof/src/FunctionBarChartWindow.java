@@ -26,9 +26,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.3 2005/10/18 22:50:34 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.4 2006/02/04 01:23:57 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -169,7 +169,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
         // Set up the data sorter
         dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
-        dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
+        //dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
 
         //Set the help window text if required.
         if (ParaProf.helpWindow.isVisible()) {
@@ -311,16 +311,16 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         };
 
         if (function != null) {
-            sortByNCTCheckbox = new JCheckBoxMenuItem("Sort By N,C,T", false);
+            sortByNCTCheckbox = new JCheckBoxMenuItem("Sort By N,C,T", dataSorter.getSortType() == SortType.NCT);
             sortByNCTCheckbox.addActionListener(sortData);
             optionsMenu.add(sortByNCTCheckbox);
         } else {
-            sortByNameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
+            sortByNameCheckBox = new JCheckBoxMenuItem("Sort By Name", dataSorter.getSortType() == SortType.NAME);
             sortByNameCheckBox.addActionListener(sortData);
             optionsMenu.add(sortByNameCheckBox);
         }
 
-        descendingOrderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
+        descendingOrderCheckBox = new JCheckBoxMenuItem("Descending Order", dataSorter.getDescendingOrder());
         descendingOrderCheckBox.addActionListener(sortData);
         optionsMenu.add(descendingOrderCheckBox);
 
@@ -432,10 +432,11 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
                     String metricName = ppTrial.getMetricName(dataSorter.getSelectedMetricID());
                     metricName = metricName.toUpperCase();
-                    if (dataSorter.isTimeMetric())
+                    if (dataSorter.isTimeMetric()) {
                         unitsSubMenu.setEnabled(true);
-                    else
+                    } else {
                         unitsSubMenu.setEnabled(false);
+                    }
                 }
             } else {
                 showValuesAsPercent.setEnabled(false);

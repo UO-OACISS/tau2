@@ -21,9 +21,12 @@ import java.util.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import edu.uoregon.tau.paraprof.script.ParaProfScript;
+import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
 import edu.uoregon.tau.paraprof.util.FileMonitor;
 import edu.uoregon.tau.paraprof.util.FileMonitorListener;
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Thread;
 
 public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObject {
 
@@ -52,6 +55,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private Trial trial;
 
+    private boolean functionMask[];
+
     private boolean monitored;
     //private Timer monitorTimer;
 
@@ -67,6 +72,14 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     public ParaProfTrial(Trial trial) {
         this.trial = new Trial(trial);
+    }
+
+    public Iterator getFunctions() {
+        return getDataSource().getFunctions();
+    }
+
+    public Thread getMeanThread() {
+        return getDataSource().getMeanData();
     }
 
     public Trial getTrial() {
@@ -251,10 +264,11 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public boolean isTimeMetric() {
         String metricName = this.getMetricName(this.getDefaultMetricID());
         metricName = metricName.toUpperCase();
-        if (metricName.indexOf("TIME") == -1)
+        if (metricName.indexOf("TIME") == -1) {
             return false;
-        else
+        } else {
             return true;
+        }
     }
 
     //    public boolean isTimeMetric(int metricID) {
@@ -344,27 +358,16 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         return displayedFunctions;
     }
 
-    public boolean displayFunction(Function func) {
-        switch (groupFilter) {
-        case 0:
-            //No specific group selection is required.
-            return true;
-        case 1:
-            //Show this group only.
-            if (func.isGroupMember(this.selectedGroup))
-                return true;
-            else
-                return false;
-        case 2:
-            //Show all groups except this one.
-            if (func.isGroupMember(this.selectedGroup))
-                return false;
-            else
-                return true;
-        default:
-            //Default case behaves as case 0.
-            return true;
+    public boolean displayFunction(Function function) {
+        if (functionMask != null && function.getID() < functionMask.length) {
+            return functionMask[function.getID()];
         }
+        return true;
+    }
+
+    public void setFunctionMask(boolean mask[]) {
+        this.functionMask = mask;
+        updateRegisteredObjects("dataEvent");
     }
 
     public void setSelectedGroup(Group group) {
@@ -373,14 +376,6 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     public Group getSelectedGroup() {
         return selectedGroup;
-    }
-
-    public void setGroupFilter(int groupFilter) {
-        this.groupFilter = groupFilter;
-    }
-
-    public int getGroupFilter() {
-        return groupFilter;
     }
 
     //####################################
@@ -428,6 +423,15 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
         //Set this trial's loading flag to false.
         this.setLoading(false);
+
+        // run any scripts
+        for (int i = 0; i < ParaProf.scripts.size(); i++) {
+            ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
+            if (pps instanceof ParaProfTrialScript) {
+                ((ParaProfTrialScript)pps).trialLoaded(this);
+            }
+        }
+
     }
 
     public DatabaseAPI getDatabaseAPI() {

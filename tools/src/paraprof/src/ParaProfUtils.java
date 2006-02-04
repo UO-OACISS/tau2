@@ -19,6 +19,9 @@ import javax.swing.event.MenuListener;
 import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
+import edu.uoregon.tau.paraprof.script.ParaProfFunctionScript;
+import edu.uoregon.tau.paraprof.script.ParaProfScript;
+import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
@@ -292,6 +295,42 @@ public class ParaProfUtils {
         return menuItem;
     }
 
+    public static JMenu createScriptMenu(final ParaProfTrial ppTrial, final JFrame owner) {
+
+        final JMenu menu = new JMenu("PyScript");
+
+        menu.addMenuListener(new MenuListener() {
+
+            public void menuCanceled(MenuEvent e) {
+                // TODO Auto-generated method stub
+
+            }
+
+            public void menuDeselected(MenuEvent e) {
+                // TODO Auto-generated method stub
+
+            }
+
+            public void menuSelected(MenuEvent e) {
+                menu.removeAll();
+                for (int i = 0; i < ParaProf.scripts.size(); i++) {
+                    final ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
+                    if (pps instanceof ParaProfTrialScript) {
+                    JMenuItem menuItem = new JMenuItem("[Script] " + pps.getName()); 
+                    menuItem.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            ((ParaProfTrialScript)pps).run(ppTrial);
+                        }});
+                    menu.add(menuItem);
+                    }
+                }
+
+            }
+        });
+
+        return menu;
+    }
+
     public static JMenu createWindowsMenu(final ParaProfTrial ppTrial, final JFrame owner) {
 
         ActionListener actionListener = new ActionListener() {
@@ -323,7 +362,7 @@ public class ParaProfUtils {
                         //(new Gears()).show();
 
                         try {
-                            
+
                             (new ThreeDeeWindow(ppTrial, owner)).show();
                             //(new ThreeDeeWindow()).show();
                         } catch (UnsatisfiedLinkError e) {
@@ -332,12 +371,12 @@ public class ParaProfUtils {
                                     + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
                                     + "Jogl is available at jogl.dev.java.net");
                         } catch (UnsupportedClassVersionError e) {
-                            JOptionPane.showMessageDialog(owner, "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
+                            JOptionPane.showMessageDialog(owner,
+                                    "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
                         } catch (Exception gle) {
                             new ParaProfErrorDialog("Unable to initialize OpenGL: " + gle.getMessage());
                         }
-                        
-                        
+
                     } else if (arg.equals("Close All Sub-Windows")) {
                         ppTrial.updateRegisteredObjects("subWindowCloseEvent");
                     }
@@ -578,6 +617,21 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
 
+        
+        functionPopup.add(new JSeparator());
+        for (int i = 0; i < ParaProf.scripts.size(); i++) {
+            final ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
+            if (pps instanceof ParaProfFunctionScript) {
+            JMenuItem menuItem = new JMenuItem("[Script] " + pps.getName()); 
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    ((ParaProfFunctionScript)pps).runFunction(ppTrial, function);
+                }});
+            functionPopup.add(menuItem);
+            }
+        }
+
+        
         return functionPopup;
 
     }
@@ -749,8 +803,8 @@ public class ParaProfUtils {
         threadPopup.add(createCallGraphMenuItem("Show " + ident + " Call Graph", ppTrial, thread, owner));
         threadPopup.add(createCallPathThreadRelationMenuItem("Show " + ident + " Call Path Relations", ppTrial, thread, owner));
         //if (thread.getNodeID() >= 0 && ppTrial.userEventsPresent()) {
-            threadPopup.add(createUserEventBarChartMenuItem("Show User Event Bar Chart", ppTrial, thread, owner));
-            threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
+        threadPopup.add(createUserEventBarChartMenuItem("Show User Event Bar Chart", ppTrial, thread, owner));
+        threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
         //}
         threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
         threadPopup.show(owner, evt.getX(), evt.getY());
@@ -993,7 +1047,7 @@ public class ParaProfUtils {
 
                 if (uep != null) {
                     p.writeInt(i);
-                    p.writeInt((int)uep.getNumSamples());
+                    p.writeInt((int) uep.getNumSamples());
                     p.writeDouble(uep.getMinValue());
                     p.writeDouble(uep.getMaxValue());
                     p.writeDouble(uep.getMeanValue());
@@ -1049,7 +1103,6 @@ public class ParaProfUtils {
         }
 
     }
-
 
     public static boolean rightClick(MouseEvent evt) {
         if ((evt.getModifiers() & InputEvent.BUTTON3_MASK) != 0) {

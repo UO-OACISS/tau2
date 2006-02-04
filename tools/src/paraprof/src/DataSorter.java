@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.2 2005/10/18 22:50:34 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.3 2006/02/04 01:23:57 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 public class DataSorter {
 
@@ -26,18 +26,40 @@ public class DataSorter {
 
     private int selectedMetricID;
     private boolean descendingOrder;
-    private boolean showAsPercent;
-    private SortType sortType = SortType.MEAN_VALUE;
-    private ValueType valueType = ValueType.EXCLUSIVE;
+    private SortType sortType;
+    private ValueType valueType;
     private UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
 
     private Function phase;
-
+    
+    private static SortType defaultSortType = SortType.MEAN_VALUE;
+    private static ValueType defaultValueType = ValueType.EXCLUSIVE;
+    private static boolean defaultSortOrder = true;
+    
     public DataSorter(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
         this.selectedMetricID = ppTrial.getDefaultMetricID();
+    
+        this.sortType = DataSorter.defaultSortType;
+        this.valueType = DataSorter.defaultValueType;
+        this.descendingOrder = DataSorter.defaultSortOrder;
     }
 
+    
+    public static void setDefaultSortType(SortType sortType) {
+        DataSorter.defaultSortType = sortType;
+    }
+
+    public static void setDefaultValueType(ValueType valueType) {
+        DataSorter.defaultValueType = valueType;
+    }
+    
+    public static void setDefaultSortOrder(boolean order) {
+        DataSorter.defaultSortOrder = order;
+    }
+    
+    
+    
     public void setPhase(Function phase) {
         this.phase = phase;
     }
@@ -85,13 +107,6 @@ public class DataSorter {
         return this.descendingOrder;
     }
 
-    public void setShowAsPercent(boolean showAsPercent) {
-        this.showAsPercent = showAsPercent;
-    }
-
-    public boolean getShowAsPercent() {
-        return showAsPercent;
-    }
 
     public void setSortType(SortType sortType) {
         this.sortType = sortType;

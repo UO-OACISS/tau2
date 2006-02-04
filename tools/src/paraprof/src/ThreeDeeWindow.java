@@ -75,8 +75,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setSortType(SortType.NAME);
 
-        this.setTitle("ParaProf Visualizer: "
-                + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        this.setTitle("ParaProf Visualizer: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -96,11 +95,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             this.show();
         }
 
-
         DataSource dataSource = ppTrial.getDataSource();
         int numThreads = dataSource.getNumThreads();
 
-        
         // initialize the scatterplot functions to the 4 most varying functions
         // we just get the first four stddev functions
         DataSorter dataSorter = new DataSorter(ppTrial);
@@ -109,10 +106,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         int count = 0;
         for (Iterator it = stdDevList.iterator(); it.hasNext() && count < 4;) {
             PPFunctionProfile fp = (PPFunctionProfile) it.next();
-            settings.setScatterFunction(fp.getFunction(),count);
+            settings.setScatterFunction(fp.getFunction(), count);
             count++;
         }
-        
+
         // if the number of threads is above this threshold, we default to the 
         // scatterplot
         if (numThreads > defaultToScatter) {
@@ -158,8 +155,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         jSplitPane.addKeyListener(this);
         this.getContentPane().add(jSplitPane);
 
-        setSize(ParaProfUtils.checkSize(new Dimension(1000,700)));
-        this.setLocation(WindowPlacer.getNewLocation(this,invoker));
+        setSize(ParaProfUtils.checkSize(new Dimension(1000, 700)));
+        this.setLocation(WindowPlacer.getNewLocation(this, invoker));
 
         //        //Grab the screen size.
         //        Toolkit tk = Toolkit.getDefaultToolkit();
@@ -211,8 +208,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                     FunctionProfile functionProfile = thread.getFunctionProfile(scatterFunctions[f]);
 
                     if (functionProfile != null) {
-                        values[threadIndex][f] = (float) scatterValueTypes[f].getValue(functionProfile,
-                                scatterMetricIDs[f]);
+                        values[threadIndex][f] = (float) scatterValueTypes[f].getValue(functionProfile, scatterMetricIDs[f]);
                         maxScatterValues[f] = Math.max(maxScatterValues[f], values[threadIndex][f]);
                         minScatterValues[f] = Math.min(minScatterValues[f], values[threadIndex][f]);
                     }
@@ -373,8 +369,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             axes.setOnEdge(false);
             if (triangleMeshPlot == null) {
                 triangleMeshPlot = new TriangleMeshPlot();
-                triangleMeshPlot.initialize(axes, settings.getPlotWidth(), settings.getPlotDepth(),
-                        settings.getPlotHeight(), heightValues, colorValues, colorScale);
+                triangleMeshPlot.initialize(axes, settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(),
+                        heightValues, colorValues, colorScale);
                 plot = triangleMeshPlot;
             } else {
                 triangleMeshPlot.setValues(settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(),
@@ -391,8 +387,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                         heightValues, colorValues, colorScale);
                 plot = barPlot;
             } else {
-                barPlot.setValues(settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(),
-                        heightValues, colorValues);
+                barPlot.setValues(settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(), heightValues,
+                        colorValues);
                 plot = barPlot;
             }
         }
@@ -417,8 +413,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
             if (newSettings.getVisType() == VisType.SCATTER_PLOT) {
                 visRenderer.setAim(settings.getScatterAim());
-            } else if (newSettings.getVisType() == VisType.TRIANGLE_MESH_PLOT
-                    || newSettings.getVisType() == VisType.BAR_PLOT) {
+            } else if (newSettings.getVisType() == VisType.TRIANGLE_MESH_PLOT || newSettings.getVisType() == VisType.BAR_PLOT) {
                 visRenderer.setAim(settings.getRegularAim());
             }
 
@@ -430,8 +425,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                 generate3dModel(false, newSettings);
                 visRenderer.addShape(plot);
                 visRenderer.addShape(colorScale);
-            } else if (newSettings.getVisType() == VisType.TRIANGLE_MESH_PLOT
-                    || newSettings.getVisType() == VisType.BAR_PLOT) {
+            } else if (newSettings.getVisType() == VisType.TRIANGLE_MESH_PLOT || newSettings.getVisType() == VisType.BAR_PLOT) {
 
                 settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
 
@@ -511,7 +505,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     public int getUnits() {
         return units;
     }
-
 
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
@@ -727,7 +720,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         if (!ppMetric.isTimeMetric() || !ValueType.isTimeUnits(settings.getHeightValue())) {
             units = 0;
         }
-        
 
         return UtilFncs.getOutputString(units, settings.getHeightValue().getValue(fp, settings.getHeightMetricID()), 6).trim()
                 + getUnitsString(units, settings.getHeightValue(), ppMetric);
@@ -786,8 +778,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                                 + scatterValueTypes[f].toString() + ")");
                     } else {
                         axisNames.add(ParaProfUtils.getFunctionName(scatterFunctions[f]) + "\n("
-                                + scatterValueTypes[f].toString() + ", " + ppTrial.getMetricName(scatterMetricIDs[f])
-                                + ")");
+                                + scatterValueTypes[f].toString() + ", " + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
                     }
                 } else {
                     axisNames.add("none");
@@ -820,8 +811,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             ParaProfMetric ppMetric = ppTrial.getMetric(scatterMetricIDs[3]);
             int units = scatterValueTypes[3].getUnits(this.units, ppMetric);
 
-            colorScale.setStrings(UtilFncs.getOutputString(units, minScatterValues[3], 6).trim(),
-                    UtilFncs.getOutputString(units, maxScatterValues[3], 6).trim(), (String) axisNames.get(3));
+            colorScale.setStrings(UtilFncs.getOutputString(units, minScatterValues[3], 6).trim(), UtilFncs.getOutputString(units,
+                    maxScatterValues[3], 6).trim(), (String) axisNames.get(3));
 
             scatterPlotAxes.setStrings((String) axisNames.get(0), (String) axisNames.get(1), (String) axisNames.get(2),
                     axisStrings[0], axisStrings[1], axisStrings[2]);

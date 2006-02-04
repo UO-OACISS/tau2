@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.3 2005/12/22 19:29:27 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.4 2006/02/04 01:23:58 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -215,4 +215,10 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         return "Misc function section ... see help window for details";
     }
 
+    
+    public List getThreads() {
+        return threads;
+    }
+    
+    
 }

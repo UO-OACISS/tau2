@@ -5,22 +5,23 @@ import java.awt.event.*;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Vector;
 
 import javax.swing.*;
 
 import edu.uoregon.tau.paraprof.interfaces.ImageExport;
-import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.perfdmf.Function;
 
 /**
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.3 2005/10/18 22:50:34 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.4 2006/02/04 01:23:57 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -265,16 +266,29 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                         lde.setColorFlag(false);
                         ppTrial.updateRegisteredObjects("colorEvent");
                     } else if (arg.equals("Show This Group Only")) {
-                        ppTrial.setSelectedGroup(lde.getGroup());
-                        ppTrial.setGroupFilter(1);
+
+                        boolean mask[] = new boolean[ppTrial.getDataSource().getNumFunctions()];
+                        for (Iterator it= ppTrial.getDataSource().getFunctions(); it.hasNext(); ) {
+                            Function function = (Function) it.next();
+                            if (function.isGroupMember(lde.getGroup())) {
+                                mask[function.getID()] = true;
+                            }
+                        }
+                        ppTrial.setFunctionMask(mask);
                         ppTrial.updateRegisteredObjects("dataEvent");
                     } else if (arg.equals("Show All Groups Except This One")) {
                         ppTrial.setSelectedGroup(lde.getGroup());
-                        ppTrial.setGroupFilter(2);
+                        boolean mask[] = new boolean[ppTrial.getDataSource().getNumFunctions()];
+                        for (Iterator it= ppTrial.getDataSource().getFunctions(); it.hasNext(); ) {
+                            Function function = (Function) it.next();
+                            if (!function.isGroupMember(lde.getGroup())) {
+                                mask[function.getID()] = true;
+                            }
+                        }
+                        ppTrial.setFunctionMask(mask);
                         ppTrial.updateRegisteredObjects("dataEvent");
                     } else if (arg.equals("Show All Groups")) {
-                        ppTrial.setSelectedGroup(null);
-                        ppTrial.setGroupFilter(0);
+                        ppTrial.setFunctionMask(null);
                         ppTrial.updateRegisteredObjects("dataEvent");
                     }
                 }

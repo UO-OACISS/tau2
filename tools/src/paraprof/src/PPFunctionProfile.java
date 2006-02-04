@@ -45,6 +45,10 @@ public class PPFunctionProfile implements Comparable {
         return meanProfile;
     }
 
+    public int getID() {
+        return functionProfile.getFunction().getID();
+    }
+    
     public int getNodeID() {
         return thread.getNodeID();
     }
