@@ -14,7 +14,6 @@ import java.util.List;
 import javax.swing.ToolTipManager;
 
 import edu.uoregon.tau.common.TauScripter;
-import edu.uoregon.tau.paraprof.script.FunctionFilter;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.FileList;
@@ -24,11 +23,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.45 2006/02/04 01:23:57 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.46 2006/02/06 19:07:28 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.45 $
+ * @version $Revision: 1.46 $
  */
 public class ParaProf implements ActionListener {
 
