@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.46 2006/02/06 19:07:28 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.47 2006/02/07 06:17:16 khuck Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.46 $
+ * @version $Revision: 1.47 $
  */
 public class ParaProf implements ActionListener {
 
@@ -266,7 +266,7 @@ public class ParaProf implements ActionListener {
         }
 
         
-        if (new File("/.ParaProf/ParaProf.py").exists()) {
+        if (new File(System.getProperty("user.home") + "/.ParaProf/ParaProf.py").exists()) {
             TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
         }
 
