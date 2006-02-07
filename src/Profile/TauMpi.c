@@ -334,14 +334,14 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Allgather()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Allgather()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Allgather( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm );
   PMPI_Type_size( recvtype, &typesize );
   TAU_ALLGATHER_DATA(typesize*recvcount);
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -359,7 +359,7 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Allgatherv()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Allgatherv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Allgatherv( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm );
@@ -367,7 +367,7 @@ MPI_Comm comm;
   TAU_ALLGATHER_DATA(typesize*(*recvcounts));
   
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -383,14 +383,14 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Allreduce()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Allreduce()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Allreduce( sendbuf, recvbuf, count, datatype, op, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_ALLREDUCE_DATA(typesize*count);
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -407,14 +407,14 @@ MPI_Comm comm;
   int  returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Alltoall()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Alltoall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Alltoall( sendbuf, sendcount, sendtype, recvbuf, recvcnt, recvtype, comm );
   PMPI_Type_size( sendtype, &typesize );
   TAU_ALLTOALL_DATA(typesize*sendcount);
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -433,14 +433,14 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Alltoallv()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Alltoallv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Alltoallv( sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm );
   PMPI_Type_size( sendtype, &typesize );
   TAU_ALLTOALL_DATA(typesize*(*sendcnts));
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -450,12 +450,12 @@ MPI_Comm comm;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Barrier()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Barrier()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Barrier( comm );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -470,14 +470,14 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Bcast()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Bcast()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Bcast( buffer, count, datatype, root, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_BCAST_DATA(typesize*count);
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -494,15 +494,21 @@ MPI_Comm comm;
 {
   int   returnVal;
   int   typesize;
+  int   rank;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Gather()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Gather()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Gather( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm );
-  PMPI_Type_size( recvtype, &typesize );
-  TAU_GATHER_DATA(typesize*recvcount);
 
-  TAU_PROFILE_STOP(tautimer); 
+  PMPI_Comm_rank ( comm, &rank );
+  if (rank == root) {
+    PMPI_Type_size( recvtype, &typesize );
+    TAU_GATHER_DATA(typesize*recvcount);
+  }
+
+
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -520,15 +526,20 @@ MPI_Comm comm;
 {
   int   returnVal;
   int   typesize;
+  int   rank;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Gatherv()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Gatherv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
-  returnVal = PMPI_Gatherv( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm );
-  PMPI_Type_size( recvtype, &typesize );
-  TAU_GATHER_DATA(typesize*(*recvcnts));
 
-  TAU_PROFILE_STOP(tautimer); 
+  returnVal = PMPI_Gatherv( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm );
+
+  PMPI_Comm_rank ( comm, &rank );
+  if (rank == root) {
+    PMPI_Type_size( recvtype, &typesize );
+    TAU_GATHER_DATA(typesize*(*recvcnts));
+  }
+
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -540,12 +551,12 @@ MPI_Op * op;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Op_create()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Op_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Op_create( function, commute, op );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -555,12 +566,12 @@ MPI_Op * op;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Op_free()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Op_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Op_free( op );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -576,14 +587,14 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Reduce_scatter()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Reduce_scatter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Reduce_scatter( sendbuf, recvbuf, recvcnts, datatype, op, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCESCATTER_DATA(typesize*(*recvcnts));
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -600,14 +611,14 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Reduce()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Reduce()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Reduce( sendbuf, recvbuf, count, datatype, op, root, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCE_DATA(typesize*count);
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -623,14 +634,14 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Scan()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Scan()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Scan( sendbuf, recvbuf, count, datatype, op, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_SCAN_DATA(typesize*count);
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -648,14 +659,14 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Scatter()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Scatter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Scatter( sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm );
   PMPI_Type_size( sendtype, &typesize );
   TAU_SCATTER_DATA(typesize*sendcnt);
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -674,14 +685,14 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Scatterv()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Scatterv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Scatterv( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm );
   PMPI_Type_size( sendtype, &typesize );
   TAU_SCATTER_DATA(typesize*(*sendcnts));
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -692,12 +703,12 @@ int keyval;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Attr_delete()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Attr_delete()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Attr_delete( comm, keyval );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -710,12 +721,12 @@ int * flag;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Attr_get()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Attr_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Attr_get( comm, keyval, attr_value, flag );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -727,12 +738,12 @@ void * attr_value;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Attr_put()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Attr_put()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Attr_put( comm, keyval, attr_value );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -744,12 +755,12 @@ int * result;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_compare()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_compare()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_compare( comm1, comm2, result );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -761,12 +772,12 @@ MPI_Comm * comm_out;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_create()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_create( comm, group, comm_out );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -777,12 +788,12 @@ MPI_Comm * comm_out;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_dup()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_dup()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_dup( comm, comm_out );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -792,12 +803,12 @@ MPI_Comm * comm;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_free()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_free( comm );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -808,12 +819,12 @@ MPI_Group * group;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_group()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_group()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_group( comm, group );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -824,12 +835,12 @@ int * rank;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_rank()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_rank()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_rank( comm, rank );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   /* Set the node as we did in MPI_Init */
   if (comm == MPI_COMM_WORLD)
@@ -844,12 +855,12 @@ MPI_Group * group;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_remote_group()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_remote_group()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_remote_group( comm, group );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -860,12 +871,12 @@ int * size;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_remote_size()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_remote_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_remote_size( comm, size );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -876,12 +887,12 @@ int * size;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_size()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_size( comm, size );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -894,12 +905,12 @@ MPI_Comm * comm_out;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_split()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_split()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_split( comm, color, key, comm_out );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -910,12 +921,12 @@ int * flag;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_test_inter()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_test_inter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_test_inter( comm, flag );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -927,12 +938,12 @@ int * result;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_compare()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_compare()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_compare( group1, group2, result );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -944,12 +955,12 @@ MPI_Group * group_out;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_difference()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_difference()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_difference( group1, group2, group_out );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -962,12 +973,12 @@ MPI_Group * newgroup;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_excl()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_excl()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_excl( group, n, ranks, newgroup );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -977,12 +988,12 @@ MPI_Group * group;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_free()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_free( group );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -995,12 +1006,12 @@ MPI_Group * group_out;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_incl()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_incl()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_incl( group, n, ranks, group_out );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1012,12 +1023,12 @@ MPI_Group * group_out;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_intersection()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_intersection()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_intersection( group1, group2, group_out );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1028,12 +1039,12 @@ int * rank;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_rank()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_rank()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_rank( group, rank );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1046,12 +1057,12 @@ MPI_Group * newgroup;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_range_excl()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_range_excl()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_range_excl( group, n, ranges, newgroup );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1064,12 +1075,12 @@ MPI_Group * newgroup;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_range_incl()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_range_incl()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_range_incl( group, n, ranges, newgroup );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1080,12 +1091,12 @@ int * size;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_size()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_size( group, size );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1099,12 +1110,12 @@ int * ranks_b;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_translate_ranks()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_translate_ranks()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_translate_ranks( group_a, n, ranks_a, group_b, ranks_b );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1116,12 +1127,12 @@ MPI_Group * group_out;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Group_union()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Group_union()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_union( group1, group2, group_out );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1136,12 +1147,12 @@ MPI_Comm * comm_out;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Intercomm_create()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Intercomm_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Intercomm_create( local_comm, local_leader, peer_comm, remote_leader, tag, comm_out );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1153,12 +1164,12 @@ MPI_Comm * comm_out;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Intercomm_merge()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Intercomm_merge()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Intercomm_merge( comm, high, comm_out );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1171,12 +1182,12 @@ void * extra_state;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Keyval_create()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Keyval_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Keyval_create( copy_fn, delete_fn, keyval, extra_state );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1186,20 +1197,20 @@ int * keyval;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Keyval_free()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Keyval_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Keyval_free( keyval );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
 
-/* LAM MPI defines MPI_Abort as a macro! We check for this and if it is 
+/* LAM MPI defines MPI_Abort as a macro! We check for this and if it is
    defined that way, we change the MPI_Abort wrapper */
 #if (defined(MPI_Abort) && defined(_ULM_MPI_H_))
-int _MPI_Abort( MPI_Comm comm, int errorcode, char * file, int line) 
+int _MPI_Abort( MPI_Comm comm, int errorcode, char * file, int line)
 #else
 int  MPI_Abort( comm, errorcode )
 MPI_Comm comm;
@@ -1208,12 +1219,12 @@ int errorcode;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Abort()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Abort()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Abort( comm, errorcode );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1224,12 +1235,12 @@ int * errorclass;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Error_class()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Error_class()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Error_class( errorcode, errorclass );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1240,12 +1251,12 @@ MPI_Errhandler * errhandler;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_create()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Errhandler_create( function, errhandler );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1255,12 +1266,12 @@ MPI_Errhandler * errhandler;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_free()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Errhandler_free( errhandler );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1271,12 +1282,12 @@ MPI_Errhandler * errhandler;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_get()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Errhandler_get( comm, errhandler );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1288,12 +1299,12 @@ int * resultlen;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Error_string()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Error_string()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Error_string( errorcode, string, resultlen );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1304,12 +1315,12 @@ MPI_Errhandler errhandler;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_set()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_set()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Errhandler_set( comm, errhandler );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1318,12 +1329,12 @@ int  MPI_Finalize(  )
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Finalize(  );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   Tau_stop_top_level_timer_if_necessary();
   return returnVal;
@@ -1335,12 +1346,12 @@ int * resultlen;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Get_processor_name()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Get_processor_name()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Get_processor_name( name, resultlen );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1352,7 +1363,7 @@ char *** argv;
   int  returnVal;
   int  size;
 
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
@@ -1415,12 +1426,12 @@ int * flag;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Initialized()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Initialized()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Initialized( flag );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1431,12 +1442,12 @@ double  MPI_Wtick(  )
 {
   double  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Wtick()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Wtick()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Wtick(  );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1446,12 +1457,12 @@ double  MPI_Wtime(  )
   double  returnVal;
 
   /* To enable the instrumentation change group to TAU_MESSAGE */
-  TAU_PROFILE_TIMER(tautimer, "MPI_Wtime()",  " ", TAU_DISABLE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Wtime()",  " ", TAU_DISABLE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Wtime(  );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1463,12 +1474,12 @@ MPI_Aint * address;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Address()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Address()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Address( location, address );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1485,12 +1496,12 @@ MPI_Comm comm;
   int typesize;
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Bsend()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Bsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( datatype, &typesize );
-    TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count); 
+    TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count);
     /*
     prof_send( procid_0, dest, tag, typesize*count,
 	       "MPI_Bsend" );
@@ -1500,7 +1511,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Bsend( buf, count, datatype, dest, tag, comm );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1523,7 +1534,7 @@ MPI_Request * request;
   
 /* fprintf( stderr, "MPI_Bsend_init call on %d\n", procid_0 ); */
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Bsend_init()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Bsend_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
 #ifdef TAU_TRACK_MSG
@@ -1536,7 +1547,7 @@ MPI_Request * request;
 
   returnVal = PMPI_Bsend_init( buf, count, datatype, dest, tag, comm, request );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1547,12 +1558,12 @@ int size;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Buffer_attach()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Buffer_attach()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Buffer_attach( buffer, size );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1563,12 +1574,12 @@ int * size;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Buffer_detach()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Buffer_detach()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Buffer_detach( buffer, size );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1578,7 +1589,7 @@ MPI_Request * request;
 {
   int  returnVal;
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Cancel()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Cancel()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
 #ifdef TAU_TRACK_MSG
@@ -1587,7 +1598,7 @@ MPI_Request * request;
 
   returnVal = PMPI_Cancel( request );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
 
   return returnVal;
@@ -1603,7 +1614,7 @@ MPI_Request * request;
   /* We'll assume it didn't. */
   
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Request_free()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Request_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
@@ -1612,7 +1623,7 @@ MPI_Request * request;
   
   returnVal = PMPI_Request_free( request );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
 
   return returnVal;
@@ -1635,12 +1646,12 @@ MPI_Request * request;
 
   
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Recv_init()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Recv_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Recv_init( buf, count, datatype, source, tag, comm, request );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
 #ifdef TAU_TRACK_MSG
   PMPI_Type_size( datatype, &typesize );
@@ -1678,7 +1689,7 @@ MPI_Request * request;
   
   /* fprintf( stderr, "MPI_Send_init call on %d\n", procid_0 ); */
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Send_init()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Send_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
 #ifdef TAU_TRACK_MSG
@@ -1691,7 +1702,7 @@ MPI_Request * request;
   returnVal = PMPI_Send_init( buf, count, datatype, dest, tag, comm, request );
 
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1703,12 +1714,12 @@ int * elements;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Get_elements()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Get_elements()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Get_elements( status, datatype, elements );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1720,12 +1731,12 @@ int * count;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Get_count()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Get_count()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Get_count( status, datatype, count );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1748,7 +1759,7 @@ MPI_Request * request;
   
 /* fprintf( stderr, "MPI_Ibsend call on %d\n", procid_0 ); */
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Ibsend()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Ibsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
 #ifdef TAU_TRACK_MSG
@@ -1761,7 +1772,7 @@ MPI_Request * request;
   returnVal = PMPI_Ibsend( buf, count, datatype, dest, tag, comm, request );
 
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1775,12 +1786,12 @@ MPI_Status * status;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Iprobe()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Iprobe()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Iprobe( source, tag, comm, flag, status );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1799,7 +1810,7 @@ MPI_Request * request;
   request_list *newrq1;
   int typesize;
 
-#ifdef DEBUG 
+#ifdef DEBUG
   int myrank;
 #endif /* DEBUG */
 
@@ -1807,7 +1818,7 @@ MPI_Request * request;
 
   
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Irecv()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Irecv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
 #ifdef DEBUG
@@ -1820,7 +1831,7 @@ MPI_Request * request;
   printf("Node: %d: Irecv: request = %lx\n", myrank, *request);
 #endif /* DEBUG */
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
 #ifdef TAU_TRACK_MSG
   if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
@@ -1859,7 +1870,7 @@ MPI_Request * request;
   
 /* fprintf( stderr, "MPI_Irsend call on %d\n", procid_0 ); */
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Irsend()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Irsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
 #ifdef TAU_TRACK_MSG
@@ -1872,7 +1883,7 @@ MPI_Request * request;
   returnVal = PMPI_Irsend( buf, count, datatype, dest, tag, comm, request );
 
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1895,7 +1906,7 @@ MPI_Request * request;
   
 /* fprintf( stderr, "MPI_Isend call on %d\n", procid_0 ); */
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Isend()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Isend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
@@ -1908,7 +1919,7 @@ MPI_Request * request;
   returnVal = PMPI_Isend( buf, count, datatype, dest, tag, comm, request );
 
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1931,7 +1942,7 @@ MPI_Request * request;
   
 /* fprintf( stderr, "MPI_Issend call on %d\n", procid_0 ); */
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Issend()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Issend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
 #ifdef TAU_TRACK_MSG
@@ -1944,7 +1955,7 @@ MPI_Request * request;
   returnVal = PMPI_Issend( buf, count, datatype, dest, tag, comm, request );
 
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1960,12 +1971,12 @@ MPI_Comm comm;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Pack()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Pack()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Pack( inbuf, incount, type, outbuf, outcount, position, comm );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1978,12 +1989,12 @@ int * size;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Pack_size()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Pack_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Pack_size( incount, datatype, comm, size );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -1996,12 +2007,12 @@ MPI_Status * status;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Probe()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Probe()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Probe( source, tag, comm, status );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2019,7 +2030,7 @@ MPI_Status * status;
   int  returnVal;
   int size;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Recv()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Recv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
@@ -2042,7 +2053,7 @@ MPI_Status * status;
     */
   }
 #endif /* TAU_TRACK_MSG */
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2061,12 +2072,12 @@ MPI_Comm comm;
 #endif /* TAU_TRACK_MSG */
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Rsend()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Rsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( datatype, &typesize );
-    TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count); 
+    TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count);
     /*
     prof_send( procid_0, dest, tag, typesize*count,
 	       "MPI_Rsend" );
@@ -2076,7 +2087,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Rsend( buf, count, datatype, dest, tag, comm );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2099,7 +2110,7 @@ MPI_Request * request;
   
 /* fprintf( stderr, "MPI_Rsend_init call on %d\n", procid_0 ); */
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Rsend_init()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Rsend_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Rsend_init( buf, count, datatype, dest, tag, comm, request );
@@ -2111,7 +2122,7 @@ MPI_Request * request;
     TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize3);
   }
 #endif /* TAU_TRACK_MSG */
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2131,13 +2142,13 @@ MPI_Comm comm;
 #endif /* TAU_TRACK_MSG */
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Send()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Send()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( datatype, &typesize );
 
-    TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count); 
+    TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count);
     /*
     prof_send( procid_0, dest, tag, typesize*count,
 	       "MPI_Send" );
@@ -2147,7 +2158,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Send( buf, count, datatype, dest, tag, comm );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2174,13 +2185,13 @@ MPI_Status * status;
 #endif /* TAU_TRACK_MSG */
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( sendtype, &typesize1 );
     TAU_TRACE_SENDMSG(sendtag, translateRankToWorld(comm, dest), typesize1*sendcount);
-    /*         
+    /*
     prof_send( procid_0, dest, sendtag,
                typesize1*sendcount, "MPI_Sendrecv" );
     */
@@ -2195,12 +2206,12 @@ MPI_Status * status;
   returnVal = PMPI_Sendrecv( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status );
 
 #ifdef TAU_TRACK_MSG
-  if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) { 
+  if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
     PMPI_Get_count( status, MPI_BYTE, &count );
     TAU_TRACE_RECVMSG(status->MPI_TAG, translateRankToWorld(comm, status->MPI_SOURCE), count);
-  } 
+  }
 #endif /* TAU_TRACK_MSG */
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2224,17 +2235,17 @@ MPI_Status * status;
 #endif /* TAU_TRACK_MSG */
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv_replace()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv_replace()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( datatype, &typesize2 );
     TAU_TRACE_SENDMSG(sendtag, translateRankToWorld(comm, dest), typesize2*count);
-    /*         
+    /*
     prof_send( procid_0, dest, sendtag,
                typesize2*count, "MPI_Sendrecv_replace" );
     */
-  }	
+  }
 
   if (status == MPI_STATUS_IGNORE) {
     status = &local_status;
@@ -2253,7 +2264,7 @@ MPI_Status * status;
     */
   }
 #endif /* TAU_TRACK_MSG */
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2272,12 +2283,12 @@ MPI_Comm comm;
 #endif /* TAU_TRACK_MSG */
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Ssend()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Ssend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( datatype, &typesize );
-    TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count); 
+    TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count);
     /*
     prof_send( procid_0, dest, tag, typesize*count,
 	       "MPI_Ssend" );
@@ -2287,7 +2298,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Ssend( buf, count, datatype, dest, tag, comm );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2310,7 +2321,7 @@ MPI_Request * request;
   
 /* fprintf( stderr, "MPI_Ssend_init call on %d\n", procid_0 ); */
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Ssend_init()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Ssend_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Ssend_init( buf, count, datatype, dest, tag, comm, request );
@@ -2322,7 +2333,7 @@ MPI_Request * request;
     TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize3);
   }
 #endif /* TAU_TRACK_MSG */
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2332,12 +2343,12 @@ MPI_Request * request;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Start()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Start()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Start( request );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2348,12 +2359,12 @@ MPI_Request * array_of_requests;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Startall()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Startall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Startall( count, array_of_requests );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2369,7 +2380,7 @@ MPI_Status * status;
   MPI_Status local_status;
 #endif /* TAU_TRACK_MSG */
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Test()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Test()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
 #ifdef TAU_TRACK_MSG
@@ -2386,7 +2397,7 @@ MPI_Status * status;
     TauProcessRecv(saverequest, status, "MPI_Test");
 #endif /* TAU_TRACK_MSG */
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
   return returnVal;
 }
 
@@ -2404,11 +2415,11 @@ MPI_Status * array_of_statuses;
 #endif /* TAU_TRACK_MSG */
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Testall()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Testall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 #ifdef TAU_TRACK_MSG
   for (i = 0; i < count; i++) {
-    saverequest[i] = array_of_requests[i]; 
+    saverequest[i] = array_of_requests[i];
   }
   if (array_of_statuses == MPI_STATUSES_IGNORE) {
     array_of_statuses = (MPI_Status*) malloc (sizeof(MPI_Status)*count);
@@ -2429,7 +2440,7 @@ MPI_Status * array_of_statuses;
   }
 #endif /* TAU_TRACK_MSG */
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2450,12 +2461,12 @@ MPI_Status * status;
 
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Testany()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Testany()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
   for (i = 0; i < count; i++) {
-    saverequest[i] = array_of_requests[i]; 
+    saverequest[i] = array_of_requests[i];
   }
   if (status == MPI_STATUS_IGNORE) {
     status = &local_status;
@@ -2466,12 +2477,12 @@ MPI_Status * status;
 
 
 #ifdef TAU_TRACK_MSG
-  if (*flag) 
+  if (*flag)
     TauProcessRecv( (saverequest[*index]),
 			        status, "MPI_Testany" );
 
 #endif /* TAU_TRACK_MSG */
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
   return returnVal;
 }
 
@@ -2481,12 +2492,12 @@ int * flag;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Test_cancelled()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Test_cancelled()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Test_cancelled( status, flag );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2505,12 +2516,12 @@ MPI_Status * array_of_statuses;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
 #endif /* TAU_TRACK_MSG */
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Testsome()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Testsome()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
   for (i = 0; i < incount; i++){
-    saverequest[i] = array_of_requests[i]; 
+    saverequest[i] = array_of_requests[i];
   }
   if (array_of_statuses == MPI_STATUSES_IGNORE) {
     array_of_statuses = (MPI_Status*) malloc (sizeof(MPI_Status)*incount);
@@ -2531,7 +2542,7 @@ MPI_Status * array_of_statuses;
   }
 #endif /* TAU_TRACK_MSG */
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2541,12 +2552,12 @@ MPI_Datatype * datatype;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_commit()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_commit()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_commit( datatype );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2558,12 +2569,12 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_contiguous()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_contiguous()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_contiguous( count, old_type, newtype );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2574,12 +2585,12 @@ MPI_Aint * extent;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_extent()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_extent()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_extent( datatype, extent );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2589,12 +2600,12 @@ MPI_Datatype * datatype;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_free()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_free( datatype );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2608,12 +2619,12 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_hindexed()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_hindexed()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_hindexed( count, blocklens, indices, old_type, newtype );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2627,12 +2638,12 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_hvector()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_hvector()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_hvector( count, blocklen, stride, old_type, newtype );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2646,12 +2657,12 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_indexed()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_indexed()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_indexed( count, blocklens, indices, old_type, newtype );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2662,12 +2673,12 @@ MPI_Aint * displacement;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_lb()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_lb()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_lb( datatype, displacement );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2678,12 +2689,12 @@ int * size;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_size()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_size( datatype, size );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2697,12 +2708,12 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_struct()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_struct()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_struct( count, blocklens, indices, old_types, newtype );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2713,12 +2724,12 @@ MPI_Aint * displacement;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_ub()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_ub()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_ub( datatype, displacement );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2732,12 +2743,12 @@ MPI_Datatype * newtype;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Type_vector()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Type_vector()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Type_vector( count, blocklen, stride, old_type, newtype );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2753,12 +2764,12 @@ MPI_Comm comm;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Unpack()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Unpack()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Unpack( inbuf, insize, position, outbuf, outcount, type, comm );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2774,7 +2785,7 @@ MPI_Status * status;
   MPI_Request saverequest;
 #endif /* TAU_TRACK_MSG */
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Wait()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Wait()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
@@ -2794,7 +2805,7 @@ MPI_Status * status;
   TauProcessRecv(saverequest, status, "MPI_Wait");
 #endif /* TAU_TRACK_MSG */
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2812,12 +2823,12 @@ MPI_Status * array_of_statuses;
 #endif /* TAU_TRACK_MSG */
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Waitall()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Waitall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
   for (i = 0; i < count; i++) {
-    saverequest[i] = array_of_requests[i]; 
+    saverequest[i] = array_of_requests[i];
   }
 
   if (array_of_statuses == MPI_STATUSES_IGNORE) {
@@ -2837,7 +2848,7 @@ MPI_Status * array_of_statuses;
   }
 #endif /* TAU_TRACK_MSG */
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2857,12 +2868,12 @@ MPI_Status * status;
 
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Waitany()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Waitany()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
 #ifdef TAU_TRACK_MSG
   for (i = 0; i < count; i++){
-    saverequest[i] = array_of_requests[i]; 
+    saverequest[i] = array_of_requests[i];
   }
   if (status == MPI_STATUS_IGNORE) {
     status = &local_status;
@@ -2877,7 +2888,7 @@ MPI_Status * status;
 			status, "MPI_Waitany" );
 #endif /* TAU_TRACK_MSG */
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
   return returnVal;
 }
 
@@ -2897,12 +2908,12 @@ MPI_Status * array_of_statuses;
 #endif /* TAU_TRACK_MSG */
 
   
-  TAU_PROFILE_TIMER(tautimer, "MPI_Waitsome()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Waitsome()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
 #ifdef TAU_TRACK_MSG
   for (i = 0; i < incount; i++) {
-    saverequest[i] = array_of_requests[i]; 
+    saverequest[i] = array_of_requests[i];
   }
 
   if (array_of_statuses == MPI_STATUSES_IGNORE) {
@@ -2925,7 +2936,7 @@ MPI_Status * array_of_statuses;
   }
 
 #endif /* TAU_TRACK_MSG */
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2938,12 +2949,12 @@ int * coords;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_coords()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_coords()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Cart_coords( comm, rank, maxdims, coords );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2958,12 +2969,12 @@ MPI_Comm * comm_cart;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_create()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Cart_create( comm_old, ndims, dims, periods, reorder, comm_cart );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2977,12 +2988,12 @@ int * coords;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_get()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Cart_get( comm, maxdims, dims, periods, coords );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -2996,12 +3007,12 @@ int * newrank;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_map()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_map()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Cart_map( comm_old, ndims, dims, periods, newrank );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3013,12 +3024,12 @@ int * rank;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_rank()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_rank()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Cart_rank( comm, coords, rank );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3032,12 +3043,12 @@ int * dest;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_shift()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_shift()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Cart_shift( comm, direction, displ, source, dest );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3049,12 +3060,12 @@ MPI_Comm * comm_new;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_sub()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Cart_sub()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Cart_sub( comm, remain_dims, comm_new );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3065,12 +3076,12 @@ int * ndims;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Cartdim_get()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Cartdim_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Cartdim_get( comm, ndims );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3082,12 +3093,12 @@ int * dims;
 {
   int  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Dims_create()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Dims_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Dims_create( nnodes, ndims, dims );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3102,12 +3113,12 @@ MPI_Comm * comm_graph;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Graph_create()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Graph_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Graph_create( comm_old, nnodes, index, edges, reorder, comm_graph );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3121,12 +3132,12 @@ int * edges;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Graph_get()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Graph_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Graph_get( comm, maxindex, maxedges, index, edges );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3140,12 +3151,12 @@ int * newrank;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Graph_map()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Graph_map()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Graph_map( comm_old, nnodes, index, edges, newrank );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3158,12 +3169,12 @@ int * neighbors;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Graph_neighbors()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Graph_neighbors()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Graph_neighbors( comm, rank, maxneighbors, neighbors );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3175,12 +3186,12 @@ int * nneighbors;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Graph_neighbors_count()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Graph_neighbors_count()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Graph_neighbors_count( comm, rank, nneighbors );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3192,12 +3203,12 @@ int * nedges;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Graphdims_get()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Graphdims_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Graphdims_get( comm, nnodes, nedges );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
@@ -3208,12 +3219,12 @@ int * top_type;
 {
   int   returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Topo_test()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Topo_test()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Topo_test( comm, top_type );
 
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
