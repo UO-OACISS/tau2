@@ -196,7 +196,7 @@ CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
 JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} | sed s/jdbc_db_jarfile://`
 LIBDIR=${tauroot}/${architecture}/lib
 
-java -cp ${LIBDIR}/perfexplorer.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/jargs.jar:${JDBC_JAR} common.Configure -t ${tauroot} -a ${architecture} -g ${CONFIG_FILE}
+java -Dderby.system.home=${LIBDIR} -cp ${LIBDIR}/perfexplorer.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/jargs.jar:${JDBC_JAR} common.Configure -t ${tauroot} -a ${architecture} -g ${CONFIG_FILE}
 
 
 
