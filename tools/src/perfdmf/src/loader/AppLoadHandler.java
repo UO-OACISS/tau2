@@ -147,6 +147,8 @@ public class AppLoadHandler extends DefaultHandler {
                         buf.append("select LAST_INSERT_ID();");
                     else if (getDB().getDBType().compareTo("db2") == 0)
                         buf.append("select IDENTITY_VAL_LOCAL() from application ");
+                    else if (getDB().getDBType().compareTo("derby") == 0)
+                        buf.append("select IDENTITY_VAL_LOCAL() from application ");
                     else
                         buf.append("select currval('application_id_seq');");
                     appid = getDB().getDataItem(buf.toString());

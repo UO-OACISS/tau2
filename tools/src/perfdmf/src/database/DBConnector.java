@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
+import java.util.Properties;
 
 import java.sql.DatabaseMetaData;
 
@@ -47,9 +48,19 @@ public class DBConnector implements DB {
         connect(user, password);
     }
 
+    public DBConnector(String user, String password, ParseConfig parser, boolean createDatabase) throws SQLException {
+        parseConfig = parser;
+        setJDBC(parser);
+        register();
+		if (createDatabase)
+        	connectAndCreate(user, password);
+    }
+
     public void setJDBC(ParseConfig parser) {
         driverName = parser.getJDBCDriver();
         if (parser.getDBType().equals("db2")) {
+            dbaddress = "jdbc:" + parser.getDBType() + ":" + parser.getDBName();
+        } else if (parser.getDBType().equals("derby")) {
             dbaddress = "jdbc:" + parser.getDBType() + ":" + parser.getDBName();
         } else {
             if (parser.getDBType().equals("oracle")) {
@@ -103,6 +114,23 @@ public class DBConnector implements DB {
             System.err.println("Exception Message: " + ex.getMessage());
             throw ex;
         }
+    }
+
+    public void connectAndCreate(String user, String password) throws SQLException {
+        StringBuffer cs = new StringBuffer();
+        try {
+            cs.append(getConnectString());
+			cs.append(";create=true");
+            conn = DriverManager.getConnection(cs.toString(), user, password);
+			conn.close();
+			System.out.println("Database created, command: " + cs.toString());
+        } catch (SQLException ex) {
+            System.err.println("Cannot create database.");
+            System.err.println("Connection String: " + cs);
+            System.err.println("Exception Message: " + ex.getMessage());
+            throw ex;
+        }
+        return;
     }
 
     /*** Execute a SQL statement that returns a single ResultSet object. ***/
@@ -320,7 +348,8 @@ public class DBConnector implements DB {
         boolean checks[] = new boolean[columns.length];
 
         ResultSet resultSet = null;
-        if (this.getDBType().compareTo("oracle") == 0) {
+        if ((this.getDBType().compareTo("oracle") == 0) ||
+        	(this.getDBType().compareTo("derby") == 0)) {
             resultSet = dbMeta.getColumns(null, null, tableName.toUpperCase(), "%");
         } else {
             resultSet = dbMeta.getColumns(null, null, tableName, "%");
@@ -393,6 +422,10 @@ public class DBConnector implements DB {
             ilpColumns[8] = "excl";
         }
 
+        else if (this.getDBType().compareTo("derby") == 0) {
+            ilpColumns[9] = "num_calls";
+        }
+
         if (checkTable(dbMeta, "interval_location_profile", ilpColumns) != 0)
             return -1;
 
@@ -406,6 +439,9 @@ public class DBConnector implements DB {
 
         if (this.getDBType().compareTo("oracle") == 0) {
             itsColumns[5] = "excl";
+        }
+        else if (this.getDBType().compareTo("derby") == 0) {
+            itsColumns[6] = "num_calls";
         }
 
         if (checkTable(dbMeta, "interval_total_summary", itsColumns) != 0)

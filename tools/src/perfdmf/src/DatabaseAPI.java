@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.2 2005/10/18 22:48:55 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.3 2006/02/08 01:25:45 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class DatabaseAPI {
 
@@ -555,6 +555,8 @@ public class DatabaseAPI {
             tmpStr = "select LAST_INSERT_ID();";
         else if (db.getDBType().compareTo("db2") == 0)
             tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
+        else if (db.getDBType().compareTo("derby") == 0)
+            tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
         else if (db.getDBType().compareTo("oracle") == 0)
             tmpStr = "select " + db.getSchemaPrefix() + "metric_id_seq.currval FROM dual";
         else
@@ -923,6 +925,8 @@ public class DatabaseAPI {
                 tmpStr = "select LAST_INSERT_ID();";
             else if (db.getDBType().compareTo("db2") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
+            else if (db.getDBType().compareTo("derby") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
             else if (db.getDBType().compareTo("oracle") == 0)
                 tmpStr = "select " + db.getSchemaPrefix() + "metric_id_seq.currval FROM dual";
             else
@@ -966,6 +970,8 @@ public class DatabaseAPI {
                 tmpStr = "select LAST_INSERT_ID();";
             else if (db.getDBType().compareTo("db2") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
+            else if (db.getDBType().compareTo("derby") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
             else if (db.getDBType().compareTo("oracle") == 0)
                 tmpStr = "select " + db.getSchemaPrefix() + "interval_event_id_seq.currval FROM dual";
             else
@@ -1001,6 +1007,8 @@ public class DatabaseAPI {
             if (db.getDBType().compareTo("mysql") == 0)
                 tmpStr = "select LAST_INSERT_ID();";
             else if (db.getDBType().compareTo("db2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
+            else if (db.getDBType().compareTo("derby") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
             else if (db.getDBType().compareTo("oracle") == 0)
                 tmpStr = "select " + db.getSchemaPrefix() + "atomic_event_id_seq.currval FROM dual";
@@ -1073,6 +1081,16 @@ public class DatabaseAPI {
             threadInsertStatement = db.prepareStatement("INSERT INTO "
                     + db.getSchemaPrefix()
                     + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+         } else if (db.getDBType().compareTo("derby") == 0) {
+            totalInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            meanInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            threadInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         } else {
             totalInsertStatement = db.prepareStatement("INSERT INTO "
                     + db.getSchemaPrefix()
@@ -1355,6 +1373,10 @@ public class DatabaseAPI {
             statement = db.prepareStatement("INSERT INTO "
                     + db.getSchemaPrefix()
                     + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        } else if (db.getDBType().compareTo("derby") == 0) {
+            statement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         } else {
             statement = db.prepareStatement("INSERT INTO "
                     + db.getSchemaPrefix()

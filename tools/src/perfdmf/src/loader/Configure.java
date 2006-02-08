@@ -27,17 +27,17 @@ public class Configure {
     private String perfdmf_home = "";
     private String tau_root = "";
     private String arch = "";
-    private String jdbc_db_jarfile = "postgresql.jar";
-    private String jdbc_db_driver = "org.postgresql.Driver";
-    private String jdbc_db_type = "postgresql";
-    private String db_hostname = "localhost";
-    private String db_portnum = "5432";
+    private String jdbc_db_jarfile = "derby.jar";
+    private String jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
+    private String jdbc_db_type = "derby";
+    private String db_hostname = "";
+    private String db_portnum = "";
     private String db_dbname = "perfdmf";
     private String db_username = "";
     private String db_password = "";
     private String db_schemaprefix = "";
     private boolean store_db_password = false;
-    private String db_schemafile = "dbschema.txt";
+    private String db_schemafile = "dbschema.derby.txt";
     private String xml_parser = "xerces.jar";
     private ParseConfig parser;
     private boolean configFileFound = false;
@@ -149,11 +149,12 @@ public class Configure {
 
 	    while (!valid) {
 		// Prompt for database type
-		System.out.print("Please enter the database vendor (oracle, postgresql or mysql).\n(" 
+		System.out.print("Please enter the database vendor (oracle, postgresql, mysql or derby).\n(" 
 				 + jdbc_db_type + "):");
 		tmpString = reader.readLine();
 		if (tmpString.compareTo("oracle") == 0 || tmpString.compareTo("postgresql") == 0 
-		    || tmpString.compareTo("mysql") == 0 || tmpString.length() == 0) {
+		    || tmpString.compareTo("mysql") == 0 || tmpString.compareTo("derby") == 0 
+			|| tmpString.length() == 0) {
 		
 		    if (tmpString.length() > 0) 
 			jdbc_db_type = tmpString;
@@ -168,18 +169,32 @@ public class Configure {
 		    jdbc_db_driver = "org.postgresql.Driver";
 		    db_schemafile = perfdmf_home + "/etc/" +"dbschema.txt";
 		    db_portnum = "5432";
+			db_hostname = "localhost";
+			db_dbname = "perfdmf";
 		} else if (jdbc_db_type.compareTo("mysql") == 0 && old_jdbc_db_type.compareTo("mysql") != 0) {
 		    // if the user has chosen mysql and the config file is not already set for it
 		    jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "mysql.jar";
 		    jdbc_db_driver = "org.gjt.mm.mysql.Driver";
 		    db_schemafile = perfdmf_home + "/etc/" + "dbschema.mysql.txt";
 		    db_portnum = "3306";
+			db_hostname = "localhost";
+			db_dbname = "perfdmf";
 		} else if (jdbc_db_type.compareTo("oracle") == 0 && old_jdbc_db_type.compareTo("oracle") != 0) {
 		    // if the user has chosen oracle and the config file is not already set for it
 		    jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "ojdbc14.jar";
 		    jdbc_db_driver = "oracle.jdbc.OracleDriver";
 		    db_schemafile = perfdmf_home + "/etc/" + "dbschema.oracle.txt";
 		    db_portnum = "1521";
+			db_hostname = "localhost";
+			db_dbname = "perfdmf";
+		} else if (jdbc_db_type.compareTo("derby") == 0 && old_jdbc_db_type.compareTo("derby") != 0) {
+		    // if the user has chosen derby and the config file is not already set for it
+		    jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "derby.jar";
+		    jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
+		    db_schemafile = perfdmf_home + "/etc/" + "dbschema.derby.txt";
+			db_dbname = tau_root + "/" + arch + "/lib/perfdmf";
+		    db_hostname = "";
+		    db_portnum = "";
 		}
 
 	    } else {
@@ -189,19 +204,30 @@ public class Configure {
 		    jdbc_db_jarfile = "postgresql.jar";
 		    jdbc_db_driver = "org.postgresql.Driver";
 		    db_schemafile = "dbschema.txt";
+			db_hostname = "localhost";
 		    db_portnum = "5432";
 		} else if (jdbc_db_type.compareTo("mysql") == 0) {
 		    // if the user has chosen mysql and the config file is not already set for it
 		    jdbc_db_jarfile = "mysql.jar";
 		    jdbc_db_driver = "org.gjt.mm.mysql.Driver";
 		    db_schemafile = "dbschema.mysql.txt";
+			db_hostname = "localhost";
 		    db_portnum = "3306";
 		} else if (jdbc_db_type.compareTo("oracle") == 0) {
-		    // if the user has chosen mysql and the config file is not already set for it
+		    // if the user has chosen oracle and the config file is not already set for it
 		    jdbc_db_jarfile = "ojdbc14.jar";
 		    jdbc_db_driver = "oracle.jdbc.OracleDriver";
 		    db_schemafile = "dbschema.oracle.txt";
+			db_hostname = "localhost";
 		    db_portnum = "1521";
+		} else if (jdbc_db_type.compareTo("derby") == 0) {
+		    // if the user has chosen derby and the config file is not already set for it
+		    jdbc_db_jarfile = "derby.jar";
+		    jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
+		    db_schemafile = "dbschema.derby.txt";
+			db_dbname = tau_root + "/" + arch + "/lib/perfdmf";
+		    db_hostname = "";
+		    db_portnum = "";
 		}
 	    }
 		
@@ -223,22 +249,29 @@ public class Configure {
 	    if (tmpString.length() > 0) jdbc_db_driver = tmpString;
 						
 						
-	    // Prompt for database hostname
-	    System.out.print("Please enter the hostname for the database server.\n(" + db_hostname + "):");
-	    tmpString = reader.readLine();
-	    if (tmpString.length() > 0) db_hostname = tmpString;
+		if (jdbc_db_type.compareTo("derby") != 0) {
+	    	// Prompt for database hostname
+	    	System.out.print("Please enter the hostname for the database server.\n(" + db_hostname + "):");
+	    	tmpString = reader.readLine();
+	    	if (tmpString.length() > 0) db_hostname = tmpString;
 						
-	    // Prompt for database portnumber
-	    System.out.print("Please enter the port number for the database JDBC connection.\n(" + db_portnum + "):");
-	    tmpString = reader.readLine();
-	    if (tmpString.length() > 0) db_portnum = tmpString;
+	    	// Prompt for database portnumber
+	    	System.out.print("Please enter the port number for the database JDBC connection.\n(" + db_portnum + "):");
+	    	tmpString = reader.readLine();
+	    	if (tmpString.length() > 0) db_portnum = tmpString;
+		}
 						
 	    // Prompt for database name
 
 	    if (jdbc_db_type.compareTo("oracle") == 0) {
-		System.out.print("Please enter the oracle TCP service name.\n(" + db_dbname + "):");
+			System.out.print("Please enter the oracle TCP service name.\n(" +
+			db_dbname + "):");
+	    } else if (jdbc_db_type.compareTo("derby") == 0) {
+			System.out.print("Please enter the path to the database directory.\n(" +
+			db_dbname + "):");
 	    } else {
-		System.out.print("Please enter the database name.\n(" + db_dbname + "):");
+			System.out.print("Please enter the database name.\n(" + 
+			db_dbname + "):");
 	    }
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) db_dbname = tmpString;

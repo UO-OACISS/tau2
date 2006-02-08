@@ -213,6 +213,20 @@ public class ConfigureTest {
         ConnectionManager connector = null;
         DB db = null;
         try {
+
+			if (jdbc_db_type.equals("derby")) {
+				// check to see if the directory exists.  If not, create the database.
+		        if (!(new File(db_dbname).exists())) {
+            		if (db_password != null) {
+						connector = new ConnectionManager(configFileName, db_password);
+            		} else {
+						connector = new ConnectionManager(configFileName);
+            		}
+					connector.connectAndCreate();
+					connector.dbclose();
+					connector = null;
+				}
+			}
             if (db_password != null) {
                 connector = new ConnectionManager(configFileName, db_password);
             } else {

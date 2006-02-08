@@ -1,0 +1,164 @@
+
+
+CREATE TABLE application (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT APPLICATION_PK PRIMARY KEY,
+    name                    CLOB,
+    version		    CLOB,
+    usage                   CLOB, 
+    description		    CLOB,
+    language                CLOB,
+    paradigm                CLOB,
+    algorithms              CLOB,
+    lines_of_code	    CLOB,
+    big_lil_endian	    CLOB,
+    directives		    CLOB,
+    memory_intensity	    CLOB,
+    communication_intensity CLOB,
+    cpu_intensity	    CLOB,
+    os_requirements	    CLOB,
+    other_requirements	    CLOB,
+    spectral_or_physical_mesh	CLOB,
+    static_or_adaptive_mesh	CLOB,
+    structured_or_unstructured_mesh	CLOB,
+    code_history	    CLOB,    
+    primary_industry	    CLOB,
+    primary_technology_area CLOB,
+    rib_entry		    CLOB
+);
+
+CREATE TABLE experiment (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT EXPERIMENT_PK PRIMARY KEY,
+    application             INT         NOT NULL,
+    name                    CLOB,
+    sysinfo                 CLOB,
+    configinfo		    CLOB,
+    instruinfo		    CLOB,
+    compilerinfo	    CLOB,
+    FOREIGN KEY(application) REFERENCES application(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE trial (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT TRIAL_PK PRIMARY KEY,
+    name                    CLOB,
+    experiment              INT         NOT NULL,
+    date                    TIMESTAMP   ,
+    collectorid		    INT,
+    node_count              INT,
+    contexts_per_node       INT,
+    threads_per_context     INT,
+    FOREIGN KEY(experiment) REFERENCES experiment(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE metric (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT METRIC_PK PRIMARY KEY,
+    name                    CLOB        NOT NULL,
+    trial                   INT		NOT NULL,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_event (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT INTERVAL_EVENT_PK PRIMARY KEY,
+    trial                   INT         NOT NULL,
+    name                    CLOB        NOT NULL,
+    group_name              CLOB,
+    source_file		    CLOB,
+    line_number		    INT,
+    line_number_end	    INT,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE atomic_event (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT ATOMIC_EVENT_PK PRIMARY KEY,
+    trial                   INT         NOT NULL,
+    name                    CLOB        NOT NULL,
+    group_name              CLOB,
+    source_file		    CLOB,
+    line_number		    INT,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_location_profile (
+    interval_event          INT         NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    num_calls               DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+    FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE atomic_location_profile (
+    atomic_event            INT         NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    sample_count            INT,         
+    maximum_value           DOUBLE PRECISION,
+    minimum_value           DOUBLE PRECISION,
+    mean_value              DOUBLE PRECISION,
+    standard_deviation	    DOUBLE PRECISION,
+    FOREIGN KEY(atomic_event) REFERENCES atomic_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_total_summary (
+    interval_event          INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    num_calls               DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+    FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_mean_summary (
+    interval_event          INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    num_calls               DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+
+CREATE TABLE trace (
+    trialid		    INT		NOT NULL,
+    tracetype		    CLOB,
+    tracefilename	    CLOB,
+    nodeid		    INT,
+    contextid		    INT,
+    threadid		    INT,
+    FOREIGN KEY(trialid) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE tracesum (
+    trialid	            INT		NOT NULL,
+    tracetype		    CLOB,
+    tracefilename	    CLOB,
+    FOREIGN KEY(trialid) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+
+CREATE INDEX interval_loc_interval_event_metric_index on interval_location_profile (interval_event, metric);
+CREATE INDEX interval_total_interval_event_metric_index on interval_total_summary (interval_event, metric);
+CREATE INDEX interval_mean_interval_event_metric_index on interval_mean_summary (interval_event, metric);
+CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (interval_event, metric, node, context, thread);
+

@@ -32,5 +32,6 @@ fi
 
 
 java -Xmx500m \
+-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 -cp ${PERFDMF_JAR}:${JARGS_JAR} \
 edu.uoregon.tau.perfdmf.loader.PhaseConverter "$@"

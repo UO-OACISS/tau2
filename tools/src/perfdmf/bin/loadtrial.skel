@@ -50,6 +50,7 @@ if [ ! -r ${JDBC_JAR} ]; then
 fi
 
 java -Xmx500m \
+-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
 edu.uoregon.tau.perfdmf.loader.LoadTrial \
 -g ${CONFIG_FILE} "$@"

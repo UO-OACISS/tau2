@@ -138,4 +138,4 @@ if [ ! -r ${JDBC_JAR} ]; then
     fi
 fi
 
-java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${JDBC_JAR} edu.uoregon.tau.perfdmf.loader.ConfigureTest -t ${TAUROOT} -a ${CONFIG_ARCH} -g ${CONFIG_FILE}
+java -Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${JDBC_JAR} edu.uoregon.tau.perfdmf.loader.ConfigureTest -t ${TAUROOT} -a ${CONFIG_ARCH} -g ${CONFIG_FILE}

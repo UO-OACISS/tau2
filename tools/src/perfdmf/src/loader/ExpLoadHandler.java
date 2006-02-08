@@ -267,6 +267,8 @@ public void endElement(String url, String name, String qname) {
 		    		buf.append("select LAST_INSERT_ID();");
 				else if (getDB().getDBType().compareTo("db2") == 0)
 		    		buf.append("select IDENTITY_VAL_LOCAL() from experiment ");
+				else if (getDB().getDBType().compareTo("derby") == 0)
+		    		buf.append("select IDENTITY_VAL_LOCAL() from experiment ");
 				else
 		    		buf.append("select currval('experiment_id_seq');");
 		    	id = getDB().getDataItem(buf.toString()); 

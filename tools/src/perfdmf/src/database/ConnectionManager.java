@@ -57,6 +57,10 @@ public class ConnectionManager {
         setDB(new DBConnector(perfdmfUser, perfdmfPass, parser));
     }
 
+    public void connectAndCreate() throws SQLException {
+        setDB(new DBConnector(perfdmfUser, perfdmfPass, parser, true));
+    }
+
     public String getParserClass() {
         return parserClass;
     }
@@ -111,13 +115,15 @@ public class ConnectionManager {
                 buf.append(inputString);
                 if (isEnd(db, inputString)) {
                     try {
-                        if (db.getDBType().compareTo("oracle") == 0) {
+                        if ((db.getDBType().compareTo("oracle") == 0) ||
+                        	(db.getDBType().compareTo("derby") == 0)) {
                             buf.delete(buf.length() - 1, buf.length());
                         }
                         //System.out.println ("line: " + buf.toString());
                         getDB().executeUpdate(buf.toString());
                         buf = buf.delete(0, buf.length());
                     } catch (SQLException ex) {
+						System.out.println(buf.toString());
                         ex.printStackTrace();
                         return -1;
                     }

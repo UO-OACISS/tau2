@@ -26,7 +26,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.1 2005/09/26 20:24:30 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.2 2006/02/08 01:25:45 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -388,7 +388,12 @@ public class IntervalLocationProfile extends Object {
             buf.append("ms.exclusive_percentage, ms.exclusive, ");
         }
 
-        buf.append("ms.call, ms.subroutines, ms.inclusive_per_call, ");
+        if (db.getDBType().compareTo("derby") == 0) {
+        	buf.append("ms.num_calls, ");
+        } else {
+        	buf.append("ms.call, ");
+		}
+        buf.append("ms.subroutines, ms.inclusive_per_call, ");
         buf.append("ms.metric, ");
         buf.append("ts.inclusive_percentage, ts.inclusive, ");
 
@@ -397,7 +402,12 @@ public class IntervalLocationProfile extends Object {
         } else {
             buf.append("ts.exclusive_percentage, ts.exclusive, ");
         }
-        buf.append("ts.call, ts.subroutines, ts.inclusive_per_call ");
+        if (db.getDBType().compareTo("derby") == 0) {
+        	buf.append("ts.num_calls, ");
+        } else {
+        	buf.append("ts.call, ");
+		}
+        buf.append("ts.subroutines, ts.inclusive_per_call ");
         buf.append("from " + db.getSchemaPrefix() + "interval_mean_summary ms inner join ");
         buf.append(db.getSchemaPrefix() + "interval_total_summary ts ");
         buf.append("on ms.interval_event = ts.interval_event ");
@@ -446,7 +456,12 @@ public class IntervalLocationProfile extends Object {
         } else {
             buf.append("p.inclusive, p.exclusive_percentage, p.exclusive, ");
         }
-        buf.append("p.call, p.subroutines, p.inclusive_per_call ");
+        if (db.getDBType().compareTo("derby") == 0) {
+        	buf.append("p.num_calls, ");
+		} else {
+        	buf.append("p.call, ");
+		}
+        buf.append("p.subroutines, p.inclusive_per_call ");
         buf.append("from " + db.getSchemaPrefix() + "interval_event e inner join " + db.getSchemaPrefix()
                 + "interval_location_profile p ");
         buf.append("on e.id = p.interval_event ");
@@ -502,6 +517,10 @@ public class IntervalLocationProfile extends Object {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
                             + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                } else if (db.getDBType().compareTo("derby") == 0) {
+                    statement = db.prepareStatement("INSERT INTO "
+                            + db.getSchemaPrefix()
+                            + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 } else {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
@@ -537,6 +556,10 @@ public class IntervalLocationProfile extends Object {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
                             + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                } else if (db.getDBType().compareTo("derby") == 0) {
+                    statement = db.prepareStatement("INSERT INTO "
+                            + db.getSchemaPrefix()
+                            + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 } else {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()

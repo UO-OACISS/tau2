@@ -17,7 +17,7 @@ import java.io.IOException;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.1 2005/09/26 20:24:28 amorris Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.2 2006/02/08 01:25:45 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -83,7 +83,8 @@ public class Experiment implements Serializable {
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
-            if (db.getDBType().compareTo("oracle") == 0) {
+            if ((db.getDBType().compareTo("oracle") == 0) || 
+				(db.getDBType().compareTo("derby") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "EXPERIMENT", "%");
             } else {
                 resultSet = dbMeta.getColumns(null, null, "experiment", "%");
@@ -261,6 +262,8 @@ public class Experiment implements Serializable {
 
             if (db.getDBType().compareTo("oracle") == 0) {
                 buf.append(" order by dbms_lob.substr(name) asc");
+            } else if (db.getDBType().compareTo("derby") == 0) {
+                buf.append(" order by cast(name as varchar(256)) asc");
             } else {
                 buf.append(" order by name asc ");
             }
@@ -340,6 +343,8 @@ public class Experiment implements Serializable {
             if (db.getDBType().compareTo("mysql") == 0) {
                 tmpStr = "select LAST_INSERT_ID();";
             } else if (db.getDBType().compareTo("db2") == 0) {
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM experiment";
+            } else if (db.getDBType().compareTo("derby") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM experiment";
             } else if (db.getDBType().compareTo("oracle") == 0) {
                 tmpStr = "select " + db.getSchemaPrefix() + "experiment_id_seq.currval FROM dual";
