@@ -22,7 +22,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.2 2006/02/08 01:25:46 khuck Exp $
+ * CVS $Id: Trial.java,v 1.3 2006/02/08 02:21:45 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -376,11 +376,21 @@ public class Trial implements Serializable {
 
             Vector nameList = new Vector();
             Vector typeList = new Vector();
+			boolean seenID = false;
+
             while (resultSet.next() != false) {
 
                 int ctype = resultSet.getInt("DATA_TYPE");
                 String cname = resultSet.getString("COLUMN_NAME");
                 String typename = resultSet.getString("TYPE_NAME");
+
+				// this code is because of a bug in derby...
+				if (cname.equals("ID")) {
+					if (!seenID)
+						seenID = true;
+					else
+						break;
+				}
 
                 // only integer and string types (for now)
                 // don't do name and id, we already know about them

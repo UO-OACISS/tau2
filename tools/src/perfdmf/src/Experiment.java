@@ -17,7 +17,7 @@ import java.io.IOException;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.2 2006/02/08 01:25:45 khuck Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.3 2006/02/08 02:21:45 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -92,6 +92,7 @@ public class Experiment implements Serializable {
 
             Vector nameList = new Vector();
             Vector typeList = new Vector();
+			boolean seenID = false;
 
             while (resultSet.next() != false) {
 
@@ -102,6 +103,14 @@ public class Experiment implements Serializable {
 
                 // only integer and string types (for now)
                 // don't do name and id, we already know about them
+
+				// this code is because of a bug in derby...
+				if (cname.equals("ID")) {
+					if (!seenID)
+						seenID = true;
+					else
+						break;
+				}
 
                 if (DBConnector.isReadAbleType(ctype) && cname.toUpperCase().compareTo("ID") != 0
                         && cname.toUpperCase().compareTo("NAME") != 0

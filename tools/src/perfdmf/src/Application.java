@@ -20,7 +20,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.2 2006/02/08 01:25:45 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.3 2006/02/08 02:21:44 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -103,12 +103,21 @@ public class Application implements Serializable {
 
             Vector nameList = new Vector();
             Vector typeList = new Vector();
+			boolean seenID = false;
 
             while (resultSet.next() != false) {
 
                 int ctype = resultSet.getInt("DATA_TYPE");
                 String cname = resultSet.getString("COLUMN_NAME");
                 String typename = resultSet.getString("TYPE_NAME");
+
+				// this code is because of a bug in derby...
+				if (cname.equals("ID")) {
+					if (!seenID)
+						seenID = true;
+					else
+						break;
+				}
 
                 // only integer and string types (for now)
                 // don't do name and id, we already know about them
