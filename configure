@@ -3888,6 +3888,7 @@ then
   cp ${tauroot}/tools/src/contrib/jython.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jogl.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/derby.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/src/Profile/TAU.jar ${tauroot}/${architecture}/lib
   echo "TAU: installed ParaProf, PerfDMF, and supporting jars in ${tauroot}/${architecture}/lib"
 
@@ -4052,6 +4053,10 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
  > ${targetdir}/${architecture}/bin/phaseconvert
 chmod a+rx ${targetdir}/${architecture}/bin/phaseconvert
 
+cat ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/lib/derby.properties
+
 cat ${tauroot}/tools/src/perfexplorer/bin/configure.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir',' \
 -e 's,@SHELL@,'$taushell',' \
@@ -4059,7 +4064,6 @@ sed -e 's,@TAUROOTDIR@,'$targetdir',' \
 -e 's,@TARGETDIR@,'$targetdir',' \
  > ${tauroot}/tools/src/perfexplorer/configure
 chmod a+rx ${tauroot}/tools/src/perfexplorer/configure
-
 
 if [ ${tauprefix} = unknown ]
 then
