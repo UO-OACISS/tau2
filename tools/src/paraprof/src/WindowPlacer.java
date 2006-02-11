@@ -28,7 +28,7 @@ public class WindowPlacer {
         visibleWindows.remove(frame);
     }
 
-    static Point getGlobalDataWindowPosition(JFrame frame) {
+    public static Point getGlobalDataWindowPosition(JFrame frame) {
 
         int xPosition = ParaProf.paraProfManagerWindow.getLocation().x;
         int yPosition = ParaProf.paraProfManagerWindow.getLocation().y;

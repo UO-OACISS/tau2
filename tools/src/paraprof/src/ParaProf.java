@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.47 2006/02/07 06:17:16 khuck Exp $
+ * CVS $Id: ParaProf.java,v 1.48 2006/02/11 01:38:11 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.47 $
+ * @version $Revision: 1.48 $
  */
 public class ParaProf implements ActionListener {
 
@@ -83,6 +83,7 @@ public class ParaProf implements ActionListener {
 
     private static String args[];
     
+    public static String scriptFile;
     
     public static void registerScript(ParaProfScript pps) {
         scripts.add(pps);
@@ -150,13 +151,13 @@ public class ParaProf implements ActionListener {
     }
 
     public static void incrementNumWindows() {
-        //        System.out.println ("incrementing");
         numWindowsOpen++;
+        //System.out.println ("incrementing: now " + numWindowsOpen);
     }
 
     public static void decrementNumWindows() {
-        //        System.out.println ("decrementing");
         numWindowsOpen--;
+        //System.out.println ("decrementing: now " + numWindowsOpen);
         if (numWindowsOpen <= 0) {
             exitParaProf(0);
         }
@@ -265,15 +266,22 @@ public class ParaProf implements ActionListener {
             // running as Java Web Start without permission
         }
 
-        
-        if (new File(System.getProperty("user.home") + "/.ParaProf/ParaProf.py").exists()) {
-            TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
-        }
+ 
+        ParaProf.loadScripts();
 
         loadDefaultTrial();
 
     }
 
+    
+    public static void loadScripts()  {
+        ParaProf.scripts.clear();
+        ParaProf.scriptFile = System.getProperty("user.home") + "/.ParaProf/ParaProf.py";
+        if (new File(scriptFile).exists()) {
+            TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
+        }
+    }
+    
     public void actionPerformed(ActionEvent evt) {
         Object EventSrc = evt.getSource();
         if (EventSrc instanceof javax.swing.Timer) {

@@ -230,7 +230,6 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public void showMainWindow() {
         if (fullDataWindow == null) {
             fullDataWindow = new GlobalDataWindow(this, trial.getDataSource().getTopLevelPhase());
-            ParaProf.incrementNumWindows();
             fullDataWindow.setVisible(true);
 
         } else {
@@ -238,17 +237,6 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
             fullDataWindow.setVisible(true);
         }
     }
-
-    public void closeStaticMainWindow() {
-        if (fullDataWindow != null) {
-            this.deleteObserver(fullDataWindow);
-            fullDataWindow.setVisible(false);
-        }
-    }
-
-    //public SystemEvents getSystemEvents() {
-    //    return systemEvents;
-    //  }
 
     //####################################
     //Interface for ParaProfMetrics.
@@ -374,6 +362,12 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         this.selectedGroup = group;
     }
 
+
+    public void closeTrialWindows() {
+        updateRegisteredObjects("subWindowCloseEvent");
+    }
+
+    
     public Group getSelectedGroup() {
         return selectedGroup;
     }
@@ -550,25 +544,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
             fileMonitor.addListener(fileMonitorListener);
 
-            //            monitorTimer = new Timer();
-            //            monitorTimer.scheduleAtFixedRate(new TimerTask() {
-            //
-            //                public void run() {
-            //                    try {
-            //                        //                        System.err.println("Monitoring Profiles!");
-            //                        getDataSource().reloadData();
-            //
-            //                        EventQueue.invokeLater(new Runnable() {
-            //                            public void run() {
-            //                                updateRegisteredObjects("dataEvent");
-            //                            }
-            //                        });
-            //
-            //                    } catch (Exception e) {
-            //                        // eat it
-            //                    }
-            //                }
-            //            }, 5000, 5000);
+        
         }
     }
 
@@ -576,8 +552,25 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         //Set this object as changed.
         this.setChanged();
 
+        
+        
         //Now notify observers.
         this.notifyObservers(inString);
     }
 
+    private List obs = new ArrayList();
+    public void addObserver(Observer o) {
+        super.addObserver(o);
+        obs.add(o);
+    }
+    
+    public void deleteObserver(Observer o) {
+        super.deleteObserver(o);
+        obs.remove(o);
+    }
+    
+    public List getObservers() {
+        return obs;
+    }
+    
 }

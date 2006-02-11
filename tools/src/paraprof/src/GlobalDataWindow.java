@@ -22,9 +22,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.3 2006/02/04 01:23:57 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.4 2006/02/11 01:38:11 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -40,11 +40,13 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private DataSorter dataSorter;
 
     private JMenu optionsMenu;
-    private JCheckBoxMenuItem nameCheckBox;
-    private JCheckBoxMenuItem normalizeCheckBox;
-    private JCheckBoxMenuItem stackBarsCheckBox;
-    private JCheckBoxMenuItem orderByMeanCheckBox;
-    private JCheckBoxMenuItem orderCheckBox;
+    private JCheckBoxMenuItem nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
+    private JCheckBoxMenuItem normalizeCheckBox = new JCheckBoxMenuItem("Normalize Bars", true);
+
+    private JCheckBoxMenuItem orderByMeanCheckBox = new JCheckBoxMenuItem("Order By Mean", true);
+    private JCheckBoxMenuItem orderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
+    private JCheckBoxMenuItem stackBarsCheckBox = new JCheckBoxMenuItem("Stack Bars Together", true);
+
     private JCheckBoxMenuItem slidersCheckBox;
     private JCheckBoxMenuItem metaDataCheckBox;
 
@@ -55,11 +57,11 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private GridBagLayout gbl;
     private GridBagConstraints gbc;
 
-    private boolean normalizeBars = true;
-    private boolean stackBars = true;
 
     private boolean mShown = false;
 
+    
+    
     public GlobalDataWindow(ParaProfTrial ppTrial, Function phase) {
         this.ppTrial = ppTrial;
         this.phase = phase;
@@ -132,6 +134,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
         panel.repaint();
 
+        ParaProf.incrementNumWindows();
     }
 
     public GlobalBarChartModel getModel() {
@@ -155,23 +158,18 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
         optionsMenu.add(new JSeparator());
 
-        nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
         nameCheckBox.addActionListener(this);
         optionsMenu.add(nameCheckBox);
 
-        normalizeCheckBox = new JCheckBoxMenuItem("Normalize Bars", true);
         normalizeCheckBox.addActionListener(this);
         optionsMenu.add(normalizeCheckBox);
 
-        orderByMeanCheckBox = new JCheckBoxMenuItem("Order By Mean", true);
         orderByMeanCheckBox.addActionListener(this);
         optionsMenu.add(orderByMeanCheckBox);
 
-        orderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
         orderCheckBox.addActionListener(this);
         optionsMenu.add(orderCheckBox);
 
-        stackBarsCheckBox = new JCheckBoxMenuItem("Stack Bars Together", true);
         stackBarsCheckBox.addActionListener(this);
         optionsMenu.add(stackBarsCheckBox);
 
@@ -199,47 +197,19 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
                 String arg = evt.getActionCommand();
 
                 if (arg.equals("Sort By Name")) {
-                    sortLocalData();
-                    panel.repaint();
+                    setSortByName(nameCheckBox.isSelected());
                 } else if (arg.equals("Normalize Bars")) {
-                    panel.getBarChart().setNormalized(normalizeCheckBox.isSelected());
-                    panel.repaint();
+                    setNormalized(normalizeCheckBox.isSelected());
                 } else if (arg.equals("Stack Bars Together")) {
-                    if (stackBarsCheckBox.isSelected()) {
-
-                        normalizeCheckBox.setEnabled(true);
-                        orderByMeanCheckBox.setEnabled(true);
-
-                        panel.getBarChart().setNormalized(normalizeCheckBox.isSelected());
-                        panel.getBarChart().setStacked(true);
-                        stackBars = true;
-                    } else {
-                        stackBars = false;
-
-                        normalizeCheckBox.setSelected(false);
-                        normalizeCheckBox.setEnabled(false);
-                        normalizeBars = false;
-                        orderByMeanCheckBox.setSelected(true);
-                        orderByMeanCheckBox.setEnabled(false);
-
-                        panel.getBarChart().setNormalized(normalizeCheckBox.isSelected());
-                        panel.getBarChart().setStacked(false);
-                    }
-                    sortLocalData();
-                    panel.repaint();
+                    setStackBars(stackBarsCheckBox.isSelected());
                 } else if (arg.equals("Order By Mean")) {
-                    sortLocalData();
-                    panel.repaint();
+                    setSortByMean(orderByMeanCheckBox.isSelected());
                 } else if (arg.equals("Descending Order")) {
-                    sortLocalData();
-                    panel.repaint();
+                    setDescendingOrder(orderCheckBox.isSelected());
                 } else if (arg.equals("Show Width Slider")) {
-                    if (slidersCheckBox.isSelected())
-                        showWidthSlider(true);
-                    else
-                        showWidthSlider(false);
+                    showWidthSlider(slidersCheckBox.isSelected());
                 } else if (arg.equals("Show Meta Data in Panel")) {
-                    this.setHeader();
+                    setShowMetaData(metaDataCheckBox.isSelected());
                 }
             }
         } catch (Exception e) {
@@ -249,13 +219,27 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
     public void stateChanged(ChangeEvent event) {
         try {
-            panel.getBarChart().setBarLength(barLengthSlider.getValue());
-            panel.repaint();
+            setBarLength(barLengthSlider.getValue());
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
     }
 
+    public int getBarLength() {
+        return barLengthSlider.getValue();
+    }
+    
+    public void setBarLength(int length) {
+        barLengthSlider.setValue(length);
+        panel.getBarChart().setBarLength(barLengthSlider.getValue());
+        panel.repaint();
+    }
+
+    
+    public boolean getWidthSliderShown() {
+        return slidersCheckBox.isSelected();
+    }
+    
     public void menuDeselected(MenuEvent evt) {
     }
 
@@ -273,6 +257,10 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             sortLocalData();
             this.setHeader();
             panel.repaint();
+        } else if (tmpString.equals("subWindowCloseEvent")) {
+            if (this != ppTrial.getFullDataWindow()) {
+                closeThisWindow();
+            }
         }
     }
 
@@ -284,6 +272,16 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         return panel.getViewport().getViewRect();
     }
 
+    
+    public boolean getShowMetaData() {
+        return metaDataCheckBox.isSelected();
+    }
+    
+    public void setShowMetaData(boolean value) {
+        metaDataCheckBox.setSelected(value);
+        setHeader();
+    }
+    
     //######
     //Panel header.
     //######
@@ -315,7 +313,8 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         }
     }
 
-    private void showWidthSlider(boolean displaySliders) {
+    public void showWidthSlider(boolean displaySliders) {
+        slidersCheckBox.setSelected(displaySliders);
         if (displaySliders) {
             contentPane.remove(panel);
 
@@ -411,22 +410,16 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         try {
             setVisible(false);
 
-            // don't do this!
-            //trial.getSystemEvents().deleteObserver(this);
+            if (this != ppTrial.getFullDataWindow()) {
+                ppTrial.deleteObserver(this);
+                dispose();
+            }
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
             // do nothing
         }
-        dispose();
     }
 
-    public boolean getNormalizeBars() {
-        return this.normalizeBars;
-    }
-
-    public boolean getStackBars() {
-        return this.stackBars;
-    }
 
     public void help(boolean display) {
         ParaProf.helpWindow.show();
@@ -436,4 +429,68 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         return phase;
     }
 
+    public boolean getSortByName() {
+        return nameCheckBox.isSelected();
+    }
+    public void setSortByName(boolean value) {
+        nameCheckBox.setSelected(value);
+        sortLocalData();
+        panel.repaint();
+    }
+    
+    public boolean getNormalized() {
+        return normalizeCheckBox.isSelected();
+    }
+    public void setNormalized(boolean value) {
+        normalizeCheckBox.setSelected(value);
+        panel.getBarChart().setNormalized(normalizeCheckBox.isSelected());
+        panel.repaint();
+    }
+
+    public boolean getSortByMean() {
+        return orderByMeanCheckBox.isSelected();
+    }
+    public void setSortByMean(boolean value) {
+        orderByMeanCheckBox.setSelected(value);
+        sortLocalData();
+        panel.repaint();
+    }
+    
+    public boolean getDescendingOrder() {
+        return orderCheckBox.isSelected();
+    }
+    public void setDescendingOrder(boolean value) {
+        orderCheckBox.setSelected(value);
+        sortLocalData();
+        panel.repaint();
+    }
+
+    public boolean getStackBars() {
+        return stackBarsCheckBox.isSelected();
+    }
+    public void setStackBars(boolean value) {
+        stackBarsCheckBox.setSelected(value);
+
+        if (value) {
+            normalizeCheckBox.setEnabled(true);
+            orderByMeanCheckBox.setEnabled(true);
+
+            panel.getBarChart().setNormalized(getNormalized());
+            panel.getBarChart().setStacked(true);
+
+        } else {
+            normalizeCheckBox.setSelected(false);
+            normalizeCheckBox.setEnabled(false);
+            orderByMeanCheckBox.setSelected(true);
+            orderByMeanCheckBox.setEnabled(false);
+
+            panel.getBarChart().setNormalized(getNormalized());
+            panel.getBarChart().setStacked(false);
+        }
+
+        sortLocalData();
+        panel.repaint();
+    }
+
+    
 }

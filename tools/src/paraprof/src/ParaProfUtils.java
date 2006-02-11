@@ -313,6 +313,14 @@ public class ParaProfUtils {
 
             public void menuSelected(MenuEvent e) {
                 menu.removeAll();
+                JMenuItem menuitem = new JMenuItem("Reload scripts");
+                menuitem.addActionListener(new ActionListener() {
+
+                    public void actionPerformed(ActionEvent e) {
+                        ParaProf.loadScripts();
+                    }});
+                menu.add(menuitem);
+                //menu.add
                 for (int i = 0; i < ParaProf.scripts.size(); i++) {
                     final ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
                     if (pps instanceof ParaProfTrialScript) {
