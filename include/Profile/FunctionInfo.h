@@ -186,7 +186,7 @@ public:
 	void SetCalls(int tid, long calls) { NumCalls[tid] = calls; }
 	long GetSubrs(int tid) { return NumSubrs[tid]; }
 	void SetSubrs(int tid, long subrs) { NumSubrs[tid] = subrs; }
-	void FunctionInfo::ResetExclTimeIfNegative(int tid);
+	void ResetExclTimeIfNegative(int tid);
 
 #ifndef TAU_MULTIPLE_COUNTERS
 	double GetExclTime(int tid) { return ExclTime[tid]; }
@@ -326,6 +326,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.38 $   $Date: 2006/01/30 19:03:25 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.38 2006/01/30 19:03:25 amorris Exp $ 
+ * $Revision: 1.39 $   $Date: 2006/02/13 22:50:32 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.39 2006/02/13 22:50:32 amorris Exp $ 
  ***************************************************************************/
