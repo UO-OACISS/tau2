@@ -522,6 +522,7 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
 
   PDB::croutinevec croutines = p.getCRoutineVec();
   bool cmpResult; 
+  pdbRoutine::locvec::iterator rlit;
   for(PDB::croutinevec::const_iterator rit = croutines.begin(); 
 	rit != croutines.end(); ++rit)
   { /* iterate over all routines */
@@ -551,8 +552,7 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
 #endif /* DEBUG */
         /* get routine entry line no. */
         pdbRoutine::locvec retlocations = (*rit)->returnLocations();
-        for (pdbRoutine::locvec::iterator rlit = retlocations.begin();
-	  rlit != retlocations.end(); ++rlit)
+        for (rlit = retlocations.begin(); rlit != retlocations.end(); ++rlit)
         {
 #ifdef DEBUG
           cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
@@ -571,6 +571,7 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
 {
   PDB::froutinevec froutines = p.getFRoutineVec();
   bool cmpResult; 
+  pdbRoutine::locvec::iterator rlit;
   for(PDB::froutinevec::const_iterator rit = froutines.begin(); 
 	rit != froutines.end(); ++rit)
   { /* iterate over all routines */
@@ -602,8 +603,7 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
         pdbRoutine::locvec stoplocations = (*rit)->stopLocations();
 	
 	/* we first start with the return locations */
-        for (pdbRoutine::locvec::iterator rlit = retlocations.begin();
-	  rlit != retlocations.end(); ++rlit)
+        for (rlit = retlocations.begin(); rlit != retlocations.end(); ++rlit)
         {
 #ifdef DEBUG
           cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
@@ -612,8 +612,7 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
 	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode()));
         }
 	/* and then examine the stop locations */
-        for (pdbRoutine::locvec::iterator rlit = stoplocations.begin();
-	  rlit != stoplocations.end(); ++rlit)
+        for (rlit = stoplocations.begin(); rlit != stoplocations.end(); ++rlit)
         {
 #ifdef DEBUG
           cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
@@ -715,6 +714,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2005/11/10 02:00:57 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.1 2005/11/10 02:00:57 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2006/02/13 18:05:47 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.2 2006/02/13 18:05:47 sameer Exp $
  ***************************************************************************/
