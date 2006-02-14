@@ -3,7 +3,6 @@
 **			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************/
 
-#include <pdbAll.h>
 #include <string>
 using std::string;
 
@@ -13,6 +12,8 @@ enum instrumentKind_t { TAU_LOOPS, TAU_LINE, TAU_ROUTINE_ENTRY, TAU_ROUTINE_EXIT
 enum itemKind_t { ROUTINE, BODY_BEGIN, FIRST_EXECSTMT, BODY_END, RETURN, EXIT, INSTRUMENTATION_POINT};
 enum tau_language_t { tau_c, tau_cplusplus, tau_fortran };
 
+#ifndef TAU_DYNINST
+#include <pdbAll.h>
 struct itemRef {
   itemRef(const pdbItem *i, bool isT);
   itemRef(const pdbItem *i, itemKind_t k, int l, int c);
@@ -25,11 +26,12 @@ struct itemRef {
   int      col;
   string   snippet;
 };
+#endif /* TAU_DYNINST */
 
 extern bool fuzzyMatch(const string& a, const string& b);
 
 /***************************************************************************
  * $RCSfile: tau_datatypes.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2005/11/10 02:24:41 $
- * VERSION_ID: $Id: tau_datatypes.h,v 1.1 2005/11/10 02:24:41 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2006/02/14 19:05:23 $
+ * VERSION_ID: $Id: tau_datatypes.h,v 1.2 2006/02/14 19:05:23 sameer Exp $
  ***************************************************************************/
