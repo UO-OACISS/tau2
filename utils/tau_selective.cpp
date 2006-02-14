@@ -121,13 +121,17 @@ int processInstrumentationRequests(char *fname)
 	if (strcmp(inbuf, END_INSTRUMENT_SECTION) == 0)
 	  break; /* Found the end of file exclude list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
+#ifndef TAU_DYNINST
         parseInstrumentationCommand(inbuf, lineno);    
+#endif /* TAU_DYNINST */
       }
     }
     /* next token */
   }
   input.close();
+#ifndef TAU_DYNINST
   printInstrumentList();
+#endif /* TAU_DYNINST */
   return 0;
 }
 
@@ -392,7 +396,7 @@ bool processFileForInstrumentation(const string& file_name)
 
 
 /***************************************************************************
- * $RCSfile: tau_selective.cpp,v $   $Author: amorris $
- * $Revision: 1.10 $   $Date: 2005/11/11 03:46:51 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.10 2005/11/11 03:46:51 amorris Exp $
+ * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
+ * $Revision: 1.11 $   $Date: 2006/02/14 01:41:23 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.11 2006/02/14 01:41:23 sameer Exp $
  ***************************************************************************/
