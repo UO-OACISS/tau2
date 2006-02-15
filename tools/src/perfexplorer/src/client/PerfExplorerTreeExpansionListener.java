@@ -1,7 +1,17 @@
 package client;
 
+import common.RMIView;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.Metric;
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.DefaultTreeModel;
+
 
 public class PerfExplorerTreeExpansionListener implements TreeExpansionListener, TreeWillExpandListener {
 
@@ -12,11 +22,19 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 	}
 
 	public void treeWillExpand (TreeExpansionEvent e) {
-	/*
 		TreePath path = e.getPath();
 		if (path == null)
 			return;
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+		if (!node.isRoot()) {
+			node.removeAllChildren();
+			TreeModel model = tree.getModel();
+			if (model instanceof DefaultTreeModel) {
+				DefaultTreeModel dModel = (DefaultTreeModel)model;
+				dModel.reload(node);
+            }
+		}
+
 		if (node.isRoot()) {
 			// do nothing
 		} else if (node.toString().equals("Database Profiles")) {
@@ -43,7 +61,6 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 				System.out.println("unknown!");
 			}
 		}
-		*/
 	}
 
 	public void treeExpanded(TreeExpansionEvent e) {

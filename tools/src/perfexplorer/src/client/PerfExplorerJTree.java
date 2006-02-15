@@ -19,9 +19,12 @@ public class PerfExplorerJTree extends JTree {
 		putClientProperty("JTree.lineStyle", "Angled");
 		//getSelectionModel().setSelectionMode (
 			//TreeSelectionModel.SINGLE_TREE_SELECTION);
+		setShowsRootHandles(true);
+
 		PerfExplorerTreeCellRenderer renderer = 
 			new PerfExplorerTreeCellRenderer();
 		setCellRenderer(renderer);
+
 		addTreeSelectionListener (
 			new PerfExplorerTreeSelectionListener(this));
 		addTreeWillExpandListener (
@@ -33,19 +36,18 @@ public class PerfExplorerJTree extends JTree {
 			DefaultTreeModel model = new DefaultTreeModel(createNodes());
 			model.setAsksAllowsChildren(true);
 			theTree = new PerfExplorerJTree(model);
-			//theTree.setShowsRootHandles(true);
 			addTrialsForViews();
 		}
 		return theTree;
 	}
 
 	private static DefaultMutableTreeNode createNodes () {
-		DefaultMutableTreeNode root = new DefaultMutableTreeNode("Performance Data");
-		DefaultMutableTreeNode top = new DefaultMutableTreeNode("Database Profiles");
-		DefaultMutableTreeNode viewTop = new DefaultMutableTreeNode("Views");
-		addApplicationNodes(top, true);
+		DefaultMutableTreeNode root = new PerfExplorerTreeNode("Performance Data");
+		DefaultMutableTreeNode top = new PerfExplorerTreeNode("Database Profiles");
+		DefaultMutableTreeNode viewTop = new PerfExplorerTreeNode("Views");
+		//addApplicationNodes(top, true);
 		leafViews = new ArrayList();
-		addViewNodes(viewTop, "0");
+		//addViewNodes(viewTop, "0");
 		root.add(top);
 		root.add(viewTop);
 
@@ -59,13 +61,13 @@ public class PerfExplorerJTree extends JTree {
 		Iterator views = viewVector.iterator();
 		while (views.hasNext()) {
 			RMIView view = (RMIView) views.next();
-			DefaultMutableTreeNode node = new DefaultMutableTreeNode (view);
+			DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
 			addViewNodes(node, view.getField("ID"));
 			parentNode.add(node);
 		}
 		if (viewVector.size() == 0) {
 			leafViews.add(parentNode);
-			//addTrialsForView(parentNode);
+			addTrialsForView(parentNode);
 		}
 	}
 
@@ -82,8 +84,8 @@ public class PerfExplorerJTree extends JTree {
 				while(applications.hasNext())
 				{
 					app = (Application) applications.next();
-					node = new DefaultMutableTreeNode (app);
-					addExperimentNodes(node, app, true);
+					node = new PerfExplorerTreeNode (app);
+					//addExperimentNodes(node, app, true);
 					parent.add(node);
 				}
 			}
@@ -101,8 +103,8 @@ public class PerfExplorerJTree extends JTree {
 		while(experiments.hasNext())
 		{
 			exp = (Experiment) experiments.next();
-			expNode = new DefaultMutableTreeNode (exp);
-			if (getTrials) addTrialNodes(expNode, exp);
+			expNode = new PerfExplorerTreeNode (exp);
+			//if (getTrials) addTrialNodes(expNode, exp);
 			node.add(expNode);
 		}
 	}
@@ -117,7 +119,7 @@ public class PerfExplorerJTree extends JTree {
 		while(trials.hasNext())
 		{
 			trial = (Trial) trials.next();
-			trialNode = new DefaultMutableTreeNode (trial);
+			trialNode = new PerfExplorerTreeNode (trial);
 			addMetricNodes(trialNode, trial);
 			node.add(trialNode);
 		}
@@ -126,7 +128,7 @@ public class PerfExplorerJTree extends JTree {
 	public static void addTrialsForViews () {
 		Iterator e = leafViews.iterator();
 		while (e.hasNext()) {
-			DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.next();
+			PerfExplorerTreeNode node = (PerfExplorerTreeNode) e.next();
 			addTrialsForView(node);
 		}
 	}
@@ -149,7 +151,7 @@ public class PerfExplorerJTree extends JTree {
 			while(trials.hasNext())
 			{
 				trial = (Trial) trials.next();
-				trialNode = new DefaultMutableTreeNode (trial);
+				trialNode = new PerfExplorerTreeNode (trial);
 				addMetricNodes(trialNode, trial);
 				node.add(trialNode);
 			}
@@ -168,7 +170,7 @@ public class PerfExplorerJTree extends JTree {
 			while(metrics.hasNext())
 			{
 				metric = (Metric) metrics.next();
-				metricNode = new DefaultMutableTreeNode (metric);
+				metricNode = new PerfExplorerTreeNode (metric, false);
 				node.add(metricNode);
 			}
 		}
