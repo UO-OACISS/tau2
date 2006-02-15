@@ -13,6 +13,7 @@ arguments=$*
 # set some defaults
 mode=standalone
 redirect=""
+RMIOptions=""
 
 CONFIGFILE=$HOME/.ParaProf/perfdmf.cfg
 OMEGAHAT_HOME=$R_ROOT/library/SJava
@@ -41,6 +42,11 @@ do
     shift
     ;;
 
+   -verbose)
+    RMIOptions="-Djava.rmi.server.logCalls=true -Dsun.rmi.loader.logLevel=BRIEF -Dsun.rmi.server.logLevel=BRIEF"
+    shift
+    ;;
+
   -help)
     echo "PerfExplorer"
     echo "***********************************************************************"
@@ -49,6 +55,7 @@ do
     echo "[-alone] (default) ............................ run in standalone mode."
     echo "[-server]  ................................... run in server-only mode."
     echo "[-client]  ................................... run in client-only mode."
+    echo "[-verbose]  .................... output RMI log messages (server only)."
     exit
     ;;
 
@@ -113,14 +120,9 @@ if [ $mode == "server" ] ; then
 	-classpath $CLASSPATH \
 	-Djava.security.policy=$TAUROOT/tools/src/perfexplorer/etc/java.policy \
 	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
+	${RMIOptions} \
 	-Dsun.rmi.server.exceptionTrace=true \
 	server.PerfExplorerServer -c $CONFIGFILE -e $ANALYSIS_ENGINE -p $SERVER_OBJECT_PORT
-
-	# Add these options to the RMI server start call if you need some
-	# additional debugging information...
-	#-Djava.rmi.server.logCalls=true \
-	#-Dsun.rmi.loader.logLevel=BRIEF \
-	#-Dsun.rmi.server.logLevel=BRIEF \
 
 	echo "Killing rmiregistry..."
 	killall rmiregistry

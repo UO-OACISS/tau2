@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.23 2005/11/11 17:32:13 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.24 2006/02/15 19:15:35 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -213,7 +213,9 @@ public class ChartData extends RMIChartData {
 		StringBuffer buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
 		if ((dataType == FRACTION_OF_TOTAL) ||
-			(dataType == CORRELATION_DATA && preQuery)) {
+			(preQuery && 
+			 (dataType == CORRELATION_DATA ||
+			  dataType == RELATIVE_EFFICIENCY))) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
 
@@ -221,7 +223,7 @@ public class ChartData extends RMIChartData {
 
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
 			if (preQuery)
-				buf.append("ims.inclusive ");
+				buf.append(" max(ims.inclusive) ");
 			else
 				buf.append("ims.exclusive_percentage ");
 			buf.append("from interval_mean_summary ims ");
@@ -238,9 +240,7 @@ public class ChartData extends RMIChartData {
 
 			buf.append(" and m.name = ? ");
 			
-			if (preQuery)
-				buf.append("and ims.inclusive_percentage = 100.0");
-			else {
+			if (!preQuery) {
 				buf.append("and ims.exclusive_percentage > ");
 				buf.append(model.getXPercent());
 			}
@@ -248,7 +248,10 @@ public class ChartData extends RMIChartData {
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
-			buf.append("order by 1, 2");
+			if (preQuery)
+				buf.append("order by ims.inclusive_percentage, 2");
+			else
+				buf.append("order by 1, 2");
 
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);

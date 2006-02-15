@@ -106,6 +106,8 @@ public class Configure {
                 
                 if (db.getDBType().compareTo("oracle") == 0) {
                     filename = tau_root + "/tools/src/perfexplorer/etc/dbschema.oracle";
+                } else if (db.getDBType().compareTo("derby") == 0) {
+                    filename = tau_root + "/tools/src/perfexplorer/etc/dbschema.derby";
                 } else if (db.getDBType().compareTo("mysql") == 0) {
                     filename = tau_root + "/tools/src/perfexplorer/etc/dbschema.mysql";
                 } else if (db.getDBType().compareTo("postgresql") == 0) {
