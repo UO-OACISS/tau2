@@ -53,6 +53,7 @@ itemRef::itemRef(const pdbItem *i, bool isT) : item(i), isTarget(isT) {
     line = i->location().line();
     col  = i->location().col();
     kind = ROUTINE; /* for C++, only routines are listed */ 
+    attribute = NOT_APPLICABLE;
   }
 itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c) : 
 	line (l), col(c), item(i), kind(k) {
@@ -61,19 +62,22 @@ itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c) :
 	 << k <<endl;
 #endif /* DEBUG */
     isTarget = true; 
+    attribute = NOT_APPLICABLE;
   }
-itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code) : 
-	line (l), col(c), item(i), kind(k), snippet(code) {
+itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code, itemAttr_t a) : 
+	line (l), col(c), item(i), kind(k), snippet(code), attribute(a) {
 #ifdef DEBUG
     if (i)
       cout <<"Added: "<<i->name() <<" line " << l << " col "<< c <<" kind " 
 	 << k << " snippet " << snippet << endl;
+    if (a == BEFORE) cout <<"BEFORE"<<endl;
 #endif /* DEBUG */
     isTarget = true; 
   }
 itemRef::itemRef(const pdbItem *i, bool isT, int l, int c)
          : item(i), isTarget(isT), line(l), col(c) {
     kind = ROUTINE; 
+    attribute = NOT_APPLICABLE;
   }
 /* not needed anymore */
 #ifdef OLD
@@ -542,6 +546,13 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
 #ifdef DEBUG
       cout <<"Entry already instrumented or brace not found - reached next routine! line = "<<(*it)->line <<endl;
 #endif
+      if ((*it)->kind == INSTRUMENTATION_POINT)
+      {
+#ifdef DEBUG
+	cout <<"Instrumentation Point: inbuf = "<<inbuf<<endl;
+#endif /* DEBUG */
+	ostr << (*it)->snippet<<endl;
+      }
       continue; // takes you to the next iteration in the for loop
     }
 
@@ -616,6 +627,12 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
   	    else 
   	    {  // if not open brace
   	      // ok to write to ostr 
+#ifdef DEBUG
+	      cout <<"DUMPING inbuf[i]"<<inbuf[i]<<endl;
+/* We need to check here if there are other items to be written out like
+entry instrumentation points  for the iteration right after the writing of
+the open brace. */
+#endif /* DEBUG */
   	      ostr << inbuf[i]; 
   	      if (inbuf[i] == ';')
   	      { // Hey! We've got a ; before seeing an open brace. That means 
@@ -652,9 +669,9 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
 		  cout <<"WRITING EXIT RECORD "<<endl;
 #endif /* DEBUG */
 		  ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
-		  for (k = (*it)->col-1; inbuf[k] != ';' ; k++)
+		  for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
 		    ostr<<inbuf[k]; 
-		  ostr <<"; }";
+		  ostr <<" }";
 		  ostr <<endl;
 		  instrumented = true; 
 		} else {
@@ -669,14 +686,23 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
 	  case INSTRUMENTATION_POINT:
 #ifdef DEBUG
 	    cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
+	    cout <<"col = "<<(*it)->col<<endl;
 #endif /* DEBUG */
-	    ostr << (*it)->snippet<<endl;
+  	    for (int i = 0; i < (*it)->col-1 ; i++) ostr << inbuf[i];
+	    if ((*it)->attribute == BEFORE)
+            {
+	      ostr << (*it)->snippet<<endl;
+            }
+	    else 
+            { /* after */
+	      ostr << endl;
+	    }
 	    /* We need to add code to write the rest of the buffer */
 	    if ((it+1) != itemvec.end())
 	    { /* there are other instrumentation requests */
 		if ((*it)->line == (*(it+1))->line)
 		{
-                  write_upto = (*(it+1))->col ; 
+                  write_upto = (*(it+1))->col - 1 ; 
 #ifdef DEBUG
 		  cout <<"There were other requests for the same line write_upto = "<<write_upto<<endl;
 #endif /* DEBUG */
@@ -699,7 +725,17 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
 	      print_cr = true;
               instrumented = true; 
             }
-	    for (i = 0; i < write_upto; i++)
+	    for (int space = 0; space < (*it)->col-1; space++) ostr <<" ";
+	    /* write out the snippet! */
+	    if ((*it)->attribute == AFTER)
+            {
+	      ostr << (*it)->snippet<<endl;
+	      for (int space = 0; space < (*it)->col-1; space++) ostr <<" ";
+            }
+#ifdef DEBUG
+            printf("it col -1 = %d, write_upto = %d\n", (*it)->col-1, write_upto);
+#endif /* DEBUG */
+	    for (i = (*it)->col-1; i < write_upto; i++)
               ostr << inbuf[i]; 
 	    if (print_cr) ostr <<endl; 
 	    break;
@@ -907,11 +943,22 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
    		  const pdbType *t = ((pdbRoutine *)((*it)->item))->signature()->returnType();
    		  if ( const pdbGroup* gr = t->isGroup() )
 		  {
+     		    return_string = gr->name();
+/* IT WAS gr->fullName(); we changed it to account for unnamed namespaces */
+#ifdef TAU_SPECIFY_FULL_NAMES_IN_RETURN_TYPE
      		    return_string = gr->fullName();
+#endif /* TAU_SPECIFY_FULL_NAMES_IN_RETURN_TYPE */
 		  }
    		  else
 		  {
+     		    return_string = t->name();
+/* IT WAS t->fullName(); we changed it to account for unnamed namespaces */
+/* Unnamed namespaces pose a unique problem! We get the name as 
+  <unnamed@6000000000074ab8>::COLORS instead of COLORS. We need to get rid of 
+  this part */
+#ifdef TAU_SPECIFY_FULL_NAMES_IN_RETURN_TYPE
      		    return_string = t->fullName();
+#endif /* TAU_SPECIFY_FULL_NAMES_IN_RETURN_TYPE */
 		  }
 		}
 
@@ -1051,31 +1098,32 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		  cout <<"WRITING EXIT RECORD "<<endl;
 #endif /* DEBUG */
 		  ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
-		  for (k = (*it)->col-1; inbuf[k] != ';' ; k++)
+		  for (k = (*it)->col-1; k < strlen(inbuf); k++)
 		    ostr<<inbuf[k]; 
-		  ostr <<"; }";
+		  ostr <<" }";
 		  instrumented = true; 
-		  write_from = k+1;
-                }
-		break; 
-                
-	    case INSTRUMENTATION_POINT:
+	  write_from = k+1;
+	}
+	break; 
+	
+    case INSTRUMENTATION_POINT:
 #ifdef DEBUG
-		cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
+	cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
 #endif /* DEBUG */
-		ostr << (*it)->snippet<<endl;
-		instrumented = true;
-		break;
-	    default:
-		cout <<"Unknown option in instrumentCFile:"<<(*it)->kind<<endl;
-		instrumented = true; 
-		break;
-	  } /* Switch statement */
-	  if (it+1 != itemvec.end())
- 	  {
-	    write_upto = (*(it+1))->line == (*it)->line ? (*(it+1))->col-1 : inbufLength; 
+	if ((*it)->attribute == AFTER) ostr<<endl;
+	ostr << (*it)->snippet<<endl;
+	instrumented = true;
+	break;
+    default:
+	cout <<"Unknown option in instrumentCFile:"<<(*it)->kind<<endl;
+	instrumented = true; 
+	break;
+  } /* Switch statement */
+  if (it+1 != itemvec.end())
+  {
+    write_upto = (*(it+1))->line == (*it)->line ? (*(it+1))->col-1 : inbufLength; 
 #ifdef DEBUG
-            cout <<"CHECKING write_from "<<write_from <<" write_upto = "<<write_upto<<endl;
+    cout <<"CHECKING write_from "<<write_from <<" write_upto = "<<write_upto<<endl;
 	    cout <<"it = ("<<(*it)->line<<", "<<(*it)->col<<") ;";
 	    cout <<"it+1 = ("<<(*(it+1))->line<<", "<<(*(it+1))->col<<") ;"<<endl;
 #endif /* DEBUG */
@@ -1826,9 +1874,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.79 $   $Date: 2006/01/04 00:30:59 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.79 2006/01/04 00:30:59 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.80 $   $Date: 2006/02/18 04:18:41 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.80 2006/02/18 04:18:41 sameer Exp $
  ***************************************************************************/
 
 

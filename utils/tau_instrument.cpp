@@ -514,6 +514,85 @@ void printInstrumentList(void)
 #endif /* DEBUG */
 
 }
+/* Add request for instrumentation for C/C++ loops */
+void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop, vector<itemRef *>& itemvec)
+{
+  const pdbFile *f = start.file();
+  char lines[256];
+  sprintf(lines, "line,col = <%d,%d> to <%d,%d>", 
+	start.line(), start.col(), stop.line(), stop.col());
+  string *timername = new string(string("Loop: " + ro->fullName() + "[ file = <"+f->name()+ "> "+ lines + " ]"));
+#ifdef DEBUG
+  printf("Adding instrumentation at %s\n", timername->c_str());
+#endif /* DEBUG */
+  string startsnippet(string("{ TAU_PROFILE_TIMER(lt, \"")+(*timername)+"\", \" \", TAU_USER); TAU_PROFILE_START(lt); ");
+  string stopsnippet(string("TAU_PROFILE_STOP(lt); } "));
+  itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, start.line(), start.col(), startsnippet, BEFORE));
+  itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, stop.line(), stop.col()+1, stopsnippet, AFTER));
+/*
+  printf("Adding instrumentation at routine %s, file %s, start %d:%d, stop %d:%d\n",
+    ro->fullName().c_str(), f->name(), start.line(), start.col(), stop.line(), stop.col());
+*/
+}
+
+/* Process Block to examine the routine */
+int processBlock(const pdbStmt *s, pdbRoutine *ro, vector<itemRef *>& itemvec)
+{
+  pdbLoc start, stop; /* the location of start and stop timer statements */
+  
+  if (!s) return 1;
+  if (!ro) return 1; /* if null, do not instrument */
+
+  
+  pdbStmt::stmt_t k = s->kind();
+
+  if (k == pdbStmt::ST_BLOCK)
+  {
+#ifdef DEBUG
+    printf("Going down the block, routine = %s\n", ro->fullName().c_str());
+#endif /* DEBUG */
+    processBlock(s->downStmt(), ro, itemvec);
+  }
+  else
+  {
+#ifdef DEBUG
+    printf("Examining statement \n");
+#endif /* DEBUG */
+    switch(k) {
+      case pdbStmt::ST_FOR:
+      case pdbStmt::ST_WHILE:
+      case pdbStmt::ST_DO:
+#ifdef DEBUG
+        printf("loop statement:\n");
+#endif /* DEBUG */
+        start = s->stmtBegin();
+        stop = s->stmtEnd();
+#ifdef DEBUG
+        printf("start=<%d:%d> - end=<%d:%d>\n",
+          start.line(), start.col(), stop.line(), stop.col());
+#endif /* DEBUG */
+	addRequestForLoopInstrumentation(ro, start, stop, itemvec); 
+        break;
+      case pdbStmt::ST_DECL:
+#ifdef DEBUG
+        printf("Decl statement:\n"); 
+#endif /* DEBUG */
+	break;
+      case pdbStmt::ST_ASSIGN:
+#ifdef DEBUG
+        printf("Assign statement:\n"); 
+#endif /* DEBUG */
+	break;
+      default:
+#ifdef DEBUG
+        printf("Other statement\n"); 
+#endif /* DEBUG */
+	break;
+    }
+  } /* and then process the next statement */
+  return processBlock(s->nextStmt(), ro, itemvec);
+
+}
 
 /* Process list of C routines */
 int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec) 
@@ -521,13 +600,18 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
   /* compare the names of routines with our instrumentation request routine name */
 
   PDB::croutinevec croutines = p.getCRoutineVec();
-  bool cmpResult; 
+  bool cmpResult1, cmpResult2; 
   pdbRoutine::locvec::iterator rlit;
   for(PDB::croutinevec::const_iterator rit = croutines.begin(); 
 	rit != croutines.end(); ++rit)
   { /* iterate over all routines */
-    cmpResult = wildcardCompare((char *)(*rit)->name().c_str(), (char *)((*it)->getRoutineName()).c_str(), '#');
-    if (cmpResult)
+    /* the first argument contains wildcard, the second is the string */
+    cmpResult1 = wildcardCompare((char *)((*it)->getRoutineName()).c_str(),
+	(char *)(*rit)->name().c_str(), '#');
+    /* the first argument contains wildcard, the second is the string */
+    cmpResult2 = wildcardCompare((char *)((*it)->getRoutineName()).c_str(),
+	(char *)(*rit)->fullName().c_str(), '#');
+    if (cmpResult1 || cmpResult2)
     { /* there is a match */
 #ifdef DEBUG
       cout <<"Examining Routine "<<(*rit)->fullName()<<" and "<<(*it)->getRoutineName()<<endl;
@@ -540,7 +624,7 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
         /* get routine entry line no. */
         cout <<"at line: "<<(*rit)->bodyBegin().line()<<", col"<< (*rit)->bodyBegin().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
-	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode()));
+	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode(), BEFORE));
 	/* should the column be 1 greater than body begin's col, so 
 	   instrumentation is placed after the beginning of the routine? */
 
@@ -558,9 +642,13 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
           cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 	
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode()));
+	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
         }
       } /* end of routine exit */
+      if ((*it)->getKind() == TAU_LOOPS)
+      { /* we need to instrument all outer loops in this routine */
+	processBlock((*rit)->body(), (*rit), itemvec);
+      }
     }
   }
 
@@ -574,8 +662,9 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
   pdbRoutine::locvec::iterator rlit;
   for(PDB::froutinevec::const_iterator rit = froutines.begin(); 
 	rit != froutines.end(); ++rit)
-  { /* iterate over all routines */
-    cmpResult = wildcardCompare((char *)(*rit)->name().c_str(), (char *)((*it)->getRoutineName()).c_str(), '#');
+  { /* iterate over all routines */  
+    /* the first argument contains the wildcard, the second is the string */
+    cmpResult = wildcardCompare((char *)((*it)->getRoutineName()).c_str(), (char *)(*rit)->name().c_str(), '#');
     if (cmpResult)
     { /* there is a match */
 #ifdef DEBUG
@@ -589,7 +678,7 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
 #endif /* DEBUG */
 	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT,
                 (*rit)->firstExecStmtLocation().line(),
-                1, (*it)->getCode()));
+                1, (*it)->getCode(), BEFORE));
                 /* start from 1st column instead of column: 
 		(*rit)->firstExecStmtLocation().col() */
       }
@@ -609,7 +698,7 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
           cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 	
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode()));
+	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
         }
 	/* and then examine the stop locations */
         for (rlit = stoplocations.begin(); rlit != stoplocations.end(); ++rlit)
@@ -618,7 +707,7 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
           cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 	
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode()));
+	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
         }
       } /* end of routine exit */
     } /* end of match */
@@ -642,6 +731,7 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 #ifdef DEBUG
     cout <<"Checking "<<file->name().c_str()<<" and "<<(*it)->getFileName().c_str()<<endl; 
 #endif /* DEBUG */
+    /* the first argument contains the wildcard, the second is the string */
     cmpResult = wildcardCompare((char *)(*it)->getFileName().c_str(), (char *)file->name().c_str(), '*');
     if (cmpResult)
     { /* check if the current file is to be instrumented */
@@ -665,7 +755,7 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 	*/
 	/* itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code)
 	 */
-	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*it)->getLineNo(), 0, (*it)->getCode()));
+	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*it)->getLineNo(), 1, (*it)->getCode(), BEFORE));
 			
       }
     }
@@ -714,6 +804,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2006/02/13 18:05:47 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.2 2006/02/13 18:05:47 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2006/02/18 04:18:41 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.3 2006/02/18 04:18:41 sameer Exp $
  ***************************************************************************/
