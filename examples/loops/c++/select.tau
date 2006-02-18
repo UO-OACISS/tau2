@@ -1,0 +1,7 @@
+BEGIN_INSTRUMENT_SECTION
+loops file="loop_test.cpp" routine="multiply"
+# it also understands # as the wildcard in routine name
+# and * and ? wildcards in file name. You can also specify the full
+# name of the routine as is found in profile files. 
+#loops file="loop_test.cpp" routine="double multiply#"
+END_INSTRUMENT_SECTION
