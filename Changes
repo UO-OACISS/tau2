@@ -27,6 +27,10 @@ Version 2.15 changes (from 2.14):
 15. Enhancements to Paraprof. 
 16. Better support for Intel compilers for linking C and Fortran codes to TAU [NOAA]. 
 17. Added support for FreeBSD [ARL]. 
+18. Added support for file based Derby database in PerfDMF/Explorer so you don't need a DB. 
+19. Added support for scripting in Paraprof using Jython to create custom views [LLNL].
+20. Added support for Python 2.4 with instrumentation for C calls [LLNL]. 
+21. Added support for loop level instrumentation for C and C++ [UTK, LANL]. 
 
 Version 2.14 changes (from 2.13):
 1. MPI-2 support and Fortran wrappers added. 
