@@ -29,7 +29,7 @@ public class Configure {
     private String arch = "";
     private String jdbc_db_jarfile = "derby.jar";
     private String jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
-    private String jdbc_db_type = "derby";
+    private String jdbc_db_type = "postgresql";
     private String db_hostname = "";
     private String db_portnum = "";
     private String db_dbname = "perfdmf";
@@ -149,12 +149,13 @@ public class Configure {
 
 	    while (!valid) {
 		// Prompt for database type
-		System.out.print("Please enter the database vendor (oracle, postgresql, mysql or derby).\n(" 
+		//System.out.print("Please enter the database vendor (oracle, postgresql, mysql or derby).\n(" 
+		System.out.print("Please enter the database vendor (oracle, postgresql or mysql).\n(" 
 				 + jdbc_db_type + "):");
 		tmpString = reader.readLine();
 		if (tmpString.compareTo("oracle") == 0 || tmpString.compareTo("postgresql") == 0 
-		    || tmpString.compareTo("mysql") == 0 || tmpString.compareTo("derby") == 0 
-			|| tmpString.length() == 0) {
+		    //|| tmpString.compareTo("mysql") == 0 || tmpString.compareTo("derby") == 0 
+		    || tmpString.compareTo("mysql") == 0 || tmpString.length() == 0) {
 		
 		    if (tmpString.length() > 0) 
 			jdbc_db_type = tmpString;
