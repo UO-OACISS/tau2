@@ -224,3 +224,8 @@ mpitrace        - Kojak's Expert tool needs traces that record events that call
                   MPI routines. We track this information at runtime when TAU
                   is configured with the -MPITRACE option. This example 
                   illustrates its use. 
+
+loops 		- TAU can instrument automatically at outer-loop boundaries. 
+                  This example describes the syntax of the selective 
+                  instrumentation file. See loops/c++/README file for details.
+                  TAU should be configured with -pdt=<dir> to use this option.
