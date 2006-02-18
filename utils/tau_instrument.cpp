@@ -599,11 +599,11 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
 {
   /* compare the names of routines with our instrumentation request routine name */
 
+  PDB::croutinevec::const_iterator rit;
   PDB::croutinevec croutines = p.getCRoutineVec();
   bool cmpResult1, cmpResult2; 
   pdbRoutine::locvec::iterator rlit;
-  for(PDB::croutinevec::const_iterator rit = croutines.begin(); 
-	rit != croutines.end(); ++rit)
+  for(rit = croutines.begin(); rit != croutines.end(); ++rit)
   { /* iterate over all routines */
     /* the first argument contains wildcard, the second is the string */
     cmpResult1 = wildcardCompare((char *)((*it)->getRoutineName()).c_str(),
@@ -657,11 +657,11 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
 /* Process list of F routines */
 int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec) 
 {
+  PDB::froutinevec::const_iterator rit;
   PDB::froutinevec froutines = p.getFRoutineVec();
   bool cmpResult; 
   pdbRoutine::locvec::iterator rlit;
-  for(PDB::froutinevec::const_iterator rit = froutines.begin(); 
-	rit != froutines.end(); ++rit)
+  for(rit = froutines.begin(); rit != froutines.end(); ++rit)
   { /* iterate over all routines */  
     /* the first argument contains the wildcard, the second is the string */
     cmpResult = wildcardCompare((char *)((*it)->getRoutineName()).c_str(), (char *)(*rit)->name().c_str(), '#');
@@ -804,6 +804,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2006/02/18 04:18:41 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.3 2006/02/18 04:18:41 sameer Exp $
+ * $Revision: 1.4 $   $Date: 2006/02/18 15:36:41 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.4 2006/02/18 15:36:41 sameer Exp $
  ***************************************************************************/

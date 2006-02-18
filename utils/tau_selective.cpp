@@ -222,14 +222,13 @@ bool matchName(const string& str1, const string& str2)
 /* -------------------------------------------------------------------------- */
 bool instrumentEntity(const string& function_name)
 {
-
+  list<string>::iterator it;
 #ifdef DEBUG
   cout <<"instrument "<<function_name<<" ?"<<endl;
 #endif /* DEBUG */
   if (!excludelist.empty())
   { /* if exclude list has entries */
-    for (list<string>::iterator it = excludelist.begin();
-        it != excludelist.end(); it++)
+    for (it = excludelist.begin(); it != excludelist.end(); it++)
     { /* iterate through the entries and see if the names match */
       if (matchName(*it, function_name)) 
       {
@@ -257,8 +256,7 @@ bool instrumentEntity(const string& function_name)
     /* wait! The include list is not empty. We must see if the given name
        appears in the list of routines that should be instrumented 
        For this, we need to iterate through the include list.  */
-    for (list<string>::iterator it = includelist.begin();
-        it != includelist.end(); it++)
+    for (it = includelist.begin(); it != includelist.end(); it++)
     { /* iterate through the entries and see if the names match */
       if (matchName(*it, function_name)) 
       {
@@ -335,11 +333,11 @@ bool wildcardCompare(char *wild, char *string, char kleenestar)
 /* -------------------------------------------------------------------------- */
 bool processFileForInstrumentation(const string& file_name)
 {
+  list<string>::iterator it;
 
   if (!fileexcludelist.empty())
   { /* if exclude list has entries */
-    for (list<string>::iterator it = fileexcludelist.begin();
-        it != fileexcludelist.end(); it++)
+    for (it = fileexcludelist.begin(); it != fileexcludelist.end(); it++)
     { /* iterate through the entries and see if the names match. Use '*' as 
        the kleene star operator */
       if (wildcardCompare((char *)((*it).c_str()), (char *) (file_name.c_str()), '*'))
@@ -368,8 +366,7 @@ bool processFileForInstrumentation(const string& file_name)
     /* wait! The file include list is not empty. We must see if the given name
        appears in the list of routines that should be instrumented 
        For this, we need to iterate through the include list.  */
-    for (list<string>::iterator it = fileincludelist.begin();
-        it != fileincludelist.end(); it++)
+    for (it = fileincludelist.begin(); it != fileincludelist.end(); it++)
     { /* iterate through the entries and see if the names match */
       if (wildcardCompare((char *)((*it).c_str()), (char *)(file_name.c_str()), '*')) 
       {
@@ -397,6 +394,6 @@ bool processFileForInstrumentation(const string& file_name)
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2006/02/14 01:41:23 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.11 2006/02/14 01:41:23 sameer Exp $
+ * $Revision: 1.12 $   $Date: 2006/02/18 15:36:41 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.12 2006/02/18 15:36:41 sameer Exp $
  ***************************************************************************/

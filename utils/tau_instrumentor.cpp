@@ -496,7 +496,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
 {
   int inbufLength, k;
   bool print_cr; 
-  int write_upto, i; 
+  int write_upto, i, space; 
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
   // open outfile for instrumented version of source file
@@ -571,7 +571,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
           // we're at the desired line no. search for an open brace
   	  inbufLength = strlen(inbuf);
   
-  	  for(int i=0; i< inbufLength; i++)
+  	  for(i=0; i< inbufLength; i++)
   	  { 
   	    if ((inbuf[i] == '{') && (instrumented == false))
   	    {
@@ -582,7 +582,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
   	      // put in instrumentation for the routine HERE
   	      //ostr <<"/*** INSTRUMENTATION ***/\n"; 
 #ifdef SPACES
-  	      for (int space = 0; space < (*it)->col ; space++) ostr << " " ; 
+  	      for (space = 0; space < (*it)->col ; space++) ostr << " " ; 
   #endif
   	      // leave some leading spaces for formatting...
   
@@ -602,7 +602,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
   	      { /* it is main() */
   	        ostr << "TAU_DEFAULT);" <<endl; // give an additional line 
   #ifdef SPACES
-  	        for (int space = 0; space < (*it)->col ; space++) ostr << " " ; 
+  	        for (space = 0; space < (*it)->col ; space++) ostr << " " ; 
   #endif 
   	        // leave some leading spaces for formatting...
   	
@@ -688,7 +688,7 @@ the open brace. */
 	    cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
 	    cout <<"col = "<<(*it)->col<<endl;
 #endif /* DEBUG */
-  	    for (int i = 0; i < (*it)->col-1 ; i++) ostr << inbuf[i];
+  	    for (i = 0; i < (*it)->col-1 ; i++) ostr << inbuf[i];
 	    if ((*it)->attribute == BEFORE)
             {
 	      ostr << (*it)->snippet<<endl;
@@ -725,12 +725,12 @@ the open brace. */
 	      print_cr = true;
               instrumented = true; 
             }
-	    for (int space = 0; space < (*it)->col-1; space++) ostr <<" ";
+	    for (space = 0; space < (*it)->col-1; space++) ostr <<" ";
 	    /* write out the snippet! */
 	    if ((*it)->attribute == AFTER)
             {
 	      ostr << (*it)->snippet<<endl;
-	      for (int space = 0; space < (*it)->col-1; space++) ostr <<" ";
+	      for (space = 0; space < (*it)->col-1; space++) ostr <<" ";
             }
 #ifdef DEBUG
             printf("it col -1 = %d, write_upto = %d\n", (*it)->col-1, write_upto);
@@ -770,7 +770,7 @@ char use_return_nonvoid[256] = "return";
 /* -------------------------------------------------------------------------- */
 void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& group_name)
 {
-
+  int space; 
 #ifdef DEBUG
   cout <<"Return type :" << return_type<<endl;
 #endif /* DEBUG */
@@ -783,7 +783,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
   { /* it is main() */
      ostr << "TAU_DEFAULT);" <<endl; // give an additional line
 #ifdef SPACES
-     for (int space = 0; space < (*it)->col ; space++) ostr << " " ;
+     for (space = 0; space < (*it)->col ; space++) ostr << " " ;
 #endif
      // leave some leading spaces for formatting...
 
@@ -808,6 +808,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
 /* -------------------------------------------------------------------------- */
 void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& group_name)
 {
+  int space;
   ostr <<"{ \n\tTAU_PROFILE_TIMER(tautimer, \""<<
     ((pdbRoutine *)(i->item))->fullName() << "\", \" " << "\", ";
     //((pdbRoutine *)(i->item))->signature()->name() << "\", ";
@@ -816,7 +817,7 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
   { /* it is main() */
      ostr << "TAU_DEFAULT);" <<endl; // give an additional line
 #ifdef SPACES
-     for (int space = 0; space < (*it)->col ; space++) ostr << " " ;
+     for (space = 0; space < (*it)->col ; space++) ostr << " " ;
 #endif
      // leave some leading spaces for formatting...
 
@@ -852,7 +853,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
 /* -------------------------------------------------------------------------- */
 bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string& header_file) 
 { 
-  int inbufLength;
+  int inbufLength, i, j;
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
   // open outfile for instrumented version of source file
@@ -909,7 +910,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
       }
       else
       { /* We're at the desired line no. */
-        for(int i=0; i< ((*lit)->col)-1; i++)
+        for(i=0; i< ((*lit)->col)-1; i++)
 	{ 
 #ifdef DEBUG
 	  cout <<"Writing(1): "<<inbuf[i]<<endl;
@@ -1134,7 +1135,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 #ifdef DEBUG
    	  cout <<"inbuf: "<<inbuf<<endl;
 #endif /* DEBUG */
-	  for (int j=write_from; j < write_upto; j++)
+	  for (j=write_from; j < write_upto; j++)
 	  {
 #ifdef DEBUG 
    	    cout <<"Writing(4): "<<inbuf[j]<<endl;
@@ -1204,7 +1205,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   char *checkbuf=NULL; // Assign inbuf to checkbuf for return processing
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
-  int space, i, j, k;
+  int space, i, j, k, c;
   if (!ostr) {
     cerr << "Error: Cannot open '" << outfile << "'" << endl;
     return false;
@@ -1334,7 +1335,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  WRITE_TAB(ostr,(*it)->col);
 		  ostr <<"call TAU_PROFILE_INIT()"<<endl;
 		  /* put spaces on the next line */
-     		  for (int space = 0; space < (*it)->col-1 ; space++) 
+     		  for (space = 0; space < (*it)->col-1 ; space++) 
 		    WRITE_SPACE(ostr, inbuf[space]) 
 
 		  WRITE_TAB(ostr,(*it)->col);
@@ -1444,7 +1445,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #ifdef DEBUG
 		  cout <<"col = "<<(*it)->col <<endl;
 #endif /* DEBUG */
-		  for(int c = ((*it)->col)-2; c > 0; c--)
+		  for(c = ((*it)->col)-2; c > 0; c--)
 		  {
 #ifdef DEBUG
 		    cout <<"c = "<<c<<"inbuf[c] = "<<inbuf[c]<<endl;
@@ -1473,7 +1474,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	        if (lit == it)
 		{ /* Has body begin already written the beginning of the statement? */
 		  /* No. Write it (since it is same as lit) */
-        	  for(int i=0; i< ((*it)->col)-1; i++)
+        	  for(i=0; i< ((*it)->col)-1; i++)
 		  { 
 #ifdef DEBUG
 	  	    cout << "Writing (1): "<<inbuf[i]<<endl;
@@ -1875,8 +1876,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.80 $   $Date: 2006/02/18 04:18:41 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.80 2006/02/18 04:18:41 sameer Exp $
+ * $Revision: 1.81 $   $Date: 2006/02/18 15:36:41 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.81 2006/02/18 15:36:41 sameer Exp $
  ***************************************************************************/
 
 
