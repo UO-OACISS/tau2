@@ -16,7 +16,7 @@ To add a TAU Build configuration to a Managed Make C, C++ or FDT Make project ri
 
 Running A TAU Instrumented Binary:
 
-Once a program has been compiled with TAU instrumentation you may run it by right clicking on the resulting binary and selecting TAU Run.  The program will run and, by default, the profile and/or trace files will be placed in the build configuration's directory.  The resulting run configuration may be manipulated as a standard Eclipse Parallel run configuration.
+Once a program has been compiled with TAU instrumentation you may run it by right clicking on the resulting binary and selecting TAU Run.  The program will run and, by default, the profile and/or trace files will be placed in a timestamped directory, inside a directory indicating the name of the file that was run, in the TAU_Output directory in the home directory of the Java project.  The resulting run configuration may be manipulated as a standard Eclipse Parallel run configuration.
 
 Options:
 
@@ -54,6 +54,6 @@ TAU Options:  Here you may specify any of the following options for use with the
  
 Set number of nodes on TAU run:  Sets the number of processes that will be used by default when a TAU instrumented project is run with the TAU Run command.
  
-Use Alternative TAU Output Directory:  Causes the TAU_Output directory to be placed in the location specified in the associated field.  The internal directory structure of the TAU_Output directory remains unchanged.  (Temporarily Disabled)
+Use Alternative TAU Output Directory:  Causes the TAU_Output directory to be placed in the location specified in the associated field.  The internal directory structure of the TAU_Output directory remains unchanged.
 
 Automatically run ParaProf on profile output:  Causes the TAU profile viewer, paraprof, to run on the output of profile and call-path analysis output as soon as the trace files have been produced.
