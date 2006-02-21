@@ -10,9 +10,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.3 2005/12/14 01:30:54 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.4 2006/02/21 02:31:30 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		TrialData
  * @see		NCT
  */
@@ -302,6 +302,17 @@ public abstract class DataSource {
         return this.metrics;
     }
 
+    
+    public Metric getMetric(String name) {
+        for (Iterator it = metrics.iterator(); it.hasNext();) {
+            Metric metric = (Metric) it.next();
+            if (metric.getName().equals(name))
+                return metric;
+        }
+        return null;
+    }
+    
+    
     /**
      * Get the metric with the given id. 
      * 
