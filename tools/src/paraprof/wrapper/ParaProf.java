@@ -14,7 +14,6 @@ import java.util.List;
 import javax.swing.ToolTipManager;
 
 import edu.uoregon.tau.common.TauScripter;
-import edu.uoregon.tau.paraprof.script.FunctionFilter;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.FileList;
@@ -24,11 +23,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.5 2006/02/04 01:23:59 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.6 2006/02/21 02:31:52 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class ParaProf implements ActionListener {
 
@@ -47,7 +46,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Fri Feb  3 15:33:41 PST 2006";
+    private final static String VERSION = "Fri Feb 10 17:39:42 PST 2006";
 
     static ColorMap colorMap = new ColorMap();
 
@@ -84,6 +83,7 @@ public class ParaProf implements ActionListener {
 
     private static String args[];
     
+    public static String scriptFile;
     
     public static void registerScript(ParaProfScript pps) {
         scripts.add(pps);
@@ -151,13 +151,13 @@ public class ParaProf implements ActionListener {
     }
 
     public static void incrementNumWindows() {
-        //        System.out.println ("incrementing");
         numWindowsOpen++;
+        //System.out.println ("incrementing: now " + numWindowsOpen);
     }
 
     public static void decrementNumWindows() {
-        //        System.out.println ("decrementing");
         numWindowsOpen--;
+        //System.out.println ("decrementing: now " + numWindowsOpen);
         if (numWindowsOpen <= 0) {
             exitParaProf(0);
         }
@@ -266,15 +266,22 @@ public class ParaProf implements ActionListener {
             // running as Java Web Start without permission
         }
 
-        
-        if (new File("/.ParaProf/ParaProf.py").exists()) {
-            TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
-        }
+ 
+        ParaProf.loadScripts();
 
         loadDefaultTrial();
 
     }
 
+    
+    public static void loadScripts()  {
+        ParaProf.scripts.clear();
+        ParaProf.scriptFile = System.getProperty("user.home") + "/.ParaProf/ParaProf.py";
+        if (new File(scriptFile).exists()) {
+            TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
+        }
+    }
+    
     public void actionPerformed(ActionEvent evt) {
         Object EventSrc = evt.getSource();
         if (EventSrc instanceof javax.swing.Timer) {

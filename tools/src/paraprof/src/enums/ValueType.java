@@ -4,19 +4,20 @@ import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.perfdmf.*;
 
 /**
- * type-safe enum pattern for type of sorting
+ * type-safe enum pattern for type of Valueing
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: ValueType.java,v 1.2 2005/10/25 00:04:24 amorris Exp $</P>
+ * <P>CVS $Id: ValueType.java,v 1.3 2006/02/21 02:31:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 public abstract class ValueType {
 
     private final String name;
-
+    private final String classname;
+    
     public abstract double getValue(FunctionProfile functionProfile, int metric);
 
     public abstract double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric);
@@ -25,12 +26,16 @@ public abstract class ValueType {
 
     public abstract int getUnits(int units, ParaProfMetric ppMetric);
 
-    private ValueType(String name) {
+    private ValueType(String name, String classname) {
         this.name = name;
+        this.classname = classname;
     }
 
     public String toString() {
         return name;
+    }
+    public String getClassName() {
+        return classname;
     }
 
     private static String timeUnits(int units) {
@@ -62,7 +67,7 @@ public abstract class ValueType {
         return false;
     }
 
-    public static final ValueType EXCLUSIVE = new ValueType("Exclusive") {
+    public static final ValueType EXCLUSIVE = new ValueType("Exclusive", "ValueType.EXCLUSIVE") {
 
         public double getValue(FunctionProfile functionProfile, int metric) {
             if (functionProfile.getFunction().isPhase()) {
@@ -89,7 +94,7 @@ public abstract class ValueType {
         }
     };
 
-    public static final ValueType EXCLUSIVE_PERCENT = new ValueType("Exclusive percent") {
+    public static final ValueType EXCLUSIVE_PERCENT = new ValueType("Exclusive percent", "ValueType.EXCLUSIVE_PERCENT") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             if (functionProfile.getFunction().isPhase()) {
                 return functionProfile.getInclusivePercent(metric);
@@ -111,7 +116,7 @@ public abstract class ValueType {
         }
     };
 
-    public static final ValueType INCLUSIVE = new ValueType("Inclusive") {
+    public static final ValueType INCLUSIVE = new ValueType("Inclusive", "ValueType.INCLUSIVE") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getInclusive(metric);
         }
@@ -133,7 +138,7 @@ public abstract class ValueType {
         }
     };
 
-    public static final ValueType INCLUSIVE_PERCENT = new ValueType("Inclusive percent") {
+    public static final ValueType INCLUSIVE_PERCENT = new ValueType("Inclusive percent", "ValueType.INCLUSIVE_PERCENT") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getInclusivePercent(metric);
         }
@@ -145,13 +150,13 @@ public abstract class ValueType {
         public String getSuffix(int units, ParaProfMetric ppMetric) {
             return " %";
         }
-
         public int getUnits(int units, ParaProfMetric ppMetric) {
+            
             return 0;
         }
     };
 
-    public static final ValueType NUMCALLS = new ValueType("Number of Calls") {
+    public static final ValueType NUMCALLS = new ValueType("Number of Calls", "ValueType.NUMCALLS") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getNumCalls();
         }
@@ -169,7 +174,7 @@ public abstract class ValueType {
         }
     };
 
-    public static final ValueType NUMSUBR = new ValueType("Number of Child Calls") {
+    public static final ValueType NUMSUBR = new ValueType("Number of Child Calls", "ValueType.NUMSUBR") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getNumSubr();
         }
@@ -187,7 +192,7 @@ public abstract class ValueType {
         }
     };
 
-    public static final ValueType INCLUSIVE_PER_CALL = new ValueType("Inclusive per Call") {
+    public static final ValueType INCLUSIVE_PER_CALL = new ValueType("Inclusive per Call", "ValueType.INCLUSIVE_PER_CALL") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getInclusivePerCall(metric);
         }
@@ -209,7 +214,7 @@ public abstract class ValueType {
         }
     };
 
-    public static final ValueType EXCLUSIVE_PER_CALL = new ValueType("Exclusive per Call") {
+    public static final ValueType EXCLUSIVE_PER_CALL = new ValueType("Exclusive per Call", "ValueType.EXCLUSIVE_PER_CALL") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getExclusivePerCall(metric);
         }

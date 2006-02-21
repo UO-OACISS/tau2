@@ -52,13 +52,18 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private Group selectedGroup;
     private int groupFilter = 0;
+    private Group groupInclude;
+    private Group groupExclude;
 
+    
     private Trial trial;
 
     private boolean functionMask[];
 
     private boolean monitored;
     //private Timer monitorTimer;
+
+    private List obs = new ArrayList();
 
     private FileMonitorListener fileMonitorListener;
 
@@ -282,6 +287,15 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         return trial.getDataSource().getMetrics();
     }
 
+    public int getMetricID(String name) {
+        Metric m = getDataSource().getMetric(name);
+        if (m == null) {
+            return -1;
+        } else {
+            return m.getID();
+        }
+    }
+    
     public int getNumberOfMetrics() {
         return trial.getDataSource().getNumberOfMetrics();
     }
@@ -353,8 +367,38 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         return true;
     }
 
+    public void showGroupOnly(Group group) {
+        boolean mask[] = new boolean[getDataSource().getNumFunctions()];
+        for (Iterator it = getDataSource().getFunctions(); it.hasNext(); ) {
+            Function function = (Function) it.next();
+            if (function.isGroupMember(group)) {
+                mask[function.getID()] = true;
+            }
+        }
+        setFunctionMask(mask);
+        groupInclude = group;
+        groupExclude = null;
+        updateRegisteredObjects("dataEvent");
+    }
+
+    public void showAllExcept(Group group) {
+        boolean mask[] = new boolean[getDataSource().getNumFunctions()];
+        for (Iterator it= getDataSource().getFunctions(); it.hasNext(); ) {
+            Function function = (Function) it.next();
+            if (!function.isGroupMember(group)) {
+                mask[function.getID()] = true;
+            }
+        }
+        setFunctionMask(mask);
+        groupInclude = null;
+        groupExclude = group;
+        updateRegisteredObjects("dataEvent");
+    }
+    
     public void setFunctionMask(boolean mask[]) {
         this.functionMask = mask;
+        groupInclude = null;
+        groupExclude = null;
         updateRegisteredObjects("dataEvent");
     }
 
@@ -446,10 +490,11 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void toggleHighlightedFunction(Function function) {
-        if (highlightedFunction == function)
+        if (highlightedFunction == function) {
             highlightedFunction = null;
-        else
+        } else {
             highlightedFunction = function;
+        }
         updateRegisteredObjects("colorEvent");
     }
 
@@ -548,6 +593,14 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         }
     }
 
+    public Function getFunction(String function) {
+        return getDataSource().getFunction(function);
+    }
+    
+    public Thread getThread(int n, int c, int t) {
+        return getDataSource().getThread(n,c,t);
+    }
+    
     public void updateRegisteredObjects(String inString) {
         //Set this object as changed.
         this.setChanged();
@@ -558,7 +611,6 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         this.notifyObservers(inString);
     }
 
-    private List obs = new ArrayList();
     public void addObserver(Observer o) {
         super.addObserver(o);
         obs.add(o);
@@ -572,5 +624,18 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public List getObservers() {
         return obs;
     }
+
+    
+    public Group getGroup(String name) {
+        return getDataSource().getGroup(name);
+    }
+    
+    public Group getGroupInclude() {
+        return groupInclude;   
+    }
+    public Group getGroupExclude() {
+        return groupExclude;
+    }
+
     
 }

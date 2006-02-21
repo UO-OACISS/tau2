@@ -36,6 +36,23 @@ public class ParaProfUtils {
         // This constructor will never be invoked
     }
 
+    public static FunctionBarChartWindow createFunctionBarChartWindow(ParaProfTrial ppTrial, Function function, Component parent) {
+        return new FunctionBarChartWindow(ppTrial, function, parent);
+    }
+    
+    public static FunctionBarChartWindow createFunctionBarChartWindow(ParaProfTrial ppTrial, Thread thread, Function phase, Component parent) {
+        return new FunctionBarChartWindow(ppTrial, thread, phase, parent);
+    }
+    
+    public static LedgerWindow createLedgerWindow(ParaProfTrial ppTrial, int windowType) {
+        return new LedgerWindow(ppTrial, windowType, null);
+    }
+
+    public static LedgerWindow createLedgerWindow(ParaProfTrial ppTrial, int windowType, Component parent) {
+        return new LedgerWindow(ppTrial, windowType, parent);
+    }
+
+    
     private static void checkVerbose() {
         if (!verboseSet) {
             if (System.getProperty("paraprof.verbose") != null) {
@@ -559,6 +576,13 @@ public class ParaProfUtils {
         g2.scale(scale, scale);
     }
 
+    
+    public FunctionBarChartWindow createFunctionAcrossPhasesWindow(ParaProfTrial ppTrial, Thread thread, Function function, Component owner) {
+        FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
+        functionDataWindow.changeToPhaseDisplay(thread);
+        return functionDataWindow;
+    }
+    
     public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function, final Thread thread,
             final Component owner) {
         ActionListener actionListener = new ActionListener() {

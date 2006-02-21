@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UserEvent;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.1 2005/09/26 21:12:05 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.2 2006/02/21 02:31:51 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -197,7 +197,6 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
         return sp.getViewport().getViewRect();
     }
 
-    //Respond correctly when this window is closed.
     private void thisWindowClosing(java.awt.event.WindowEvent e) {
         closeThisWindow();
     }
@@ -213,5 +212,8 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
         dispose();
     }
 
+    public int getWindowType() {
+        return windowType;
+    }
    
 }

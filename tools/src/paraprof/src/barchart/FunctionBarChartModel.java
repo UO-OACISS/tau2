@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * A BarChartModel for doing A) One function across threads, or 
  * B) One function across all phases (for one thread).
  * 
- * <P>CVS $Id: FunctionBarChartModel.java,v 1.1 2005/09/26 21:12:13 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartModel.java,v 1.2 2006/02/21 02:31:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class FunctionBarChartModel extends AbstractBarChartModel {
@@ -109,7 +109,7 @@ public class FunctionBarChartModel extends AbstractBarChartModel {
 
     public void reloadData() {
         if (window.isPhaseDisplay()) {
-            list = dataSorter.getFunctionAcrossPhases(function, window.getPhaseThread());
+            list = dataSorter.getFunctionAcrossPhases(function, window.getThread());
         } else {
             list = dataSorter.getFunctionData(function, true, true);
         }

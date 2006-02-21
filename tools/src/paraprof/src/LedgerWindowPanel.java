@@ -17,11 +17,11 @@ import edu.uoregon.tau.perfdmf.Function;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.4 2006/02/04 01:23:57 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.5 2006/02/21 02:31:51 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -266,27 +266,9 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                         lde.setColorFlag(false);
                         ppTrial.updateRegisteredObjects("colorEvent");
                     } else if (arg.equals("Show This Group Only")) {
-
-                        boolean mask[] = new boolean[ppTrial.getDataSource().getNumFunctions()];
-                        for (Iterator it= ppTrial.getDataSource().getFunctions(); it.hasNext(); ) {
-                            Function function = (Function) it.next();
-                            if (function.isGroupMember(lde.getGroup())) {
-                                mask[function.getID()] = true;
-                            }
-                        }
-                        ppTrial.setFunctionMask(mask);
-                        ppTrial.updateRegisteredObjects("dataEvent");
+                        ppTrial.showGroupOnly(lde.getGroup());
                     } else if (arg.equals("Show All Groups Except This One")) {
-                        ppTrial.setSelectedGroup(lde.getGroup());
-                        boolean mask[] = new boolean[ppTrial.getDataSource().getNumFunctions()];
-                        for (Iterator it= ppTrial.getDataSource().getFunctions(); it.hasNext(); ) {
-                            Function function = (Function) it.next();
-                            if (!function.isGroupMember(lde.getGroup())) {
-                                mask[function.getID()] = true;
-                            }
-                        }
-                        ppTrial.setFunctionMask(mask);
-                        ppTrial.updateRegisteredObjects("dataEvent");
+                        ppTrial.showAllExcept(lde.getGroup());
                     } else if (arg.equals("Show All Groups")) {
                         ppTrial.setFunctionMask(null);
                         ppTrial.updateRegisteredObjects("dataEvent");

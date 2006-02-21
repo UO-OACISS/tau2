@@ -26,9 +26,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.4 2006/02/04 01:23:57 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.5 2006/02/21 02:31:51 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -60,7 +60,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     private BarChartModel model;
 
     // Phase support
-    private Thread phaseThread;
     private boolean phaseDisplay;
 
     private SearchPanel searchPanel;
@@ -121,6 +120,12 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     private FunctionBarChartWindow() {
     }
 
+    
+    public Function getFunction() {
+        return function;
+    }
+
+    
     public static FunctionBarChartWindow CreateComparisonWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
         FunctionBarChartWindow window = new FunctionBarChartWindow();
 
@@ -216,7 +221,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     }
 
     public void changeToPhaseDisplay(Thread thread) {
-        phaseThread = thread;
+
+        this.ppThread = new PPThread(thread, ppTrial);
         phaseDisplay = true;
 
         this.setTitle(ParaProfUtils.getThreadIdentifier(thread) + " - Function Data: "
@@ -277,6 +283,25 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         }
     }
 
+    public void setMetricID(int id) {
+        dataSorter.setSelectedMetricID(id);
+        sortLocalData();
+        panel.repaint();
+    }
+    public int getMetricID() {
+        return dataSorter.getSelectedMetricID();
+    }
+    
+    public void setValueType(ValueType type) {
+        dataSorter.setValueType(type);
+        sortLocalData();
+        panel.repaint();
+    }
+    public ValueType getValueType() {
+        return dataSorter.getValueType();
+    }
+    
+    
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
         mainMenu.addKeyListener(this);
@@ -310,12 +335,13 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             }
         };
 
+        sortByNCTCheckbox = new JCheckBoxMenuItem("Sort By N,C,T", dataSorter.getSortType() == SortType.NCT);
+        sortByNameCheckBox = new JCheckBoxMenuItem("Sort By Name", dataSorter.getSortType() == SortType.NAME);
+
         if (function != null) {
-            sortByNCTCheckbox = new JCheckBoxMenuItem("Sort By N,C,T", dataSorter.getSortType() == SortType.NCT);
             sortByNCTCheckbox.addActionListener(sortData);
             optionsMenu.add(sortByNCTCheckbox);
         } else {
-            sortByNameCheckBox = new JCheckBoxMenuItem("Sort By Name", dataSorter.getSortType() == SortType.NAME);
             sortByNameCheckBox.addActionListener(sortData);
             optionsMenu.add(sortByNameCheckBox);
         }
@@ -408,6 +434,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             ParaProfUtils.handleException(e);
         }
     }
+    
+    
+    
 
     public void stateChanged(ChangeEvent event) {
         try {
@@ -754,6 +783,11 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         dispose();
     }
 
+    
+    public int getUnits() {
+        return units;
+    }
+    
     public void setUnits(int units) {
         this.units = units;
         this.setHeader();
@@ -769,8 +803,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         return ppTrial;
     }
 
-    public Thread getPhaseThread() {
-        return phaseThread;
+    public Thread getThread() {
+        return ppThread.getThread();
     }
 
     public void keyPressed(KeyEvent e) {
@@ -789,4 +823,33 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         return phase;
     }
 
+    
+    public void setDescendingOrder(boolean order) {
+        descendingOrderCheckBox.setSelected(order);
+        sortLocalData();
+        panel.repaint();
+    }
+
+    public boolean getDescendingOrder() {
+        return descendingOrderCheckBox.isSelected();
+    }
+
+    public void setSortByName(boolean order) {
+        sortByNameCheckBox.setSelected(order);
+        sortLocalData();
+        panel.repaint();
+    }
+    public boolean getSortByName() {
+        return sortByNameCheckBox.isSelected();
+    }
+    
+    public void setSortByNCT(boolean order) {
+        sortByNCTCheckbox.setSelected(order);
+    }
+    public boolean getSortByNCT() {
+        return sortByNCTCheckbox.isSelected();
+    }
+    
+    
+    
 }
