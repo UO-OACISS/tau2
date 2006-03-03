@@ -5,7 +5,14 @@ import org.python.core.PyInteger;
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
 
-
+/**
+ * TauScriptor.java
+ * A simple wrapper around any scripting interpreter.
+ *       
+ * <P>CVS $Id: TauScripter.java,v 1.2 2006/03/03 02:47:03 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.2 $
+ */
 public class TauScripter {
 
 
