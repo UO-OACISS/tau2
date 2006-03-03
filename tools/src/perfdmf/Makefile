@@ -1,12 +1,12 @@
 # settings set automatically by the configure script.
-CONFIG_ARCH=apple
-TAUROOT=/Users/khuck/tau2
+CONFIG_ARCH=i386_linux
+TAUROOT=/home/amorris/tau2
 
 
 # these are classpaths for the build.  The second classpath is for the 
 # loader directory.  The first is for everything else.
 CLASSPATH=./classes
-LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar
+LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar:../common/bin/tau-common.jar
 
 # These are class and source targets.
 DOC_PATH=./doc

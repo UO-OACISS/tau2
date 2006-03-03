@@ -4,6 +4,10 @@ package edu.uoregon.tau.perfdmf;
 
 public class DataSourceException extends Exception {
 
+    private Exception exception; 
+    private String message;
+
+    
     public DataSourceException(String message) {
         this.message = message;
     }
@@ -20,7 +24,4 @@ public class DataSourceException extends Exception {
         return exception;
     }
     
-    Exception exception; 
-    
-    String message;
 }

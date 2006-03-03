@@ -3,6 +3,8 @@ package edu.uoregon.tau.perfdmf.database;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
+import edu.uoregon.tau.common.TauRuntimeException;
+
 /* This class is intended to read in config.txt file and parse the parameters. */
 
 public class ParseConfig {
@@ -28,19 +30,20 @@ public class ParseConfig {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(configLoc));
 
+            // The following is for reading perfdmf.cfg out of the jar file for Java Web Start
             //        URL url = ParseConfig.class.getResource("/perfdmf.cfg");
             //        
             //        if (url == null) {
-            //            throw new IOException("Couldn't get perfdmf.cfg from the jar");
             //        }
+            //            throw new IOException("Couldn't get perfdmf.cfg from the jar");
             //        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
             //        
 
             while ((inputString = reader.readLine()) != null) {
-
-                if (inputString.startsWith("#") || inputString.trim().equals(""))
+                inputString = inputString.trim();
+                if (inputString.startsWith("#") || inputString.equals("")) {
                     continue;
-                else {
+                } else {
                     name = getNameToken(inputString).toLowerCase();
                     value = getValueToken(inputString);
                     if (name.equals("perfdmf_home"))
@@ -72,18 +75,18 @@ public class ParseConfig {
                     }
                 }
             }
+
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            // wrap it up in a runtime exception
+            throw new TauRuntimeException("Unable to parse \"" + configLoc + "\"", e);
         }
     }
 
     public String getNameToken(String aLine) {
         int i = aLine.indexOf(":");
-        if (i > 0)
+        if (i > 0) {
             return aLine.substring(0, i).trim();
-        else {
-            System.out.println(aLine);
-            System.out.println("This is an abnormal term. The correct form is name:value.");
+        } else {
             return null;
         }
 
@@ -91,10 +94,9 @@ public class ParseConfig {
 
     public String getValueToken(String aLine) {
         int i = aLine.indexOf(":");
-        if (i > 0)
+        if (i > 0) {
             return aLine.substring(i + 1).trim();
-        else {
-            System.out.println("This is an abnormal term. The correct form is name:value.");
+        } else {
             return null;
         }
     }
