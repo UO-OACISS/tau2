@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.2 2006/02/04 01:23:59 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.3 2006/03/03 02:52:10 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -362,7 +362,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
-            new ParaProfErrorDialog(e);
+            ParaProfUtils.handleException(e);
             return NO_SUCH_PAGE;
         }
     }

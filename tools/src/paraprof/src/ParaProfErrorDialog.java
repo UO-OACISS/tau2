@@ -1,5 +1,6 @@
 package edu.uoregon.tau.paraprof;
 
+import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.perfdmf.*;
 
 import java.awt.*;
@@ -11,20 +12,27 @@ import java.io.*;
 
 public class ParaProfErrorDialog extends JFrame implements ActionListener {
 
+
+    public ParaProfErrorDialog(String message) {
+        this(message,null);
+    }
     
-    public ParaProfErrorDialog(Object obj) {
+    public ParaProfErrorDialog(String message, Exception e) {
 
         String errorString = null;
 
-        if (obj instanceof DataSourceException) {
-            DataSourceException dse = (DataSourceException) obj;
-            Exception e = dse.getException();
+        if (e instanceof TauRuntimeException) {
+            e = ((TauRuntimeException)e).getActualException();
+        }
+        if (e instanceof DataSourceException) {
+            DataSourceException dse = (DataSourceException) e;
+            Exception ex = dse.getException();
 
-            if (e != null) {
-                e.printStackTrace();
+            if (ex != null) {
+                ex.printStackTrace();
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
-                e.printStackTrace(pw);
+                ex.printStackTrace(pw);
                 pw.close();
                 errorString = sw.toString();
             } else {
@@ -33,23 +41,28 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
                 return;
             }
 
-        } else if (obj instanceof DatabaseException) {
-            DatabaseException dbe = (DatabaseException) obj;
-            Exception e = dbe.getException();
+        } else if (e instanceof DatabaseException) {
+            DatabaseException dbe = (DatabaseException) e;
+            Exception ex = dbe.getException();
 
-            e.printStackTrace();
+            ex.printStackTrace();
+
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            ex.printStackTrace(pw);
+            pw.close();
+            errorString = dbe.getMessage() + "\n\n" + sw.toString();
+
+        } else if (e == null) {
+            errorString = message;
+        } else if (message != null && e != null) {
 
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
             pw.close();
-            errorString = dbe.getMessage() + "\n\n" + sw.toString();
-
-        } else if (obj instanceof String) {
-            errorString = (String) obj;
-            
+            errorString = sw.toString();
         } else {
-            Exception e = (Exception) obj;
             e.printStackTrace();
 
             StringWriter sw = new StringWriter();
@@ -80,15 +93,17 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
         //JTextArea headerTextArea = new JTextArea("<html>An unexpected error has occurred.<br>Please email us at: tau-bugs@cs.uoregon.edu with the message given below.  If possible, please also send the profile files that caused this error as well as a brief description of your sequence of actions.<br>Thanks for your help!</html>");
 
         JTextArea headerTextArea;
-        if (obj instanceof DataSourceException) {
+        if (e instanceof DataSourceException) {
             headerTextArea = new JTextArea(
                     "\nAn error occurred loading the profile.\nThis most likely means that the data is corrupt.\nBelow is the full error message.\n");
-        } else if (obj instanceof DatabaseException) {
+        } else if (e instanceof DatabaseException) {
             headerTextArea = new JTextArea(
                     "\nAn error occurred during a database transaction.\nBelow is the full error message.\n");
-        } else if (obj instanceof String) {
+        } else if (e == null) {
             headerTextArea = new JTextArea(
             "\nThe following error occurred.\n");
+        } else if (message != null && e != null) {
+            headerTextArea = new JTextArea("\n" + message + "\n");
         } else {
             headerTextArea = new JTextArea(
                     "\nAn unexpected error has occurred.\nPlease email us at: tau-bugs@cs.uoregon.edu with the message given below.\nIf possible, please also send the profile files that caused this error as well as a brief description of your sequence of actions.\nThanks for your help!\n");

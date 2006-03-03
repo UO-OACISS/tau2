@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
 /**
  * Adds scroll ability, and handles image export/printing with header support.
  * 
- * <P>CVS $Id: BarChartPanel.java,v 1.2 2005/10/18 22:50:34 amorris Exp $</P>
+ * <P>CVS $Id: BarChartPanel.java,v 1.3 2006/03/03 02:52:10 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class BarChartPanel extends JScrollPane implements Printable, ImageExport, ScrollBarController {
 
@@ -50,7 +50,7 @@ public class BarChartPanel extends JScrollPane implements Printable, ImageExport
             return Printable.PAGE_EXISTS;
 
         } catch (Exception e) {
-            new ParaProfErrorDialog(e);
+            ParaProfUtils.handleException(e);
             return NO_SUCH_PAGE;
         }
 

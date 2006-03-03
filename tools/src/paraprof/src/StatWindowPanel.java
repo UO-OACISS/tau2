@@ -101,7 +101,7 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
-            new ParaProfErrorDialog(e);
+            ParaProfUtils.handleException(e);
             return NO_SUCH_PAGE;
         }
     }

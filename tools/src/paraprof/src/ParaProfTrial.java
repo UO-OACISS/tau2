@@ -55,7 +55,6 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     private Group groupInclude;
     private Group groupExclude;
 
-    
     private Trial trial;
 
     private boolean functionMask[];
@@ -295,7 +294,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
             return m.getID();
         }
     }
-    
+
     public int getNumberOfMetrics() {
         return trial.getDataSource().getNumberOfMetrics();
     }
@@ -369,7 +368,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     public void showGroupOnly(Group group) {
         boolean mask[] = new boolean[getDataSource().getNumFunctions()];
-        for (Iterator it = getDataSource().getFunctions(); it.hasNext(); ) {
+        for (Iterator it = getDataSource().getFunctions(); it.hasNext();) {
             Function function = (Function) it.next();
             if (function.isGroupMember(group)) {
                 mask[function.getID()] = true;
@@ -383,7 +382,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     public void showAllExcept(Group group) {
         boolean mask[] = new boolean[getDataSource().getNumFunctions()];
-        for (Iterator it= getDataSource().getFunctions(); it.hasNext(); ) {
+        for (Iterator it = getDataSource().getFunctions(); it.hasNext();) {
             Function function = (Function) it.next();
             if (!function.isGroupMember(group)) {
                 mask[function.getID()] = true;
@@ -394,7 +393,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         groupExclude = group;
         updateRegisteredObjects("dataEvent");
     }
-    
+
     public void setFunctionMask(boolean mask[]) {
         this.functionMask = mask;
         groupInclude = null;
@@ -406,12 +405,10 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         this.selectedGroup = group;
     }
 
-
     public void closeTrialWindows() {
         updateRegisteredObjects("subWindowCloseEvent");
     }
 
-    
     public Group getSelectedGroup() {
         return selectedGroup;
     }
@@ -466,7 +463,11 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         for (int i = 0; i < ParaProf.scripts.size(); i++) {
             ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
             if (pps instanceof ParaProfTrialScript) {
-                ((ParaProfTrialScript)pps).trialLoaded(this);
+                try {
+                    ((ParaProfTrialScript) pps).trialLoaded(this);
+                } catch (Exception e) {
+                    new ParaProfErrorDialog("Exception while executing script: ", e);
+                }
             }
         }
 
@@ -589,24 +590,21 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
             fileMonitor.addListener(fileMonitorListener);
 
-        
         }
     }
 
     public Function getFunction(String function) {
         return getDataSource().getFunction(function);
     }
-    
+
     public Thread getThread(int n, int c, int t) {
-        return getDataSource().getThread(n,c,t);
+        return getDataSource().getThread(n, c, t);
     }
-    
+
     public void updateRegisteredObjects(String inString) {
         //Set this object as changed.
         this.setChanged();
 
-        
-        
         //Now notify observers.
         this.notifyObservers(inString);
     }
@@ -615,27 +613,26 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         super.addObserver(o);
         obs.add(o);
     }
-    
+
     public void deleteObserver(Observer o) {
         super.deleteObserver(o);
         obs.remove(o);
     }
-    
+
     public List getObservers() {
         return obs;
     }
 
-    
     public Group getGroup(String name) {
         return getDataSource().getGroup(name);
     }
-    
+
     public Group getGroupInclude() {
-        return groupInclude;   
+        return groupInclude;
     }
+
     public Group getGroupExclude() {
         return groupExclude;
     }
 
-    
 }

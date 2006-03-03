@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.*;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.37 2005/09/26 21:12:02 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.38 2006/03/03 02:52:09 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.37 $
+ * @version	$Revision: 1.38 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -100,7 +100,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
-            new ParaProfErrorDialog(e);
+            ParaProfUtils.handleException(e);
             return NO_SUCH_PAGE;
         }
     }

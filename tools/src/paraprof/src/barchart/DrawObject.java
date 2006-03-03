@@ -3,9 +3,9 @@ package edu.uoregon.tau.paraprof.barchart;
 /**
  * Holds a rectangle, basically.  We should probably use java.awt.Rectangle.
  * 
- * <P>CVS $Id: DrawObject.java,v 1.1 2005/09/26 21:12:13 amorris Exp $</P>
+ * <P>CVS $Id: DrawObject.java,v 1.2 2006/03/03 02:52:10 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class DrawObject {
@@ -21,6 +21,10 @@ public class DrawObject {
     }
 
 
+    public int getHeight() {
+        return yEnd - yBeg;
+    }
+    
     public int getXBeg() {
         return xBeg;
     }

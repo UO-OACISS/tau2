@@ -39,11 +39,12 @@ public class ParaProfUtils {
     public static FunctionBarChartWindow createFunctionBarChartWindow(ParaProfTrial ppTrial, Function function, Component parent) {
         return new FunctionBarChartWindow(ppTrial, function, parent);
     }
-    
-    public static FunctionBarChartWindow createFunctionBarChartWindow(ParaProfTrial ppTrial, Thread thread, Function phase, Component parent) {
+
+    public static FunctionBarChartWindow createFunctionBarChartWindow(ParaProfTrial ppTrial, Thread thread, Function phase,
+            Component parent) {
         return new FunctionBarChartWindow(ppTrial, thread, phase, parent);
     }
-    
+
     public static LedgerWindow createLedgerWindow(ParaProfTrial ppTrial, int windowType) {
         return new LedgerWindow(ppTrial, windowType, null);
     }
@@ -52,7 +53,6 @@ public class ParaProfUtils {
         return new LedgerWindow(ppTrial, windowType, parent);
     }
 
-    
     private static void checkVerbose() {
         if (!verboseSet) {
             if (System.getProperty("paraprof.verbose") != null) {
@@ -335,18 +335,24 @@ public class ParaProfUtils {
 
                     public void actionPerformed(ActionEvent e) {
                         ParaProf.loadScripts();
-                    }});
+                    }
+                });
                 menu.add(menuitem);
                 //menu.add
                 for (int i = 0; i < ParaProf.scripts.size(); i++) {
                     final ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
                     if (pps instanceof ParaProfTrialScript) {
-                    JMenuItem menuItem = new JMenuItem("[Script] " + pps.getName()); 
-                    menuItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            ((ParaProfTrialScript)pps).run(ppTrial);
-                        }});
-                    menu.add(menuItem);
+                        JMenuItem menuItem = new JMenuItem("[Script] " + pps.getName());
+                        menuItem.addActionListener(new ActionListener() {
+                            public void actionPerformed(ActionEvent e) {
+                                try {
+                                    ((ParaProfTrialScript) pps).run(ppTrial);
+                                } catch (Exception ex) {
+                                    new ParaProfErrorDialog("Exception while executing script:", ex);
+                                }
+                            }
+                        });
+                        menu.add(menuItem);
                     }
                 }
 
@@ -399,7 +405,7 @@ public class ParaProfUtils {
                             JOptionPane.showMessageDialog(owner,
                                     "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
                         } catch (Exception gle) {
-                            new ParaProfErrorDialog("Unable to initialize OpenGL: " + gle.getMessage());
+                            new ParaProfErrorDialog("Unable to initialize OpenGL: ", gle);
                         }
 
                     } else if (arg.equals("Close All Sub-Windows")) {
@@ -576,13 +582,13 @@ public class ParaProfUtils {
         g2.scale(scale, scale);
     }
 
-    
-    public FunctionBarChartWindow createFunctionAcrossPhasesWindow(ParaProfTrial ppTrial, Thread thread, Function function, Component owner) {
+    public FunctionBarChartWindow createFunctionAcrossPhasesWindow(ParaProfTrial ppTrial, Thread thread, Function function,
+            Component owner) {
         FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
         functionDataWindow.changeToPhaseDisplay(thread);
         return functionDataWindow;
     }
-    
+
     public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function, final Thread thread,
             final Component owner) {
         ActionListener actionListener = new ActionListener() {
@@ -649,21 +655,25 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
 
-        
         functionPopup.add(new JSeparator());
         for (int i = 0; i < ParaProf.scripts.size(); i++) {
             final ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
             if (pps instanceof ParaProfFunctionScript) {
-            JMenuItem menuItem = new JMenuItem("[Script] " + pps.getName()); 
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    ((ParaProfFunctionScript)pps).runFunction(ppTrial, function);
-                }});
-            functionPopup.add(menuItem);
+                JMenuItem menuItem = new JMenuItem("[Script] " + pps.getName());
+                menuItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        try {
+                            ((ParaProfFunctionScript) pps).runFunction(ppTrial, function);
+                        } catch (Exception ex) {
+                            new ParaProfErrorDialog("Exception while executing script: ", ex);
+                        }
+
+                    }
+                });
+                functionPopup.add(menuItem);
             }
         }
 
-        
         return functionPopup;
 
     }
@@ -963,18 +973,18 @@ public class ParaProfUtils {
         int numGroups = dataSource.getNumGroups();
 
         // write out magic cookie
-        p.writeChar('P');
-        p.writeChar('P');
-        p.writeChar('K');
+        p.writeChar('P');  // two bytes
+        p.writeChar('P');  // two bytes
+        p.writeChar('K');  // two bytes
 
         // write out version
-        p.writeInt(1);
+        p.writeInt(1);     // four bytes
 
         // write out lowest compatibility version
-        p.writeInt(1);
+        p.writeInt(1);     // four bytes
 
         // write out size of header in bytes
-        p.writeInt(0);
+        p.writeInt(0);     // four bytes
 
         // write out metric names
         p.writeInt(numMetrics);
@@ -983,11 +993,11 @@ public class ParaProfUtils {
             p.writeUTF(metricName);
         }
 
-        int idx = 0;
 
         // write out group names
         p.writeInt(numGroups);
         Group groups[] = new Group[numGroups];
+        int idx = 0;
         for (Iterator it = dataSource.getGroups(); it.hasNext();) {
             Group group = (Group) it.next();
             String groupName = group.getName();
@@ -995,9 +1005,9 @@ public class ParaProfUtils {
             groups[idx++] = group;
         }
 
+        // write out function names
         Function functions[] = new Function[numFunctions];
         idx = 0;
-        // write out function names
         p.writeInt(numFunctions);
         for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
             Function function = (Function) it.next();
@@ -1016,9 +1026,9 @@ public class ParaProfUtils {
             }
         }
 
+        // write out user event names
         UserEvent userEvents[] = new UserEvent[numUserEvents];
         idx = 0;
-        // write out user event names
         p.writeInt(numUserEvents);
         for (Iterator it = dataSource.getUserEvents(); it.hasNext();) {
             UserEvent userEvent = (UserEvent) it.next();
@@ -1026,17 +1036,18 @@ public class ParaProfUtils {
             p.writeUTF(userEvent.getName());
         }
 
+        // write out the number of threads
         p.writeInt(dataSource.getAllThreads().size());
 
+        // write out each thread's data
         for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
             edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
 
-            //System.out.println("writing " + thread.getNodeID() + "," + thread.getContextID() + "," + thread.getThreadID());
             p.writeInt(thread.getNodeID());
             p.writeInt(thread.getContextID());
             p.writeInt(thread.getThreadID());
 
-            // count function profiles
+            // count (non-null) function profiles
             int count = 0;
             for (int i = 0; i < numFunctions; i++) {
                 FunctionProfile fp = thread.getFunctionProfile(functions[i]);
@@ -1051,7 +1062,7 @@ public class ParaProfUtils {
                 FunctionProfile fp = thread.getFunctionProfile(functions[i]);
 
                 if (fp != null) {
-                    p.writeInt(i); // which function
+                    p.writeInt(i); // which function (id)
                     p.writeDouble(fp.getNumCalls());
                     p.writeDouble(fp.getNumSubr());
 
@@ -1062,7 +1073,7 @@ public class ParaProfUtils {
                 }
             }
 
-            // count user event profiles
+            // count (non-null) user event profiles
             count = 0;
             for (int i = 0; i < numUserEvents; i++) {
                 UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
@@ -1165,7 +1176,7 @@ public class ParaProfUtils {
     }
 
     public static void handleException(Exception e) {
-        new ParaProfErrorDialog(e);
+        new ParaProfErrorDialog(null, e);
     }
 
     public static Dimension checkSize(Dimension d) {

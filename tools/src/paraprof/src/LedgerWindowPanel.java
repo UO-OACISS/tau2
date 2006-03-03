@@ -17,11 +17,11 @@ import edu.uoregon.tau.perfdmf.Function;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.5 2006/02/21 02:31:51 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.6 2006/03/03 02:52:09 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -114,7 +114,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
             return Printable.PAGE_EXISTS;
         } catch (Exception e) {
-            new ParaProfErrorDialog(e);
+            ParaProfUtils.handleException(e);
             return NO_SUCH_PAGE;
         }
     }

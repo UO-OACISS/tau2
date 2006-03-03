@@ -30,9 +30,9 @@ public class Preferences implements Serializable {
     private Point managerWindowPosition;
     private Map assignedColors;
 
-    private boolean showValuesAsPercent = true;
-    private boolean showPathTitleInReverse = true;
-    private int units = 0;
+    private boolean showValuesAsPercent = false;
+    private boolean showPathTitleInReverse = false;
+    private int units = 2;
     private boolean reversedCallPaths = false;
     private boolean computeMeanWithoutNulls = false;
 

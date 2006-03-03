@@ -454,9 +454,9 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     fontName = "SansSerif";
                     fontStyle = Font.PLAIN;
                     fontSize = 12;
-                    unitsBox.setSelectedIndex(0);
-                    showValuesAsPercentBox.setSelected(true);
-                    showPathTitleInReverseBox.setSelected(true);
+                    unitsBox.setSelectedIndex(2);
+                    showValuesAsPercentBox.setSelected(false);
+                    showPathTitleInReverseBox.setSelected(false);
                     reverseCallPathsBox.setSelected(false);
                     meanIncludeNullBox.setSelected(true);
                     setControls();

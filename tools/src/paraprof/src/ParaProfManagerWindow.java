@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.1 2005/09/26 21:12:08 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.2 2006/03/03 02:52:09 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -31,6 +31,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 
+import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.perfdmf.*;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener, TreeSelectionListener, TreeWillExpandListener {
@@ -1730,6 +1731,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
+            if (e instanceof TauRuntimeException) { // unwrap
+                ParaProf.helpWindow.writeText(((TauRuntimeException)e).getMessage() + "\n\n");
+                e = ((TauRuntimeException)e).getActualException();
+            }
             e.printStackTrace(pw);
             pw.close();
             ParaProf.helpWindow.writeText(sw.toString());

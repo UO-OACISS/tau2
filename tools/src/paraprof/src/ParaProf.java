@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.48 2006/02/11 01:38:11 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.49 2006/03/03 02:52:09 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.48 $
+ * @version $Revision: 1.49 $
  */
 public class ParaProf implements ActionListener {
 
@@ -78,13 +78,12 @@ public class ParaProf implements ActionListener {
 
     public static boolean JNLP = false;
 
-
     public static List scripts = new ArrayList();
 
     private static String args[];
-    
+
     public static String scriptFile;
-    
+
     public static void registerScript(ParaProfScript pps) {
         scripts.add(pps);
     }
@@ -266,22 +265,24 @@ public class ParaProf implements ActionListener {
             // running as Java Web Start without permission
         }
 
- 
         ParaProf.loadScripts();
 
         loadDefaultTrial();
 
     }
 
-    
-    public static void loadScripts()  {
+    public static void loadScripts() {
         ParaProf.scripts.clear();
         ParaProf.scriptFile = System.getProperty("user.home") + "/.ParaProf/ParaProf.py";
         if (new File(scriptFile).exists()) {
-            TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
+            try {
+                TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
+            } catch (Exception e) {
+                new ParaProfErrorDialog("Exception while executing script: ", e);
+            }
         }
     }
-    
+
     public void actionPerformed(ActionEvent evt) {
         Object EventSrc = evt.getSource();
         if (EventSrc instanceof javax.swing.Timer) {
