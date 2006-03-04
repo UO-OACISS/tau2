@@ -5,7 +5,7 @@ TOOLS_SRC=$(TAUROOT)/tools/src
 
 
 
-SOURCES = $(wildcard src/*.java)
+SOURCES = $(wildcard src/*.java) $(wildcard src/tar/*.java)
 
 CLASSPATH = $(TAUROOT)/$(CONFIG_ARCH)/lib/batik-combined.jar:$(TOOLS_SRC)/contrib/jython.jar
 
