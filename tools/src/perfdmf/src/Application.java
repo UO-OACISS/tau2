@@ -20,7 +20,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.3 2006/02/08 02:21:44 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.4 2006/03/04 03:02:10 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -52,7 +52,6 @@ public class Application implements Serializable {
         this.fields = (String[]) app.fields.clone();
     }
 
-    
     public void reallocMetaData() {
         if (Application.fieldNames == null) {
             this.fields = new String[0];
@@ -60,27 +59,26 @@ public class Application implements Serializable {
             this.fields = new String[Application.fieldNames.length];
         }
     }
-    
-    
+
     public String[] getFields() {
         return fields;
     }
-    
+
     public void setFields(String[] fields) {
         this.fields = fields;
     }
-    
-   	/**
-	 * Returns the column names for the Application table
-	 *
-	 * @param	db	the database connection
-	 * @return	String[] an array of String objects
-	 */
-	public static String[] getFieldNames(DB db) throws DatabaseException {
-		getMetaData(db);
-		return fieldNames;
-	}
- 
+
+    /**
+     * Returns the column names for the Application table
+     *
+     * @param	db	the database connection
+     * @return	String[] an array of String objects
+     */
+    public static String[] getFieldNames(DB db) throws DatabaseException {
+        getMetaData(db);
+        return fieldNames;
+    }
+
     public static void getMetaData(DB db) {
         // see if we've already have them
         if (Application.fieldNames != null)
@@ -94,8 +92,7 @@ public class Application implements Serializable {
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
-            if ((db.getDBType().compareTo("oracle") == 0) || 
-				(db.getDBType().compareTo("derby") == 0)) {
+            if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "APPLICATION", "%");
             } else {
                 resultSet = dbMeta.getColumns(null, null, "application", "%");
@@ -103,7 +100,7 @@ public class Application implements Serializable {
 
             Vector nameList = new Vector();
             Vector typeList = new Vector();
-			boolean seenID = false;
+            boolean seenID = false;
 
             while (resultSet.next() != false) {
 
@@ -111,13 +108,13 @@ public class Application implements Serializable {
                 String cname = resultSet.getString("COLUMN_NAME");
                 String typename = resultSet.getString("TYPE_NAME");
 
-				// this code is because of a bug in derby...
-				if (cname.equals("ID")) {
-					if (!seenID)
-						seenID = true;
-					else
-						break;
-				}
+                // this code is because of a bug in derby...
+                if (cname.equals("ID")) {
+                    if (!seenID)
+                        seenID = true;
+                    else
+                        break;
+                }
 
                 // only integer and string types (for now)
                 // don't do name and id, we already know about them
@@ -141,8 +138,6 @@ public class Application implements Serializable {
             e.printStackTrace();
         }
     }
-
-   
 
     public int getNumFields() {
         return fields.length;
@@ -234,7 +229,6 @@ public class Application implements Serializable {
 
     public static Vector getApplicationList(DB db, String whereClause) {
         try {
-
             Application.getMetaData(db);
 
             ResultSet resultSet = null;
@@ -278,11 +272,10 @@ public class Application implements Serializable {
             resultSet.close();
 
             return applications;
-
-        } catch (SQLException e) { // this is unreal, I can't throw it because the base class Datasession doesn't throw it, why on earth does the base class have "getApplicationList"???
-            e.printStackTrace();
-            return null;
+        } catch (SQLException e) {
+            throw new DatabaseException("", e);
         }
+
     }
 
     public int saveApplication(DB db) {

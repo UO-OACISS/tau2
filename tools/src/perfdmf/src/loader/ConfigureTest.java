@@ -237,6 +237,7 @@ public class ConfigureTest {
             String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "application");
             ResultSet resultSet = db.executeQuery(query);
         } catch (SQLException e) {
+            e.printStackTrace();
             // this is our method of determining that no 'application' table exists
 
             System.out.print("Tables not found.  Would you like to upload the schema? [y/n]: ");

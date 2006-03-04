@@ -4,7 +4,7 @@ package edu.uoregon.tau.perfdmf;
 import java.sql.*;
 
 
-public class DatabaseException extends Exception {
+public class DatabaseException extends RuntimeException {
 
     DatabaseException(String s, SQLException sqlException) {
         this.message = s;
