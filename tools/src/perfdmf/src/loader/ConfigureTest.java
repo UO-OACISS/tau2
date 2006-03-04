@@ -20,16 +20,12 @@ import java.sql.*;
 import jargs.gnu.CmdLineParser;
 
 public class ConfigureTest {
-    private DB db = null;
     private static String Usage = "Usage: configure [{-h,--help}] [{-g,--configfile} filename] [{-t,--tauroot} path]";
     private static String Greeting = "\nNow testing your database connection.\n";
-    private static String PDBHomePrompt = "Please enter the PerfDMF home directory:";
 
     // todo - remove these defaults
     // todo - consider using a hash table!
     private String perfdmf_home = "";
-    private String tau_root = "";
-    private String arch = "";
     private String jdbc_db_jarfile = "postgresql.jar";
     private String jdbc_db_driver = "org.postgresql.Driver";
     private String jdbc_db_type = "postgresql";
@@ -41,14 +37,11 @@ public class ConfigureTest {
     private String db_schemafile = "dbschema.txt";
     private String xml_parser = "xerces.jar";
     private ParseConfig parser;
-    private boolean configFileFound = false;
 
     private String configFileName;
 
-    public ConfigureTest(String tauroot, String arch) {
+    public ConfigureTest(String tauroot) {
         super();
-        this.tau_root = tauroot;
-        this.arch = arch;
         this.perfdmf_home = tauroot + "/tools/src/dms";
     }
 
@@ -76,7 +69,6 @@ public class ConfigureTest {
                 //System.out.println("Configuration file found...");
                 // Parse the configuration file
                 parseConfigFile();
-                configFileFound = true;
             } else {
                 System.out.println("Configuration file NOT found...");
                 System.out.println("a new configuration file will be created.");
@@ -314,8 +306,11 @@ public class ConfigureTest {
             System.exit(-1);
         }
 
-        if (configFile == null)
-            configFile = new String("");
+        if (configFile == null) {
+            configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
+        }
+
+        
         if (tauroot == null)
             tauroot = new String("");
         if (arch == null)
@@ -323,10 +318,7 @@ public class ConfigureTest {
 
         // Create a new Configure object, which will walk the user through
         // the process of creating/editing a configuration file.
-        ConfigureTest config = new ConfigureTest(tauroot, arch);
-
-        config.tau_root = tauroot;
-
+        ConfigureTest config = new ConfigureTest(tauroot);
         config.initialize(configFile);
         config.createDB();
     }
