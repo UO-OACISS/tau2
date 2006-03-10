@@ -839,7 +839,7 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
 /* -------------------------------------------------------------------------- */
 void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it, char *use_string)
 {
-  if (isReturnTypeReference(it))
+  if (isReturnTypeReference(it) || (strcmp(ret_expression.c_str(), "") == 0))
     ostr <<"{ TAU_PROFILE_STOP(tautimer); "<<use_string<<" "<< (ret_expression)<<"; }" <<endl;
   else 
     ostr <<"{ tau_ret_val = " << ret_expression << "; TAU_PROFILE_STOP(tautimer); "<<
@@ -1876,8 +1876,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.81 $   $Date: 2006/02/18 15:36:41 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.81 2006/02/18 15:36:41 sameer Exp $
+ * $Revision: 1.82 $   $Date: 2006/03/10 17:50:28 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.82 2006/03/10 17:50:28 sameer Exp $
  ***************************************************************************/
 
 
