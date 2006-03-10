@@ -835,11 +835,36 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
 }
 
 /* -------------------------------------------------------------------------- */
+/* -- Checks to see if string is blank  ------------------------------------- */
+/* -------------------------------------------------------------------------- */
+bool isBlankString(string& s)
+{
+  int i;
+  const char * chr = s.c_str();
+  if (!chr) /* if chr is 0 or null, it is blank. */
+  {
+    return true;
+  }
+  else
+  { /* it is not null, we need to examine each character */
+    i = 0;
+    while (chr[i] != '\0')
+    { /* keep going to the end ... */
+      if (! (chr[i] == ' ' || chr[i] == '\t')) return false;
+      /* if it is not a space, just return a false -- it is not a blank */
+      i++; /* see next character */
+    } /* reached the end, and didn't find any non-white space characters */
+  }
+  return true; /* the string has only white space characters */
+}
+
+
+/* -------------------------------------------------------------------------- */
 /* -- Writes the return expression to the instrumented file  ---------------- */
 /* -------------------------------------------------------------------------- */
 void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it, char *use_string)
 {
-  if (isReturnTypeReference(it) || (strcmp(ret_expression.c_str(), "") == 0))
+  if (isReturnTypeReference(it) || isBlankString(ret_expression))
     ostr <<"{ TAU_PROFILE_STOP(tautimer); "<<use_string<<" "<< (ret_expression)<<"; }" <<endl;
   else 
     ostr <<"{ tau_ret_val = " << ret_expression << "; TAU_PROFILE_STOP(tautimer); "<<
@@ -1876,8 +1901,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.82 $   $Date: 2006/03/10 17:50:28 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.82 2006/03/10 17:50:28 sameer Exp $
+ * $Revision: 1.83 $   $Date: 2006/03/10 18:17:26 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.83 2006/03/10 18:17:26 sameer Exp $
  ***************************************************************************/
 
 
