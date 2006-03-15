@@ -951,171 +951,21 @@ public class ParaProfUtils {
         return unitsSubMenu;
     }
 
-    private static int findGroupID(Group groups[], Group group) {
-        for (int i = 0; i < groups.length; i++) {
-            if (groups[i] == group) {
-                return i;
-            }
-        }
-        throw new ParaProfException("Couldn't find group: " + group.getName());
-    }
-
-    public static void writePacked(DataSource dataSource, File file) throws FileNotFoundException, IOException {
-        //File file = new File("/home/amorris/test.ppk");
-        FileOutputStream ostream = new FileOutputStream(file);
-        GZIPOutputStream gzip = new GZIPOutputStream(ostream);
-        BufferedOutputStream bw = new BufferedOutputStream(gzip);
-        DataOutputStream p = new DataOutputStream(bw);
-
-        int numFunctions = dataSource.getNumFunctions();
-        int numMetrics = dataSource.getNumberOfMetrics();
-        int numUserEvents = dataSource.getNumUserEvents();
-        int numGroups = dataSource.getNumGroups();
-
-        // write out magic cookie
-        p.writeChar('P');  // two bytes
-        p.writeChar('P');  // two bytes
-        p.writeChar('K');  // two bytes
-
-        // write out version
-        p.writeInt(1);     // four bytes
-
-        // write out lowest compatibility version
-        p.writeInt(1);     // four bytes
-
-        // write out size of header in bytes
-        p.writeInt(0);     // four bytes
-
-        // write out metric names
-        p.writeInt(numMetrics);
-        for (int i = 0; i < numMetrics; i++) {
-            String metricName = dataSource.getMetricName(i);
-            p.writeUTF(metricName);
-        }
-
-
-        // write out group names
-        p.writeInt(numGroups);
-        Group groups[] = new Group[numGroups];
-        int idx = 0;
-        for (Iterator it = dataSource.getGroups(); it.hasNext();) {
-            Group group = (Group) it.next();
-            String groupName = group.getName();
-            p.writeUTF(groupName);
-            groups[idx++] = group;
-        }
-
-        // write out function names
-        Function functions[] = new Function[numFunctions];
-        idx = 0;
-        p.writeInt(numFunctions);
-        for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
-            Function function = (Function) it.next();
-            functions[idx++] = function;
-            p.writeUTF(function.getName());
-
-            List thisGroups = function.getGroups();
-            if (thisGroups == null) {
-                p.writeInt(0);
-            } else {
-                p.writeInt(thisGroups.size());
-                for (int i = 0; i < thisGroups.size(); i++) {
-                    Group group = (Group) thisGroups.get(i);
-                    p.writeInt(findGroupID(groups, group));
-                }
-            }
-        }
-
-        // write out user event names
-        UserEvent userEvents[] = new UserEvent[numUserEvents];
-        idx = 0;
-        p.writeInt(numUserEvents);
-        for (Iterator it = dataSource.getUserEvents(); it.hasNext();) {
-            UserEvent userEvent = (UserEvent) it.next();
-            userEvents[idx++] = userEvent;
-            p.writeUTF(userEvent.getName());
-        }
-
-        // write out the number of threads
-        p.writeInt(dataSource.getAllThreads().size());
-
-        // write out each thread's data
-        for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
-            edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
-
-            p.writeInt(thread.getNodeID());
-            p.writeInt(thread.getContextID());
-            p.writeInt(thread.getThreadID());
-
-            // count (non-null) function profiles
-            int count = 0;
-            for (int i = 0; i < numFunctions; i++) {
-                FunctionProfile fp = thread.getFunctionProfile(functions[i]);
-                if (fp != null) {
-                    count++;
-                }
-            }
-            p.writeInt(count);
-
-            // write out function profiles
-            for (int i = 0; i < numFunctions; i++) {
-                FunctionProfile fp = thread.getFunctionProfile(functions[i]);
-
-                if (fp != null) {
-                    p.writeInt(i); // which function (id)
-                    p.writeDouble(fp.getNumCalls());
-                    p.writeDouble(fp.getNumSubr());
-
-                    for (int j = 0; j < numMetrics; j++) {
-                        p.writeDouble(fp.getExclusive(j));
-                        p.writeDouble(fp.getInclusive(j));
-                    }
-                }
-            }
-
-            // count (non-null) user event profiles
-            count = 0;
-            for (int i = 0; i < numUserEvents; i++) {
-                UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
-                if (uep != null) {
-                    count++;
-                }
-            }
-
-            p.writeInt(count); // number of user event profiles
-
-            // write out user event profiles
-            for (int i = 0; i < numUserEvents; i++) {
-                UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
-
-                if (uep != null) {
-                    p.writeInt(i);
-                    p.writeInt((int) uep.getNumSamples());
-                    p.writeDouble(uep.getMinValue());
-                    p.writeDouble(uep.getMaxValue());
-                    p.writeDouble(uep.getMeanValue());
-                    p.writeDouble(uep.getSumSquared());
-                }
-            }
-        }
-
-        p.close();
-        gzip.close();
-        ostream.close();
-
-    }
-
     public static void exportTrial(ParaProfTrial ppTrial, Component owner) {
 
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Export Trial");
         //Set the directory.
-        fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+        //fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
         javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
 
-        fileChooser.setFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.PPK));
-
+        for (int i = 0; i < fileFilters.length; i++) {
+            fileChooser.removeChoosableFileFilter(fileFilters[i]);
+        }
+        fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.TXT));
+        fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.PPK));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
         int resultValue = fileChooser.showSaveDialog(owner);
         if (resultValue != JFileChooser.APPROVE_OPTION) {
             return;
@@ -1128,7 +978,11 @@ public class ParaProfUtils {
 
             String extension = ParaProfImageFormatFileFilter.getExtension(file);
             if (extension == null) {
-                path = path + ".ppk";
+                javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
+                if (fileFilter instanceof ParaProfImageFormatFileFilter) {
+                    ParaProfImageFormatFileFilter paraProfImageFormatFileFilter = (ParaProfImageFormatFileFilter) fileFilter;
+                    path = path + "." + paraProfImageFormatFileFilter.getExtension();
+                }
                 file = new File(path);
             }
 
@@ -1139,7 +993,13 @@ public class ParaProfUtils {
                     return;
             }
 
-            writePacked(ppTrial.getDataSource(), file);
+            extension = ParaProfImageFormatFileFilter.getExtension(file).toLowerCase();
+
+            if (extension.compareTo("txt") == 0) {
+                DataSourceExport.writeDelimited(ppTrial.getDataSource(), file);
+            } else {
+                DataSourceExport.writePacked(ppTrial.getDataSource(), file);
+            }
 
         } catch (Exception e) {
             ParaProfUtils.handleException(e);

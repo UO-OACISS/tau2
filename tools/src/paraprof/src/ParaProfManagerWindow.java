@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.2 2006/03/03 02:52:09 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.3 2006/03/15 19:30:56 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -341,7 +341,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem = new JMenuItem("Add Mean to Comparison Window");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
-        jMenuItem = new JMenuItem("Export as Packed Profile");
+        jMenuItem = new JMenuItem("Export Profile");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
@@ -349,7 +349,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         stdTrialPopup.add(jMenuItem);
 
         // DB trial popup
-        jMenuItem = new JMenuItem("Export as Packed Profile");
+        jMenuItem = new JMenuItem("Export Profile");
         jMenuItem.addActionListener(this);
         dbTrialPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Add Mean to Comparison Window");
@@ -715,7 +715,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         }
                     }
 
-                } else if (arg.equals("Export as Packed Profile")) {
+                } else if (arg.equals("Export Profile")) {
                     ParaProfTrial ppTrial = (ParaProfTrial) clickedOnObject;
                     if (ppTrial.loading()) {
                         JOptionPane.showMessageDialog(this, "Cannot export trial while loading");

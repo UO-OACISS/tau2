@@ -15,17 +15,30 @@ import java.io.*;
 
 public class ParaProfImageFormatFileFilter extends javax.swing.filechooser.FileFilter {
 
+
+    private String extension = null;
+
+    static String JPG = "jpg";
+    static String PNG = "png";
+    static String PPK = "ppk";
+    static String SVG = "svg";
+    static String EPS = "eps";
+    static String TXT = "txt";
+
+    
     public ParaProfImageFormatFileFilter(String extension) {
         super();
         this.extension = extension;
     }
 
     public boolean accept(File f) {
-        boolean accept = f.isDirectory();
+//        boolean accept = f.isDirectory();
+        boolean accept = false;
         if (!accept) {
             String extension = ParaProfImageFormatFileFilter.getExtension(f);
-            if (extension != null)
+            if (extension != null) {
                 accept = this.extension.equals(extension);
+            }
         }
         return accept;
     }
@@ -35,6 +48,8 @@ public class ParaProfImageFormatFileFilter extends javax.swing.filechooser.FileF
             return "JPEG File (*.jpg)";
         else if (extension.equals("png"))
             return "PNG File (*.png)";
+        else if (extension.equals("txt"))
+            return "Tab Delimited (*.txt)";
         else if (extension.equals("ppk"))
             return "ParaProf Packed Profile (*.ppk)";
         else if (extension.equals("svg"))
@@ -63,18 +78,4 @@ public class ParaProfImageFormatFileFilter extends javax.swing.filechooser.FileF
 
         return extension;
     }
-
-    //####################################
-    //Instance Data.
-    //####################################
-    private String extension = null;
-
-    static String JPG = "jpg";
-    static String PNG = "png";
-    static String PPK = "ppk";
-    static String SVG = "svg";
-    static String EPS = "eps";
-    //####################################
-    //End - Instance Data.
-    //####################################
 }

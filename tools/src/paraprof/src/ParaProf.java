@@ -15,19 +15,17 @@ import javax.swing.ToolTipManager;
 
 import edu.uoregon.tau.common.TauScripter;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
-import edu.uoregon.tau.perfdmf.DataSource;
-import edu.uoregon.tau.perfdmf.FileList;
-import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.*;
 
 /**
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.49 2006/03/03 02:52:09 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.50 2006/03/15 19:30:56 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.49 $
+ * @version $Revision: 1.50 $
  */
 public class ParaProf implements ActionListener {
 
@@ -472,7 +470,7 @@ public class ParaProf implements ActionListener {
                 System.out.println("Loading data...");
                 dataSource.load();
                 System.out.println("Packing data...");
-                ParaProfUtils.writePacked(dataSource, new File(pack));
+                DataSourceExport.writePacked(dataSource, new File(pack));
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -494,7 +492,7 @@ public class ParaProf implements ActionListener {
                 System.out.println("Loading data...");
                 dataSource.load();
                 System.out.println("Creating TAU Profile data...");
-                UtilFncs.writeProfiles(dataSource, new File("."));
+                DataSourceExport.writeProfiles(dataSource, new File("."));
 
             } catch (Exception e) {
                 e.printStackTrace();
