@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.3 2006/02/04 01:21:57 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.4 2006/03/15 19:30:05 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		FunctionProfile
  */
 /**
@@ -116,6 +116,19 @@ public class Function implements Serializable, Comparable {
         return groups;
     }
 
+    public String getGroupString() {
+        String groupString = "";
+        for (int i = 0; i < groups.size(); i++) {
+            Group group = (Group) groups.get(i);
+            if (i == 0) {
+                groupString = group.getName();
+            } else {
+                groupString = groupString + " | " + group.getName();
+            }
+        }
+        return groupString;
+    }
+    
     public boolean isPhaseMember(Function phase) {
         if (phase == null) {
             return true;

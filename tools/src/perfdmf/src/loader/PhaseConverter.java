@@ -12,9 +12,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uoregon.tau.perfdmf.DataSource;
-import edu.uoregon.tau.perfdmf.PhaseConvertedDataSource;
-import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.*;
 
 /**
  * Creates a phase profile from a callpath profile.
@@ -25,9 +23,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 
  * In addition the top level functions (those on the leftmost side) are always phases.
  *
- * <P>CVS $Id: PhaseConverter.java,v 1.1 2005/12/22 00:36:29 amorris Exp $</P>
+ * <P>CVS $Id: PhaseConverter.java,v 1.2 2006/03/15 19:30:05 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class PhaseConverter {
 
@@ -190,7 +188,7 @@ public class PhaseConverter {
                 }
             }
             System.out.println("Writing profiles to 'converted'");
-            UtilFncs.writeProfiles(phaseDataSource, new File(name));
+            DataSourceExport.writeProfiles(phaseDataSource, new File(name));
         } catch (IOException ioe) {
             ioe.printStackTrace();
             System.exit(-1);
