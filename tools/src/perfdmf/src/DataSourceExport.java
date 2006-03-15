@@ -9,8 +9,6 @@ import java.util.zip.GZIPOutputStream;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
-import edu.uoregon.tau.paraprof.*;
-
 public class DataSourceExport {
 
     private static int findGroupID(Group groups[], Group group) {
@@ -19,7 +17,7 @@ public class DataSourceExport {
                 return i;
             }
         }
-        throw new ParaProfException("Couldn't find group: " + group.getName());
+        throw new RuntimeException("Couldn't find group: " + group.getName());
     }
 
     public static void writeDelimited(DataSource dataSource, File file) throws FileNotFoundException, IOException {
