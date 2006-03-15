@@ -1,41 +1,35 @@
-/* 
- ParaProfImageFormatFileFilter.java
-
- Title:      ParaProf
- Author:     Robert Bell
- 
- Description: A file filter for the different image format types Pararof supports.
-
- Things to do: Class is complete.
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.io.*;
 
-public class ParaProfImageFormatFileFilter extends javax.swing.filechooser.FileFilter {
+/**
+ * A custom FileFilter
+ * 
+ * <P>CVS $Id: ParaProfFileFilter.java,v 1.1 2006/03/15 22:32:27 amorris Exp $</P>
+ * @author  Robert Bell, Alan Morris
+ * @version $Revision: 1.1 $
+ */
 
+public class ParaProfFileFilter extends javax.swing.filechooser.FileFilter {
 
     private String extension = null;
 
-    static String JPG = "jpg";
-    static String PNG = "png";
-    static String PPK = "ppk";
-    static String SVG = "svg";
-    static String EPS = "eps";
-    static String TXT = "txt";
+    public static String JPG = "jpg";
+    public static String PNG = "png";
+    public static String PPK = "ppk";
+    public static String SVG = "svg";
+    public static String EPS = "eps";
+    public static String TXT = "txt";
 
-    
-    public ParaProfImageFormatFileFilter(String extension) {
+    public ParaProfFileFilter(String extension) {
         super();
         this.extension = extension;
     }
 
     public boolean accept(File f) {
-//        boolean accept = f.isDirectory();
-        boolean accept = false;
+        boolean accept = f.isDirectory(); // must accept directories for JFileChooser to work properly
         if (!accept) {
-            String extension = ParaProfImageFormatFileFilter.getExtension(f);
+            String extension = ParaProfFileFilter.getExtension(f);
             if (extension != null) {
                 accept = this.extension.equals(extension);
             }
@@ -73,8 +67,9 @@ public class ParaProfImageFormatFileFilter extends javax.swing.filechooser.FileF
         String extension = null;
 
         int i = s.lastIndexOf('.');
-        if (i > 0 && i < s.length() - 1)
+        if (i > 0 && i < s.length() - 1) {
             extension = s.substring(i + 1).toLowerCase();
+        }
 
         return extension;
     }

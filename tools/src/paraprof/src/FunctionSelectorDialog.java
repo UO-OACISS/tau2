@@ -5,10 +5,10 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.*;
 
 import javax.swing.*;
+
 
 /**
  * Function selector dialog.  Nothing in it is "function" specific except the title.
@@ -18,9 +18,9 @@ import javax.swing.*;
  *   
  * TODO: nothing
  *
- * <P>CVS $Id: FunctionSelectorDialog.java,v 1.1 2005/09/26 21:12:04 amorris Exp $</P>
+ * <P>CVS $Id: FunctionSelectorDialog.java,v 1.2 2006/03/15 22:32:27 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  */
 public class FunctionSelectorDialog extends JDialog {
 
@@ -28,51 +28,64 @@ public class FunctionSelectorDialog extends JDialog {
     private JList list;
     private boolean selected;
     private Object selectedObject;
+    private List selectedObjects;
     private boolean allowNone;
+    private boolean allowMultiple;
 
     // center the frame in the owner 
     private void center(JFrame owner) {
-      
+
         int centerOwnerX = owner.getX() + (owner.getWidth() / 2);
         int centerOwnerY = owner.getY() + (owner.getHeight() / 2);
-        
-        
-        int posX = centerOwnerX-(this.getWidth()/2);
-        int posY = centerOwnerY-(this.getHeight()/2);
-        
-        posX = Math.max(posX,0);
-        posY = Math.max(posY,0);
-        
-        this.setLocation(posX, posY );
+
+        int posX = centerOwnerX - (this.getWidth() / 2);
+        int posY = centerOwnerY - (this.getHeight() / 2);
+
+        posX = Math.max(posX, 0);
+        posY = Math.max(posY, 0);
+
+        this.setLocation(posX, posY);
     }
-    
+
     public boolean choose() {
         this.show();
 
-        if (!selected)
+        if (!selected) {
             return false;
-        
-        if (list.getSelectedIndex() == 0 && allowNone) {
-            selectedObject = null;
-        } else {
-            selectedObject = items.get(list.getSelectedIndex());
         }
-        
+
+        if (allowMultiple) {
+            list.getSelectedIndices();
+            selectedObjects = new ArrayList();
+            for (int i=0; i < list.getSelectedIndices().length; i++) {
+                selectedObjects.add(items.get(list.getSelectedIndices()[i]));
+            }
+        } else {
+
+            if (list.getSelectedIndex() == 0 && allowNone) {
+                selectedObject = null;
+            } else {
+                selectedObject = items.get(list.getSelectedIndex());
+            }
+        }
         return true;
     }
 
     
-    public FunctionSelectorDialog(JFrame owner, boolean modal, Iterator functions, Object initialSelection, boolean allowNone) {
-        
+    
+    public FunctionSelectorDialog(JFrame owner, boolean modal, Iterator functions, Object initialSelection, boolean allowNone,
+            boolean allowMultiple) {
+
         super(owner, modal);
-        
+
         this.allowNone = allowNone;
+        this.allowMultiple = allowMultiple;
         this.setTitle("Select a Function");
-        this.setSize(600,600);
-      
+        this.setSize(600, 600);
+
         center(owner);
         int selectedIndex = 0;
-        
+
         int index = 0;
         if (allowNone) {
             items.add("   <none>");
@@ -89,20 +102,24 @@ public class FunctionSelectorDialog extends JDialog {
 
         list = new JList(items);
         list.setSelectedIndex(selectedIndex);
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        if (allowMultiple) {
+            list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        } else {
+            list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        }
         JScrollPane sp = new JScrollPane(list);
-        
+
         Container panel = this.getContentPane();
-        
+
         panel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        
+
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
 
-        JButton okButton = new JButton ("select");
+        JButton okButton = new JButton("select");
         okButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
@@ -113,8 +130,8 @@ public class FunctionSelectorDialog extends JDialog {
                 }
             }
         });
-        JButton cancelButton = new JButton ("cancel");
-        
+        JButton cancelButton = new JButton("cancel");
+
         cancelButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
@@ -124,9 +141,7 @@ public class FunctionSelectorDialog extends JDialog {
                 }
             }
         });
-        
-        
-        
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
@@ -138,8 +153,11 @@ public class FunctionSelectorDialog extends JDialog {
         gbc.weighty = 0;
         ParaProfUtils.addCompItem(panel, buttonPanel, gbc, 0, 1, 1, 1);
     }
-    
+
     public Object getSelectedObject() {
         return selectedObject;
+    }
+    public List getSelectedObjects() {
+        return selectedObjects;
     }
 }

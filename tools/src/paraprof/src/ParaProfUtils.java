@@ -3,14 +3,13 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.print.*;
-import java.io.*;
+import java.io.File;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.zip.GZIPOutputStream;
 
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
@@ -442,7 +441,7 @@ public class ParaProfUtils {
         ActionListener fActionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true,
-                        ppTrial.getDataSource().getFunctions(), null, false);
+                        ppTrial.getDataSource().getFunctions(), null, false, false);
                 if (fSelector.choose()) {
                     Function selectedFunction = (Function) fSelector.getSelectedObject();
 
@@ -476,7 +475,7 @@ public class ParaProfUtils {
                     list.add(1, ppTrial.getDataSource().getMeanData());
                 }
 
-                FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true, list.iterator(), null, false);
+                FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true, list.iterator(), null, false, false);
                 fSelector.setTitle("Select a Thread");
                 if (fSelector.choose()) {
                     edu.uoregon.tau.perfdmf.Thread selectedThread = (edu.uoregon.tau.perfdmf.Thread) fSelector.getSelectedObject();
@@ -951,6 +950,59 @@ public class ParaProfUtils {
         return unitsSubMenu;
     }
 
+    public static void phaseConvertTrial(ParaProfTrial srcPpTrial, JFrame owner) {
+
+        if (srcPpTrial.getDataSource().getCallPathDataPresent() == false) {
+            JOptionPane.showMessageDialog(owner, "Can't phase convert non-callpath profiles");
+            return;
+        }
+
+        FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true, srcPpTrial.getDataSource().getFunctions(),
+                null, false, true);
+        fSelector.setTitle("Choose Phases");
+
+        if (fSelector.choose()) {
+            List phases = fSelector.getSelectedObjects();
+
+            List phaseStrings = new ArrayList();
+            for (Iterator it = phases.iterator(); it.hasNext();) {
+                Function f = (Function) it.next();
+                phaseStrings.add(f.getName());
+            }
+
+            DataSource phaseDataSource = new PhaseConvertedDataSource(srcPpTrial.getDataSource(), phaseStrings);
+
+            ParaProfApplication application = ParaProf.applicationManager.addApplication();
+            application.setName("New Application");
+
+            ParaProfExperiment experiment = application.addExperiment();
+            experiment.setName("New Experiment");
+
+            ParaProf.paraProfManagerWindow.expandApplicationType(0, application.getID(), application);
+            ParaProf.paraProfManagerWindow.expandApplication(0, application.getID(), experiment.getID(), null, experiment);
+
+            final ParaProfTrial ppTrial = new ParaProfTrial();
+            ppTrial.getTrial().setDataSource(phaseDataSource);
+
+            ppTrial.setExperiment(experiment);
+            ppTrial.setApplicationID(experiment.getApplicationID());
+            ppTrial.setExperimentID(experiment.getID());
+
+            ppTrial.getTrial().setName("Phase Converted from " + srcPpTrial.getName());
+
+            experiment.addTrial(ppTrial);
+            ppTrial.finishLoad();
+            ParaProf.paraProfManagerWindow.populateTrialMetrics(ppTrial);
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    ppTrial.showMainWindow();
+                }
+            });
+
+        }
+
+    }
+
     public static void exportTrial(ParaProfTrial ppTrial, Component owner) {
 
         JFileChooser fileChooser = new JFileChooser();
@@ -962,8 +1014,8 @@ public class ParaProfUtils {
         for (int i = 0; i < fileFilters.length; i++) {
             fileChooser.removeChoosableFileFilter(fileFilters[i]);
         }
-        fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.TXT));
-        fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.PPK));
+        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.TXT));
+        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.PPK));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         int resultValue = fileChooser.showSaveDialog(owner);
@@ -976,11 +1028,11 @@ public class ParaProfUtils {
             File file = fileChooser.getSelectedFile();
             String path = file.getCanonicalPath();
 
-            String extension = ParaProfImageFormatFileFilter.getExtension(file);
+            String extension = ParaProfFileFilter.getExtension(file);
             if (extension == null) {
                 javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
-                if (fileFilter instanceof ParaProfImageFormatFileFilter) {
-                    ParaProfImageFormatFileFilter paraProfImageFormatFileFilter = (ParaProfImageFormatFileFilter) fileFilter;
+                if (fileFilter instanceof ParaProfFileFilter) {
+                    ParaProfFileFilter paraProfImageFormatFileFilter = (ParaProfFileFilter) fileFilter;
                     path = path + "." + paraProfImageFormatFileFilter.getExtension();
                 }
                 file = new File(path);
@@ -993,7 +1045,7 @@ public class ParaProfUtils {
                     return;
             }
 
-            extension = ParaProfImageFormatFileFilter.getExtension(file).toLowerCase();
+            extension = ParaProfFileFilter.getExtension(file).toLowerCase();
 
             if (extension.compareTo("txt") == 0) {
                 DataSourceExport.writeDelimited(ppTrial.getDataSource(), file);

@@ -54,8 +54,8 @@ public class JVMDependent {
         javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
         for (int i = 0; i < fileFilters.length; i++)
             fileChooser.removeChoosableFileFilter(fileFilters[i]);
-        fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.EPS));
-        fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.SVG));
+        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.EPS));
+        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.SVG));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         ParaProfImageOptionsPanel optionsPanel = new ParaProfImageOptionsPanel((Component) ie, true, true);
@@ -70,12 +70,12 @@ public class JVMDependent {
         String path = file.getCanonicalPath();
 
 
-        String extension = ParaProfImageFormatFileFilter.getExtension(file);
+        String extension = ParaProfFileFilter.getExtension(file);
         if (extension == null) {
 
             javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
-            if (fileFilter instanceof ParaProfImageFormatFileFilter) {
-                ParaProfImageFormatFileFilter paraProfImageFormatFileFilter = (ParaProfImageFormatFileFilter) fileFilter;
+            if (fileFilter instanceof ParaProfFileFilter) {
+                ParaProfFileFilter paraProfImageFormatFileFilter = (ParaProfFileFilter) fileFilter;
                 path = path + "." + paraProfImageFormatFileFilter.getExtension();
             }
             file = new File(path);
@@ -88,7 +88,7 @@ public class JVMDependent {
                 return;
         }
 
-        extension = ParaProfImageFormatFileFilter.getExtension(file).toLowerCase();
+        extension = ParaProfFileFilter.getExtension(file).toLowerCase();
 
         boolean textAsShapes = optionsPanel.getTextAsShapes();
         

@@ -2,12 +2,12 @@
 package edu.uoregon.tau.paraprof;
 
 /**
- * This exception represents programming errors on our part.  Hopefully the customer
+ * This exception represents programming errors on our part.  Hopefully the user
  * will send us the message given by the error window.
  * 
- * <P>CVS $Id: ParaProfException.java,v 1.1 2005/09/26 21:12:07 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfException.java,v 1.2 2006/03/15 22:32:27 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  */
 public class ParaProfException extends RuntimeException {
 

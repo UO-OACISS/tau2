@@ -419,7 +419,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     public void finishLoad() {
 
-        // The dataSource has accumulated edu.uoregon.tau.dms.dss.Metrics.
+        // The dataSource has accumulated metrics.
         // Inside ParaProf, these need to be ParaProfMetrics.
 
         int numberOfMetrics = trial.getDataSource().getNumberOfMetrics();
@@ -444,7 +444,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
             }
         }
 
-        // Set the default metric to the first metric named "Time" (if it exists)
+        // Set the default metric to the first metric named "Time" (if it exists), higher priority than above
         for (int i = 0; i < numberOfMetrics; i++) {
             ParaProfMetric ppMetric = (ParaProfMetric) trial.getDataSource().getMetric(i);
             if (ppMetric.getName().equalsIgnoreCase("Time")) {

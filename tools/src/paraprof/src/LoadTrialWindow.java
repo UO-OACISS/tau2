@@ -1,11 +1,3 @@
-/*
- * LoadTrialWindow.java
- * 
- * Title: ParaProf 
- * Author: Robert Bell 
- * Description:
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.io.*;
@@ -15,7 +7,16 @@ import javax.swing.*;
 
 import edu.uoregon.tau.perfdmf.*;
 
+/**
+ * A window that lets the user select a profile format and launch a JFileChooser
+ * 
+ * <P>CVS $Id: LoadTrialWindow.java,v 1.2 2006/03/15 22:32:27 amorris Exp $</P>
+ * @author  Robert Bell, Alan Morris
+ * @version $Revision: 1.2 $
+ */
 public class LoadTrialWindow extends JFrame implements ActionListener {
+
+    private static int defaultIndex;
 
     static String lastDirectory;
 
@@ -24,21 +25,16 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
     private ParaProfExperiment experiment = null;
     private boolean newExperiment;
     private boolean newApplication;
-    
+
     private JTextField dirLocationField = new JTextField(lastDirectory, 30);
-    //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun.
-    //String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP",
-    // "hpmtoolkit", "gprof", "psrun"};
-    private String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit",
-            "Gprof", "PSRun", "ParaProf Packed Profile", "Cube", "HPCToolkit" };
     private JComboBox trialTypes = null;
     private File selectedFiles[];
     private JButton selectButton = null;
 
     private JCheckBox monitorTrialCheckBox = new JCheckBox("Monitor Trial");
-    
-    public LoadTrialWindow(ParaProfManagerWindow paraProfManager, ParaProfApplication application,
-            ParaProfExperiment experiment, boolean newApplication, boolean newExperiment) {
+
+    public LoadTrialWindow(ParaProfManagerWindow paraProfManager, ParaProfApplication application, ParaProfExperiment experiment,
+            boolean newApplication, boolean newExperiment) {
         this.paraProfManagerWindow = paraProfManager;
         this.application = application;
         this.experiment = experiment;
@@ -77,9 +73,14 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
             }
         });
 
-        trialTypes = new JComboBox(trialTypeStrings);
+        selectButton = new JButton("Select Directory");
+        selectButton.addActionListener(this);
+
+        trialTypes = new JComboBox(DataSource.formatTypeStrings);
         trialTypes.setMaximumRowCount(12);
         trialTypes.addActionListener(this);
+        // must be after action listener
+        trialTypes.setSelectedIndex(defaultIndex);
 
         Container contentPane = getContentPane();
         GridBagLayout gbl = new GridBagLayout();
@@ -99,8 +100,6 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         gbc.weighty = 0;
         addCompItem(trialTypes, gbc, 1, 0, 1, 1);
 
-        selectButton = new JButton("Select Directory");
-        selectButton.addActionListener(this);
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.EAST;
         gbc.weightx = 0;
@@ -117,7 +116,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         gbc.anchor = GridBagConstraints.EAST;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        
+
         if (!experiment.dBExperiment()) {
             monitorTrialCheckBox.addActionListener(this);
             gbc.fill = GridBagConstraints.BOTH;
@@ -136,7 +135,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
             jButton.addActionListener(this);
             addCompItem(jButton, gbc, 2, 3, 1, 1);
         } else {
-            
+
             JButton jButton = new JButton("Cancel");
             jButton.addActionListener(this);
             addCompItem(jButton, gbc, 0, 2, 1, 1);
@@ -144,9 +143,9 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
             jButton = new JButton("Ok");
             jButton.addActionListener(this);
             addCompItem(jButton, gbc, 2, 2, 1, 1);
-            
+
         }
-        
+
     }
 
     public void actionPerformed(ActionEvent evt) {
@@ -167,7 +166,18 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
             } else if (arg.equals("  Select File(s)  ")) {
                 JFileChooser jFileChooser = new JFileChooser(lastDirectory);
                 jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                jFileChooser.setMultiSelectionEnabled(true);
+
+                if (trialTypes.getSelectedIndex() == DataSource.PPK || trialTypes.getSelectedIndex() == DataSource.MPIP
+                        || trialTypes.getSelectedIndex() == DataSource.PPROF || trialTypes.getSelectedIndex() == DataSource.CUBE) {
+                    // These formats are in a single file only
+                    jFileChooser.setMultiSelectionEnabled(false);
+                } else {
+                    // others may have multiple files
+                    jFileChooser.setMultiSelectionEnabled(true);
+                }
+                if (trialTypes.getSelectedIndex() == DataSource.PPK) {
+                    jFileChooser.setFileFilter(new ParaProfFileFilter(ParaProfFileFilter.PPK));
+                }
                 jFileChooser.setDialogTitle("Select File(s)");
                 jFileChooser.setApproveButtonText("Select");
                 if ((jFileChooser.showOpenDialog(this)) != JFileChooser.APPROVE_OPTION) {
@@ -176,6 +186,10 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
 
                 selectedFiles = jFileChooser.getSelectedFiles();
                 lastDirectory = jFileChooser.getSelectedFile().getParent();
+                if (!jFileChooser.isMultiSelectionEnabled()) {
+                    selectedFiles = new File[1];
+                    selectedFiles[0] = jFileChooser.getSelectedFile();
+                }
 
                 if (selectedFiles.length > 1) {
                     dirLocationField.setText("<Multiple Files Selected>");
@@ -199,24 +213,22 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                     File files[] = new File[1];
                     files[0] = new File(dirLocationField.getText().trim());
                     if (!files[0].exists()) {
-                        JOptionPane.showMessageDialog(this, dirLocationField.getText().trim()
-                                + " does not exist");
+                        JOptionPane.showMessageDialog(this, dirLocationField.getText().trim() + " does not exist");
                         return;
                     }
-                    paraProfManagerWindow.addTrial(application, experiment, files,
-                            trialTypes.getSelectedIndex(), false, monitorTrialCheckBox.isSelected());
+                    paraProfManagerWindow.addTrial(application, experiment, files, trialTypes.getSelectedIndex(), false,
+                            monitorTrialCheckBox.isSelected());
                 } else {
                     if (selectedFiles == null) {
                         selectedFiles = new File[1];
                         selectedFiles[0] = new File(dirLocationField.getText().trim());
                         if (!selectedFiles[0].exists()) {
-                            JOptionPane.showMessageDialog(this, dirLocationField.getText().trim()
-                                    + " does not exist");
+                            JOptionPane.showMessageDialog(this, dirLocationField.getText().trim() + " does not exist");
                             return;
                         }
                     }
-                    paraProfManagerWindow.addTrial(application, experiment, selectedFiles,
-                            trialTypes.getSelectedIndex(), false, monitorTrialCheckBox.isSelected());
+                    paraProfManagerWindow.addTrial(application, experiment, selectedFiles, trialTypes.getSelectedIndex(), false,
+                            monitorTrialCheckBox.isSelected());
                 }
                 closeThisWindow();
             } else if (arg.equals("comboBoxChanged")) {
@@ -248,9 +260,13 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         closeThisWindow();
     }
 
-    void closeThisWindow() {
+    private void closeThisWindow() {
         this.setVisible(false);
         dispose();
+    }
+
+    public static void setDefaultIndex(int index) {
+        defaultIndex = index;
     }
 
 }

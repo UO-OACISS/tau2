@@ -39,8 +39,8 @@ public class ParaProfImageOutput {
         javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
         for (int i = 0; i < fileFilters.length; i++)
             fileChooser.removeChoosableFileFilter(fileFilters[i]);
-        fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.JPG));
-        fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.PNG));
+        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.JPG));
+        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.PNG));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         ParaProfImageOptionsPanel paraProfImageOptionsPanel = new ParaProfImageOptionsPanel((Component) ref, true, false);
@@ -55,15 +55,15 @@ public class ParaProfImageOutput {
         File file = fileChooser.getSelectedFile();
         String path = file.getCanonicalPath();
 
-        ParaProfImageFormatFileFilter paraProfImageFormatFileFilter = null;
+        ParaProfFileFilter paraProfImageFormatFileFilter = null;
         javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
-        if (fileFilter instanceof ParaProfImageFormatFileFilter) {
-            paraProfImageFormatFileFilter = (ParaProfImageFormatFileFilter) fileFilter;
+        if (fileFilter instanceof ParaProfFileFilter) {
+            paraProfImageFormatFileFilter = (ParaProfFileFilter) fileFilter;
         } else {
             throw new ParaProfException("Unknown format : " + fileFilter);
             //???
         }
-        String extension = ParaProfImageFormatFileFilter.getExtension(file);
+        String extension = ParaProfFileFilter.getExtension(file);
         if (extension == null) {
             extension = paraProfImageFormatFileFilter.getExtension();
             path = path + "." + extension;
@@ -132,8 +132,8 @@ public class ParaProfImageOutput {
         javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
         for (int i = 0; i < fileFilters.length; i++)
             fileChooser.removeChoosableFileFilter(fileFilters[i]);
-        fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.PNG));
-        fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.JPG));
+        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.PNG));
+        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.JPG));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         final ParaProfImageOptionsPanel paraProfImageOptionsPanel = new ParaProfImageOptionsPanel((Component) ref, false, false);
@@ -151,10 +151,10 @@ public class ParaProfImageOutput {
         //Append extension if required.
 
         //Only create if we recognize the format.
-        ParaProfImageFormatFileFilter paraProfImageFormatFileFilter = null;
-        if (fileFilter instanceof ParaProfImageFormatFileFilter) {
-            paraProfImageFormatFileFilter = (ParaProfImageFormatFileFilter) fileFilter;
-            String extension = ParaProfImageFormatFileFilter.getExtension(f);
+        ParaProfFileFilter paraProfImageFormatFileFilter = null;
+        if (fileFilter instanceof ParaProfFileFilter) {
+            paraProfImageFormatFileFilter = (ParaProfFileFilter) fileFilter;
+            String extension = ParaProfFileFilter.getExtension(f);
             //Could probably collapse this if/else based on the order of evaluation of arguments (ie, to make sure
             //the extension is not null before trying to call equals on it).  However, it is easier to understand
             //what is going on this way.

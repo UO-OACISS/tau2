@@ -99,9 +99,9 @@ public class ParaProfImageOptionsPanel extends JPanel implements PropertyChangeL
             if (obj instanceof JFileChooser) {
                 JFileChooser fileChooser = (JFileChooser) obj;
                 javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
-                if (fileFilter instanceof ParaProfImageFormatFileFilter) {
-                    String extension = ((ParaProfImageFormatFileFilter) fileFilter).getExtension();
-                    if (extension.equals(ParaProfImageFormatFileFilter.PNG)) {
+                if (fileFilter instanceof ParaProfFileFilter) {
+                    String extension = ((ParaProfFileFilter) fileFilter).getExtension();
+                    if (extension.equals(ParaProfFileFilter.PNG)) {
                         imageQuality.setEnabled(false);
                         imageQualityEnabled = false;
                     } else {

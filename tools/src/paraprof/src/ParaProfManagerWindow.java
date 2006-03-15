@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.3 2006/03/15 19:30:56 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.4 2006/03/15 22:32:28 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -105,9 +105,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         }
 
         if (ParaProf.demoMode) {
-            this.setLocation(0,0);
+            this.setLocation(0, 0);
         }
-        
+
         setSize(ParaProfUtils.checkSize(new java.awt.Dimension(windowWidth, windowHeight)));
         setTitle("ParaProf Manager");
 
@@ -335,21 +335,28 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         dbExpPopup.add(jMenuItem);
 
         // Standard trial popup
-        jMenuItem = new JMenuItem("Upload Trial to DB");
+        jMenuItem = new JMenuItem("Export Profile");
+        jMenuItem.addActionListener(this);
+        stdTrialPopup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Convert to Phase Profile");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Add Mean to Comparison Window");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
-        jMenuItem = new JMenuItem("Export Profile");
+        jMenuItem = new JMenuItem("Upload Trial to DB");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
+
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
 
         // DB trial popup
         jMenuItem = new JMenuItem("Export Profile");
+        jMenuItem.addActionListener(this);
+        dbTrialPopup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Convert to Phase Profile");
         jMenuItem.addActionListener(this);
         dbTrialPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Add Mean to Comparison Window");
@@ -457,6 +464,22 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         }
     }
 
+    private boolean isLoaded(ParaProfTrial ppTrial) {
+        boolean loaded = true;
+        if (ppTrial.dBTrial()) {
+            loaded = false;
+            for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
+                ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+                if ((ppTrial.getID() == loadedTrial.getID())
+                        && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
+                        && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
+                    loaded = true;
+                }
+            }
+        }
+        return loaded;
+    }
+    
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
@@ -719,27 +742,28 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     ParaProfTrial ppTrial = (ParaProfTrial) clickedOnObject;
                     if (ppTrial.loading()) {
                         JOptionPane.showMessageDialog(this, "Cannot export trial while loading");
-                    } else {
-                        boolean loaded = true;
-
-                        if (ppTrial.dBTrial()) {
-                            loaded = false;
-                            for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-                                ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-                                if ((ppTrial.getID() == loadedTrial.getID())
-                                        && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
-                                        && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
-                                    loaded = true;
-                                }
-                            }
-                        }
-
-                        if (!loaded) {
-                            JOptionPane.showMessageDialog(this, "Please load the trial before exporting (expand the tree)");
-                        } else {
-                            ParaProfUtils.exportTrial(ppTrial, this);
-                        }
+                        return;
                     }
+                    if (!isLoaded(ppTrial)) {
+                        JOptionPane.showMessageDialog(this, "Please load the trial before exporting (expand the tree)");
+                        return;
+                    }
+
+                    ParaProfUtils.exportTrial(ppTrial, this);
+
+                } else if (arg.equals("Convert to Phase Profile")) {
+                    ParaProfTrial ppTrial = (ParaProfTrial) clickedOnObject;
+                    if (ppTrial.loading()) {
+                        JOptionPane.showMessageDialog(this, "Cannot convert while loading");
+                        return;
+                    }
+                    if (!isLoaded(ppTrial)) {
+                        JOptionPane.showMessageDialog(this, "Please load the trial before converting (expand the tree)");
+                        return;
+                    }
+                    
+                    ParaProfUtils.phaseConvertTrial(ppTrial,this);
+                    
                 }
             }
         } catch (Exception e) {
@@ -1376,7 +1400,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     public void addTrial(ParaProfApplication application, ParaProfExperiment experiment, File files[], int fileType,
             boolean fixGprofNames, boolean monitorProfiles) {
-        
+
         ParaProfTrial ppTrial = null;
         DataSource dataSource = null;
 
@@ -1732,8 +1756,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             if (e instanceof TauRuntimeException) { // unwrap
-                ParaProf.helpWindow.writeText(((TauRuntimeException)e).getMessage() + "\n\n");
-                e = ((TauRuntimeException)e).getActualException();
+                ParaProf.helpWindow.writeText(((TauRuntimeException) e).getMessage() + "\n\n");
+                e = ((TauRuntimeException) e).getActualException();
             }
             e.printStackTrace(pw);
             pw.close();
