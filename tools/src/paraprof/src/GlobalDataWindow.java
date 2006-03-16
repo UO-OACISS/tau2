@@ -22,9 +22,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.4 2006/02/11 01:38:11 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.5 2006/03/16 02:14:50 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -182,7 +182,9 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         //mainMenu.add(ParaProfUtils.createFunctionMenu(ppTrial, this, null));
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
 
-        mainMenu.add(ParaProfUtils.createScriptMenu(ppTrial, this));
+        if (ParaProf.scripts.size() > 0) {
+            mainMenu.add(ParaProfUtils.createScriptMenu(ppTrial, this));
+        }
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
@@ -296,7 +298,6 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
             jTextArea.setMargin(new Insets(3,3,3,3));
-            PreferencesWindow p = ppTrial.getPreferencesWindow();
             jTextArea.setFont(ParaProf.preferencesWindow.getFont());
             jTextArea.append(this.getHeaderString());
             panel.setColumnHeaderView(jTextArea);

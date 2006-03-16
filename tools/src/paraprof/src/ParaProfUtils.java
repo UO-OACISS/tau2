@@ -654,7 +654,17 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
 
-        functionPopup.add(new JSeparator());
+        // count function scripts
+        int functionScripts = 0;
+        for (int i = 0; i < ParaProf.scripts.size(); i++) {
+            ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
+            if (pps instanceof ParaProfFunctionScript) {
+                functionScripts++;
+            }
+        }
+        if (functionScripts > 1) {
+            functionPopup.add(new JSeparator());
+        }
         for (int i = 0; i < ParaProf.scripts.size(); i++) {
             final ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
             if (pps instanceof ParaProfFunctionScript) {

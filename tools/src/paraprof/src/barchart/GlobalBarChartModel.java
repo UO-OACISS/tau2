@@ -1,12 +1,14 @@
 package edu.uoregon.tau.paraprof.barchart;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.JComponent;
-import javax.swing.JPopupMenu;
+import javax.swing.*;
 
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.perfdmf.Function;
@@ -15,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.4 2006/02/04 01:23:58 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.5 2006/03/16 02:14:51 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -102,10 +104,47 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
 
     public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
         PPThread ppThread = (PPThread) threads.get(row);
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) ppThread.getFunctionList().get(subIndex);
+        final PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) ppThread.getFunctionList().get(subIndex);
         if (ParaProfUtils.rightClick(e)) { // Bring up context menu
             JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(),
                     ppThread.getThread(), owner);
+
+            popup.add(new JSeparator());
+
+            JMenuItem menuItem = new JMenuItem("Move to Front");
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    try {
+                        Function function = ppFunctionProfile.getFunction();
+                        for (Iterator it = threads.iterator(); it.hasNext();) {
+                            PPThread ppThread = (PPThread) it.next();
+                            
+                            List flist = ppThread.getFunctionList();
+                            
+                            int targetIndex = -1;
+                            for (int fIndex = 0; fIndex < flist.size(); fIndex++) {
+                                PPFunctionProfile fp = (PPFunctionProfile) flist.get(fIndex);
+                                if (fp != null && fp.getFunction() == function) {
+                                    targetIndex = fIndex;
+                                }
+                            }
+                            
+                            if (targetIndex != -1) {
+                                Object item = flist.remove(targetIndex);
+                                flist.add(0,item);
+                            }
+                            fireModelChanged();
+                            window.repaint();
+                        }
+                    } catch (Exception e) {
+                        ParaProfUtils.handleException(e);
+                    }
+                }
+
+            });
+
+            popup.add(menuItem);
+
             popup.show(owner, e.getX(), e.getY());
         } else {
             ppTrial.setHighlightedFunction(ppFunctionProfile.getFunction());
@@ -134,7 +173,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         if (ppTrial.getDataSource().getPhasesPresent()) {
 
             //return "Other Patches";
-            
+
             // we can't use PPFunctionProfile's getFunctionName since the callpath might be reversed
             //return UtilFncs.getRightSide(ppFunctionProfile.getFunctionName());
             return UtilFncs.getRightSide(ppFunctionProfile.getFunction().getName());
@@ -215,10 +254,8 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         return "Misc function section ... see help window for details";
     }
 
-    
     public List getThreads() {
         return threads;
     }
-    
-    
+
 }

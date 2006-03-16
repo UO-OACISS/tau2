@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.*;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.38 2006/03/03 02:52:09 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.39 2006/03/16 02:14:50 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.38 $
+ * @version	$Revision: 1.39 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -473,6 +473,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                     if (ParaProfUtils.rightClick(evt)) {
                         JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, callPathDrawObject.getFunction(),
                                 thread, this);
+
+                        popup.add(new JSeparator());
 
                         JMenuItem menuItem = new JMenuItem("Goto Function");
                         menuItem.addActionListener(new ActionListener() {
