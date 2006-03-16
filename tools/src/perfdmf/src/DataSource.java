@@ -5,18 +5,31 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.sql.*;
 
-
 /**
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.4 2006/02/21 02:31:30 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.5 2006/03/16 02:15:22 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		TrialData
  * @see		NCT
  */
 public abstract class DataSource {
+
+    public static int TAUPROFILE = 0;
+    public static int PPROF = 1;
+    public static int DYNAPROF = 2;
+    public static int MPIP = 3;
+    public static int HPM = 4;
+    public static int GPROF = 5;
+    public static int PSRUN = 6;
+    public static int PPK = 7;
+    public static int CUBE = 8;
+    public static int HPCTOOLKIT = 9;
+
+    public static String formatTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
+            "PSRun", "ParaProf Packed Profile", "Cube", "HPCToolkit" };
 
     private static boolean meanIncludeNulls = true;
 
@@ -25,8 +38,7 @@ public abstract class DataSource {
     private boolean groupNamesPresent = false;
     private boolean phasesPresent = false;
     private Function topLevelPhase;
-    
-    
+
     // data structures
     private List metrics = null;
     protected Thread meanData = null;
@@ -47,9 +59,8 @@ public abstract class DataSource {
 
     abstract public void cancelLoad();
 
-    
     protected volatile boolean reloading;
-    
+
     // by default no files
     public List getFiles() {
         return new ArrayList();
@@ -58,7 +69,7 @@ public abstract class DataSource {
     public boolean isReloading() {
         return reloading;
     }
-    
+
     public boolean reloadData() throws Exception {
         if (this.reloading) {
             return false;
@@ -71,7 +82,7 @@ public abstract class DataSource {
         this.reloading = false;
         return true;
     }
-    
+
     protected void cleanData() {
         for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
             Thread thread = (Thread) it.next();
@@ -79,8 +90,8 @@ public abstract class DataSource {
                 FunctionProfile fp = (FunctionProfile) it2.next();
                 if (fp != null) {
                     for (int m = 0; m < this.getNumberOfMetrics(); m++) {
-                        fp.setExclusive(m,0);
-                        fp.setInclusive(m,0);
+                        fp.setExclusive(m, 0);
+                        fp.setInclusive(m, 0);
                     }
                     fp.setNumSubr(0);
                     fp.setNumCalls(0);
@@ -88,7 +99,7 @@ public abstract class DataSource {
             }
         }
     }
-    
+
     public Thread getMeanData() {
         return meanData;
     }
@@ -181,7 +192,7 @@ public abstract class DataSource {
     public Group getGroup(String name) {
         return (Group) groups.get(name);
     }
-    
+
     public Group addGroup(String name) {
         name = name.trim();
         Object obj = groups.get(name);
@@ -302,7 +313,6 @@ public abstract class DataSource {
         return this.metrics;
     }
 
-    
     public Metric getMetric(String name) {
         for (Iterator it = metrics.iterator(); it.hasNext();) {
             Metric metric = (Metric) it.next();
@@ -311,8 +321,7 @@ public abstract class DataSource {
         }
         return null;
     }
-    
-    
+
     /**
      * Get the metric with the given id. 
      * 
@@ -378,7 +387,7 @@ public abstract class DataSource {
         this.stddevData.setThreadDataAllMetrics();
 
         this.generateUserEventStatistics();
-        
+
         finishPhaseAnalysis();
 
         //time = (System.currentTimeMillis()) - time;
@@ -386,17 +395,15 @@ public abstract class DataSource {
 
     }
 
-    
     private double computeStdDev(double sumSqr, double mean, int count) {
         double stdDev = 0;
         if (count > 1) {
-            stdDev = java.lang.Math.sqrt(java.lang.Math.abs((sumSqr / count)
-                    - (mean * mean)));
+            stdDev = java.lang.Math.sqrt(java.lang.Math.abs((sumSqr / count) - (mean * mean)));
         }
-        
+
         return stdDev;
     }
-    
+
     private void generateUserEventStatistics() {
 
         for (Iterator it = this.getUserEvents(); it.hasNext();) {
@@ -426,7 +433,6 @@ public abstract class DataSource {
             }
             //ue.setStddevProfile(stddevProfile);
 
-
             int numProfiles = 0;
             double numSampSum = 0;
             double numSampSumSqr = 0;
@@ -439,7 +445,6 @@ public abstract class DataSource {
             double stdDevSum = 0;
             double stdDevSumSqr = 0;
 
-            
             int numThreads = allThreads.size();
 
             for (int i = 0; i < numThreads; i++) { // for each thread
@@ -447,13 +452,13 @@ public abstract class DataSource {
                 UserEventProfile uep = thread.getUserEventProfile(ue);
                 if (uep != null) {
                     numProfiles++;
-                    
+
                     numSampSum += uep.getNumSamples();
                     numSampSumSqr += uep.getNumSamples() * uep.getNumSamples();
-                    
+
                     maxSum += uep.getMaxValue();
                     maxSumSqr += uep.getMaxValue() * uep.getMaxValue();
-                    
+
                     minSum += uep.getMinValue();
                     minSumSqr += uep.getMinValue() * uep.getMinValue();
 
@@ -469,19 +474,18 @@ public abstract class DataSource {
                 numThreads = numProfiles;
             }
 
-            
-            totalProfile.setNumSamples((int)numSampSum);
+            totalProfile.setNumSamples((int) numSampSum);
             totalProfile.setMaxValue(maxSum);
             totalProfile.setMinValue(minSum);
             totalProfile.setMeanValue(maxSum);
             totalProfile.setStdDev(stdDevSum);
-            
-            meanProfile.setNumSamples((int)(numSampSum / numThreads));
+
+            meanProfile.setNumSamples((int) (numSampSum / numThreads));
             meanProfile.setMaxValue(maxSum / numThreads);
             meanProfile.setMinValue(minSum / numThreads);
             meanProfile.setMeanValue(meanSum / numThreads);
             meanProfile.setStdDev(stdDevSum / numThreads);
-            
+
             stddevProfile.setNumSamples(computeStdDev(numSampSumSqr, meanProfile.getNumSamples(), numThreads));
             stddevProfile.setMaxValue(computeStdDev(maxSumSqr, meanProfile.getMaxValue(), numThreads));
             stddevProfile.setMinValue(computeStdDev(minSumSqr, meanProfile.getMinValue(), numThreads));
@@ -490,7 +494,7 @@ public abstract class DataSource {
         }
 
     }
-    
+
     public void generateStatistics(int startMetric, int endMetric) {
 
         /*
@@ -860,65 +864,64 @@ public abstract class DataSource {
     }
 
     protected void checkForPhases() {
-        
+
         Group tau_phase = this.getGroup("TAU_PHASE");
 
         if (tau_phase != null) {
             phasesPresent = true;
-            
+
             for (Iterator it = this.getFunctions(); it.hasNext();) {
                 Function function = (Function) it.next();
-                
+
                 if (function.isGroupMember(tau_phase)) {
                     function.setPhase(true);
                     function.setActualPhase(function);
                 }
-            }   
+            }
 
             for (Iterator it = this.getFunctions(); it.hasNext();) {
                 Function function = (Function) it.next();
-                
-              int location = function.getName().indexOf("=>");
-              
-              if (location > 0) {
-                  // split "A => B"
-                  String phaseRoot = UtilFncs.getLeftSide(function.getName());
-                  String phaseChild = UtilFncs.getRightSide(function.getName());
 
-                  Function f = this.getFunction(phaseChild);
-                  if (f.isPhase()) {
-                      function.setPhase(true);
-                      function.setActualPhase(f);
-                  }
-                  
-                  function.setParentPhase(this.getFunction(phaseRoot));
-              }
-            }   
+                int location = function.getName().indexOf("=>");
 
-    
+                if (location > 0) {
+                    // split "A => B"
+                    String phaseRoot = UtilFncs.getLeftSide(function.getName());
+                    String phaseChild = UtilFncs.getRightSide(function.getName());
+
+                    Function f = this.getFunction(phaseChild);
+                    if (f.isPhase()) {
+                        function.setPhase(true);
+                        function.setActualPhase(f);
+                    }
+
+                    function.setParentPhase(this.getFunction(phaseRoot));
+                }
+            }
+
         }
     }
-    
+
     protected void finishPhaseAnalysis() {
-  
+
         if (phasesPresent) {
             Group tau_phase = this.getGroup("TAU_PHASE");
             ArrayList phases = new ArrayList();
-            
+
             for (Iterator it = this.getFunctions(); it.hasNext();) {
                 Function function = (Function) it.next();
                 if (function.isGroupMember(tau_phase)) {
                     phases.add(function);
                 }
-            }   
-            
+            }
+
             // there must be at least one
             if (phases.size() == 0) {
                 throw new RuntimeException("Error: TAU_PHASE found, but no phases!");
             }
-            
+
             // try to find the "top level phase", usually 'main'
-            topLevelPhase = (Function)phases.get(0);
+            topLevelPhase = (Function) phases.get(0);
             for (Iterator it = phases.iterator(); it.hasNext();) {
                 Function function = (Function) it.next();
                 if (function.getMeanInclusive(0) > topLevelPhase.getMeanInclusive(0)) {
