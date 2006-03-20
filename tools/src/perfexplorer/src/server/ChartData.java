@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.24 2006/02/15 19:15:35 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.25 2006/03/20 22:20:34 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -212,20 +212,12 @@ public class ChartData extends RMIChartData {
 		PreparedStatement statement = null;
 		StringBuffer buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
-		if ((dataType == FRACTION_OF_TOTAL) ||
-			(preQuery && 
-			 (dataType == CORRELATION_DATA ||
-			  dataType == RELATIVE_EFFICIENCY))) {
+		if (preQuery && (dataType == CORRELATION_DATA)) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
-
-			buf.append("select ie.name, ");
-
+			buf.append("select 'TOTAL', ");
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-			if (preQuery)
-				buf.append(" max(ims.inclusive) ");
-			else
-				buf.append("ims.exclusive_percentage ");
+			buf.append(" max(ims.inclusive) ");
 			buf.append("from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie ");
 			buf.append("on ims.interval_event = ie.id ");
@@ -237,22 +229,37 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-
 			buf.append(" and m.name = ? ");
-			
-			if (!preQuery) {
-				buf.append("and ims.exclusive_percentage > ");
-				buf.append(model.getXPercent());
-			}
-
+			buf.append("and ims.exclusive_percentage > ");
+			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
-			if (preQuery)
-				buf.append("order by ims.inclusive_percentage, 2");
-			else
-				buf.append("order by 1, 2");
-
+			buf.append("group by 2 order by 2 ");
+			statement = db.prepareStatement(buf.toString());
+			statement.setString(1, metricName);
+		} else if (dataType == FRACTION_OF_TOTAL) {
+			// The user wants to know the runtime breakdown by events of one 
+			// experiment as the number of threads of execution increases.
+			buf.append("select ie.name, ");
+			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append(" max(ims.inclusive) ");
+			buf.append("from interval_mean_summary ims ");
+			buf.append("inner join interval_event ie ");
+			buf.append("on ims.interval_event = ie.id ");
+			buf.append("inner join trial t on ie.trial = t.id ");
+			buf.append("inner join metric m on m.id = ims.metric ");
+			if (object instanceof RMIView) {
+				buf.append(model.getViewSelectionPath(true, true));
+			} else {
+				buf.append("where t.experiment = ");
+				buf.append(model.getExperiment().getID() + " ");
+			}
+			buf.append(" and m.name = ? ");
+			buf.append(" and (ie.group_name is null or (");
+			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
+			buf.append("order by 1, 2");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == RELATIVE_EFFICIENCY) {
@@ -268,15 +275,10 @@ public class ChartData extends RMIChartData {
 					buf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-				//if (selections == null) {
-					//buf.append(" m.name, ");
-				//} else {
 				buf.append(" e.name, ");
-
-				//}
 			}
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-			buf.append("ims.inclusive from interval_mean_summary ims ");
+			buf.append("avg(ims.inclusive) from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
@@ -298,21 +300,14 @@ public class ChartData extends RMIChartData {
 				}
 				buf.append(")");
 			}
-			//if (selections == null) {
-				//buf.append(" and ims.inclusive_percentage = 100.0 ");
-			//} else {
 
 			buf.append(" and m.name = ? and ims.inclusive_percentage = 100.0 ");
-
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
-			//}
-			buf.append(" order by 1, 2");
+			buf.append(" group by 1, 2 order by 1, 2");
 			statement = db.prepareStatement(buf.toString());
-			//if (selections != null) {
-				statement.setString(1, metricName);
-			//}
+			statement.setString(1, metricName);
 		} else if (dataType == TOTAL_FOR_GROUP) {
 			// The user wants to know the percentage of total runtime that
 			// comes from one group of events, such as communication or 
@@ -645,6 +640,7 @@ public class ChartData extends RMIChartData {
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1");
 			
+			System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 
