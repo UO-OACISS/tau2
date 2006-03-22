@@ -29,7 +29,7 @@ ARFLAGS		= rcv
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
-TAU_TARGET		= libTauShmem$(TAU_OPTIONS)$(LSX)
+TAU_TARGET		= libTauShmem$(TAU_CONFIG)$(LSX)
 ##############################################
 
 all : 		$(TAU_TARGET)
