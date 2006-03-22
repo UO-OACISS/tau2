@@ -67,7 +67,7 @@ LIBS            = $(TAU_MPI_LIBS) $(TAU_SHLIBS)
 
 LDFLAGS	      	= $(USER_OPT) $(TAU_LDFLAGS)
 
-LIBTARGET 	= libTAU_traceinput$(TAU_OPTIONS).a
+LIBTARGET 	= libTAU_traceinput$(TAU_CONFIG).a
 
 OBJS		= TAU_tf.o TAU_Cwrapper.o TAU_tf_writer.o
 
@@ -107,6 +107,6 @@ clean:
 ##############################################
 #/***************************************************************************
 # * $RCSfile: Makefile,v $   $Author: amorris $
-# * $Revision: 1.8 $   $Date: 2005/11/09 03:43:02 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.8 2005/11/09 03:43:02 amorris Exp $ 
+# * $Revision: 1.9 $   $Date: 2006/03/22 01:53:01 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.9 2006/03/22 01:53:01 amorris Exp $ 
 # ***************************************************************************/

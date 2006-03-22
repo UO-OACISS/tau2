@@ -240,11 +240,11 @@ fi
         ;;
 
 ###############################################################
-# Set the TAU_PREFIX_INSTALL_DIR variable
+# Set the TAU_CONFIG variable
 ###############################################################
      tauoptions=*)
         tauoptions=`echo $1 | sed -e 's/^tauoptions=//' `
-        echo "s@^TAU_OPTIONS=\(.*\)@TAU_OPTIONS=$tauoptions@g" >> $sedout
+        echo "s@^TAU_CONFIG=\(.*\)@TAU_CONFIG=$tauoptions@g" >> $sedout
         ;;
 
 ###############################################################

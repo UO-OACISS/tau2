@@ -2424,7 +2424,7 @@ fi
 
 if [ $mpi = yes ]
 then
-  wrapperlib="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
+  wrapperlib="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_CONFIG)"
   if [ $epilog = yes -a $mpi = yes ]
   then
     if [ -f $epilogdir/lib/libelg.mpi.a ] 

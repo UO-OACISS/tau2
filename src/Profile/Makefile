@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=/home2/anataraj/devel/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -111,19 +111,19 @@ ARFLAGS	      = rcv
 
 RM 	      = /bin/rm -rf
 
-TAU_TARGET	      = libtau$(TAU_OPTIONS)$(LSX)
+TAU_TARGET	      = libtau$(TAU_CONFIG)$(LSX)
 
 TAU_DISABLE   = libTauDisable$(LSX)
 
 ##############################################
-#MPI#MPI_WRAPPER   = libTauMpi$(TAU_OPTIONS)$(LSX)  #ENDIF#
+#MPI#MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 #MPI#MPI_WRAPPER_O = TauMpi.o  #ENDIF#
-#MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX)  #ENDIF#
+#MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
 ##############################################
-#SHMEM#SHMEM_WRAPPER   = libTauShmem$(TAU_OPTIONS)$(LSX)  #ENDIF#
-#SHMEM#SHMEM_INSTALL   = $(INSTALLDEST)/libTauShmem$(TAU_OPTIONS)$(LSX)  #ENDIF#
+#SHMEM#SHMEM_WRAPPER   = libTauShmem$(TAU_CONFIG)$(LSX)  #ENDIF#
+#SHMEM#SHMEM_INSTALL   = $(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
 
@@ -135,7 +135,7 @@ TAU_SHLIBX		= .so
 #APPLECXX#TAU_APPLE_SHLIBX  = .dylib		#ENDIF#
 #PYTHON#TAU_APPLE_SHLIBX    = .so		#ENDIF#
 #APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)	#ENDIF#
-AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
+#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
@@ -149,8 +149,8 @@ AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
 #USE_INTELCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
 #ACC#AR_SHFLAGS  		= -b 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
-TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
-#APPLECXX#TAU_SHLIB = $(INSTALLDEST)/libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX) #ENDIF#
+TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
+#APPLECXX#TAU_SHLIB = $(INSTALLDEST)/libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX) #ENDIF#
 #HITACHI#TAU_SHLIB	= #ENDIF#
 #CRAYX1CC#TAU_SHLIB	= #ENDIF#
 #CRAYCC#TAU_SHLIB = #ENDIF#
@@ -175,7 +175,7 @@ TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
 #USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
 #PYTHON#TAUPYTHON = pytau$(TAU_SHLIBX) #ENDIF#
 #PYTHON#TAUPYTHON_INSTALL = $(INSTALLDEST)/pytau$(TAU_SHLIBX) #ENDIF#
-#PYTHON#TAUPYTHON_BINDINGSDIR = $(INSTALLDEST)/bindings$(TAU_OPTIONS)#ENDIF#
+#PYTHON#TAUPYTHON_BINDINGSDIR = $(INSTALLDEST)/bindings$(TAU_CONFIG)#ENDIF#
 ##############################################
 TAU_DSO         = $(TAU_SHLIB)
 TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
@@ -198,10 +198,10 @@ $(TAU_DISABLE): TauDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
 		$(TAU_RANLIB) $(TAU_DISABLE)
 
-libTauMpi$(TAU_OPTIONS)$(LSX): 
+libTauMpi$(TAU_CONFIG)$(LSX): 
 		$(MAKE) -f Makefile.wrapper  
 
-libTauShmem$(TAU_OPTIONS)$(LSX): 
+libTauShmem$(TAU_CONFIG)$(LSX): 
 		$(MAKE) -f Makefile.shmem  
 
 $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
@@ -209,7 +209,7 @@ $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
-		$(TAU_INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_OPTIONS)
+		$(TAU_INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_CONFIG)
 
 $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE)
 		@echo Installing $? in $(INSTALLDEST)
@@ -225,10 +225,10 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 
-$(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX): libTauMpi$(TAU_OPTIONS)$(LSX)
+$(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX): libTauMpi$(TAU_CONFIG)$(LSX)
 		$(MAKE) -f Makefile.wrapper install 
 
-$(INSTALLDEST)/libTauShmem$(TAU_OPTIONS)$(LSX): libTauShmem$(TAU_OPTIONS)$(LSX)
+$(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX): libTauShmem$(TAU_CONFIG)$(LSX)
 		$(MAKE) -f Makefile.shmem install 
 
 $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
