@@ -168,6 +168,11 @@ extern "C" char * Tau_phase_enable(const char *group);
 #endif /* TAU_PROFILEPHASE */
 #endif  /* TAU_MAX_THREADS */
 
+#ifdef TAU_PROFILEPARAM
+#define TAU_PROFILE_PARAM1L(b,c)  	Profiler::AddProfileParamData(b,c)
+#else   /* TAU_PROFILEPARAM */
+#define TAU_PROFILE_PARAM1L(b,c)  
+#endif /* TAU_PROFILEPARAM */
 
 
 // Construct a Profiler obj and a FunctionInfo obj with an extended name
@@ -391,6 +396,7 @@ extern "C" char * Tau_phase_enable(const char *group);
 #define TAU_CONTEXT_EVENT(event, data)
 #define TAU_DISABLE_CONTEXT_EVENT(event)
 #define TAU_ENABLE_CONTEXT_EVENT(event)
+//#define TAU_PROFILE_PARAM1L(b,c)  
 
 
 
@@ -418,7 +424,7 @@ extern "C" char * Tau_phase_enable(const char *group);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.53 $   $Date: 2005/11/11 03:46:47 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.53 2005/11/11 03:46:47 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.54 $   $Date: 2006/03/27 20:12:02 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.54 2006/03/27 20:12:02 sameer Exp $ 
  ***************************************************************************/

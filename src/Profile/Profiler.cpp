@@ -301,6 +301,12 @@ void Profiler::Start(int tid)
 #ifdef TAU_CALLPATH
         CallPathStart(tid);
 #endif // TAU_CALLPATH
+#ifdef TAU_PROFILEPARAM
+	ProfileParamFunction = NULL;
+        if (ParentProfiler && ParentProfiler->ProfileParamFunction ) {
+          ParentProfiler->ProfileParamFunction->IncrNumSubrs(tid);
+        }
+#endif /* TAU_PROFILEPARAM */
 
 #ifdef TRACING_ON
 #ifdef TAU_MPITRACE
@@ -673,6 +679,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #ifdef TAU_CALLPATH
 	    CallPathStop(TotalTime, tid);
 #endif // TAU_CALLPATH
+#ifdef TAU_PROFILEPARAM
+	    ProfileParamStop(TotalTime, tid);
+            if (ParentProfiler && ParentProfiler->ProfileParamFunction)
+            { /* Increment the parent's NumSubrs and decrease its exclude time */
+              ParentProfiler->ProfileParamFunction->ExcludeTime(TotalTime, tid);
+	    }
+#endif /* TAU_PROFILEPARAM */
 
         DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
   	  << RtsLayer::myContext() << "," << tid 
@@ -731,6 +744,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
           CallPathFunction->ResetExclTimeIfNegative(tid); 
 	}
 #endif /* TAU_CALLPATH */
+#ifdef TAU_PROFILEPARAM
+	if (ParentProfiler != NULL) {
+	  ProfileParamFunction->ResetExclTimeIfNegative(tid);
+	}
+#endif /* TAU_PROFILEPARAM */
 #endif /* TAU_COMPENSATE */
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS)|| defined(PROFILE_CALLSTACK) )
@@ -749,6 +767,10 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 	if (CallPathFunction)
 	  CallPathFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
 #endif /* TAU_CALLPATH */
+#ifdef TAU_PROFILEPARAM
+	if (ProfileParamFunction)
+	  ProfileParamFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
+#endif /* TAU_PROFILEPARAM */
 #endif // PROFILE_CALLS
 
 #ifdef PROFILE_STATS
@@ -757,6 +779,10 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 	if (CallPathFunction)
 	  CallPathFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
 #endif /* TAU_CALLPATH */
+#ifdef TAU_PROFILEPARAM
+	if (ProfileParamFunction)
+	  ProfileParamFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
+#endif /* TAU_PROFILEPARAM */
 #endif // PROFILE_STATS
 
 	if (ParentProfiler != (Profiler *) NULL) {
@@ -3251,9 +3277,9 @@ double& Profiler::TheTauThrottlePerCall(void)
   return throttlePercall;
 }
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: anataraj $
- * $Revision: 1.133 $   $Date: 2005/12/01 02:46:35 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.133 2005/12/01 02:46:35 anataraj Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.134 $   $Date: 2006/03/27 20:11:35 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.134 2006/03/27 20:11:35 sameer Exp $ 
  ***************************************************************************/
 
 	

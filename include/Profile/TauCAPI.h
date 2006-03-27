@@ -181,6 +181,13 @@ extern "C" {
 
 #define TAU_GLOBAL_TIMER_EXTERNAL(timer)  extern void* TauGlobal##timer(void);
 
+#ifdef TAU_PROFILEPARAM
+#define TAU_PROFILE_PARAM1L(b,c)  	Tau_profile_param1l(b,c)
+#else  /* TAU_PROFILEPARAM */
+#define TAU_PROFILE_PARAM1L(b,c)  	
+#endif /* TAU_PROFILEPARAM */
+
+extern void Tau_specify_mapping_data1(long data, const char *name);
 extern void Tau_bcast_data(int data);
 extern void Tau_reduce_data(int data);
 extern void Tau_alltoall_data(int data);
@@ -328,6 +335,8 @@ extern char * Tau_phase_enable_once(const char *group, void **ptr);
 #define TAU_GLOBAL_TIMER_EXTERNAL(timer)
 #define TAU_GLOBAL_TIMER_START(timer)
 #define TAU_GLOBAL_TIMER_STOP()
+#define TAU_PROFILE_PARAM1L(b,c)  	
+
 
 
 #endif /* PROFILING_ON */
@@ -354,8 +363,8 @@ extern char * Tau_phase_enable_once(const char *group, void **ptr);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.43 $   $Date: 2005/11/11 03:46:47 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.43 2005/11/11 03:46:47 amorris Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: sameer $
+ * $Revision: 1.44 $   $Date: 2006/03/27 20:12:02 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.44 2006/03/27 20:12:02 sameer Exp $
  ***************************************************************************/
 

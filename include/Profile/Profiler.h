@@ -135,6 +135,15 @@ public:
         void CallPathStop(double totaltime, int tid);
 #endif // TAU_MULTIPLE_COUNTERS 
 #endif // TAU_CALLPATH 
+
+#ifdef TAU_PROFILEPARAM
+#ifdef TAU_MULTIPLE_COUNTERS
+        void ProfileParamStop(double* totaltime, int tid);
+#else  // TAU_MULTIPLE_COUNTERS 
+        void ProfileParamStop(double totaltime, int tid);
+#endif // TAU_MULTIPLE_COUNTERS 
+#endif // TAU_PROFILEPARAM 
+
   	static void ProfileExit(const char *message=0, 
 	  int tid = RtsLayer::myThread());
 	static bool createDirectories();
@@ -189,6 +198,11 @@ public:
 	FunctionInfo * CallPathFunction;
 	bool 	       AddInclCallPathFlag; 
 #endif // TAU_CALLPATH
+#ifdef TAU_PROFILEPARAM
+	FunctionInfo * ProfileParamFunction; 
+	bool 	       AddInclProfileParamFlag; 
+	static void AddProfileParamData(long key, string& keyname);
+#endif // TAU_PROFILEPARAM
 #ifdef TAU_COMPENSATE
 	/* Compensate for instrumentation overhead based on total number of 
 	child calls executed under the given timer */
@@ -256,7 +270,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: anataraj $
- * $Revision: 1.63 $   $Date: 2005/12/01 02:46:34 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.63 2005/12/01 02:46:34 anataraj Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.64 $   $Date: 2006/03/27 20:12:02 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.64 2006/03/27 20:12:02 sameer Exp $ 
  ***************************************************************************/
