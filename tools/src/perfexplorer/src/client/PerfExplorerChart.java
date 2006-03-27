@@ -17,6 +17,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.plot.XYPlot;
@@ -441,6 +442,50 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
 		customizeChart(chart, rawData.getRows(), false);
 		return new PerfExplorerChart(chart, "Timesteps per Second");
+	}
+
+	public static PerfExplorerChart doTotalTimeChart () {
+		// get the server
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		// get the data
+		RMIChartData rawData = server.requestChartData(
+			PerfExplorerModel.getModel(), 
+			RMIChartData.RELATIVE_EFFICIENCY);
+
+        XYSeriesCollection dataset = new XYSeriesCollection();
+		List rowLabels = rawData.getRowLabels();
+		for (int y = 0 ; y < rawData.getRows() ; y++) {
+			List row = rawData.getRowData(y);
+        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+			for (int x = 0 ; x < row.size() ; x++) {
+				double[] values = (double[])(row.get(x));
+        		s.add(values[0], values[1]);
+			}
+        	dataset.addSeries(s);
+		}
+
+        JFreeChart chart = ChartFactory.createXYLineChart(
+            "Total Execution:" +
+			PerfExplorerModel.getModel().getMetricName(),  // chart title
+            "Number of Processors",          // domain axis label
+            PerfExplorerModel.getModel().getMetricName(),     // range axis label
+            dataset,                         // data
+            PlotOrientation.VERTICAL,        // the plot orientation
+            true,                            // legend
+            true,                            // tooltips
+            false                            // urls
+        );
+
+		customizeChart(chart, rawData.getRows(), false);
+
+        XYPlot plot = chart.getXYPlot();
+        LogarithmicAxis axis = new LogarithmicAxis(
+			PerfExplorerModel.getModel().getMetricName());
+        axis.setAutoRangeIncludesZero(false);
+        axis.setLog10TickLabelsFlag(true);
+        plot.setRangeAxis(0, axis);
+ 
+		return new PerfExplorerChart(chart, "Total Execution Time");
 	}
 
 	public static PerfExplorerChart doCommunicationChart () {

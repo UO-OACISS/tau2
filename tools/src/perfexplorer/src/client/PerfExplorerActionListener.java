@@ -33,6 +33,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String SET_TIMESTEPS = "Set Total Number of Timesteps";
 	public final static String SET_EVENTNAME = "Set Event of Interest";
 	public final static String TIMESTEPS_CHART = "Timesteps Per Second";
+	public final static String TOTAL_TIME_CHART = "Total Execution Time";
 	public final static String EFFICIENCY_CHART = "Relative Efficiency";
 	public final static String EFFICIENCY_EVENTS_CHART = "Relative Efficiency by Event";
 	public final static String EFFICIENCY_ONE_EVENT_CHART = "Relative Efficiency for One Event";
@@ -117,6 +118,9 @@ public class PerfExplorerActionListener implements ActionListener {
 					if (checkAndSetMetricName(false))
 						if (checkAndSetTimesteps(false))
 							PerfExplorerChart.doTimestepsChart();
+				} else if (arg.equals(TOTAL_TIME_CHART)) {
+					if (checkAndSetMetricName(false))
+						PerfExplorerChart.doTotalTimeChart();
 				} else if (arg.equals(EFFICIENCY_CHART)) {
 					if (checkAndSetMetricName(false))
 						if (checkAndSetProblemSize(false))

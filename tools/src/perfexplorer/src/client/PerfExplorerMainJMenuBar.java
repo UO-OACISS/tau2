@@ -180,6 +180,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		chartMenu.add(problemItem);
 
 		//Add a menu item.
+		JMenuItem totalTime = new JMenuItem(
+			PerfExplorerActionListener.TOTAL_TIME_CHART);
+		totalTime.addActionListener(listener);
+		chartMenu.add(totalTime);
+
+		//Add a menu item.
 		JMenuItem timesteps = new JMenuItem(
 			PerfExplorerActionListener.TIMESTEPS_CHART);
 		timesteps.addActionListener(listener);

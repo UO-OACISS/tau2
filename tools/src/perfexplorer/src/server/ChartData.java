@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.26 2006/03/27 20:20:05 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.27 2006/03/27 21:11:37 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -256,6 +256,8 @@ public class ChartData extends RMIChartData {
 				buf.append(model.getExperiment().getID() + " ");
 			}
 			buf.append(" and m.name = ? ");
+			buf.append("and ims.exclusive_percentage > ");
+			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
@@ -640,7 +642,7 @@ public class ChartData extends RMIChartData {
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1");
 			
-			System.out.println(buf.toString());
+			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 
