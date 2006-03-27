@@ -359,8 +359,10 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
 {
   static int initialize = register_events();
 #ifdef TAU_PROFILEPARAM
+#ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
   static string s("message size");
   TAU_PROFILE_PARAM1L(length, s);
+#endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
 #ifdef DEBUG_PROF
   printf("Node %d: Tau_trace_sendmsg: type %d dest %d len %d\n", 
@@ -378,8 +380,10 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length)
 {
   TAU_EVENT(TheRecvEvent(), length);
 #ifdef TAU_PROFILEPARAM
+#ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
   static string s("message size");
   TAU_PROFILE_PARAM1L(length, s);
+#endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
   if (source >= 0) 
     TAU_TRACE_RECVMSG(type, source, length);
@@ -706,7 +710,7 @@ extern "C" void Tau_profile_param1l(long data, const char * dataname)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.55 $   $Date: 2006/03/27 20:11:35 $
- * VERSION: $Id: TauCAPI.cpp,v 1.55 2006/03/27 20:11:35 sameer Exp $
+ * $Revision: 1.56 $   $Date: 2006/03/27 21:10:50 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.56 2006/03/27 21:10:50 sameer Exp $
  ***************************************************************************/
 

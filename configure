@@ -952,7 +952,7 @@ do
     echo "-muse ................................. Specify the use of MAGNET/MUSE." 
     echo "-muse_event ............................Specify the use of MAGNET/MUSE."
     echo "                                w/ non-monotonically increasing values." 
-    echo "-muse_multiple......................... Specify the use of MAGNET/MUSE." 
+    echo "-muse_multiple ........................ Specify the use of MAGNET/MUSE." 
     echo "                                    w/ monotonically increasing values." 
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
