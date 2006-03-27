@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.25 2006/03/20 22:20:34 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.26 2006/03/27 20:20:05 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -243,7 +243,7 @@ public class ChartData extends RMIChartData {
 			// experiment as the number of threads of execution increases.
 			buf.append("select ie.name, ");
 			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-			buf.append(" max(ims.inclusive) ");
+			buf.append(" ims.exclusive_percentage ");
 			buf.append("from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie ");
 			buf.append("on ims.interval_event = ie.id ");
