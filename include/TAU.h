@@ -120,6 +120,7 @@
 #define TAU_GLOBAL_TIMER_EXTERNAL(timer)
 #define TAU_GLOBAL_TIMER_START(timer)
 #define TAU_GLOBAL_TIMER_STOP()
+#define TAU_PROFILE_PARAM1L(a,b)
 
 #endif /* PROFILING_ON || TRACING_ON */
 

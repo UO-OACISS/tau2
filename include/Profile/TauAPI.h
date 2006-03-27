@@ -396,7 +396,7 @@ extern "C" char * Tau_phase_enable(const char *group);
 #define TAU_CONTEXT_EVENT(event, data)
 #define TAU_DISABLE_CONTEXT_EVENT(event)
 #define TAU_ENABLE_CONTEXT_EVENT(event)
-//#define TAU_PROFILE_PARAM1L(b,c)  
+#define TAU_PROFILE_PARAM1L(b,c)  
 
 
 
@@ -425,6 +425,6 @@ extern "C" char * Tau_phase_enable(const char *group);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.54 $   $Date: 2006/03/27 20:12:02 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.54 2006/03/27 20:12:02 sameer Exp $ 
+ * $Revision: 1.55 $   $Date: 2006/03/27 20:24:55 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.55 2006/03/27 20:24:55 sameer Exp $ 
  ***************************************************************************/
