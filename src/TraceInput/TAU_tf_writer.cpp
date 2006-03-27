@@ -27,7 +27,8 @@ extern "C" {
 
 
   static void checkFlush(Ttf_fileT *tFile) {
-    // ...
+    // Write the current trace buffer to file if necessary.
+
     if (tFile->tracePosition >= TAU_MAX_RECORDS) {
       Ttf_FlushTrace(tFile);
     }
@@ -192,17 +193,15 @@ extern "C" {
 
 
   static int checkInitialized(Ttf_FileHandleT file, unsigned int nodeToken, unsigned int threadToken, double time) {
+    // Adds the initialization record
     Ttf_fileT *tFile = (Ttf_fileT*)file;
     if (!tFile->initialized) {
-      //int pos = tFile->tracePosition;
       int pos = 0;
       tFile->traceBuffer[pos].ev = PCXX_EV_INIT;
       tFile->traceBuffer[pos].nid = nodeToken;
       tFile->traceBuffer[pos].tid = threadToken;
       tFile->traceBuffer[pos].ti = (x_uint64) time;
       tFile->traceBuffer[pos].par = 3;
-      //tFile->tracePosition++;
-      //checkFlush(tFile);
       tFile->initialized = true;
     }
     return 0;
@@ -225,7 +224,7 @@ extern "C" {
       (*(tFile->NidTidMap))[pair<int,int>(nid,tid)] = 1;
     }
 
-	return 0;
+    return 0;
   }
 
 
@@ -234,16 +233,7 @@ extern "C" {
   int Ttf_DefStateGroup(Ttf_FileHandleT file, const char *stateGroupName, unsigned int stateGroupToken) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
-
-    (*tFile->groupNameMap)[stateGroupToken] = stateGroupName;
-
-//     GroupIdMapT::iterator git = tFile->GroupIdMap->find(stateGroupName);
-//     if (git == tFile->GroupIdMap->end()) { 
-//       /* group id not found. Generate group id on the fly */
-//       int groupid = tFile->GroupIdMap->size()+1;
-//       (*(tFile->GroupIdMap))[stateGroupName] = groupid;
-//     }
-    
+    (*tFile->groupNameMap)[stateGroupToken] = strdup(stateGroupName);
     return 0;
   }
 
@@ -262,7 +252,6 @@ extern "C" {
       fprintf (stderr, "Ttf_DefState: Have not seen %d stateGroupToken before, please define it first\n", stateGroupToken);
     }
 
-    //newEvent.Eid = tFile->EventIdMap->size()+1;
     newEventDesc.Eid = stateToken;
     newEventDesc.Group = const_cast<char*>((*tFile->groupNameMap)[stateGroupToken]);
     newEventDesc.EventName = strdup(stateName);
