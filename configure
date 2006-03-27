@@ -172,6 +172,7 @@ profilestats=no
 profilememory=no
 profileheadroom=no
 callpath=no
+profileparam=no
 depthlimit=no
 phase=no
 profilecalls=no
@@ -769,6 +770,11 @@ do
     callpath=yes
     shift
     ;;
+  -PROFILEPARAM)
+    profile=yes
+    profileparam=yes
+    shift
+    ;;
 
   -DEPTHLIMIT)
     depthlimit=yes
@@ -952,6 +958,7 @@ do
     echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
+    echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
@@ -1352,6 +1359,12 @@ if [ $callpath = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILECALLPATH"
     tauoptions="${tauoptions}-callpath"
+fi
+
+if [ $profileparam = yes ]
+  then
+    fixmakeargs="$fixmakeargs PROFILEPARAM"
+    tauoptions="${tauoptions}-param"
 fi
 
 if [ $depthlimit = yes ]

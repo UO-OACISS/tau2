@@ -76,7 +76,8 @@ MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
-		TauHooks.o TauHandler.o TauMemory.o $(EVENTS_O) $(THR_O) \
+		TauHooks.o TauHandler.o TauMemory.o \
+		$(PARAM_O) $(EVENTS_O) $(THR_O) \
 		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(CALLPATH_O) $(PYTHON_O) $(MUSE_O) \
 		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O)
@@ -84,7 +85,7 @@ OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 PRINT	      = pr
 
 SRCS	      = Profiler.cpp TulipTimers.cpp UserEvent.cpp FunctionInfo.cpp \
-		TauCAPI.cpp TauFAPI.cpp TauMapping.cpp TauHooks.cpp
+		TauCAPI.cpp TauFAPI.cpp TauMapping.cpp TauHooks.cpp 
 
 AR	      = $(TAU_AR)
 
@@ -272,6 +273,9 @@ RtsLayer.o 	: RtsLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 RtsThread.o 	: RtsThread.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+ProfileParam.o   : ProfileParam.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 pcxx_events.o   : pcxx_events.cpp $(HDRS)
