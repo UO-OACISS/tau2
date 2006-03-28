@@ -3890,6 +3890,7 @@ then
   echo "TAU: installed paraprof in ${tauroot}/${architecture}/bin"
   cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/vis/bin/vis.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/common/bin/tau-common.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauroot}/${architecture}/lib
@@ -3903,7 +3904,7 @@ then
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/derby.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/src/Profile/TAU.jar ${tauroot}/${architecture}/lib
-  echo "TAU: installed ParaProf, PerfDMF, and supporting jars in ${tauroot}/${architecture}/lib"
+  echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in ${tauroot}/${architecture}/lib"
 
 # Now we look at the installation of tau_compiler.sh 
    if [ ! -f /bin/bash ] 
@@ -3969,6 +3970,7 @@ else
   echo "TAU: installed paraprof in ${tauprefix}/${architecture}/bin"
   cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar ${tauprefix}/${architecture}/lib
+  cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/vis/bin/vis.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/common/bin/tau-common.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauprefix}/${architecture}/lib
@@ -3980,7 +3982,7 @@ else
   cp ${tauroot}/tools/src/contrib/jython.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jogl.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauprefix}/${architecture}/lib
-  echo "TAU: installed ParaProf, PerfDMF, and supporting jars in ${tauprefix}/${architecture}/lib"
+  echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in ${tauprefix}/${architecture}/lib"
 # Now we look at the installation of tau_compiler.sh 
    if [ ! -f /bin/bash ] 
    then
@@ -4071,13 +4073,32 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
  > ${targetdir}/${architecture}/lib/derby.properties
 
 cat ${tauroot}/tools/src/perfexplorer/bin/configure.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir',' \
+sed -e 's,@TAUROOTDIR@,'$tauroot',' \
 -e 's,@SHELL@,'$taushell',' \
 -e 's,@ARCH@,'$architecture',' \
 -e 's,@TARGETDIR@,'$targetdir',' \
  > ${tauroot}/tools/src/perfexplorer/configure
 chmod a+rx ${tauroot}/tools/src/perfexplorer/configure
 
+cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer_configure.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir',' \
+-e 's,@SHELL@,'$taushell',' \
+-e 's,@ARCH@,'$architecture',' \
+-e 's,@TARGETDIR@,'$targetdir',' \
+ > ${targetdir}/${architecture}/bin/perfexplorer_configure
+chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer_configure
+
+if [ ! -d ${targetdir}/etc ] 
+  then
+    mkdir -p ${targetdir}/etc
+fi
+cp ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.derby ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.mysql ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
+  
 if [ ${tauprefix} = unknown ]
 then
   targetdir=${tauroot}
