@@ -1,0 +1,99 @@
+#!/usr/bin/env perl
+
+
+$numArgs = $#ARGV + 1;
+
+if ($numArgs != 1) {
+    print "\nupgradetau: This script is provided to rebuild all TAU configurations\n";
+    print "            previously built in a different TAU source directory.\n";
+    die "\nusage: $0 <path/to/old/tau>\n";
+}
+
+$oldTAU = $ARGV[0];
+
+$oldConfigs = "$oldTAU/.all_configs";
+
+if (! -r $oldConfigs ) {
+    die "Unable to find $oldConfigs\n";
+}
+
+print "\n-= Upgrading TAU =-\n";
+print "Reading configurations from $oldConfigs\n";
+
+
+# determine the available options
+@availableOpts = `./configure -help | grep "^-" | awk '{print \$1}' | sed s/=.*//g`;
+
+foreach $opt (@availableOpts) {
+    chomp($opt);
+    $opts{$opt} = 1;
+} 
+
+# read .all_configs at once in case the user is running it using the
+# current directory as the old tau
+@allConfigs = `cat $oldConfigs`;
+
+foreach $config (@allConfigs) {
+    chomp($config);
+    @oldopts = split(' ', $config);
+
+    $newline = "";
+    $newopt = "";
+
+    foreach $opt (@oldopts) {
+
+	# get the base option (e.g. -mpiinc for -mpiinc=/usr/local/...)
+	$base = $opt;
+	$base =~ s/=.*//g;
+
+	if ($opts{$base} == 1) { 
+            # if it matches an option from `configure -help`
+	    # then append previous fragments ($newopt) as the previous option
+	    # and restart $newopt
+	    if (!($newopt eq "")) {
+		if ($newopt =~ / /) {
+		    $newline = $newline . '"' . $newopt . '" ';
+		} else {
+		    $newline = $newline . ' ' . $newopt . ' ';
+		}
+	    }
+	    $newopt = $opt;
+	} else { 
+            # no match, add to $newopt
+	    $newopt = $newopt . " " . $opt;
+	}
+    }
+    
+    # flush the last option
+    if (!($newopt eq "")) {
+	if ($newopt =~ / /) {
+	    $newline = $newline . '"' . $newopt . '" ';
+	} else {
+	    $newline = $newline . ' ' . $newopt . ' ';
+	}
+    }
+    
+    if ($newline =~ /-help/) {
+	# skip -help
+    } else {
+	print "Configuring TAU with: $newline\n";
+
+	$rc = 0xffff & system("./configure $newline");
+	if ($rc == 2) { # SIGINT
+	    # kill all children
+	    local $SIG{HUP} = 'IGNORE'; 
+	    kill HUP => -$$;
+	    print "\nkilled\n";
+	    exit;
+	}
+	$rc = 0xffff & system("make clean install");
+	if ($rc == 2) { # SIGINT
+	    # kill all children
+	    local $SIG{HUP} = 'IGNORE'; 
+	    kill HUP => -$$;
+	    print "\nkilled\n";
+	    exit;
+	}
+    }
+}
+close(FD);
