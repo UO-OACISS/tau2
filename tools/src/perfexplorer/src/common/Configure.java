@@ -105,13 +105,13 @@ public class Configure {
                 String filename="";
                 
                 if (db.getDBType().compareTo("oracle") == 0) {
-                    filename = tau_root + "/tools/src/perfexplorer/etc/dbschema.oracle";
+                    filename = tau_root + "/etc/dbschema.oracle";
                 } else if (db.getDBType().compareTo("derby") == 0) {
-                    filename = tau_root + "/tools/src/perfexplorer/etc/dbschema.derby";
+                    filename = tau_root + "/etc/dbschema.derby";
                 } else if (db.getDBType().compareTo("mysql") == 0) {
-                    filename = tau_root + "/tools/src/perfexplorer/etc/dbschema.mysql";
+                    filename = tau_root + "/etc/dbschema.mysql";
                 } else if (db.getDBType().compareTo("postgresql") == 0) {
-                    filename = tau_root + "/tools/src/perfexplorer/etc/dbschema.postgresql";
+                    filename = tau_root + "/etc/dbschema.postgresql";
                 } else {
                     System.out.println("Unknown database type: " + db.getDBType());
                     System.exit(-1);

@@ -6,6 +6,7 @@ ANALYSIS_ENGINE=@ANALYSIS_ENGINE@
 SERVER_HOSTNAME=@SERVER_HOSTNAME@
 SERVER_OBJECT_PORT=@SERVER_OBJECT_PORT@
 SERVER_RMIREGISTRY_PORT=@SERVER_RMIREGISTRY_PORT@
+CONFIGFILE=@CONFIGFILE@
 
 # Record all the arguments
 arguments=$*
@@ -15,7 +16,6 @@ mode=standalone
 redirect=""
 RMIOptions=""
 
-CONFIGFILE=$HOME/.ParaProf/perfdmf.cfg
 OMEGAHAT_HOME=$R_ROOT/library/SJava
 OMEGAHAT_JARPATH=$OMEGAHAT_HOME/org/omegahat/Jars
 CLIENT_DYLD_LIBRARY_PATH=$TAUROOT/$CONFIG_ARCH/lib
@@ -118,7 +118,7 @@ if [ $mode == "server" ] ; then
 	java -Xmx1800m \
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
-	-Djava.security.policy=$TAUROOT/tools/src/perfexplorer/etc/java.policy \
+	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
 	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
 	${RMIOptions} \
 	-Dsun.rmi.server.exceptionTrace=true \
@@ -134,7 +134,7 @@ if [ $mode == "client" ] ; then
 
 	java -Xmx500m \
 	-classpath $CLASSPATH \
-	-Djava.security.policy=$TAUROOT/tools/src/perfexplorer/etc/java.policy \
+	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
 	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \
 	-Djava.rmi.server.hostname=$SERVER_HOSTNAME \
 	client.PerfExplorerClient

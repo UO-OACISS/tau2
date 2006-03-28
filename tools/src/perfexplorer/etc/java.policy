@@ -1,8 +1,8 @@
 grant {
     permission java.net.SocketPermission "*:1024-65535", "connect,accept";
     permission java.net.SocketPermission "*:80", "connect";
-	permission java.io.FilePermission "/Users/khuck/.ParaProf/perfdmf.cfg", "read";
-	permission java.io.FilePermission "/tmp/*", "read,write,delete";
+	permission java.io.FilePermission "@CONFIGFILE@", "read";
+	permission java.io.FilePermission "@TMPDIR@/*", "read,write,delete";
 	permission java.lang.RuntimePermission "loadLibrary.SJava";
 	permission java.lang.RuntimePermission "loadLibrary.RInterpreter";
 	permission java.lang.RuntimePermission "loadLibrary.jogl";

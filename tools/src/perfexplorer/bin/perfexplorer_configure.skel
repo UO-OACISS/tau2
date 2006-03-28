@@ -1,0 +1,250 @@
+#!/bin/@SHELL@
+
+rm -f .last_config
+echo $* > .last_config
+echo $* >> .all_configs
+
+# Record all the arguments
+arguments=$*
+
+# Default compilers and options
+tauroot=@TAUROOTDIR@
+architecture=@ARCH@
+taushell=@SHELL@
+targetdir=@TARGETDIR@
+engine=weka
+engine_upper=WEKA
+rroot=/usr/lib/R
+serverhostname=localhost
+objectport=9999
+registryport=1099
+configfile=$HOME/.ParaProf/perfdmf.cfg
+tmpdir=/tmp
+
+
+# PARSE COMMAND LINE SWITCHES
+###############################################################
+for arg in "$@";
+do
+  case $arg in
+
+  -engine=*)
+    myarg=`echo $arg | sed 's/-engine=//'`
+    myarg=`echo $myarg | tr "[:upper:]" "[:lower:]"`
+    if [ $myarg = weka -o $myarg = r ]
+      then
+        engine=$myarg
+        engine_upper=`echo $engine | tr "[:lower:]" "[:upper:]"`
+      else
+        echo "WARNING: valid options for engine are 'weka' and 'R' "
+    fi
+    shift
+    ;;
+
+  -rroot=*)
+    myarg=`echo $arg | sed 's/-rroot=//'`
+    rroot=$myarg
+    shift
+    ;;
+
+  -objectport=*)
+    myarg=`echo $arg | sed 's/-objectport=//'`
+    objectport=$myarg
+    shift
+    ;;
+
+  -registryport=*)
+    myarg=`echo $arg | sed 's/-registryport=//'`
+    registryport=$myarg
+    shift
+    ;;
+
+  -server=*)
+    myarg=`echo $arg | sed 's/-server=//'`
+    serverhostname=$myarg
+    shift
+    ;;
+
+  -configfile=*)
+    myarg=`echo $arg | sed 's/-configfile=//'`
+    configfile=$myarg
+    shift
+    ;;
+
+  -tmpdir=*)
+    myarg=`echo $arg | sed 's/-tmpdir=//'`
+    tmpdir=$myarg
+    shift
+    ;;
+
+  -help)
+    echo "PerfExplorer Configuration Utility "
+    echo "***********************************************************************"
+    echo "Usage: configure [OPTIONS]"
+    echo "  where [OPTIONS] are:"
+    echo "-engine=<analysis_engine>  ............... specify the analysis engine."
+    echo "                                                      options [weka|R]."
+    echo "-rroot=<dir> ....................... specify location of the R project."
+    echo "-server=<hostname> ...... specify hostname for the perfexplorer server."
+    echo "-registryport=<number> ............. specify port for the rmi registry."
+    echo "-objectport=<number> ................ specify port for the rmi objects."
+    echo "-configfile=<path to file> ............... specify PerfDMF config file."
+    echo "-tmpdir=<dir> ....................... specify temporary file directory."
+    exit
+    ;;
+
+  '')
+    #echo "NULL switch!"
+    # Required for HP/Compaq Tru64 machines.
+    ;;
+
+  *)
+    echo "ERROR: Command line switch \`$arg' not recognized" 1>&2
+    exit 1
+    ;;
+  esac
+done
+
+# check to see if PerfDMF has been executed
+if [ ! -r ${configfile} ]
+    then
+    echo ""
+    echo "PerfDMF Configfile not found."
+    echo "Please run perfdmf_configure, if you haven't already done so."
+    echo ""
+    exit
+fi
+
+JDBC_JAR=`grep jdbc_db_jarfile ${configfile} | sed s/jdbc_db_jarfile://`
+LIBDIR=${tauroot}/${architecture}/lib
+
+if [ ! -r ${JDBC_JAR} ]
+    then
+    echo ""
+    echo "$JDBC_JAR not found."
+	echo "Please run perfdmf_configure, if you haven't already done so."
+    echo ""
+    exit
+fi
+
+
+
+# -- set up portable echo command
+case "`echo 'x\c'`" in
+'x\c')  echo="echo -n"  nnl= ;;     #BSD
+x)      echo="echo"     nnl="\c";;  #SysV
+*)      echo 'Cannot setup echo. What weird machine do you have?' 1>2&
+        exit 1;;
+esac
+
+echo
+echo "Configuring scripts to use the following values:"
+echo "------------------------------------------------"
+echo "tauroot = $tauroot"
+echo "architecture = $architecture"
+echo "taushell = $taushell"
+echo "targetdir = $targetdir"
+echo "engine = $engine"
+echo "rroot = $rroot"
+echo "server = $serverhostname"
+echo "configfile = $configfile"
+echo "tmpdir = $tmpdir"
+echo
+
+echo "TAU: installing tools in $targetdir"
+
+cat ${targetdir}/etc/perfexplorer.skel | 
+sed -e 's,@TAUROOT@,'$targetdir',' \
+-e 's,@TAUSHELL@,'$taushell',' \
+-e 's,@TAUARCH@,'$architecture',' \
+-e 's,@RROOT@,'$rroot',' \
+-e 's,@ANALYSIS_ENGINE@,'$engine',' \
+-e 's,@SERVER_HOSTNAME@,'$serverhostname',' \
+-e 's,@SERVER_OBJECT_PORT@,'$objectport',' \
+-e 's,@SERVER_RMIREGISTRY_PORT@,'$registryport',' \
+-e 's,@CONFIGFILE@,'$configfile',' \
+ > ${targetdir}/${architecture}/bin/perfexplorer
+chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer
+
+cat ${targetdir}/etc/java.policy | 
+sed -e 's,@TMPDIR@,'$tmpdir',' \
+-e 's,@CONFIGFILE@,'$configfile',' \
+ > ${targetdir}/${architecture}/lib/java.policy
+
+WEKA_JAR=${targetdir}/${architecture}/lib/weka.jar
+WEKA_ZIP_DIR=${targetdir}/${architecture}/lib/
+    
+if [ ! -r ${WEKA_JAR} ]; then
+    echo ""
+    echo "$WEKA_JAR not found."
+    echo ""
+
+	while [ "x$RESPONSE" = "x" ]; do
+	    $echo "Would you like to attempt to automatically download the Weka jar file? (y/n) ${nnl}"
+	    read RESPONSE
+	    case $RESPONSE in
+		[yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
+		[nN]|[Nn][Oo]) RESPONSE=n ;;
+	    esac
+	done
+	
+	
+	if [ "${RESPONSE}" == "y" ]; then 
+	    #WGET=`which wget 2>/dev/null`
+	    #if [ ! -r "$WGET" ]; then
+		#echo ""
+		#echo "Couldn't find wget, you'll have to manually download the Weka jar file."
+		#echo "Please go here: "
+		#exit 1
+	    #fi
+	    
+		/bin/rm -f weka-redirect.html
+		#wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html
+		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html weka-redirect.html
+		URL=`grep URL weka-redirect.html | sed s/URL=//`
+		FILE=`grep FILE weka-redirect.html | sed s/FILE=//`
+		DIR=`grep DIR weka-redirect.html | sed s/DIR=//`
+		/bin/rm -f weka-redirect.html
+		echo "Getting $FILE... please be patient..."
+		#wget "$URL"
+		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE"
+		mv "$FILE" ${WEKA_ZIP_DIR}/.
+		cd ${WEKA_ZIP_DIR}/.
+		unzip ${FILE}
+		/bin/rm -f weka-redirect.html
+		/bin/rm -f $FILE
+		cp $DIR/weka.jar .
+		/bin/rm -rf $DIR
+	    
+	    if [ ! -r ${WEKA_JAR} ]; then
+		echo ""
+		echo "Still couldn't find $WEKA_JAR, please acquire your Weka jar file manually"
+		echo ""
+		
+		exit
+	    fi
+	else
+	    exit
+	fi
+fi
+
+# now to test the DB and upload schema (if necessary)
+
+java -Dderby.system.home=${LIBDIR} -cp ${LIBDIR}/perfexplorer.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/jargs.jar:${JDBC_JAR}:${LIBDIR}/tau-common.jar common.Configure -t ${tauroot} -a ${architecture} -g ${configfile}
+
+
+
+# bye bye
+echo 
+echo "Configuration complete!"
+echo "   If you haven't already done so, "
+echo "   Please add " $tauroot/$architecture/bin " to your path"
+
+exit 0
+
+
+
+
+
+
+

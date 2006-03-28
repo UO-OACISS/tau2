@@ -97,7 +97,7 @@ x)      echo="echo"     nnl="\c";;  #SysV
 esac
 
 echo
-echo "Configuring scripts to use the following values:"
+echo "Configuring Makefile to use the following values:"
 echo "------------------------------------------------"
 echo "tauroot = $tauroot"
 echo "architecture = $architecture"
@@ -110,18 +110,6 @@ echo
 
 echo "TAU: installing tools in $targetdir"
 
-cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel | 
-sed -e 's,@TAUROOT@,'$targetdir',' \
--e 's,@TAUSHELL@,'$taushell',' \
--e 's,@TAUARCH@,'$architecture',' \
--e 's,@RROOT@,'$rroot',' \
--e 's,@ANALYSIS_ENGINE@,'$engine',' \
--e 's,@SERVER_HOSTNAME@,'$serverhostname',' \
--e 's,@SERVER_OBJECT_PORT@,'$objectport',' \
--e 's,@SERVER_RMIREGISTRY_PORT@,'$registryport',' \
- > ${targetdir}/${architecture}/bin/perfexplorer
-chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer
-
 cat ${tauroot}/tools/src/perfexplorer/bin/Makefile.skel | 
 sed -e 's,@TAUROOT@,'$targetdir',' \
 -e 's,@TAUSHELL@,'$taushell',' \
@@ -130,74 +118,6 @@ sed -e 's,@TAUROOT@,'$targetdir',' \
 -e 's,@ANALYSIS_ENGINE@,'$engine',' \
 -e 's,@ANALYSIS_ENGINE_DEF@,'$engine_upper',' \
  > ${tauroot}/tools/src/perfexplorer/Makefile
-
-WEKA_JAR=${targetdir}/${architecture}/lib/weka.jar
-WEKA_ZIP_DIR=${targetdir}/${architecture}/lib/
-    
-if [ ! -r ${WEKA_JAR} ]; then
-    echo ""
-    echo "$WEKA_JAR not found."
-    echo ""
-
-	while [ "x$RESPONSE" = "x" ]; do
-	    $echo "Would you like to attempt to automatically download the Weka jar file? (y/n) ${nnl}"
-	    read RESPONSE
-	    case $RESPONSE in
-		[yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
-		[nN]|[Nn][Oo]) RESPONSE=n ;;
-	    esac
-	done
-	
-	
-	if [ "${RESPONSE}" == "y" ]; then 
-	    WGET=`which wget 2>/dev/null`
-	    if [ ! -r "$WGET" ]; then
-		echo ""
-		echo "Couldn't find wget, you'll have to manually download the Weka jar file."
-		echo "Please go here: "
-		exit 1
-	    fi
-	    
-		/bin/rm -f weka-redirect.html
-		wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html
-		URL=`grep URL weka-redirect.html | sed s/URL=//`
-		FILE=`grep FILE weka-redirect.html | sed s/FILE=//`
-		DIR=`grep DIR weka-redirect.html | sed s/DIR=//`
-		/bin/rm -f weka-redirect.html
-		wget "$URL"
-		mv "$FILE" ${WEKA_ZIP_DIR}/.
-		cd ${WEKA_ZIP_DIR}/.
-		unzip ${FILE}
-		/bin/rm -f weka-redirect.html
-		/bin/rm -f $FILE
-		cp $DIR/weka.jar .
-	    
-	    if [ ! -r ${WEKA_JAR} ]; then
-		echo ""
-		echo "Still couldn't find $WEKA_JAR, please acquire your Weka jar file manually"
-		echo ""
-		
-		exit
-	    fi
-	else
-	    exit
-	fi
-fi
-
-
-# install the perfexplorer jar file
-
-cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar ${targetdir}/${architecture}/lib/.
-
-
-# now to test the DB and upload schema (if necessary)
-
-CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
-JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} | sed s/jdbc_db_jarfile://`
-LIBDIR=${tauroot}/${architecture}/lib
-
-java -Dderby.system.home=${LIBDIR} -cp ${LIBDIR}/perfexplorer.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/jargs.jar:${JDBC_JAR} common.Configure -t ${tauroot} -a ${architecture} -g ${CONFIG_FILE}
-
 
 
 # bye bye
