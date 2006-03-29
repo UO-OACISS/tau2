@@ -12,21 +12,19 @@ import java.awt.*;
 import javax.swing.*;
 import java.beans.*;
 
-//import edu.uoregon.tau.perfdmf.*;
-
 public class ImageOptionsPanel extends JPanel implements PropertyChangeListener {
 
-    private JCheckBox fullScreen = new JCheckBox("Full Window",true);
-    private JCheckBox prependHeader = new JCheckBox("Show Meta-Data",true);
+    private JCheckBox fullScreen = new JCheckBox("Full Window", true);
+    private JCheckBox prependHeader = new JCheckBox("Show Meta-Data", true);
     private JLabel imageQualityLabel = new JLabel("Image Quality");
     private String imageQualityStrings[] = { "1.0", "0.75", "0.5", "0.25", "0.15", "0.1" };
     private JComboBox imageQuality = new JComboBox(imageQualityStrings);
 
-    private JCheckBox textAsShapes = new JCheckBox("Draw text as shapes",true);
+    private JCheckBox textAsShapes = new JCheckBox("Draw text as shapes");
     private boolean imageQualityEnabled = true;
 
     public ImageOptionsPanel(Component component, boolean dumbControls, boolean vector) {
-     
+
         //Window Stuff.
         int windowWidth = 200;
         int windowHeight = 500;
@@ -41,13 +39,13 @@ public class ImageOptionsPanel extends JPanel implements PropertyChangeListener 
             gbc.anchor = GridBagConstraints.WEST;
             gbc.weightx = 0;
             gbc.weighty = 0;
-            //addCompItem(fullScreen, gbc, 0, 0, 1, 1);
+            addCompItem(fullScreen, gbc, 0, 0, 1, 1);
 
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.WEST;
             gbc.weightx = 0;
             gbc.weighty = 0;
-            //addCompItem(prependHeader, gbc, 0, 1, 1, 1);
+            addCompItem(prependHeader, gbc, 0, 1, 1, 1);
         }
 
         if (vector) {
@@ -55,7 +53,7 @@ public class ImageOptionsPanel extends JPanel implements PropertyChangeListener 
             gbc.anchor = GridBagConstraints.WEST;
             gbc.weightx = 0;
             gbc.weighty = 0;
-            //addCompItem(textAsShapes, gbc, 0, 2, 1, 1);
+            addCompItem(textAsShapes, gbc, 0, 2, 1, 1);
 
         } else {
 
@@ -88,7 +86,7 @@ public class ImageOptionsPanel extends JPanel implements PropertyChangeListener 
     public boolean imageQualityEnabled() {
         return imageQualityEnabled;
     }
-    
+
     public boolean getTextAsShapes() {
         return textAsShapes.isSelected();
     }

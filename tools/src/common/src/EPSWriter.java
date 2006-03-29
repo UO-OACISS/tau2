@@ -74,14 +74,15 @@ public class EPSWriter {
         if (lastG2d != null && g2d != lastG2d) {
             lastG2d = g2d;
             comment("--------------= graphics mismatch, resetting state BEGIN =--------------\n");
-            output("grestore\n");
+//            output("grestore\n");
             g2d.setClip(g2d.getClip());
             g2d.setStroke(g2d.getStroke());
             g2d.setColor(g2d.getColor());
             g2d.setFont(g2d.getFont());
-            output("gsave\n");
+//            output("gsave\n");
             comment("--------------= graphics mismatch, resetting state END   =--------------\n");
         }
+        lastG2d = g2d;
         output(str);
     }
 

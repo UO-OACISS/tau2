@@ -110,7 +110,7 @@ public class EPSOutput extends Graphics2D {
     }
 
     public void clip(Shape s) {
-        comment("clip " + s + "\n");
+        comment("clip(" + s + ")\n");
         g2d.clip(s);
         setClip(g2d.getClip());
     }
@@ -184,11 +184,13 @@ public class EPSOutput extends Graphics2D {
     }
 
     public void draw(Shape s) {
+        comment("draw(" + s + ")\n");
         outputPath(s);
         output("stroke\n");
     }
 
     public void fill(Shape s) {
+        comment("fill(" + s + ")\n");
         outputPath(s);
         if (s.getPathIterator(null).getWindingRule() == PathIterator.WIND_EVEN_ODD) {
             output("eofill\n");
@@ -202,6 +204,8 @@ public class EPSOutput extends Graphics2D {
     }
 
     public void setStroke(Stroke s) {
+        comment("setStroke(" + s + ")\n");
+
         g2d.setStroke(s);
 
         if (s instanceof BasicStroke) {
@@ -404,6 +408,7 @@ public class EPSOutput extends Graphics2D {
     }
 
     public void setColor(Color c) {
+        comment("setColor(" + c + ")\n");
         g2d.setColor(c);
         if (c == null) {
             c = Color.BLACK;
@@ -420,7 +425,7 @@ public class EPSOutput extends Graphics2D {
     }
 
     public void setFont(Font font) {
-        comment("setFont " + font + "\n");
+        comment("setFont(" + font + ")\n");
         g2d.setFont(font);
         output("/" + font.getPSName() + " findfont " + font.getSize() + " scalefont setfont\n");
     }
@@ -438,8 +443,8 @@ public class EPSOutput extends Graphics2D {
     }
 
     public void setClip(Shape clip) {
-        comment("setClip " + clip + "\n");
-        comment("old clip: " + g2d.getClip() + "\n");
+        comment("setClip(" + clip + ")\n");
+        comment("    old clip: " + g2d.getClip() + "\n");
         if (clip == null) {
             output("grestore\n");
         } else {
