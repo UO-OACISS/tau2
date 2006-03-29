@@ -1,19 +1,21 @@
-/* 
- ImageFormatFileFilter.java
-
- Title:      ImageFormatFileFilter.java
- Author:     Kevin Huck
- 
- Description: A file filter for the different image format types Pararof supports.
-
- Things to do: Class is complete.
- */
-
 package edu.uoregon.tau.common;
 
 import java.io.*;
-
+/**
+ * A custom FileFilter for graphics formats
+ * 
+ * <P>CVS $Id: ImageFormatFileFilter.java,v 1.2 2006/03/29 18:42:37 amorris Exp $</P>
+ * @author  Robert Bell
+ * @version $Revision: 1.2 $
+ */
 public class ImageFormatFileFilter extends javax.swing.filechooser.FileFilter {
+
+    public static String JPG = "jpg";
+    public static String PNG = "png";
+    public static String SVG = "svg";
+    public static String EPS = "eps";
+
+    private String extension = null;
 
     public ImageFormatFileFilter(String extension) {
         super();
@@ -61,17 +63,4 @@ public class ImageFormatFileFilter extends javax.swing.filechooser.FileFilter {
 
         return extension;
     }
-
-    //####################################
-    //Instance Data.
-    //####################################
-    private String extension = null;
-
-    static String JPG = "jpg";
-    static String PNG = "png";
-    static String SVG = "svg";
-    static String EPS = "eps";
-    //####################################
-    //End - Instance Data.
-    //####################################
 }
