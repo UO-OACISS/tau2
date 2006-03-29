@@ -22,9 +22,9 @@ import net.java.games.jogl.util.GLUT;
 /**
  * Draws axes with labels.
  *
- * <P>CVS $Id: Axes.java,v 1.2 2005/07/16 00:21:07 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.3 2006/03/29 19:54:02 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 public class Axes implements Shape {
 
@@ -348,10 +348,10 @@ public class Axes implements Shape {
     public void render(VisRenderer visRenderer) {
         GLDrawable glDrawable = visRenderer.getGLDrawable();
 
+        // If the reverse video setting has changed, we must redraw
         if (oldReverseVideo != visRenderer.getReverseVideo()) {
             dirty = true;
         }
-        
         oldReverseVideo = visRenderer.getReverseVideo();
         
         if (!enabled)

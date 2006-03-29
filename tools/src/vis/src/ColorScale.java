@@ -24,9 +24,9 @@ import net.java.games.jogl.util.GLUT;
  * allowing them to query values (0..1) and get colors in the current
  * color set. 
  *    
- * <P>CVS $Id: ColorScale.java,v 1.3 2005/11/23 23:45:48 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.4 2006/03/29 19:54:02 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 
 /* TODO: Provide control over font size perhaps? */
@@ -81,6 +81,11 @@ public class ColorScale extends Observable implements Shape {
     private String lowString, highString, label;
     private double fontScale = 0.10;
     private int displayList;
+
+    // this is to keep track of the old reverseVideo value
+    // I need to come up with a better way of tracking the settings
+    // we have to know whether to recreate the display list or not
+    private boolean oldReverseVideo;
 
     public ColorScale() {
     }
@@ -259,6 +264,13 @@ public class ColorScale extends Observable implements Shape {
      */
     public void render(VisRenderer visRenderer) {
         GLDrawable glDrawable = visRenderer.getGLDrawable();
+
+        
+        // If the reverse video setting has changed, we must redraw
+        if (oldReverseVideo != visRenderer.getReverseVideo()) {
+            dirty = true;
+        }
+        oldReverseVideo = visRenderer.getReverseVideo();
 
         if (!enabled) {
             return;
