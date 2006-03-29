@@ -11,6 +11,9 @@ public class EPSWriter {
     private OutputStreamWriter outWriter;
     private BufferedWriter bw;
     private Graphics2D lastG2d;
+
+    // set this to true to enable EPS comments (useful for debugging)
+    private static boolean commentsEnabled = false;
     
     public EPSWriter(String name, File file, int width, int height) {
         try {
@@ -56,19 +59,29 @@ public class EPSWriter {
             throw new RuntimeException(e);
         }
     }
+    
+    public void comment(String str) {
+        try {
+            if (commentsEnabled) {
+                bw.write("% " + str);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public void write(Graphics2D g2d, String str) {
-        if (g2d != lastG2d) {
-            if (lastG2d != null) {
-                output("grestore\n");
-            }
+        if (lastG2d != null && g2d != lastG2d) {
+            lastG2d = g2d;
+            comment("--------------= graphics mismatch, resetting state BEGIN =--------------\n");
+            output("grestore\n");
             g2d.setClip(g2d.getClip());
             g2d.setStroke(g2d.getStroke());
             g2d.setColor(g2d.getColor());
             g2d.setFont(g2d.getFont());
             output("gsave\n");
+            comment("--------------= graphics mismatch, resetting state END   =--------------\n");
         }
-        lastG2d = g2d;
         output(str);
     }
 

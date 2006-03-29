@@ -14,14 +14,13 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.TimeZone;
 
-
 public class EPSOutput extends Graphics2D {
 
     private int width, height;
     private Graphics2D g2d;
     private boolean drawTextAsShapes;
     private EPSWriter writer;
-    
+
     private EPSOutput(EPSOutput other) {
         this.writer = other.writer;
         this.g2d = (Graphics2D) other.g2d.create();
@@ -29,28 +28,27 @@ public class EPSOutput extends Graphics2D {
     }
 
     public EPSOutput(String name, File file, int width, int height) {
-        
-        writer = new EPSWriter(name,file,width,height);
+        writer = new EPSWriter(name, file, width, height);
         this.width = width;
         this.height = height;
         BufferedImage bi = new BufferedImage(5, 5, BufferedImage.TYPE_INT_ARGB);
         g2d = bi.createGraphics();
-        g2d.setClip(0, 0, width, height);
-
+        setClip(0, 0, width, height);
 
         setStroke(new BasicStroke());
     }
 
-    
     private void output(String str) {
-        writer.write(g2d,str);
+        writer.write(this, str);
+    }
+    
+    private void comment(String str) {
+        writer.comment(str);
     }
 
-    
     public void finish() throws IOException {
         writer.finish();
     }
-
 
     public void rotate(double theta) {
         g2d.rotate(theta);
@@ -112,10 +110,9 @@ public class EPSOutput extends Graphics2D {
     }
 
     public void clip(Shape s) {
+        comment("clip " + s + "\n");
         g2d.clip(s);
-        output("initclip\n");
-        outputPath(g2d.getClip());
-        output("clip\n");
+        setClip(g2d.getClip());
     }
 
     private String transformedPoint(double x, double y) {
@@ -172,8 +169,8 @@ public class EPSOutput extends Graphics2D {
                 lasty = coords[3];
                 break;
             case PathIterator.SEG_CUBICTO:
-                output(transformedPoint(coords[0], coords[1]) + " " + transformedPoint(coords[2], coords[3])
-                        + " " + transformedPoint(coords[4], coords[5]) + " curveto\n");
+                output(transformedPoint(coords[0], coords[1]) + " " + transformedPoint(coords[2], coords[3]) + " "
+                        + transformedPoint(coords[4], coords[5]) + " curveto\n");
 
                 lastx = coords[4];
                 lasty = coords[5];
@@ -423,6 +420,7 @@ public class EPSOutput extends Graphics2D {
     }
 
     public void setFont(Font font) {
+        comment("setFont " + font + "\n");
         g2d.setFont(font);
         output("/" + font.getPSName() + " findfont " + font.getSize() + " scalefont setfont\n");
     }
@@ -440,10 +438,19 @@ public class EPSOutput extends Graphics2D {
     }
 
     public void setClip(Shape clip) {
+        comment("setClip " + clip + "\n");
+        comment("old clip: " + g2d.getClip() + "\n");
+        if (clip == null) {
+            output("grestore\n");
+        } else {
+            if (g2d.getClip() != null) {
+                output("grestore\n");
+            }
+            output("gsave\n");
+            outputPath(clip);
+            output("clip\n");
+        }
         g2d.setClip(clip);
-        output("initclip\n");
-        outputPath(g2d.getClip());
-        output("clip\n");
     }
 
     public FontMetrics getFontMetrics(Font f) {
@@ -466,14 +473,13 @@ public class EPSOutput extends Graphics2D {
         return false;
     }
 
-    public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2,
-            Color bgcolor, ImageObserver observer) {
+    public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2, Color bgcolor,
+            ImageObserver observer) {
         // TODO Auto-generated method stub
         return false;
     }
 
-    public boolean drawImage(Image img, int x, int y, int width, int height, Color bgcolor,
-            ImageObserver observer) {
+    public boolean drawImage(Image img, int x, int y, int width, int height, Color bgcolor, ImageObserver observer) {
         // TODO Auto-generated method stub
         return false;
     }
