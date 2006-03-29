@@ -29,6 +29,10 @@ foreach $opt (@availableOpts) {
     $opts{$opt} = 1;
 } 
 
+$opts{"-setnode0"} = 1;
+$opts{"-PROFILECALLS"} = 1;
+$opts{"-pdtcompdir"} = 1;
+
 # read .all_configs at once in case the user is running it using the
 # current directory as the old tau
 @allConfigs = `cat $oldConfigs`;
