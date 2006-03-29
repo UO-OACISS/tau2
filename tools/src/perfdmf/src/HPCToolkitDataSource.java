@@ -28,9 +28,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *       hpcquick.
  * 
  * 
- * <P>CVS $Id: HPCToolkitDataSource.java,v 1.1 2005/09/26 20:24:29 amorris Exp $</P>
+ * <P>CVS $Id: HPCToolkitDataSource.java,v 1.2 2006/03/29 20:14:38 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class HPCToolkitDataSource extends DataSource {
 
@@ -54,10 +54,6 @@ public class HPCToolkitDataSource extends DataSource {
             xmlreader.setErrorHandler(handler);
 
             xmlreader.parse(new InputSource(new FileInputStream(file)));
-
-            if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
-                setCallPathDataPresent(true);
-            }
 
             // now subract out children inclusive values from parent exclusive values
             for (int i = 0; i < this.getNumberOfMetrics(); i++) {

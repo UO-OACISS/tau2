@@ -149,22 +149,10 @@ public class TimeSeriesDataSource extends DataSource {
                 br.close();
                 inReader.close();
                 fileIn.close();
-
-                
-                
-                
             }
-            
-            
         }
 
         this.generateDerivedData();
-
-        if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
-            setCallPathDataPresent(true);
-        }
-
-        
     }
 
     

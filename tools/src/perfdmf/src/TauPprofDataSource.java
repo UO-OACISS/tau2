@@ -420,25 +420,12 @@ public class TauPprofDataSource extends DataSource {
 //
 //            meanData.setThreadDataAllMetrics();
 
-            this.generateDerivedData();
             
             time = (System.currentTimeMillis()) - time;
             //System.out.println("Time to process file (in milliseconds): " + time);
         }
 
-        for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
-            ((Thread) it.next()).setThreadDataAllMetrics();
-        }
-        this.meanData.setThreadDataAllMetrics();
-
-        
-        //System.out.println("Processing callpath data ...");
-        if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
-            setCallPathDataPresent(true);
-        } else {
-            //System.out.println("No callpath data found.");
-        }
-        //System.out.println("Done - Processing callpath data!");
+        this.generateDerivedData();
     }
 
    

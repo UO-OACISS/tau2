@@ -9,7 +9,7 @@ import java.io.Serializable;
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.1 2005/09/26 20:24:32 amorris Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.2 2006/03/29 20:14:38 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -92,4 +92,14 @@ public class Metric implements Serializable {
         this.name = name;
     }
 
+    public boolean isTimeMetric() {
+        String metricName = name.toUpperCase();
+        if (metricName.indexOf("TIME") == -1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    
 }

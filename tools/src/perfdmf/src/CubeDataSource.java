@@ -17,9 +17,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeDataSource.java,v 1.1 2005/09/26 20:24:25 amorris Exp $</P>
+ * <P>CVS $Id: CubeDataSource.java,v 1.2 2006/03/29 20:14:38 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class CubeDataSource extends DataSource {
 
@@ -46,10 +46,6 @@ public class CubeDataSource extends DataSource {
             xmlreader.setErrorHandler(handler);
             xmlreader.parse(new InputSource(new FileInputStream(file)));
 
-            
-            if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
-                setCallPathDataPresent(true);
-            }
             
             this.setGroupNamesPresent(true);
 

@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.4 2006/03/15 19:30:05 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.5 2006/03/29 20:14:38 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		FunctionProfile
  */
 /**
@@ -88,7 +88,7 @@ public class Function implements Serializable, Comparable {
             }
         }
 
-        return reversedName;
+        return reversedName.trim();
     }
 
     public String toString() {

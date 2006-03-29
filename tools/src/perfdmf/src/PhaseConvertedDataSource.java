@@ -103,8 +103,6 @@ public class PhaseConvertedDataSource extends DataSource {
         }
 
         this.generateDerivedData();
-        this.setCallPathDataPresent(true);
-
     }
 
     public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException {

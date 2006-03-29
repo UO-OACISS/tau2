@@ -9,9 +9,9 @@ import java.util.zip.GZIPInputStream;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.2 2005/10/18 22:48:55 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.3 2006/03/29 20:14:38 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -182,12 +182,8 @@ public class PackedProfileDataSource extends DataSource {
             setUserEventsPresent(true);
         }
 
-
+        
         this.generateDerivedData(); // mean, percentages, etc.
-
-        if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
-            setCallPathDataPresent(true);
-        }
 
         //time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + time);

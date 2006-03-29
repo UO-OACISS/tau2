@@ -5,17 +5,18 @@ import java.sql.*;
 
 public class DBDataSource extends DataSource {
 
-    public DBDataSource(Object initializeObject) {
-        super();
-        this.setMetrics(new Vector());
-        this.initializeObject = initializeObject;
-    }
-
-    private Object initializeObject;
-
+    private DatabaseAPI databaseAPI;
     private volatile boolean abort = false;
     private volatile int totalItems = 0;
     private volatile int itemsDone = 0;
+
+    
+    public DBDataSource(DatabaseAPI dbAPI) {
+        super();
+        this.setMetrics(new Vector());
+        this.databaseAPI = dbAPI;
+    }
+
 
     public int getProgress() {
         return 0;
@@ -28,7 +29,6 @@ public class DBDataSource extends DataSource {
     }
 
     public void load() throws SQLException {
-        DatabaseAPI databaseAPI = (DatabaseAPI) initializeObject;
 
         Function function = null;
         UserEvent userEvent = null;
@@ -200,20 +200,9 @@ public class DBDataSource extends DataSource {
         time = (System.currentTimeMillis()) - time;
 //        System.out.println("Time to download file (in milliseconds): " + time);
 
-        for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
-            ((Thread) it.next()).setThreadDataAllMetrics();
-        }
-        this.meanData.setThreadDataAllMetrics();
-
-        if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
-            setCallPathDataPresent(true);
-        }
 
         // yep, I'm going to do it anyway, I have other stats to compute, we're just discarding the
         // database values.
         generateDerivedData();
-
-        
-
     }
 }

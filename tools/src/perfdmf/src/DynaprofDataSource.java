@@ -197,10 +197,6 @@ public class DynaprofDataSource extends DataSource {
 
         this.generateDerivedData();
 
-        if (CallPathUtilFuncs.checkCallPathsPresent(getFunctions())) {
-            setCallPathDataPresent(true);
-        }
-
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Done processing data!");
         //System.out.println("Time to process (in milliseconds): " + time);

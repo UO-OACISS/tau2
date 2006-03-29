@@ -9,9 +9,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.5 2006/03/16 02:15:22 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.6 2006/03/29 20:14:38 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		TrialData
  * @see		NCT
  */
@@ -112,7 +112,7 @@ public abstract class DataSource {
         return totalData;
     }
 
-    protected void setCallPathDataPresent(boolean callPathDataPresent) {
+    private void setCallPathDataPresent(boolean callPathDataPresent) {
         this.callPathDataPresent = callPathDataPresent;
     }
 
@@ -331,10 +331,11 @@ public abstract class DataSource {
      * @return Metric with given id.
      */
     public Metric getMetric(int metricID) {
-        if ((this.metrics != null) && (metricID < this.metrics.size()))
+        if ((this.metrics != null) && (metricID < this.metrics.size())) {
             return (Metric) this.metrics.get(metricID);
-        else
+        } else {
             return null;
+        }
     }
 
     /**
@@ -348,10 +349,11 @@ public abstract class DataSource {
      * @return The metric name as a String.
      */
     public String getMetricName(int metricID) {
-        if ((this.metrics != null) && (metricID < this.metrics.size()))
+        if ((this.metrics != null) && (metricID < this.metrics.size())) {
             return ((Metric) this.metrics.get(metricID)).getName();
-        else
+        } else {
             return null;
+        }
     }
 
     /**
@@ -363,10 +365,91 @@ public abstract class DataSource {
      */
     public int getNumberOfMetrics() {
         //Try getting the metric name.
-        if (this.metrics != null)
+        if (this.metrics != null) {
             return metrics.size();
-        else
+        } else {
             return -1;
+        }
+    }
+
+    private void generateBonusCallPathData() {
+        /*
+         * The "bonus" data is necessary for the reverse call tree
+         * With normal callpath data we have:
+         *     A => B1 => C => D
+         *     A => B2 => C => D
+         *     D
+         *     
+         * Here, D is duplicate data, it is the sum of the other two
+         * The Bonus data is additional duplicate data:
+         *     B1 => C => D
+         *     B2 => C => D
+         *     C => D
+         *     
+         * It provides an aggregate view from each root for all parents
+         */
+        if (!getCallPathDataPresent()) {
+            return;
+        }
+
+        List functions = new ArrayList();
+
+        for (Iterator l = this.getFunctions(); l.hasNext();) {
+            Function function = (Function) l.next();
+            functions.add(function);
+        }
+
+        // make sure that the allThreads list is initialized;
+        this.initAllThreadsList();
+
+        int numThreads = allThreads.size();
+
+        Group derivedGroup = this.addGroup("TAU_CALLPATH_DERIVED");
+
+        for (Iterator l = functions.iterator(); l.hasNext();) {
+            Function function = (Function) l.next();
+
+            if (function.isCallPathFunction() && CallPathUtilFuncs.containsDoublePath(function.getName())) {
+
+                String bonusName = function.getName();
+                bonusName = bonusName.substring(bonusName.indexOf("=>") + 2);
+                while (bonusName.indexOf("=>") != -1) {
+
+                    Function bonusFunction = this.getFunction(bonusName);
+                    if (bonusFunction == null) {
+                        bonusFunction = addFunction(bonusName);
+                        for (Iterator g = function.getGroups().iterator(); g.hasNext();) {
+                            bonusFunction.addGroup((Group) g.next());
+                        }
+                    }
+                    bonusFunction.addGroup(derivedGroup);
+                    bonusName = bonusName.substring(bonusName.indexOf("=>") + 2);
+
+                    for (int i = 0; i < numThreads; i++) {
+                        edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) allThreads.get(i);
+
+                        FunctionProfile functionProfile = thread.getFunctionProfile(function);
+                        if (functionProfile != null) {
+                            FunctionProfile bfp = thread.getFunctionProfile(bonusFunction);
+                            if (bfp == null) {
+                                bfp = new FunctionProfile(bonusFunction);
+                                thread.addFunctionProfile(bfp);
+                            }
+
+                            for (int metric = 0; metric < this.getNumberOfMetrics(); metric++) {
+
+                                bfp.setExclusive(metric, bfp.getExclusive(metric) + functionProfile.getExclusive(metric));
+                                bfp.setInclusive(metric, bfp.getInclusive(metric) + functionProfile.getInclusive(metric));
+                            }
+                            bfp.setNumCalls(bfp.getNumCalls() + functionProfile.getNumCalls());
+                            bfp.setNumSubr(bfp.getNumSubr() + functionProfile.getNumSubr());
+
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     /*
@@ -376,6 +459,12 @@ public abstract class DataSource {
     public void generateDerivedData() {
         //long time = System.currentTimeMillis();
 
+        if (CallPathUtilFuncs.checkCallPathsPresent(getFunctions())) {
+            setCallPathDataPresent(true);
+        }
+        
+        generateBonusCallPathData();
+        
         checkForPhases();
 
         for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
@@ -445,6 +534,8 @@ public abstract class DataSource {
             double stdDevSum = 0;
             double stdDevSumSqr = 0;
 
+            // make sure that the allThreads list is initialized;
+            this.initAllThreadsList();
             int numThreads = allThreads.size();
 
             for (int i = 0; i < numThreads; i++) { // for each thread

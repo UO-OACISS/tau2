@@ -356,10 +356,6 @@ public class TauDataSource extends DataSource {
         //Generate derived data.
         this.generateDerivedData();
 
-        if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
-            setCallPathDataPresent(true);
-        }
-
         //time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + time);
     }

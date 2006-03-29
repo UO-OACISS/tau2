@@ -392,6 +392,16 @@ public class UtilFncs {
         }
     }
 
+    public static String getRevLeftSide(String str) {
+        int location = str.indexOf("<=");
+        if (location >= 0) {
+            return str.substring(0, location).trim();
+        } else {
+            return str;
+        }
+    }
+
+    
     public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames)
             throws DataSourceException {
         DataSource dataSource = null;
