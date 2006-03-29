@@ -171,6 +171,9 @@ runclient: perfexplorer.jar
 runstandalone: perfexplorer.jar
 	perfexplorer
 
+test: perfexplorer.jar
+	perfexplorer -test
+
 install: perfexplorer.jar
 	mkdir -p PerfExplorer-0.1
 	rm -rf PerfExplorer-0.1/*.jar PerfExplorer-0.1/java.policy

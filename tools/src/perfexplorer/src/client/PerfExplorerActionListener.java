@@ -156,7 +156,7 @@ public class PerfExplorerActionListener implements ActionListener {
 						PerfExplorerChart.doFractionChart();
 				} else if (arg.equals(CORRELATION_CHART)) {
 					if (checkAndSetMetricName(false))
-						//if (checkAndSetProblemSize(false))
+						if (checkAndSetProblemSize(false))
 							PerfExplorerChart.doCorrelationChart();
 				} else if (arg.equals(EFFICIENCY_PHASE_CHART)) {
 					if (checkAndSetMetricName(false))
@@ -568,14 +568,14 @@ public class PerfExplorerActionListener implements ActionListener {
 		Boolean constantProblem = theModel.getConstantProblem();
 		if (forceIt || constantProblem == null) {
 			List answers = new ArrayList();
-			answers.add("Yes, the problem size remains constant.");
-			answers.add("No, the problem increases as the processor count increases.");
+			answers.add("The problem size remains constant. (strong scaling)");
+			answers.add("The problem size increases as the processor count increases. (weak scaling)");
 			Object[] options = answers.toArray();
 			String response = (String)JOptionPane.showInputDialog (mainFrame,
-				"Does the problem size remain constant, or does it scale with the number of processors?",
+				"Please select the problem scaling:",
 				"Problem Scaling", JOptionPane.PLAIN_MESSAGE,
 				null, options, options[0]);
-			theModel.setConstantProblem(response.startsWith("Y") ? true : false);
+			theModel.setConstantProblem(response.startsWith("The problem size remains") ? true : false);
 			constantProblem = theModel.getConstantProblem();
 		}
 		return (!forceIt && constantProblem == null) ? false : true;

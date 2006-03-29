@@ -92,9 +92,19 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
 		customizeChart(chart, rawData.getRows(), true);
         XYPlot plot = chart.getXYPlot();
-        NumberAxis axis2 = new NumberAxis("Inclusive Time for " + (String)rawData.getRowLabels().get(0));
-        axis2.setAutoRangeIncludesZero(false);
-        plot.setRangeAxis(1, axis2);
+
+		if (PerfExplorerModel.getModel().getConstantProblem().booleanValue()) {
+			// log axis, to make the chart more readable
+        	LogarithmicAxis axis = new LogarithmicAxis("Exclusive Time for Event");
+        	axis.setAutoRangeIncludesZero(false);
+        	axis.setLog10TickLabelsFlag(true);
+        	plot.setRangeAxis(0, axis);
+ 		}else {
+			// otherwise, give the inclusive time its own axis
+        	NumberAxis axis2 = new NumberAxis("Inclusive Time for " + (String)rawData.getRowLabels().get(0));
+        	axis2.setAutoRangeIncludesZero(false);
+        	plot.setRangeAxis(1, axis2);
+		}
         XYDataset dataset2 = new CorrelationPlotDataset(rawData, true);
         plot.setDataset(1, dataset2);
         plot.mapDatasetToRangeAxis(1, 1);

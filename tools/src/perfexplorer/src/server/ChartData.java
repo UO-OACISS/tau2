@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.27 2006/03/27 21:11:37 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.28 2006/03/29 00:51:40 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -26,7 +26,6 @@ public class ChartData extends RMIChartData {
 	private String groupName = null;
 	private String eventName = null;
 	private String groupByColumn = null;
-	private boolean preQuery = false;
 	private List columnValues = null;
 	
 	/**
@@ -82,18 +81,17 @@ public class ChartData extends RMIChartData {
 			int experimentIndex = -1;
 			if (dataType == CORRELATION_DATA) {
 				columnValues = new ArrayList();
-				preQuery = true;
 				// do a pre-query to get the event with inclusive value
 				// of 100.0.
-				statement = buildStatement();
-				//System.out.println(statement.toString());
+				statement = buildPreQueryStatement();
+				System.out.println(statement.toString());
 				ResultSet results = statement.executeQuery();
 				// TODO - this query assumes a scalability study...!
 				while (results.next() != false) {
 					groupingName = results.getString(1);
-					threadName = results.getString(2);
-					numThreads = results.getDouble(2);
-					value = results.getDouble(3);
+					numThreads = results.getDouble(2) * results.getDouble(3) *
+						results.getDouble(4);
+					value = results.getDouble(5);
 					if (metricName.toLowerCase().indexOf("time") != -1)
 						value = value/1000000;
 	
@@ -107,7 +105,6 @@ public class ChartData extends RMIChartData {
 				} 
 				results.close();
 				statement.close();
-				preQuery = false;
 			}
 			// all query results are organized the same, only the selection
 			// parameters are different.
@@ -118,9 +115,10 @@ public class ChartData extends RMIChartData {
 			int columnCounter = 0;
 			while (results.next() != false) {
 				groupingName = results.getString(1);
-				threadName = results.getString(2);
-				numThreads = results.getDouble(2);
-				value = results.getDouble(3);
+				numThreads = results.getDouble(2) * results.getDouble(3) *
+					results.getDouble(4);
+				threadName = Double.toString(numThreads);
+				value = results.getDouble(5);
 				if ((metricName.toLowerCase().indexOf("time") != -1) 
 					&& (dataType != FRACTION_OF_TOTAL))
 					value = value/1000000;
@@ -155,9 +153,10 @@ public class ChartData extends RMIChartData {
 				// TODO - this query assumes a scalability study...!
 				while (results.next() != false) {
 					groupingName = "other";
-					threadName = results.getString(1);
-					numThreads = results.getDouble(1);
-					value = results.getDouble(2);
+					numThreads = results.getDouble(1) * results.getDouble(2) *
+						results.getDouble(3);
+					threadName = Double.toString(numThreads);
+					value = results.getDouble(4);
 					if ((metricName.toLowerCase().indexOf("time") != -1) 
 						&& (dataType != FRACTION_OF_TOTAL))
 						value = value/1000000;
@@ -190,7 +189,8 @@ public class ChartData extends RMIChartData {
 				// do nothing, as all we did was truncate & drop the table
 			}
 		} catch (Exception e) {
-			System.out.println(statement.toString());
+			if (statement != null)
+				System.out.println(statement.toString());
 			String error = "ERROR: Couldn't select the analysis settings from the database!";
 			System.out.println(error);
 			e.printStackTrace();
@@ -212,37 +212,11 @@ public class ChartData extends RMIChartData {
 		PreparedStatement statement = null;
 		StringBuffer buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
-		if (preQuery && (dataType == CORRELATION_DATA)) {
-			// The user wants to know the runtime breakdown by events of one 
-			// experiment as the number of threads of execution increases.
-			buf.append("select 'TOTAL', ");
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
-			buf.append(" max(ims.inclusive) ");
-			buf.append("from interval_mean_summary ims ");
-			buf.append("inner join interval_event ie ");
-			buf.append("on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
-			if (object instanceof RMIView) {
-				buf.append(model.getViewSelectionPath(true, true));
-			} else {
-				buf.append("where t.experiment = ");
-				buf.append(model.getExperiment().getID() + " ");
-			}
-			buf.append(" and m.name = ? ");
-			buf.append("and ims.exclusive_percentage > ");
-			buf.append(model.getXPercent());
-			buf.append(" and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
-			buf.append("group by 2 order by 2 ");
-			statement = db.prepareStatement(buf.toString());
-			statement.setString(1, metricName);
-		} else if (dataType == FRACTION_OF_TOTAL) {
+		if (dataType == FRACTION_OF_TOTAL) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
 			buf.append("select ie.name, ");
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			buf.append(" ims.exclusive_percentage ");
 			buf.append("from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie ");
@@ -261,7 +235,7 @@ public class ChartData extends RMIChartData {
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
-			buf.append("order by 1, 2");
+			buf.append("order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == RELATIVE_EFFICIENCY) {
@@ -270,16 +244,18 @@ public class ChartData extends RMIChartData {
 			// execution increases.
 			List selections = model.getMultiSelection();
 			buf.append("select ");
+			StringBuffer tmpBuf = new StringBuffer();
 			if (object instanceof RMIView) {
 				if (isLeafView()) {
-					buf.append(" " + model.getViewSelectionString() + ", ");
+					tmpBuf.append(model.getViewSelectionString());
 				} else {
-					buf.append(" " + groupByColumn + ", ");
+					tmpBuf.append(groupByColumn);
 				}
 			} else {
-				buf.append(" e.name, ");
+				tmpBuf.append("e.name");
 			}
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append(" " + tmpBuf.toString() + ", ");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			buf.append("avg(ims.inclusive) from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
@@ -307,7 +283,7 @@ public class ChartData extends RMIChartData {
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
-			buf.append(" group by 1, 2 order by 1, 2");
+			buf.append(" group by " + tmpBuf.toString() + ", t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == TOTAL_FOR_GROUP) {
@@ -326,7 +302,7 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append(" e.name, ");
 			}
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 
 			if (db.getDBType().compareTo("oracle") == 0) {
 				buf.append("sum(ims.excl) from interval_mean_summary ims ");
@@ -371,15 +347,14 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append(" e.name, ");
 			}
-			buf.append("(t.node_count * t.contexts_per_node * ");
-			buf.append("t.threads_per_context), ie.group_name order by 1, 2");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ie.group_name order by 1, 2, 3, 4");
 
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 			statement.setString(2, groupName);
 		} else if ((dataType == RELATIVE_EFFICIENCY_EVENTS) ||
-			(dataType == CORRELATION_DATA && !preQuery)) {
+			(dataType == CORRELATION_DATA)) {
 			// The user wants to know the relative efficiency or speedup
 			// of all the events for one experiment, as the number of threads of 
 			// execution increases.
@@ -436,7 +411,7 @@ public class ChartData extends RMIChartData {
 			buf = new StringBuffer();
 			buf.append("select distinct ");
 			buf.append("ie.name, ");
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 
 			if (dataType == CORRELATION_DATA) {
 				if (db.getDBType().compareTo("oracle") == 0) {
@@ -462,7 +437,7 @@ public class ChartData extends RMIChartData {
 				buf.append(model.getExperiment().getID() + " ");
 			}
 
-			buf.append(" and m.name = ? order by 1, 2 ");
+			buf.append(" and m.name = ? order by 1, 2, 3, 4 ");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == RELATIVE_EFFICIENCY_ONE_EVENT) {
@@ -479,7 +454,7 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append(" e.name, ");
 			}
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			buf.append("exclusive from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
@@ -505,7 +480,7 @@ public class ChartData extends RMIChartData {
 			}
 
 			buf.append(" and m.name = ? ");
-			buf.append("and ie.name = ? order by 1, 2");
+			buf.append("and ie.name = ? order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 			statement.setString(2, eventName);
@@ -525,7 +500,7 @@ public class ChartData extends RMIChartData {
 				buf.append(" ie.name, ");
 
 			}
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			buf.append("ims.inclusive from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
@@ -533,7 +508,7 @@ public class ChartData extends RMIChartData {
 			buf.append("where t.experiment = ? and m.name = ? ");
 
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ie.group_name like '%TAU_PHASE%' order by 1, 2");
+			buf.append("and ie.group_name like '%TAU_PHASE%' order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt (1, model.getExperiment().getID());
 			statement.setString(2, metricName);
@@ -552,7 +527,7 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append(" ie.name, ");
 			}
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			buf.append("ims.inclusive_percentage from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
@@ -570,14 +545,14 @@ public class ChartData extends RMIChartData {
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
 
 			
-			buf.append("and ie.group_name like '%TAU_PHASE%' order by 1, 2");
+			buf.append("and ie.group_name like '%TAU_PHASE%' order by 1, 2, 3, 4");
 
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == IQR_DATA) {
 			int contexts = 1;
-			int threads = 16;
-			// get the number of contexts and threads
+			int threads = 1;
+			// get the number of contexts and threads!
 			
 			// The user wants to know the runtime breakdown by phases 
 			// of one experiment as the number of threads of execution
@@ -622,7 +597,7 @@ public class ChartData extends RMIChartData {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
 			buf.append("select ");
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			buf.append("sum(ims.exclusive_percentage) from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie ");
 			buf.append("on ims.interval_event = ie.id ");
@@ -640,7 +615,7 @@ public class ChartData extends RMIChartData {
 			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) group by (t.node_count * t.contexts_per_node * t.threads_per_context) order by 1");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')) group by 1, 2, 3 order by 1, 2, 3");
 			
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
@@ -671,7 +646,7 @@ public class ChartData extends RMIChartData {
 			*/
 
 			buf.append("select ");
-			buf.append("(t.node_count * t.contexts_per_node * t.threads_per_context), ");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 
 			if (db.getDBType().compareTo("oracle") == 0) {
 				buf.append("sum(ims.excl) from interval_mean_summary ims ");
@@ -692,8 +667,7 @@ public class ChartData extends RMIChartData {
 			
 			buf.append(" and m.name = ? ");
 			buf.append("and w.name is null ");
-			buf.append("group by (t.node_count * t.contexts_per_node ");
-			buf.append("* t.threads_per_context) order by 1 ");
+			buf.append("group by 1, 2, 3 order by 1, 2, 3 ");
 
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
@@ -702,6 +676,42 @@ public class ChartData extends RMIChartData {
 		}
 		//if (statement != null)
 			//System.out.println(statement.toString());
+		return statement;
+	}
+
+
+	private PreparedStatement buildPreQueryStatement () throws SQLException {
+		DB db = PerfExplorerServer.getServer().getDB();
+		PreparedStatement statement = null;
+		StringBuffer buf = new StringBuffer();
+		Object object = model.getCurrentSelection();
+		if (dataType == CORRELATION_DATA) {
+			// The user wants to know the runtime breakdown by events of one 
+			// experiment as the number of threads of execution increases.
+			buf.append("select 'TOTAL', ");
+			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
+			buf.append(" max(ims.inclusive) ");
+			buf.append("from interval_mean_summary ims ");
+			buf.append("inner join interval_event ie ");
+			buf.append("on ims.interval_event = ie.id ");
+			buf.append("inner join trial t on ie.trial = t.id ");
+			buf.append("inner join metric m on m.id = ims.metric ");
+			if (object instanceof RMIView) {
+				buf.append(model.getViewSelectionPath(true, true));
+			} else {
+				buf.append("where t.experiment = ");
+				buf.append(model.getExperiment().getID() + " ");
+			}
+			buf.append(" and m.name = ? ");
+			buf.append("and ims.exclusive_percentage > ");
+			buf.append(model.getXPercent());
+			buf.append(" and (ie.group_name is null or (");
+			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
+			buf.append("group by 2, 3, 4 order by 2, 3, 4 ");
+			statement = db.prepareStatement(buf.toString());
+			statement.setString(1, metricName);
+		}
 		return statement;
 	}
 		

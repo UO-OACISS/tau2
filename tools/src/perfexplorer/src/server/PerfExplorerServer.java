@@ -23,7 +23,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.25 2006/02/15 19:15:35 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.26 2006/03/29 00:51:40 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -865,6 +865,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			if (db.getDBType().compareTo("mysql") == 0) {
 				tmpStr = "select LAST_INSERT_ID();";
 			} else if (db.getDBType().compareTo("db2") == 0) {
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial_view";
+			} else if (db.getDBType().compareTo("derby") == 0) {
 				tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial_view";
 			} else if (db.getDBType().compareTo("oracle") == 0) {
 				tmpStr = "SELECT " + db.getSchemaPrefix() + "tv_id_seq.currval FROM DUAL";

@@ -21,7 +21,7 @@ public class PerfExplorerClient extends JFrame {
 		return listener;
 	}
 
-	private PerfExplorerClient (boolean standalone, String configFile,
+	PerfExplorerClient (boolean standalone, String configFile,
 	int analysisEngine, boolean quiet) {
 		super("PerfExplorer Client");
 		PerfExplorerOutput.initialize(quiet);
