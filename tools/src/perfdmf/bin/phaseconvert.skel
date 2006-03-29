@@ -5,6 +5,7 @@ CONFIG_ARCH=@ARCH@
 PERFDMF_HOME=${TAUROOT}/tools/src/perfdmf
 PERFDMF_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/perfdmf.jar
 JARGS_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
+COMMON_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/tau-common.jar
 CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
 
 if [ "x$TAUROOT" = "x" ] 
@@ -33,5 +34,5 @@ fi
 
 java -Xmx500m \
 -Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
--cp ${PERFDMF_JAR}:${JARGS_JAR} \
+-cp ${PERFDMF_JAR}:${JARGS_JAR}:${COMMON_JAR} \
 edu.uoregon.tau.perfdmf.loader.PhaseConverter "$@"
