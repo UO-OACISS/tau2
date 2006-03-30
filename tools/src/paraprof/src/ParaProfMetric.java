@@ -13,6 +13,11 @@ import edu.uoregon.tau.perfdmf.*;
 import javax.swing.tree.*;
 
 public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject {
+    private ParaProfTrial ppTrial = null;
+    private DefaultMutableTreeNode defaultMutableTreeNode = null;
+    private TreePath treePath = null;
+    private boolean derivedMetric = false;
+
     public ParaProfMetric() {
     }
 
@@ -60,48 +65,20 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
         return ppTrial.getID();
     }
 
-    
-    public boolean isTimeMetric() {
-        String metricName = this.getName().toUpperCase();
-        if (metricName.indexOf("TIME") == -1)
-            return false;
-        else
-            return true;
-    }
-
-    
     public String getIDString() {
-        if (ppTrial != null)
+        if (ppTrial != null) {
             return ppTrial.getIDString() + ":" + this.getID() + " - " + this.getName();
-        else
+        } else {
             return ":" + this.getID() + " - " + this.getName();
+        }
     }
 
     public String toString() {
         return super.getName();
     }
 
-    //####################################
-    //Interface code.
-    //####################################
-
-    //######
-    //ParaProfTreeUserObject
-    //######
-    public void clearDefaultMutableTreeNodes() {
+    public void clearDefaultMutableTreeNode() {
         this.setDMTN(null);
     }
 
-    //######
-    //End - ParaProfTreeUserObject
-    //######
-
-    //####################################
-    //End - Interface code.
-    //####################################
-
-    private ParaProfTrial ppTrial = null;
-    private DefaultMutableTreeNode defaultMutableTreeNode = null;
-    private TreePath treePath = null;
-    private boolean derivedMetric = false;
 }

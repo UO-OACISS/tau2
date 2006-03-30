@@ -14,19 +14,24 @@ import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.database.*;
 
 public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUserObject {
+    private ParaProfApplication application = null;
+    private DefaultMutableTreeNode defaultMutableTreeNode = null;
+    private TreePath treePath = null;
+    private boolean dBExperiment = false;
+    private Vector trials = new Vector();
 
     public ParaProfExperiment() {
         super();
-        this.setID(-1);
-        this.setApplicationID(-1);
-        this.setName("");
+        setID(-1);
+        setApplicationID(-1);
+        setName("");
     }
 
     public ParaProfExperiment(DB db) throws DatabaseException {
         super();
-        this.setID(-1);
-        this.setApplicationID(-1);
-        this.setName("");
+        setID(-1);
+        setApplicationID(-1);
+        setName("");
     }
 
     public ParaProfExperiment(Experiment experiment) {
@@ -107,34 +112,8 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
         return super.getName();
     }
 
-    //####################################
-    //Interface code.
-    //####################################
-
-    //######
-    //ParaProfTreeUserObject
-    //######
-    public void clearDefaultMutableTreeNodes() {
+    public void clearDefaultMutableTreeNode() {
         this.setDMTN(null);
     }
 
-    //######
-    //End - ParaProfTreeUserObject
-    //######
-
-    //####################################
-    //End - Interface code.
-    //####################################
-
-    //####################################
-    //Instance data.
-    //####################################
-    private ParaProfApplication application = null;
-    private DefaultMutableTreeNode defaultMutableTreeNode = null;
-    private TreePath treePath = null;
-    private boolean dBExperiment = false;
-    private Vector trials = new Vector();
-    //####################################
-    //End - Instance data.
-    //####################################
 }

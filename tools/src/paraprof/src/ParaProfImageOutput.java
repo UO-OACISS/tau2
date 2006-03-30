@@ -20,7 +20,9 @@ import javax.imageio.stream.ImageOutputStream;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
-import edu.uoregon.tau.paraprof.interfaces.ImageExport;
+import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.ImageFormatFileFilter;
+import edu.uoregon.tau.common.ImageOptionsPanel;
 
 public class ParaProfImageOutput {
 
@@ -39,11 +41,11 @@ public class ParaProfImageOutput {
         javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
         for (int i = 0; i < fileFilters.length; i++)
             fileChooser.removeChoosableFileFilter(fileFilters[i]);
-        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.JPG));
-        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.PNG));
+        fileChooser.addChoosableFileFilter(new ImageFormatFileFilter(ImageFormatFileFilter.JPG));
+        fileChooser.addChoosableFileFilter(new ImageFormatFileFilter(ImageFormatFileFilter.PNG));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-        ParaProfImageOptionsPanel paraProfImageOptionsPanel = new ParaProfImageOptionsPanel((Component) ref, true, false);
+        ImageOptionsPanel paraProfImageOptionsPanel = new ImageOptionsPanel((Component) ref, true, false);
         fileChooser.setAccessory(paraProfImageOptionsPanel);
         fileChooser.addPropertyChangeListener(paraProfImageOptionsPanel);
         int resultValue = fileChooser.showSaveDialog((Component) ref);
@@ -55,15 +57,15 @@ public class ParaProfImageOutput {
         File file = fileChooser.getSelectedFile();
         String path = file.getCanonicalPath();
 
-        ParaProfFileFilter paraProfImageFormatFileFilter = null;
+        ImageFormatFileFilter paraProfImageFormatFileFilter = null;
         javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
-        if (fileFilter instanceof ParaProfFileFilter) {
-            paraProfImageFormatFileFilter = (ParaProfFileFilter) fileFilter;
+        if (fileFilter instanceof ImageFormatFileFilter) {
+            paraProfImageFormatFileFilter = (ImageFormatFileFilter) fileFilter;
         } else {
             throw new ParaProfException("Unknown format : " + fileFilter);
             //???
         }
-        String extension = ParaProfFileFilter.getExtension(file);
+        String extension = ImageFormatFileFilter.getExtension(file);
         if (extension == null) {
             extension = paraProfImageFormatFileFilter.getExtension();
             path = path + "." + extension;
@@ -132,12 +134,12 @@ public class ParaProfImageOutput {
         javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
         for (int i = 0; i < fileFilters.length; i++)
             fileChooser.removeChoosableFileFilter(fileFilters[i]);
-        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.PNG));
-        fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.JPG));
+        fileChooser.addChoosableFileFilter(new ImageFormatFileFilter(ImageFormatFileFilter.PNG));
+        fileChooser.addChoosableFileFilter(new ImageFormatFileFilter(ImageFormatFileFilter.JPG));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-        final ParaProfImageOptionsPanel paraProfImageOptionsPanel = new ParaProfImageOptionsPanel((Component) ref, false, false);
-        fileChooser.setAccessory(paraProfImageOptionsPanel);
+        final ImageOptionsPanel paraProfImageOptionsPanel = new ImageOptionsPanel((Component) ref, false, false);
+        fileChooser.setAccessory(paraProfImageOptionsPanel); 
         fileChooser.addPropertyChangeListener(paraProfImageOptionsPanel);
         int resultValue = fileChooser.showSaveDialog((Component) ref);
         if (resultValue != JFileChooser.APPROVE_OPTION) {
@@ -151,22 +153,22 @@ public class ParaProfImageOutput {
         //Append extension if required.
 
         //Only create if we recognize the format.
-        ParaProfFileFilter paraProfImageFormatFileFilter = null;
-        if (fileFilter instanceof ParaProfFileFilter) {
-            paraProfImageFormatFileFilter = (ParaProfFileFilter) fileFilter;
-            String extension = ParaProfFileFilter.getExtension(f);
+        ImageFormatFileFilter imageFormatFileFilter = null;
+        if (fileFilter instanceof ImageFormatFileFilter) {
+            imageFormatFileFilter = (ImageFormatFileFilter) fileFilter;
+            String extension = ImageFormatFileFilter.getExtension(f);
             //Could probably collapse this if/else based on the order of evaluation of arguments (ie, to make sure
             //the extension is not null before trying to call equals on it).  However, it is easier to understand
             //what is going on this way.
             if (extension == null) {
-                path = path + "." + paraProfImageFormatFileFilter.getExtension();
+                path = path + "." + imageFormatFileFilter.getExtension();
                 f = new File(path);
             } else if (!(extension.equals("png") || extension.equals("jpg"))) {
-                path = path + "." + paraProfImageFormatFileFilter.getExtension();
+                path = path + "." + imageFormatFileFilter.getExtension();
                 f = new File(path);
             }
 
-            final String extensionString = paraProfImageFormatFileFilter.getExtension().toUpperCase();
+            final String extensionString = imageFormatFileFilter.getExtension().toUpperCase();
 
             final File filename = f;
 

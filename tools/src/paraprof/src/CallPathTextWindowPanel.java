@@ -4,19 +4,21 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Vector;
 
 import javax.swing.*;
 
-import edu.uoregon.tau.paraprof.interfaces.ImageExport;
+import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.perfdmf.*;
 
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.39 2006/03/16 02:14:50 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.40 2006/03/30 03:03:52 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.39 $
+ * @version	$Revision: 1.40 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 

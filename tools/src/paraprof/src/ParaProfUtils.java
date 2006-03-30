@@ -4,6 +4,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.print.*;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
@@ -15,7 +17,8 @@ import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
-import edu.uoregon.tau.paraprof.interfaces.ImageExport;
+import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.script.ParaProfFunctionScript;
@@ -116,6 +119,14 @@ public class ParaProfUtils {
         menu.add(item);
     }
 
+    public static void addCompItem(JFrame frame, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        frame.getContentPane().add(c, gbc);
+    }
+
     public static void addCompItem(Container jPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
         gbc.gridx = x;
         gbc.gridy = y;
@@ -211,7 +222,13 @@ public class ParaProfUtils {
 
                     } else if (arg.equals("Save as Vector Graphics")) {
                         if (panel instanceof ImageExport) {
-                            JVMDependent.exportVector((ImageExport) panel);
+
+                            if (JVMDependent.version.equals("1.4")) {
+                                VectorExport.promptForVectorExport((ImageExport) panel, "ParaProf");
+                            } else {
+                                JOptionPane.showMessageDialog((Component) panel,
+                                        "Can't save Vector Graphics with Java 1.3.  Reconfigure TAU with Java 1.4 or higher in the path.");
+                            }
                         } else if (panel instanceof ThreeDeeWindow) {
                             JOptionPane.showMessageDialog((JFrame) window, "Can't save 3D visualization as vector graphics");
                         } else {
@@ -1076,11 +1093,13 @@ public class ParaProfUtils {
         return false;
     }
 
-    public static String getFunctionName(Function function) {
+    // handles reversed callpaths
+    public static String getDisplayName(Function function) {
         if (ParaProf.preferences.getReversedCallPaths()) {
             return function.getReversedName();
+        } else {
+            return function.getName();
         }
-        return function.getName();
     }
 
     public static String getThreadIdentifier(Thread thread) {
@@ -1097,7 +1116,24 @@ public class ParaProfUtils {
 
     }
 
+    public static void logException(Exception e) {
+        try {
+            File file = new File(ParaProf.paraProfHomeDirectory + "/ParaProf.errors");
+            FileOutputStream out = new FileOutputStream(file.getName(), true);
+            PrintStream p = new PrintStream(out);
+            p.println("ParaProf Build (" + ParaProf.getVersionString() + ") encountered the following error on ("
+                    + new java.util.Date() + ") : ");
+            e.printStackTrace(p);
+            p.println("");
+            p.close();
+            out.close();
+        } catch (Exception ex) {
+            // oh well...
+        }
+    }
+
     public static void handleException(Exception e) {
+        logException(e);
         new ParaProfErrorDialog(null, e);
     }
 

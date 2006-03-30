@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.Searcher;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.4 2006/03/03 02:52:10 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.5 2006/03/30 03:03:54 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, MouseMotionListener, BarChartModelListener {
@@ -169,9 +169,6 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
     protected void paintComponent(Graphics g) {
         try {
             Rectangle rect = g.getClipBounds();
-            //setBackground(Color.white);
-            //g.clearRect(rect.x, rect.y, rect.width, rect.height);
-            //super.paintComponent(g);
 
             // Java 1.3 seems to need this rather than clearRect
             g.setColor(Color.white);

@@ -5,21 +5,17 @@ import java.io.*;
 /**
  * A custom FileFilter
  * 
- * <P>CVS $Id: ParaProfFileFilter.java,v 1.1 2006/03/15 22:32:27 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfFileFilter.java,v 1.2 2006/03/30 03:03:53 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 public class ParaProfFileFilter extends javax.swing.filechooser.FileFilter {
 
-    private String extension = null;
-
-    public static String JPG = "jpg";
-    public static String PNG = "png";
     public static String PPK = "ppk";
-    public static String SVG = "svg";
-    public static String EPS = "eps";
     public static String TXT = "txt";
+
+    private String extension = null;
 
     public ParaProfFileFilter(String extension) {
         super();
@@ -38,18 +34,10 @@ public class ParaProfFileFilter extends javax.swing.filechooser.FileFilter {
     }
 
     public String getDescription() {
-        if (extension.equals("jpg"))
-            return "JPEG File (*.jpg)";
-        else if (extension.equals("png"))
-            return "PNG File (*.png)";
-        else if (extension.equals("txt"))
+        if (extension.equals(TXT))
             return "Tab Delimited (*.txt)";
-        else if (extension.equals("ppk"))
+        else if (extension.equals(PPK))
             return "ParaProf Packed Profile (*.ppk)";
-        else if (extension.equals("svg"))
-            return "Scalable Vector Graphics (*.svg)";
-        else if (extension.equals("eps"))
-            return "Encapsulated PostScript (*.eps)";
         else
             return "Unknown Extension (*.*)";
     }

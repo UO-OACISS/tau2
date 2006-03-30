@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.2 2005/11/10 01:29:07 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.3 2006/03/30 03:03:54 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -112,10 +112,10 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         for (Iterator it = list.iterator(); it.hasNext();) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
-            RowBlob blob = new RowBlob(ppFunctionProfile.getFunctionName());
+            RowBlob blob = new RowBlob(ppFunctionProfile.getDisplayName());
             rows.add(blob);
             blob.add(ppFunctionProfile);
-            rowMap.put(ppFunctionProfile.getFunctionName(), blob);
+            rowMap.put(ppFunctionProfile.getDisplayName(), blob);
         }
 
         // add all the others
@@ -133,7 +133,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                     if (blob != null) {
                         blob.add(i, fp);
                     } else {
-                        blob = new RowBlob(fp.getFunctionName());
+                        blob = new RowBlob(fp.getDisplayName());
                         rows.add(blob);
                         rowMap.put(fp.getFunction(), blob);
                         blob.add(i, fp);

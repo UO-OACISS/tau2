@@ -10,18 +10,20 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.font.*;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
-import javax.swing.*;
+import javax.swing.JPanel;
 
-import edu.uoregon.tau.paraprof.interfaces.ImageExport;
+import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.UserEvent;
 import edu.uoregon.tau.perfdmf.UtilFncs;
@@ -131,7 +133,7 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
                     statString = ((PPUserEventProfile) list.get(i)).getUserEventStatString(ParaProf.defaultNumberPrecision);
                     statString = statString + nameString;
                 } else {
-                    nameString = ((PPFunctionProfile) list.get(i)).getFunctionName();
+                    nameString = ((PPFunctionProfile) list.get(i)).getDisplayName();
                     statString = ((PPFunctionProfile) list.get(i)).getStatString(window.units());
                     statString = statString + "   " + nameString;
                 }
@@ -316,7 +318,7 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
                 nameString = ppUserEventProfile.getUserEventName();
             } else {
                 nameColor = ppFunctionProfile.getColor();
-                nameString = ppFunctionProfile.getFunctionName();
+                nameString = ppFunctionProfile.getDisplayName();
                 if (window.getPhase() != null) {
                     nameString = UtilFncs.getRightSide(nameString);
                 }

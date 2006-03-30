@@ -2,7 +2,7 @@
  * ParaProf.java
  * 
  * Title: ParaProf 
- * Author: Bob Bell 
+ * Author: Robert Bell 
  * Description:
  */
 

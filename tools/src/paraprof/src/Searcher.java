@@ -24,9 +24,9 @@ import edu.uoregon.tau.paraprof.interfaces.Searchable;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Searcher.java,v 1.3 2005/10/14 18:59:32 amorris Exp $</P>
+ * <P>CVS $Id: Searcher.java,v 1.4 2006/03/30 03:03:54 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class Searcher implements Searchable, MouseListener, MouseMotionListener, ClipboardOwner {
 
@@ -38,7 +38,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     private boolean searchMatchCase;
     private boolean searchUp;
 
-    private int lineHeight;
+    private int lineHeight = 1; // initialize to 1 to eliminate the possiblility of divide by zero
     private int maxDescent;
     
     private JComponent panel;
@@ -500,9 +500,6 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     }
 
     public void mouseReleased(MouseEvent e) {
-        if (lineHeight == 0) {
-            return;
-        }
         selectionEndX = e.getX();
         selectionEndY = e.getY()-topMargin;
 
@@ -565,7 +562,8 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     }
 
     public void setLineHeight(int lineHeight) {
-        this.lineHeight = lineHeight;
+        // disallow less than one to eliminate divide by zero errors
+        this.lineHeight = Math.max(1,lineHeight);
     }
 
     public void setMaxDescent(int maxDescent) {

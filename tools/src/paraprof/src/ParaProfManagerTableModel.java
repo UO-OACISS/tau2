@@ -4,9 +4,9 @@
  * It allows the user to change the meta data associated with a trial.
  *  
  * 
- * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.8 2005/09/26 21:12:08 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.9 2006/03/30 03:03:53 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		ParaProfManagerWindow
  */
 
@@ -293,39 +293,35 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
     }
 
     private void updateDB(Object obj) {
-        try {
-            if (obj instanceof ParaProfApplication) {
-                ParaProfApplication application = (ParaProfApplication) obj;
-                if (application.dBApplication()) {
+        if (obj instanceof ParaProfApplication) {
+            ParaProfApplication application = (ParaProfApplication) obj;
+            if (application.dBApplication()) {
 
-                    DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
-                    if (databaseAPI != null) {
-                        databaseAPI.saveApplication(application);
-                        databaseAPI.terminate();
-                    }
+                DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
+                if (databaseAPI != null) {
+                    databaseAPI.saveApplication(application);
+                    databaseAPI.terminate();
+                }
 
-                }
-            } else if (obj instanceof ParaProfExperiment) {
-                ParaProfExperiment experiment = (ParaProfExperiment) obj;
-                if (experiment.dBExperiment()) {
-                    DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
-                    if (databaseAPI != null) {
-                        databaseAPI.saveExperiment(experiment);
-                        databaseAPI.terminate();
-                    }
-                }
-            } else if (obj instanceof ParaProfTrial) {
-                ParaProfTrial ppTrial = (ParaProfTrial) obj;
-                if (ppTrial.dBTrial()) {
-                    DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
-                    if (databaseAPI != null) {
-                        databaseAPI.saveTrial(ppTrial.getTrial());
-                        databaseAPI.terminate();
-                    }
+            }
+        } else if (obj instanceof ParaProfExperiment) {
+            ParaProfExperiment experiment = (ParaProfExperiment) obj;
+            if (experiment.dBExperiment()) {
+                DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
+                if (databaseAPI != null) {
+                    databaseAPI.saveExperiment(experiment);
+                    databaseAPI.terminate();
                 }
             }
-        } catch (Exception e) {
-            ParaProfUtils.handleException(e);
+        } else if (obj instanceof ParaProfTrial) {
+            ParaProfTrial ppTrial = (ParaProfTrial) obj;
+            if (ppTrial.dBTrial()) {
+                DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
+                if (databaseAPI != null) {
+                    databaseAPI.saveTrial(ppTrial.getTrial());
+                    databaseAPI.terminate();
+                }
+            }
         }
     }
 

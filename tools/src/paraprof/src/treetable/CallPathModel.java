@@ -13,9 +13,9 @@ import edu.uoregon.tau.perfdmf.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.1 2005/09/26 21:12:49 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.2 2006/03/30 03:03:55 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -28,9 +28,11 @@ public class CallPathModel extends AbstractTreeTableModel {
     private int sortColumn;
     private boolean sortAscending;
 
+    private boolean reversedCallPaths = true;
+    
     private TreeTableWindow window;
 
-    public CallPathModel(TreeTableWindow window, ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread) {
+    public CallPathModel(TreeTableWindow window, ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread, boolean reversedCallPaths) {
         super(null);
         this.window = window;
         root = new TreeTableNode(null, this, "root");
@@ -39,6 +41,7 @@ public class CallPathModel extends AbstractTreeTableModel {
         this.thread = thread;
         this.ppTrial = ppTrial;
 
+        this.reversedCallPaths = reversedCallPaths;
         setupData();
 
     }
@@ -52,6 +55,8 @@ public class CallPathModel extends AbstractTreeTableModel {
         List functionProfileList = dataSorter.getFunctionProfiles(thread);
 
         Map rootNames = new HashMap();
+        
+        Group derived = ppTrial.getGroup("TAU_CALLPATH_DERIVED");
 
         if (window.getTreeMode()) {
             for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
@@ -60,7 +65,16 @@ public class CallPathModel extends AbstractTreeTableModel {
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
 
                 if (fp != null && fp.isCallPathFunction()) {
-                    String rootName = UtilFncs.getLeftSide(fp.getName());
+                    String rootName;
+                    if (reversedCallPaths) {
+                        rootName = UtilFncs.getRevLeftSide(fp.getFunction().getReversedName());
+                    } else {
+                        if (fp.getFunction().isGroupMember(derived)) {
+                            continue;
+                        }
+                        rootName = UtilFncs.getLeftSide(fp.getName());
+                    }
+                    
                     if (rootNames.get(rootNames) == null) {
                         rootNames.put(rootName, "1");
                     }
@@ -212,6 +226,14 @@ public class CallPathModel extends AbstractTreeTableModel {
 
     public ParaProfTrial getPPTrial() {
         return ppTrial;
+    }
+
+    public boolean getReversedCallPaths() {
+        return reversedCallPaths;
+    }
+
+    public void setReversedCallPaths(boolean reversedCallPaths) {
+        this.reversedCallPaths = reversedCallPaths;
     }
 
 }

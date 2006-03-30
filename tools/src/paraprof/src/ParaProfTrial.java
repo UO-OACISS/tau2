@@ -15,7 +15,7 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.EventQueue;
-import java.io.File;
+import java.io.*;
 import java.util.*;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -188,13 +188,15 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     //Used in many ParaProf windows for the title of the window.
     public String getTrialIdentifier(boolean reverse) {
         if (path != null) {
-            if (reverse)
+            if (reverse) {
                 return pathReverse;
-            else
+            } else {
                 return path;
-        } else
+            }
+        } else {
             return "Application " + trial.getApplicationID() + ", Experiment " + trial.getExperimentID() + ", Trial "
                     + trial.getID() + ".";
+        }
     }
 
     //Sets both the path and the path reverse.
@@ -219,7 +221,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         }
     }
 
-    public void clearDefaultMutableTreeNodes() {
+    public void clearDefaultMutableTreeNode() {
         this.setDMTN(null);
     }
 
@@ -459,6 +461,11 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         //Set this trial's loading flag to false.
         this.setLoading(false);
 
+        Group derived = getGroup("TAU_CALLPATH_DERIVED");
+        if (derived != null) {
+            showAllExcept(derived);
+        }
+        
         // run any scripts
         for (int i = 0; i < ParaProf.scripts.size(); i++) {
             ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
@@ -470,7 +477,6 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
                 }
             }
         }
-
     }
 
     public DatabaseAPI getDatabaseAPI() {

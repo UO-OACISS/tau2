@@ -1,7 +1,5 @@
 package edu.uoregon.tau.paraprof;
 
-import edu.uoregon.tau.perfdmf.Thread;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
@@ -19,12 +17,11 @@ import javax.swing.event.ChangeListener;
 import org.jgraph.JGraph;
 import org.jgraph.graph.*;
 
+import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.paraprof.enums.CallGraphOption;
-import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.CallPathUtilFuncs;
 import edu.uoregon.tau.perfdmf.Function;
-import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 
 /**
@@ -35,9 +32,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.1 2005/09/26 21:12:02 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.2 2006/03/30 03:03:52 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ImageExport, Printable, ParaProfWindow {

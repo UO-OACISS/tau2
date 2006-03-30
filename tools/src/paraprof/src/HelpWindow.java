@@ -76,7 +76,7 @@ public class HelpWindow extends JFrame implements ActionListener, Observer {
         helpJTextArea = new JTextArea();
         helpJTextArea.setLineWrap(true);
         helpJTextArea.setWrapStyleWord(true);
-        helpJTextArea.setMargin(new Insets(3,3,3,3));
+        helpJTextArea.setMargin(new Insets(3, 3, 3, 3));
         helpJTextArea.setSize(new java.awt.Dimension(windowWidth, windowHeight));
         helpJTextAreaDocument = helpJTextArea.getDocument();
 

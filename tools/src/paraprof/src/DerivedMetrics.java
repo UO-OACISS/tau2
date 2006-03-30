@@ -17,8 +17,7 @@ import java.util.*;
 
 public class DerivedMetrics {
 
-    
-    private static void incrementStorage (edu.uoregon.tau.perfdmf.Thread thread) {
+    private static void incrementStorage(edu.uoregon.tau.perfdmf.Thread thread) {
         thread.incrementStorage();
 
         Iterator l = thread.getFunctionProfileIterator();
@@ -29,7 +28,7 @@ public class DerivedMetrics {
             }
         }
     }
-    
+
     public static ParaProfMetric applyOperation(ParaProfMetric operand1, Object operand2, String inOperation) {
 
         try {
@@ -56,8 +55,7 @@ public class DerivedMetrics {
             //We do not support metric from different trials yet. Check for this.
             if ((!constant) && (trialOpA != trialOpB)) {
                 JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow,
-                        "Sorry, please select metrics from the same trial!", "ParaProf Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Sorry, please select metrics from the same trial!", "ParaProf Error", JOptionPane.ERROR_MESSAGE);
                 return null;
             }
 
@@ -83,8 +81,7 @@ public class DerivedMetrics {
             }
 
             if (constant)
-                newMetricName = ((ParaProfMetric) trialOpA.getMetrics().get(opA)).getName() + newMetricName
-                        + constantValue;
+                newMetricName = ((ParaProfMetric) trialOpA.getMetrics().get(opA)).getName() + newMetricName + constantValue;
             else
                 newMetricName = ((ParaProfMetric) trialOpA.getMetrics().get(opA)).getName() + newMetricName
                         + ((ParaProfMetric) trialOpA.getMetrics().get(opB)).getName();
@@ -98,7 +95,6 @@ public class DerivedMetrics {
 
             Iterator l = trialOpA.getDataSource().getFunctions();
 
-            
             incrementStorage(trialOpA.getDataSource().getMeanData());
             incrementStorage(trialOpA.getDataSource().getTotalData());
             incrementStorage(trialOpA.getDataSource().getStdDevData());
@@ -143,9 +139,6 @@ public class DerivedMetrics {
 
                         functionProfile.setInclusive(metric, result);
 
-                        //functionProfile.setInclusivePerCall(metric,
-                        //        functionProfile.getInclusive(metric) / functionProfile.getNumCalls());
-
                     }
                 }
                 thread.setThreadData(metric);
@@ -161,8 +154,7 @@ public class DerivedMetrics {
             return newMetric;
         } catch (NumberFormatException e) {
             //Display an error
-            JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow,
-                    "Did not recognize arguments! Note: DB apply not supported.", "Argument Error!",
+            JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow, "Did not recognize arguments! ", "Argument Error!",
                     JOptionPane.ERROR_MESSAGE);
             return null;
         }

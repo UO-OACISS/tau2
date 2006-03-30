@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.1 2005/09/26 21:12:51 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.2 2006/03/30 03:03:55 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
@@ -39,14 +39,22 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
         this.functionProfile = functionProfile;
         this.model = model;
         this.alternateName = alternateName;
+
+        String pathDelimeter = "=>";
         if (functionProfile != null) {
-            displayName = functionProfile.getName();
+            if (model.getReversedCallPaths()) {
+                displayName = functionProfile.getFunction().getReversedName();
+                pathDelimeter = "<=";
+            } else {
+                displayName = functionProfile.getName();
+                pathDelimeter = "=>";
+            }
         } else {
             displayName = alternateName;
         }
 
         if (model.getWindow().getTreeMode()) {
-            int loc = displayName.lastIndexOf("=>");
+            int loc = displayName.lastIndexOf(pathDelimeter);
             if (loc != -1) {
                 displayName = displayName.substring(loc + 2).trim();
             }
@@ -88,13 +96,25 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
                     continue;
 
                 if (fp != null && fp.isCallPathFunction()) {
-                    String fname = fp.getName();
+                    String fname;
+                    String pathDelimeter;
+                    if (model.getReversedCallPaths()) {
+                        fname = fp.getFunction().getReversedName();
+                        pathDelimeter = "<=";
+                    } else {
+                        fname = fp.getName();
+                        pathDelimeter = "=>";
+                    }
 
                     // For mpiP (and possibly others), there will be nodes that do not have
                     // a FunctionProfile associated with them, use the alternateName instead
                     String thisName = alternateName;
                     if (functionProfile != null) {
-                        thisName = functionProfile.getName();
+                        if (model.getReversedCallPaths()) {
+                            thisName = functionProfile.getFunction().getReversedName();
+                        } else {
+                            thisName = functionProfile.getName();
+                        }
                     }
 
                     // thisname = "main"
@@ -104,9 +124,9 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
                     // want "main => a"
 
                     if (loc != -1) {
-                        int loc2 = fname.indexOf("=>", loc + thisName.length());
+                        int loc2 = fname.indexOf(pathDelimeter, loc + thisName.length());
 
-                        int loc3 = fname.indexOf("=>", loc2 + 1);
+                        int loc3 = fname.indexOf(pathDelimeter, loc2 + 1);
 
                         if (loc2 != -1) {
                             foundAsInternal = true;
@@ -114,7 +134,17 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
                             if (loc3 == -1) {
                                 potentialChildren.put(fp, new Object());
                             } else {
-                                potentialChildren.put(fname.substring(0, loc3), new Object());
+
+                                if (model.getReversedCallPaths()) {
+                                    // we might have the following:
+                                    // MPI_Put_attr <= MPI_Init <= MAIN
+                                    // There will be no "MPI_Put_attr <= MPI_Init"
+                                    // so we use this one instead
+                                    //potentialChildren.put(fp, new Object());
+                                    potentialChildren.put(fname.substring(0, loc3), new Object());
+                                } else {
+                                    potentialChildren.put(fname.substring(0, loc3), new Object());
+                                }
                             }
                         }
 
@@ -123,7 +153,7 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
                     if (loc == 0) {
                         String remainder = fname.substring(thisName.length()).trim();
 
-                        int loc2 = remainder.lastIndexOf("=>");
+                        int loc2 = remainder.lastIndexOf(pathDelimeter);
                         if (loc2 == 0) {
                             foundActual = true;
                             TreeTableNode node = new TreeTableNode(fp, model, null);

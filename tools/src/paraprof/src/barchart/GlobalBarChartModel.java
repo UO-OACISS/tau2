@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.5 2006/03/16 02:14:51 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.6 2006/03/30 03:03:54 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -115,26 +115,34 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
                     try {
+
                         Function function = ppFunctionProfile.getFunction();
+                        int targetIndex = -1;
+
                         for (Iterator it = threads.iterator(); it.hasNext();) {
                             PPThread ppThread = (PPThread) it.next();
-                            
+
                             List flist = ppThread.getFunctionList();
-                            
-                            int targetIndex = -1;
+
                             for (int fIndex = 0; fIndex < flist.size(); fIndex++) {
                                 PPFunctionProfile fp = (PPFunctionProfile) flist.get(fIndex);
                                 if (fp != null && fp.getFunction() == function) {
                                     targetIndex = fIndex;
                                 }
                             }
-                            
-                            if (targetIndex != -1) {
+                        }
+
+                        if (targetIndex != -1) {
+                            for (Iterator it = threads.iterator(); it.hasNext();) {
+                                PPThread ppThread = (PPThread) it.next();
+
+                                List flist = ppThread.getFunctionList();
+
                                 Object item = flist.remove(targetIndex);
-                                flist.add(0,item);
+                                flist.add(0, item);
+                                fireModelChanged();
+                                window.repaint();
                             }
-                            fireModelChanged();
-                            window.repaint();
                         }
                     } catch (Exception e) {
                         ParaProfUtils.handleException(e);
@@ -179,7 +187,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
             return UtilFncs.getRightSide(ppFunctionProfile.getFunction().getName());
         } else {
             //Return the name of the function
-            return ppFunctionProfile.getFunctionName();
+            return ppFunctionProfile.getDisplayName();
         }
     }
 

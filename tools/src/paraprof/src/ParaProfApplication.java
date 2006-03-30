@@ -97,7 +97,7 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
         return super.getName();
     }
 
-    public void clearDefaultMutableTreeNodes() {
+    public void clearDefaultMutableTreeNode() {
         this.setDMTN(null);
     }
 

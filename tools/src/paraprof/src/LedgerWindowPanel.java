@@ -5,23 +5,21 @@ import java.awt.event.*;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.Vector;
 
 import javax.swing.*;
 
-import edu.uoregon.tau.paraprof.interfaces.ImageExport;
-import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.common.ImageExport;
 
 /**
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.6 2006/03/03 02:52:09 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.7 2006/03/30 03:03:53 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */

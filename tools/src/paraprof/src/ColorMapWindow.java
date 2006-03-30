@@ -1,9 +1,3 @@
-/*
- * Created on Mar 6, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package edu.uoregon.tau.paraprof;
 
 import javax.swing.*;
@@ -104,12 +98,6 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
         int idx = 0;
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();
-
-            //            String name = ppTrial.getExperiment().getApplication().getName() + "/"
-            //            			  ppTrial.getExperiment().getName() + "/" +
-            //            			  ppTrial.getName() + " (" +
-            //            			  		"" +
-            //            			  		"
 
             String name = ppTrial.getTrial().getApplicationID() + ":" + ppTrial.getTrial().getExperimentID() + ":"
                     + ppTrial.getTrial().getID() + " - " + ppTrial.getName();
@@ -268,20 +256,12 @@ class ColorMapCellRenderer implements ListCellRenderer {
                 int xStringPos1 = 60;
                 int yStringPos1 = (ySize - 5);
 
-                //int xStringPos1 = 5;
-                //int yStringPos1 = (ySize - 5);
                 g.setColor(isSelected ? list.getSelectionForeground() : list.getForeground());
 
                 int totalNumberOfColors = (ParaProf.colorChooser.getNumberOfColors())
                         + (ParaProf.colorChooser.getNumberOfGroupColors());
 
                 g.drawString(functionName, xStringPos1, yStringPos1);
-
-                //               int xStringPos2 = 50 + (((xSize - 50) - thisXFontSize) / 2);
-                //               int yStringPos2 = (ySize - 5);
-
-                //                g.setColor(isSelected ? list.getSelectionForeground() : list.getForeground());
-                //                g.drawString(tmpString2, xStringPos2, yStringPos2);
             }
 
             public Dimension getPreferredSize() {

@@ -16,8 +16,8 @@ import javax.swing.event.TreeExpansionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 
+import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.paraprof.*;
-import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.treetable.ColumnChooser.CheckBoxListItem;
@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.3 2006/03/03 02:52:10 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.4 2006/03/30 03:03:55 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -45,7 +45,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     private int colorMetricID;
     private int units = ParaProf.preferences.getUnits();
 
-    private final JMenuItem showAsTreeMenuItem = new JCheckBoxMenuItem("Show as Call Path Tree");
+    private final JMenuItem showAsTreeMenuItem = new JCheckBoxMenuItem("Show as Call Tree");
+    private final JMenuItem reverseTreeMenuItem = new JCheckBoxMenuItem("Reverse Call Tree", false);
     private final JMenuItem showInclExclMenuItem = new JCheckBoxMenuItem("Show Inclusive/Exclusive", true);
 
     private List columns;
@@ -54,6 +55,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     public TreeTableWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread) {
         this(ppTrial, thread, null);
     }
+
     public TreeTableWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread, Component invoker) {
 
         this.ppTrial = ppTrial;
@@ -72,7 +74,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         } else if (thread.getNodeID() == -2) {
             this.setTitle("Total Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -3) {
-            this.setTitle("Std. Dev. Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("Std. Dev. Statistics - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {
             this.setTitle("Thread Statistics: " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
                     + thread.getThreadID() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
@@ -201,7 +204,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         //columns.add(new StdDevColumn(this, 0));
         //columns.add(new MiniHistogramColumn(this));
 
-        model = new CallPathModel(this, ppTrial, thread);
+        model = new CallPathModel(this, ppTrial, thread, reverseTreeMenuItem.isSelected());
         createTreeTable(model);
         addComponents();
 
@@ -230,11 +233,13 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
                         String arg = evt.getActionCommand();
 
-                        if (arg.equals("Show as Call Path Tree")) {
+                        if (arg.equals("Show as Call Tree")) {
                             if (showAsTreeMenuItem.isSelected()) {
                                 showInclExclMenuItem.setSelected(false);
                             }
 
+                            setupData();
+                        } else if (arg.equals("Reverse Call Tree")) {
                             setupData();
                         } else if (arg.equals("Show Inclusive/Exclusive")) {
                             setupData();
@@ -252,6 +257,9 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         showAsTreeMenuItem.addActionListener(actionListener);
         optionsMenu.add(showAsTreeMenuItem);
         showAsTreeMenuItem.setSelected(true);
+
+        reverseTreeMenuItem.addActionListener(actionListener);
+        optionsMenu.add(reverseTreeMenuItem);
 
         showInclExclMenuItem.addActionListener(actionListener);
         optionsMenu.add(showInclExclMenuItem);
@@ -299,7 +307,6 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         TableColumn col = treeTable.getColumnModel().getColumn(0);
 
         int nameWidth = 500;
-        
 
         if (ppTrial.getNumberOfMetrics() > 1) {
             nameWidth = 350;
@@ -398,6 +405,11 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         if (fullWindow) {
+            // first draw the column headers
+            scrollPane.getColumnHeader().paintAll(g2D);
+            // translate past the column headers
+            g2D.translate(0,scrollPane.getColumnHeader().getHeight());
+            // draw the entire treetable
             treeTable.paintAll(g2D);
         } else {
             scrollPane.paintAll(g2D);
@@ -406,9 +418,12 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     public Dimension getImageSize(boolean fullScreen, boolean header) {
         if (fullScreen) {
-            return scrollPane.getSize();
+            Dimension d = treeTable.getSize();
+            // we want to draw the column headers as well
+            d.setSize(d.getWidth(), d.getHeight() + scrollPane.getColumnHeader().getHeight());
+            return d;
         } else {
-            return treeTable.getSize();
+            return scrollPane.getSize();
         }
     }
 

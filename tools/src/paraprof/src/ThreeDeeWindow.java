@@ -301,7 +301,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             //            }
 
             if (addFunctionNames) {
-                functionNames.add(ParaProfUtils.getFunctionName(function));
+                functionNames.add(ParaProfUtils.getDisplayName(function));
                 functions.add(function);
             }
             int threadIndex = 0;
@@ -774,10 +774,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                 if (scatterFunctions[f] != null) {
                     // e.g. "MPI_Recv()\n(Exclusive, Time)"
                     if (scatterValueTypes[f] == ValueType.NUMCALLS || scatterValueTypes[f] == ValueType.NUMSUBR) {
-                        axisNames.add(ParaProfUtils.getFunctionName(scatterFunctions[f]) + "\n("
+                        axisNames.add(ParaProfUtils.getDisplayName(scatterFunctions[f]) + "\n("
                                 + scatterValueTypes[f].toString() + ")");
                     } else {
-                        axisNames.add(ParaProfUtils.getFunctionName(scatterFunctions[f]) + "\n("
+                        axisNames.add(ParaProfUtils.getDisplayName(scatterFunctions[f]) + "\n("
                                 + scatterValueTypes[f].toString() + ", " + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
                     }
                 } else {

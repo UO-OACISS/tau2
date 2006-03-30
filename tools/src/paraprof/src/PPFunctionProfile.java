@@ -18,37 +18,35 @@
 
 package edu.uoregon.tau.paraprof;
 
+import java.awt.Color;
 import java.text.DecimalFormat;
-import java.util.*;
-import java.awt.*;
-import edu.uoregon.tau.paraprof.enums.*;
+import java.util.Iterator;
+
+import edu.uoregon.tau.paraprof.enums.SortType;
+import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Thread;
 
 public class PPFunctionProfile implements Comparable {
 
     private DataSorter dataSorter;
     private edu.uoregon.tau.perfdmf.Thread thread;
-
     private FunctionProfile functionProfile;
-    private FunctionProfile meanProfile;
-
 
     public PPFunctionProfile(DataSorter dataSorter, edu.uoregon.tau.perfdmf.Thread thread, FunctionProfile fp) {
         this.dataSorter = dataSorter;
         this.thread = thread;
         this.functionProfile = fp;
-        // prefetch this
-        this.meanProfile = functionProfile.getFunction().getMeanProfile();
     }
 
     public FunctionProfile getMeanProfile() {
-        return meanProfile;
+        return functionProfile.getFunction().getMeanProfile();
     }
 
     public int getID() {
         return functionProfile.getFunction().getID();
     }
-    
+
     public int getNodeID() {
         return thread.getNodeID();
     }
@@ -69,16 +67,13 @@ public class PPFunctionProfile implements Comparable {
         return functionProfile.getFunction();
     }
 
-    public String getFunctionName() {
+    // handles reversed callpaths
+    public String getDisplayName() {
         if (ParaProf.preferences.getReversedCallPaths()) {
             return functionProfile.getFunction().getReversedName();
         } else {
             return functionProfile.getFunction().getName();
         }
-    }
-
-    public String getFunctionNameReversedCallPath() {
-        return functionProfile.getFunction().getReversedName();
     }
 
     public Color getColor() {
@@ -125,8 +120,6 @@ public class PPFunctionProfile implements Comparable {
         return functionProfile.getInclusivePerCall(dataSorter.getSelectedMetricID());
     }
 
-    //Parent/child interface.
-
     public Iterator getChildProfiles() {
         return functionProfile.getChildProfiles();
     }
@@ -143,11 +136,10 @@ public class PPFunctionProfile implements Comparable {
         return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID());
     }
 
-    //   
-
     private int checkDescending(int value) {
-        if (dataSorter.getDescendingOrder())
+        if (dataSorter.getDescendingOrder()) {
             return -value;
+        }
         return value;
     }
 
@@ -157,18 +149,20 @@ public class PPFunctionProfile implements Comparable {
         PPFunctionProfile other = (PPFunctionProfile) inObject;
 
         if (dataSorter.getSortType() == SortType.NAME) {
-            return checkDescending(other.getFunctionName().compareTo(this.getFunctionName()));
+            return checkDescending(other.getDisplayName().compareTo(this.getDisplayName()));
         } else if (dataSorter.getSortType() == SortType.NCT) {
-            if (other.getNodeID() != this.getNodeID())
+            if (other.getNodeID() != this.getNodeID()) {
                 return checkDescending(this.getNodeID() - other.getNodeID());
-            else if (other.getContextID() != this.getContextID())
+            } else if (other.getContextID() != this.getContextID()) {
                 return checkDescending(this.getContextID() - other.getContextID());
-            else
+            } else {
                 return checkDescending(this.getThreadID() - other.getThreadID());
+            }
         } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
 
-            return checkDescending(compareToHelper(valueType.getValue(this.meanProfile, dataSorter.getSelectedMetricID()),
-                    valueType.getValue(other.meanProfile, dataSorter.getSelectedMetricID()), this.meanProfile, other.meanProfile));
+            return checkDescending(compareToHelper(valueType.getValue(this.getMeanProfile(), dataSorter.getSelectedMetricID()),
+                    valueType.getValue(other.getMeanProfile(), dataSorter.getSelectedMetricID()), this.getMeanProfile(),
+                    other.getMeanProfile()));
 
         } else if (dataSorter.getSortType() == SortType.VALUE) {
             return checkDescending(compareToHelper(
@@ -181,12 +175,13 @@ public class PPFunctionProfile implements Comparable {
 
     private int compareToHelper(double d1, double d2) {
         double result = d1 - d2;
-        if (result < 0.00)
+        if (result < 0.00) {
             return -1;
-        else if (result == 0.00)
+        } else if (result == 0.00) {
             return 0;
-        else
+        } else {
             return 1;
+        }
     }
 
     private int compareToHelper(double d1, double d2, FunctionProfile f1, FunctionProfile f2) {
@@ -202,7 +197,6 @@ public class PPFunctionProfile implements Comparable {
             return 1;
         }
     }
-
 
     public String getStatString(int type) {
 
@@ -226,6 +220,14 @@ public class PPFunctionProfile implements Comparable {
         return tmpString;
     }
 
+    public String toString() {
+        return functionProfile.toString();
+    }
+
+    public Thread getThread() {
+        return thread;
+    }
+
     // Static Functions
 
     public static String getStatStringHeading(String metricType) {
@@ -234,14 +236,6 @@ public class PPFunctionProfile implements Comparable {
         //        + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
         return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad("Exclusive", 16) + UtilFncs.lpad("Inclusive", 18)
                 + UtilFncs.lpad("#Calls", 14) + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Inclusive/Call", 21) + "   ";
-    }
-
-    public String toString() {
-        return functionProfile.toString();
-    }
-
-    public edu.uoregon.tau.perfdmf.Thread getThread() {
-        return thread;
     }
 
 }

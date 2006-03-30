@@ -22,19 +22,16 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.5 2006/03/16 02:14:50 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.6 2006/03/30 03:03:53 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
 
-    //Instance data.
     private ParaProfTrial ppTrial;
-    private Function phase;
+    private Function phase; // null for non-phase profiles
 
-
-    //References for some of the components for this frame.
     private BarChartPanel panel;
     private GlobalBarChartModel model;
     private DataSorter dataSorter;
@@ -42,27 +39,23 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private JMenu optionsMenu;
     private JCheckBoxMenuItem nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
     private JCheckBoxMenuItem normalizeCheckBox = new JCheckBoxMenuItem("Normalize Bars", true);
-
     private JCheckBoxMenuItem orderByMeanCheckBox = new JCheckBoxMenuItem("Order By Mean", true);
     private JCheckBoxMenuItem orderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
     private JCheckBoxMenuItem stackBarsCheckBox = new JCheckBoxMenuItem("Stack Bars Together", true);
-
     private JCheckBoxMenuItem slidersCheckBox;
     private JCheckBoxMenuItem metaDataCheckBox;
 
     private JLabel barLengthLabel = new JLabel("Bar Width");
     private JSlider barLengthSlider = new JSlider(0, 2000, 600);
 
-    private Container contentPane;
-    private GridBagLayout gbl;
-    private GridBagConstraints gbc;
 
+    private boolean visible = false;
 
-    private boolean mShown = false;
+    private static int defaultWidth = 750;
+    private static int defaultHeight = 410;
 
-    
-    
     public GlobalDataWindow(ParaProfTrial ppTrial, Function phase) {
+        try {
         this.ppTrial = ppTrial;
         this.phase = phase;
         ppTrial.addObserver(this);
@@ -76,34 +69,23 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + " Phase: "
                     + phase.getName());
         }
-        int windowWidth = 750;
-        int windowHeight = 410;
-        setSize(ParaProfUtils.checkSize(new java.awt.Dimension(windowWidth, windowHeight)));
 
+        setSize(ParaProfUtils.checkSize(new java.awt.Dimension(defaultWidth, defaultHeight)));
         setLocation(WindowPlacer.getGlobalDataWindowPosition(this));
 
-        //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 thisWindowClosing(evt);
             }
         });
 
-//        int xPosition = ParaProf.paraProfManagerWindow.getLocation().x;
-//        int yPosition = ParaProf.paraProfManagerWindow.getLocation().y;
-//        setLocation(xPosition + 75, yPosition + 110);
-
-        if (ParaProf.demoMode) {
+        if (ParaProf.demoMode) { // for Scott's quicktime videos
             barLengthSlider.setValue(500);
         }
-        
-        
-        
-        //Setting up the layout system for the main window.
-        contentPane = getContentPane();
-        gbl = new GridBagLayout();
-        contentPane.setLayout(gbl);
-        gbc = new GridBagConstraints();
+
+        getContentPane().setLayout(new GridBagLayout());
+
+        GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(2, 2, 2, 2);
 
         model = new GlobalBarChartModel(this, dataSorter, ppTrial);
@@ -113,8 +95,8 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         panel.getBarChart().setLeftJustified(true);
         panel.getBarChart().setBarLength(barLengthSlider.getValue());
 
-        JScrollBar jScrollBar = panel.getVerticalScrollBar();
-        jScrollBar.setUnitIncrement(35);
+        // more sane scrollbar sensitivity
+        panel.getVerticalScrollBar().setUnitIncrement(35);
 
         this.setHeader();
 
@@ -128,24 +110,25 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 1;
         gbc.weighty = 1;
-        addCompItem(panel, gbc, 0, 0, 1, 1);
+        ParaProfUtils.addCompItem(this, panel, gbc, 0, 0, 1, 1);
 
         sortLocalData();
 
         panel.repaint();
 
         ParaProf.incrementNumWindows();
+        } catch (Error e) {
+            e.printStackTrace();
+        }
     }
 
     public GlobalBarChartModel getModel() {
         return model;
     }
-    
+
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
 
-
-        //Options menu.
         optionsMenu = new JMenu("Options");
 
         slidersCheckBox = new JCheckBoxMenuItem("Show Width Slider", false);
@@ -173,15 +156,9 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         stackBarsCheckBox.addActionListener(this);
         optionsMenu.add(stackBarsCheckBox);
 
-        //Now, add all the menus to the main menu.
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
-        //mainMenu.add(ParaProfUtils.createTrialMenu(ppTrial, this));
-
-        //mainMenu.add(ParaProfUtils.createThreadMenu(ppTrial, this, null));
-        //mainMenu.add(ParaProfUtils.createFunctionMenu(ppTrial, this, null));
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
-
         if (ParaProf.scripts.size() > 0) {
             mainMenu.add(ParaProfUtils.createScriptMenu(ppTrial, this));
         }
@@ -230,18 +207,17 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     public int getBarLength() {
         return barLengthSlider.getValue();
     }
-    
+
     public void setBarLength(int length) {
         barLengthSlider.setValue(length);
         panel.getBarChart().setBarLength(barLengthSlider.getValue());
         panel.repaint();
     }
 
-    
     public boolean getWidthSliderShown() {
         return slidersCheckBox.isSelected();
     }
-    
+
     public void menuDeselected(MenuEvent evt) {
     }
 
@@ -274,35 +250,19 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         return panel.getViewport().getViewRect();
     }
 
-    
-    public boolean getShowMetaData() {
-        return metaDataCheckBox.isSelected();
-    }
-    
-    public void setShowMetaData(boolean value) {
-        metaDataCheckBox.setSelected(value);
-        setHeader();
-    }
-    
-    //######
-    //Panel header.
-    //######
-    //This process is separated into two functionProfiles to provide the option
-    //of obtaining the current header string being used for the panel
-    //without resetting the actual header. Printing and image generation
-    //use this functionality for example.
     public void setHeader() {
         if (metaDataCheckBox.isSelected()) {
             JTextArea jTextArea = new JTextArea();
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
-            jTextArea.setMargin(new Insets(3,3,3,3));
+            jTextArea.setMargin(new Insets(3, 3, 3, 3));
             jTextArea.setFont(ParaProf.preferencesWindow.getFont());
             jTextArea.append(this.getHeaderString());
             panel.setColumnHeaderView(jTextArea);
-        } else
+        } else {
             panel.setColumnHeaderView(null);
+        }
     }
 
     public String getHeaderString() {
@@ -315,58 +275,51 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     }
 
     public void showWidthSlider(boolean displaySliders) {
+        GridBagConstraints gbc = new GridBagConstraints();
+
         slidersCheckBox.setSelected(displaySliders);
         if (displaySliders) {
-            contentPane.remove(panel);
+            getContentPane().remove(panel);
 
             gbc.insets = new Insets(5, 5, 5, 5);
             gbc.fill = GridBagConstraints.NONE;
             gbc.anchor = GridBagConstraints.EAST;
             gbc.weightx = 0.10;
             gbc.weighty = 0.01;
-            addCompItem(barLengthLabel, gbc, 0, 0, 1, 1);
+            ParaProfUtils.addCompItem(this, barLengthLabel, gbc, 0, 0, 1, 1);
 
             gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.anchor = GridBagConstraints.WEST;
             gbc.weightx = 0.70;
             gbc.weighty = 0.01;
-            addCompItem(barLengthSlider, gbc, 1, 0, 1, 1);
+            ParaProfUtils.addCompItem(this, barLengthSlider, gbc, 1, 0, 1, 1);
 
             gbc.insets = new Insets(0, 0, 0, 0);
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1.0;
             gbc.weighty = 0.99;
-            addCompItem(panel, gbc, 0, 1, 2, 1);
+            ParaProfUtils.addCompItem(this, panel, gbc, 0, 1, 2, 1);
         } else {
-            contentPane.remove(barLengthLabel);
-            contentPane.remove(barLengthSlider);
-            contentPane.remove(panel);
+            getContentPane().remove(barLengthLabel);
+            getContentPane().remove(barLengthSlider);
+            getContentPane().remove(panel);
 
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1;
             gbc.weighty = 1;
-            addCompItem(panel, gbc, 0, 0, 1, 1);
+            ParaProfUtils.addCompItem(this, panel, gbc, 0, 0, 1, 1);
         }
 
         //Now call validate so that these component changes are displayed.
         validate();
     }
 
-    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        gbc.gridx = x;
-        gbc.gridy = y;
-        gbc.gridwidth = w;
-        gbc.gridheight = h;
-        contentPane.add(c, gbc);
-    }
-
     public DataSorter getDataSorter() {
         return dataSorter;
     }
 
-    //Updates the sorted lists after a change of sorting method takes place.
     private void sortLocalData() {
         dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
         dataSorter.setValueType(ValueType.EXCLUSIVE);
@@ -387,8 +340,9 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     public void addNotify() {
         super.addNotify();
 
-        if (mShown)
+        if (visible) {
             return;
+        }
 
         // resize frame to account for menubar
         JMenuBar jMenuBar = getJMenuBar();
@@ -399,10 +353,9 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             setSize(dimension);
         }
 
-        mShown = true;
+        visible = true;
     }
 
-    //Close the window when the close box is clicked
     void thisWindowClosing(java.awt.event.WindowEvent e) {
         closeThisWindow();
     }
@@ -421,7 +374,6 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         }
     }
 
-
     public void help(boolean display) {
         ParaProf.helpWindow.show();
     }
@@ -433,15 +385,17 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     public boolean getSortByName() {
         return nameCheckBox.isSelected();
     }
+
     public void setSortByName(boolean value) {
         nameCheckBox.setSelected(value);
         sortLocalData();
         panel.repaint();
     }
-    
+
     public boolean getNormalized() {
         return normalizeCheckBox.isSelected();
     }
+
     public void setNormalized(boolean value) {
         normalizeCheckBox.setSelected(value);
         panel.getBarChart().setNormalized(normalizeCheckBox.isSelected());
@@ -451,24 +405,36 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     public boolean getSortByMean() {
         return orderByMeanCheckBox.isSelected();
     }
+
     public void setSortByMean(boolean value) {
         orderByMeanCheckBox.setSelected(value);
         sortLocalData();
         panel.repaint();
     }
-    
+
     public boolean getDescendingOrder() {
         return orderCheckBox.isSelected();
     }
+
     public void setDescendingOrder(boolean value) {
         orderCheckBox.setSelected(value);
         sortLocalData();
         panel.repaint();
     }
 
+    public boolean getShowMetaData() {
+        return metaDataCheckBox.isSelected();
+    }
+
+    public void setShowMetaData(boolean value) {
+        metaDataCheckBox.setSelected(value);
+        setHeader();
+    }
+
     public boolean getStackBars() {
         return stackBarsCheckBox.isSelected();
     }
+
     public void setStackBars(boolean value) {
         stackBarsCheckBox.setSelected(value);
 
@@ -493,5 +459,4 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         panel.repaint();
     }
 
-    
 }

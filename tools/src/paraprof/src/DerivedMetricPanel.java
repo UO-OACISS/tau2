@@ -15,13 +15,13 @@ import javax.swing.*;
 import edu.uoregon.tau.perfdmf.*;
 
 public class DerivedMetricPanel extends JPanel implements ActionListener {
-    
+
     private ParaProfManagerWindow paraProfManager = null;
     private JTextField arg1Field = new JTextField("Argument 1 (x:x:x:x)", 30);
     private JTextField arg2Field = new JTextField("Argument 2 (x:x:x:x)", 30);
     private String operationStrings[] = { "Add", "Subtract", "Multiply", "Divide" };
     private JComboBox operation = new JComboBox(operationStrings);
-    
+
     public DerivedMetricPanel(ParaProfManagerWindow paraProfManager) {
         this.paraProfManager = paraProfManager;
 
@@ -99,22 +99,22 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
     public void applyOperation() {
         String arg2 = this.getArg2Field();
         ParaProfMetric metric = null;
-        if ((arg2.indexOf("val")) != -1)
-            metric = DerivedMetrics.applyOperation(paraProfManager.getOperand1(), arg2,
+        if ((arg2.indexOf("val")) != -1) {
+            metric = DerivedMetrics.applyOperation(paraProfManager.getOperand1(), arg2, (String) operation.getSelectedItem());
+        } else {
+            metric = DerivedMetrics.applyOperation(paraProfManager.getOperand1(), paraProfManager.getOperand2(),
                     (String) operation.getSelectedItem());
-        else
-            metric = DerivedMetrics.applyOperation(paraProfManager.getOperand1(),
-                    paraProfManager.getOperand2(), (String) operation.getSelectedItem());
+        }
         if (metric != null) {
-            if (metric.getParaProfTrial().dBTrial())
+            if (metric.getParaProfTrial().dBTrial()) {
                 paraProfManager.uploadMetric(metric);
+            }
             paraProfManager.populateTrialMetrics(metric.getParaProfTrial());
         }
     }
 
     public void actionPerformed(ActionEvent evt) {
         try {
-            Object EventSrc = evt.getSource();
             String arg = evt.getActionCommand();
             if (arg.equals("Apply operation")) {
                 applyOperation();

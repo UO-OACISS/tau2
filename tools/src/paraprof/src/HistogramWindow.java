@@ -20,14 +20,13 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.xy.ClusteredXYBarRenderer;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.xy.XYDataset;
 
+import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.paraprof.enums.ValueType;
-import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.perfdmf.Function;
@@ -37,9 +36,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.2 2005/10/14 18:08:09 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.3 2006/03/30 03:03:53 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see     HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
@@ -341,10 +340,10 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         } else {
             if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR) {
                 return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
-                        + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n";
+                        + ParaProfUtils.getDisplayName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n";
             } else {
                 return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
-                        + ParaProfUtils.getFunctionName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n"
+                        + ParaProfUtils.getDisplayName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n"
                         + "Units: " + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
             }
         }
