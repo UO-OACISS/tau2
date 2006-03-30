@@ -96,7 +96,8 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		if (PerfExplorerModel.getModel().getConstantProblem().booleanValue()) {
 			// log axis, to make the chart more readable
         	LogarithmicAxis axis = new LogarithmicAxis("Exclusive Time for Event");
-        	axis.setAutoRangeIncludesZero(false);
+        	axis.setAutoRangeIncludesZero(true);
+        	axis.setAllowNegativesFlag(true);
         	axis.setLog10TickLabelsFlag(true);
         	plot.setRangeAxis(0, axis);
  		}else {
@@ -491,7 +492,8 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         XYPlot plot = chart.getXYPlot();
         LogarithmicAxis axis = new LogarithmicAxis(
 			PerfExplorerModel.getModel().getMetricName());
-        axis.setAutoRangeIncludesZero(false);
+        axis.setAutoRangeIncludesZero(true);
+        axis.setAllowNegativesFlag(true);
         axis.setLog10TickLabelsFlag(true);
         plot.setRangeAxis(0, axis);
  

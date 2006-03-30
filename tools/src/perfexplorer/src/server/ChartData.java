@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.28 2006/03/29 00:51:40 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.29 2006/03/30 01:24:37 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -84,7 +84,7 @@ public class ChartData extends RMIChartData {
 				// do a pre-query to get the event with inclusive value
 				// of 100.0.
 				statement = buildPreQueryStatement();
-				System.out.println(statement.toString());
+				//System.out.println(statement.toString());
 				ResultSet results = statement.executeQuery();
 				// TODO - this query assumes a scalability study...!
 				while (results.next() != false) {
@@ -181,7 +181,10 @@ public class ChartData extends RMIChartData {
 						statement.execute();
 						statement.close();
 					}
-					statement = db.prepareStatement("drop table working_table");
+					if (db.getDBType().compareTo("derby") == 0)
+						statement = db.prepareStatement("drop table SESSION.working_table");
+					else
+						statement = db.prepareStatement("drop table working_table");
 					statement.execute();
 					statement.close();
 				}
@@ -284,6 +287,7 @@ public class ChartData extends RMIChartData {
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
 			buf.append(" group by " + tmpBuf.toString() + ", t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3, 4");
+			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == TOTAL_FOR_GROUP) {
@@ -359,24 +363,32 @@ public class ChartData extends RMIChartData {
 			// of all the events for one experiment, as the number of threads of 
 			// execution increases.
 			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("create global temporary table working_table (name varchar2(4000)) ");
+				buf.append("create global temporary table working_table ");
+				buf.append("(name varchar2(4000)) ");
+			} else if (db.getDBType().compareTo("derby") == 0) {
+				buf.append("declare global temporary table working_table ");
+				buf.append("(name varchar(4000)) on commit preserve rows not logged ");
 			} else {
 				buf.append("create temporary table working_table (name text) ");
 			}
 			try {
+				//System.out.println(buf.toString());
 				statement = db.prepareStatement(buf.toString());
-				//System.out.println(statement.toString());
 				statement.execute();
 				statement.close();
 			} catch (Exception e) {
-				System.out.println(statement.toString());
+				if (statement != null)
+					System.out.println(statement.toString());
 				String error = "ERROR: Couldn't select the analysis settings from the database!";
 				System.out.println(error);
 				e.printStackTrace();
 			}
 
 			buf = new StringBuffer();
-			buf.append("insert into working_table (select distinct ");
+			buf.append("insert into ");
+			if (db.getDBType().compareTo("derby") == 0)
+				buf.append("SESSION.");
+			buf.append("working_table (select distinct ");
 			buf.append("ie.name from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
@@ -395,6 +407,7 @@ public class ChartData extends RMIChartData {
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
 			buf.append("and ims.inclusive_percentage < 100.0) ");
 
+			//System.out.println(buf.toString());
 			try {
 				statement = db.prepareStatement(buf.toString());
 				statement.setString(1, metricName);
@@ -429,7 +442,10 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
-			buf.append("inner join working_table w on w.name = ie.name ");
+			buf.append("inner join ");
+			if (db.getDBType().compareTo("derby") == 0)
+				buf.append("SESSION.");
+			buf.append("working_table w on w.name = ie.name ");
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true));
 			} else {
@@ -438,6 +454,7 @@ public class ChartData extends RMIChartData {
 			}
 
 			buf.append(" and m.name = ? order by 1, 2, 3, 4 ");
+			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == RELATIVE_EFFICIENCY_ONE_EVENT) {
@@ -615,7 +632,7 @@ public class ChartData extends RMIChartData {
 			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) group by 1, 2, 3 order by 1, 2, 3");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')) group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3");
 			
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
@@ -657,7 +674,10 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
-			buf.append("left outer join working_table w on w.name = ie.name ");
+			buf.append("left outer join ");
+			if (db.getDBType().compareTo("derby") == 0)
+				buf.append("SESSION.");
+			buf.append("working_table w on w.name = ie.name ");
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true));
 			} else {
@@ -667,15 +687,13 @@ public class ChartData extends RMIChartData {
 			
 			buf.append(" and m.name = ? ");
 			buf.append("and w.name is null ");
-			buf.append("group by 1, 2, 3 order by 1, 2, 3 ");
+			buf.append("group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3 ");
 
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 
 		}
-		//if (statement != null)
-			//System.out.println(statement.toString());
 		return statement;
 	}
 
@@ -708,7 +726,7 @@ public class ChartData extends RMIChartData {
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
-			buf.append("group by 2, 3, 4 order by 2, 3, 4 ");
+			buf.append("group by t.node_count, t.contexts_per_node, t.threads_per_context order by 2, 3, 4 ");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		}

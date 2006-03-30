@@ -35,23 +35,26 @@ public class TestHarness {
 			for (ListIterator apps = connection.getApplicationList(); 
 				apps.hasNext() ; ) {
 				app = (Application)apps.next();
-				if (app.getName().equalsIgnoreCase("sweep3d")) {
-					System.out.println(app.getName());
+				System.out.println(app.getName());
+				//if (app.getName().equalsIgnoreCase("sweep3d")) {
+				if (app.getName().equalsIgnoreCase("gyro-b1")) {
 					break;
 				}
 			}
 
 			Experiment exp = null;
 			System.out.println("******** Experiments *********");
-			for (ListIterator exps = connection.getExperimentList(2); 
+			for (ListIterator exps = connection.getExperimentList(app.getID()); 
 				exps.hasNext() ; ) {
 				exp = (Experiment)exps.next();
-				if (exp.getName().equalsIgnoreCase("150.1 Strong Scaling 1")) {
-					System.out.println(exp.getName());
+				System.out.println(exp.getName());
+				//if (exp.getName().equalsIgnoreCase("150.1 Strong Scaling 1")) {
+				if (exp.getName().equalsIgnoreCase("tg")) {
 					break;
 				}
 			}
 
+/*
 			Trial trial = null;
 			System.out.println("******** Trials *********");
 			for (ListIterator trials = connection.getTrialList(2); 
@@ -72,6 +75,7 @@ public class TestHarness {
 					break;
 				}
 			}
+*/
 
 			RMIPerfExplorerModel model = PerfExplorerModel.getModel();
 
@@ -82,15 +86,25 @@ public class TestHarness {
 			//objects[2] = trial;
 			//objects[3] = metric;
 			model.setCurrentSelection(objects);
+			//model.setMetricName("Time");
+			//model.setEventName("MPI_Recv()");
+			//model.setGroupName("MPI");
+			//model.setTotalTimesteps("12");
+			//model.setConstantProblem(true);
+			model.setMetricName("Time");
+			model.setEventName("field");
+			model.setGroupName("TRANSPOSE");
+			model.setTotalTimesteps("100");
+			model.setConstantProblem(true);
 
 			PerfExplorerChart.doTotalTimeChart();
 			PerfExplorerChart.doTimestepsChart();
 			PerfExplorerChart.doEfficiencyChart();
-			PerfExplorerChart.doEfficiencyEventsChart();
-			PerfExplorerChart.doEfficiencyOneEventChart();
 			PerfExplorerChart.doSpeedupChart();
-			PerfExplorerChart.doSpeedupEventsChart();
+			PerfExplorerChart.doEfficiencyOneEventChart();
 			PerfExplorerChart.doSpeedupOneEventChart();
+			PerfExplorerChart.doEfficiencyEventsChart();
+			PerfExplorerChart.doSpeedupEventsChart();
 			PerfExplorerChart.doCommunicationChart();
 			PerfExplorerChart.doFractionChart();
 			PerfExplorerChart.doCorrelationChart();
