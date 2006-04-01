@@ -187,6 +187,9 @@ MPI_Fint *ierr;
 }
  
 
+#ifdef TAU_AIX
+  extern int mpi_in_place_;
+#endif /* TAU_AIX */
 void   mpi_allreduce( sendbuf, recvbuf, count, datatype, op, comm , ierr)
 void * sendbuf;
 void * recvbuf;
@@ -196,16 +199,14 @@ MPI_Fint *op;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
-  long long *s;
-  s = (long long *)sendbuf;
-  if (*s == -2)
+#ifdef TAU_AIX
+  if (sendbuf == &mpi_in_place_)
   { /* FOR IBM ! */
     mpi_allreduce_( MPI_IN_PLACE, recvbuf, count, datatype, op, comm , ierr);
   }
   else
-  {
+#endif /* TAU_AIX */
     mpi_allreduce_( sendbuf, recvbuf, count, datatype, op, comm , ierr);
-  }
 
 }
 
