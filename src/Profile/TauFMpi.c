@@ -29,6 +29,7 @@
 #include <mpi.h>
 #include <Profile/TauUtil.h>
 
+
 /******************************************************/
 /******************************************************/
 void  mpi_allgather_( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm , ierr)
@@ -195,7 +196,17 @@ MPI_Fint *op;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
-  mpi_allreduce_( sendbuf, recvbuf, count, datatype, op, comm , ierr);
+  long long *s;
+  s = (long long *)sendbuf;
+  if (*s == -2)
+  { /* FOR IBM ! */
+    mpi_allreduce_( MPI_IN_PLACE, recvbuf, count, datatype, op, comm , ierr);
+  }
+  else
+  {
+    mpi_allreduce_( sendbuf, recvbuf, count, datatype, op, comm , ierr);
+  }
+
 }
 
 /******************************************************/
@@ -3452,6 +3463,7 @@ MPI_Fint *ierr;
 {
   mpi_probe_( source, tag, comm, status, ierr );
 }
+
 
 /******************************************************/
 /******************************************************/
