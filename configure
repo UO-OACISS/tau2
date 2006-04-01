@@ -2929,7 +2929,7 @@ fi
 
 
 ######################################################################
-if [ $machine = x86_64 -a ! -f /usr/lib/libc.a -o $catamount = yes ] 
+if [ $catamount = yes ] 
 then
   #echo "This looks like a CATAMOUNT Cray RS system..."
   fixmakeargs="$fixmakeargs CATAMOUNT"
