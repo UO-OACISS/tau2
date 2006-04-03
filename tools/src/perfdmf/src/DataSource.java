@@ -9,9 +9,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.6 2006/03/29 20:14:38 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.7 2006/04/03 18:16:40 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  * @see		TrialData
  * @see		NCT
  */
@@ -432,7 +432,7 @@ public abstract class DataSource {
                         if (functionProfile != null) {
                             FunctionProfile bfp = thread.getFunctionProfile(bonusFunction);
                             if (bfp == null) {
-                                bfp = new FunctionProfile(bonusFunction);
+                                bfp = new FunctionProfile(bonusFunction, getNumberOfMetrics());
                                 thread.addFunctionProfile(bfp);
                             }
 

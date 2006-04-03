@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.4 2006/03/04 03:02:10 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.5 2006/04/03 18:16:40 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class DatabaseAPI {
 
@@ -722,10 +722,13 @@ public class DatabaseAPI {
         int fcount = 0;
         int ucount = 0;
 
+
+        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+        
         // create the intervalEvents
         for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
             Function f = (Function) it.next();
-            if (f != null) {
+            if (!f.isGroupMember(derived)) {
                 // create a intervalEvent
                 IntervalEvent intervalEvent = new IntervalEvent(this);
                 intervalEvent.setName(f.getName());
@@ -793,7 +796,7 @@ public class DatabaseAPI {
             // create interval location profiles
             for (Iterator e4 = intervalEvents.iterator(); e4.hasNext();) {
                 FunctionProfile fp = (FunctionProfile) e4.next();
-                if (fp != null) {
+                if (fp != null && !fp.getFunction().isGroupMember(derived)) {
                     IntervalLocationProfile ilp = new IntervalLocationProfile(metricCount);
                     ilp.setNode(thread.getNodeID());
                     ilp.setContext(thread.getContextID());
@@ -939,8 +942,13 @@ public class DatabaseAPI {
     private Map uploadFunctions(int trialID, DataSource dataSource) throws SQLException {
         Map map = new HashMap();
 
+
+        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
         for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
             Function f = (Function) it.next();
+            if (f.isGroupMember(derived)) {
+                continue;
+            }
 
             String group = null;
             List groups = f.getGroups();
@@ -1100,12 +1108,17 @@ public class DatabaseAPI {
                     + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         }
 
+        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+        
         for (Iterator it5 = dataSource.getMetrics().iterator(); it5.hasNext();) {
             Metric metric = (Metric) it5.next();
             Integer dbMetricID = (Integer) metricMap.get(metric);
 
             for (Iterator it4 = dataSource.getFunctions(); it4.hasNext();) {
                 Function function = (Function) it4.next();
+                if (!function.isGroupMember(derived)) {
+                    continue;
+                }
                 Integer intervalEventID = (Integer) functionMap.get(function);
 
                 edu.uoregon.tau.perfdmf.Thread totalData = dataSource.getTotalData();

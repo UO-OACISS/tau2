@@ -68,13 +68,13 @@ public class DataSourceExport {
                 if (uep != null) {
 
                     bw.write(thread.getNodeID() + "\t" + thread.getContextID() + "\t" + thread.getThreadID());
-                    bw.write("\t"+uep.getUserEvent().getName());
-                    
-                    bw.write("\t"+uep.getNumSamples());
-                    bw.write("\t"+uep.getMinValue());
-                    bw.write("\t"+uep.getMaxValue());
-                    bw.write("\t"+uep.getMeanValue());
-                    bw.write("\t"+uep.getStdDev());
+                    bw.write("\t" + uep.getUserEvent().getName());
+
+                    bw.write("\t" + uep.getNumSamples());
+                    bw.write("\t" + uep.getMinValue());
+                    bw.write("\t" + uep.getMaxValue());
+                    bw.write("\t" + uep.getMeanValue());
+                    bw.write("\t" + uep.getStdDev());
                     bw.write("\n");
 
                 }
@@ -94,7 +94,16 @@ public class DataSourceExport {
         BufferedOutputStream bw = new BufferedOutputStream(gzip);
         DataOutputStream p = new DataOutputStream(bw);
 
-        int numFunctions = dataSource.getNumFunctions();
+        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+        int numFunctions = 0;
+
+        for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
+            Function function = (Function) it.next();
+            if (!function.isGroupMember(derived)) {
+                numFunctions++;
+            }
+        }
+
         int numMetrics = dataSource.getNumberOfMetrics();
         int numUserEvents = dataSource.getNumUserEvents();
         int numGroups = dataSource.getNumGroups();
@@ -137,17 +146,20 @@ public class DataSourceExport {
         p.writeInt(numFunctions);
         for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
             Function function = (Function) it.next();
-            functions[idx++] = function;
-            p.writeUTF(function.getName());
+            if (!function.isGroupMember(derived)) {
 
-            List thisGroups = function.getGroups();
-            if (thisGroups == null) {
-                p.writeInt(0);
-            } else {
-                p.writeInt(thisGroups.size());
-                for (int i = 0; i < thisGroups.size(); i++) {
-                    Group group = (Group) thisGroups.get(i);
-                    p.writeInt(findGroupID(groups, group));
+                functions[idx++] = function;
+                p.writeUTF(function.getName());
+
+                List thisGroups = function.getGroups();
+                if (thisGroups == null) {
+                    p.writeInt(0);
+                } else {
+                    p.writeInt(thisGroups.size());
+                    for (int i = 0; i < thisGroups.size(); i++) {
+                        Group group = (Group) thisGroups.get(i);
+                        p.writeInt(findGroupID(groups, group));
+                    }
                 }
             }
         }
@@ -340,30 +352,36 @@ public class DataSourceExport {
         Function functions[] = new Function[numFunctions];
         String groupStrings[] = new String[numFunctions];
         idx = 0;
+
+        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+
         // write out function names
         for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
             Function function = (Function) it.next();
-            functions[idx] = function;
 
-            List thisGroups = function.getGroups();
+            if (!function.isGroupMember(derived)) {
+                functions[idx] = function;
 
-            if (thisGroups == null) {
-                groupStrings[idx] = "";
-            } else {
-                groupStrings[idx] = "";
+                List thisGroups = function.getGroups();
 
-                for (int i = 0; i < thisGroups.size(); i++) {
-                    Group group = (Group) thisGroups.get(i);
-                    if (i == 0) {
-                        groupStrings[idx] = group.getName();
-                    } else {
-                        groupStrings[idx] = groupStrings[idx] + " | " + group.getName();
+                if (thisGroups == null) {
+                    groupStrings[idx] = "";
+                } else {
+                    groupStrings[idx] = "";
+
+                    for (int i = 0; i < thisGroups.size(); i++) {
+                        Group group = (Group) thisGroups.get(i);
+                        if (i == 0) {
+                            groupStrings[idx] = group.getName();
+                        } else {
+                            groupStrings[idx] = groupStrings[idx] + " | " + group.getName();
+                        }
                     }
-                }
 
-                groupStrings[idx] = groupStrings[idx].trim();
+                    groupStrings[idx] = groupStrings[idx].trim();
+                }
+                idx++;
             }
-            idx++;
         }
 
         UserEvent userEvents[] = new UserEvent[numUserEvents];
