@@ -246,7 +246,6 @@ public class DataSourceExport {
     private static void writeMetric(File root, DataSource dataSource, int metricID, Function[] functions, String[] groupStrings,
             UserEvent[] userEvents) throws IOException {
 
-        int numFunctions = dataSource.getNumFunctions();
         int numMetrics = dataSource.getNumberOfMetrics();
         int numUserEvents = dataSource.getNumUserEvents();
         int numGroups = dataSource.getNumGroups();
@@ -263,7 +262,7 @@ public class DataSourceExport {
 
             // count function profiles
             int count = 0;
-            for (int i = 0; i < numFunctions; i++) {
+            for (int i = 0; i < functions.length; i++) {
                 FunctionProfile fp = thread.getFunctionProfile(functions[i]);
                 if (fp != null) {
                     count++;
@@ -278,7 +277,7 @@ public class DataSourceExport {
             bw.write("# Name Calls Subrs Excl Incl ProfileCalls\n");
 
             // write out function profiles
-            for (int i = 0; i < numFunctions; i++) {
+            for (int i = 0; i < functions.length; i++) {
                 FunctionProfile fp = thread.getFunctionProfile(functions[i]);
 
                 if (fp != null) {
@@ -334,13 +333,23 @@ public class DataSourceExport {
 
     public static void writeProfiles(DataSource dataSource, File directory) throws IOException {
 
-        int numFunctions = dataSource.getNumFunctions();
         int numMetrics = dataSource.getNumberOfMetrics();
         int numUserEvents = dataSource.getNumUserEvents();
         int numGroups = dataSource.getNumGroups();
 
         int idx = 0;
 
+        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+
+        int numFunctions = 0;
+        for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
+            Function function = (Function) it.next();
+            if (function.isGroupMember(derived)) {
+                continue;
+            }
+            numFunctions++;
+        }
+            
         // write out group names
         Group groups[] = new Group[numGroups];
         for (Iterator it = dataSource.getGroups(); it.hasNext();) {
@@ -353,7 +362,6 @@ public class DataSourceExport {
         String groupStrings[] = new String[numFunctions];
         idx = 0;
 
-        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
         // write out function names
         for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
