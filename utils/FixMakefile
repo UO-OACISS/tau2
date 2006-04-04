@@ -956,7 +956,7 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYTIMERS)
-	echo "NOTE: Using Cray X1 fast nanosecond timers for profiling"
+	echo "NOTE: Using Cray X1/XT3 fast nanosecond timers for profiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CATAMOUNT)
