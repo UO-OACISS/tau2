@@ -27,6 +27,13 @@
 #include <signal.h>
 #include <Profile/Profiler.h>
 
+#if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
+#ifndef TAU_CATAMOUNT
+#define TAU_CATAMOUNT 
+#endif /* TAU_CATAMOUNT */
+#include <catamount/catmalloc.h>
+#endif /* __QK_USER__ || __LIBCATAMOUNT__ */
+
 /* Which platforms support mallinfo? */
 #ifndef TAU_HASMALLINFO
 #if (defined (__linux__) || defined (_AIX) || defined(sgi) || \
@@ -153,6 +160,15 @@ double TauGetMaxRSS(void)
   double used = (double) (minfo.hblkhd + minfo.usmblks + minfo.uordblks);
   /* This is in bytes, we need KB */
   return used/1024.0;
+#else 
+#ifdef TAU_CATAMOUNT
+  size_t fragments;
+  unsigned long total_free, largest_free, total_used;
+  if (heap_info(&fragments, &total_free, &largest_free, &total_used) == 0)
+  {
+    return  total_used/1024.0; 
+  }
+#endif /* TAU_CATAMOUNT */
 #endif /* TAU_HASMALLINFO */
 
 #if (! (defined (TAU_WINDOWS) || defined (CRAYCC)))
@@ -357,9 +373,9 @@ void TauTrackMuseEvents(void)
 }
   
 /***************************************************************************
- * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
- * $Revision: 1.14 $   $Date: 2005/11/11 03:46:50 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.14 2005/11/11 03:46:50 amorris Exp $ 
+ * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
+ * $Revision: 1.15 $   $Date: 2006/04/04 19:09:01 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.15 2006/04/04 19:09:01 sameer Exp $ 
  ***************************************************************************/
 
 	

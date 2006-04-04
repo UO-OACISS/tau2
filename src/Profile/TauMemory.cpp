@@ -37,6 +37,13 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
+#if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
+#ifndef TAU_CATAMOUNT
+#define TAU_CATAMOUNT 
+#endif /* TAU_CATAMOUNT */
+#include <catamount/catmalloc.h>
+#endif /* __QK_USER__ || __LIBCATAMOUNT__ */
+
 //////////////////////////////////////////////////////////////////////
 // Class for building the map
 //////////////////////////////////////////////////////////////////////
@@ -212,6 +219,19 @@ extern "C" void Tau_free_C(const char *file, int line, void *p)
 
 #define TAU_BLOCK_COUNT 1024
 
+/* Catamount has a heap_info call that returns the available memory headroom */
+#ifdef TAU_CATAMOUNT
+int TauGetFreeMemory(void)
+{
+  size_t fragments;
+  unsigned long total_free, largest_free, total_used;
+  if (heap_info(&fragments, &total_free, &largest_free, &total_used) == 0)
+  {  /* return free memory in MB */
+    return  (int) (total_free/(1024*1024));
+  }
+  return 0; /* if it didn't work */
+}
+#else /* TAU_CATAMOUNT */
 int TauGetFreeMemory(void)
 {
   char* blocks[TAU_BLOCK_COUNT];
@@ -243,9 +263,10 @@ int TauGetFreeMemory(void)
 
   return freemem;
 }
+#endif /* TAU_CATAMOUNT */
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2006/02/02 02:30:59 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.10 2006/02/02 02:30:59 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 2006/04/04 19:09:01 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.11 2006/04/04 19:09:01 sameer Exp $ 
  ***************************************************************************/
