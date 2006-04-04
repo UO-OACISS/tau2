@@ -50,9 +50,19 @@
  #include "tauarch.h"
 #endif
 
+#if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
+#ifndef TAU_CATAMOUNT
+#define TAU_CATAMOUNT 
+#endif /* TAU_CATAMOUNT */
+#include <catamount/dclock.h>
+#endif /* __QK_USER__ || __LIBCATAMOUNT__ */
+
 #ifdef CRAY_TIMERS
+#ifndef TAU_CATAMOUNT
+/* These header files are for Cray X1 */
 #include <intrinsics.h>
 #include <sys/param.h>
+#endif /* TAU_CATAMOUNT */
 #endif // CRAY_TIMERS
 
 #ifdef TAU_XLC
@@ -568,8 +578,12 @@ double RtsLayer::getUSecD (int tid) {
 
 #else  // SGI_TIMERS
 #ifdef CRAY_TIMERS
+#ifdef TAU_CATAMOUNT /* for Cray XT3 */
+  return dclock()*1.0e6; 
+#else /* for Cray X1 */
   long long tick = _rtc();
   return (double) tick/HZ;
+#endif /* TAU_CATAMOUNT */
 #endif // CRAY_TIMERS
 #ifdef TAU_ALPHA_TIMERS
   struct timespec currenttime;
@@ -1310,7 +1324,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: suravee $
- * $Revision: 1.73 $   $Date: 2005/12/30 04:24:47 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.73 2005/12/30 04:24:47 suravee Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.74 $   $Date: 2006/04/04 19:54:08 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.74 2006/04/04 19:54:08 sameer Exp $ 
  ***************************************************************************/
