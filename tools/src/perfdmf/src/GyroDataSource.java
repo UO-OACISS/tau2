@@ -279,7 +279,7 @@ public class GyroDataSource extends DataSource {
 
 			if (doingPhases) {
 				if (eventName.indexOf("=>") == -1)
-					function.addGroup(this.addGroup("TAU_CALLPATH"));
+					function.addGroup(this.addGroup("TAU_PHASE"));
 				else
 					function.addGroup(this.addGroup("TAU_CALLPATH"));
 			} else {

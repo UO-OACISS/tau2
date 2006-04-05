@@ -2,44 +2,44 @@
 
 CREATE TABLE application (
     id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT APPLICATION_PK PRIMARY KEY,
-    name                    CLOB,
-    version		    CLOB,
-    usage                   CLOB, 
-    description		    CLOB,
-    language                CLOB,
-    paradigm                CLOB,
-    algorithms              CLOB,
-    lines_of_code	    CLOB,
-    big_lil_endian	    CLOB,
-    directives		    CLOB,
-    memory_intensity	    CLOB,
-    communication_intensity CLOB,
-    cpu_intensity	    CLOB,
-    os_requirements	    CLOB,
-    other_requirements	    CLOB,
-    spectral_or_physical_mesh	CLOB,
-    static_or_adaptive_mesh	CLOB,
-    structured_or_unstructured_mesh	CLOB,
-    code_history	    CLOB,    
-    primary_industry	    CLOB,
-    primary_technology_area CLOB,
-    rib_entry		    CLOB
+    name                    VARCHAR(4000),
+    version		    VARCHAR(4000),
+    usage                   VARCHAR(4000), 
+    description		    VARCHAR(4000),
+    language                VARCHAR(4000),
+    paradigm                VARCHAR(4000),
+    algorithms              VARCHAR(4000),
+    lines_of_code	    VARCHAR(4000),
+    big_lil_endian	    VARCHAR(4000),
+    directives		    VARCHAR(4000),
+    memory_intensity	    VARCHAR(4000),
+    communication_intensity VARCHAR(4000),
+    cpu_intensity	    VARCHAR(4000),
+    os_requirements	    VARCHAR(4000),
+    other_requirements	    VARCHAR(4000),
+    spectral_or_physical_mesh	VARCHAR(4000),
+    static_or_adaptive_mesh	VARCHAR(4000),
+    structured_or_unstructured_mesh	VARCHAR(4000),
+    code_history	    VARCHAR(4000),    
+    primary_industry	    VARCHAR(4000),
+    primary_technology_area VARCHAR(4000),
+    rib_entry		    VARCHAR(4000)
 );
 
 CREATE TABLE experiment (
     id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT EXPERIMENT_PK PRIMARY KEY,
     application             INT         NOT NULL,
-    name                    CLOB,
-    sysinfo                 CLOB,
-    configinfo		    CLOB,
-    instruinfo		    CLOB,
-    compilerinfo	    CLOB,
+    name                    VARCHAR(4000),
+    sysinfo                 VARCHAR(4000),
+    configinfo		    VARCHAR(4000),
+    instruinfo		    VARCHAR(4000),
+    compilerinfo	    VARCHAR(4000),
     FOREIGN KEY(application) REFERENCES application(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE trial (
     id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT TRIAL_PK PRIMARY KEY,
-    name                    CLOB,
+    name                    VARCHAR(4000),
     experiment              INT         NOT NULL,
     date                    TIMESTAMP   ,
     collectorid		    INT,
@@ -51,7 +51,7 @@ CREATE TABLE trial (
 
 CREATE TABLE metric (
     id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT METRIC_PK PRIMARY KEY,
-    name                    CLOB        NOT NULL,
+    name                    VARCHAR(4000)        NOT NULL,
     trial                   INT		NOT NULL,
     FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
@@ -59,9 +59,9 @@ CREATE TABLE metric (
 CREATE TABLE interval_event (
     id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT INTERVAL_EVENT_PK PRIMARY KEY,
     trial                   INT         NOT NULL,
-    name                    CLOB        NOT NULL,
-    group_name              CLOB,
-    source_file		    CLOB,
+    name                    VARCHAR(4000)        NOT NULL,
+    group_name              VARCHAR(4000),
+    source_file		    VARCHAR(4000),
     line_number		    INT,
     line_number_end	    INT,
     FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -70,9 +70,9 @@ CREATE TABLE interval_event (
 CREATE TABLE atomic_event (
     id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT ATOMIC_EVENT_PK PRIMARY KEY,
     trial                   INT         NOT NULL,
-    name                    CLOB        NOT NULL,
-    group_name              CLOB,
-    source_file		    CLOB,
+    name                    VARCHAR(4000)        NOT NULL,
+    group_name              VARCHAR(4000),
+    source_file		    VARCHAR(4000),
     line_number		    INT,
     FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
@@ -141,8 +141,8 @@ CREATE TABLE interval_mean_summary (
 
 CREATE TABLE trace (
     trialid		    INT		NOT NULL,
-    tracetype		    CLOB,
-    tracefilename	    CLOB,
+    tracetype		    VARCHAR(4000),
+    tracefilename	    VARCHAR(4000),
     nodeid		    INT,
     contextid		    INT,
     threadid		    INT,
@@ -151,8 +151,8 @@ CREATE TABLE trace (
 
 CREATE TABLE tracesum (
     trialid	            INT		NOT NULL,
-    tracetype		    CLOB,
-    tracefilename	    CLOB,
+    tracetype		    VARCHAR(4000),
+    tracefilename	    VARCHAR(4000),
     FOREIGN KEY(trialid) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
