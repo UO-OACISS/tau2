@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.30 2006/04/05 07:05:50 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.31 2006/04/05 20:46:11 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -295,7 +295,10 @@ public class ChartData extends RMIChartData {
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
-			buf.append(" group by " + tmpBuf.toString() + ", t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3, 4");
+			buf.append(" group by ");
+			buf.append(tmpBuf.toString());
+			buf.append(", t.node_count, t.contexts_per_node, t.threads_per_context ");
+			buf.append("order by 1, 2, 3, 4");
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -306,15 +309,17 @@ public class ChartData extends RMIChartData {
 			// one or more experiments, as the number of threads of 
 			// execution increases.
 			buf.append("select ");
+			StringBuffer tmpBuf = new StringBuffer();
 			if (object instanceof RMIView) {
 				if (isLeafView()) {
-					buf.append(" " + model.getViewSelectionString() + ", ");
+					tmpBuf.append(" " + model.getViewSelectionString() + ", ");
 				} else {
-					buf.append(" " + groupByColumn + ", ");
+					tmpBuf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-				buf.append(" e.name, ");
+				tmpBuf.append(" e.name, ");
 			}
+			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 
 			if (db.getDBType().compareTo("oracle") == 0) {
@@ -351,15 +356,7 @@ public class ChartData extends RMIChartData {
 //			buf.append(" and ims.inclusive_percentage < 100.0 ");
 			
 			buf.append(" and ie.group_name = ? group by ");
-			if (object instanceof RMIView) {
-				if (isLeafView()) {
-					buf.append(" " + model.getViewSelectionString() + ", ");
-				} else {
-					buf.append(" " + groupByColumn + ", ");
-				}
-			} else {
-				buf.append(" e.name, ");
-			}
+			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ie.group_name order by 1, 2, 3, 4");
 
 			//System.out.println(buf.toString());

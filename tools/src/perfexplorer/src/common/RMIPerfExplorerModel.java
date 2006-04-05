@@ -8,7 +8,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.12 2005/11/10 19:42:47 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.13 2006/04/05 20:46:11 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -424,9 +424,9 @@ public class RMIPerfExplorerModel implements Serializable {
 		StringBuffer buf = new StringBuffer();
 		int i = fullPath.length - 1;
 		RMIView view = (RMIView) fullPath[i];
-		if (view.getField("operator").equalsIgnoreCase("like")) {
-			buf.append(" '" + view.getField("value").replaceAll("%","") + "'");
-		} else if (view.getField("operator").equals("=")) {
+		if ((view.getField("operator").equalsIgnoreCase("like")) || //{
+			//buf.append(" '" + view.getField("value").replaceAll("%","") + "'");
+		/*} else if*/ (view.getField("operator").equals("="))) {
 			if (view.getField("table_name").equalsIgnoreCase("Application")) {
 				buf.append (" a.");
 			} else if (view.getField("table_name").equalsIgnoreCase("Experiment")) {

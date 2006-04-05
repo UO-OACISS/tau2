@@ -202,6 +202,10 @@ public class TestHarness {
 		viewList = null;
 		foundView = false;
 		getViews("0", new ArrayList());
+		System.out.print("Selecting: ");
+		for(int i = 0 ; i < viewList.length ; i++) 
+			System.out.print(viewList[i] + ": ");
+		System.out.println("");
 		model.setCurrentSelection(viewList);
 		model.setMetricName("Time");
 		model.setEventName("field");
@@ -232,7 +236,7 @@ public class TestHarness {
             RMIView view = (RMIView) views.next();
 			System.out.println("VIEW: " + view.getField("NAME"));
 			//if (view.getField("VALUE").equals("gyro-b1"))
-			if (view.getField("VALUE").equals("FULL%"))
+			if (view.getField("VALUE").equals("B1-std.tg"))
 				foundView = true;
 			ArrayList newList = new ArrayList(list);
 			newList.add(view);
