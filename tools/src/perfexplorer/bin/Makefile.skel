@@ -172,7 +172,22 @@ runstandalone: perfexplorer.jar
 	perfexplorer
 
 test: perfexplorer.jar
-	perfexplorer -test
+	perfexplorer -test=all
+
+testchart: perfexplorer.jar
+	perfexplorer -test=chart
+
+testcluster: perfexplorer.jar
+	perfexplorer -test=cluster
+
+testcorrelation: perfexplorer.jar
+	perfexplorer -test=correlation
+
+testviz: perfexplorer.jar
+	perfexplorer -test=viz
+
+testviews: perfexplorer.jar
+	perfexplorer -test=views
 
 install: perfexplorer.jar
 	mkdir -p PerfExplorer-0.1

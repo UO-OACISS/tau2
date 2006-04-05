@@ -13,130 +13,49 @@ import java.awt.event.*;
 import java.util.*;
 
 public class TestHarness {
-	private static String USAGE = "Usage: TestHarness [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
+	private static String USAGE = "Usage: TestHarness [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>] [{-t,--test}=<test_type>]\n  where analysis_engine = R or Weka and test_type = charts, cluster, correlation, viz or all ";
+	private PerfExplorerConnection connection = null;
+	private RMIPerfExplorerModel model = null;
+	private Object[] viewList = null;
+	private boolean foundView = false;
 
 	private TestHarness (boolean standalone, String configFile,
-		int analysisEngine, boolean quiet) {
+		int analysisEngine, boolean quiet, String test) {
 
 		JFrame frame = new PerfExplorerClient(standalone, configFile, 
 			analysisEngine, quiet);
 		frame.pack();
 		frame.setVisible(true);
 
-		PerfExplorerConnection connection = PerfExplorerConnection.getConnection();
+		// get the connection to the server object
+		connection = PerfExplorerConnection.getConnection();
+		// get the tree model
+		model = PerfExplorerModel.getModel();
+
 		try {
 			// test the connection
 			System.out.println(connection.sayHello());
 
-			
-			// get lists of things. And spit them out.
-			Application app = null;
-			System.out.println("******** Applications *********");
-			for (ListIterator apps = connection.getApplicationList(); 
-				apps.hasNext() ; ) {
-				app = (Application)apps.next();
-				System.out.println(app.getName());
-				//if (app.getName().equalsIgnoreCase("sweep3d")) {
-				if (app.getName().equalsIgnoreCase("gyro-b1")) {
-					break;
-				}
+			if (test.equals("chart") || test.equals("all")) {
+				System.out.println("Testing charts...");
+				testCharts();
 			}
-
-			Experiment exp = null;
-			System.out.println("******** Experiments *********");
-			for (ListIterator exps = connection.getExperimentList(app.getID()); 
-				exps.hasNext() ; ) {
-				exp = (Experiment)exps.next();
-				System.out.println(exp.getName());
-				//if (exp.getName().equalsIgnoreCase("150.1 Strong Scaling 1")) {
-				if (exp.getName().equalsIgnoreCase("tg")) {
-					break;
-				}
+			if (test.equals("viz") || test.equals("all")) {
+				System.out.println("Testing visualization...");
+				testVisualization();
 			}
-
-/*
-			Trial trial = null;
-			System.out.println("******** Trials *********");
-			for (ListIterator trials = connection.getTrialList(2); 
-				trials.hasNext() ; ) {
-				trial = (Trial)trials.next();
-				if (trial.getName().equalsIgnoreCase("32")) {
-					System.out.println(trial.getName());
-					break;
-				}
+			if (test.equals("views") || test.equals("all")) {
+				System.out.println("Testing views...");
+				testViews();
 			}
-
-			Metric metric = null;
-			Vector metrics = trial.getMetrics();
-			for (int i = 0 ; i < metrics.size() ; i++) {
-				metric = (Metric)metrics.elementAt(i);
-				if (metric.getName().equalsIgnoreCase("time")) {
-					System.out.println(metric.getName());
-					break;
-				}
+			if (test.equals("cluster") || test.equals("all")) {
+				System.out.println("Testing clustering...");
+				testCluster();
 			}
-*/
-
-			RMIPerfExplorerModel model = PerfExplorerModel.getModel();
-
-			// select the application, experiment, trial, metric we want
-			Object[] objects = new Object[4];
-			objects[0] = app;
-			objects[1] = exp;
-			//objects[2] = trial;
-			//objects[3] = metric;
-			model.setCurrentSelection(objects);
-			//model.setMetricName("Time");
-			//model.setEventName("MPI_Recv()");
-			//model.setGroupName("MPI");
-			//model.setTotalTimesteps("12");
-			//model.setConstantProblem(true);
-			model.setMetricName("Time");
-			model.setEventName("field");
-			model.setGroupName("TRANSPOSE");
-			model.setTotalTimesteps("100");
-			model.setConstantProblem(true);
-
-			PerfExplorerChart.doTotalTimeChart();
-			PerfExplorerChart.doTimestepsChart();
-			PerfExplorerChart.doEfficiencyChart();
-			PerfExplorerChart.doSpeedupChart();
-			PerfExplorerChart.doEfficiencyOneEventChart();
-			PerfExplorerChart.doSpeedupOneEventChart();
-			PerfExplorerChart.doEfficiencyEventsChart();
-			PerfExplorerChart.doSpeedupEventsChart();
-			PerfExplorerChart.doCommunicationChart();
-			PerfExplorerChart.doFractionChart();
-			PerfExplorerChart.doCorrelationChart();
-			PerfExplorerChart.doEfficiencyPhasesChart();
-			PerfExplorerChart.doSpeedupPhasesChart();
-			PerfExplorerChart.doFractionPhasesChart();
-
-/*
-			//model.setClusterMethod(RMIPerfExplorerModel.CORRELATION_ANALYSIS);
-			model.setDimensionReduction(RMIPerfExplorerModel.OVER_X_PERCENT);
-			model.setNumberOfClusters("10");
-			model.setXPercent("2");
-			String status = connection.requestAnalysis(model, true);
-			System.out.println(status);
-			if (status.equalsIgnoreCase("Request already exists"))
-				System.out.println(connection.requestAnalysis(model, true));
-			java.lang.Thread.sleep(100000);
-*/
-			/*
-	public RMIPerformanceResults getPerformanceResults(RMIPerfExplorerModel model) throws RemoteException;
-	public List getPotentialGroups(RMIPerfExplorerModel model) throws RemoteException;
-	public List getPotentialMetrics(RMIPerfExplorerModel model) throws RemoteException;
-	public List getPotentialEvents(RMIPerfExplorerModel model) throws RemoteException;
-	public String[] getMetaData(String tableName) throws RemoteException;
-	public List getPossibleValues(String tableName, String columnName) throws RemoteException;
-	public int createNewView(String name, int parent, String tableName, String columnName, String oper, String value) throws RemoteException;
-	public List getViews(int parent) throws RemoteException;
-	public List getTrialsForView(List views) throws RemoteException;
-	public RMIPerformanceResults getCorrelationResults(RMIPerfExplorerModel model) throws RemoteException;
-	public RMIVarianceData getVariationAnalysis(RMIPerfExplorerModel model) throws RemoteException;
-	public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteException;
-	*/
+			if (test.equals("correlation") || test.equals("all")) {
+				System.out.println("Testing correlation...");
+				testCorrelation();
+			}
 			//java.lang.Thread.sleep(1000);
 		} catch (Exception e) {
 			System.err.println("TestHarness exception: " + e.getMessage());
@@ -158,6 +77,219 @@ public class TestHarness {
 		*/
 	}
 
+	private Application setApplication(String name) {
+		Application app = null;
+		System.out.println("******** Applications *********");
+		for (ListIterator apps = connection.getApplicationList(); 
+			apps.hasNext() ; ) {
+			app = (Application)apps.next();
+			System.out.println("\t" + app.getName());
+			if (app.getName().equalsIgnoreCase(name)) {
+				break;
+			}
+		}
+		return app;
+	}
+
+	private Experiment setExperiment(Application app, String name) {
+		Experiment exp = null;
+		System.out.println("******** Experiments *********");
+		for (ListIterator exps = connection.getExperimentList(app.getID()); 
+			exps.hasNext() ; ) {
+			exp = (Experiment)exps.next();
+			System.out.println("\t" + exp.getName());
+			if (exp.getName().equalsIgnoreCase(name)) {
+				break;
+			}
+		}
+		return exp;
+	}
+
+	private Trial setTrial(Experiment exp, String name) {
+		Trial trial = null;
+		System.out.println("******** Trials *********");
+		for (ListIterator trials = connection.getTrialList(exp.getID()); 
+			trials.hasNext() ; ) {
+			trial = (Trial)trials.next();
+			System.out.println("\t" + trial.getName());
+			if (trial.getName().trim().equalsIgnoreCase(name)) {
+				break;
+			}
+		}
+		return trial;
+	}
+
+	private Metric setMetric(Trial trial, String name) {
+		Metric metric = null;
+		System.out.println("******** Metrics *********");
+		Vector metrics = trial.getMetrics();
+		for (int i = 0 ; i < metrics.size() ; i++) {
+			metric = (Metric)metrics.elementAt(i);
+			System.out.println("\t" + metric.getName());
+			if (metric.getName().equalsIgnoreCase(name)) {
+				break;
+			}
+		}
+		return metric;
+	}
+
+	public void setSelection(String appName, String expName, String trialName, String metricName) {
+		Object[] objects = new Object[4];
+
+		Application app = setApplication(appName);
+		objects[0] = app;
+
+		if (expName != null) {
+			Experiment exp = setExperiment(app, expName);
+			objects[1] = exp;
+
+			if (trialName != null) {
+				Trial trial = setTrial(exp, trialName);
+				objects[2] = trial;
+
+				if (metricName != null) {
+					Metric metric = setMetric(trial, metricName);
+					objects[3] = metric;
+				}
+			}
+		}
+
+		// select the application, experiment, trial, metric we want
+		model.setCurrentSelection(objects);
+	}
+
+	public void testCharts() throws Exception {
+		// derby settings
+		//setSelection("gyro-b1", "tg", null, null);
+		//model.setMetricName("Time");
+
+		// postgres settings
+		setSelection("gyro.B1-std", "B1-std.tg", null, null);
+		model.setMetricName("WALL_CLOCK_TIME");
+
+		model.setEventName("field");
+		model.setGroupName("TRANSPOSE");
+		model.setTotalTimesteps("100");
+		model.setConstantProblem(true);
+
+		// do the tests
+		PerfExplorerChart.doTotalTimeChart();
+		PerfExplorerChart.doTimestepsChart();
+		PerfExplorerChart.doEfficiencyChart();
+		PerfExplorerChart.doSpeedupChart();
+		PerfExplorerChart.doEfficiencyOneEventChart();
+		PerfExplorerChart.doSpeedupOneEventChart();
+		PerfExplorerChart.doEfficiencyEventsChart();
+		PerfExplorerChart.doSpeedupEventsChart();
+		PerfExplorerChart.doCommunicationChart();
+		PerfExplorerChart.doFractionChart();
+		PerfExplorerChart.doCorrelationChart();
+		PerfExplorerChart.doEfficiencyPhasesChart();
+		PerfExplorerChart.doSpeedupPhasesChart();
+		PerfExplorerChart.doFractionPhasesChart();
+	}
+
+	public void testVisualization() throws Exception {
+		setSelection("sweep3d", "150.1 Strong Scaling 2", "128", "time");
+
+		PerfExplorerVariation.doVariationAnalysis();
+		PerfExplorerHistogramChart.doHistogram();
+		PerfExplorerBoxChart.doIQRBoxChart();
+		PerfExplorerCube.doCorrelationCube();
+	}
+
+	public void testViews() throws Exception {
+		viewList = null;
+		foundView = false;
+		getViews("0", new ArrayList());
+		model.setCurrentSelection(viewList);
+		model.setMetricName("Time");
+		model.setEventName("field");
+		model.setGroupName("TRANSPOSE");
+		model.setTotalTimesteps("100");
+		model.setConstantProblem(true);
+		PerfExplorerChart.doTotalTimeChart();
+		PerfExplorerChart.doTimestepsChart();
+		PerfExplorerChart.doEfficiencyChart();
+		PerfExplorerChart.doSpeedupChart();
+		PerfExplorerChart.doEfficiencyOneEventChart();
+		PerfExplorerChart.doSpeedupOneEventChart();
+		PerfExplorerChart.doEfficiencyEventsChart();
+		PerfExplorerChart.doSpeedupEventsChart();
+		PerfExplorerChart.doCommunicationChart();
+		PerfExplorerChart.doFractionChart();
+		PerfExplorerChart.doCorrelationChart();
+		PerfExplorerChart.doEfficiencyPhasesChart();
+		PerfExplorerChart.doSpeedupPhasesChart();
+		PerfExplorerChart.doFractionPhasesChart();
+//public int createNewView(String name, int parent, String tableName, String columnName, String oper, String value) throws RemoteException;
+	}
+
+	public void getViews(String parent, ArrayList list) throws Exception {
+        java.util.List viewVector = connection.getViews(Integer.parseInt(parent));
+        Iterator views = viewVector.iterator();
+        while (views.hasNext()) {
+            RMIView view = (RMIView) views.next();
+			System.out.println("VIEW: " + view.getField("NAME"));
+			//if (view.getField("VALUE").equals("gyro-b1"))
+			if (view.getField("VALUE").equals("FULL%"))
+				foundView = true;
+			ArrayList newList = new ArrayList(list);
+			newList.add(view);
+            getViews(view.getField("ID"), newList);
+        }
+        if (viewVector.size() == 0) {
+			if (viewList == null && foundView) {
+				viewList = list.toArray();
+			}
+            ListIterator trials = connection.getTrialsForView(list);
+            Trial trial = null;
+            while(trials.hasNext())
+            {
+                trial = (Trial) trials.next();
+				System.out.println("TRIAL: " + trial.getName());
+            }
+        }
+	}
+
+	public void testCluster() throws Exception {
+		setSelection("sweep3d", "150.1 Strong Scaling 2", "32", "time");
+
+		model.setDimensionReduction(RMIPerfExplorerModel.OVER_X_PERCENT);
+		model.setNumberOfClusters("10");
+		model.setXPercent("2");
+		String status = connection.requestAnalysis(model, true);
+		System.out.println(status);
+		if (status.equalsIgnoreCase("Request already exists"))
+			System.out.println(connection.requestAnalysis(model, true));
+		java.lang.Thread.sleep(5000);
+	}
+
+	public void testCorrelation() throws Exception {
+		setSelection("sweep3d", "150.1 Strong Scaling 2", "32", "time");
+
+		model.setClusterMethod(RMIPerfExplorerModel.CORRELATION_ANALYSIS);
+		model.setDimensionReduction(RMIPerfExplorerModel.OVER_X_PERCENT);
+		model.setXPercent("2");
+		String status = connection.requestAnalysis(model, true);
+		System.out.println(status);
+		if (status.equalsIgnoreCase("Request already exists"))
+			System.out.println(connection.requestAnalysis(model, true));
+		java.lang.Thread.sleep(5000);
+	}
+
+/*
+public RMIPerformanceResults getPerformanceResults(RMIPerfExplorerModel model) throws RemoteException;
+public List getPotentialGroups(RMIPerfExplorerModel model) throws RemoteException;
+public List getPotentialMetrics(RMIPerfExplorerModel model) throws RemoteException;
+public List getPotentialEvents(RMIPerfExplorerModel model) throws RemoteException;
+public String[] getMetaData(String tableName) throws RemoteException;
+public List getPossibleValues(String tableName, String columnName) throws RemoteException;
+public RMIPerformanceResults getCorrelationResults(RMIPerfExplorerModel model) throws RemoteException;
+public RMIVarianceData getVariationAnalysis(RMIPerfExplorerModel model) throws RemoteException;
+public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteException;
+*/
+
 	public static void main (String[] args) {
 
 		// set the tooltip delay to 20 seconds
@@ -170,6 +302,7 @@ public class TestHarness {
 		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
 		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
 		CmdLineParser.Option quietOpt = parser.addBooleanOption('q',"quiet");
+		CmdLineParser.Option testOpt = parser.addStringOption('t',"test");
 
 		try {
 			parser.parse(args);
@@ -184,6 +317,7 @@ public class TestHarness {
 		String configFile = (String) parser.getOptionValue(configfileOpt);
 		String engine = (String) parser.getOptionValue(engineOpt);
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
+		String test = (String) parser.getOptionValue(testOpt);
 
 		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
 
@@ -197,6 +331,11 @@ public class TestHarness {
 
 		if (standalone == null) 
 			standalone = new Boolean(false);
+
+		if (test == null)
+			test = new String("all");
+		else
+			test = test.toLowerCase();
 
 		if (standalone.booleanValue()) {
 			if (configFile == null) {
@@ -218,6 +357,14 @@ public class TestHarness {
 			}
 		}
 
+		if (!test.equals("chart") && !test.equals("cluster") &&
+			!test.equals("viz") && !test.equals("correlation") &&
+			!test.equals("views") && !test.equals("all")) {
+			System.err.println("Please enter a valid test.");
+			System.err.println(USAGE);
+			System.exit(-1);
+		}
+
 
 	/*
 		try {
@@ -227,7 +374,7 @@ public class TestHarness {
 	*/
 
 		TestHarness harness = new TestHarness(standalone.booleanValue(),
-			configFile, analysisEngine, quiet.booleanValue());
+			configFile, analysisEngine, quiet.booleanValue(), test);
 	}
 
 }

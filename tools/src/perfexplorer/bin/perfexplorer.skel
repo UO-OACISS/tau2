@@ -13,6 +13,7 @@ arguments=$*
 
 # set some defaults
 mode=standalone
+testName="all"
 redirect=""
 RMIOptions=""
 
@@ -42,8 +43,10 @@ do
     shift
     ;;
 
-  -test)
+  -test=*)
     mode=test
+    myarg=`echo $arg | sed 's/-test=//'`
+	testName=$myarg
     shift
     ;;
 
@@ -119,7 +122,7 @@ if [ $mode == "test" ] ; then
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
-	client.TestHarness -s -c $CONFIGFILE -e $ANALYSIS_ENGINE
+	client.TestHarness -s -c $CONFIGFILE -e $ANALYSIS_ENGINE -t $testName
 fi
 
 if [ $mode == "server" ] ; then

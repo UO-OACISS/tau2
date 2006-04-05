@@ -23,7 +23,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.26 2006/03/29 00:51:40 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.27 2006/04/05 07:05:50 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -566,6 +566,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		   	tmpStr = "select LAST_INSERT_ID();";
 			} else if (db.getDBType().compareTo("db2") == 0) {
 		   	tmpStr = "select IDENTITY_VAL_LOCAL() FROM analysis_settings";
+			} else if (db.getDBType().compareTo("derby") == 0) {
+		   	tmpStr = "select IDENTITY_VAL_LOCAL() FROM analysis_settings";
 			} else if (db.getDBType().compareTo("oracle") == 0) {
 		   	tmpStr = "SELECT as_id_seq.currval FROM DUAL";
 			} else { // postgresql 
@@ -1006,6 +1008,15 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("max(ilp.excl), ");
 				buf.append("min(ilp.excl), ");
 				buf.append("stddev(ilp.excl) ");
+			} else if (db.getDBType().compareTo("derby") == 0) {
+				buf.append("select ie.name, ");
+				buf.append("avg(ilp.exclusive), ");
+				buf.append("avg(ilp.exclusive_percentage), ");
+				buf.append("avg(ilp.num_calls), ");
+				buf.append("avg(ilp.exclusive / ilp.num_calls), ");
+				buf.append("max(ilp.exclusive), ");
+				buf.append("min(ilp.exclusive), ");
+				buf.append("0 "); // no support for stddev!
 			} else {
 				buf.append("select ie.name, ");
 				buf.append("avg(ilp.exclusive), ");
@@ -1085,6 +1096,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			StringBuffer buf = new StringBuffer();
 			if (db.getDBType().compareTo("oracle") == 0) {
 				buf.append("select id, stddev(excl) ");
+			} else if (db.getDBType().compareTo("derby") == 0) {
+				//sttdev is unsupported in derby!
+				buf.append("select id, avg(exclusive) ");
 			} else {
 				buf.append("select id, stddev(exclusive) ");
 			}
@@ -1122,11 +1136,15 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			if (db.getDBType().compareTo("oracle") == 0) {
 				buf.append("select id, name, (stddev(excl)/ ");
 				buf.append("(max(excl)-min(excl))) * ");
+				buf.append("avg(exclusive_percentage) ");
+			} else if (db.getDBType().compareTo("derby") == 0) {
+				// stddev is unsupported!
+				buf.append("select id, name, avg(exclusive) ");
 			} else {
 				buf.append("select id, name, (stddev(exclusive)/ ");
 				buf.append("(max(exclusive)-min(exclusive)))* ");
+				buf.append("avg(exclusive_percentage) ");
 			}
-			buf.append("avg(exclusive_percentage) ");
 			buf.append("from interval_location_profile ");
 			buf.append("inner join interval_event ");
 			buf.append("on interval_event = id ");

@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.29 2006/03/30 01:24:37 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.30 2006/04/05 07:05:50 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -27,6 +27,7 @@ public class ChartData extends RMIChartData {
 	private String eventName = null;
 	private String groupByColumn = null;
 	private List columnValues = null;
+	private StringBuffer buf = null;
 	
 	/**
 	 * Constructor
@@ -115,10 +116,16 @@ public class ChartData extends RMIChartData {
 			int columnCounter = 0;
 			while (results.next() != false) {
 				groupingName = results.getString(1);
-				numThreads = results.getDouble(2) * results.getDouble(3) *
-					results.getDouble(4);
-				threadName = Double.toString(numThreads);
-				value = results.getDouble(5);
+				if (dataType == IQR_DATA) {
+					numThreads = results.getDouble(2);
+					threadName = Double.toString(numThreads);
+					value = results.getDouble(3);
+				} else {
+					numThreads = results.getDouble(2) * results.getDouble(3) *
+						results.getDouble(4);
+					threadName = Double.toString(numThreads);
+					value = results.getDouble(5);
+				}
 				if ((metricName.toLowerCase().indexOf("time") != -1) 
 					&& (dataType != FRACTION_OF_TOTAL))
 					value = value/1000000;
@@ -194,6 +201,8 @@ public class ChartData extends RMIChartData {
 		} catch (Exception e) {
 			if (statement != null)
 				System.out.println(statement.toString());
+			else
+				System.out.println(buf.toString());
 			String error = "ERROR: Couldn't select the analysis settings from the database!";
 			System.out.println(error);
 			e.printStackTrace();
@@ -213,7 +222,7 @@ public class ChartData extends RMIChartData {
 			DB db = PerfExplorerServer.getServer().getDB();
 
 		PreparedStatement statement = null;
-		StringBuffer buf = new StringBuffer();
+		buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
 		if (dataType == FRACTION_OF_TOTAL) {
 			// The user wants to know the runtime breakdown by events of one 
@@ -508,7 +517,8 @@ public class ChartData extends RMIChartData {
 			buf.append("select ");
 			if (object instanceof RMIView) {
 				if (isLeafView()) {
-					buf.append(" " + model.getViewSelectionString() + ", ");
+					//buf.append(" " + model.getViewSelectionString() + ", ");
+					buf.append(" ie.name, ");
 				} else {
 					buf.append(" " + groupByColumn + ", ");
 				}
@@ -522,13 +532,22 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
-			buf.append("where t.experiment = ? and m.name = ? ");
+			if (object instanceof RMIView) {
+				buf.append(model.getViewSelectionPath(true, true));
+			} else {
+				buf.append("where t.experiment = ? ");
+			}
+			buf.append(" and m.name = ? ");
 
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ie.group_name like '%TAU_PHASE%' order by 1, 2, 3, 4");
+			buf.append(" and ie.group_name like '%TAU_PHASE%' order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
-			statement.setInt (1, model.getExperiment().getID());
-			statement.setString(2, metricName);
+			if (object instanceof RMIView) {
+				statement.setString(1, metricName);
+			} else {
+				statement.setInt (1, model.getExperiment().getID());
+				statement.setString(2, metricName);
+			}
 		} else if ((dataType == FRACTION_OF_TOTAL_PHASES) || 
 			(dataType == CORRELATION_DATA)) {
 			// The user wants to know the runtime breakdown by phases 
@@ -537,7 +556,8 @@ public class ChartData extends RMIChartData {
 			buf.append("select ");
 			if (object instanceof RMIView) {
 				if (isLeafView()) {
-					buf.append(" " + model.getViewSelectionString() + ", ");
+					//buf.append(" " + model.getViewSelectionString() + ", ");
+					buf.append(" ie.name, ");
 				} else {
 					buf.append(" " + groupByColumn + ", ");
 				}
@@ -567,22 +587,18 @@ public class ChartData extends RMIChartData {
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == IQR_DATA) {
-			int contexts = 1;
-			int threads = 1;
-			// get the number of contexts and threads!
-			
 			// The user wants to know the runtime breakdown by phases 
 			// of one experiment as the number of threads of execution
 			// increases.
-			buf.append("select ie.name, (p.node*");
-			buf.append(contexts * threads);
-			buf.append(") + (p.context*");
-			buf.append(threads);
+			buf.append("select ie.name, ");
+			buf.append("(p.node * t.contexts_per_node * ");
+			buf.append("t.threads_per_context) + (p.context * ");
+			buf.append("t.threads_per_context) + p.thread as thread, ");
             
             if (db.getDBType().compareTo("oracle") == 0) {
-                buf.append(") + p.thread as thread, p.excl ");
+                buf.append("p.excl ");
             } else {
-                buf.append(") + p.thread as thread, p.exclusive_percentage ");
+                buf.append("p.exclusive_percentage ");
             }
 
 			buf.append("from interval_event ie ");
@@ -591,9 +607,11 @@ public class ChartData extends RMIChartData {
 			buf.append(model.getXPercent());
 			buf.append(" left outer join interval_location_profile p ");
 			buf.append("on ie.id = p.interval_event ");
-			buf.append("and p.metric = s.metric where ie.trial = ? ");
-			buf.append(" and p.metric = ? ");
-			buf.append(" and (ie.group_name is null or (");
+			buf.append("and p.metric = s.metric ");
+			buf.append("inner join trial t on ie.trial = t.id ");
+			buf.append("where ie.trial = ? ");
+			buf.append("and p.metric = ? ");
+			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
 			buf.append(" order by 1,2 ");
@@ -608,7 +626,7 @@ public class ChartData extends RMIChartData {
 			DB db = PerfExplorerServer.getServer().getDB();
 
 		PreparedStatement statement = null;
-		StringBuffer buf = new StringBuffer();
+		buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
 		if (dataType == FRACTION_OF_TOTAL) {
 			// The user wants to know the runtime breakdown by events of one 
@@ -701,7 +719,7 @@ public class ChartData extends RMIChartData {
 	private PreparedStatement buildPreQueryStatement () throws SQLException {
 		DB db = PerfExplorerServer.getServer().getDB();
 		PreparedStatement statement = null;
-		StringBuffer buf = new StringBuffer();
+		buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
 		if (dataType == CORRELATION_DATA) {
 			// The user wants to know the runtime breakdown by events of one 

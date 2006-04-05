@@ -16,6 +16,7 @@ import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.Range;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
@@ -65,6 +66,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
             true,                            // tooltips
             false                            // urls
         );
+        XYPlot plot = chart.getXYPlot();
+		NumberAxis axis = new NumberAxis("Percentage of Total Runtime");
+        axis.setRange(new Range(0,100));
+        plot.setRangeAxis(0, axis);
 
 		return new PerfExplorerChart(chart, "Total Runtime Breakdown");
 	}
