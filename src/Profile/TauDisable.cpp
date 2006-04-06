@@ -53,6 +53,14 @@ void tau_profile_exit_(char *msg)
 {
 }
 
+void tau_db_dump_(void)
+{
+}
+
+void tau_db_dump_prefix_(char *prefix)
+{
+}
+
 void tau_profile_init_(int *argc, char **argv)
 {
 }
@@ -84,6 +92,14 @@ void tau_profile_stop(void **profiler)
 }
 
 void tau_profile_exit(char *msg)
+{
+}
+
+void tau_db_dump(void)
+{
+}
+
+void tau_db_dump_prefix(char *prefix)
 {
 }
 
@@ -168,6 +184,14 @@ void TAU_PROFILE_STOP(void **profiler)
 }
 
 void TAU_PROFILE_EXIT(char *msg)
+{
+}
+
+void TAU_DB_DUMP(void)
+{
+}
+
+void TAU_DB_DUMP_PREFIX(char *prefix)
 {
 }
 
@@ -372,6 +396,14 @@ void tau_profile_exit__(char *msg)
 {
 }
 
+void tau_db_dump__(void)
+{
+}
+
+void tau_db_dump_prefix__(char *prefix)
+{
+}
+
 void tau_profile_init__(int *argc, char **argv)
 {
 }
@@ -551,7 +583,7 @@ void TAU_SET_INTERRUPT_INTERVAL(int value)
 } /* extern "C" */
 
 /***************************************************************************
- * $RCSfile: TauDisable.cpp,v $   $Author: amorris $
- * $Revision: 1.6 $   $Date: 2005/11/11 03:46:49 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.6 2005/11/11 03:46:49 amorris Exp $ 
+ * $RCSfile: TauDisable.cpp,v $   $Author: khuck $
+ * $Revision: 1.7 $   $Date: 2006/04/06 00:08:27 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.7 2006/04/06 00:08:27 khuck Exp $ 
  ***************************************************************************/
