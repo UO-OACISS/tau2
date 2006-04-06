@@ -58,9 +58,9 @@ public class DBConnector implements DB {
 
     public void setJDBC(ParseConfig parser) {
         driverName = parser.getJDBCDriver();
-        if (parser.getDBType().equals("db2")) {
-            dbaddress = "jdbc:" + parser.getDBType() + ":" + parser.getDBName();
-        } else if (parser.getDBType().equals("derby")) {
+        //if (parser.getDBType().equals("db2")) {
+            //dbaddress = "jdbc:" + parser.getDBType() + ":" + parser.getDBName();
+        if (parser.getDBType().equals("derby")) {
             dbaddress = "jdbc:" + parser.getDBType() + ":" + parser.getDBName();
         } else {
             if (parser.getDBType().equals("oracle")) {

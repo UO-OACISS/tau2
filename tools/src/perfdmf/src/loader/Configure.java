@@ -148,12 +148,12 @@ public class Configure {
 
             while (!valid) {
                 // Prompt for database type
-                System.out.print("Please enter the database vendor (oracle, postgresql, mysql or derby).\n(" + jdbc_db_type + "):");
-                //System.out.print("Please enter the database vendor (oracle, postgresql or mysql).\n(" + jdbc_db_type + "):");
+                System.out.println("Please enter the database vendor (oracle, postgresql, mysql, db2 or derby).");
+				System.out.println(jdbc_db_type + "):");
                 tmpString = reader.readLine();
                 if (tmpString.compareTo("oracle") == 0 || tmpString.compareTo("postgresql") == 0
                 || tmpString.compareTo("mysql") == 0 || tmpString.compareTo("derby") == 0 
-                || tmpString.length() == 0) {
+                || tmpString.compareTo("db2") == 0 || tmpString.length() == 0) {
                     if (tmpString.length() > 0)
                         jdbc_db_type = tmpString;
                     valid = true;
@@ -193,6 +193,14 @@ public class Configure {
                     db_dbname = tau_root + "/" + arch + "/lib/perfdmf";
                     db_hostname = "";
                     db_portnum = "";
+                } else if (jdbc_db_type.compareTo("db2") == 0 && old_jdbc_db_type.compareTo("db2") != 0) {
+                    // if the user has chosen derby and the config file is not already set for it
+                    jdbc_db_jarfile = getSysDepRoot() + "db2java.jar";
+                    jdbc_db_driver = "COM.ibm.db2.jdbc.net.DB2Driver";
+                    db_schemafile = perfdmf_home + "/etc/" + "dbschema.db2.txt";
+                    db_dbname = "perfdmf";
+                    db_hostname = "localhost";
+                    db_portnum = "50000";
                 }
 
             } else {
@@ -226,7 +234,14 @@ public class Configure {
                     db_dbname = tau_root + "/" + arch + "/lib/perfdmf";
                     db_hostname = "";
                     db_portnum = "";
-                }
+                } else if (jdbc_db_type.compareTo("db2") == 0) {
+                    jdbc_db_jarfile = "db2java.jar";
+                    jdbc_db_driver = "COM.ibm.db2.jdbc.net.DB2Driver";
+                    db_schemafile = "dbschema.db2.txt";
+                    db_dbname = "perfdmf";
+                    db_hostname = "localhost";
+                    db_portnum = "50000";
+                 }
             }
 
             if (!configFileFound) {
