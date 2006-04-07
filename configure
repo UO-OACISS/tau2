@@ -2289,7 +2289,6 @@ EOF
     fi
   fi
 
-  echo $mpicompiler $orig_useropt $mpi_include -c mpi2iorequest.$msuf  
   cp mpi2iorequest.$msuf io.$msuf
   if $mpicompiler $orig_useropt $mpi_include -c mpi2iorequest.$msuf  1> /dev/null 2>&1
   then
@@ -4015,6 +4014,15 @@ else
   targetdir=${tauprefix}
 fi
 
+
+# Copy over tau_load.sh
+if [ $mpi = yes ]
+then
+  cat ${tauroot}/tools/src/tau_load.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau_load.sh
+  chmod a+rx ${targetdir}/${architecture}/bin/tau_load.sh
+  echo "TAU: installed tau_load.sh in ${targetdir}/${architecture}/bin"
+  cat ${targetdir}/${architecture}/bin/tau_load.sh
+fi
 
 if [ $slog2 = yes ]
 then
