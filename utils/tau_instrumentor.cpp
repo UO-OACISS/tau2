@@ -1317,6 +1317,15 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    write_upto = inbufLength; 
 	    print_cr = true;
 	  }
+
+	  int pure = 0;
+#ifdef PDT_PURE
+	  if (((pdbRoutine *)(*it)->item)->fprefix() == pdbItem::FP_PURE ||
+	      ((pdbRoutine *)(*it)->item)->fprefix() == pdbItem::FP_ELEM) {
+	    pure = 1;
+	  }
+#endif
+
 	  /* set instrumented = true after inserting instrumentation */
 	  switch((*it)->kind)
 	  {
@@ -1335,20 +1344,33 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
 		WRITE_TAB(ostr,(*it)->col);
 
+		
+		if (pure) {
+		  ostr <<"interface\n";
+		  ostr <<"pure function TAU_PURE_START(name)\n";
+		  ostr <<"character(*), intent(in) :: name\n";
+		  ostr <<"end function TAU_PURE_START\n";
+		  ostr <<"pure function TAU_PURE_STOP(name)\n";
+		  ostr <<"character(*), intent(in) :: name\n";
+		  ostr <<"end function TAU_PURE_STOP\n";
+		  ostr <<"end interface\n";
+		} else {
+		  
 #ifdef TAU_ALIGN_FORTRAN_INSTRUMENTATION
-		// alignment issues on solaris2-64 require a value
-		// that will be properly aligned
-		ostr <<"DOUBLE PRECISION profiler / 0 /"<<endl;
-		//ostr <<"integer*8 profiler / 0 /"<<endl;
+		  // alignment issues on solaris2-64 require a value
+		  // that will be properly aligned
+		  ostr <<"DOUBLE PRECISION profiler / 0 /"<<endl;
+		  //ostr <<"integer*8 profiler / 0 /"<<endl;
 #else
-		ostr <<"integer profiler(2) / 0, 0 /"<<endl;
+		  ostr <<"integer profiler(2) / 0, 0 /"<<endl;
 #endif
-		/* spaces */
-     		for (space = 0; space < (*it)->col-1 ; space++) 
-		  WRITE_SPACE(ostr, inbuf[space]) 
-
-		WRITE_TAB(ostr,(*it)->col);
-		ostr <<"save profiler"<<endl<<endl;
+		  /* spaces */
+		  for (space = 0; space < (*it)->col-1 ; space++) 
+		    WRITE_SPACE(ostr, inbuf[space]);
+		      
+		  WRITE_TAB(ostr,(*it)->col);
+		  ostr <<"save profiler"<<endl<<endl;
+		}
 
      		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
@@ -1368,17 +1390,21 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		    (*it)->item->fullName()<< "')"<<endl;
 		}
 		else { /* For all routines */
-		  if (strcmp(group_name.c_str(), "TAU_USER") != 0)
-  		  { /* Write the following lines only when -DTAU_GROUP=string is defined */
-		    WRITE_TAB(ostr,(*it)->col);
-		    ostr<<"call TAU_PROFILE_TIMER(profiler,'" <<
-    		       group_name.substr(10)<<">"<< (*it)->item->fullName()<< "')"<<endl;
-		  }
-		  else 
-		  { /* group_name is not defined, write the default fullName of the routine */
-		    WRITE_TAB(ostr,(*it)->col);
-		    ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
-		      (*it)->item->fullName()<< "')"<<endl;
+
+		  if (!pure) {
+
+		    if (strcmp(group_name.c_str(), "TAU_USER") != 0)
+		      { /* Write the following lines only when -DTAU_GROUP=string is defined */
+			WRITE_TAB(ostr,(*it)->col);
+			ostr<<"call TAU_PROFILE_TIMER(profiler,'" <<
+			  group_name.substr(10)<<">"<< (*it)->item->fullName()<< "')"<<endl;
+		      }
+		    else 
+		      { /* group_name is not defined, write the default fullName of the routine */
+			WRITE_TAB(ostr,(*it)->col);
+			ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
+			  (*it)->item->fullName()<< "')"<<endl;
+		      }
 		  }
   		}
 		/* spaces */
@@ -1386,7 +1412,11 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  WRITE_SPACE(ostr, inbuf[space]) 
 
 		WRITE_TAB(ostr,(*it)->col);
-		ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
+		if (pure) {
+		  ostr << "call TAU_PURE_START('" << (*it)->item->fullName()<< "')"<<endl;
+		} else {
+		  ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
+		}
 
 		/* write the original statement */
      		for (k = 0; k < write_upto ; k++) 
@@ -1422,7 +1452,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    }
 
 	    if ((*it)->col > strlen(inbuf)) {
-	      perror("ERROR: column number beyond line");
+	      fprintf(stderr, "ERROR: specified column number (%d) is beyond the end of the line (%d in length)\n",(*it)->col,strlen(inbuf));
+	      fprintf(stderr, "line = %s\n",inbuf);
 	      exit(-1);
 	    }
                 checkbuf = new char[strlen(inbuf)+1]; 
@@ -1522,7 +1553,11 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
 		else
 		{
-		  ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
+		  if (pure) {
+		    ostr <<"call TAU_PURE_STOP('" << (*it)->item->fullName()<< "')"<<endl;
+		  } else {
+		    ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
+		  }
 		}
 
      		for (space = 0; space < (*it)->col-1 ; space++) 
@@ -1900,9 +1935,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.83 $   $Date: 2006/03/10 18:17:26 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.83 2006/03/10 18:17:26 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.84 $   $Date: 2006/04/07 22:55:20 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.84 2006/04/07 22:55:20 amorris Exp $
  ***************************************************************************/
 
 
