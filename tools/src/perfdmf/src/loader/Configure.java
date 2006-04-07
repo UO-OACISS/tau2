@@ -200,8 +200,9 @@ public class Configure {
                     jdbc_db_driver = "COM.ibm.db2.jdbc.net.DB2Driver";
                     db_schemafile = perfdmf_home + "/etc/" + "dbschema.db2.txt";
                     db_dbname = "perfdmf";
+    				db_schemaprefix = "perfdmf";
                     db_hostname = "localhost";
-                    db_portnum = "50000";
+                    db_portnum = "446";
                 } else if (jdbc_db_type.compareTo("db2") == 0 && old_jdbc_db_type.compareTo("db2") == 0) {
                     // if the user has chosen db2 and the config file is already set for it
      				int endIndex = jdbc_db_jarfile.indexOf("java/db2java.zip:");
@@ -248,8 +249,9 @@ public class Configure {
                     jdbc_db_driver = "COM.ibm.db2.jdbc.net.DB2Driver";
                     db_schemafile = "dbschema.db2.txt";
                     db_dbname = "perfdmf";
+    				db_schemaprefix = "perfdmf";
                     db_hostname = "localhost";
-                    db_portnum = "50000";
+                    db_portnum = "446";
                  }
             }
 
@@ -372,9 +374,10 @@ public class Configure {
             }
 
             if (jdbc_db_type.compareTo("db2") == 0) {
-                tmpString = jdbc_db_jarfile + "/java/db2java.zip:" +
+                tmpString = 
+				//jdbc_db_jarfile + "/java/db2java.zip:" +
 				jdbc_db_jarfile + "/java/db2jcc.jar:" +
-				jdbc_db_jarfile + "/function:" +
+				//jdbc_db_jarfile + "/function:" +
 				jdbc_db_jarfile + "/java/db2jcc_license_cu.jar";
 				jdbc_db_jarfile = tmpString;
 			}
@@ -412,7 +415,7 @@ public class Configure {
             if (tmpString.length() > 0)
                 db_dbname = tmpString;
 
-            if (jdbc_db_type.compareTo("oracle") == 0) {
+            if ((jdbc_db_type.compareTo("oracle") == 0) || (jdbc_db_type.compareTo("db2") == 0)) {
                 System.out.print("Please enter the database schema name, or your username if you are creating the tables now.\n("
                         + db_schemaprefix + "):");
                 tmpString = reader.readLine();

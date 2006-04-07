@@ -1,4 +1,4 @@
-connect to perfdmf
+connect to PARAPROF
 
 CREATE TABLE application ( \
 	id						INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, \
@@ -7,32 +7,32 @@ CREATE TABLE application ( \
 	description				CLOB, \
 	language				CLOB, \
 	paradigm				CLOB, \
-    algorithms              TEXT, \
-    lines_of_code	    TEXT, \
-    big_lil_endian	    TEXT, \
-    directives		    TEXT, \
-    memory_intensity	    TEXT, \
-    communication_intensity TEXT, \
-    cpu_intensity	    TEXT, \
-    os_requirements	    TEXT, \
-    other_requirements	    TEXT, \
-    spectral_or_physical_mesh	TEXT, \
-    static_or_adaptive_mesh	TEXT, \
-    structured_or_unstructured_mesh	TEXT, \
-    code_history	    TEXT,     \
-    primary_industry	    TEXT, \
-    primary_technology_area TEXT, \
-    rib_entry		    TEXT \
+    algorithms              CLOB, \
+    lines_of_code	    	CLOB, \
+    big_lil_endian	    	CLOB, \
+    directives		    	CLOB, \
+    memory_intensity	    CLOB, \
+    communication_intensity CLOB, \
+    cpu_intensity	    	CLOB, \
+    os_requirements	    	CLOB, \
+    other_requirements	    CLOB, \
+    spectral_or_physical_mesh	CLOB, \
+    static_or_adaptive_mesh	CLOB, \
+    structured_or_unstructured_mesh	CLOB, \
+    code_history	    	CLOB,     \
+    primary_industry	    CLOB, \
+    primary_technology_area CLOB, \
+    rib_entry		    	CLOB \
 )
 
 CREATE TABLE experiment ( \
     id                      INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, \
     application             INT             NOT NULL, \
-    name                    TEXT, \
-    sysinfo                 TEXT, \
-    configinfo		    TEXT, \
-    instruinfo		    TEXT, \
-    compilerinfo	    TEXT, \
+    name                    CLOB, \
+    sysinfo                 CLOB, \
+    configinfo		    	CLOB, \
+    instruinfo		    	CLOB, \
+    compilerinfo	    	CLOB, \
  	FOREIGN KEY(application) REFERENCES application(id) ON DELETE NO ACTION \
 )
 
@@ -41,7 +41,7 @@ CREATE TABLE trial ( \
     name                    VARCHAR(100), \
     experiment              INT             NOT NULL, \
     date                    TIMESTAMP,       \
-    collectorid		    INT, \
+    collectorid		    	INT, \
     node_count              INT, \
     contexts_per_node       INT, \
     threads_per_context     INT, \
@@ -59,8 +59,8 @@ CREATE TABLE interval_event ( \
     id                      INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, \
     trial                   INT             NOT NULL, \
     name                    CLOB            NOT NULL, \
-    group_name              TEXT, \
-    source_file		    TEXT, \
+    group_name              CLOB, \
+    source_file		    CLOB, \
     line_number		    INT, \
     line_number_end	    INT, \
  	FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION \
@@ -70,8 +70,8 @@ CREATE TABLE atomic_event ( \
     id                      INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, \
     trial                   INT              NOT NULL, \
     name                    CLOB             NOT NULL, \
-    group_name              TEXT, \
-    source_file		        TEXT, \
+    group_name              CLOB, \
+    source_file		        CLOB, \
     line_number		        INT, \
 	FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION \
 )
