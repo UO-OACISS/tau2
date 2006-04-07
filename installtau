@@ -374,10 +374,13 @@ echo " " > wishver
     fi
   fi 
 
+  if [ $arch = yes -a $archdir != bgl -a $archdir != xt3 ]
+  then
 # Just Pthread
-  echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread "
-  ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread <wishver
-  make clean; make install
+    echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread "
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread <wishver
+    make clean; make install
+  fi
   
 # Just Sequential
   echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt "
@@ -387,9 +390,12 @@ echo " " > wishver
   if [ $papi = yes ]
   then 
 # PAPI with PTHREAD 
-    echo "Configuring with -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL "
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
-    make clean; make install
+    if [ $arch = yes -a $archdir != bgl -a $archdir != xt3 ]
+    then
+      echo "Configuring with -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL "
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
+      make clean; make install
+    fi
 
 # PAPI with -pdt 
     if [ $pdt = yes ]
