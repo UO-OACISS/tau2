@@ -708,9 +708,38 @@ extern "C" void Tau_profile_param1l(long data, const char * dataname)
   TAU_PROFILE_PARAM1L(data, dname);
 }
 
+
+/*
+  The following is for supporting pure and elemental fortran subroutines
+*/
+
+static map<string, FunctionInfo *> pureMap;
+
+extern "C" void Tau_pure_start(char *name) {
+  FunctionInfo *fi = 0;
+  string n = string(name);
+  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
+  if (it == pureMap.end()) {
+    tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
+    pureMap[n] = fi;
+  } else {
+    fi = (*it).second;
+  }
+  Tau_start_timer(fi,0);
+}
+
+extern "C" void Tau_pure_stop(char *name) {
+  FunctionInfo *fi;
+  string n = string(name);
+  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
+  fi = (*it).second;
+  Tau_stop_timer(fi);
+}
+
+
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.56 $   $Date: 2006/03/27 21:10:50 $
- * VERSION: $Id: TauCAPI.cpp,v 1.56 2006/03/27 21:10:50 sameer Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.57 $   $Date: 2006/04/07 22:56:34 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.57 2006/04/07 22:56:34 amorris Exp $
  ***************************************************************************/
 
