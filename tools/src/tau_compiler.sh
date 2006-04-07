@@ -444,7 +444,7 @@ for arg in "$@"
 			;;
 
 		-o*)
- 			if [ "x$arg" != "x-openmp" ]; then
+ 			if [ "x$arg" != "x-openmp" -a "x$arg" != "x-override_limits" ]; then
 			    hasAnOutputFile=$TRUE
 			    passedOutputFile="${arg#"-o"}"
 			    echoIfDebug "\tHas an output file = $passedOutputFile"
@@ -452,6 +452,8 @@ for arg in "$@"
 			#options, so no need to append it to argsRemaining. WIth
 			#others it is simply added to the command.
 			#-o is added later
+		        else
+				argsRemaining="$argsRemaining ""$arg"
  			fi
 			;;
 
