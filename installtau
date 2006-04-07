@@ -5,6 +5,7 @@ pdt=no
 pdtcomp=no
 dyninst=no
 arch=no
+archdir=none
 cc=no
 cxx=no
 fortran=no
@@ -374,7 +375,7 @@ echo " " > wishver
     fi
   fi 
 
-  if [ $arch = yes -a $archdir != bgl -a $archdir != xt3 ]
+  if [ $arch = no -o $archdir != bgl -a $archdir != xt3 ]
   then
 # Just Pthread
     echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread "
@@ -390,7 +391,7 @@ echo " " > wishver
   if [ $papi = yes ]
   then 
 # PAPI with PTHREAD 
-    if [ $arch = yes -a $archdir != bgl -a $archdir != xt3 ]
+    if [ $arch = no -o $archdir != bgl -a $archdir != xt3 ]
     then
       echo "Configuring with -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL "
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
