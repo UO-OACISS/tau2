@@ -396,8 +396,11 @@ void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *rit, pdbRouti
 #ifdef DEBUG 
 	   cout <<"Callee " << rr->name() << " location line " << (*cit)->line() << " col " << (*cit)->col() <<endl; 
 #endif /* DEBUG */
-	   if (strcmp(rr->name().c_str(), exit_keyword)== 0)
-	   {
+	   /* we do not want to call TAU_PROFILE_EXIT before obj->exit or 
+	      obj->abort. Ignore the routines that have a parent group */
+           if ((rr->parentGroup() == (const pdbGroup *) NULL) && 
+	       (strcmp(rr->name().c_str(), exit_keyword)== 0))
+	   { /* routine name matches and it is not a member of a class */
 	     /* routine calls exit */
 #ifdef DEBUG
              cout <<"Exit keyword matched"<<endl;
@@ -1935,9 +1938,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.84 $   $Date: 2006/04/07 22:55:20 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.84 2006/04/07 22:55:20 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.85 $   $Date: 2006/04/07 23:06:35 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.85 2006/04/07 23:06:35 sameer Exp $
  ***************************************************************************/
 
 
