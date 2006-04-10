@@ -794,7 +794,7 @@ void MultipleCounterLayer::papiMCL(int tid, double values[]){
       if(resultCode != PAPI_OK){
 	cout << "Error adding Papi events!" << endl;
 	if(resultCode == PAPI_ECNFLCT){
-	  cout <<"The events you have chosed conflict."<<endl;
+	  cout <<"The events you have chosen conflict."<<endl;
 	  cout <<"This could be a limit on either the number of events" << endl;
 	  cout <<"allowed by this hardware, or the combination of events chosen." << endl;
 	  cout << endl;
