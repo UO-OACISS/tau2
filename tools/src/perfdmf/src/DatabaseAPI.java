@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.5 2006/04/03 18:16:40 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.6 2006/04/10 19:55:50 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class DatabaseAPI {
 
@@ -1116,7 +1116,7 @@ public class DatabaseAPI {
 
             for (Iterator it4 = dataSource.getFunctions(); it4.hasNext();) {
                 Function function = (Function) it4.next();
-                if (!function.isGroupMember(derived)) {
+                if (function.isGroupMember(derived)) {
                     continue;
                 }
                 Integer intervalEventID = (Integer) functionMap.get(function);

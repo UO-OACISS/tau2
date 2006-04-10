@@ -252,6 +252,13 @@ public class DBConnector implements DB {
                 return new String(this.parseConfig.getDBSchemaPrefix() + ".");
             else
                 return "";
+        } else if (this.getDBType().compareTo("db2") == 0) {
+
+            if (this.parseConfig.getDBSchemaPrefix() != null
+                    && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
+                return new String(this.parseConfig.getDBSchemaPrefix() + ".");
+            else
+                return "";
         } else {
             return "";
         }
@@ -349,7 +356,8 @@ public class DBConnector implements DB {
 
         ResultSet resultSet = null;
         if ((this.getDBType().compareTo("oracle") == 0) ||
-        	(this.getDBType().compareTo("derby") == 0)) {
+        	(this.getDBType().compareTo("derby") == 0) ||
+        	(this.getDBType().compareTo("db2") == 0)) {
             resultSet = dbMeta.getColumns(null, null, tableName.toUpperCase(), "%");
         } else {
             resultSet = dbMeta.getColumns(null, null, tableName, "%");

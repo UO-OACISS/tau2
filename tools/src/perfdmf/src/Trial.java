@@ -22,7 +22,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.3 2006/02/08 02:21:45 khuck Exp $
+ * CVS $Id: Trial.java,v 1.4 2006/04/10 19:55:50 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -368,7 +368,8 @@ public class Trial implements Serializable {
             DatabaseMetaData dbMeta = db.getMetaData();
 
 			if ((db.getDBType().compareTo("oracle") == 0) ||
-				(db.getDBType().compareTo("derby") == 0)) {
+				(db.getDBType().compareTo("derby") == 0) ||
+				(db.getDBType().compareTo("db2") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "TRIAL", "%");
             } else {
                 resultSet = dbMeta.getColumns(null, null, "trial", "%");

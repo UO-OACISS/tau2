@@ -42,14 +42,17 @@ fi
 
 # get the jdbc jar file from the configuration file
 JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} 2>/dev/null | sed s/jdbc_db_jarfile://`
+JDBC_TYPE=`grep jdbc_db_type ${CONFIG_FILE} | sed s/jdbc_db_type://`
 
-if [ ! -z ${JDBC_JAR} ]; then
-    if [ ! -r ${JDBC_JAR} ]; then
-        echo ""
-        echo "Error: JDBC driver '$JDBC_JAR' not found."
-        echo ""
-	exit
-    fi
+if [ ! "${JDBC_TYPE}" = "db2" ]; then
+	if [ ! -z ${JDBC_JAR} ]; then
+    	if [ ! -r ${JDBC_JAR} ]; then
+        	echo ""
+        	echo "Error: JDBC driver '$JDBC_JAR' not found."
+        	echo ""
+		exit
+    	fi
+	fi
 fi
 
 

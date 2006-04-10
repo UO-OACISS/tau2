@@ -25,7 +25,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: IntervalEvent.java,v 1.2 2006/02/08 01:25:45 khuck Exp $</P>
+ * <P>CVS $Id: IntervalEvent.java,v 1.3 2006/04/10 19:55:50 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -208,6 +208,8 @@ public class IntervalEvent {
         if (db.getDBType().compareTo("oracle") == 0) {
             buf.append(" order by dbms_lob.substr(name) asc");
         } else if (db.getDBType().compareTo("derby") == 0) {
+            buf.append(" order by cast (name as varchar(256)) asc");
+        } else if (db.getDBType().compareTo("db2") == 0) {
             buf.append(" order by cast (name as varchar(256)) asc");
         } else {
             buf.append(" order by name asc ");

@@ -112,11 +112,13 @@ public class ConnectionManager {
 
             while ((inputString = preader.readLine()) != null) {
                 inputString = inputString.replaceAll("@DATABASE_NAME@", parser.getDBName());
+                inputString = inputString.replaceAll("@DATABASE_PREFIX@", parser.getDBSchemaPrefix() + ".");
                 buf.append(inputString);
                 if (isEnd(db, inputString)) {
                     try {
                         if ((db.getDBType().compareTo("oracle") == 0) ||
-                        	(db.getDBType().compareTo("derby") == 0)) {
+                        	(db.getDBType().compareTo("derby") == 0) ||
+                        	(db.getDBType().compareTo("db2") == 0)) {
                             buf.delete(buf.length() - 1, buf.length());
                         }
                         //System.out.println ("line: " + buf.toString());

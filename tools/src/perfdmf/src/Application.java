@@ -20,7 +20,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.4 2006/03/04 03:02:10 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.5 2006/04/10 19:55:50 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -92,7 +92,9 @@ public class Application implements Serializable {
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
-            if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)) {
+            if ((db.getDBType().compareTo("oracle") == 0) || 
+				(db.getDBType().compareTo("derby") == 0) || 
+				(db.getDBType().compareTo("db2") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "APPLICATION", "%");
             } else {
                 resultSet = dbMeta.getColumns(null, null, "application", "%");
@@ -228,13 +230,14 @@ public class Application implements Serializable {
     }
 
     public static Vector getApplicationList(DB db, String whereClause) {
+        StringBuffer buf = null;
         try {
             Application.getMetaData(db);
 
             ResultSet resultSet = null;
             Vector applications = new Vector();
 
-            StringBuffer buf = new StringBuffer("select id, name");
+            buf = new StringBuffer("select id, name");
 
             for (int i = 0; i < Application.fieldNames.length; i++) {
                 buf.append(", " + Application.fieldNames[i]);
@@ -247,6 +250,8 @@ public class Application implements Serializable {
             if (db.getDBType().compareTo("oracle") == 0) {
                 buf.append(" order by dbms_lob.substr(name) asc");
             } else if (db.getDBType().compareTo("derby") == 0) {
+                buf.append(" order by cast (name as varchar(256)) asc");
+            } else if (db.getDBType().compareTo("db2") == 0) {
                 buf.append(" order by cast (name as varchar(256)) asc");
             } else {
                 buf.append(" order by name asc ");
@@ -273,6 +278,8 @@ public class Application implements Serializable {
 
             return applications;
         } catch (SQLException e) {
+			if (buf != null)
+				System.out.println(buf.toString());
             throw new DatabaseException("", e);
         }
 

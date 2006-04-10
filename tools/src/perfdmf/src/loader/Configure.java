@@ -207,7 +207,12 @@ public class Configure {
                     // if the user has chosen db2 and the config file is already set for it
      				int endIndex = jdbc_db_jarfile.indexOf("java/db2java.zip:");
 					if (endIndex == -1) {
-						jdbc_db_jarfile = "";
+     					endIndex = jdbc_db_jarfile.indexOf("java/db2jcc.jar:");
+						if (endIndex == -1) {
+							jdbc_db_jarfile = "";
+						} else {
+							jdbc_db_jarfile = jdbc_db_jarfile.substring(0,endIndex-1);
+						}
 					} else {
 						jdbc_db_jarfile = jdbc_db_jarfile.substring(0,endIndex-1);
 					}
@@ -375,9 +380,9 @@ public class Configure {
 
             if (jdbc_db_type.compareTo("db2") == 0) {
                 tmpString = 
-				//jdbc_db_jarfile + "/java/db2java.zip:" +
+				jdbc_db_jarfile + "/java/db2java.zip:" +
 				jdbc_db_jarfile + "/java/db2jcc.jar:" +
-				//jdbc_db_jarfile + "/function:" +
+				jdbc_db_jarfile + "/function:" +
 				jdbc_db_jarfile + "/java/db2jcc_license_cu.jar";
 				jdbc_db_jarfile = tmpString;
 			}
