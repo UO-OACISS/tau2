@@ -4,8 +4,8 @@
 #Makefile creates the ParaProf jar file.
 ##########################
 
-CONFIG_ARCH=i386_linux
-TAUROOT=/home/amorris/tau2
+CONFIG_ARCH=apple
+TAUROOT=/Users/khuck/tau2
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java \
              ParaProfTreeCellRenderer.java \
@@ -14,7 +14,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
              CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java PrefSpacingPanel.java \
              CallPathTextWindowPanel.java Preferences.java FunctionBarChartWindow.java \
              ColorChooser.java ParaProfExperiment.java \
-             ColorPair.java LedgerWindow.java ParaProfImageOptionsPanel.java \
+             ColorPair.java LedgerWindow.java \
              ParaProfFileFilter.java LedgerDataElement.java \
 	     DataSorter.java CallGraphWindow.java \
              PPThread.java LedgerWindowPanel.java PPFunctionProfile.java \
