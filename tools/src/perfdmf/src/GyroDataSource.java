@@ -191,7 +191,7 @@ public class GyroDataSource extends DataSource {
 						runningTotal += value;
 						phaseTotal += value;
 						values[0] = value;
-						values[1] = 0.0;
+						values[1] = value;
 						String tmp = (String) methodNames.elementAt(counter);
 						phaseValues.put(new String(name + " => " + tmp), values);
 					}
@@ -274,8 +274,10 @@ public class GyroDataSource extends DataSource {
 			functionProfile.setNumCalls(1);
 			if (!eventName.toUpperCase().equals("RUNTIME"))
 				functionProfile.setNumSubr(0);
-			else
+			else {
 				functionProfile.setNumSubr(8);
+				function.addGroup(this.addGroup("TAU_PHASE"));
+			}
 
 			if (doingPhases) {
 				if (eventName.indexOf("=>") == -1)

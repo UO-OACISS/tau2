@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.6 2006/04/10 19:55:50 khuck Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.7 2006/04/11 02:22:42 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class DatabaseAPI {
 
@@ -1059,15 +1059,18 @@ public class DatabaseAPI {
         this.itemsDone++;
 
         //stmt.addBatch();
-        try {
+        //try {
             stmt.executeUpdate();
-        } catch (Exception e) {
-            System.out.println("exclusive: " + fp.getExclusive(metricID));
-            System.out.println("numcalls: " + fp.getNumCalls());
-            System.out.println("numsubr: " + fp.getNumSubr());
-            System.out.println("inclusivepercall: " + fp.getInclusivePerCall(metricID));
-            System.out.println("asdf");
-        }
+        //} catch (Exception e) {
+			//System.out.println(e);
+			//System.out.println(stmt.toString());
+            //System.out.println("exclusive: " + fp.getExclusive(metricID));
+            //System.out.println("numcalls: " + fp.getNumCalls());
+            //System.out.println("numsubr: " + fp.getNumSubr());
+            //System.out.println("inclusivepercall: " + fp.getInclusivePerCall(metricID));
+            //System.out.println("asdf");
+			//System.exit(9);
+        //}
     }
 
     private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map functionMap, Map metricMap) throws SQLException {
