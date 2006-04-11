@@ -23,7 +23,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.28 2006/04/11 02:24:38 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.29 2006/04/11 05:28:53 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -665,8 +665,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		dbControl.WAIT("getPotentialMetrics");
 		try {
 			DB db = this.getDB();
-			StringBuffer buf;
-			buf= new StringBuffer("select distinct count(m.name), m.name ");
+			StringBuffer buf = new StringBuffer();
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select distinct count(cast (m.name as VARCHAR(256)), m.name ");
+			} else {
+				buf.append("select distinct count(m.name), m.name ");
+			}
 			buf.append(" from metric m inner join trial t on m.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
@@ -687,7 +691,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				}
 				buf.append(")");
 			}
-			buf.append(" group by m.name order by count(m.name) desc");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" group by cast (m.name as VARCHAR(256)) order by count(cast (m.name as VARCHAR(256))) desc");
+			} else {
+				buf.append(" group by m.name order by count(m.name) desc");
+			}
 			System.out.println(buf.toString());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
@@ -725,8 +733,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		dbControl.WAIT("getPotentialEvents");
 		try {
 			DB db = this.getDB();
-			StringBuffer buf;
-			buf = new StringBuffer("select distinct ie.name ");
+			StringBuffer buf = new StringBuffer();
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select distinct cast (m.name as VARCHAR(256))");
+			} else {
+				buf.append("select distinct ie.name ");
+			}
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
@@ -1035,7 +1047,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and group_name not like '%TAU_PHASE%' ");
-			buf.append("group by ie.id, ie.name order by ie.name");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("group by ie.id, cast (ie.name as VARCHAR(256)) order by cast (ie.name as VARCHAR(256)) ");
+			} else {
+				buf.append("group by ie.id, ie.name order by ie.name");
+			}
 
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());

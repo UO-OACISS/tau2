@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.31 2006/04/05 20:46:11 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.32 2006/04/11 05:28:53 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -110,7 +110,7 @@ public class ChartData extends RMIChartData {
 			// all query results are organized the same, only the selection
 			// parameters are different.
 			statement = buildStatement();
-			//System.out.println(statement.toString());
+			System.out.println(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// TODO - this query assumes a scalability study...!
 			int columnCounter = 0;
@@ -201,8 +201,7 @@ public class ChartData extends RMIChartData {
 		} catch (Exception e) {
 			if (statement != null)
 				System.out.println(statement.toString());
-			else
-				System.out.println(buf.toString());
+			System.out.println(buf.toString());
 			String error = "ERROR: Couldn't select the analysis settings from the database!";
 			System.out.println(error);
 			e.printStackTrace();
@@ -227,7 +226,11 @@ public class ChartData extends RMIChartData {
 		if (dataType == FRACTION_OF_TOTAL) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
-			buf.append("select ie.name, ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select cast (ie.name as varchar(256)), ");
+			} else {
+				buf.append("select ie.name, ");
+			}
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			buf.append(" ims.exclusive_percentage ");
 			buf.append("from interval_mean_summary ims ");
@@ -241,12 +244,17 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-			buf.append(" and m.name = ? ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? ");
+			} else {
+				buf.append(" and m.name = ? ");
+			}
 			buf.append("and ims.exclusive_percentage > ");
 			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')");
+			buf.append("or ims.exclusive_percentage = 100.0) ");
 			buf.append("order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -264,7 +272,11 @@ public class ChartData extends RMIChartData {
 					tmpBuf.append(groupByColumn);
 				}
 			} else {
-				tmpBuf.append("e.name");
+				if (db.getDBType().compareTo("db2") == 0) {
+					tmpBuf.append("cast (e.name as varchar(256))");
+				} else {
+					tmpBuf.append("e.name");
+				}
 			}
 			buf.append(" " + tmpBuf.toString() + ", ");
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
@@ -291,10 +303,11 @@ public class ChartData extends RMIChartData {
 				buf.append(")");
 			}
 
-			buf.append(" and m.name = ? and ims.inclusive_percentage = 100.0 ");
-			buf.append(" and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? and ims.inclusive_percentage = 100.0 ");
+			} else {
+				buf.append(" and m.name = ? and ims.inclusive_percentage = 100.0 ");
+			}
 			buf.append(" group by ");
 			buf.append(tmpBuf.toString());
 			buf.append(", t.node_count, t.contexts_per_node, t.threads_per_context ");
@@ -317,7 +330,11 @@ public class ChartData extends RMIChartData {
 					tmpBuf.append(" " + groupByColumn + ", ");
 				}
 			} else {
+			if (db.getDBType().compareTo("db2") == 0) {
+				tmpBuf.append(" cast (e.name as varchar(256)), ");
+			} else {
 				tmpBuf.append(" e.name, ");
+			}
 			}
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
@@ -351,11 +368,14 @@ public class ChartData extends RMIChartData {
 				buf.append(") ");
 			}
 
-			buf.append(" and m.name = ? ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? ");
+				buf.append(" and ie.group_name like ? group by ");
+			} else {
+				buf.append(" and m.name = ? ");
+				buf.append(" and ie.group_name = ? group by ");
+			}
 
-//			buf.append(" and ims.inclusive_percentage < 100.0 ");
-			
-			buf.append(" and ie.group_name = ? group by ");
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ie.group_name order by 1, 2, 3, 4");
 
@@ -374,6 +394,9 @@ public class ChartData extends RMIChartData {
 			} else if (db.getDBType().compareTo("derby") == 0) {
 				buf.append("declare global temporary table working_table ");
 				buf.append("(name varchar(4000)) on commit preserve rows not logged ");
+			} else if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("declare global temporary table working_table ");
+				buf.append("(name varchar(4000)) on commit preserve rows not logged ");
 			} else {
 				buf.append("create temporary table working_table (name text) ");
 			}
@@ -385,6 +408,7 @@ public class ChartData extends RMIChartData {
 			} catch (Exception e) {
 				if (statement != null)
 					System.out.println(statement.toString());
+				System.out.println(buf.toString());
 				String error = "ERROR: Couldn't select the analysis settings from the database!";
 				System.out.println(error);
 				e.printStackTrace();
@@ -405,12 +429,17 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-			buf.append(" and m.name = ? ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? ");
+			} else {
+				buf.append(" and m.name = ? ");
+			}
 			buf.append("and ims.exclusive_percentage > ");
 			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')");
+			buf.append("or ims.exclusive_percentage = 100.0) ");
 			buf.append("and ims.inclusive_percentage < 100.0) ");
 
 			//System.out.println(buf.toString());
@@ -422,6 +451,7 @@ public class ChartData extends RMIChartData {
 				statement.close();
 			} catch (Exception e) {
 				System.out.println(statement.toString());
+				System.out.println(buf.toString());
 				String error = "ERROR: Couldn't select the analysis settings from the database!";
 				System.out.println(error);
 				e.printStackTrace();
@@ -429,7 +459,11 @@ public class ChartData extends RMIChartData {
 
 			buf = new StringBuffer();
 			buf.append("select distinct ");
-			buf.append("ie.name, ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" cast (ie.name as varchar(256)), ");
+			} else {
+				buf.append(" ie.name, ");
+			}
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 
 			if (dataType == CORRELATION_DATA) {
@@ -459,7 +493,12 @@ public class ChartData extends RMIChartData {
 				buf.append(model.getExperiment().getID() + " ");
 			}
 
-			buf.append(" and m.name = ? order by 1, 2, 3, 4 ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? ");
+			} else {
+				buf.append(" and m.name = ? ");
+			}
+			buf.append(" order by 1, 2, 3, 4 ");
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -475,7 +514,11 @@ public class ChartData extends RMIChartData {
 					buf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-				buf.append(" e.name, ");
+				if (db.getDBType().compareTo("db2") == 0) {
+					buf.append(" cast (e.name as varchar(256)), ");
+				} else {
+					buf.append(" e.name, ");
+				}
 			}
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			buf.append("exclusive from interval_mean_summary ims ");
@@ -502,8 +545,13 @@ public class ChartData extends RMIChartData {
 				buf.append(") ");
 			}
 
-			buf.append(" and m.name = ? ");
-			buf.append("and ie.name = ? order by 1, 2, 3, 4");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? ");
+				buf.append("and ie.name like ? order by 1, 2, 3, 4");
+			} else {
+				buf.append(" and m.name = ? ");
+				buf.append("and ie.name = ? order by 1, 2, 3, 4");
+			}
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 			statement.setString(2, eventName);
@@ -515,14 +563,20 @@ public class ChartData extends RMIChartData {
 			if (object instanceof RMIView) {
 				if (isLeafView()) {
 					//buf.append(" " + model.getViewSelectionString() + ", ");
-					buf.append(" ie.name, ");
+					if (db.getDBType().compareTo("db2") == 0) {
+						buf.append(" cast (ie.name as varchar(256)), ");
+					} else {
+						buf.append(" ie.name, ");
+					}
 				} else {
 					buf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-				
-				buf.append(" ie.name, ");
-
+				if (db.getDBType().compareTo("db2") == 0) {
+					buf.append(" cast (ie.name as varchar(256)), ");
+				} else {
+					buf.append(" ie.name, ");
+				}
 			}
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			buf.append("ims.inclusive from interval_mean_summary ims ");
@@ -534,7 +588,11 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append("where t.experiment = ? ");
 			}
-			buf.append(" and m.name = ? ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? ");
+			} else {
+				buf.append(" and m.name = ? ");
+			}
 
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
 			buf.append(" and ie.group_name like '%TAU_PHASE%' order by 1, 2, 3, 4");
@@ -554,12 +612,20 @@ public class ChartData extends RMIChartData {
 			if (object instanceof RMIView) {
 				if (isLeafView()) {
 					//buf.append(" " + model.getViewSelectionString() + ", ");
-					buf.append(" ie.name, ");
+					if (db.getDBType().compareTo("db2") == 0) {
+						buf.append(" cast (ie.name as varchar(256)), ");
+					} else {
+						buf.append(" ie.name, ");
+					}
 				} else {
 					buf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-				buf.append(" ie.name, ");
+				if (db.getDBType().compareTo("db2") == 0) {
+					buf.append(" cast (ie.name as varchar(256)), ");
+				} else {
+					buf.append(" ie.name, ");
+				}
 			}
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			buf.append("ims.inclusive_percentage from interval_mean_summary ims ");
@@ -574,7 +640,11 @@ public class ChartData extends RMIChartData {
 				buf.append(model.getExperiment().getID() + " ");
 			}
 
-			buf.append(" and m.name = ? ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? ");
+			} else {
+				buf.append(" and m.name = ? ");
+			}
 
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
 
@@ -587,7 +657,11 @@ public class ChartData extends RMIChartData {
 			// The user wants to know the runtime breakdown by phases 
 			// of one experiment as the number of threads of execution
 			// increases.
-			buf.append("select ie.name, ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select cast (ie.name as varchar(256)), ");
+			} else {
+				buf.append("select ie.name, ");
+			}
 			buf.append("(p.node * t.contexts_per_node * ");
 			buf.append("t.threads_per_context) + (p.context * ");
 			buf.append("t.threads_per_context) + p.thread as thread, ");
@@ -610,7 +684,8 @@ public class ChartData extends RMIChartData {
 			buf.append("and p.metric = ? ");
 			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')");
+			buf.append("or s.exclusive_percentage = 100.0) ");
 			buf.append(" order by 1,2 ");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());
@@ -641,13 +716,18 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-			buf.append(" and m.name = ? ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? ");
+			} else {
+				buf.append(" and m.name = ? ");
+			}
 			buf.append("and ims.inclusive_percentage < 100.0 ");
 			buf.append("and ims.exclusive_percentage < ");
 			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')");
+			buf.append("or ims.exclusive_percentage = 100.0) group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3");
 			
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
@@ -692,7 +772,10 @@ public class ChartData extends RMIChartData {
 			buf.append("left outer join ");
 			if (db.getDBType().compareTo("derby") == 0)
 				buf.append("SESSION.");
-			buf.append("working_table w on w.name = ie.name ");
+			if (db.getDBType().compareTo("db2") == 0)
+				buf.append("working_table w on w.name like ie.name ");
+			else
+				buf.append("working_table w on w.name = ie.name ");
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true));
 			} else {
@@ -700,7 +783,11 @@ public class ChartData extends RMIChartData {
 				buf.append(model.getExperiment().getID() + " ");
 			}
 			
-			buf.append(" and m.name = ? ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? ");
+			} else {
+				buf.append(" and m.name = ? ");
+			}
 			buf.append("and w.name is null ");
 			buf.append("group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3 ");
 
@@ -735,12 +822,17 @@ public class ChartData extends RMIChartData {
 				buf.append("where t.experiment = ");
 				buf.append(model.getExperiment().getID() + " ");
 			}
-			buf.append(" and m.name = ? ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" and m.name like ? ");
+			} else {
+				buf.append(" and m.name = ? ");
+			}
 			buf.append("and ims.exclusive_percentage > ");
 			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')) ");
+			buf.append("and ie.group_name not like '%TAU_PHASE%')");
+			buf.append("or ims.exclusive_percentage = 100.0) ");
 			buf.append("group by t.node_count, t.contexts_per_node, t.threads_per_context order by 2, 3, 4 ");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);

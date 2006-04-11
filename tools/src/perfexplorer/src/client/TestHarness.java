@@ -165,7 +165,8 @@ public class TestHarness {
 
 		// postgres settings
 		setSelection("gyro.B1-std", "B1-std.tg", null, null);
-		model.setMetricName("WALL_CLOCK_TIME");
+		model.setMetricName("Time");
+		//model.setMetricName("WALL_CLOCK_TIME");
 
 		model.setEventName("field");
 		model.setGroupName("TRANSPOSE");
@@ -173,20 +174,20 @@ public class TestHarness {
 		model.setConstantProblem(true);
 
 		// do the tests
-		PerfExplorerChart.doTotalTimeChart();
-		PerfExplorerChart.doTimestepsChart();
-		PerfExplorerChart.doEfficiencyChart();
-		PerfExplorerChart.doSpeedupChart();
-		PerfExplorerChart.doEfficiencyOneEventChart();
-		PerfExplorerChart.doSpeedupOneEventChart();
+		//PerfExplorerChart.doTotalTimeChart();
+		//PerfExplorerChart.doTimestepsChart();
+		//PerfExplorerChart.doEfficiencyChart();
+		//PerfExplorerChart.doSpeedupChart();
+		//PerfExplorerChart.doEfficiencyOneEventChart();
+		//PerfExplorerChart.doSpeedupOneEventChart();
 		PerfExplorerChart.doEfficiencyEventsChart();
-		PerfExplorerChart.doSpeedupEventsChart();
-		PerfExplorerChart.doCommunicationChart();
-		PerfExplorerChart.doFractionChart();
-		PerfExplorerChart.doCorrelationChart();
-		PerfExplorerChart.doEfficiencyPhasesChart();
-		PerfExplorerChart.doSpeedupPhasesChart();
-		PerfExplorerChart.doFractionPhasesChart();
+		//PerfExplorerChart.doSpeedupEventsChart();
+		//PerfExplorerChart.doCommunicationChart();
+		//PerfExplorerChart.doFractionChart();
+		//PerfExplorerChart.doCorrelationChart();
+		//PerfExplorerChart.doEfficiencyPhasesChart();
+		//PerfExplorerChart.doSpeedupPhasesChart();
+		//PerfExplorerChart.doFractionPhasesChart();
 	}
 
 	public void testVisualization() throws Exception {

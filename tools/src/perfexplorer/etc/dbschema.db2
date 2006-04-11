@@ -3,7 +3,7 @@ create table @DATABASE_PREFIX@analysis_settings (
 	application			INTEGER			NOT NULL,
 	experiment			INTEGER			NOT NULL,
 	trial				INTEGER			NOT NULL,
-	metric				INTEGER			NULL,
+	metric				INTEGER,
 	method				VARCHAR(255)	NOT NULL,
 	dimension_reduction	VARCHAR(255)	NOT NULL,
 	normalization		VARCHAR(255)	NOT NULL,
@@ -21,21 +21,21 @@ create table @DATABASE_PREFIX@analysis_result (
 	id					INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 	analysis_settings	INTEGER			NOT NULL,
 	description			VARCHAR(255)	NOT NULL,
-	thumbnail_size		INTEGER			NULL,
-	image_size			INTEGER			NULL,
-	thumbnail			BYTEA			NULL,
-	image				BYTEA			NULL,
+	thumbnail_size		INTEGER,
+	image_size			INTEGER,
+	thumbnail			BLOB,
+	image				BLOB,
 	result_type			INTEGER			NOT NULL
 );
 
 create table @DATABASE_PREFIX@trial_view (
 	id					INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	parent				INTEGER			NULL,
-	name				VARCHAR(4000)	NOT NULL,
-	table_name			VARCHAR(4000)	NOT NULL,
-	column_name			VARCHAR(4000)	NOT NULL,
-	operator			VARCHAR(4000)	NOT NULL,
-	value				VARCHAR(4000)	NOT NULL,
+	parent				INTEGER,
+	name				CLOB	NOT NULL,
+	table_name			CLOB	NOT NULL,
+	column_name			CLOB	NOT NULL,
+	operator			CLOB	NOT NULL,
+	value				CLOB	NOT NULL,
 	FOREIGN KEY (parent) REFERENCES @DATABASE_PREFIX@trial_view(id) 
 		ON DELETE CASCADE
 );
