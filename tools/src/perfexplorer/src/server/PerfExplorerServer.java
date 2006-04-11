@@ -23,7 +23,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.29 2006/04/11 05:28:53 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.30 2006/04/11 20:43:42 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -667,7 +667,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			DB db = this.getDB();
 			StringBuffer buf = new StringBuffer();
 			if (db.getDBType().compareTo("db2") == 0) {
-				buf.append("select distinct count(cast (m.name as VARCHAR(256)), m.name ");
+				buf.append("select distinct count(cast (m.name as VARCHAR(256))), cast (m.name as VARCHAR(256)) ");
 			} else {
 				buf.append("select distinct count(m.name), m.name ");
 			}
@@ -692,7 +692,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append(")");
 			}
 			if (db.getDBType().compareTo("db2") == 0) {
-				buf.append(" group by cast (m.name as VARCHAR(256)) order by count(cast (m.name as VARCHAR(256))) desc");
+				buf.append(" group by cast (m.name as VARCHAR(256)) order by 1 desc");
 			} else {
 				buf.append(" group by m.name order by count(m.name) desc");
 			}
