@@ -112,6 +112,8 @@ public class Configure {
                     filename = tau_root + "/etc/dbschema.mysql";
                 } else if (db.getDBType().compareTo("postgresql") == 0) {
                     filename = tau_root + "/etc/dbschema.postgresql";
+                } else if (db.getDBType().compareTo("db2") == 0) {
+                    filename = tau_root + "/etc/dbschema.db2";
                 } else {
                     System.out.println("Unknown database type: " + db.getDBType());
                     System.exit(-1);

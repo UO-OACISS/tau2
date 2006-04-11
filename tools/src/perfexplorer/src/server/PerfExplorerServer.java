@@ -23,7 +23,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.27 2006/04/05 07:05:50 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.28 2006/04/11 02:24:38 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -688,7 +688,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append(")");
 			}
 			buf.append(" group by m.name order by count(m.name) desc");
-			//System.out.println(buf.toString());
+			System.out.println(buf.toString());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// only get the metrics that are in all trials.
