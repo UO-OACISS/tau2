@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.33 2006/04/11 20:43:42 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.34 2006/04/11 23:21:30 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -188,7 +188,8 @@ public class ChartData extends RMIChartData {
 						statement.execute();
 						statement.close();
 					}
-					if (db.getDBType().compareTo("derby") == 0)
+					if ((db.getDBType().compareTo("derby") == 0) ||
+					    (db.getDBType().compareTo("db2") == 0))
 						statement = db.prepareStatement("drop table SESSION.working_table");
 					else
 						statement = db.prepareStatement("drop table working_table");
@@ -401,12 +402,12 @@ public class ChartData extends RMIChartData {
 				buf.append("(name varchar(4000)) on commit preserve rows not logged ");
 			} else if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("declare global temporary table working_table ");
-				buf.append("(name varchar(4000)) on commit preserve rows not logged ");
+				buf.append("(name varchar(256)) on commit preserve rows not logged ");
 			} else {
 				buf.append("create temporary table working_table (name text) ");
 			}
 			try {
-				//System.out.println(buf.toString());
+				System.out.println(buf.toString());
 				statement = db.prepareStatement(buf.toString());
 				statement.execute();
 				statement.close();
@@ -421,10 +422,16 @@ public class ChartData extends RMIChartData {
 
 			buf = new StringBuffer();
 			buf.append("insert into ");
-			if (db.getDBType().compareTo("derby") == 0)
+			if ((db.getDBType().compareTo("derby") == 0) ||
+			    (db.getDBType().compareTo("db2") == 0))
 				buf.append("SESSION.");
 			buf.append("working_table (select distinct ");
-			buf.append("ie.name from interval_mean_summary ims ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("cast (ie.name as varchar(256)) ");
+			} else {
+				buf.append("ie.name ");
+			}
+			buf.append("from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
@@ -447,7 +454,7 @@ public class ChartData extends RMIChartData {
 			buf.append("or ims.exclusive_percentage = 100.0) ");
 			buf.append("and ims.inclusive_percentage < 100.0) ");
 
-			//System.out.println(buf.toString());
+			System.out.println(buf.toString());
 			try {
 				statement = db.prepareStatement(buf.toString());
 				statement.setString(1, metricName);
@@ -490,7 +497,11 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join ");
 			if (db.getDBType().compareTo("derby") == 0)
 				buf.append("SESSION.");
-			buf.append("working_table w on w.name = ie.name ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("SESSION.working_table w on w.name = cast (ie.name as varchar(256)) ");
+			} else {
+				buf.append("working_table w on w.name = ie.name ");
+			}
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true));
 			} else {
@@ -651,9 +662,7 @@ public class ChartData extends RMIChartData {
 				buf.append(" and m.name = ? ");
 			}
 
-//			buf.append("and ims.inclusive_percentage < 100.0 ");
-
-			
+			buf.append("and ims.inclusive_percentage < 100.0 ");
 			buf.append("and ie.group_name like '%TAU_PHASE%' order by 1, 2, 3, 4");
 
 			statement = db.prepareStatement(buf.toString());
@@ -778,7 +787,7 @@ public class ChartData extends RMIChartData {
 			if (db.getDBType().compareTo("derby") == 0)
 				buf.append("SESSION.");
 			if (db.getDBType().compareTo("db2") == 0)
-				buf.append("working_table w on w.name like ie.name ");
+				buf.append("SESSION.working_table w on w.name = cast(ie.name as varchar(256)) ");
 			else
 				buf.append("working_table w on w.name = ie.name ");
 			if (object instanceof RMIView) {

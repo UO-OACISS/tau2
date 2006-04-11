@@ -181,13 +181,13 @@ public class TestHarness {
 		//PerfExplorerChart.doEfficiencyOneEventChart();
 		//PerfExplorerChart.doSpeedupOneEventChart();
 		//PerfExplorerChart.doEfficiencyEventsChart();
-		//PerfExplorerChart.doSpeedupEventsChart();
+		PerfExplorerChart.doSpeedupEventsChart();
 		//PerfExplorerChart.doCommunicationChart();
 		//PerfExplorerChart.doFractionChart();
 		//PerfExplorerChart.doCorrelationChart();
 		//PerfExplorerChart.doEfficiencyPhasesChart();
 		//PerfExplorerChart.doSpeedupPhasesChart();
-		PerfExplorerChart.doFractionPhasesChart();
+		//PerfExplorerChart.doFractionPhasesChart();
 	}
 
 	public void testVisualization() throws Exception {
