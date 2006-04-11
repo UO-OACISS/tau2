@@ -1118,8 +1118,8 @@ public class ParaProfUtils {
 
     public static void logException(Exception e) {
         try {
-            File file = new File(ParaProf.paraProfHomeDirectory + "/ParaProf.errors");
-            FileOutputStream out = new FileOutputStream(file.getName(), true);
+            String file = ParaProf.paraProfHomeDirectory + "/ParaProf.errors";
+            FileOutputStream out = new FileOutputStream(file, true);
             PrintStream p = new PrintStream(out);
             p.println("ParaProf Build (" + ParaProf.getVersionString() + ") encountered the following error on ("
                     + new java.util.Date() + ") : ");
