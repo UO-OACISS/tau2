@@ -3710,9 +3710,14 @@ EOF
         taugcclib2dir=`which g++ | sed s/g++/../`         
         if ifort f1.o f2.o -o foo -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1
         then
-      #    echo "Confirmed  - links with gcc libs"
+#          echo "Confirmed  - links with gcc libs"
           echo "Intel v8.1+ compilers used"
-          fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir INTEL81FIX" 
+          if [ "x$taugcclib2dir" != "x/usr/bin/../lib" ]
+          then
+            tauextralibopts="taugcclibopts=-L$taugcclib2dir/lib"
+# Here a different version of gcc is used (other than the one installed in /usr/bin)
+          fi
+          fixmakeargs="$fixmakeargs $tauextralibopts taugcclibdir=$taugcclibdir INTEL81FIX" 
         fi
       fi
       /bin/rm -f f1.o f2.o f1.cpp f2.f foo

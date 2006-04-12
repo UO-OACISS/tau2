@@ -3,6 +3,7 @@ s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=default/g
 s/^TAU_ARCH=\(.*\)/TAU_ARCH=default/g
 s@^TAUROOT=\(.*\)@TAUROOT=@g
 s@^TULIPDIR=\(.*\)@TULIPDIR=@g
+s@^TAUGCCLIBOPTS=\(.*\)@TAUGCCLIBOPTS=@g
 s@^TAUGCCLIBDIR=\(.*\)@TAUGCCLIBDIR=@g
 s@^PCLDIR=\(.*\)@PCLDIR=@g
 s@^PAPIDIR=\(.*\)@PAPIDIR=@g

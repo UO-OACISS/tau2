@@ -109,6 +109,11 @@ fi
         echo "s,^TAUGCCLIBDIR=.*$,TAUGCCLIBDIR=$taugcclibdir,g" >> $sedout
         ;;
 
+     taugcclibopts=*)
+        taugcclibopts=`echo $1 | sed -e 's/^taugcclibopts=//'`
+        echo "s,^TAUGCCLIBOPTS=.*$,TAUGCCLIBOPTS=$taugcclibopts,g" >> $sedout
+        ;;
+
      papisubdir=*)
         papisubdir=`echo $1 | sed -e 's/^papisubdir=//'`
 	echo "s,^PAPISUBDIR=.*$,PAPISUBDIR=$papisubdir,g" >> $sedout
