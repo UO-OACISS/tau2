@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * This class is the RMI class which contains the tree of views to be 
  * constructed in the PerfExplorerClient.
  *
- * <P>CVS $Id: RMIView.java,v 1.6 2006/04/05 07:05:50 khuck Exp $</P>
+ * <P>CVS $Id: RMIView.java,v 1.7 2006/04/12 02:38:26 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -38,6 +38,8 @@ public class RMIView implements Serializable {
 				if (db.getDBType().compareTo("oracle") == 0) {
 					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
 				} else if (db.getDBType().compareTo("derby") == 0) {
+					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
+				} else if (db.getDBType().compareTo("db2") == 0) {
 					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
 				} else {
 					resultSet = dbMeta.getColumns(null, null, "trial_view", "%");

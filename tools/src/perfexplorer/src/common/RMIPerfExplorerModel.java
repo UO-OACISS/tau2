@@ -8,7 +8,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.13 2006/04/05 20:46:11 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.14 2006/04/12 02:38:26 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -388,7 +388,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		this.eventName = eventName;
 	}
 	
-	public String getViewSelectionPath (boolean joinApp, boolean joinExp) {
+	public String getViewSelectionPath (boolean joinApp, boolean joinExp, String dbType) {
 		StringBuffer buf = new StringBuffer();
 		if (joinExp)
 			buf.append(" inner join experiment e on t.experiment = e.id ");
@@ -402,6 +402,8 @@ public class RMIPerfExplorerModel implements Serializable {
 			}
 			if (fullPath[i] instanceof RMIView) {
 				RMIView view = (RMIView) fullPath[i];
+				if (dbType.equalsIgnoreCase("db2"))
+					buf.append(" cast (");
 				if (view.getField("table_name").equalsIgnoreCase("Application")) {
 					buf.append (" a.");
 				} else if (view.getField("table_name").equalsIgnoreCase("Experiment")) {
@@ -410,6 +412,8 @@ public class RMIPerfExplorerModel implements Serializable {
 					buf.append (" t.");
 				}
 				buf.append (view.getField("column_name"));
+				if (dbType.equalsIgnoreCase("db2"))
+					buf.append(" as varchar(256)) ");
 				buf.append (" " + view.getField("operator") + " '");
 				buf.append (view.getField("value"));
 				buf.append ("' ");
@@ -420,13 +424,15 @@ public class RMIPerfExplorerModel implements Serializable {
 		return buf.toString();
 	}
 
-	public String getViewSelectionString () {
+	public String getViewSelectionString (String dbType) {
 		StringBuffer buf = new StringBuffer();
 		int i = fullPath.length - 1;
 		RMIView view = (RMIView) fullPath[i];
 		if ((view.getField("operator").equalsIgnoreCase("like")) || //{
 			//buf.append(" '" + view.getField("value").replaceAll("%","") + "'");
 		/*} else if*/ (view.getField("operator").equals("="))) {
+			if (dbType.equalsIgnoreCase("db2"))
+				buf.append(" cast ( ");
 			if (view.getField("table_name").equalsIgnoreCase("Application")) {
 				buf.append (" a.");
 			} else if (view.getField("table_name").equalsIgnoreCase("Experiment")) {
@@ -435,6 +441,8 @@ public class RMIPerfExplorerModel implements Serializable {
 				buf.append (" t.");
 			}
 			buf.append (view.getField("column_name"));
+			if (dbType.equalsIgnoreCase("db2"))
+				buf.append(" as varchar(256)) ");
 		}else {
 			buf.append(" '" + view.getField("name") + "'");
 		}

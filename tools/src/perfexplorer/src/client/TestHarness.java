@@ -174,20 +174,20 @@ public class TestHarness {
 		model.setConstantProblem(true);
 
 		// do the tests
-		//PerfExplorerChart.doTotalTimeChart();
-		//PerfExplorerChart.doTimestepsChart();
-		//PerfExplorerChart.doEfficiencyChart();
-		//PerfExplorerChart.doSpeedupChart();
-		//PerfExplorerChart.doEfficiencyOneEventChart();
-		//PerfExplorerChart.doSpeedupOneEventChart();
-		//PerfExplorerChart.doEfficiencyEventsChart();
+		PerfExplorerChart.doTotalTimeChart();
+		PerfExplorerChart.doTimestepsChart();
+		PerfExplorerChart.doEfficiencyChart();
+		PerfExplorerChart.doSpeedupChart();
+		PerfExplorerChart.doEfficiencyOneEventChart();
+		PerfExplorerChart.doSpeedupOneEventChart();
+		PerfExplorerChart.doEfficiencyEventsChart();
 		PerfExplorerChart.doSpeedupEventsChart();
-		//PerfExplorerChart.doCommunicationChart();
-		//PerfExplorerChart.doFractionChart();
-		//PerfExplorerChart.doCorrelationChart();
-		//PerfExplorerChart.doEfficiencyPhasesChart();
-		//PerfExplorerChart.doSpeedupPhasesChart();
-		//PerfExplorerChart.doFractionPhasesChart();
+		PerfExplorerChart.doCommunicationChart();
+		PerfExplorerChart.doFractionChart();
+		PerfExplorerChart.doCorrelationChart();
+		PerfExplorerChart.doEfficiencyPhasesChart();
+		PerfExplorerChart.doSpeedupPhasesChart();
+		PerfExplorerChart.doFractionPhasesChart();
 	}
 
 	public void testVisualization() throws Exception {
@@ -237,7 +237,8 @@ public class TestHarness {
             RMIView view = (RMIView) views.next();
 			System.out.println("VIEW: " + view.getField("NAME"));
 			//if (view.getField("VALUE").equals("gyro-b1"))
-			if (view.getField("VALUE").equals("B1-std.tg"))
+			//if (view.getField("VALUE").equals("B1-std.tg"))
+			if (view.getField("VALUE").equals("gyro.B1-std"))
 				foundView = true;
 			ArrayList newList = new ArrayList(list);
 			newList.add(view);

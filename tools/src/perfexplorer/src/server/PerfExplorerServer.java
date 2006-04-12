@@ -23,7 +23,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.30 2006/04/11 20:43:42 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.31 2006/04/12 02:38:26 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -617,7 +617,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
-				buf.append(modelData.getViewSelectionPath(true, true));
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" where t.experiment in (");
 				List selections = modelData.getMultiSelection();
@@ -674,7 +674,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append(" from metric m inner join trial t on m.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
-				buf.append(modelData.getViewSelectionPath(true, true));
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" where t.experiment in (");
 				List selections = modelData.getMultiSelection();
@@ -696,7 +696,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else {
 				buf.append(" group by m.name order by count(m.name) desc");
 			}
-			System.out.println(buf.toString());
+			//System.out.println(buf.toString());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// only get the metrics that are in all trials.
@@ -742,7 +742,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
-				buf.append(modelData.getViewSelectionPath(true, true));
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" where t.experiment in (");
 				List selections = modelData.getMultiSelection();
@@ -822,7 +822,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DB db = this.getDB();
 			StringBuffer buf = new StringBuffer("select distinct ");
-			buf.append(columnName);
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("cast (");
+				buf.append(columnName);
+				buf.append(" as varchar(256))");
+			} else {
+				buf.append(columnName);
+			}
 			buf.append(" from ");
 			buf.append(tableName.toLowerCase());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
@@ -976,6 +982,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				}
 				RMIView view = (RMIView) views.get(i);
 
+				if (db.getDBType().compareTo("db2") == 0) {
+					whereClause.append(" cast (");
+				}
 				if (view.getField("TABLE_NAME").equalsIgnoreCase("Application")) {
 					whereClause.append (" a.");
 				} else if (view.getField("TABLE_NAME").equalsIgnoreCase("Experiment")) {
@@ -984,12 +993,15 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					whereClause.append (" t.");
 				}
 				whereClause.append (view.getField("COLUMN_NAME"));
+				if (db.getDBType().compareTo("db2") == 0) {
+					whereClause.append(" as varchar(256)) ");
+				}
 				whereClause.append (" " + view.getField("OPERATOR") + " '");
 				whereClause.append (view.getField("VALUE"));
 				whereClause.append ("' ");
 
 			}
-			// System.out.println(whereClause.toString());
+			System.out.println(whereClause.toString());
 			trials = Trial.getTrialList(db, whereClause.toString());
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select views from the database!";
@@ -1029,6 +1041,15 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("max(ilp.exclusive), ");
 				buf.append("min(ilp.exclusive), ");
 				buf.append("0 "); // no support for stddev!
+			} else if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select cast (ie.name as varchar(256)), ");
+				buf.append("avg(ilp.exclusive), ");
+				buf.append("avg(ilp.exclusive_percentage), ");
+				buf.append("avg(ilp.call), ");
+				buf.append("avg(ilp.exclusive / ilp.call), ");
+				buf.append("max(ilp.exclusive), ");
+				buf.append("min(ilp.exclusive), ");
+				buf.append("stddev(ilp.exclusive) ");
 			} else {
 				buf.append("select ie.name, ");
 				buf.append("avg(ilp.exclusive), ");
@@ -1156,6 +1177,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else if (db.getDBType().compareTo("derby") == 0) {
 				// stddev is unsupported!
 				buf.append("select id, name, avg(exclusive) ");
+			} else if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select id, cast (name as varchar(256)), (stddev(exclusive)/ ");
+				buf.append("(max(exclusive)-min(exclusive)))* ");
+				buf.append("avg(exclusive_percentage) ");
 			} else {
 				buf.append("select id, name, (stddev(exclusive)/ ");
 				buf.append("(max(exclusive)-min(exclusive)))* ");
@@ -1165,7 +1190,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("inner join interval_event ");
 			buf.append("on interval_event = id ");
 			buf.append("where id in (" + idString.toString() + ") ");
-			buf.append("group by interval_event.id, name ");
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("group by interval_event.id, cast (name as varchar(256))");
+			} else {
+				buf.append("group by interval_event.id, name ");
+			}
 			buf.append("order by 3 desc");
 			statement = db.prepareStatement(buf.toString());
 			//System.out.println(buf.toString());
@@ -1193,6 +1222,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf = new StringBuffer();
 			if (db.getDBType().compareTo("oracle") == 0) {
 				buf.append("select node, context, thread, name, excl ");
+			} else if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select node, context, thread, cast (name as varchar(256)), exclusive ");
 			} else {
 				buf.append("select node, context, thread, name, exclusive ");
 			}
@@ -1207,6 +1238,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			buf.append(") and metric = ? ");
 			buf.append("order by 1, 2, 3, 4");
+			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, metric.getID());
 			//System.out.println(statement.toString());

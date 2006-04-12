@@ -54,7 +54,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.15 2005/11/08 03:09:00 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.16 2006/04/12 02:38:26 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -284,7 +284,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				//sql.append("inner join interval_mean_summary s ");
 				//sql.append("on e.id = s.interval_event and s.metric = p.metric ");
 			}
-			sql.append("where e.trial = ?");
+			sql.append(" where e.trial = ?");
 			sql.append(" and e.group_name not like '%TAU_CALLPATH%' ");
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				sql.append(" and p.metric = ?");
@@ -448,7 +448,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				sql.append("inner join interval_mean_summary s ");
 				sql.append("on e.id = s.interval_event and (s.exclusive_percentage > ");
 				sql.append(modelData.getXPercent());
-				sql.append("or s.inclusive_percentage = 100.0) ");
+				sql.append(" or s.inclusive_percentage = 100.0) ");
 				sql.append(" left outer join interval_location_profile p ");
 				sql.append("on e.id = p.interval_event ");
 				sql.append("and p.metric = s.metric where e.trial = ? ");
