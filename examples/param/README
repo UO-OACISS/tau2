@@ -1,0 +1,44 @@
+We demonstrate the use of the PROFILE_PARAM_1L macro in this example.
+We wish to capture the time spent in a function based on some runtime 
+parameter, such as the argument to the routine. While dynamic timers can
+do this for each instance of a function invocation, if we wish to 
+call a routine a million times with 3 different parameters and wish to
+partition the time spent in the routine based on the three values, we 
+can use the above macro and configure TAU with the -PROFILEPARAM configuration
+option. In this case, a dynamic timer is not necessary and in fact 
+too expensive as it would create a million function information objects
+at runtime instead of just three additional objects. 
+
+To illustrate the point, there is a routine f1 that sleeps for x seconds.
+We show how the total time in f1 is partitioned using PROFILE_PARAM_1L:
+[epsilon:tau2/examples/param] sameer% ./simple
+Inside main: calling f1
+Inside f1: sleeping for 2 seconds, calling f2
+Inside f2: sleeping for 1 seconds
+Inside f1: sleeping for 4 seconds, calling f2
+Inside f2: sleeping for 2 seconds
+Inside f1: sleeping for 3 seconds, calling f2
+Inside f2: sleeping for 1 seconds
+Inside f1: sleeping for 2 seconds, calling f2
+Inside f2: sleeping for 1 seconds
+Inside f1: sleeping for 2 seconds, calling f2
+Inside f2: sleeping for 1 seconds
+[epsilon:tau2/examples/param] sameer% pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.634       19,001           1           5   19001817 main() (calls f1, f5)
+100.0       13,000       19,001           5           5    3800237 f1() 
+ 47.4        6,000        9,001           3           3    3000344 f1()  [ <x> = <2> ]  
+ 31.6        6,000        6,000           5           0    1200110 f2() 
+ 31.6        3,999        6,000           1           1    6000008 f1()  [ <x> = <4> ]  
+ 21.1        3,000        4,000           1           1    4000144 f1()  [ <x> = <3> ]  
+ 15.8        3,000        3,000           3           0    1000130 f2()  [ <y> = <2> ]  
+ 10.5        2,000        2,000           1           0    2000049 f2()  [ <y> = <4> ]  
+  5.3        1,000        1,000           1           0    1000111 f2()  [ <y> = <3> ]  
+
+
