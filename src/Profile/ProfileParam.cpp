@@ -102,12 +102,13 @@ map<TAU_PROFILE_PARAM_TYPE >& TheTimerProfileParamMap(void)
   return timerappdatamap;
 }
 
-long * TauCreateProfileParamArray(long key)
+long * TauCreateProfileParamArray(long FuncId, long key)
 {
-  int depth = 2; 
-  long *retary = new long[depth]; 
+  int depth = 3; 
+  long *retary = new long[depth+1]; 
   retary[0] = depth; /* encode the depth first */
-  retary[1] = key;   /* data */
+  retary[1] = FuncId; /* the id of the current timer */
+  retary[2] = key;   /* data */
   return retary;
 }
 
@@ -123,7 +124,7 @@ FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname)
    * it has appeared before. If not, we need to create a new functionInfo 
    * and a mapping between the key and the newly created functionInfo */
   
-  long *ary = TauCreateProfileParamArray(key);
+  long *ary = TauCreateProfileParamArray((long) f, key);
 
    /* We've set the key */
    map<TAU_PROFILE_PARAM_TYPE >::iterator it = TheTimerProfileParamMap().find(ary);
@@ -205,6 +206,6 @@ void Profiler::ProfileParamStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: ProfileParam.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2006/03/27 20:11:35 $
- * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.1 2006/03/27 20:11:35 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 2006/04/14 04:42:00 $
+ * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.2 2006/04/14 04:42:00 sameer Exp $ 
  ***************************************************************************/
