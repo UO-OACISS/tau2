@@ -116,15 +116,22 @@ Usage: configure [OPTIONS]
 -pythoninc=<dir> ........ Specify location of Python include directory.
 -pythonlib=<dir> ............ Specify location of Python lib directory.
 -tag=<unique name> ........ Specify a tag to identify the installation.
+-ktau ........................................... Kernel TAU Profiling.
+-ktau_merge ........................ Kernel TAU Profiling with merging.
+                                                    user-space profile.
+-ktauinc=<dir> ............... Specify location of Linux Kernel source.
+-ktausym=<path to System.map>  ...... Specify location of Linux Kernel.
+                                                          Symbol Table.
 -muse ................................. Specify the use of MAGNET/MUSE.
 -muse_event ............................Specify the use of MAGNET/MUSE.
                                 w/ non-monotonically increasing values.
--muse_multiple......................... Specify the use of MAGNET/MUSE.
+-muse_multiple ........................ Specify the use of MAGNET/MUSE.
                                     w/ monotonically increasing values.
 -TRACE ..................................... Generate TAU event traces.
 -MPITRACE ... Generate event traces for MPI events and their ancestors.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILECALLPATH ......................... Generate call path profiles.
+-PROFILEPARAM .... Generate profiles with parameter mapped event data .
 -PROFILEPHASE .......................... Generate phase based profiles.
 -PROFILESTATS .................. Enable standard deviation calculation.
 -DEPTHLIMIT ........... Disable instrumentation beyond a certain depth.
@@ -414,6 +421,15 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    This option is an extension of -PROFILE, the default profiling option. 
    Specifying TAU_CALLPATH_DEPTH environment variable, the user can vary the 
    depth of the callpath. See examples/calltree for further information.
+
+-PROFILEPARAM
+ 
+   This option generates parameter mapped profiles. When used with the MPI 
+   wrappper library (-mpi, -mpiinc=<dir>, -mpilib=<dir>) options, TAU generates
+   profiles where the time spent in MPI routines is partitioned based on 
+   the size of the message. It can also be used in an application to partition
+   the time spent in a given routine based on a runtime parameter, such as an
+   argument to the routine. See examples/param for further information. 
 
 -PROFILEPHASE
    
