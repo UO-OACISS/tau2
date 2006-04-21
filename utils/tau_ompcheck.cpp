@@ -60,9 +60,9 @@ class Directive
   }
   int getType()
   { return type; }
-  int getCol()
+  int getCol() const
   { return col; }
-  int getLine()
+  int getLine() const
   { return line; }
   const pdbStmt* getBlock()
   { return block; }
@@ -80,7 +80,7 @@ class Directive
   { depth = d; }
 };
 
-bool operator< (Directive& a, Directive& b)
+bool operator< (const Directive& a, const Directive& b)
 {
   if (a.getLine() == b.getLine())
     return a.getCol() < b.getCol();
