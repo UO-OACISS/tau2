@@ -366,8 +366,21 @@ class CompleteDirectives
       //Must maintain monotomy, ie don't follow loops.
       if (s->downStmt() != NULL && s->downStmt()->stmtBegin().line() >=
       s->stmtBegin().line())
+      {  
         addDirectives.splice(addDirectives.end(), findOMPStmt(s->downStmt(), s, loop + 1, pdb));
-      
+        if (s->nextStmt() != NULL)
+        {
+        pdbFile f(-1);
+        pdbStmt endBlock(-1);
+        endBlock.stmtBegin(pdbLoc(&f,s->stmtEnd().line(),s->stmtEnd().col()));
+        endBlock.stmtEnd(pdbLoc(&f,s->stmtEnd().line(),s->stmtEnd().col()));
+        endBlock.nextStmt(s->nextStmt());
+        endBlock.downStmt(NULL);
+        endBlock.extraStmt(NULL);
+        addDirectives.splice(addDirectives.end(), findOMPStmt(&endBlock, block, loop, pdb));  
+          
+        }
+      }
       if (s->extraStmt() != NULL && s->extraStmt()->stmtBegin().line() >=
             s->stmtBegin().line())
         addDirectives.splice(addDirectives.end(), findOMPStmt(s->extraStmt(), s, loop + 1, pdb));
