@@ -1,18 +1,12 @@
 #include "pdbAll.h"
-#include "stdio.h"
-#include <cctype>
-#include <typeinfo>
+#include <stdio.h>
+
 #include <algorithm>
 #include <cctype>
 #include <string>
 #include <list>
 #include <fstream>
 using namespace std;
-
-//list<int> directiveLine;
-//list<int> directiveList;
-//list<int> directiveDepth;
-//list<int> directiveExpected;
 
 char* file;
 char* source;
