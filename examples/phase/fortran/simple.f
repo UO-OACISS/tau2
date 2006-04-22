@@ -81,16 +81,17 @@ cc-----------------------------------------------------------------------------
 
 
       subroutine ITERATION(val)
-        integer val
+        integer val / 0 /
         character(13) cvar 
         integer profiler(2) / 0, 0 /
-        save profiler
+        save profiler, val
 
         print *, "Iteration ", val
 
         write (cvar,'(a9,i2)') 'Iteration', val
         call TAU_PHASE_CREATE_DYNAMIC(profiler, cvar)
         call TAU_PHASE_START(profiler)
+        val = val  + 1
 
         call F1()
         call F2()
