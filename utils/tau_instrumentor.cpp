@@ -35,6 +35,8 @@ extern int processInstrumentationRequests(char *fname);
 extern bool instrumentEntity(const string& function_name);
 extern bool processFileForInstrumentation(const string& file_name);
 extern bool isInstrumentListEmpty(void);
+extern void writeAdditionalFortranDeclarations(ofstream& ostr, const pdbRoutine *routine);
+extern void writeAdditionalFortranInvocations(ofstream& ostr, const pdbRoutine *routine);
 
 #include "tau_datatypes.h"
 
@@ -1374,6 +1376,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  WRITE_TAB(ostr,(*it)->col);
 		  ostr <<"save profiler"<<endl<<endl;
 		}
+                writeAdditionalFortranDeclarations(ostr, (pdbRoutine *)((*it)->item));
 
      		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
@@ -1410,6 +1413,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		      }
 		  }
   		}
+                writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
 		/* spaces */
      		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
@@ -1587,12 +1591,15 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		 
 	    case INSTRUMENTATION_POINT:
 #ifdef DEBUG
-		cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
+		cout <<"Instrumentation point Fortran -> line = "<< (*it)->line<<endl;
 #endif /* DEBUG */
-		ostr << (*it)->snippet<<endl;
+	        if ((*it)->attribute == BEFORE)
+		  ostr << (*it)->snippet<<endl;
 		for (i=0; i < write_upto; i++)
 		  ostr <<inbuf[i];
                 if (print_cr) ostr<<endl;
+	        if ((*it)->attribute == AFTER)
+		  ostr << (*it)->snippet<<endl;
 		instrumented = true;
 		break;
 	    default:
@@ -1939,8 +1946,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.85 $   $Date: 2006/04/07 23:06:35 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.85 2006/04/07 23:06:35 sameer Exp $
+ * $Revision: 1.86 $   $Date: 2006/04/23 05:06:58 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.86 2006/04/23 05:06:58 sameer Exp $
  ***************************************************************************/
 
 

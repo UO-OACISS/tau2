@@ -22,17 +22,13 @@ using namespace std;
 #include "tau_instrument.h"
 #ifdef _OLD_HEADER_
 # include <fstream.h>
-# include <set.h>
 # include <algo.h>
+# include <list.h>
 #else
 # include <fstream>
-  using std::ifstream;
-    using std::ofstream;
-# include <set>
-      using std::set;
 # include <algorithm>
-        using std::sort;
-	  using std::unique;
+# include <list>
+# include <map>
 #endif
 #include "pdbAll.h"
 
@@ -41,6 +37,11 @@ extern bool wildcardCompare(char *wild, char *string, char kleenestar);
 /* Globals */
 ///////////////////////////////////////////////////////////////////////////
 vector<tauInstrument *> instrumentList; 
+list<pair<int, list<string> > > additionalDeclarations; 
+list<pair<int, list<string> > > additionalInvocations; 
+/* In this list resides a list of variable declarations that must be added before
+the first executable statement. It has a list of strings with the routine no. as 
+the first element of the pair (the second is the list of strings). */
 ///////////////////////////////////////////////////////////////////////////
 
 /* Constructors */
@@ -514,6 +515,110 @@ void printInstrumentList(void)
 #endif /* DEBUG */
 
 }
+
+/* using the list, write the additional statements */
+void writeStatements(ofstream& ostr, const pdbRoutine *ro, 
+         list< pair< int, list<string> > > & additional)
+{
+
+  /* search the list to locate the routine */
+  list< pair<int, list<string> > >::iterator it ;
+
+  for(it = additional.begin(); it != additional.end(); it++)
+  {
+    if ((*it).first == ro->id())
+    { /* There is a match! Extract the pair */
+#ifdef DEBUG 
+      printf("There are additional declarations for routine %s\n", ro->fullName());
+#endif /* DEBUG */
+      list <string> l = (*it).second;
+      list <string>::iterator lit;
+      /* iterate over the list of strings */
+      for (lit = l.begin(); lit != l.end(); lit++)
+      {
+#ifdef DEBUG
+        cout <<"Adding: "<<(*lit)<<endl;
+#endif /* DEBUG */
+        ostr <<(*lit)<<endl;
+      }
+   
+    }
+  }
+  return;  /* either it is not found, or all statements were written! */
+}
+/* After profiler and save statements are written, do we need to declare any other variables? */
+void writeAdditionalFortranDeclarations(ofstream& ostr, const pdbRoutine *ro)
+{
+  if (isInstrumentListEmpty()) return; /* nothing specified */
+#ifdef DEBUG 
+  printf("writeAdditionalFortranDeclarations: Name %s, id=%d\n", ro->fullName(), ro->id());
+#endif /* DEBUG */
+  writeStatements(ostr, ro, additionalDeclarations);
+}
+
+/* After profiler and save statements are written, do we need 
+   to call any other timer routines? */
+void writeAdditionalFortranInvocations(ofstream& ostr, const pdbRoutine *ro)
+{
+  if (isInstrumentListEmpty()) return; /* nothing specified */
+#ifdef DEBUG 
+  printf("writeAdditionalFortranInvocations: Name %s, id=%d\n", ro->fullName(), ro->id());
+#endif /* DEBUG */
+  writeStatements(ostr, ro, additionalInvocations);
+}
+
+/* Add request for instrumentation for Fortran loops */
+void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop, vector<itemRef *>& itemvec)
+{
+
+  const pdbFile *f = start.file();
+  char lines[256], var[256];
+
+  /* first we construct a string with the line numbers */
+  sprintf(lines, "{%d,%d}-{%d,%d}", 
+	start.line(), start.col(), stop.line(), stop.col());
+  sprintf(var, "%d", start.line());
+  /* we use the line numbers in building the name of the timer */
+  string timername (string("Loop: " + ro->fullName() + " [{"+f->name()+ "} "+ lines + "]"));
+
+  /* we embed the line from_to in the name of the timer. e.g., t */
+  string varname(string("t_")+var);
+
+  string declaration1(string("       integer ")+varname+"(2) / 0, 0 /");
+  string declaration2(string("       save ")+varname);
+
+  /* now we create the call to create the timer */
+  string createtimer(string("       call TAU_PROFILE_TIMER(")+varname+", '"+timername+"')");
+#ifdef DEBUG
+  printf("Adding instrumentation at %s, var: %s\n", timername.c_str(), varname.c_str());
+  printf("%s\n", declaration1.c_str());
+  printf("%s\n", declaration2.c_str());
+  printf("%s\n", createtimer.c_str());
+  printf("Routine id = %d\n", ro->id());
+#endif /* DEBUG */
+  list<string> decls;
+  decls.push_back(declaration1);
+  decls.push_back(declaration2);
+
+  additionalDeclarations.push_back(pair<int, list<string> >(ro->id(), decls)); /* assign the list of strings to the list */
+
+  list<string> calls;
+  calls.push_back(createtimer);
+  /* now we create the list that has additional TAU calls for creating the timer */
+
+  additionalInvocations.push_back(pair<int, list<string> >(ro->id(), calls)); /* assign the list of strings to the list */
+
+  string startsnippet(string("        call TAU_PROFILE_START(")+varname+")");
+  string stopsnippet (string("        call TAU_PROFILE_STOP(") +varname+")");
+  itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, start.line(), start.col(), startsnippet, BEFORE));
+  itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, stop.line(), stop.col()+1, stopsnippet, AFTER));
+
+#ifdef DEBUG 
+  printf("routine: %s, line,col = <%d,%d> to <%d,%d>", 
+	ro->fullName(), start.line(), start.col(), stop.line(), stop.col());
+#endif /* DEBUG */
+}
+
 /* Add request for instrumentation for C/C++ loops */
 void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop, vector<itemRef *>& itemvec)
 {
@@ -583,6 +688,13 @@ int processBlock(const pdbStmt *s, pdbRoutine *ro, vector<itemRef *>& itemvec)
         printf("Assign statement:\n"); 
 #endif /* DEBUG */
 	break;
+      case pdbStmt::ST_FDO:
+        start = s->stmtBegin();
+        stop = s->stmtEnd();
+        addFortranLoopInstrumentation(ro, start, stop, itemvec);
+#ifdef DEBUG
+        printf("Fortran DO statement:\n"); 
+#endif /* DEBUG */
       default:
 #ifdef DEBUG
         printf("Other statement\n"); 
@@ -710,6 +822,10 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
 	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
         }
       } /* end of routine exit */
+      if ((*it)->getKind() == TAU_LOOPS)
+      { /* we need to instrument all outer loops in this routine */
+	processBlock((*rit)->body(), (*rit), itemvec);
+      }
     } /* end of match */
   } /* iterate over all routines */
 
@@ -804,6 +920,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 2006/02/18 15:36:41 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.4 2006/02/18 15:36:41 sameer Exp $
+ * $Revision: 1.5 $   $Date: 2006/04/23 05:06:58 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.5 2006/04/23 05:06:58 sameer Exp $
  ***************************************************************************/
