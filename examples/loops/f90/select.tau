@@ -1,0 +1,6 @@
+BEGIN_INSTRUMENT_SECTION
+loops file="loop_test.f90" routine="FOO"
+# it also understands # as the wildcard in routine name
+# and * and ? wildcards in file name. The routine 
+# name must be in uppercase letters as shown above
+END_INSTRUMENT_SECTION
