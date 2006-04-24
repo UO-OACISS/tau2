@@ -197,7 +197,7 @@ public class Configure {
                     // if the user has chosen db2 and the config file is not already set for it
 
                     jdbc_db_jarfile = "";  // there are 3 jar files...
-                    jdbc_db_driver = "COM.ibm.db2.jdbc.net.DB2Driver";
+                    jdbc_db_driver = "com.ibm.db2.jcc.DB2Driver";
                     db_schemafile = perfdmf_home + "/etc/" + "dbschema.db2.txt";
                     db_dbname = "perfdmf";
     				db_schemaprefix = "perfdmf";
