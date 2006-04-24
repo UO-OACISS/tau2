@@ -881,6 +881,7 @@ if [ $errorStatus == $TRUE ] ; then
 		evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
 	else
 		echo "Reverting to uninstrumented command disabled. To enable reverting pass -optRevert to tau_compiler.sh."
+		exit 1
 	fi
 fi
 echo -e ""
