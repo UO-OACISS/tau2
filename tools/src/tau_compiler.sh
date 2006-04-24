@@ -35,13 +35,18 @@ declare -i counterForOutput=-10
 declare -i counterForOptions=0
 declare -i temp=0
 
+declare -i preprocess=$FALSE
+declare -i revertOnError=$TRUE
+
+preprocessorOpts=-P 
+
 
 printUsage () {
 	echo -e "Usage: tau_compiler.sh"
 	echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
 	echo -e "  -optPdtDir=\"\"\t\t\tPDT architecture directory. Typically \$(PDTDIR)/\$(PDTARCHDIR)"
 	echo -e "  -optPdtF95Opts=\"\"\t\tOptions for Fortran parser in PDT (f95parse)"
-	echo -e "  -optPdtF95Reset=\"\"\tReset options to the Fortran parser to the given list"
+	echo -e "  -optPdtF95Reset=\"\"\t\tReset options to the Fortran parser to the given list"
 	echo -e "  -optPdtCOpts=\"\"\t\tOptions for C parser in PDT (cparse). Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
 	echo -e "  -optPdtCReset=\"\"\t\tReset options to the C parser to the given list"
 	echo -e "  -optPdtCxxOpts=\"\"\t\tOptions for C++ parser in PDT (cxxparse). Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
@@ -49,20 +54,27 @@ printUsage () {
 	echo -e "  -optPdtF90Parser=\"\"\t\tSpecify a different Fortran parser. For e.g., f90parse instead of f95parse"
 	echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
 	echo -e "  -optTauInstr=\"\"\t\tSpecify location of tau_instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/tau_instrumentor"
+	echo -e "  -optPreProcess\t\tPreprocess the source code before parsing. Uses /usr/bin/cpp -P by default."
+	echo -e "  -optCPP=\"\"\t\t\tSpecify an alternative preprocessor and pre-process the sources."
+	echo -e "  -optCPPOpts=\"\"\t\tSpecify additional options to the C pre-processor."
+	echo -e "  -optCPPReset=\"\"\t\tReset C preprocessor options to the specified list."
 	echo -e "  -optTauSelectFile=\"\"\t\tSpecify selective instrumentation file for tau_instrumentor"
 	echo -e "  -optPDBFile=\"\"\t\tSpecify PDB file for tau_instrumentor. Skips parsing stage."
 	echo -e "  -optTau=\"\"\t\t\tSpecify options for tau_instrumentor"
-	echo -e "  -optCompile=\"\"\t\tOptions passed to the compiler. Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
+	echo -e "  -optCompile=\"\"\t\tOptions passed to the compiler by the user."
+	echo -e "  -optTauCompile=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
 	echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
 	echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
 	echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
 	echo -e "  -optTauCC=\"<cc>\"\t\tSpecifies the C compiler used by TAU"
 	echo -e "  -optOpariTool=\"<path/opari>\"\tSpecifies the location of the Opari tool"
-	echo -e "  -optOpariDir=\"<path>\"\tSpecifies the location of the Opari directory"
+	echo -e "  -optOpariDir=\"<path>\"\t\tSpecifies the location of the Opari directory"
 	echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
 	echo -e "  -optOpariReset=\"\"\t\tResets options passed to the Opari tool"
 	echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking (default)"
 	echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking"
+	echo -e "  -optNoRevert=\"\"\t\tExit on error. Does not revert to the original compilation rule on error."
+	echo -e "  -optRevert=\"\"\t\t\tRevert to the original compilation rule on error (default)."
 	echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
 	if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 		exit
@@ -167,6 +179,28 @@ for arg in "$@"
 			counterForOptions=counterForOptions+1
 			case $arg in
 
+			-optPreProcess)
+				preprocess=$TRUE
+				preprocessor=/usr/bin/cpp
+				# Default options 	
+				echoIfDebug "\tPreprocessing turned on. preprocessor used is $preprocessor with options $preprocessorOpts"
+				;;
+
+			-optCPP=*)
+                                preprocessor=${arg#"-optCPP="}
+				preprocess=$TRUE
+				echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
+				;;
+
+			-optCPPOpts=*)
+                                preprocessorOpts="$preprocessOpts ${arg#"-optCPPOpts="}"
+				echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
+				;;
+			-optCPPReset=*)
+                                preprocessorOpts="${arg#"-optCPPReset="}"
+				echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
+				;;
+
 			-optPdtF90Parser*)
 				#Assumption: This should be passed with complete path to the
 				#parser executable. However, if the path is defined in the
@@ -252,7 +286,7 @@ for arg in "$@"
 					
 				;;
 
-			-optTau*)
+			-optTau=*)
 				optTau=${arg#"-optTau="}
 				echoIfDebug "\tTau Options are: $optTau"
 				;;
@@ -265,6 +299,11 @@ for arg in "$@"
 			-optLinkReset*)
 				optLinking=${arg#"-optLinkReset="}
 				echoIfDebug "\tLinking Options are: $optLinking"
+				;;
+			-optTauCompile=*)
+				optTauCompile="${arg#"-optTauCompile="} $optCompile"
+				echoIfDebug "\tCompiling Options from TAU are: $optTauCompile"
+				echoIfDebug "\tFrom optTauCompile: $optTauCompile"
 				;;
 			-optCompile*)
 				optCompile="${arg#"-optCompile="} $optCompile"
@@ -309,6 +348,14 @@ for arg in "$@"
 				;;
 			-optMpi*)
 				hasMpi=$TRUE
+				;;
+
+			-optNoRevert*)
+				revertOnError=$FALSE
+				;;
+
+			-optRevert*)
+				revertOnError=$TRUE
 				;;
 
 			-optKeepFiles*)
@@ -375,8 +422,9 @@ for arg in "$@"
 			if [ $optResetUsed == $FALSE ]; then
 			  #optCompile="`echo $optCompile | sed -e 's/ -D[^ ]*//g'`"
 			  #echoIfDebug "Resetting optCompile (removing -D* ): $optCompile"
-			  optCompile="`echo $optCompile | sed -e 's/ -[^I][^ ]*//g'`"
-			  echoIfDebug "Resetting optCompile (removing everything but -I* ): $optCompile"
+			  #optCompile="`echo $optCompile | sed -e 's/ -[^I][^ ]*//g'`"
+			  echoIfDebug "Keeping optCompile as it is: $optCompile"
+			  # Do not remove anything! Let TAU pass in -optCompile that we ignore 
 			fi
 			groupType=$group_f_F
 			;;
@@ -499,6 +547,19 @@ while [ $tempCounter -lt $numFiles ]; do
 	base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//'`
 	suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 	#echoIfDebug "suffix here is -- $suf"
+	# If we need to pre-process the source code, we should do so here!
+	if [ $preprocess = $TRUE ]; then
+	  base=${base}.pp
+	  cmdToExecute="${preprocessor} $preprocessorOpts $optCompile ${arrFileName[$tempCounter]} $base$suf"
+	  evalWithDebugMessage "$cmdToExecute" "Preprocessing"
+          if [ ! -f $base$suf ]; then
+            echoIfVerbose "ERROR: Did not generate .pp file"
+	    printError "$preprocessor" "$cmdToExecute"
+          fi
+	  arrFileName[$tempCounter]=$base$suf
+	  echoIfDebug "Completed Preprocessing\n"
+        fi
+	# And then pass it on to opari for OpenMP programs.
 	if [ $opari = $TRUE ]; then
 	  base=${base}.pomp
 	  cmdToExecute="${optOpariTool} $optOpariOpts ${arrFileName[$tempCounter]} $base$suf"
@@ -601,12 +662,14 @@ if [ $gotoNextStep == $TRUE ]; then
 				pdtCmd="$optPdtDir""/$pdtParserType"
 				pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 				pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
+				optCompile="$optCompile $optTauCompile"
 				;;
 
 			$group_C)
 				pdtCmd="$optPdtDir""/$pdtParserType"
 				pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 				pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
+				optCompile="$optCompile $optTauCompile"
 				;;
 
 		esac
@@ -814,6 +877,10 @@ fi
 #Regular Command: In case of an Intermediate Error. 
 ####################################################################
 if [ $errorStatus == $TRUE ] ; then
-	evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
+	if [ $revertOnError == $TRUE ]; then
+		evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
+	else
+		echo "Reverting to uninstrumented command disabled. To enable reverting pass -optRevert to tau_compiler.sh."
+	fi
 fi
 echo -e ""
