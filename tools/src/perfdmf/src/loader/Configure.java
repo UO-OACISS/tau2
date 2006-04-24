@@ -251,7 +251,7 @@ public class Configure {
                     db_portnum = "";
                 } else if (jdbc_db_type.compareTo("db2") == 0) {
                     jdbc_db_jarfile = "";  // there are 3 jar files...
-                    jdbc_db_driver = "COM.ibm.db2.jdbc.net.DB2Driver";
+                    jdbc_db_driver = "com.ibm.db2.jcc.DB2Driver";
                     db_schemafile = "dbschema.db2.txt";
                     db_dbname = "perfdmf";
     				db_schemaprefix = "perfdmf";
