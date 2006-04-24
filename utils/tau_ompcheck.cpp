@@ -1,6 +1,20 @@
 #include "pdbAll.h"
+/****************************************************************************
+**			TAU Portable Profiling Package			                               **
+**			http://www.cs.uoregon.edu/research/paracomp/tau                    **
+*****************************************************************************
+**    Copyright 2006                                    						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+**    Research Center Juelich, Germany                                     **
+****************************************************************************/
+/***************************************************************************
+**	File 		: tau_ompcheck.cpp			                                       **
+**	Description 	: OMP Directive Checker                                  **
+**	Author		: Scott Biersdorff			                                     **
+**	Contact		: scottb@cs.uoregon.edu 	                                   **
+***************************************************************************/
 #include <stdio.h>
-
 #include <algorithm>
 #include <cctype>
 #include <string>
@@ -14,6 +28,7 @@ char* source;
 int pragma_id;
 int lang;
 int verbosity;
+ostream* output;
 
 enum {Fortran, C};
 enum {Standard, Verbose, Debug};
@@ -440,7 +455,7 @@ class CompleteDirectives
       text += "for";
       length = 12;
     }  
-    /*cout << "pr#" << ++pragma_id << " omp\n"
+    /**output << "pr#" << ++pragma_id << " omp\n"
             "ploc so#1 " << (s->stmtBegin().line()-1) << " " << "1\n"
             "pkind " << type << " \n"
             "ppos so#1 " << (s->stmtBegin().line()-1) << " " << "1  so#1 " <<
@@ -456,39 +471,87 @@ void placeDirective(Directive directive)
   if (lang == Fortran)
   {
     if (directive.getType() == -1)
-      cout << endl << "!$omp end parallel - <autocompleted>" << endl;
+      *output << endl << "!$omp end parallel" << endl;
     else if (directive.getType() == -2)
-      cout << endl << "!$omp end do - <autocompleted>" << endl;
+      *output << endl << "!$omp end do" << endl;
     else if (directive.getType() == -3)
-      cout << endl << "!$omp end for - <autocompleted>" << endl;
+      *output << endl << "!$omp end for" << endl;
   }
   else
   {
     if (directive.getType() == -1)
-      cout << endl << "#pragma omp end parallel - <autocompleted>" << endl;
+      *output << endl << "#pragma omp end parallel" << endl;
     else if (directive.getType() == -2)
-      cout << endl << "#pragma omp end do - <autocompleted>" << endl;
+      *output << endl << "#pragma omp end do" << endl;
     else if (directive.getType() == -3)
-      cout << endl << "#pragma omp end for - <autocompleted>" << endl;
+      *output << endl << "#pragma omp end for" << endl;
   }
+}
+void printHelp()
+{
+  cout << "Usage: tau_ompcheck pdbfile soucrefile [-v|-d|-o outfile]" << endl;
+  cout << endl;
+  cout << "Finds uncompleted do/for omp directives and inserts closing" << endl;
+  cout << "directives for each one uncompleted. do/for directives are" << endl;
+  cout << "expected immediately before a do/for loop. Closing directives are" << endl;
+  cout << "then placed immediately following the same do/for loop." << endl;
+  cout << endl;
+  cout << "Arguments: " << endl;
+  cout << "pdbfile:     A pdbfile generated from the source file you wish to check." << endl;
+  cout << "             This pdbfile must contain comments form which the omp" << endl;
+  cout << "             directives are gathered. See pdbcomment for information on" << endl;
+  cout << "             how to obtain comment from a pdbfile." << endl;
+  cout << "sourcefile:  A fortran, C or C++ source file to analyized." << endl;
+  cout << endl;
+  cout << "Options:" << endl; 
+  cout << "-v           verbose output." << endl;
+  cout << "-d           debuging information, we suggest you pipe this" << endl;
+  cout << "             unrestrained output to a file." << endl;
+  cout << "-o outfile   write the output to the specified outfile." << endl;
 }
 
 int main(int argc, char *argv[]) 
 {
+  if (argc < 3)
+  {
+    printHelp();
+    exit(1);
+  }
+  
+  ofstream of;
   file = argv[1];
   source = argv[2];
-  if (argv[3] != NULL)
+  if (argc > 3)
   {
-    if (*argv[3] == '1')
-      verbosity = Verbose;
-    else if (*argv[3] == '2')
-      verbosity = Debug;
-    else
-      verbosity = Standard;
+    int i = 3;
+    while (i < argc && argv[i] != "")
+    {
+      if (string(argv[i]) == "-v")
+      {  
+        verbosity = Verbose;
+        output = &cout;
+      }
+      else if (string(argv[i]) == "-d")
+      {
+        verbosity = Debug;
+        output = &cout;
+      }
+      else if (string(argv[i]) == "-o" && argv[i+1] != NULL)
+      {
+        verbosity = Standard;
+        of.open(argv[i+1]);
+        output = &of;
+        i++; // grab two arguments
+      }
+      i++;
+    }
   }
   else
+  {
     verbosity = Standard;
-            
+    output = &cout;
+  }         
+  
   PDB p(argv[1]); if ( !p ) return 1;
   //p.write(cout);    
   
@@ -590,7 +653,7 @@ int main(int argc, char *argv[])
       //pass line.
       currentLine++;
       getline(input, buffer);
-      cout << buffer << endl;
+      *output << buffer << endl;
     }
     currentCol = 1;
     currentLine++;
@@ -601,7 +664,7 @@ int main(int argc, char *argv[])
     {
       //pass char
       c = *it;
-      cout << c;
+      *output << c;
       currentCol++;
       it++;
     }
@@ -613,12 +676,17 @@ int main(int argc, char *argv[])
     {
       c = *it;
       it++;
-      cout << c;
+      *output << c;
     }
   }
   while (getline(input, buffer) != 0)
   {
     //pass remaining lines
-    cout << buffer << endl;
+    *output << buffer << endl;
   }
 }
+/***************************************************************************
+ * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
+ * $Revision: 1.5 $   $Date: 2006/04/24 22:47:15 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.5 2006/04/24 22:47:15 scottb Exp $
+ ***************************************************************************/
