@@ -568,6 +568,8 @@ int main(int argc, char *argv[])
 
   list<Directive> directivesToBeAdded;
 
+/* NOT processing C/C++ code
+
   if (p.language() == PDB::LA_C || p.language() == PDB::LA_CXX || p.language() == PDB::LA_C_or_CXX)
   {  
     lang = C;
@@ -593,8 +595,8 @@ int main(int argc, char *argv[])
         //}
       //}
   }  
-  
-  else if (p.language() == PDB::LA_FORTRAN)
+*/
+  if (p.language() == PDB::LA_FORTRAN)
   {  
     lang = Fortran;
     //for(PDB::filevec::iterator fi=files.begin(); fi!=files.end(); ++fi) {
@@ -689,6 +691,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.6 $   $Date: 2006/04/25 02:02:23 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.6 2006/04/25 02:02:23 scottb Exp $
+ * $Revision: 1.7 $   $Date: 2006/04/25 02:21:15 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.7 2006/04/25 02:21:15 scottb Exp $
  ***************************************************************************/
