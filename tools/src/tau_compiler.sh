@@ -574,7 +574,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	# Before we pass it to Opari for OpenMP instrumentation
 	# we should use tau_ompcheck to verify that OpenMP constructs are 
 	# used correctly.
-	if [ $opari = $TRUE -a $pdtUsed = $TRUE ]; then
+	if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
 	
 	  case $groupType in
 	    $group_f_F)
@@ -670,6 +670,9 @@ if [ $numFiles == 0 ]; then
 	gotoNextStep=$FALSE
 	if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
 	  evalWithDebugMessage "/bin/rm -f opari.tab.c opari.tab.o *.opari.inc" "Removing opari.tab.c opari.tab.o *.opari.inc"
+	  if [ $pdtUsed == $TRUE ]; then
+	    evalWithDebugMessage "/bin/rm -f *.comment.pdb *.chk.* *.pomp.*" "Removing *.chk *.pomp.* *.comment.pdb "
+	  fi
 	fi
 fi
 
@@ -801,7 +804,7 @@ if [ $gotoNextStep == $TRUE ]; then
 			suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 			outputFile=${base##*/}.o	#strip it off the directory
 			# Remove the .pomp from the name of the output file. 
-			if [ $opari == $TRUE -a $pdtUsed = $TRUE ]; then
+			if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
 			  outputFile=`echo $outputFile | sed -e 's/\.chk\.pomp//'`
 			fi
 			
