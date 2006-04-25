@@ -671,6 +671,8 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optNoMpi \
 	-optOpariDir="$(OPARIDIR)" -optOpariTool="$(TAU_OPARI_TOOL)" \
 	-optTauCC="$(TAU_CC)" \
+	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE)" \
+	-optTauDefs="$(TAU_DEFS)" \
         -optTauCompile="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
         -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"
 #############################################
