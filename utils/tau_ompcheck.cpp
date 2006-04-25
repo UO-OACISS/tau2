@@ -22,6 +22,8 @@
 #include <fstream>
 using namespace std;
 
+//---------------------------------------------------------------------------
+
 char* file;
 char* source;
 
@@ -33,6 +35,12 @@ ostream* output;
 enum {Fortran, C};
 enum {Standard, Verbose, Debug};
 
+/***************************************************************
+ *
+ * Class Directive: Holds information about each individual
+ * directive
+ * 
+ *************************************************************/         
 class Directive
 {
   int type;
@@ -42,11 +50,27 @@ class Directive
   const pdbStmt* block;
   public:
 
+  /*
+   * Constructor IN: 
+   * int t         : the type of this directive (ie. do/for/paralell
+   *                 opening/closing).
+   * int l         : the line number in the source file where the
+   *                 direcitve is declared.
+   */
   Directive(int t, int l)
   {
     type = t;
     line = l;
   }
+  /*
+   * Constructor IN: 
+   * Directive d      : An Opening Directive, we will create a
+   *                    matching closing Directive
+   * int l            : the line number in the source file where the
+   *                    direcitve is declared.
+   * const pdbStmt* s : The pdbStmt which follows the opening
+   *                    directive - a block statement.
+   */
   Directive(Directive d, int l, const pdbStmt* s)
   {
     type = d.getType();
@@ -57,6 +81,16 @@ class Directive
     depth = l;
     block = s;
   }
+  /*
+   * Constructor IN: 
+   * Directive d      : An Opening Directive, we will create a
+   *                    matching closing Directive
+   * int t            : the type of the Opening Directive.
+   * int l            : the line number in the source file where the
+   *                    direcitve is declared.
+   * const pdbStmt* s : The pdbStmt which follows the opening
+   *                    directive - a block statement.
+   */
   Directive(Directive d, int t, int l, const pdbStmt* s)
   {
     type = -t;
@@ -67,6 +101,12 @@ class Directive
     depth = l;
     block = s;
   }  
+  /*
+   * Constructor IN: 
+   * Directive d      : A Directive on which base this new one
+   * int l            : the line number in the source file where the
+   *                    direcitve is declared.
+   */
   Directive(Directive d, int l)
   {
     type = d.getType();
@@ -95,6 +135,15 @@ class Directive
   { depth = d; }
 };
 
+/*
+ * Operator<: 
+ * Compares two directives ordered by the place inside the source files
+ * IE. a < b iff a is declared before b in the source file.
+ *
+ * IN:
+ * Directive& a
+ * Directive& b
+ */
 bool operator< (const Directive& a, const Directive& b)
 {
   if (a.getLine() == b.getLine())
@@ -102,29 +151,59 @@ bool operator< (const Directive& a, const Directive& b)
   else
     return a.getLine() < b.getLine();
 }
-  
+/***************************************************************
+  *
+  * Class CompleteDirective: A collection of functions that finds 
+  * and completes unclosed directives which a routine.
+  * 
+  *************************************************************/
 class CompleteDirectives
 {
+  /* A complete list of Directives in the routine. */
   list<Directive> directives;
+  /* A list of currently open Directives at this stage in the routine. */
   list<Directive> openDirectives;
+  /* A list of Directives that should be inserted in this routine. */
   list<Directive> addDirectives;
   int language;
 
+  /* the line number at the begining this routine. */
   int beginRoutine;
+  /* the line number at the end this routine. */
   int endRoutine;
 
   public:
     
+ /*
+  * Constructor
+  * IN:
+  * char* a         : the name of the file this routine is defined in.
+  * pdbRoutine* ro  : the routine we are to consider.
+  * int lan         : the language this program is written is.
+  *
+  */
   CompleteDirectives(char* a, pdbRoutine* ro, int lan)
   {
     language = lan;
     findOMPDirectives(a,ro);
   }
+ /*
+  * findFRoutineEnd : find the last line of a fortran routine.
+  * IN:
+  * pdbRoutine* ro  : the routine we are to consider.
+  *
+  * OUTPUT:
+  * pdbLoc*         : the location of the end of this routine. This
+  *                   is found by finding that last return or stop location in
+  *                   the routine.
+  */
   pdbLoc* findFRoutineEnd(pdbRoutine* ro)
   {
     //cerr << "finding end of the routine." << endl;
     pdbRoutine::locvec l = ro->returnLocations();
     pdbLoc* lastReturn = *(l.begin());
+    
+    //search stop routine if the langage is fortran
     if (language == Fortran)
     {
       pdbFRoutine* fro = ((pdbFRoutine*) ro);
@@ -134,6 +213,7 @@ class CompleteDirectives
     if (verbosity == Debug)
       cerr << "initialized size: " << l.size() << " first: " << (*l.begin())->line() << endl;
     
+    //find the last return/stop location
     for (pdbRoutine::locvec::iterator loc = l.begin(); loc != l.end() ; loc++)
     {
       if (verbosity == Debug)
@@ -145,6 +225,14 @@ class CompleteDirectives
     }
     return lastReturn;
   }
+ /*
+  * findOMPDirectives : populates the directives list with directives decleared
+  *                     in this routine.
+  * IN:
+  * char* a         : the name of the file where the routine resides.
+  * pdbRoutine* ro  : the routine we are to consider.
+  *
+  */
   void findOMPDirectives(char* a, pdbRoutine* ro)
   {
     int i;
@@ -162,6 +250,8 @@ class CompleteDirectives
     if (verbosity == Debug)
       cerr <<  "Routine lines: " << beginRoutine << "-" << endRoutine << endl;
     
+    // iterate through the pragma vector added to the list each one that appears
+    // with this routine.
     for (PDB::pragmavec::iterator r = pdbHead.getPragmaVec().begin();
           r!=pdbHead.getPragmaVec().end(); r++)
     {
@@ -178,6 +268,19 @@ class CompleteDirectives
       cerr << "----------------" << endl;
   }
 
+ /*
+  * getDirectiveType: return the type of this directive.
+  * IN:
+  * pdbPragma p     : the pragma/directive.
+  *
+  * OUTPUT:
+  * int             : The type of the routine:
+  *                   1 - open parallel
+  *                   2 - open do
+  *                   3 - open for
+  *                   closing directive type = -(opening directive type)
+  *
+  */
   int getDirectiveType(pdbPragma p)
   {
     //Transform pragma text to lower case
@@ -224,10 +327,32 @@ class CompleteDirectives
     }
 
   }
+ /*
+  * findOMPStmt     : initalizes the recursive processing of each statemet in
+  *                   the routine.
+  * IN:
+  * pdbStmt *s      : The statement of which to begin processing.
+  * PDB& pdb        : The pdb root object.
+  *
+  * OUTPUT:
+  * list<Directive>&: A list of all the directives that need to be added to this
+  *                   routine to complete each open directive.
+  */
   list<Directive>& findOMPStmt(const pdbStmt *s, PDB& pdb)
   {
-    //expectedClosingDirective = 1;
-    //create stmt to repersent the entire routine (need for fortran)
+    /* We need to make sure the entire routine is processed to insure that it is
+     * we will create two statements. The first as the head of each routine
+     * enclosing all the statement in the routine. The second is place at the
+     * close of the routine.
+     *
+     *      Head statement (created)
+     *               |
+     *               v
+     *     First statement (modified) -> Tail statement (created)
+     *               |
+     *               v
+     *     The rest of the statments
+     */
     pdbStmt head(-1);
     pdbStmt tail(-1);
     pdbStmt state(*s);
@@ -246,6 +371,21 @@ class CompleteDirectives
     state.downStmt(s);
     return findOMPStmt(&state,&head,0, pdb);
   }
+ /*
+  * findOMPStmt     : recursivesly processes each statemet in
+  *                   the routine opening and closing directives and
+  *                   inserting directive when need.
+  * IN:
+  * pdbStmt *s      : The statement of which to begin processing.
+  * pdbStmt *block  : The statement that defines the block the s statement is
+  *                   in.
+  * int loop        : the loop depth of this statement.
+  * PDB& pdb        : The pdb root object.
+  *
+  * OUTPUT:
+  * list<Directive>&: A list of all the directives that need to be added to this
+  *                   routine to complete each open directive.
+  */
   list<Directive>& findOMPStmt(const pdbStmt *s, const pdbStmt *block, int loop, PDB& pdb)
   {
 
@@ -266,7 +406,7 @@ class CompleteDirectives
           if (verbosity == Debug)  
             cerr << "Closing Parallel OMP Directive." << endl;
           if (openDirectives.size() != 0)
-            openDirectives.pop_front();
+            //openDirectives.pop_front();
           
           directives.pop_front();
         }
@@ -293,22 +433,28 @@ class CompleteDirectives
             directives.front().getLine() && directives.front().getType() < 0 &&
             openDirectives.size() != 0)
       {
-        //atempt to close directive
-        if (openDirectives.front().getType() + directives.front().getType() == 0)
+        if (openDirectives.size() != 0)
         {
-          if (verbosity == Debug)  
-            cerr << "Closing OMP Directive type: " << directives.front().getType() << endl;
-          openDirectives.pop_front();
-          directives.pop_front();
+          //atempt to close directive
+          if (openDirectives.front().getType() + directives.front().getType() == 0)
+          {
+            if (verbosity == Debug)  
+              cerr << "Closing OMP Directive type: " << directives.front().getType() << endl;
+            openDirectives.pop_front();
+            directives.pop_front();
+          }
+          else 
+          {  
+            cerr << "ERROR: Mismatched closing OMP Directive on line: " << directives.front().getType() << endl;
+            if (verbosity >= Verbose)  
+              cerr << "ERROR: mismatched closing OMP Directive on line: " <<
+              s->stmtBegin().line() << " type: " << directives.front().getType() << endl;
+            openDirectives.pop_front();
+            directives.pop_front();
+          }
         }
-        else 
-        {  
-          if (verbosity >= Verbose)  
-            cerr << "ERROR: mismatched closing OMP Directive on line: " <<
-            s->stmtBegin().line() << " type: " << directives.front().getType() << endl;
-          openDirectives.pop_front();
-          directives.pop_front();
-        }
+        else  
+          cerr << "ERROR: Superfluous closing OMP Directive on line: " << directives.front().getLine() << endl;
       }
     
       //Are we expecting any more pragmas to be closed before this statement?
@@ -523,6 +669,8 @@ int main(int argc, char *argv[])
   ofstream of;
   file = argv[1];
   source = argv[2];
+  output = &cout;
+  verbosity = Standard;
   if (argc > 3)
   {
     int i = 3;
@@ -531,16 +679,13 @@ int main(int argc, char *argv[])
       if (string(argv[i]) == "-v")
       {  
         verbosity = Verbose;
-        output = &cout;
       }
       else if (string(argv[i]) == "-d")
       {
         verbosity = Debug;
-        output = &cout;
       }
       else if (string(argv[i]) == "-o" && argv[i+1] != NULL)
       {
-        verbosity = Standard;
         of.open(argv[i+1]);
         output = &of;
         i++; // grab two arguments
@@ -548,11 +693,6 @@ int main(int argc, char *argv[])
       i++;
     }
   }
-  else
-  {
-    verbosity = Standard;
-    output = &cout;
-  }         
   
   PDB p(argv[1]); if ( !p ) return 1;
   //p.write(cout);    
@@ -686,6 +826,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.8 $   $Date: 2006/04/25 02:27:48 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.8 2006/04/25 02:27:48 scottb Exp $
+ * $Revision: 1.9 $   $Date: 2006/04/25 22:09:47 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.9 2006/04/25 22:09:47 scottb Exp $
  ***************************************************************************/
