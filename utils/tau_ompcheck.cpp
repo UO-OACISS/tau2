@@ -621,11 +621,6 @@ int main(int argc, char *argv[])
         //}
       //}
   }
-  else
-  {
-    cerr << "Cannot find language information. quiting" << endl;
-    return 1;
-  }
   
   if (verbosity >= Verbose)
     cerr << "----------------------\nDirectives to be added:" << endl; 
@@ -691,6 +686,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.7 $   $Date: 2006/04/25 02:21:15 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.7 2006/04/25 02:21:15 scottb Exp $
+ * $Revision: 1.8 $   $Date: 2006/04/25 02:27:48 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.8 2006/04/25 02:27:48 scottb Exp $
  ***************************************************************************/
