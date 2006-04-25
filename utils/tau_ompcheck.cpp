@@ -258,7 +258,7 @@ class CompleteDirectives
         {
           if (verbosity == Debug)  
             cerr << "Opening Parallel OMP Directive." << endl;
-          openDirectives.push_front(Directive(directives.front(), loop, block));
+          //openDirectives.push_front(Directive(directives.front(), loop, block));
           directives.pop_front();
         }
         while (directives.front().getType() == -1)
@@ -297,14 +297,15 @@ class CompleteDirectives
         if (openDirectives.front().getType() + directives.front().getType() == 0)
         {
           if (verbosity == Debug)  
-            cerr << "Closing OMP Directive." << endl;
+            cerr << "Closing OMP Directive type: " << directives.front().getType() << endl;
           openDirectives.pop_front();
           directives.pop_front();
         }
         else 
         {  
           if (verbosity >= Verbose)  
-            cerr << "ERROR: mismatched closing OMP Directive on line: " << s->stmtBegin().line() << endl;
+            cerr << "ERROR: mismatched closing OMP Directive on line: " <<
+            s->stmtBegin().line() << " type: " << directives.front().getType() << endl;
           openDirectives.pop_front();
           directives.pop_front();
         }
@@ -339,7 +340,6 @@ class CompleteDirectives
         
         openDirectives.pop_front();
       }
-
       
       while (directives.size() != 0 && s->stmtBegin().line() >=
       directives.front().getLine() && directives.front().getType() > 1)
@@ -360,6 +360,7 @@ class CompleteDirectives
           directives.pop_front();
       }
       
+
       int i = 0;
       if (verbosity == Debug) 
       {
@@ -383,17 +384,18 @@ class CompleteDirectives
       s->stmtBegin().line())
       {  
         addDirectives.splice(addDirectives.end(), findOMPStmt(s->downStmt(), s, loop + 1, pdb));
-        if (s->nextStmt() != NULL)
+        if (s->nextStmt() == NULL)
         {
-        pdbFile f(-1);
-        pdbStmt endBlock(-1);
-        endBlock.stmtBegin(pdbLoc(&f,s->stmtEnd().line(),s->stmtEnd().col()));
-        endBlock.stmtEnd(pdbLoc(&f,s->stmtEnd().line(),s->stmtEnd().col()));
-        endBlock.nextStmt(s->nextStmt());
-        endBlock.downStmt(NULL);
-        endBlock.extraStmt(NULL);
-        addDirectives.splice(addDirectives.end(), findOMPStmt(&endBlock, block, loop, pdb));  
-          
+          if (verbosity == Debug)
+            cerr << "ending block: " << s->stmtBegin().line() << endl;
+          pdbFile f(-1);
+          pdbStmt endBlock(-1);
+          endBlock.stmtBegin(pdbLoc(&f,s->stmtEnd().line(),s->stmtEnd().col()));
+          endBlock.stmtEnd(pdbLoc(&f,s->stmtEnd().line(),s->stmtEnd().col()));
+          endBlock.nextStmt(s->nextStmt());
+          endBlock.downStmt(NULL);
+          endBlock.extraStmt(NULL);
+          addDirectives.splice(addDirectives.end(), findOMPStmt(&endBlock, block, loop, pdb));  
         }
       }
       if (s->extraStmt() != NULL && s->extraStmt()->stmtBegin().line() >=
@@ -687,6 +689,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.5 $   $Date: 2006/04/24 22:47:15 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.5 2006/04/24 22:47:15 scottb Exp $
+ * $Revision: 1.6 $   $Date: 2006/04/25 02:02:23 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.6 2006/04/25 02:02:23 scottb Exp $
  ***************************************************************************/
