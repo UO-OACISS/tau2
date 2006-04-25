@@ -28,6 +28,21 @@
 #ifndef PROFILER_H
 #define PROFILER_H
 
+#ifdef PTHREADS
+#ifndef TAU_LIBRARY_SOURCE
+/* pthread_create wrapper */
+#include <pthread.h>
+#define pthread_create(thread, attr, function, arg) \
+        tau_pthread_create(thread, attr, function, arg)
+
+extern "C" int tau_pthread_create (pthread_t *__restrict __threadp,
+			__const pthread_attr_t *__restrict __attr,
+			void *(*__start_routine) (void *),
+			void *__restrict __arg);
+#endif /* TAU_LIBRARY_SOURCE */
+#endif /* PTHREADS */
+
+
 #if (defined(TAU_WINDOWS))
 #pragma warning( disable : 4786 )
 #endif /* TAU_WINDOWS */
@@ -56,6 +71,8 @@
 #else
 #define TAU_MAX_THREADS 1
 #endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS || OPENMP || SPROC */
+
+
 
 /* We should throttle if number n > a && percall < b .a and b are given below */
 #define TAU_THROTTLE_NUMCALLS_DEFAULT 100000
@@ -270,7 +287,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.64 $   $Date: 2006/03/27 20:12:02 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.64 2006/03/27 20:12:02 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: amorris $
+ * $Revision: 1.65 $   $Date: 2006/04/25 19:38:48 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.65 2006/04/25 19:38:48 amorris Exp $ 
  ***************************************************************************/

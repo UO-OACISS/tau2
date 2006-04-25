@@ -213,10 +213,31 @@ int PthreadLayer::UnLockEnv(void)
   pthread_mutex_unlock(&tauEnvMutex);
   return 1;
 }  
+
+/* Below is the pthread_create wrapper */
+typedef struct tau_pthread_pack {
+  void *(*__start_routine) (void *);
+  void *__restrict __arg;
+} tau_pthread_pack;
+
+extern "C" void *tau_pthread_function (void *__restrict __arg) {
+  tau_pthread_pack *pack = (tau_pthread_pack*) __arg;
+  TAU_REGISTER_THREAD();
+  pack->__start_routine(pack->__arg);
+}
+
+extern "C" int tau_pthread_create (pthread_t *__restrict __threadp,
+		    __const pthread_attr_t *__restrict __attr,
+		    void *(*__start_routine) (void *),
+		    void *__restrict __arg) {
+  tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
+  pack->__start_routine = __start_routine;
+  pack->__arg = __arg;
+  pthread_create(__threadp, __attr, tau_pthread_function, (void*)pack);
+}
+
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.10 $   $Date: 2005/11/11 03:46:49 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.10 2005/11/11 03:46:49 amorris Exp $
+ * $Revision: 1.11 $   $Date: 2006/04/25 19:37:57 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.11 2006/04/25 19:37:57 amorris Exp $
  ***************************************************************************/
-
-
