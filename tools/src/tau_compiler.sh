@@ -65,7 +65,8 @@ printUsage () {
 	echo -e "  -optPDBFile=\"\"\t\tSpecify PDB file for tau_instrumentor. Skips parsing stage."
 	echo -e "  -optTau=\"\"\t\t\tSpecify options for tau_instrumentor"
 	echo -e "  -optCompile=\"\"\t\tOptions passed to the compiler by the user."
-	echo -e "  -optTauCompile=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
+	echo -e "  -optTauDefs=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_DEFS)"
+	echo -e "  -optTauIncludes=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE)"
 	echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
 	echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
 	echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
@@ -311,11 +312,17 @@ for arg in "$@"
 				optLinking=${arg#"-optLinkReset="}
 				echoIfDebug "\tLinking Options are: $optLinking"
 				;;
-			-optTauCompile=*)
-				optTauCompile="${arg#"-optTauCompile="} $optCompile"
-				echoIfDebug "\tCompiling Options from TAU are: $optTauCompile"
-				echoIfDebug "\tFrom optTauCompile: $optTauCompile"
-				optIncludeDefs="$optIncludeDefs $optTauCompile"
+			-optTauDefs=*)
+				optTauDefs="${arg#"-optTauDefs="}"
+				echoIfDebug "\tCompiling Defines Options from TAU are: $optTauDefs"
+				echoIfDebug "\tFrom optTauDefs: $optTauDefs"
+				optDefs="$optDefs $optTauDefs"
+				;;
+			-optTauIncludes=*)
+				optTauIncludes="${arg#"-optTauIncludes="}"
+				echoIfDebug "\tCompiling Include Options from TAU are: $optTauIncludes"
+				echoIfDebug "\tFrom optTauIncludes: $optTauIncludes"
+				optIncludes="$optIncludes $optTauIncludes"
 				;;
 			-optCompile*)
 				optCompile="${arg#"-optCompile="} $optCompile"
@@ -578,13 +585,13 @@ while [ $tempCounter -lt $numFiles ]; do
 	
 	  case $groupType in
 	    $group_f_F)
-	      pdtParserCmd="$pdtParserF ${arrFileName[$tempCounter]} $optPdtUser ${optPdtF95}"
+	      pdtParserCmd="$pdtParserF ${arrFileName[$tempCounter]} $optPdtUser ${optPdtF95} $optIncludes"
 	      ;;
 	    $group_c)
-	      pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCFlags $optPdtUser"
+	      pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCFlags $optPdtUser $optDefines $optIncludes"
 	      ;;
 	    $group_C)
-	      pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCxxFlags $optPdtUser"
+	      pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCxxFlags $optPdtUser $optDefines $optIncludes"
 	      ;;
 	  esac
 	  evalWithDebugMessage "$pdtParserCmd" "Parsing with PDT (phase 1):" 
@@ -697,21 +704,22 @@ if [ $gotoNextStep == $TRUE ]; then
 				pdtCmd="$pdtParserF"
 				pdtCmd="$pdtCmd ${arrFileName[$tempCounter]}"
 				pdtCmd="$pdtCmd $optPdtUser"
-				pdtCmd="$pdtCmd ${optPdtF95} "
+				pdtCmd="$pdtCmd ${optPdtF95} $optIncludes"
+				optCompile="$optCompile $optIncludes"
 				;;
 
 			$group_c)
 				pdtCmd="$optPdtDir""/$pdtParserType"
 				pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 				pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
-				optCompile="$optCompile $optTauCompile"
+				optCompile="$optCompile $optDefs $optIncludes"
 				;;
 
 			$group_C)
 				pdtCmd="$optPdtDir""/$pdtParserType"
 				pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 				pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
-				optCompile="$optCompile $optTauCompile"
+				optCompile="$optCompile $optDefs $optIncludes"
 				;;
 
 		esac
