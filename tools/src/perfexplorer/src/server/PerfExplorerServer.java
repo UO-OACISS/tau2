@@ -23,7 +23,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.31 2006/04/12 02:38:26 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.32 2006/04/25 00:37:40 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -342,7 +342,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			dbControl.SIGNAL("getCorrelationResults");
 		}
 		dbControl.SIGNAL("getCorrelationResults");
-		System.out.println(" Done!");
+		//System.out.println(" Done!");
 		return analysisResults;
 	}
 
@@ -356,7 +356,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return RMIPerformanceResults
 	 */
 	public RMIPerformanceResults getPerformanceResults(RMIPerfExplorerModel model) {
-		//System.out.print("getPerformanceResults(" + model.toString() + ")... ");
+		System.out.print("getPerformanceResults(" + model.toString() + ")... ");
 		RMIPerformanceResults analysisResults = new RMIPerformanceResults();
 		dbControl.WAIT("getPerformanceResults");
 		try {
@@ -376,6 +376,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				statement.setInt(3, model.getTrial().getID());
 				statement.setString(4, RMIPerfExplorerModel.K_MEANS);
 			}
+			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			int analysisID = 0;
 			if (results.next() != false) {
@@ -461,7 +462,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			dbControl.SIGNAL("getPerformanceResults");
 		}
 		dbControl.SIGNAL("getPerformanceResults");
-		System.out.println(" Done!");
+		//System.out.println(" Done!");
 		return analysisResults;
 	}
 
@@ -1148,6 +1149,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("group by interval_event.id ");
 
 			statement = db.prepareStatement(buf.toString());
+			//System.out.println(buf.toString());
 			statement.setInt(1, model.getTrial().getID());
 			Metric metric = (Metric)model.getCurrentSelection();
 			statement.setInt(2, metric.getID());
@@ -1155,47 +1157,71 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			ResultSet results = statement.executeQuery();
 			StringBuffer idString = new StringBuffer();
 			boolean gotOne = false;
+			List goodMethods = new ArrayList();
 			while (results.next() != false) {
 				if ((results.getString(2) != null) &&
 					(!(results.getString(2).trim().equalsIgnoreCase("NaN"))) &&
+					(!(results.getString(2).trim().equals(""))) &&
 					(!(results.getString(2).trim().equals("0"))) &&
-					(!(results.getString(2).trim().equals("")))) {
+					(results.getDouble(2) != 0.0)) {
 					if (gotOne)
 						idString.append(",");
 					idString.append(results.getString(1));
 					gotOne = true;
+					//System.out.println(results.getInt(2));
+					goodMethods.add(results.getString(1));
 				}
 			}
 			results.close();
 			statement.close();
 
 			buf = new StringBuffer();
-			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("select id, name, (stddev(excl)/ ");
-				buf.append("(max(excl)-min(excl))) * ");
-				buf.append("avg(exclusive_percentage) ");
-			} else if (db.getDBType().compareTo("derby") == 0) {
-				// stddev is unsupported!
-				buf.append("select id, name, avg(exclusive) ");
-			} else if (db.getDBType().compareTo("db2") == 0) {
-				buf.append("select id, cast (name as varchar(256)), (stddev(exclusive)/ ");
-				buf.append("(max(exclusive)-min(exclusive)))* ");
-				buf.append("avg(exclusive_percentage) ");
-			} else {
-				buf.append("select id, name, (stddev(exclusive)/ ");
-				buf.append("(max(exclusive)-min(exclusive)))* ");
-				buf.append("avg(exclusive_percentage) ");
-			}
-			buf.append("from interval_location_profile ");
-			buf.append("inner join interval_event ");
-			buf.append("on interval_event = id ");
-			buf.append("where id in (" + idString.toString() + ") ");
 			if (db.getDBType().compareTo("db2") == 0) {
+				// create a temporary table
+				statement = db.prepareStatement("declare global temporary table working_table (id int) on commit preserve rows not logged ");
+				statement.execute();
+				statement.close();
+
+				// populate it
+				statement = db.prepareStatement("insert into SESSION.working_table (id) values (?)");
+				for (Iterator i = goodMethods.iterator() ; i.hasNext() ; ) {
+					int next = Integer.parseInt((String)i.next());
+					statement.setInt(1, next);
+					statement.execute();
+				}
+				statement.close();
+
+				buf.append("select interval_event.id, cast (name as varchar(256)), (stddev(exclusive)/ ");
+				buf.append("(max(exclusive)-min(exclusive)))* ");
+				buf.append("avg(exclusive_percentage) ");
+				buf.append("from interval_location_profile ");
+				buf.append("inner join interval_event ");
+				buf.append("on interval_event = interval_event.id ");
+				buf.append("inner join SESSION.working_table on ");
+				buf.append("interval_event.id = SESSION.working_table.id ");
 				buf.append("group by interval_event.id, cast (name as varchar(256))");
+
 			} else {
+				if (db.getDBType().compareTo("oracle") == 0) {
+					buf.append("select id, name, (stddev(excl)/ ");
+					buf.append("(max(excl)-min(excl))) * ");
+					buf.append("avg(exclusive_percentage) ");
+				} else if (db.getDBType().compareTo("derby") == 0) {
+					// stddev is unsupported!
+					buf.append("select id, name, avg(exclusive) ");
+				} else {
+					buf.append("select id, name, (stddev(exclusive)/ ");
+					buf.append("(max(exclusive)-min(exclusive)))* ");
+					buf.append("avg(exclusive_percentage) ");
+				}
+				buf.append("from interval_location_profile ");
+				buf.append("inner join interval_event ");
+				buf.append("on interval_event = id ");
+				buf.append("where id in (" + idString.toString() + ") ");
 				buf.append("group by interval_event.id, name ");
 			}
 			buf.append("order by 3 desc");
+			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			//System.out.println(buf.toString());
 			//System.out.println(statement.toString());
@@ -1215,6 +1241,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			results.close();
 			statement.close();
+
+			if (db.getDBType().compareTo("db2") == 0) {
+				// drop the temporary table
+				statement = db.prepareStatement("drop table SESSION.working_table");
+				statement.execute();
+				statement.close();
+			}
 
 			data = new RMICubeData(count);
 			data.setNames(names);

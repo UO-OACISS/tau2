@@ -37,23 +37,68 @@ public class TestHarness {
 			System.out.println(connection.sayHello());
 
 			if (test.equals("chart") || test.equals("all")) {
+				// derby settings
+				//setSelection("gyro-b1", "tg", null, null);
+				//model.setMetricName("Time");
+		
+				// postgres settings
+				//setSelection("gyro.B1-std", "B1-std.tg", null, null);
+				//model.setMetricName("WALL_CLOCK_TIME");
+				//model.setEventName("field");
+				//model.setGroupName("TRANSPOSE");
+				//model.setTotalTimesteps("100");
+				//model.setConstantProblem(true);
+
+				// DB2 settings
+				setSelection("FLASH", "hydro radiation scaling on BG/L", null, null);
+				model.setMetricName("Time");
+				model.setEventName("MPI_Barrier()");
+				model.setGroupName("MPI");
+				model.setTotalTimesteps("100");
+				model.setConstantProblem(false);
+
 				System.out.println("Testing charts...");
 				testCharts();
 			}
 			if (test.equals("viz") || test.equals("all")) {
 				System.out.println("Testing visualization...");
+				// derby/postgres
+				//setSelection("sweep3d", "150.1 Strong Scaling 2", "128", "time");
+
+				// DB2
+				setSelection("FLASH", "hydro radiation scaling on BG/L", "tau64p.ppk/64p/scaling/hydro-radiation-scaling/flash/flash/taudata/packages/disk2/", "Time");
+
 				testVisualization();
 			}
 			if (test.equals("views") || test.equals("all")) {
 				System.out.println("Testing views...");
+				viewList = null;
+				foundView = false;
+				getViews("0", new ArrayList());
+				System.out.print("Selecting: ");
+				for(int i = 0 ; i < viewList.length ; i++) 
+					System.out.print(viewList[i] + ": ");
+				System.out.println("");
+				model.setCurrentSelection(viewList);
+				model.setMetricName("Time");
+				model.setEventName("field");
+				model.setGroupName("TRANSPOSE");
+				model.setTotalTimesteps("100");
+				model.setConstantProblem(true);
 				testViews();
 			}
 			if (test.equals("cluster") || test.equals("all")) {
 				System.out.println("Testing clustering...");
+				//setSelection("sweep3d", "150.1 Strong Scaling 2", "32", "time");
+				setSelection("FLASH", "hydro radiation scaling on BG/L", "tau64p.ppk/64p/scaling/hydro-radiation-scaling/flash/flash/taudata/packages/disk2/", "Time");
+
 				testCluster();
 			}
 			if (test.equals("correlation") || test.equals("all")) {
 				System.out.println("Testing correlation...");
+				//setSelection("sweep3d", "150.1 Strong Scaling 2", "32", "time");
+				setSelection("FLASH", "hydro radiation scaling on BG/L", "tau64p.ppk/64p/scaling/hydro-radiation-scaling/flash/flash/taudata/packages/disk2/", "Time");
+
 				testCorrelation();
 			}
 			//java.lang.Thread.sleep(1000);
@@ -159,20 +204,6 @@ public class TestHarness {
 	}
 
 	public void testCharts() throws Exception {
-		// derby settings
-		//setSelection("gyro-b1", "tg", null, null);
-		//model.setMetricName("Time");
-
-		// postgres settings
-		setSelection("gyro.B1-std", "B1-std.tg", null, null);
-		model.setMetricName("Time");
-		//model.setMetricName("WALL_CLOCK_TIME");
-
-		model.setEventName("field");
-		model.setGroupName("TRANSPOSE");
-		model.setTotalTimesteps("100");
-		model.setConstantProblem(true);
-
 		// do the tests
 		PerfExplorerChart.doTotalTimeChart();
 		PerfExplorerChart.doTimestepsChart();
@@ -191,8 +222,6 @@ public class TestHarness {
 	}
 
 	public void testVisualization() throws Exception {
-		setSelection("sweep3d", "150.1 Strong Scaling 2", "128", "time");
-
 		PerfExplorerVariation.doVariationAnalysis();
 		PerfExplorerHistogramChart.doHistogram();
 		PerfExplorerBoxChart.doIQRBoxChart();
@@ -200,19 +229,6 @@ public class TestHarness {
 	}
 
 	public void testViews() throws Exception {
-		viewList = null;
-		foundView = false;
-		getViews("0", new ArrayList());
-		System.out.print("Selecting: ");
-		for(int i = 0 ; i < viewList.length ; i++) 
-			System.out.print(viewList[i] + ": ");
-		System.out.println("");
-		model.setCurrentSelection(viewList);
-		model.setMetricName("Time");
-		model.setEventName("field");
-		model.setGroupName("TRANSPOSE");
-		model.setTotalTimesteps("100");
-		model.setConstantProblem(true);
 		PerfExplorerChart.doTotalTimeChart();
 		PerfExplorerChart.doTimestepsChart();
 		PerfExplorerChart.doEfficiencyChart();
@@ -259,8 +275,6 @@ public class TestHarness {
 	}
 
 	public void testCluster() throws Exception {
-		setSelection("sweep3d", "150.1 Strong Scaling 2", "32", "time");
-
 		model.setDimensionReduction(RMIPerfExplorerModel.OVER_X_PERCENT);
 		model.setNumberOfClusters("10");
 		model.setXPercent("2");
@@ -272,8 +286,6 @@ public class TestHarness {
 	}
 
 	public void testCorrelation() throws Exception {
-		setSelection("sweep3d", "150.1 Strong Scaling 2", "32", "time");
-
 		model.setClusterMethod(RMIPerfExplorerModel.CORRELATION_ANALYSIS);
 		model.setDimensionReduction(RMIPerfExplorerModel.OVER_X_PERCENT);
 		model.setXPercent("2");
