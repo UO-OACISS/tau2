@@ -11,6 +11,8 @@ declare -i group_C=3
 declare -i disablePdtStep=$FALSE
 declare -i hasAnOutputFile=$FALSE
 declare -i fortranParserDefined=$FALSE
+declare -i gfparseUsed=$FALSE
+declare -i pdtUsed=$FALSE
 declare -i isForCompilation=$FALSE
 declare -i hasAnObjectOutputFile=$FALSE
 declare -i hasMpi=$TRUE
@@ -52,6 +54,7 @@ printUsage () {
 	echo -e "  -optPdtCxxOpts=\"\"\t\tOptions for C++ parser in PDT (cxxparse). Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
 	echo -e "  -optPdtCReset=\"\"\t\tReset options to the C++ parser to the given list"
 	echo -e "  -optPdtF90Parser=\"\"\t\tSpecify a different Fortran parser. For e.g., f90parse instead of f95parse"
+	echo -e "  -optPdtGnuFortranParser=\"\"\t\tSpecify the GNU gfortran PDT parser gfparse instead of f95parse"
 	echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
 	echo -e "  -optTauInstr=\"\"\t\tSpecify location of tau_instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/tau_instrumentor"
 	echo -e "  -optPreProcess\t\tPreprocess the source code before parsing. Uses /usr/bin/cpp -P by default."
@@ -223,7 +226,15 @@ for arg in "$@"
 				if [ ! -d $optPdtDir ]; then
 				  disablePdtStep=$TRUE
 				  echoIfDebug "PDT is not configured."
+				else
+				  pdtUsed=$TRUE
 				fi 
+				;;
+
+			-optPdtGnuFortranParser*)
+				fortranParserDefined=$TRUE
+				pdtParserF="$optPdtDir""/gfparse"
+				gfparseUsed=$TRUE
 				;;
 
 			-optPdtF95Opts*)
@@ -304,6 +315,7 @@ for arg in "$@"
 				optTauCompile="${arg#"-optTauCompile="} $optCompile"
 				echoIfDebug "\tCompiling Options from TAU are: $optTauCompile"
 				echoIfDebug "\tFrom optTauCompile: $optTauCompile"
+				optIncludeDefs="$optIncludeDefs $optTauCompile"
 				;;
 			-optCompile*)
 				optCompile="${arg#"-optCompile="} $optCompile"
@@ -559,6 +571,33 @@ while [ $tempCounter -lt $numFiles ]; do
 	  arrFileName[$tempCounter]=$base$suf
 	  echoIfDebug "Completed Preprocessing\n"
         fi
+	# Before we pass it to Opari for OpenMP instrumentation
+	# we should use tau_ompcheck to verify that OpenMP constructs are 
+	# used correctly.
+	if [ $opari = $TRUE -a $pdtUsed = $TRUE ]; then
+	
+	  case $groupType in
+	    $group_f_F)
+	      pdtParserCmd="$pdtParserF ${arrFileName[$tempCounter]} $optPdtUser ${optPdtF95}"
+	      ;;
+	    $group_c)
+	      pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCFlags $optPdtUser"
+	      ;;
+	    $group_C)
+	      pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCxxFlags $optPdtUser"
+	      ;;
+	  esac
+	  evalWithDebugMessage "$pdtParserCmd" "Parsing with PDT (phase 1):" 
+	  pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.pdb"
+	  
+	  evalWithDebugMessage "$pdbcommentCmd" "Using pdbcomment:" 
+
+	  ompcheck=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_ompcheck@'` 
+	  ompcheckCmd="$ompcheck ${base}.comment.pdb ${base}${suf} -o ${base}.chk${suf}"
+	  arrFileName[$tempCounter]=$base.chk$suf
+	  base=${base}.chk
+	  evalWithDebugMessage "$ompcheckCmd" "Using tau_ompcheck:" 
+	fi
 	# And then pass it on to opari for OpenMP programs.
 	if [ $opari = $TRUE ]; then
 	  base=${base}.pomp
@@ -762,8 +801,8 @@ if [ $gotoNextStep == $TRUE ]; then
 			suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 			outputFile=${base##*/}.o	#strip it off the directory
 			# Remove the .pomp from the name of the output file. 
-			if [ $opari == $TRUE ]; then
-			  outputFile=`echo $outputFile | sed -e 's/\.pomp//'`
+			if [ $opari == $TRUE -a $pdtUsed = $TRUE ]; then
+			  outputFile=`echo $outputFile | sed -e 's/\.chk\.pomp//'`
 			fi
 			
 				
