@@ -40,7 +40,7 @@ declare -i temp=0
 declare -i preprocess=$FALSE
 declare -i revertOnError=$TRUE
 
-preprocessorOpts=-P 
+preprocessorOpts="-P  -traditional-cpp"
 
 
 printUsage () {
@@ -567,7 +567,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 	#echoIfDebug "suffix here is -- $suf"
 	# If we need to pre-process the source code, we should do so here!
-	if [ $preprocess = $TRUE ]; then
+	if [ $preprocess = $TRUE -a $groupType == $group_f_F ]; then
 	  base=${base}.pp
 	  cmdToExecute="${preprocessor} $preprocessorOpts $optCompile ${arrFileName[$tempCounter]} $base$suf"
 	  evalWithDebugMessage "$cmdToExecute" "Preprocessing"
