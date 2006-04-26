@@ -78,6 +78,11 @@ int PthreadLayer::tauThreadCount = 0;
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::RegisterThread(void)
 {
+  int *id = (int *) pthread_getspecific(tauPthreadId);
+  
+  if (id != NULL) {
+    return 0;
+  }
 
   int *threadId = new int;
 
@@ -238,6 +243,6 @@ extern "C" int tau_pthread_create (pthread_t *__restrict __threadp,
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.11 $   $Date: 2006/04/25 19:37:57 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.11 2006/04/25 19:37:57 amorris Exp $
+ * $Revision: 1.12 $   $Date: 2006/04/26 01:26:14 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.12 2006/04/26 01:26:14 amorris Exp $
  ***************************************************************************/
