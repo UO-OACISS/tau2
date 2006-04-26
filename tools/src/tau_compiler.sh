@@ -662,7 +662,7 @@ if [ $numFiles == 0 ]; then
 
 	if [ $opari == $TRUE ]; then
 	  evalWithDebugMessage "/bin/rm -f opari.rc" "Removing opari.rc"
-	  cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} opari.tab.c"
+	  cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} opari.tab.c"
 	  evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	  linkCmd="$linkCmd opari.tab.o"
 	fi
