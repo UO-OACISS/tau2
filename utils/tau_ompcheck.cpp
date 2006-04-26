@@ -199,17 +199,22 @@ class CompleteDirectives
   */
   pdbLoc* findFRoutineEnd(pdbRoutine* ro)
   {
-    //cerr << "finding end of the routine." << endl;
+    if (verbosity == Debug)
+      cerr << "finding end of the routine." << endl;
     pdbRoutine::locvec l = ro->returnLocations();
-    pdbLoc* lastReturn = *(l.begin());
+    if (verbosity == Debug)
+      cerr << "got the return location." << endl;
     
     //search stop routine if the langage is fortran
     if (language == Fortran)
     {
       pdbFRoutine* fro = ((pdbFRoutine*) ro);
       pdbRoutine::locvec s = fro->stopLocations();
+      if (verbosity == Debug)
+        cerr << "got the stop location." << endl;
       l.insert(l.end(), s.begin(), s.end());
     }
+    pdbLoc* lastReturn = *(l.begin());
     if (verbosity == Debug)
       cerr << "initialized size: " << l.size() << " first: " << (*l.begin())->line() << endl;
     
@@ -401,12 +406,12 @@ class CompleteDirectives
           //openDirectives.push_front(Directive(directives.front(), loop, block));
           directives.pop_front();
         }
-        while (directives.front().getType() == -1)
+        while (directives.size() != 0 && directives.front().getType() == -1)
         {
+          //if (openDirectives.size() == 1)
+            //cerr << "ERROR: Superfluous closing OMP Directive on line: " << directives.front().getLine() << endl;
           if (verbosity == Debug)  
             cerr << "Closing Parallel OMP Directive." << endl;
-          if (openDirectives.size() != 0)
-            //openDirectives.pop_front();
           
           directives.pop_front();
         }
@@ -826,6 +831,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.9 $   $Date: 2006/04/25 22:09:47 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.9 2006/04/25 22:09:47 scottb Exp $
+ * $Revision: 1.10 $   $Date: 2006/04/26 17:47:34 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.10 2006/04/26 17:47:34 scottb Exp $
  ***************************************************************************/
