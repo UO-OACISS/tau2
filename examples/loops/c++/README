@@ -1,6 +1,7 @@
-This example describes how to instrument outer-loops in C and C++. To
-do this, create a file that is passed as the selective instrumentation file
-to the tau_instrumentor. In this file, we have an instrument section:
+This example describes how to instrument outer-loops in C and C++. Fortran 
+support is illustrated in the ../f90 directory. To instrument outer loops in 
+a given routine, create a file that is passed as the selective instrumentation file
+to the tau_instrumentor. In this file, we specify an instrument section:
 
 BEGIN_INSTRUMENT_SECTION
 loops file="loop_test.cpp" routine="multiply"
@@ -9,6 +10,22 @@ loops file="loop_test.cpp" routine="multiply"
 # name of the routine as is found in profile files. 
 #loops file="loop_test.cpp" routine="double multiply#"
 END_INSTRUMENT_SECTION
+
+For Fortran, you must specify only the name of the routine in upper case (it is 
+case sensitive). For e.g., 
+BEGIN_INSTRUMENT_SECTION
+loops file="loop_test.f90" routine="MULTIPLY"
+END_INSTRUMENT_SECTION
+
+Wildcard characters may be used to instrument all routines/files. It is recommended
+to use throttling of events using 
+% setenv TAU_THROTTLE 1
+when trying to instrument all outer loops. For e.g.,
+BEGIN_INSTRUMENT_SECTION
+loops file="*" routine="#"
+END_INSTRUMENT_SECTION
+
+instruments all outer loops in all files. 
 
 A typical output of running pprof after executing the instrumented program is
 given below:
