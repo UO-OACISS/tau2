@@ -28,21 +28,6 @@
 #ifndef PROFILER_H
 #define PROFILER_H
 
-#ifdef PTHREADS
-#ifndef TAU_LIBRARY_SOURCE
-/* pthread_create wrapper */
-#include <pthread.h>
-#define pthread_create(thread, attr, function, arg) \
-        tau_pthread_create(thread, attr, function, arg)
-
-extern "C" int tau_pthread_create (pthread_t *__restrict __threadp,
-			__const pthread_attr_t *__restrict __attr,
-			void *(*__start_routine) (void *),
-			void *__restrict __arg);
-#endif /* TAU_LIBRARY_SOURCE */
-#endif /* PTHREADS */
-
-
 #if (defined(TAU_WINDOWS))
 #pragma warning( disable : 4786 )
 #endif /* TAU_WINDOWS */
@@ -288,6 +273,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.65 $   $Date: 2006/04/25 19:38:48 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.65 2006/04/25 19:38:48 amorris Exp $ 
+ * $Revision: 1.66 $   $Date: 2006/04/26 01:25:21 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.66 2006/04/26 01:25:21 amorris Exp $ 
  ***************************************************************************/
