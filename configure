@@ -2277,8 +2277,14 @@ EOF
   if $mpicompiler $orig_useropt $mpi_include -c mpi2.$msuf  1> /dev/null 2>&1
   then
     echo "MPI-2 Interface is defined..."
-    fixmakeargs="$fixmakeargs MPI2"
-    mpi2=yes
+    # Wait don't enable this for SGI Altix. Their MPI2 is not complete
+    if [ -e $mpilib/libmpi.so -a -e $mpilib/libmpi++.so -a -e $mpilib/libsma.so -a -e $mpilib/libxmpi.so ] 
+    then
+      echo "SGI MPI detected. Disabling MPI2 wrappers for SGI MPI"
+    else
+      fixmakeargs="$fixmakeargs MPI2"
+      mpi2=yes
+    fi
   fi
   if $mpicompiler $orig_useropt $mpi_include -c mpi2grequest.$msuf  1> /dev/null 2>&1
   then
