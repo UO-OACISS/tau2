@@ -2484,6 +2484,15 @@ then
 	      #mpich1, must use -lfmpich
 	      mpiflibargs="-L$mpilib -lfmpich $wrapperlib"
 	  fi
+	  # Does MPI_Init have weak bindings for Fortran (Infiniband MPI)
+	  weakmpi=T 
+	  # by default it has a T for defined symbol in nm output */
+          weakmpi=`nm $mpilib/libfmpich.a | grep mpi_init | awk '{ print $2 ; }' | head -n 1 `
+	  if [ "x$weakmpi" = "xW" ]
+	  then
+	   echo "MPI has weak bindings for mpi_init Fortran bindings..."
+             fixmakeargs="$fixmakeargs WEAKMPIINIT"
+          fi
       else 
 	  if [ -f $mpilib/liblamf77mpi.a -o -f $mpilib/liblamf77mpi.so ] ; then
               #echo "Fortran liblamf77mpi.* found"
@@ -4031,7 +4040,6 @@ then
   cat ${tauroot}/tools/src/tau_load.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau_load.sh
   chmod a+rx ${targetdir}/${architecture}/bin/tau_load.sh
   echo "TAU: installed tau_load.sh in ${targetdir}/${architecture}/bin"
-  cat ${targetdir}/${architecture}/bin/tau_load.sh
 fi
 
 if [ $slog2 = yes ]
