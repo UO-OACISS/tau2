@@ -41,6 +41,8 @@ Version 2.15 changes (from 2.14):
 29. Added support for Infiniband MPICH on Opterons [NERSC]. 
 30. Added support for Cray XT3 Memory headroom information and Cray Timers [PSC]. 
 31. Added support for GNU Gfortran parser in PDT for tau_compiler.sh [LANL]. 
+32. Added support for parameter based profiling (-PROFILEPARAM) for workload characterization [UTK].
+33. Added support for upgrading from one version of TAU to another (upgradetau) [NERSC]. 
 
 Version 2.14 changes (from 2.13):
 1. MPI-2 support and Fortran wrappers added. 
