@@ -594,7 +594,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	      pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCxxFlags $optPdtUser $optDefines $optIncludes"
 	      ;;
 	  esac
-	  evalWithDebugMessage "$pdtParserCmd" "Parsing with PDT (phase 1):" 
+	  evalWithDebugMessage "$pdtParserCmd" "Parsing with PDT for OpenMP directives verification:" 
 	  pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.pdb"
 	  
 	  evalWithDebugMessage "$pdbcommentCmd" "Using pdbcomment:" 
@@ -678,7 +678,7 @@ if [ $numFiles == 0 ]; then
 	if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
 	  evalWithDebugMessage "/bin/rm -f opari.tab.c opari.tab.o *.opari.inc" "Removing opari.tab.c opari.tab.o *.opari.inc"
 	  if [ $pdtUsed == $TRUE ]; then
-	    evalWithDebugMessage "/bin/rm -f *.comment.pdb *.chk.* *.pomp.*" "Removing *.chk *.pomp.* *.comment.pdb "
+	    evalWithDebugMessage "/bin/rm -f *.comment.pdb *.chk.* *.pomp.* *.pp.pdb *.comment.pdb" "Removing *.chk *.pomp.* *.comment.pdb *.pp.pdb"
 	  fi
 	fi
 fi
@@ -812,6 +812,9 @@ if [ $gotoNextStep == $TRUE ]; then
 			suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 			outputFile=${base##*/}.o	#strip it off the directory
 			# Remove the .pomp from the name of the output file. 
+			if [ $preprocess == $TRUE ]; then
+			  outputFile=`echo $outputFile | sed -e 's/\.pp//'`
+			fi
 			if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
 			  outputFile=`echo $outputFile | sed -e 's/\.chk\.pomp//'`
 			fi
@@ -911,9 +914,21 @@ fi
 if [ $needToCleanPdbInstFiles == $TRUE ]; then
 	tempCounter=0
 	while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
-		eval "/bin/rm ${arrTau[$tempCounter]##*/}"
+		evalWithDebugMessage "/bin/rm -f ${arrTau[$tempCounter]##*/}" "cleaning inst file"
+		if [ $preprocess == $TRUE -a $groupType == $group_f_F ]; then
+		  if [ $opari == $TRUE ]; then
+		    secondSource=`echo ${arrTau[$tempCounter]##*/} | sed -e 's/\.chk\.pomp\.inst//'`
+		  else
+		    secondSource=`echo ${arrTau[$tempCounter]##*/} | sed -e 's/\.inst//'`
+		  fi
+		  evalWithDebugMessage "/bin/rm -f $secondSource" "cleaning pp file"
+		fi
 		if [ $pdbFileSpecified == $FALSE ]; then
 		  evalWithDebugMessage "/bin/rm -f ${arrPdb[$tempCounter]##*/}" "cleaning PDB file"
+		  if [ $preprocess == $TRUE -o $opari == $TRUE ]; then
+		    secondPDB=`echo $outputFile | sed -e 's/\.o/\.pdb/'`
+		    evalWithDebugMessage "/bin/rm -f $secondPDB" "cleaning PDB file"
+		  fi
 		fi
 		if [ $opari == $TRUE ]; then
 		  evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
