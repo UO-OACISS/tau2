@@ -3521,7 +3521,6 @@ then
       fi
     fi
   fi
-fi
 
 # Check if PDT has Fortran statement level information
   cat <<EOF > checkpdt.cpp
@@ -3542,6 +3541,7 @@ EOF
     echo "See http://www.cs.uoregon.edu/research/pdt"
     fixmakeargs="$fixmakeargs PDTNOFSTMTS"
   fi
+fi
 
 
 if [ $java = yes ]
@@ -4068,6 +4068,9 @@ then
   chmod a+rx ${targetdir}/${architecture}/bin/tau_load.sh
   echo "TAU: installed tau_load.sh in ${targetdir}/${architecture}/bin"
 fi
+
+cp ${tauroot}/tools/src/jtf_writer/tf_writer.jar ${targetdir}/${architecture}/lib
+echo "TAU: installed TAU's Java trace writer api tf_writer.jar"
 
 if [ $slog2 = yes ]
 then
@@ -4643,6 +4646,10 @@ then
   utils/slogconverter/slogtest $jdkdir > utils/slogconverter/trace_impl.h
 fi
 
+if [ $tauprefix != unknown ]
+then
+  cp -r examples ${tauprefix}
+fi
 
 
 # bye bye
