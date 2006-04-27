@@ -1,1 +1,123 @@
-See c++/README.
+This directory (consisting of c, c++ and f90 subdirectories) illustrates 
+how to instrument outer-loops in C and C++ and Fortran 90 using PDT. 
+TAU must be configured with the -pdt=<dir> configuration option to 
+use outer-loop level instrumentation. To instrument outer loops in 
+a given routine, create a file that is passed as the selective instrumentation file
+to the tau_instrumentor. In this file, we specify an instrument section:
+
+BEGIN_INSTRUMENT_SECTION
+loops file="loop_test.cpp" routine="multiply"
+# it also understands # as the wildcard in routine name
+# and * and ? wildcards in file name. You can also specify the full
+# name of the routine as is found in profile files. 
+#loops file="loop_test.cpp" routine="double multiply#"
+END_INSTRUMENT_SECTION
+
+For Fortran, you must specify only the name of the routine in upper case (it is 
+case sensitive). For e.g., 
+BEGIN_INSTRUMENT_SECTION
+loops file="loop_test.f90" routine="MULTIPLY"
+END_INSTRUMENT_SECTION
+
+Wildcard characters may be used to instrument all routines/files. It is recommended
+to use throttling of events using 
+% setenv TAU_THROTTLE 1
+when trying to instrument all outer loops. For e.g.,
+BEGIN_INSTRUMENT_SECTION
+loops file="*" routine="#"
+END_INSTRUMENT_SECTION
+
+instruments all outer loops in all files. 
+
+It is important to note that sometimes the instrumented source code may have a column
+width that exceeds 72 columns. This can cause problems in compiling a fixed format
+instrumented source file. Several compilers provide options that extend the source code
+column number. For e.g., the IBM xlf90_r compiler allows you to specify 
+-qfixed=132
+instead of the usual -qfixed to accomodate such files. The Intel compiler provides
+-132
+command-line option. We strongly recommend using these options in your list of compilation
+options if you enable outer-loop level instrumentation in fixed format source code. 
+For e.g.,
+
+F90 = ifort
+FFLAGS = -O3 
+
+changes to:
+include <tau-stub-makefile>
+OPTS = -optKeepFiles -optVerbose -optTauSelectFile=select.tau
+F90 = $(TAU_COMPILER) $(OPTS) ifort
+FFLAGS = -O3 -132
+
+
+A typical output of running pprof after executing the instrumented program is
+given below:
+
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.015          865           1           1     865117 int main(int, char **)  
+100.0        0.161          865           1           4     865102 double multiply()  
+ 56.8          491          491           1           0     491203 Loop: double multiply()[ file = <loop_test.cpp> line,col = <23,3> to <30,3> ]  
+ 41.5          358          358           1           0     358627 Loop: double multiply()[ file = <loop_test.cpp> line,col = <38,3> to <46,7> ]  
+  1.6           13           13           1           0      13664 Loop: double multiply()[ file = <loop_test.cpp> line,col = <16,10> to <21,12> ]  
+  0.2            1            1           1           0       1447 Loop: double multiply()[ file = <loop_test.cpp> line,col = <34,3> to <36,18> ]  
+
+Other forms of instrumentation understood in the selective instrumentation
+file is:
+1) Entry/Exit instrumentation for C/C++/F90:
+BEGIN_INSTRUMENT_SECTION
+exit routine ="int foo()" code = "cout <<\"exiting foo\"<<endl;"
+entry routine ="int foo()" code = "cout <<\"entering foo\"<<endl;"
+END_INSTRUMENT_SECTION
+
+As you can see the \ allows you to escape the quotes in the code string. 
+
+2) Line level instrumentation
+a) For F90:
+$ cat line_test.f90 
+subroutine foo()
+  integer i
+
+  do i=1,10
+    print *, "Inside foo"
+  end do 
+
+end subroutine foo
+
+program main
+
+  call foo()
+end program main
+$ cat select.tau 
+BEGIN_INSTRUMENT_SECTION
+file = "line_test.f90" line = 5 code = "  print *, \"i=\", i"
+END_INSTRUMENT_SECTION
+
+b) For C/C++:
+$ cat line_test.cpp 
+#include <stdio.h>
+
+int main(int argc, char **argv)
+{
+  int i;
+
+  for (i=0; i < 5; i++) 
+  {
+    printf("Inside main\n");
+  }
+  return 0;
+}
+
+$ cat select.tau 
+BEGIN_INSTRUMENT_SECTION
+file = "line_test.cpp" line = 9 code = "printf(\"i=%d: \", i);"
+END_INSTRUMENT_SECTION
+
+
+
+
