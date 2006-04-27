@@ -33,6 +33,7 @@ using namespace std;
 #include "pdbAll.h"
 
 extern bool wildcardCompare(char *wild, char *string, char kleenestar);
+extern bool instrumentEntity(const string& function_name);
 
 /* Globals */
 ///////////////////////////////////////////////////////////////////////////
@@ -608,10 +609,14 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
 
   additionalInvocations.push_back(pair<int, list<string> >(ro->id(), calls)); /* assign the list of strings to the list */
 
-  string startsnippet(string("        call TAU_PROFILE_START(")+varname+")");
-  string stopsnippet (string("        call TAU_PROFILE_STOP(") +varname+")");
-  itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, start.line(), start.col(), startsnippet, BEFORE));
-  itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, stop.line(), stop.col()+1, stopsnippet, AFTER));
+  if (instrumentEntity(ro->fullName()))
+  { /* if it is ok to instrument this routine, invoke the start/stop functions */
+    string startsnippet(string("        call TAU_PROFILE_START(")+varname+")");
+    string stopsnippet (string("        call TAU_PROFILE_STOP(") +varname+")");
+    itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, start.line(), start.col(), startsnippet, BEFORE));
+    itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, stop.line(), stop.col()+1, stopsnippet, AFTER));
+    printf("instrumenting routine %s\n", ro->fullName());
+  }
 
 #ifdef DEBUG 
   printf("routine: %s, line,col = <%d,%d> to <%d,%d>", 
@@ -920,6 +925,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2006/04/23 05:06:58 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.5 2006/04/23 05:06:58 sameer Exp $
+ * $Revision: 1.6 $   $Date: 2006/04/27 02:19:40 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.6 2006/04/27 02:19:40 sameer Exp $
  ***************************************************************************/
