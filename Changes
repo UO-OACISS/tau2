@@ -33,6 +33,14 @@ Version 2.15 changes (from 2.14):
 21. Added support for loop level instrumentation for C and C++ [UTK, LANL]. 
 22. Added support for parameter based profiling (-PROFILEPARAM) [UTK].
 23. Added support for tau_load.sh for runtime MPI library instrumentation [UTK]. 
+24. Added support for outer-loop level instrumentation for Fortran [UTK, LLNL].
+25. Added a new tool: tau_ompcheck that completes OpenMP Fortran directives [NCAR]. 
+26. Added support for preprocessing Fortran sources in tau_compiler.sh (-optPreProcess) [GSFC].
+27. Added support for invoking tau_ompcheck in tau_compiler.sh [NCAR]. 
+28. Added support for DB2 and Derby in PerfDMF [UTK, LLNL]. 
+29. Added support for Infiniband MPICH on Opterons [NERSC]. 
+30. Added support for Cray XT3 Memory headroom information and Cray Timers [PSC]. 
+31. Added support for GNU Gfortran parser in PDT for tau_compiler.sh [LANL]. 
 
 Version 2.14 changes (from 2.13):
 1. MPI-2 support and Fortran wrappers added. 
