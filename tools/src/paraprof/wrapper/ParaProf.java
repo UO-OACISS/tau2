@@ -15,19 +15,17 @@ import javax.swing.ToolTipManager;
 
 import edu.uoregon.tau.common.TauScripter;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
-import edu.uoregon.tau.perfdmf.DataSource;
-import edu.uoregon.tau.perfdmf.FileList;
-import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.*;
 
 /**
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.6 2006/02/21 02:31:52 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.7 2006/04/27 19:49:55 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class ParaProf implements ActionListener {
 
@@ -46,7 +44,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Fri Feb 10 17:39:42 PST 2006";
+    private final static String VERSION = "Mon Apr 10 19:41:45 PDT 2006";
 
     static ColorMap colorMap = new ColorMap();
 
@@ -78,13 +76,12 @@ public class ParaProf implements ActionListener {
 
     public static boolean JNLP = false;
 
-
     public static List scripts = new ArrayList();
 
     private static String args[];
-    
+
     public static String scriptFile;
-    
+
     public static void registerScript(ParaProfScript pps) {
         scripts.add(pps);
     }
@@ -266,22 +263,24 @@ public class ParaProf implements ActionListener {
             // running as Java Web Start without permission
         }
 
- 
         ParaProf.loadScripts();
 
         loadDefaultTrial();
 
     }
 
-    
-    public static void loadScripts()  {
+    public static void loadScripts() {
         ParaProf.scripts.clear();
         ParaProf.scriptFile = System.getProperty("user.home") + "/.ParaProf/ParaProf.py";
         if (new File(scriptFile).exists()) {
-            TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
+            try {
+                TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
+            } catch (Exception e) {
+                new ParaProfErrorDialog("Exception while executing script: ", e);
+            }
         }
     }
-    
+
     public void actionPerformed(ActionEvent evt) {
         Object EventSrc = evt.getSource();
         if (EventSrc instanceof javax.swing.Timer) {
@@ -471,7 +470,7 @@ public class ParaProf implements ActionListener {
                 System.out.println("Loading data...");
                 dataSource.load();
                 System.out.println("Packing data...");
-                ParaProfUtils.writePacked(dataSource, new File(pack));
+                DataSourceExport.writePacked(dataSource, new File(pack));
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -493,7 +492,7 @@ public class ParaProf implements ActionListener {
                 System.out.println("Loading data...");
                 dataSource.load();
                 System.out.println("Creating TAU Profile data...");
-                UtilFncs.writeProfiles(dataSource, new File("."));
+                DataSourceExport.writeProfiles(dataSource, new File("."));
 
             } catch (Exception e) {
                 e.printStackTrace();

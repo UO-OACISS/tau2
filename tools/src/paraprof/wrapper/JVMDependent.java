@@ -6,7 +6,6 @@ import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
 
 
-import edu.uoregon.tau.paraprof.interfaces.ImageExport;
 import java.awt.*;
 import javax.swing.*;
 
@@ -26,9 +25,4 @@ public class JVMDependent {
         cp.setContents(st, owner);
     }
 
-
-    public static void exportVector(ImageExport ie) throws Exception {
-	JOptionPane.showMessageDialog((JFrame)ie, "Can't save Vector Graphics with Java 1.3.  Reconfigure TAU with Java 1.4 or higher in the path.");
-    }    
-    
 }

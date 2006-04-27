@@ -15,7 +15,7 @@ import java.awt.image.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
-import edu.uoregon.tau.paraprof.interfaces.*;
+import edu.uoregon.tau.common.*;
 
 public class ParaProfImageOutput{
 
