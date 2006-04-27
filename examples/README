@@ -48,6 +48,18 @@ traceinput      - To build a trace converter/trace reader application, we
                   register routines with the callback interface and how TAU 
                   invokes these routines when events take place. 
 
+tracewriter     - To write performance data in the TAU trace format we provide a
+		  trace writer library.  This directory contains an example that
+		  illustrates how an application can use the trace writer API to
+		  produce TAU trace files.  It includes demonstrations of the 
+		  creation of all TAU trace event types. 
+
+javatracewriter - The java tracewriter API allows java programs to produce the 
+		  TAU trace format using an API equivalent to the C/C++ trace
+		  writer.  This directory contains an example java tracewriter 
+		  program which is equivalent to the example in the tracewriter 
+		  directory.
+
 papi		- A matrix multiply example that shows how to use TAU statement
 		  level timers for comparing the performance of two algorithms 
 		  for matrix multiplication. When used with PAPI or PCL, this
