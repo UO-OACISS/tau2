@@ -1,0 +1,24 @@
+This directory contains an example of the java TAU trace writer API, equivalent 
+to the C/C++ example in the tracewriter directory.  The C/C++ API reference is 
+applicable, but note that Time is passed as a java long primitive, character 
+arrays are passed as strings and other numeric values are passed as ints.
+
+To use this API, ensure that your CLASSPATH contains the file 
+<tau>/<arch>/lib/tf_writer.jar.
+
+For example, starting in the TAU root directory,
+
+$ ./configure -TRACE
+$ make clean install
+$ cd examples/javatracewriter
+$ export CLASSPATH=/home/wspear/tau2/i386_linux/lib/tf_writer.jar
+
+Now compile the trace writer application.
+
+$ javac jtau_writer.java
+
+And run it
+
+$ java jtau_writer
+
+$ tau_convert -dump tau.trc tau.edf
