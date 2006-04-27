@@ -93,11 +93,11 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public double getExclusiveValue() {
-        if (functionProfile.getFunction().isPhase()) {
+        if (functionProfile.getFunction().isPhase() && functionProfile.getFunction().isCallPathFunction()) {
             return functionProfile.getInclusive(dataSorter.getSelectedMetricID());
         } else {
             return functionProfile.getExclusive(dataSorter.getSelectedMetricID());
-        }
+       }
     }
 
     public double getInclusivePercentValue() {
@@ -206,7 +206,7 @@ public class PPFunctionProfile implements Comparable {
         DecimalFormat dF = new DecimalFormat("##0.0");
         tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(metric)), 13);
 
-        if (functionProfile.getFunction().isPhase()) {
+        if (functionProfile.getFunction().isPhase() && functionProfile.getFunction().isCallPathFunction()) {
             tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 14);
         } else {
             tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getExclusive(metric), 14);

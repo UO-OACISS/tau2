@@ -8,9 +8,9 @@ import edu.uoregon.tau.perfdmf.*;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: ValueType.java,v 1.4 2006/03/30 03:03:54 amorris Exp $</P>
+ * <P>CVS $Id: ValueType.java,v 1.5 2006/04/27 19:31:16 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 
 public abstract class ValueType {
@@ -19,8 +19,6 @@ public abstract class ValueType {
     private final String classname;
     
     public abstract double getValue(FunctionProfile functionProfile, int metric);
-
-    public abstract double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric);
 
     public abstract String getSuffix(int units, Metric metric);
 
@@ -70,15 +68,11 @@ public abstract class ValueType {
     public static final ValueType EXCLUSIVE = new ValueType("Exclusive", "ValueType.EXCLUSIVE") {
 
         public double getValue(FunctionProfile functionProfile, int metric) {
-            if (functionProfile.getFunction().isPhase()) {
+            if (functionProfile.getFunction().isPhase() && functionProfile.getFunction().isCallPathFunction()) {
                 return functionProfile.getInclusive(metric);
             } else {
                 return functionProfile.getExclusive(metric);
             }
-        }
-
-        public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-            return thread.getMaxExclusive(metric);
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -96,15 +90,11 @@ public abstract class ValueType {
 
     public static final ValueType EXCLUSIVE_PERCENT = new ValueType("Exclusive percent", "ValueType.EXCLUSIVE_PERCENT") {
         public double getValue(FunctionProfile functionProfile, int metric) {
-            if (functionProfile.getFunction().isPhase()) {
+            if (functionProfile.getFunction().isPhase() && functionProfile.getFunction().isCallPathFunction()) {
                 return functionProfile.getInclusivePercent(metric);
             } else {
                 return functionProfile.getExclusivePercent(metric);
             }
-        }
-
-        public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-            return thread.getMaxExclusivePercent(metric);
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -119,10 +109,6 @@ public abstract class ValueType {
     public static final ValueType INCLUSIVE = new ValueType("Inclusive", "ValueType.INCLUSIVE") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getInclusive(metric);
-        }
-
-        public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-            return thread.getMaxInclusive(metric);
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -143,10 +129,6 @@ public abstract class ValueType {
             return functionProfile.getInclusivePercent(metric);
         }
 
-        public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-            return thread.getMaxInclusivePercent(metric);
-        }
-
         public String getSuffix(int units, Metric metric) {
             return " %";
         }
@@ -159,10 +141,6 @@ public abstract class ValueType {
     public static final ValueType NUMCALLS = new ValueType("Number of Calls", "ValueType.NUMCALLS") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getNumCalls();
-        }
-
-        public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-            return thread.getMaxNumCalls();
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -179,10 +157,6 @@ public abstract class ValueType {
             return functionProfile.getNumSubr();
         }
 
-        public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-            return thread.getMaxNumSubr();
-        }
-
         public String getSuffix(int units, Metric metric) {
             return " calls";
         }
@@ -195,10 +169,6 @@ public abstract class ValueType {
     public static final ValueType INCLUSIVE_PER_CALL = new ValueType("Inclusive per Call", "ValueType.INCLUSIVE_PER_CALL") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getInclusivePerCall(metric);
-        }
-
-        public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-            return thread.getMaxInclusivePerCall(metric);
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -217,10 +187,6 @@ public abstract class ValueType {
     public static final ValueType EXCLUSIVE_PER_CALL = new ValueType("Exclusive per Call", "ValueType.EXCLUSIVE_PER_CALL") {
         public double getValue(FunctionProfile functionProfile, int metric) {
             return functionProfile.getExclusivePerCall(metric);
-        }
-
-        public double getThreadMaxValue(edu.uoregon.tau.perfdmf.Thread thread, int metric) {
-            return thread.getMaxExclusivePerCall(metric);
         }
 
         public String getSuffix(int units, Metric metric) {
