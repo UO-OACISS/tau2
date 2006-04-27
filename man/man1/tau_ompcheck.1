@@ -1,0 +1,46 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_OMPCHECK" "1" "04/27/2006" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau_ompcheck \- Completes uncompleted do/for/parallel omp directives
+.SH "SYNOPSIS"
+.HP 13
+\fBtau_ompcheck\fR {\fIpdbfile\fR} {\fIsourcefile\fR} [\fB\-o\fR\ \fIoutfile\fR] [\fB\-v\fR] [\fB\-d\fR]
+.SH "DESCRIPTION"
+.PP
+Finds uncompleted do/for omp directives and inserts closing directives for each one uncompleted. do/for directives are expected immediately before a do/for loop. Closing directives are then placed immediately following the same do/for loop.
+.SH "OPTIONS"
+.PP
+\fBpdbfile\fR
+A pdbfile generated from the source file you wish to check. This pdbfile must contain comments from which the omp directives are gathered. See pdbcomment for information on how to obtain comment from a pdbfile.
+.PP
+\fBsourcefile\fR
+A fortran, C or C++ source file to analyzed.
+.PP
+\fB\-o\fR
+write the output to the specified outfile.
+.PP
+\fB\-v\fRverbose output, will say which directive where added.
+.PP
+\fB\-d\fR
+debuging information, we suggest you pipe this unrestrained output to a file.
+.SH "EXAMPLES"
+.PP
+To check file: source.f90 do: (you will need pdtoolkit/<arch>/bin and tau/utils/ in your path).
+.sp
+.nf
+%>f95parse source.f90
+%>pdbcomment source.pdb > source.comment.pdb
+%>tau_omp source.comment.pdb source.f90 \-o source.chk.f90
+    
+.fi
+.sp
+.SH "SEE ALSO"
+.PP
+f95parse pdbcomment
