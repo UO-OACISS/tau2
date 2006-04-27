@@ -3,13 +3,18 @@
 
 $numArgs = $#ARGV + 1;
 
-if ($numArgs != 1) {
+if ($numArgs < 1) {
     print "\nupgradetau: This script is provided to rebuild all TAU configurations\n";
     print "            previously built in a different TAU source directory.\n";
-    die "\nusage: $0 <path/to/old/tau>\n";
+    die "\nusage: $0 <path/to/old/tau> [extra args]\n";
 }
 
 $oldTAU = $ARGV[0];
+
+$remainingArgs = "";
+for $i (1 .. $#ARGV) {
+    $remainingArgs = $remainingArgs . $ARGV[$i];
+}
 
 $oldConfigs = "$oldTAU/.all_configs";
 
@@ -82,7 +87,7 @@ foreach $config (@allConfigs) {
     } else {
 	print "Configuring TAU with: $newline\n";
 
-	$rc = 0xffff & system("./configure $newline");
+	$rc = 0xffff & system("./configure $newline $remainingArgs");
 	if ($rc == 2) { # SIGINT
 	    # kill all children
 	    local $SIG{HUP} = 'IGNORE'; 
