@@ -134,6 +134,9 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
                     statString = statString + nameString;
                 } else {
                     nameString = ((PPFunctionProfile) list.get(i)).getDisplayName();
+                    if (window.getPhase() != null) {
+                        nameString = UtilFncs.getRightSide(nameString);
+                    }
                     statString = ((PPFunctionProfile) list.get(i)).getStatString(window.units());
                     statString = statString + "   " + nameString;
                 }
