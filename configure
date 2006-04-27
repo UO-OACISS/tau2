@@ -3523,6 +3523,27 @@ then
   fi
 fi
 
+# Check if PDT has Fortran statement level information
+  cat <<EOF > checkpdt.cpp
+  #include <pdbAll.h>
+
+  int IsFortranDoStatement(pdbStmt::stmt_t k)
+  {
+	if (k == pdbStmt::ST_FDO) return 1;
+	else return 0;
+  }
+EOF
+  if $cxx_compiler $orig_useropt -I$pdtdir/include -c checkpdt.cpp 1> /dev/null 2>&1
+  then
+    echo "PDT supports Fortran Loop Level information"
+  else
+    echo "IMPORTANT NOTE: Your PDT does not support Fortran Loop Level information."
+    echo "***************You may want to upgrade to a newer release."
+    echo "See http://www.cs.uoregon.edu/research/pdt"
+    fixmakeargs="$fixmakeargs PDTNOFSTMTS"
+  fi
+
+
 if [ $java = yes ]
   then
     fixmakeargs="$fixmakeargs JAVA jdkdir=$jdkdir"

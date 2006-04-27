@@ -589,6 +589,10 @@ fi
 	echo NOTE: Using a different architecture/compiler dir for PDT 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PDTNOFSTMTS)
+	echo NOTE: Disabling loop level instrumentation for Fortran
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PDTALPHACXX)
 	echo NOTE: Using -D__USE_STD_IOSTREAM option for tau_instrumentor
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
