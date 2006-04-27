@@ -12,13 +12,11 @@
 # include <algo.h>
 #else
 # include <fstream>
-  using std::ifstream;
-  using std::ofstream;
 # include <set>
-  using std::set;
 # include <algorithm>
-  using std::sort;
-  using std::unique;
+# include <list> 
+# include <string> 
+using namespace std;
 #endif
 #include "pdbAll.h"
 
@@ -49,6 +47,8 @@ bool process_this_return = false; /* for C instrumentation using a different ret
 char exit_keyword[256] = "exit"; /* You can define your own exit keyword */
 bool using_exit_keyword = false; /* By default, we don't use the exit keyword */
 tau_language_t tau_language; /* language of the file */
+
+list<string> current_timer; /* for Fortran loop level instrumentation. */
 
 /* implementation of struct itemRef */
 itemRef::itemRef(const pdbItem *i, bool isT) : item(i), isTarget(isT) {
@@ -1207,17 +1207,25 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
 int CPDB_GetSubstringCol(const char *haystack, const char *needle)
 {
-  const char *res = strstr(haystack, needle);
+  char *local_haystack = strdup(haystack);
+  int length = strlen(local_haystack); 
+  int i;
+  for (i = 0; i < length; i++)
+  { /* make it all lowercase */
+    local_haystack[i] = tolower(haystack[i]);
+  }
+  const char *res = strstr(local_haystack, needle);
   int diff = 0;
   if (res)
   {
-    diff = res - haystack + 1 ;  /* columns start from 1, not 0 */
+    diff = res - local_haystack + 1 ;  /* columns start from 1, not 0 */
 #ifdef DEBUG 
     printf("needle:%s\n", needle);
-    printf("haystack:%s\n", haystack);
+    printf("haystack:%s\n", local_haystack);
     printf("diff = %d\n", diff);
 #endif /* DEBUG */ 
   }
+  free((void *)local_haystack);
   return diff;
 }
 
@@ -1450,9 +1458,6 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    */
 	    int col;
 	    col = CPDB_GetSubstringCol(inbuf,"return");
-	    if (col == 0) {
-	      col =  CPDB_GetSubstringCol(inbuf,"RETURN");
-	    }
 	    
 	    if (col != 0) {
 	      (*it)->col = col;
@@ -1559,10 +1564,19 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  ostr <<"call TAU_PROFILE_EXIT('exit')"<<endl;
 		}
 		else
-		{
+		{ /* it is RETURN */
 		  if (pure) {
 		    ostr <<"call TAU_PURE_STOP('" << (*it)->item->fullName()<< "')"<<endl;
 		  } else {
+		    /* we need to check if the current_timer (outer-loop level instrumentation) is set */
+		    for (list<string>::iterator siter = current_timer.begin(); 
+			siter != current_timer.end(); siter++)
+		    { /* it is not empty -- we must shut the timer before exiting! */
+#ifdef DEBUG 
+			cout <<"Shutting timer "<<(*siter)<<" before stopping the profiler "<<endl;
+#endif /* DEBUG */
+			ostr <<"call TAU_PROFILE_STOP("<<(*siter)<<")"<<endl<<"\t";
+		    }
 		    ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
 		  }
 		}
@@ -1602,6 +1616,49 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  ostr << (*it)->snippet<<endl;
 		instrumented = true;
 		break;
+            case START_TIMER:
+#ifdef DEBUG
+                cout <<"START_TIMER point Fortran -> line = "<< (*it)->line
+		     <<" timer = "<<(*it)->snippet<<endl;
+#endif /* DEBUG */
+                if ((*it)->attribute == BEFORE)
+		{
+                  ostr << "       call TAU_PROFILE_START("<<(*it)->snippet<<")"<<endl;
+		}
+                for (i=0; i < write_upto; i++)
+                  ostr <<inbuf[i];
+                if (print_cr) ostr<<endl;
+                if ((*it)->attribute == AFTER)
+ 		{
+                  ostr << "       call TAU_PROFILE_START("<<(*it)->snippet<<")"<<endl;
+		}
+                instrumented = true;
+		/* Push the current timer name on the stack */
+	 	current_timer.push_front((*it)->snippet); 
+                break;
+
+            case STOP_TIMER:
+#ifdef DEBUG
+                cout <<"STOP_TIMER point Fortran -> line = "<< (*it)->line
+		     <<" timer = "<<(*it)->snippet<<endl;
+#endif /* DEBUG */
+                if ((*it)->attribute == BEFORE)
+                {
+                  ostr << "       call TAU_PROFILE_STOP("<<(*it)->snippet<<")"<<endl;
+                }
+                for (i=0; i < write_upto; i++)
+                  ostr <<inbuf[i];
+                if (print_cr) ostr<<endl;
+
+                if ((*it)->attribute == AFTER)
+		{
+                  ostr << "       call TAU_PROFILE_STOP("<<(*it)->snippet<<")"<<endl;
+		}
+                instrumented = true;
+	        /* We maintain the current outer loop level timer active. We need to pop the stack */
+		if (!current_timer.empty()) current_timer.pop_front();
+                break;
+
 	    default:
 		cout <<"Unknown option in instrumentFFile:"<<(*it)->kind<<endl;
 		instrumented = true;
@@ -1946,8 +2003,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.86 $   $Date: 2006/04/23 05:06:58 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.86 2006/04/23 05:06:58 sameer Exp $
+ * $Revision: 1.87 $   $Date: 2006/04/27 17:26:13 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.87 2006/04/27 17:26:13 sameer Exp $
  ***************************************************************************/
 
 

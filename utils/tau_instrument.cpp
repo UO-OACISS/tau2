@@ -613,8 +613,8 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
   { /* if it is ok to instrument this routine, invoke the start/stop functions */
     string startsnippet(string("        call TAU_PROFILE_START(")+varname+")");
     string stopsnippet (string("        call TAU_PROFILE_STOP(") +varname+")");
-    itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, start.line(), start.col(), startsnippet, BEFORE));
-    itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, stop.line(), stop.col()+1, stopsnippet, AFTER));
+    itemvec.push_back( new itemRef((const pdbItem *)ro, START_TIMER, start.line(), start.col(), varname, BEFORE));
+    itemvec.push_back( new itemRef((const pdbItem *)ro, STOP_TIMER, stop.line(), stop.col()+1, varname, AFTER));
 #ifdef DEBUG
     printf("instrumenting routine %s\n", ro->fullName());
 #endif /* DEBUG */
@@ -927,6 +927,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 2006/04/27 02:26:20 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.7 2006/04/27 02:26:20 sameer Exp $
+ * $Revision: 1.8 $   $Date: 2006/04/27 17:26:13 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.8 2006/04/27 17:26:13 sameer Exp $
  ***************************************************************************/
