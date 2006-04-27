@@ -280,9 +280,10 @@ class CompleteDirectives
   *
   * OUTPUT:
   * int             : The type of the routine:
-  *                   1 - open parallel
-  *                   2 - open do
-  *                   3 - open for
+  *                   1 - open parallel 
+  *                   2 - open parallel do
+  *                   3 - open do
+  *                   4 - open for
   *                   closing directive type = -(opening directive type)
   *
   */
@@ -295,38 +296,46 @@ class CompleteDirectives
     if (language == Fortran)
     {
       //Match OMP PARALLEL directive
-      if (text.substr(0,14) == "!$omp parallel")
+      if (text.substr(0,17) == "!$omp parallel do")
+        return 2;
+      else if (text.substr(0,14) == "!$omp parallel")
         return 1;
       //Match OMP DO directive
       else if (text.substr(0,8) == "!$omp do")
-        return 2;
-      else if (text.substr(0,9) == "!$omp for")
         return 3;
+      else if (text.substr(0,9) == "!$omp for")
+        return 4;
       //Match OMP END PARALLEL directive
+      else if (text.substr(0,21) == "!$omp end parallel do")
+        return -2;
       else if (text.substr(0,18) == "!$omp end parallel")
         return -1;
       //Match OMP DO directive
       else if (text.substr(0,12) == "!$omp end do")
-        return -2;
-      else if (text.substr(0,13) == "!$omp end for")
         return -3;
+      else if (text.substr(0,13) == "!$omp end for")
+        return -4;
       else
         return 0;
     }
     else
     {
+      if (text.substr(0,23) == "#pragma omp parallel do")
+        return 2;
       if (text.substr(0,20) == "#pragma omp parallel")
         return 1;
       else if (text.substr(0,14) == "#pragma omp do")
-        return 2;
-      else if (text.substr(0,15) == "#pragma omp for")
         return 3;
+      else if (text.substr(0,15) == "#pragma omp for")
+        return 4;
+      else if (text.substr(0,27) == "#pragma omp end parallel do")
+        return -2;
       else if (text.substr(0,24) == "#pragma omp end parallel")
         return -1;
       else if (text.substr(0,18) == "#pragma omp end do")
-        return -2;
-      else if (text.substr(0,19) == "#pragma omp end for")
         return -3;
+      else if (text.substr(0,19) == "#pragma omp end for")
+        return -4;
       else
         return 0;
     }
@@ -350,31 +359,25 @@ class CompleteDirectives
      * enclosing all the statement in the routine. The second is place at the
      * close of the routine.
      *
-     *      Head statement (created)
-     *               |
-     *               v
-     *     First statement (modified) -> Tail statement (created)
-     *               |
-     *               v
-     *     The rest of the statments
+     *      Head statement (created) -> s1 -> ... -> s2
      */
     pdbStmt head(-1);
-    pdbStmt tail(-1);
-    pdbStmt state(*s);
+    //pdbStmt tail(-1);
+    //pdbStmt state(*s);
     pdbFile file(-1);
     head.stmtBegin(pdbLoc(&file,beginRoutine,0));
     head.stmtEnd(pdbLoc(&file,endRoutine,0));
-    head.nextStmt(NULL);
-    head.downStmt(s);
+    head.nextStmt(s);
+    head.downStmt(NULL);
     head.extraStmt(NULL);
-    tail.stmtBegin(pdbLoc(&file,endRoutine,0));
+    /*tail.stmtBegin(pdbLoc(&file,endRoutine,0));
     tail.stmtEnd(pdbLoc(&file,endRoutine,0));
     tail.nextStmt(NULL);
     tail.downStmt(NULL);
     tail.extraStmt(NULL);
     state.nextStmt(&tail);
-    state.downStmt(s);
-    return findOMPStmt(&state,&head,0, pdb);
+    state.downStmt(s);*/
+    return findOMPStmt(&head,s,0, pdb);
   }
  /*
   * findOMPStmt     : recursivesly processes each statemet in
@@ -461,10 +464,16 @@ class CompleteDirectives
         else  
           cerr << "ERROR: Superfluous closing OMP Directive on line: " << directives.front().getLine() << endl;
       }
-    
+      
+      if (openDirectives.size() != 0 && openDirectives.front().getDepth() ==
+            loop && openDirectives.front().getType() > 1 && verbosity == Debug)
+        cerr << "Could be a missing directive." << endl;
+      
       //Are we expecting any more pragmas to be closed before this statement?
       while (openDirectives.size() != 0 && openDirectives.front().getDepth() ==
-      loop && openDirectives.front().getType() > 1)
+      loop && openDirectives.front().getType() > 1 && ( directives.size() == 0
+      || !((s->stmtBegin().line()+1) >= directives.front().getLine() &&
+      directives.front().getType() + openDirectives.front().getType() == 0)))
       {
         if (verbosity >= Verbose)
           cerr << "We are expecting there to be a directive closing the one on line: " << openDirectives.front().getLine() << endl;
@@ -497,7 +506,7 @@ class CompleteDirectives
           
       {
           //open new directive        
-          if (s->downStmt() == NULL)
+          if (s->kind() != pdbStmt::ST_FDO && s->kind() != pdbStmt::ST_FOR)
           {  
             if (verbosity == Debug)    
               cerr << "Directives opening a loop are only allowed immediately before the loop body." << endl;
@@ -558,8 +567,8 @@ class CompleteDirectives
         addDirectives.splice(addDirectives.end(), findOMPStmt(s->nextStmt(), block, loop, pdb));  
   
       //Need to make sure that the end of this block is analyzed.
-      if (s->downStmt() != NULL && (s->nextStmt() == NULL ||
-      s->nextStmt()->stmtBegin().line() == 0))
+      if ((s->kind() == pdbStmt::ST_FOR || s->kind() == pdbStmt::ST_FDO)
+      && (s->nextStmt() == NULL || s->nextStmt()->stmtBegin().line() == 0))
       {
         if (verbosity == Debug)
           cerr << "ending block" << endl;
@@ -626,8 +635,10 @@ void placeDirective(Directive directive)
     if (directive.getType() == -1)
       *output << endl << "!$omp end parallel" << endl;
     else if (directive.getType() == -2)
-      *output << endl << "!$omp end do" << endl;
+      *output << endl << "!$omp end parallel do" << endl;
     else if (directive.getType() == -3)
+      *output << endl << "!$omp end do" << endl;
+    else if (directive.getType() == -4)
       *output << endl << "!$omp end for" << endl;
   }
   else
@@ -635,8 +646,10 @@ void placeDirective(Directive directive)
     if (directive.getType() == -1)
       *output << endl << "#pragma omp end parallel" << endl;
     else if (directive.getType() == -2)
-      *output << endl << "#pragma omp end do" << endl;
+      *output << endl << "#pragma omp end parallel do" << endl;
     else if (directive.getType() == -3)
+      *output << endl << "#pragma omp end do" << endl;
+    else if (directive.getType() == -4)
       *output << endl << "#pragma omp end for" << endl;
   }
 }
@@ -831,6 +844,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.10 $   $Date: 2006/04/26 17:47:34 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.10 2006/04/26 17:47:34 scottb Exp $
+ * $Revision: 1.11 $   $Date: 2006/04/27 19:18:19 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.11 2006/04/27 19:18:19 scottb Exp $
  ***************************************************************************/
