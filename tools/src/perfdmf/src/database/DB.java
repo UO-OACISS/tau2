@@ -27,5 +27,6 @@ public interface DB {
     public void setAutoCommit(boolean auto) throws SQLException;
     public void commit() throws SQLException;
     public void rollback() throws SQLException;
+    public String getConnectString();
 
 }
