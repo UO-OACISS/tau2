@@ -43,7 +43,8 @@ public class PerfExplorerJTree extends JTree {
 
 	private static DefaultMutableTreeNode createNodes () {
 		DefaultMutableTreeNode root = new PerfExplorerTreeNode("Performance Data");
-		DefaultMutableTreeNode top = new PerfExplorerTreeNode("Database Profiles");
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		DefaultMutableTreeNode top = new PerfExplorerTreeNode(server.getConnectionString());
 		DefaultMutableTreeNode viewTop = new PerfExplorerTreeNode("Views");
 		//addApplicationNodes(top, true);
 		leafViews = new ArrayList();

@@ -9,7 +9,7 @@ import java.util.List;
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.1 2005/07/05 22:29:52 amorris Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.2 2006/04/28 22:01:21 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -35,5 +35,6 @@ public interface RMIPerfExplorer extends Remote {
 	public RMIPerformanceResults getCorrelationResults(RMIPerfExplorerModel model) throws RemoteException;
 	public RMIVarianceData getVariationAnalysis(RMIPerfExplorerModel model) throws RemoteException;
 	public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteException;
+	public String getConnectionString() throws RemoteException;
 }
 

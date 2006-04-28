@@ -37,7 +37,7 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 
 		if (node.isRoot()) {
 			// do nothing
-		} else if (node.toString().equals("Database Profiles")) {
+		} else if (node.toString().startsWith("jdbc:")) {
 			PerfExplorerJTree.addApplicationNodes(node, false);
 		} else if (node.toString().equals("Views")) {
 			PerfExplorerJTree.addViewNodes(node, "0");

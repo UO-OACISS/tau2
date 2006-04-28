@@ -275,4 +275,14 @@ public class PerfExplorerConnection {
 	return results;
     }
 
+	public String getConnectionString() {
+		String conn = null;
+		try {
+	    	conn = server.getConnectionString();
+		} catch (RemoteException e) {
+	    	handleError(e, "getConnectionString()");
+		}
+		return conn;
+	}
+
 }
