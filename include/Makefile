@@ -406,7 +406,7 @@ TAU_GCCLIB	= -lgcc_s
 #INTEL_FORTRAN#TAU_FORTRANLIBS         = -lcprts -lPEPCF90   #ENDIF#
 #INTEL32_FORTRAN#TAU_FORTRANLIBS       = -lcprts -lCEPCF90 -lF90 #ENDIF#
 #INTELIFORT#TAU_FORTRANLIBS       = -lcprts #ENDIF#
-#INTEL81FIX#TAU_FORTRANLIBS       = -L$(TAUGCCLIBDIR) $(TAUGCCLIBOPTS) -lstdc++ $(TAU_GCCLIB) -lcxa -lunwind#ENDIF#
+#INTEL81FIX#TAU_FORTRANLIBS       = -L$(TAUGCCLIBDIR) $(TAUGCCLIBOPTS) -lstdc++ $(TAU_GCCLIB) -lcxa -lunwind -L$(EXTRADIR)/lib -lifcore $(EXTRADIR)/lib/for_main.o #ENDIF#
 #PGI1.7#LEXTRA = -lstd -lstrm#ENDIF#
 #PGI1.7#TAUHELPER = $(TAUROOT)/src/Profile/TauPGIHelper.cpp #ENDIF#
 # LINKER OPTIONS
@@ -597,9 +597,9 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
 
 ############# TAU Fortran ####################
 TAU_LINKER=$(TAU_CXX)
-#INTEL_FORTRAN#TAU_LINKER=$(TAU_F90) #ENDIF#
-#INTEL32_FORTRAN#TAU_LINKER=$(TAU_F90) #ENDIF#
-# Intel efc compiler acts as a linker
+#INTEL_FORTRAN##TAU_LINKER=$(TAU_F90) #ENDIF#
+#INTEL32_FORTRAN##TAU_LINKER=$(TAU_F90) #ENDIF#
+# Intel efc compiler acts as a linker - NO. Let C++ be the linker. 
 
 ##############################################
 ############# TAU Options ####################
