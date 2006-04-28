@@ -22,4 +22,13 @@ public class Wget {
         }
     }
 
+	public static void main(String[] args) {
+		if (args.length != 2)
+			System.out.println("Usage: Wget <url> <local filename>");
+        try {
+			Wget.wget(args[0], args[1]);
+		} catch (IOException e) {
+			System.out.println("Failed getting " + args[0]);
+		}
+	}
 }
