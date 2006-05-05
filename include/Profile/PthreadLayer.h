@@ -26,6 +26,7 @@
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
+
 #ifndef _PTHREADLAYER_H_
 #define _PTHREADLAYER_H_
 
@@ -37,18 +38,6 @@
 //////////////////////////////////////////////////////////////////////
 
 #ifdef PTHREADS
-
-#ifndef TAU_LIBRARY_SOURCE
-/* pthread_create wrapper */
-#include <pthread.h>
-#define pthread_create(thread, attr, function, arg) \
-        tau_pthread_create(thread, attr, function, arg)
-
-extern "C" int tau_pthread_create (pthread_t *__restrict __threadp,
-			__const pthread_attr_t *__restrict __attr,
-			void *(*__start_routine) (void *),
-			void *__restrict __arg);
-#endif /* TAU_LIBRARY_SOURCE */
 
 #ifdef TAU_CHARM
 extern "C" {
@@ -92,8 +81,8 @@ class PthreadLayer
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.h,v $   $Author: amorris $
- * $Revision: 1.6 $   $Date: 2006/04/26 01:25:21 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.6 2006/04/26 01:25:21 amorris Exp $
+ * $Revision: 1.7 $   $Date: 2006/05/05 19:17:02 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.7 2006/05/05 19:17:02 amorris Exp $
  ***************************************************************************/
 
 
