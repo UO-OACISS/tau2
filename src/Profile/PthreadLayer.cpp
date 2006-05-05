@@ -228,7 +228,7 @@ typedef struct tau_pthread_pack {
 extern "C" void *tau_pthread_function (void *arg) {
   tau_pthread_pack *pack = (tau_pthread_pack*)arg;
   TAU_REGISTER_THREAD();
-  pack->start_routine(pack->arg);
+  return pack->start_routine(pack->arg);
 }
 
 extern "C" int tau_pthread_create (pthread_t * threadp,
@@ -238,11 +238,11 @@ extern "C" int tau_pthread_create (pthread_t * threadp,
   tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
   pack->start_routine = start_routine;
   pack->arg = arg;
-  pthread_create(threadp, attr, tau_pthread_function, (void*)pack);
+  return pthread_create(threadp, attr, tau_pthread_function, (void*)pack);
 }
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.13 $   $Date: 2006/05/05 19:14:56 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.13 2006/05/05 19:14:56 amorris Exp $
+ * $Revision: 1.14 $   $Date: 2006/05/05 19:27:25 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.14 2006/05/05 19:27:25 amorris Exp $
  ***************************************************************************/
