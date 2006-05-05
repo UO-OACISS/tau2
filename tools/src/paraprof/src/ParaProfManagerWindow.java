@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.5 2006/03/30 03:03:53 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.6 2006/05/05 19:02:35 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -33,6 +33,7 @@ import javax.swing.tree.*;
 
 import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener, TreeSelectionListener, TreeWillExpandListener {
 
@@ -70,6 +71,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private ParaProfMetric operand2 = null;
 
     private List runtimeApps = new ArrayList();
+
+    private String dbDisplayName;
 
     public ParaProfManagerWindow() {
 
@@ -127,7 +130,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Applications");
         standard = new DefaultMutableTreeNode("Standard Applications");
         runtime = new DefaultMutableTreeNode("Runtime Applications");
-        dbApps = new DefaultMutableTreeNode("DB Applications");
+        dbApps = new DefaultMutableTreeNode("DB Apps " + getDatabaseName());
 
         root.add(standard);
         //root.add(runtime);
@@ -970,7 +973,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         }
     }
 
-    
     private void clearDefaultMutableTreeNodes(DefaultMutableTreeNode defaultMutableTreeNode) {
         int count = defaultMutableTreeNode.getChildCount();
         for (int i = 0; i < count; i++) {
@@ -980,7 +982,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         }
     }
 
-    
     public void treeWillCollapse(TreeExpansionEvent event) {
         try {
             TreePath path = event.getPath();
@@ -1162,7 +1163,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             boolean loaded = false;
             for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
                 ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-                if ((ppTrial.getID() == loadedTrial.getID())
+                if ((ppTrial.getID() == loadedTrial.getID()) 
                         && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
                         && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
                     selectedNode.setUserObject(loadedTrial);
@@ -1233,9 +1234,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             int location = jSplitInnerPane.getDividerLocation();
             jSplitInnerPane.setRightComponent(getTable(userObject));
             jSplitInnerPane.setDividerLocation(location);
-        }   
+        }
     }
-    
+
     private void showMetric(ParaProfMetric metric) {
         try {
             ParaProfTrial ppTrial = metric.getParaProfTrial();
@@ -1249,7 +1250,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         }
     }
 
-    
     private void metricSelected(ParaProfMetric metric, boolean show) {
         int location = jSplitInnerPane.getDividerLocation();
         jSplitInnerPane.setRightComponent(getTable(metric));
@@ -1285,7 +1285,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             }
         }
     }
-
 
     public int[] getSelectedDBExperiment() {
         if (ParaProf.preferences.getDatabaseConfigurationFile() == null || ParaProf.preferences.getDatabasePassword() == null) {
@@ -1455,7 +1454,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         lpw.show();
 
     }
-
 
     public void populateTrialMetrics(final ParaProfTrial ppTrial) {
         try {
@@ -1650,6 +1648,24 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     //    }
 
     // private DatabaseAPI dbAPI = null;
+
+
+    public String getDatabaseName() {
+        if (dbDisplayName == null) {
+            try {
+                if (ParaProf.preferences.getDatabaseConfigurationFile() == null) {
+                    dbDisplayName = "";
+                }
+
+                ParseConfig parser = new ParseConfig(ParaProf.preferences.getDatabaseConfigurationFile());
+                dbDisplayName = "[" + parser.getDBHost() + " (" + parser.getDBType() + ")]";
+            } catch (Exception e) {
+                // Forget it
+                dbDisplayName = "";
+            }
+        }
+        return dbDisplayName;
+    }
 
     public DatabaseAPI getDatabaseAPI() {
 
