@@ -221,28 +221,28 @@ int PthreadLayer::UnLockEnv(void)
 
 /* Below is the pthread_create wrapper */
 typedef struct tau_pthread_pack {
-  void *(*__start_routine) (void *);
-  void *__restrict __arg;
+  void *(*start_routine) (void *);
+  void *arg;
 } tau_pthread_pack;
 
-extern "C" void *tau_pthread_function (void *__restrict __arg) {
-  tau_pthread_pack *pack = (tau_pthread_pack*) __arg;
+extern "C" void *tau_pthread_function (void *arg) {
+  tau_pthread_pack *pack = (tau_pthread_pack*)arg;
   TAU_REGISTER_THREAD();
-  pack->__start_routine(pack->__arg);
+  pack->start_routine(pack->arg);
 }
 
-extern "C" int tau_pthread_create (pthread_t *__restrict __threadp,
-		    __const pthread_attr_t *__restrict __attr,
-		    void *(*__start_routine) (void *),
-		    void *__restrict __arg) {
+extern "C" int tau_pthread_create (pthread_t * threadp,
+		    const pthread_attr_t *attr,
+		    void *(*start_routine) (void *),
+		    void *arg) {
   tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
-  pack->__start_routine = __start_routine;
-  pack->__arg = __arg;
-  pthread_create(__threadp, __attr, tau_pthread_function, (void*)pack);
+  pack->start_routine = start_routine;
+  pack->arg = arg;
+  pthread_create(threadp, attr, tau_pthread_function, (void*)pack);
 }
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.12 $   $Date: 2006/04/26 01:26:14 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.12 2006/04/26 01:26:14 amorris Exp $
+ * $Revision: 1.13 $   $Date: 2006/05/05 19:14:56 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.13 2006/05/05 19:14:56 amorris Exp $
  ***************************************************************************/
