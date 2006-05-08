@@ -32,6 +32,7 @@ using namespace std;
 #endif
 #include "pdbAll.h"
 
+//#define DEBUG 1
 extern bool wildcardCompare(char *wild, char *string, char kleenestar);
 extern bool instrumentEntity(const string& function_name);
 
@@ -518,7 +519,7 @@ void printInstrumentList(void)
 }
 
 /* using the list, write the additional statements */
-void writeStatements(ofstream& ostr, const pdbRoutine *ro, 
+void writeStatements(ofstream& ostr, pdbRoutine *ro, 
          list< pair< int, list<string> > > & additional)
 {
 
@@ -530,7 +531,7 @@ void writeStatements(ofstream& ostr, const pdbRoutine *ro,
     if ((*it).first == ro->id())
     { /* There is a match! Extract the pair */
 #ifdef DEBUG 
-      printf("There are additional declarations for routine %s\n", ro->fullName());
+      printf("There are additional declarations for routine %s\n", ro->fullName().c_str());
 #endif /* DEBUG */
       list <string> l = (*it).second;
       list <string>::iterator lit;
@@ -552,7 +553,7 @@ void writeAdditionalFortranDeclarations(ofstream& ostr, const pdbRoutine *ro)
 {
   if (isInstrumentListEmpty()) return; /* nothing specified */
 #ifdef DEBUG 
-  printf("writeAdditionalFortranDeclarations: Name %s, id=%d\n", ro->fullName(), ro->id());
+  printf("writeAdditionalFortranDeclarations: Name %s, id=%d\n", ro->fullName().c_str(), ro->id());
 #endif /* DEBUG */
   writeStatements(ostr, ro, additionalDeclarations);
 }
@@ -563,27 +564,36 @@ void writeAdditionalFortranInvocations(ofstream& ostr, const pdbRoutine *ro)
 {
   if (isInstrumentListEmpty()) return; /* nothing specified */
 #ifdef DEBUG 
-  printf("writeAdditionalFortranInvocations: Name %s, id=%d\n", ro->fullName(), ro->id());
+  printf("writeAdditionalFortranInvocations: Name %s, id=%d\n", ro->fullName().c_str(), ro->id());
 #endif /* DEBUG */
   writeStatements(ostr, ro, additionalInvocations);
 }
 
+/* construct the timer name e.g., t_24; */
+void getLoopTimerVariableName(string& varname, int line)
+{
+  char var[256];
+  sprintf(var, "%d", line);
+  varname = string("t_")+var;
+  return;
+}
+
 /* Add request for instrumentation for Fortran loops */
-void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop, vector<itemRef *>& itemvec)
+void addFortranLoopInstrumentation(pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop, vector<itemRef *>& itemvec)
 {
 
   const pdbFile *f = start.file();
-  char lines[256], var[256];
+  char lines[256];
 
   /* first we construct a string with the line numbers */
   sprintf(lines, "{%d,%d}-{%d,%d}", 
 	start.line(), start.col(), stop.line(), stop.col());
-  sprintf(var, "%d", start.line());
   /* we use the line numbers in building the name of the timer */
   string timername (string("Loop: " + ro->fullName() + " [{"+f->name()+ "} "+ lines + "]"));
 
   /* we embed the line from_to in the name of the timer. e.g., t */
-  string varname(string("t_")+var);
+  string varname;
+  getLoopTimerVariableName(varname, start.line());
 
   string declaration1(string("       integer ")+varname+"(2) / 0, 0 /");
   string declaration2(string("       save ")+varname);
@@ -595,7 +605,7 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
   printf("%s\n", declaration1.c_str());
   printf("%s\n", declaration2.c_str());
   printf("%s\n", createtimer.c_str());
-  printf("Routine id = %d\n", ro->id());
+  printf("Routine id = %d, name = %s\n", ro->id(), ro->fullName().c_str());
 #endif /* DEBUG */
   list<string> decls;
   decls.push_back(declaration1);
@@ -613,17 +623,67 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
   { /* if it is ok to instrument this routine, invoke the start/stop functions */
     string startsnippet(string("        call TAU_PROFILE_START(")+varname+")");
     string stopsnippet (string("        call TAU_PROFILE_STOP(") +varname+")");
-    itemvec.push_back( new itemRef((const pdbItem *)ro, START_TIMER, start.line(), start.col(), varname, BEFORE));
+    itemvec.push_back( new itemRef((const pdbItem *)ro, START_DO_TIMER, start.line(), start.col(), varname, BEFORE));
     itemvec.push_back( new itemRef((const pdbItem *)ro, STOP_TIMER, stop.line(), stop.col()+1, varname, AFTER));
 #ifdef DEBUG
-    printf("instrumenting routine %s\n", ro->fullName());
+    printf("instrumenting routine %s\n", ro->fullName().c_str());
 #endif /* DEBUG */
   }
 
 #ifdef DEBUG 
-  printf("routine: %s, line,col = <%d,%d> to <%d,%d>", 
-	ro->fullName(), start.line(), start.col(), stop.line(), stop.col());
+  printf("routine: %s, line,col = <%d,%d> to <%d,%d>\n", 
+	ro->fullName().c_str(), start.line(), start.col(), stop.line(), stop.col());
 #endif /* DEBUG */
+}
+
+/* BUG: When do statement occurs with a label as in:
+ * 30   do i=1,4
+ *      ...
+ *      end do
+ *      we can't instrument it correctly. TAU inserts:
+ *      call TAU_PROFILE_START(t_no)
+ *      30    do i = 1, 4
+ *      instead of 
+ *      30   call TAU_PROFILE_START
+ *           do i = 1, 4 
+ *           end do
+ *           */
+ /* fixed: we use CPDB... (inbuf, "do") to find the correct DO column no. */
+
+/* Does the label leave the statement boundary? */
+int labelOutsideStatementBoundary(pdbStmt *labelstmt, pdbStmt *parentDO)
+{
+  int defaultreturn = 0; /* does not leave boundary */
+  if (labelstmt == NULL) return defaultreturn; 
+  if (parentDO == NULL) return defaultreturn; /* does not leave boundary */
+
+  int labelline = labelstmt->stmtBegin().line();
+  int labelcol  = labelstmt->stmtBegin().col();
+  int parentbeginline = parentDO->stmtBegin().line();
+  int parentbegincol = parentDO->stmtBegin().col();
+  int parentendline = parentDO->stmtEnd().line();
+  int parentendcol = parentDO->stmtEnd().col();
+#ifdef DEBUG
+  printf("OustideStmtBoundary: label line no. = %d, col = %d\n",
+		  labelline, labelcol);
+  printf("OutsideStmtBoundary: parentDO start = <%d,%d>, stop = <%d,%d>\n", 
+    parentbeginline, parentbegincol, parentendline, parentendcol);
+#endif /* DEBUG */
+  /* is the label within the block defined by the parent do? */
+  /* first examine the line numbers */
+  if ((labelline > parentbeginline) && (labelline < parentendline))
+  { /* sure! the label is indeed between these two boundaries */
+    return 0; /* it does not leave the boundary */
+  }
+  else 
+  {
+    if (labelline < parentbeginline) return 1; /* yes, it is above */
+    if ((labelline == parentbeginline) && (labelcol < parentbegincol)) return 1;
+    if (labelline > parentendline) return 1; /* yes, it is outside */
+    if ((labelline == parentendline) && (labelcol > parentendcol)) return 1; 
+    /* yes it is outside */
+  }
+  return defaultreturn; /* by default, label is not outside parent? */
 }
 
 /* Add request for instrumentation for C/C++ loops */
@@ -648,7 +708,8 @@ void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start,
 }
 
 /* Process Block to examine the routine */
-int processBlock(const pdbStmt *s, pdbRoutine *ro, vector<itemRef *>& itemvec)
+int processBlock(const pdbStmt *s, pdbRoutine *ro, vector<itemRef *>& itemvec,
+		int level, const pdbStmt *parentDO)
 {
   pdbLoc start, stop; /* the location of start and stop timer statements */
   
@@ -663,13 +724,15 @@ int processBlock(const pdbStmt *s, pdbRoutine *ro, vector<itemRef *>& itemvec)
 #ifdef DEBUG
     printf("Going down the block, routine = %s\n", ro->fullName().c_str());
 #endif /* DEBUG */
-    processBlock(s->downStmt(), ro, itemvec);
+    processBlock(s->downStmt(), ro, itemvec, level+1, s);
   }
   else
   {
 #ifdef DEBUG
     printf("Examining statement \n");
 #endif /* DEBUG */
+    /* NOTE: We currently do not support goto in C/C++ to close the timer.
+     * This needs to be added at some point -- similar to Fortran */
     switch(k) {
       case pdbStmt::ST_FOR:
       case pdbStmt::ST_WHILE:
@@ -695,18 +758,116 @@ int processBlock(const pdbStmt *s, pdbRoutine *ro, vector<itemRef *>& itemvec)
         printf("Assign statement:\n"); 
 #endif /* DEBUG */
 	break;
+      case pdbStmt::ST_FGOTO:
+	if (s->extraStmt())
+	{
+#ifdef DEBUG
+          printf("GOTO statement! label line no= %d \n", s->extraStmt()->stmtBegin().line());
+#endif /* DEBUG */
+	  /* if the GOTO leaves the boundary of the calling do loop, decrement
+	   * the level by one. Else keep it as it is */
+	  if (labelOutsideStatementBoundary(s->extraStmt(), parentDO))
+	  {
+	    /* Uh oh! The go to is leaving the current do loop. We need to 
+	     * stop the timer */
+	    string timertoclose;
+	    getLoopTimerVariableName(timertoclose, parentDO->stmtBegin().line());
+	    //string stopsnippet (string("        call TAU_PROFILE_STOP(") +timertoclose+")");
+  /* BUG: Flint has a bug. It gives the wrong column no. for a goto statement 
+   * inside a single if. both if and goto statements have the same line and 
+   * col nos. We need to put a "then" and an "endif" on the line. The timer
+   * must be stopped inside the if clause and not before the if statement:
+   * if (x == 3) goto 30 
+   * should become
+   * if (x == 30) then
+   *   call TAU_PROFILE_STOP(t_7)
+   *   goto 30
+   * endif  
+   * We check for the correct column numbers for goto if and then in 
+   * tau_instrumentor.cpp using CPDB routines. */
+	    itemvec.push_back( new itemRef((const pdbItem *)ro, GOTO_STOP_TIMER, s->stmtBegin().line(), s->stmtBegin().col(), timertoclose, BEFORE));
+	    /* stop the timer right before writing the go statement */
+
+#ifdef DEBUG
+	    printf("LABEL IS OUTSIDE PARENT DO BOUNDARY! level - 1 \n");
+	    printf("close timer: %s\n", timertoclose.c_str());
+#endif /* DEBUG  */
+	    
+  	    processBlock(s->extraStmt(), ro, itemvec, level, NULL);
+	  }
+	  else
+	  {
+#ifdef DEBUG
+	    printf("LABEL is within the outer loop boundary. Keep level as it is. \n");
+#endif /* DEBUG  */
+  	    processBlock(s->extraStmt(), ro, itemvec, level, NULL);
+	  }
+	}
+	break;
+
 #ifndef PDT_NOFSTMTS
 /* PDT has Fortran statement level information. Use it! */
       case pdbStmt::ST_FDO:
         start = s->stmtBegin();
         stop = s->stmtEnd();
-        addFortranLoopInstrumentation(ro, start, stop, itemvec);
+#ifdef DEBUG
+	printf("DO Statement, line = %d, level = %d\n", start.line(), level);
+#endif /* DEBUG */
+	if (level == 1)
+	{ /* only instrument level 1 loops (or outer loops) */
+          addFortranLoopInstrumentation(ro, start, stop, itemvec);
+	}
 #ifdef DEBUG
         printf("Fortran DO statement:\n"); 
 #endif /* DEBUG */
+	if (s->downStmt())
+  	  processBlock(s->downStmt(), ro, itemvec, level+1, s);
+	/* NOTE: We are passing s as the parentDO argument for subsequent 
+	 * processing of the DO loop. We also increment the level by 1 */
 	break;
-#endif /* PDT_NOFSTMTS */
 
+      case pdbStmt::ST_FSINGLE_IF:
+#ifdef DEBUG
+	if (s->downStmt() && (s->downStmt()->kind() == pdbStmt::ST_FGOTO))
+	{
+	  printf("SINGLE_IF followed by goto! goto ends\n");
+	  printf("line %d col %d after! \n",
+	    s->stmtEnd().line(), s->stmtEnd().col());
+	}
+#endif /* DEBUG */
+	/* let single_if continue into ST_FIF : no break! */
+      case pdbStmt::ST_FIF:
+	if (s->downStmt())
+	{
+#ifdef DEBUG
+          printf("IF statement processing down stmt: line no= %d \n", s->downStmt()->stmtBegin().line());
+#endif /* DEBUG */
+  	  processBlock(s->downStmt(), ro, itemvec, level, parentDO);
+	}
+	if (s->extraStmt())
+	{
+#ifdef DEBUG
+	  printf("IF: processing extra statement\n");
+#endif
+  	  processBlock(s->extraStmt(), ro, itemvec, level, parentDO);
+	}
+	break;
+      case pdbStmt::ST_FLABEL:
+	if (s->downStmt())
+	{
+#ifdef DEBUG
+          printf("FLABEL statement! down line no= %d \n", s->downStmt()->stmtBegin().line());
+#endif /* DEBUG */
+  	  processBlock(s->downStmt(), ro, itemvec, level,  parentDO);
+	}
+	break;
+
+#endif /* not PDT_NOFSTMTS */
+      case pdbStmt::ST_NA:
+#ifdef DEBUG
+        printf("ST_NA statement! \n");
+#endif /* DEBUG */
+	return 1;
       default:
 #ifdef DEBUG
         printf("Other statement\n"); 
@@ -714,7 +875,10 @@ int processBlock(const pdbStmt *s, pdbRoutine *ro, vector<itemRef *>& itemvec)
 	break;
     }
   } /* and then process the next statement */
-  return processBlock(s->nextStmt(), ro, itemvec);
+  if (s->nextStmt())
+    return processBlock(s->nextStmt(), ro, itemvec, level, parentDO);
+  else
+    return 1;
 
 }
 
@@ -771,7 +935,8 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
       } /* end of routine exit */
       if ((*it)->getKind() == TAU_LOOPS)
       { /* we need to instrument all outer loops in this routine */
-	processBlock((*rit)->body(), (*rit), itemvec);
+	processBlock((*rit)->body(), (*rit), itemvec, 1, NULL);
+	/* level = 1 */
       }
     }
   }
@@ -836,7 +1001,7 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
       } /* end of routine exit */
       if ((*it)->getKind() == TAU_LOOPS)
       { /* we need to instrument all outer loops in this routine */
-	processBlock((*rit)->body(), (*rit), itemvec);
+	processBlock((*rit)->body(), (*rit), itemvec, 1, NULL); /* level = 1 */
       }
     } /* end of match */
   } /* iterate over all routines */
@@ -932,6 +1097,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2006/04/27 19:02:17 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.9 2006/04/27 19:02:17 sameer Exp $
+ * $Revision: 1.10 $   $Date: 2006/05/08 06:39:43 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.10 2006/05/08 06:39:43 sameer Exp $
  ***************************************************************************/

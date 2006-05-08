@@ -1197,6 +1197,30 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
 #define WRITE_TAB(os, column) if (column < 7) os<<"\t";
 
+/* The macro below assumes that ostr, inbuf and print_cr are defined */
+#define WRITE_SNIPPET(attr, col, write_upto, snippetcode) { \
+	int i; /* the index into the array */ \
+                if (attr == BEFORE)  \
+		{ \
+		  for(i = 0; i < col-1; i++) \
+		  { \
+                    ostr <<inbuf[i]; \
+		  } \
+                  ostr << snippetcode <<endl; \
+		  ostr <<"\t"; /* write a tab */ \
+                  for (i=col-1; i < write_upto; i++) \
+                    ostr <<inbuf[i]; \
+                  if (print_cr) ostr<<endl; \
+		} \
+                if (attr == AFTER) \
+ 		{ \
+		  for(i = 0; i < write_upto; i++) \
+                    ostr <<inbuf[i]; \
+                  if (print_cr) ostr<<endl; \
+                  ostr << snippetcode <<endl; \
+		} \
+	} 
+
 /* In Fortran programs, it is a bad idea to begin the first column with a C
  * as it can be confused with a comment. So, we should check and see if the
  * "call TAU_PROFILE..." statement starts on the first column and if so, we 
@@ -1213,6 +1237,12 @@ int CPDB_GetSubstringCol(const char *haystack, const char *needle)
   for (i = 0; i < length; i++)
   { /* make it all lowercase */
     local_haystack[i] = tolower(haystack[i]);
+    if (local_haystack[i] == '!') 
+    { /* ignore all comments -- everything after ! on a line ... */
+      local_haystack[i] = '\0';
+      /* break out of the loop */
+      break;
+    }
   }
   const char *res = strstr(local_haystack, needle);
   int diff = 0;
@@ -1239,11 +1269,13 @@ int CPDB_GetSubstringCol(const char *haystack, const char *needle)
 bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name) 
 { 
   string file(f->name());
+  string codesnippet; /* for START_TIMER, STOP_TIMER */
   static char inbuf[INBUF_SIZE]; // to read the line
   char *checkbuf=NULL; // Assign inbuf to checkbuf for return processing
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
   int space, i, j, k, c;
+  int docol, ifcol, thencol, gotocol;
   if (!ostr) {
     cerr << "Error: Cannot open '" << outfile << "'" << endl;
     return false;
@@ -1605,55 +1637,70 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		 
 	    case INSTRUMENTATION_POINT:
 #ifdef DEBUG
-		cout <<"Instrumentation point Fortran -> line = "<< (*it)->line<<endl;
+		cout <<"Instrumentation point Fortran -> line = "<< (*it)->line<<" col "<<(*it)->col <<" write_upto = "<<write_upto<<" snippet = "<<(*it)->snippet<<endl;
 #endif /* DEBUG */
-	        if ((*it)->attribute == BEFORE)
-		  ostr << (*it)->snippet<<endl;
-		for (i=0; i < write_upto; i++)
-		  ostr <<inbuf[i];
-                if (print_cr) ostr<<endl;
-	        if ((*it)->attribute == AFTER)
-		  ostr << (*it)->snippet<<endl;
+		WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, (*it)->snippet);
 		instrumented = true;
 		break;
+            case START_DO_TIMER:
             case START_TIMER:
-#ifdef DEBUG
-                cout <<"START_TIMER point Fortran -> line = "<< (*it)->line
-		     <<" timer = "<<(*it)->snippet<<endl;
-#endif /* DEBUG */
-                if ((*it)->attribute == BEFORE)
+		docol = (*it)->col;
+		if ((*it)->kind == START_DO_TIMER)
 		{
-                  ostr << "       call TAU_PROFILE_START("<<(*it)->snippet<<")"<<endl;
+
+		  docol = CPDB_GetSubstringCol(inbuf,"do");
+#ifdef DEBUG
+                cout <<"START_DO_TIMER point Fortran -> line = "<< (*it)->line
+		     <<" col = "<< (*it)->col <<" write_upto = "<< write_upto
+		     <<" timer = "<<(*it)->snippet<< " docol = "<<docol<<endl;
+		cout <<"inbuf = "<<inbuf<<endl;
+#endif /* DEBUG */
 		}
-                for (i=0; i < write_upto; i++)
-                  ostr <<inbuf[i];
-                if (print_cr) ostr<<endl;
-                if ((*it)->attribute == AFTER)
- 		{
-                  ostr << "       call TAU_PROFILE_START("<<(*it)->snippet<<")"<<endl;
-		}
+		codesnippet = string("       call TAU_PROFILE_START(")+(*it)->snippet+")";
+		WRITE_SNIPPET((*it)->attribute, docol, write_upto, codesnippet);
                 instrumented = true;
 		/* Push the current timer name on the stack */
 	 	current_timer.push_front((*it)->snippet); 
                 break;
 
+	    case GOTO_STOP_TIMER:
+
+#ifdef DEBUG
+                cout <<"GOTO_STOP_TIMER point Fortran -> line = "<< (*it)->line
+		     <<" timer = "<<(*it)->snippet<<endl;
+#endif /* DEBUG */
+		/* we need to check if this goto occurs on a line with an if */
+		ifcol = CPDB_GetSubstringCol(inbuf,"if");
+		gotocol = CPDB_GetSubstringCol(inbuf,"goto");
+		thencol = CPDB_GetSubstringCol(inbuf,"then");
+		if (ifcol && gotocol && !thencol)
+		{
+#ifdef DEBUG
+		  cout <<"ifcol = "<<ifcol<<" goto col = "<<gotocol
+		        <<" thencol = " << thencol<<endl;
+                  cout <<"GOTO_STOP_TIMER INSIDE SINGLE_IF "<<endl;
+#endif /* DEBUG */
+		  
+		  codesnippet = string("\t then \n       call TAU_PROFILE_STOP(")+(*it)->snippet+")";
+		  WRITE_SNIPPET(BEFORE, gotocol, write_upto, codesnippet);
+		  ostr <<"\t endif"<<endl;
+		}
+		else
+		{
+		  codesnippet = string("       call TAU_PROFILE_STOP(")+(*it)->snippet+")";
+		  WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, codesnippet);
+		}
+                instrumented = true;
+	        /* We maintain the current outer loop level timer active. We need to pop the stack */
+		break; /* no need to close the timer in the list */
             case STOP_TIMER:
 #ifdef DEBUG
                 cout <<"STOP_TIMER point Fortran -> line = "<< (*it)->line
 		     <<" timer = "<<(*it)->snippet<<endl;
 #endif /* DEBUG */
-                if ((*it)->attribute == BEFORE)
-                {
-                  ostr << "       call TAU_PROFILE_STOP("<<(*it)->snippet<<")"<<endl;
-                }
-                for (i=0; i < write_upto; i++)
-                  ostr <<inbuf[i];
-                if (print_cr) ostr<<endl;
 
-                if ((*it)->attribute == AFTER)
-		{
-                  ostr << "       call TAU_PROFILE_STOP("<<(*it)->snippet<<")"<<endl;
-		}
+		codesnippet = string("       call TAU_PROFILE_STOP(")+(*it)->snippet+")";
+		WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, codesnippet);
                 instrumented = true;
 	        /* We maintain the current outer loop level timer active. We need to pop the stack */
 		if (!current_timer.empty()) current_timer.pop_front();
@@ -2003,8 +2050,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.87 $   $Date: 2006/04/27 17:26:13 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.87 2006/04/27 17:26:13 sameer Exp $
+ * $Revision: 1.88 $   $Date: 2006/05/08 06:39:43 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.88 2006/05/08 06:39:43 sameer Exp $
  ***************************************************************************/
 
 
