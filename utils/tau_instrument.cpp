@@ -519,7 +519,7 @@ void printInstrumentList(void)
 }
 
 /* using the list, write the additional statements */
-void writeStatements(ofstream& ostr, pdbRoutine *ro, 
+void writeStatements(ofstream& ostr, const pdbRoutine *ro, 
          list< pair< int, list<string> > > & additional)
 {
 
@@ -579,7 +579,7 @@ void getLoopTimerVariableName(string& varname, int line)
 }
 
 /* Add request for instrumentation for Fortran loops */
-void addFortranLoopInstrumentation(pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop, vector<itemRef *>& itemvec)
+void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop, vector<itemRef *>& itemvec)
 {
 
   const pdbFile *f = start.file();
@@ -651,7 +651,7 @@ void addFortranLoopInstrumentation(pdbRoutine *ro, const pdbLoc& start, const pd
  /* fixed: we use CPDB... (inbuf, "do") to find the correct DO column no. */
 
 /* Does the label leave the statement boundary? */
-int labelOutsideStatementBoundary(pdbStmt *labelstmt, pdbStmt *parentDO)
+int labelOutsideStatementBoundary(const pdbStmt *labelstmt, const pdbStmt *parentDO)
 {
   int defaultreturn = 0; /* does not leave boundary */
   if (labelstmt == NULL) return defaultreturn; 
@@ -708,7 +708,7 @@ void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start,
 }
 
 /* Process Block to examine the routine */
-int processBlock(const pdbStmt *s, pdbRoutine *ro, vector<itemRef *>& itemvec,
+int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& itemvec,
 		int level, const pdbStmt *parentDO)
 {
   pdbLoc start, stop; /* the location of start and stop timer statements */
@@ -1097,6 +1097,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2006/05/08 06:39:43 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.10 2006/05/08 06:39:43 sameer Exp $
+ * $Revision: 1.11 $   $Date: 2006/05/09 07:44:42 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.11 2006/05/09 07:44:42 sameer Exp $
  ***************************************************************************/
