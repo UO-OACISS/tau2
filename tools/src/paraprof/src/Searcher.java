@@ -18,15 +18,14 @@ import javax.swing.JComponent;
 import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
 import edu.uoregon.tau.paraprof.interfaces.Searchable;
 
-
 /**
  * Searches text for ParaProf windows
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Searcher.java,v 1.4 2006/03/30 03:03:54 amorris Exp $</P>
+ * <P>CVS $Id: Searcher.java,v 1.5 2006/05/09 22:57:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class Searcher implements Searchable, MouseListener, MouseMotionListener, ClipboardOwner {
 
@@ -40,7 +39,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     private int lineHeight = 1; // initialize to 1 to eliminate the possiblility of divide by zero
     private int maxDescent;
-    
+
     private JComponent panel;
     private ScrollBarController scrollBarController;
 
@@ -50,12 +49,11 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     private Graphics2D g2d;
     private int xOffset;
     private int topMargin;
-    
-    
+
     // for selection
     private String selectionString = "";
     private boolean selectionReversed;
-    private int selectionStartLine=-1, selectionEndLine=-1;
+    private int selectionStartLine = -1, selectionEndLine = -1;
     private int selectionStartX, selectionStartY;
     private int selectionEndX, selectionEndY;
 
@@ -218,6 +216,9 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     }
 
     private void checkSearchStringVisibility() {
+        if (g2d == null) {
+            return;
+        }
         String localSearchString = searchString;
 
         // now determine if it is visible vertically
@@ -286,8 +287,9 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
             // the current incremental search line
 
             if (text.indexOf(localSearchString, searchColumn) != -1 && localSearchString.length() > 0) {
-                Shape base = textLayout.getLogicalHighlightShape(text.indexOf(localSearchString, searchColumn),
-                        text.indexOf(localSearchString, searchColumn) + localSearchString.length());
+                Shape base = textLayout.getLogicalHighlightShape(text.indexOf(localSearchString, searchColumn), text.indexOf(
+                        localSearchString, searchColumn)
+                        + localSearchString.length());
                 AffineTransform at = AffineTransform.getTranslateInstance(x, y);
                 Shape highlight = at.createTransformedShape(base);
                 g2D.setPaint(Searchable.searchColor);
@@ -340,8 +342,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
                     // the first line of a multi-line selection
                     TextHitInfo hit = textLayout.hitTestChar(localX - x, selectionStartY);
                     if (hit != null) {
-                        Shape base = textLayout.getLogicalHighlightShape(hit.getInsertionIndex(),
-                                textLayout.getCharacterCount());
+                        Shape base = textLayout.getLogicalHighlightShape(hit.getInsertionIndex(), textLayout.getCharacterCount());
                         AffineTransform at = AffineTransform.getTranslateInstance(x, y);
                         Shape highlight = at.createTransformedShape(base);
 
@@ -418,13 +419,17 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void mousePressed(MouseEvent e) {
         selectionStartX = e.getX();
-        selectionStartY = e.getY()-topMargin;
-        selectionStartLine = (e.getY()-topMargin) / lineHeight;
+        selectionStartY = e.getY() - topMargin;
+        selectionStartLine = (e.getY() - topMargin) / lineHeight;
     }
 
     private void determineSelection() {
+        if (g2d == null) {
+            return;
+        }
+
         selectionString = "";
-        
+
         for (int line = selectionStartLine; line <= selectionEndLine; line++) {
             if (line >= searchLines.size()) {
                 break;
@@ -432,7 +437,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
             if (line < 0 || line >= searchLines.size()) {
                 return;
             }
-            
+
             String text = (String) searchLines.get(line);
 
             TextLayout textLayout = new TextLayout(text, g2d.getFont(), g2d.getFontRenderContext());
@@ -501,7 +506,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void mouseReleased(MouseEvent e) {
         selectionEndX = e.getX();
-        selectionEndY = e.getY()-topMargin;
+        selectionEndY = e.getY() - topMargin;
 
         if (selectionStartY < selectionEndY) {
             selectionStartLine = selectionStartY / lineHeight;
@@ -521,7 +526,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void mouseDragged(MouseEvent e) {
         selectionEndX = e.getX();
-        selectionEndY = (e.getY()-topMargin) - maxDescent;
+        selectionEndY = (e.getY() - topMargin) - maxDescent;
 
         if (selectionStartY < selectionEndY) {
             selectionStartLine = selectionStartY / lineHeight;
@@ -563,7 +568,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void setLineHeight(int lineHeight) {
         // disallow less than one to eliminate divide by zero errors
-        this.lineHeight = Math.max(1,lineHeight);
+        this.lineHeight = Math.max(1, lineHeight);
     }
 
     public void setMaxDescent(int maxDescent) {
