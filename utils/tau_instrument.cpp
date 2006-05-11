@@ -758,6 +758,7 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
         printf("Assign statement:\n"); 
 #endif /* DEBUG */
 	break;
+#ifndef PDT_NOFSTMTS
       case pdbStmt::ST_FGOTO:
 	if (s->extraStmt())
 	{
@@ -805,7 +806,6 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 	}
 	break;
 
-#ifndef PDT_NOFSTMTS
 /* PDT has Fortran statement level information. Use it! */
       case pdbStmt::ST_FDO:
         start = s->stmtBegin();
@@ -1097,6 +1097,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2006/05/09 07:44:42 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.11 2006/05/09 07:44:42 sameer Exp $
+ * $Revision: 1.12 $   $Date: 2006/05/11 20:13:29 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.12 2006/05/11 20:13:29 sameer Exp $
  ***************************************************************************/
