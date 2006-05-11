@@ -830,7 +830,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 	  (*(tFile->GroupIdMap))[eventDescr->Group] = groupid;
 	  /* invoke group callback */
 	  /* check Param to see if its a user defined event */
-	  if (strcmp(eventDescr->Param, "TriggerValue") != 0)
+	  if (strcmp(eventDescr->Param, "EntryExit\n") == 0)
 	  { /* it is not a user defined event */
 	    if (*cb.DefStateGroup)
 	      (*cb.DefStateGroup)(cb.UserData, groupid, eventDescr->Group); 
@@ -846,8 +846,8 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
           if (*cb.DefUserEvent)
 	    (*cb.DefUserEvent)(cb.UserData, localEventId, eventDescr->EventName, eventDescr->Tag);
 	}
-	else
-        { /* it is not a user defined event */
+	else if (strcmp(eventDescr->Param, "EntryExit\n") == 0)
+        { /* it is an entry/exit event */
 	  if (*cb.DefState)
 	    (*cb.DefState)(cb.UserData, localEventId, eventDescr->EventName, 
 		      groupid);
@@ -880,6 +880,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.17 $   $Date: 2005/10/11 16:20:38 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.17 2005/10/11 16:20:38 amorris Exp $ 
+ * $Revision: 1.18 $   $Date: 2006/05/11 19:12:12 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.18 2006/05/11 19:12:12 amorris Exp $ 
  ***************************************************************************/
