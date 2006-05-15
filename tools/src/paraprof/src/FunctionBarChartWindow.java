@@ -26,9 +26,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.6 2006/03/30 03:03:53 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.7 2006/05/15 23:43:24 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -69,6 +69,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
     private boolean comparisonChart;
 
+    private boolean defaultPercentValue;
+    
     // Initializes Chart as a single function across threads
     public FunctionBarChartWindow(ParaProfTrial ppTrial, Function function, Component parent) {
         this.ppTrial = ppTrial;
@@ -157,6 +159,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
     private void initialize(Component parent) {
 
+        
+        defaultPercentValue = ParaProf.preferences.getShowValuesAsPercent();
         ppTrial.addObserver(this);
 
         panel.getBarChart().setBarLength(barLengthSlider.getValue());
@@ -350,7 +354,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         descendingOrderCheckBox.addActionListener(sortData);
         optionsMenu.add(descendingOrderCheckBox);
 
-        showValuesAsPercent = new JCheckBoxMenuItem("Show Values as Percent", ParaProf.preferences.getShowValuesAsPercent());
+        showValuesAsPercent = new JCheckBoxMenuItem("Show Values as Percent", defaultPercentValue);
         showValuesAsPercent.addActionListener(sortData);
         optionsMenu.add(showValuesAsPercent);
 
