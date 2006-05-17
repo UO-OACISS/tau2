@@ -3,7 +3,7 @@
 ::
 @echo off
 
-set TAU_ROOT=.
+set TAU_ROOT=..
 set JAR_ROOT=%TAU_ROOT%/bin
 set CONFIG_FILE=%HOME%/.ParaProf/perfdmf.cfg
 set PERFDMF_JAR=%JAR_ROOT%/perfdmf.jar
