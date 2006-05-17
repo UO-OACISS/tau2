@@ -1,7 +1,7 @@
 
 !ifndef VERSION
-  !define VERSION '2.13.5'
-  !define NAME Tau-${VERSION}
+  !define VERSION '2.X'
+  !define NAME Tau ${VERSION}
 !endif
 
 
