@@ -2,7 +2,7 @@
 :: set TAU_ROOT below and make sure java is in your path
 ::
 @echo off
-set TAU_ROOT=..
+set TAU_ROOT=.
 
 
 set JAR_ROOT=%TAU_ROOT%/bin
