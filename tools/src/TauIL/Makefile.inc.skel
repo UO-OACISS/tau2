@@ -7,7 +7,7 @@ CUPDIR		= $(TOOLDIR)/CUP
 JFLEXDIR	= $(TOOLDIR)/JFlex
 
 PARAPROF_HOME	= $(TAU_HOME)/tools/src/paraprof/bin/ParaProf.jar
-DMS_HOME	= $(TAU_HOME)/tools/src/dms/dms.jar
+DMS_HOME	= $(TAU_HOME)/tools/src/perfdmf/bin/perfdmf.jar
 
 SOURCEDIR	= $(TAUIL_HOME)/src
 CLASSDIR	= $(TAUIL_HOME)/classes
