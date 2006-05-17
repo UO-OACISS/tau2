@@ -1,9 +1,9 @@
 
 !ifndef VERSION
   !define VERSION '2.X'
-  !define NAME Tau ${VERSION}
 !endif
 
+!define NAME "Tau ${VERSION}"
 
 
 !macro SED_REPLACE FILE
@@ -76,11 +76,11 @@ Name "Tau"
 !ifdef OUTFILE
   OutFile "${OUTFILE}"
 !else
-  OutFile C:\zip\Tau-${VERSION}.exe
+  OutFile "C:\zip\${NAME}.exe"
 !endif
 
 ; The default installation directory
-InstallDir $PROGRAMFILES\Tau-${VERSION}
+InstallDir "$PROGRAMFILES\${NAME}"
 
 ;--------------------------------
 
@@ -116,12 +116,12 @@ Section "" ;No components page, name is not important
   WriteUninstaller "uninstall.exe"
 
   ; Create Shortcuts  
-  CreateDirectory $SMPROGRAMS\${NAME}
-  CreateShortCut $SMPROGRAMS\${NAME}\ParaProf.lnk $INSTDIR\bin\paraprof.bat "" $INSTDIR\bin\tau.ico
-  CreateShortCut $SMPROGRAMS\${NAME}\Readme.lnk $INSTDIR\Readme.txt
-  CreateShortCut $SMPROGRAMS\${NAME}\JumpShot.lnk $INSTDIR\bin\jumpshot.bat
-  CreateShortCut $SMPROGRAMS\${NAME}\PerfDMF.lnk $INSTDIR\bin\perfdmf_configure.bat "" $INSTDIR\bin\tau.ico
-  CreateShortCut $SMPROGRAMS\${NAME}\Uninstall.lnk "$INSTDIR\uninstall.exe"
+  CreateDirectory "$SMPROGRAMS\${NAME}"
+  CreateShortCut "$SMPROGRAMS\${NAME}\ParaProf.lnk" $INSTDIR\bin\paraprof.bat "" "$INSTDIR\bin\tau.ico"
+  CreateShortCut "$SMPROGRAMS\${NAME}\Readme.lnk" $INSTDIR\Readme.txt
+  CreateShortCut "$SMPROGRAMS\${NAME}\JumpShot.lnk" $INSTDIR\bin\jumpshot.bat
+  CreateShortCut "$SMPROGRAMS\${NAME}\PerfDMF.lnk" $INSTDIR\bin\perfdmf_configure.bat "" "$INSTDIR\bin\tau.ico"
+  CreateShortCut "$SMPROGRAMS\${NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe"
   
   
   
@@ -143,6 +143,6 @@ Section "Uninstall"
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"
   RMDir "$SMPROGRAMS\${NAME}"
-  RMDir /r $INSTDIR
+  RMDir /r "$INSTDIR"
 
 SectionEnd
