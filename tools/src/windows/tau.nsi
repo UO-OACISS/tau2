@@ -142,7 +142,7 @@ Section "Uninstall"
 
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"
-  RMDir "$SMPROGRAMS\${NAME}"
+  RMDir /r "$SMPROGRAMS\${NAME}"
   RMDir /r "$INSTDIR"
 
 SectionEnd
