@@ -13,8 +13,8 @@ fi
 export BITS=$1
 export BITSUFFIX=$BITS
 
-rm -rf $BITS
-mkdir $BITS
+#rm -rf $BITS
+#mkdir $BITS
 cd $BITS
 
 export USE_PMAPI=-lpmapi
@@ -47,13 +47,13 @@ for o in $OBJ ; do
     rtl_enable -X $BITS -l -R -s $o -L. -lc_r -lpthreads  -lpmapi
     if [[ $o == "mpicore_r.o" ]] ; then
 
-	sed -e 's#mpicore_r.o -b#../TauMpi.o ../libtau-mpi.a /usr/lib/libC.a mpicore_r.o -b#' $news > tmp.$nnews
+	sed -e 's#mpicore_r.o -b#tau/* /usr/lib/libC.a mpicore_r.o -b#' $news > tmp.$nnews
 #  sed -e 's/mpicore_r.o -b/libipm.o mpicore_r.o -b/' $news > tmp.$nnews
 	mv tmp.$nnews $news
     fi
     if [[ $o == "mpicore64_r.o" ]] ; then
 #  sed -e 's/mpicore64_r.o -b/libipm_64.o mpicore64_r.o -b/' $news > tmp.$nnews 
-	sed -e 's#mpicore64_r.o -b#../TauMpi.o ../libtau-mpi.a /usr/lib/libC.a mpicore64_r.o -b#' $news > tmp.$nnews 
+	sed -e 's#mpicore64_r.o -b#tau/* ../libtau-mpi.a /usr/lib/libC.a mpicore64_r.o -b#' $news > tmp.$nnews 
 	mv tmp.$nnews $news
     fi
     sed -e 's/-bnortllib -bnosymbolic -bnoautoexp/-bM:SRE -H512 -T512 -bnoentry -bnoobjreorder/' $news > tmp.$nnews

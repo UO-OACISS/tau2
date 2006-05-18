@@ -261,6 +261,9 @@ $(INSTALLDEST)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 
 libmpi_r.a: $(TAU_SHLIB) $(MPI_WRAPPER)
 	@echo Creating libmpi_r.a
+	rm -rf $(BITS)
+	mkdir -p $(BITS)/tau
+	cp $(TAU_TARGET) libTauMpi$(TAU_CONFIG)$(LSX) $(BITS)/tau
 	@./rebuild_libmpi $(BITS)
 	@cp $(BITS)/libmpi_r.a .
 	@rm -rf $(BITS)
