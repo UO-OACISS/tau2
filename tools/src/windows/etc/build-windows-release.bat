@@ -44,7 +44,7 @@ cd \
 
 PATH=%PATH%;"c:\Program Files\NSIS"
 
-makensis /DVERSION=%1 /DOUTFILE=C:\zip\tau-%1 C:\tau2\tools\src\windows\tau.nsi
+makensis /DVERSION=%1 /DOUTFILE=C:\zip\tau-%1.exe C:\tau2\tools\src\windows\tau.nsi
 goto done
 
 :error

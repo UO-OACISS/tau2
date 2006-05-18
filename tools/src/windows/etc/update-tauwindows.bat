@@ -28,6 +28,8 @@ copy tools\src\contrib\windows\jogl.dll c:\tau-windows\bin
 copy tools\src\contrib\slog2sdk\lib\jumpshot.jar c:\tau-windows\bin
 copy win32\lib\*.* c:\tau-windows\lib
 copy win32\java\*.* c:\tau-windows\javadll
+copy LICENSE c:\tau-windows
+copy tools\src\windows\etc\Readme.txt c:\tau-windows
 
 
 cd \
