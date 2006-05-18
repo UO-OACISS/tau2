@@ -118,7 +118,7 @@ TAU_DISABLE   = libTauDisable$(LSX)
 
 ##############################################
 #MPI#MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
-#MPI#TAU_MPI_OBJS = TauMpi.o $(FWRAPPER) $(MPI2EXTENSIONS) $(TAU_MPI_LIBS)  #ENDIF#
+#MPI#TAU_MPI_OBJS = TauMpi.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF#
 #MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
