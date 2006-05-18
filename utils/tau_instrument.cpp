@@ -869,6 +869,13 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 #endif /* DEBUG */
 	return 1;
       default:
+        if (s->downStmt())
+          processBlock(s->downStmt(), ro, itemvec, level, parentDO);
+        if (s->extraStmt())
+          processBlock(s->extraStmt(), ro, itemvec, level, parentDO);
+	/* We only process down and extra statements for the default statements
+	   that are not loops. When a loop is encountered, its down is not
+	   processed. That way we retain outer loop level instrumentation */
 #ifdef DEBUG
         printf("Other statement\n"); 
 #endif /* DEBUG */
@@ -1097,6 +1104,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2006/05/11 20:13:29 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.12 2006/05/11 20:13:29 sameer Exp $
+ * $Revision: 1.13 $   $Date: 2006/05/18 01:06:53 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.13 2006/05/18 01:06:53 sameer Exp $
  ***************************************************************************/
