@@ -744,9 +744,11 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 	if (level == 1)
 	{
           /* C++/C or Fortran instrumentation? */
+#ifndef PDT_NOFSTMTS
 	  if (k == pdbStmt::ST_FDO)
             addFortranLoopInstrumentation(ro, start, stop, itemvec);
 	  else 
+#endif /* PDT_NOFSTMTS */
 	    addRequestForLoopInstrumentation(ro, start, stop, itemvec); 
 	}
 	if (s->downStmt())
@@ -1021,6 +1023,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2006/05/18 02:04:37 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.14 2006/05/18 02:04:37 sameer Exp $
+ * $Revision: 1.15 $   $Date: 2006/05/18 17:35:50 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.15 2006/05/18 17:35:50 sameer Exp $
  ***************************************************************************/
