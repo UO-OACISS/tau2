@@ -104,7 +104,7 @@ public class ParaProfImageOutput {
 
         //Now write the image to file.
         ImageWriter writer = null;
-        Iterator iter = ImageIO.getImageWritersByFormatName(paraProfImageFormatFileFilter.getExtension().toUpperCase());
+        Iterator iter = ImageIO.getImageWritersByFormatName(extension.toUpperCase());
         if (iter.hasNext()) {
             writer = (ImageWriter) iter.next();
         }
