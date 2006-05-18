@@ -39,7 +39,7 @@ double multiply(void)
     for(k=0; k < SIZE; k++)
       for(sz = 0; sz < SIZE; sz+=CACHE)
       {
-        //vl = min(SIZE-sz, CACHE);
+        /*vl = min(SIZE-sz, CACHE); */
   	vl = (SIZE - sz < CACHE ? SIZE - sz : CACHE); 
         for(strip = sz; strip < sz+vl; strip++)
           C[i][strip] += A[i][k]*B[k][strip];
@@ -47,7 +47,6 @@ double multiply(void)
 
  
   return C[SIZE-10][SIZE-10];
-  // So KCC doesn't optimize this loop away.
 }
        
        
