@@ -688,6 +688,19 @@ the open brace. */
 		}            
             break;
 
+	  case GOTO_STOP_TIMER:
+		/* first flush all the characters till we reach the goto */
+		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
+#ifdef DEBUG
+		cout <<"WRITING STOP LOOP TIMER RECORD "<<endl;
+#endif /* DEBUG */
+		ostr <<"{ TAU_PROFILE_STOP(lt); "; 
+		for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
+		  ostr<<inbuf[k]; 
+		ostr <<" }";
+		ostr <<endl;
+		instrumented = true; 
+	    break;
 	  case INSTRUMENTATION_POINT:
 #ifdef DEBUG
 	    cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
@@ -1143,6 +1156,14 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 #endif /* DEBUG */
 	if ((*it)->attribute == AFTER) ostr<<endl;
 	ostr << (*it)->snippet<<endl;
+	instrumented = true;
+	break;
+    case GOTO_STOP_TIMER:
+	ostr <<"{ TAU_PROFILE_STOP(lt);"; 
+	for (k = (*it)->col-1; k < strlen(inbuf); k++)
+	  ostr<<inbuf[k]; 
+	ostr <<" }";
+	write_from = k+1;
 	instrumented = true;
 	break;
     default:
@@ -2050,8 +2071,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.88 $   $Date: 2006/05/08 06:39:43 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.88 2006/05/08 06:39:43 sameer Exp $
+ * $Revision: 1.89 $   $Date: 2006/05/18 02:27:41 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.89 2006/05/18 02:27:41 sameer Exp $
  ***************************************************************************/
 
 
