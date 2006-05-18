@@ -719,15 +719,6 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
   
   pdbStmt::stmt_t k = s->kind();
 
-  if (k == pdbStmt::ST_BLOCK)
-  {
-#ifdef DEBUG
-    printf("Going down the block, routine = %s\n", ro->fullName().c_str());
-#endif /* DEBUG */
-    processBlock(s->downStmt(), ro, itemvec, level+1, s);
-  }
-  else
-  {
 #ifdef DEBUG
     printf("Examining statement \n");
 #endif /* DEBUG */
@@ -737,6 +728,10 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
       case pdbStmt::ST_FOR:
       case pdbStmt::ST_WHILE:
       case pdbStmt::ST_DO:
+#ifndef PDT_NOFSTMTS 
+/* PDT has Fortran statement level information. Use it! */
+      case pdbStmt::ST_FDO:
+#endif /* PDT_NOFSTMTS */
 #ifdef DEBUG
         printf("loop statement:\n");
 #endif /* DEBUG */
@@ -746,20 +741,23 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
         printf("start=<%d:%d> - end=<%d:%d>\n",
           start.line(), start.col(), stop.line(), stop.col());
 #endif /* DEBUG */
-	addRequestForLoopInstrumentation(ro, start, stop, itemvec); 
+	if (level == 1)
+	{
+          /* C++/C or Fortran instrumentation? */
+	  if (k == pdbStmt::ST_FDO)
+            addFortranLoopInstrumentation(ro, start, stop, itemvec);
+	  else 
+	    addRequestForLoopInstrumentation(ro, start, stop, itemvec); 
+	}
+	if (s->downStmt())
+  	  processBlock(s->downStmt(), ro, itemvec, level+1, s);
+	/* NOTE: We are passing s as the parentDO argument for subsequent 
+	 * processing of the DO loop. We also increment the level by 1 */
         break;
-      case pdbStmt::ST_DECL:
-#ifdef DEBUG
-        printf("Decl statement:\n"); 
-#endif /* DEBUG */
-	break;
-      case pdbStmt::ST_ASSIGN:
-#ifdef DEBUG
-        printf("Assign statement:\n"); 
-#endif /* DEBUG */
-	break;
+      case pdbStmt::ST_GOTO:
 #ifndef PDT_NOFSTMTS
       case pdbStmt::ST_FGOTO:
+#endif /* PDT_NOFSTMTS */
 	if (s->extraStmt())
 	{
 #ifdef DEBUG
@@ -774,18 +772,6 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 	    string timertoclose;
 	    getLoopTimerVariableName(timertoclose, parentDO->stmtBegin().line());
 	    //string stopsnippet (string("        call TAU_PROFILE_STOP(") +timertoclose+")");
-  /* BUG: Flint has a bug. It gives the wrong column no. for a goto statement 
-   * inside a single if. both if and goto statements have the same line and 
-   * col nos. We need to put a "then" and an "endif" on the line. The timer
-   * must be stopped inside the if clause and not before the if statement:
-   * if (x == 3) goto 30 
-   * should become
-   * if (x == 30) then
-   *   call TAU_PROFILE_STOP(t_7)
-   *   goto 30
-   * endif  
-   * We check for the correct column numbers for goto if and then in 
-   * tau_instrumentor.cpp using CPDB routines. */
 	    itemvec.push_back( new itemRef((const pdbItem *)ro, GOTO_STOP_TIMER, s->stmtBegin().line(), s->stmtBegin().col(), timertoclose, BEFORE));
 	    /* stop the timer right before writing the go statement */
 
@@ -794,80 +780,11 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 	    printf("close timer: %s\n", timertoclose.c_str());
 #endif /* DEBUG  */
 	    
-  	    processBlock(s->extraStmt(), ro, itemvec, level, NULL);
-	  }
-	  else
-	  {
-#ifdef DEBUG
-	    printf("LABEL is within the outer loop boundary. Keep level as it is. \n");
-#endif /* DEBUG  */
-  	    processBlock(s->extraStmt(), ro, itemvec, level, NULL);
 	  }
 	}
 	break;
 
-/* PDT has Fortran statement level information. Use it! */
-      case pdbStmt::ST_FDO:
-        start = s->stmtBegin();
-        stop = s->stmtEnd();
-#ifdef DEBUG
-	printf("DO Statement, line = %d, level = %d\n", start.line(), level);
-#endif /* DEBUG */
-	if (level == 1)
-	{ /* only instrument level 1 loops (or outer loops) */
-          addFortranLoopInstrumentation(ro, start, stop, itemvec);
-	}
-#ifdef DEBUG
-        printf("Fortran DO statement:\n"); 
-#endif /* DEBUG */
-	if (s->downStmt())
-  	  processBlock(s->downStmt(), ro, itemvec, level+1, s);
-	/* NOTE: We are passing s as the parentDO argument for subsequent 
-	 * processing of the DO loop. We also increment the level by 1 */
-	break;
 
-      case pdbStmt::ST_FSINGLE_IF:
-#ifdef DEBUG
-	if (s->downStmt() && (s->downStmt()->kind() == pdbStmt::ST_FGOTO))
-	{
-	  printf("SINGLE_IF followed by goto! goto ends\n");
-	  printf("line %d col %d after! \n",
-	    s->stmtEnd().line(), s->stmtEnd().col());
-	}
-#endif /* DEBUG */
-	/* let single_if continue into ST_FIF : no break! */
-      case pdbStmt::ST_FIF:
-	if (s->downStmt())
-	{
-#ifdef DEBUG
-          printf("IF statement processing down stmt: line no= %d \n", s->downStmt()->stmtBegin().line());
-#endif /* DEBUG */
-  	  processBlock(s->downStmt(), ro, itemvec, level, parentDO);
-	}
-	if (s->extraStmt())
-	{
-#ifdef DEBUG
-	  printf("IF: processing extra statement\n");
-#endif
-  	  processBlock(s->extraStmt(), ro, itemvec, level, parentDO);
-	}
-	break;
-      case pdbStmt::ST_FLABEL:
-	if (s->downStmt())
-	{
-#ifdef DEBUG
-          printf("FLABEL statement! down line no= %d \n", s->downStmt()->stmtBegin().line());
-#endif /* DEBUG */
-  	  processBlock(s->downStmt(), ro, itemvec, level,  parentDO);
-	}
-	break;
-
-#endif /* not PDT_NOFSTMTS */
-      case pdbStmt::ST_NA:
-#ifdef DEBUG
-        printf("ST_NA statement! \n");
-#endif /* DEBUG */
-	return 1;
       default:
         if (s->downStmt())
           processBlock(s->downStmt(), ro, itemvec, level, parentDO);
@@ -881,7 +798,7 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 #endif /* DEBUG */
 	break;
     }
-  } /* and then process the next statement */
+  /* and then process the next statement */
   if (s->nextStmt())
     return processBlock(s->nextStmt(), ro, itemvec, level, parentDO);
   else
@@ -1104,6 +1021,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2006/05/18 01:06:53 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.13 2006/05/18 01:06:53 sameer Exp $
+ * $Revision: 1.14 $   $Date: 2006/05/18 02:04:37 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.14 2006/05/18 02:04:37 sameer Exp $
  ***************************************************************************/
