@@ -1,3 +1,4 @@
+//#define DEBUG 1
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -1512,9 +1513,28 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    int col;
 	    col = CPDB_GetSubstringCol(inbuf,"return");
 	    
+            /* When the return is at an incorrect location in the pdb file,
+               we need to flush the buffer from the current location to the 
+	       correct location */
+		/* Also check to see if lit is the same as it or in other 
+	words, has the body begin written the statement? */
+	    if (col && col > (*it)->col && lit!=it)
+	    {
+	      for(i=(*it)->col-1; i < col-1; i++)
+	      {
+		ostr<<inbuf[i];
+	      }
+
+	    }
+
+		
 	    if (col != 0) {
 	      (*it)->col = col;
 	    }
+
+#ifdef DEBUG
+	    cout <<"Return is found at "<< (*it)->line<<" Column: "<<(*it)->col<<endl;
+#endif /* DEBUG */
 
 	    if ((*it)->col > strlen(inbuf)) {
 	      fprintf(stderr, "ERROR: specified column number (%d) is beyond the end of the line (%d in length)\n",(*it)->col,strlen(inbuf));
@@ -2071,8 +2091,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.89 $   $Date: 2006/05/18 02:27:41 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.89 2006/05/18 02:27:41 sameer Exp $
+ * $Revision: 1.90 $   $Date: 2006/05/19 00:37:44 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.90 2006/05/19 00:37:44 sameer Exp $
  ***************************************************************************/
 
 
