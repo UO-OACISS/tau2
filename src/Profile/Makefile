@@ -261,9 +261,9 @@ $(INSTALLDEST)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 
 libmpi_r.a: $(TAU_SHLIB) $(MPI_WRAPPER)
 	@echo Creating libmpi_r.a
-	rm -rf $(BITS)
-	mkdir -p $(BITS)/tau
-	cp $(TAU_TARGET) libTauMpi$(TAU_CONFIG)$(LSX) $(BITS)/tau
+	@rm -rf $(BITS)
+	@mkdir -p $(BITS)/tau
+	@cp $(TAU_TARGET) libTauMpi$(TAU_CONFIG)$(LSX) $(BITS)/tau
 	@./rebuild_libmpi $(BITS)
 	@cp $(BITS)/libmpi_r.a .
 	@rm -rf $(BITS)
@@ -275,6 +275,8 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	@if [ -d $(TAUPOE_BINDINGSDIR) ] ; then true; \
 	    else mkdir $(TAUPOE_BINDINGSDIR); fi
 	$(RM) $(TAUPOE_BINDINGSDIR)/libmpi_r.a
+	@rm -f $(TAUPOE_BINDINGSDIR)/libmpi_r.a
+	@rm -f $(INSTALLDEST)/libmpi_r.a
 	@cp libmpi_r.a $(TAUPOE_BINDINGSDIR)
 	@cp libmpi_r.a $(INSTALLDEST)
 
