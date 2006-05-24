@@ -53,7 +53,7 @@ for o in $OBJ ; do
     fi
     if [[ $o == "mpicore64_r.o" ]] ; then
 #  sed -e 's/mpicore64_r.o -b/libipm_64.o mpicore64_r.o -b/' $news > tmp.$nnews 
-	sed -e 's#mpicore64_r.o -b#tau/* ../libtau-mpi.a /usr/lib/libC.a mpicore64_r.o -b#' $news > tmp.$nnews 
+	sed -e 's#mpicore64_r.o -b#tau/* /usr/lib/libC.a mpicore64_r.o -b#' $news > tmp.$nnews 
 	mv tmp.$nnews $news
     fi
     sed -e 's/-bnortllib -bnosymbolic -bnoautoexp/-bM:SRE -H512 -T512 -bnoentry -bnoobjreorder/' $news > tmp.$nnews
