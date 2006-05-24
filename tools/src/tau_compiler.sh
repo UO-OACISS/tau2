@@ -54,7 +54,7 @@ printUsage () {
 	echo -e "  -optPdtCxxOpts=\"\"\t\tOptions for C++ parser in PDT (cxxparse). Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
 	echo -e "  -optPdtCReset=\"\"\t\tReset options to the C++ parser to the given list"
 	echo -e "  -optPdtF90Parser=\"\"\t\tSpecify a different Fortran parser. For e.g., f90parse instead of f95parse"
-	echo -e "  -optPdtGnuFortranParser=\"\"\t\tSpecify the GNU gfortran PDT parser gfparse instead of f95parse"
+	echo -e "  -optPdtGnuFortranParser\tSpecify the GNU gfortran PDT parser gfparse instead of f95parse"
 	echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
 	echo -e "  -optTauInstr=\"\"\t\tSpecify location of tau_instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/tau_instrumentor"
 	echo -e "  -optPreProcess\t\tPreprocess the source code before parsing. Uses /usr/bin/cpp -P by default."
@@ -77,8 +77,8 @@ printUsage () {
 	echo -e "  -optOpariReset=\"\"\t\tResets options passed to the Opari tool"
 	echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking (default)"
 	echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking"
-	echo -e "  -optNoRevert=\"\"\t\tExit on error. Does not revert to the original compilation rule on error."
-	echo -e "  -optRevert=\"\"\t\t\tRevert to the original compilation rule on error (default)."
+	echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
+	echo -e "  -optRevert\t\t\tRevert to the original compilation rule on error (default)."
 	echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
 	if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 		exit
@@ -185,7 +185,17 @@ for arg in "$@"
 
 			-optPreProcess)
 				preprocess=$TRUE
-				preprocessor=/usr/bin/cpp
+			# if a preprocessor has not been specified yet, use
+			# the default C preprocessor
+				if [ "x$preprocessor" = "x" ]; then
+				  preprocessor=/usr/bin/cpp
+				fi
+				if [ ! -x $preprocessor ]; then
+				  preprocessor=`which cpp`
+				fi
+				if [ ! -x $preprocessor ]; then
+ 				  echo "ERROR: No working cpp found in path. Please specify -optCPP=<full_path_to_cpp> and recompile"
+				fi
 				# Default options 	
 				echoIfDebug "\tPreprocessing turned on. preprocessor used is $preprocessor with options $preprocessorOpts"
 				;;
@@ -197,7 +207,7 @@ for arg in "$@"
 				;;
 
 			-optCPPOpts=*)
-                                preprocessorOpts="$preprocessOpts ${arg#"-optCPPOpts="}"
+				preprocessorOpts="$preprocessorOpts ${arg#"-optCPPOpts="}"
 				echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
 				;;
 			-optCPPReset=*)
@@ -449,14 +459,13 @@ for arg in "$@"
 			;;
 
 		-WF,-D*)
-		        theDefine=`echo "$arg" | sed s/-WF,//` 
-		        echo "arg = $arg"
+		        #theDefine=`echo "$arg" | sed s/-WF,//` 
+			theDefine=${arg#"-WF,"}
 			optPdtCFlags="$theDefine $optPdtCFlags"
 			optPdtCxxFlags="$theDefine $optPdtCxxFlags"
 			optPdtF95="$theDefine $optPdtF95"
 			optCompile="$arg $optCompile"
 			optIncludeDefs="$theDefine $optIncludeDefs"
-			argsRemaining="$arg $argsRemaining"
 			;;
 
 		-I*|-D*)
@@ -569,7 +578,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	# If we need to pre-process the source code, we should do so here!
 	if [ $preprocess = $TRUE -a $groupType == $group_f_F ]; then
 	  base=${base}.pp
-	  cmdToExecute="${preprocessor} $preprocessorOpts $optCompile ${arrFileName[$tempCounter]} $base$suf"
+	  cmdToExecute="${preprocessor} $preprocessorOpts $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
 	  evalWithDebugMessage "$cmdToExecute" "Preprocessing"
           if [ ! -f $base$suf ]; then
             echoIfVerbose "ERROR: Did not generate .pp file"
