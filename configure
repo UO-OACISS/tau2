@@ -126,6 +126,7 @@ mpiio=no
 mpiinc=
 mpilib=
 mpilibrary=no
+ibmmpi=no
 shmem=no
 shmeminc=
 shmemlib=
@@ -2479,6 +2480,7 @@ then
     if [ -r $mpilib/libmpi_r.a -a -r $mpilib/libmpi.a ]
     then
       fixmakeargs="$fixmakeargs IBMMPI"
+      ibmmpi=yes
     fi
 
     if [ -f $mpilib/libfmpi.a -o -f $mpilib/libfmpi.so ]
@@ -4078,6 +4080,13 @@ then
   cat ${tauroot}/tools/src/tau_load.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau_load.sh
   chmod a+rx ${targetdir}/${architecture}/bin/tau_load.sh
   echo "TAU: installed tau_load.sh in ${targetdir}/${architecture}/bin"
+fi
+
+if [ $ibmmpi = yes ]
+then
+  cat ${tauroot}/tools/src/tau_poe | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau_poe
+  chmod a+rx ${targetdir}/${architecture}/bin/tau_poe
+  echo "TAU: installed tau_poe in ${targetdir}/${architecture}/bin"
 fi
 
 cp ${tauroot}/tools/src/jtf_writer/tf_writer.jar ${targetdir}/${architecture}/lib

@@ -1,0 +1,20 @@
+#!/bin/sh
+TAU_INSTALLATION_DIR=@TAUROOTDIR@
+TAU_ARCHITECTURE_DIR=@ARCH@
+TAU_LIB=bindings-default
+
+for arg in "$@"; do
+  case $arg in
+      -XrunTAU*)
+	  myarg=`echo $arg | sed 's/-XrunTAU//'`
+	  TAU_LIB=bindings$myarg
+	  ;;
+      *)
+	  ARGS="$ARGS $arg"
+	  ;;
+  esac  
+done
+
+export MP_EUILIBPATH=$TAU_INSTALLATION_DIR/$TAU_ARCHITECTURE_DIR/lib/$TAU_LIB
+
+poe $ARGS
