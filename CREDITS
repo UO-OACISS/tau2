@@ -1,7 +1,7 @@
 /******************************************************************* 
  *                                                                 *
  *       	Tuning and Analysis Utilities Credits  		   *
- *                           Version 2.14                          *
+ *                           Version 2.15                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -23,30 +23,31 @@ Sameer Shende, University of Oregon
 Alan Morris, University of Oregon
 Wyatt Spear, University of Oregon
 Kevin Huck, University of Oregon
-Suravee Suthikulpani, University of Oregon
 Aroon Nataraj, University of Oregon
-Chris Hoge, University of Oregon
 Scott Biersdorff, University of Oregon
-Nicholas Trebon, University of Oregon
+Suravee Suthikulpani, University of Oregon
+Chris Hoge, University of Oregon
 Kai Li, University of Oregon
 Li Li, University of Oregon
 Robert Michael Ansell-Bell, University of Oregon
 Kathleen Lindlan, University of Oregon
 Ariya Lohavanichbutr, University of Oregon
-Peter Beckman, Los Alamos National Laboratory
+Nicholas Trebon, University of Chicago
+Peter Beckman, Argonne National Laboratory
 Steve Karmesin, Los Alamos National Laboratory
 Bernd Mohr, Research Centre Jülich, ZAM, Germany
 
 Principal Investigators:
 ------------------------
 Prof. Allen Malony, University of Oregon
-Prof. Janice Cuny, University of Oregon
 
 Thanks to: 
 ----------
+Brian Miller
+Bronis R. de Supinski
+Janice Cuny
 Susan Post
 Rod Oldehoeft
-Brian Miller
 Matt Sottile
 Craig Rasmussen
 Todd Veldhuizen
@@ -62,6 +63,7 @@ Scott Haney
 James Crotinger
 Timothy Williams
 Anthony Chan
+David Skinner
 NAS Parallel Benchmarks Group for allowing us to use their code as an example
 of TAU instrumentation with Fortran and MPI (http://www.nas.nasa.gov/NAS/NPB/).
 The Jumpshot group at Argonne National Laboratories for providing Jumpshot
