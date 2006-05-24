@@ -22,10 +22,11 @@ using namespace std;
 /*
  * This holds a single monotonically increasing event
  */
-struct MonIncEvent {
+class MonIncEvent {
 	/*Observed values must be held
 	 * until all events are encountered
 	 * so they can be processed at the same time*/
+	public:
 	long long holdvalue;
 	long long inclusive;
 	long long exclusive;
@@ -40,7 +41,8 @@ struct MonIncEvent {
  * including any monotonically increasing
  * events defined in the trace
  */
-struct State {
+class State {
+	public:
 	double inclusive;
 	double exclusive;
 	int calls;
@@ -61,7 +63,8 @@ struct State {
 /*
  * This holds a single non-monotonically increasing event
  */
-struct UserEvent{
+class UserEvent{
+	public:
 	const char * userEventName;
 	int userEventToken;
 	int numevents;
@@ -77,7 +80,8 @@ struct UserEvent{
  * It holds a representation of each (possible) state
  * and each non-monotonically increasing event
  */
-struct Thread {
+class Thread {
+	public:
 	map<int,State>allstate;
 	map<int,UserEvent>allevents;
 	int nodeToken;
@@ -85,11 +89,15 @@ struct Thread {
 	int lastState;/*The last state entered in this thread*/
 	stack<unsigned int> callstack;/*State IDs*/
 	const char * threadName;
+	bool finished;
 };
 
 /*Each thread in the trace is held here, mapped to the node and thread ids
  * The number indicating if the thread has exited is also mapped here*/
-map<pair<int,int>,pair<int,Thread>, less<pair<int,int> > > EOF_Trace;
+//map<pair<int,int>,pair<int,Thread> > EOF_Trace;//, less<pair<int,int> > 
+map<int,Thread> ThreadMap;//global id to Thread object
+//map<int,bool> EOF_Trace;//Id to (false: still in/true:exited)
+map<pair<int,int>,int> ThreadID;//NID/TID
 /*Each state in the trace is held here, mapped to its thread id.  
  * This is copied into each thread once it is initialized*/
 map<int,State> allstate;
@@ -104,12 +112,12 @@ map<unsigned int,const char*> groupids;
 
 void ReadFile();
 void Usage();
-void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > > mainmap);
+void PrintProfiles(map< int,Thread> &mainmap);//, less< pair<int,int> > 
 void PrintSnapshot(double time);
-void SnapshotControl(double time);
-Thread LeaveAll(Thread thread, double time);
-Thread StateLeave(double time, Thread thread, unsigned int stateid);
-Thread StateEnter(double time, Thread thread, unsigned int stateid);
+void SnapshotControl(double time, int token);
+//Thread LeaveAll(Thread thread, double time);
+void StateLeave(double time, Thread &thread, unsigned int stateid);
+void StateEnter(double time, Thread &thread, unsigned int stateid);
 
 Ttf_FileHandleT fh;
 int EndOfTrace=0;  /* false */
@@ -122,6 +130,10 @@ double nextShot=-1;
 char * trc = NULL;
 char * edf = NULL;
 char * out = NULL;
+
+int trigEvent=-1;
+int trigCount=1;
+int trigSeen=0;
 
 /* implementation of callback routines */
 /***************************************************************************
@@ -137,7 +149,13 @@ const char *threadName )
 	local.threadToken=threadToken;
 	local.threadName=threadName;
 	local.lastState=-1;
-	EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = pair<int,Thread>(0,local);
+	local.finished=false;
+	int curid;
+	//EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = pair<int,Thread>(0,local);
+	ThreadID[pair<int,int>(nodeToken,threadToken)]= curid =ThreadID.size();
+	//EOF_Trace[curid]=false;
+	ThreadMap[curid]=local;
+	
 	return 0;
 }
 
@@ -248,13 +266,14 @@ int ClockPeriod( void*  userData, double clkPeriod )
  ***************************************************************************/
 int EndTrace( void *userData, unsigned int nodeToken, unsigned int threadToken)
 {
-	(EOF_Trace[pair<int,int> (nodeToken,threadToken) ]).first = 1; /* flag it as over */
+	//(EOF_Trace[pair<int,int> (nodeToken,threadToken) ]).first = 1; /* flag it as over */
+	(ThreadMap[ThreadID[pair<int,int>(nodeToken,threadToken)]]).finished=true;
 	/* yes, it is over */
-	map < pair<int, int>, pair<int,Thread>, less< pair<int,int> > >::iterator it;
+	map < int,Thread >::iterator it;//pair<int, int>, pair<int,Thread>, less< pair<int,int> > 
 	EndOfTrace = 1; /* Lets assume that it is over */
-	for (it = EOF_Trace.begin(); it != EOF_Trace.end(); it++)
+	for (it = ThreadMap.begin(); it != ThreadMap.end(); it++)
 	{/* cycle through all <nid,tid> pairs to see if it really over */
-		if (((*it).second).first == 0)
+		if ((*it).second.finished == false)//.second.
 		{
 			EndOfTrace = 0; /* not over! */
 			/* If there's any processor that is not over, then the trace is not over */
@@ -274,66 +293,71 @@ int EventTrigger( void *userData, double time,
 		unsigned int userEventToken,
 		long long userEventValue)
 { 
-	SnapshotControl(time);
+	SnapshotControl(time,-2);
+	int curid=ThreadID[pair<int,int>(nid,tid)];
 	/* write the sample data */
 	if(allevents.count(userEventToken)>0)
 	{	/*not monotonically increasing*/
 		/*Each NMI event is between two '0' events which are ignored. (every 2nd of 3 events is used)*/
-		if(EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].tricount==0)
+
+		//ThreadMap[curid] <- EOF_Trace[pair<int,int>(nid,tid)].second
+		if(ThreadMap[curid].allevents[userEventToken].tricount==0)
 		{
-			EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].tricount++;
+			ThreadMap[curid].allevents[userEventToken].tricount++;
 			return(0);
 		}
-		if(EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].tricount==2)
+		if(ThreadMap[curid].allevents[userEventToken].tricount==2)
 		{
-			EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].tricount=0;
+			ThreadMap[curid].allevents[userEventToken].tricount=0;
 			return(0);
 		}
 		/*Update the event data*/
-		EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].tricount++;
-		EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].numevents++;
-		EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].sum+=userEventValue;
-		EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].sumsqr+=
+		ThreadMap[curid].allevents[userEventToken].tricount++;
+		ThreadMap[curid].allevents[userEventToken].numevents++;
+		ThreadMap[curid].allevents[userEventToken].sum+=userEventValue;
+		ThreadMap[curid].allevents[userEventToken].sumsqr+=
 		(userEventValue*userEventValue);
-		if(userEventValue > EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].max)
+		if(userEventValue > ThreadMap[curid].allevents[userEventToken].max)
 		{
-			EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].max=userEventValue;
+			ThreadMap[curid].allevents[userEventToken].max=userEventValue;
 		}
-		if(userEventValue<EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].min
-		||EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].min==0)
+		if(userEventValue<ThreadMap[curid].allevents[userEventToken].min
+		||ThreadMap[curid].allevents[userEventToken].min==0)
 		{
-			EOF_Trace[pair<int,int>(nid,tid)].second.allevents[userEventToken].min=userEventValue;
+			ThreadMap[curid].allevents[userEventToken].min=userEventValue;
 		}
 	}
 	else
 	{	/*monotonically increasing*/
-		int stateid=EOF_Trace[pair<int,int>(nid,tid)].second.lastState;
+		int stateid=ThreadMap[curid].lastState;
 		if(stateid==-1)
 		{
 			cout << "State not set" << endl;
 		}
-		EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].allmi[userEventToken].holdvalue=userEventValue;
-		EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].countMIE++;
+		ThreadMap[curid].allstate[stateid].allmi[userEventToken].holdvalue=userEventValue;
+		ThreadMap[curid].allstate[stateid].countMIE++;
 		/*If we have encountered every event associated with this state we can process all at once*/
-		if(EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].countMIE==(miecount+1))
+		if(ThreadMap[curid].allstate[stateid].countMIE==(miecount+1))
 		{/*lastaction indicates if we should batch process a state exit or a state enter*/
-			if(EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].lastaction==1)
+			if(ThreadMap[curid].allstate[stateid].lastaction==1)
 			{
-				EOF_Trace[pair<int,int>(nid,tid)].second=StateEnter(time,EOF_Trace[pair<int,int>(nid,tid)].second,stateid);
+				//ThreadMap[curid]=
+				StateEnter(time,ThreadMap[curid],stateid);
 			}
 			else
-			if(EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].lastaction==-1)
+			if(ThreadMap[curid].allstate[stateid].lastaction==-1)
 			{
-				EOF_Trace[pair<int,int>(nid,tid)].second=StateLeave(time,EOF_Trace[pair<int,int>(nid,tid)].second,stateid);
+				//ThreadMap[curid]=
+				StateLeave(time,ThreadMap[curid],stateid);
 			}
 			else
-			if(EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].lastaction==0)
+			if(ThreadMap[curid].allstate[stateid].lastaction==0)
 			{
 				cout << "Action Detection Fault(Event Trigger)" << endl;
 			}
-			EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].countMIE=0;
-			EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].lastaction=0;
-			EOF_Trace[pair<int,int>(nid,tid)].second.lastState=-1;
+			ThreadMap[curid].allstate[stateid].countMIE=0;
+			ThreadMap[curid].allstate[stateid].lastaction=0;
+			ThreadMap[curid].lastState=-1;
 		}
 	}
 	return 0;
@@ -347,26 +371,28 @@ int EventTrigger( void *userData, double time,
 int EnterState(void *userData, double time, 
 		unsigned int nid, unsigned int tid, unsigned int stateid)
 {
-	SnapshotControl(time);
+	SnapshotControl(time,-2);
 	
 	/*
 	 * If we are recording user defined events, all state control is managed by 'EventTrigger'
 	 */
+	int curid=ThreadID[pair<int,int>(nid,tid)];
 	if(miecount>0)
 	{
-		EOF_Trace[pair<int,int>(nid,tid)].second.lastState=stateid;
-		EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].lastaction=1;
-		EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].holdvalue=time;
-		if(EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].countMIE>0)
+		ThreadMap[curid].lastState=stateid;
+		ThreadMap[curid].allstate[stateid].lastaction=1;
+		ThreadMap[curid].allstate[stateid].holdvalue=time;
+		if(ThreadMap[curid].allstate[stateid].countMIE>0)
 		{
 			cout << "User Event Couting Fault (EnterState)" << endl;
 		}
-		EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].countMIE++;
+		ThreadMap[curid].allstate[stateid].countMIE++;
 		return 0;
 	}
 	
-	EOF_Trace[pair<int,int>(nid,tid)].second=
-	StateEnter(time,(EOF_Trace[pair<int,int>(nid,tid)].second),stateid);
+	//ThreadMap[curid]=
+	
+	StateEnter(time,(ThreadMap[curid]),stateid);
 	
 	return 0;
 }
@@ -377,7 +403,7 @@ int EnterState(void *userData, double time,
  * It returns 'threadin' with these modifications.
  * 
  ***************************************************************************/
-Thread StateEnter(double time, Thread threadin, unsigned int stateid)
+void StateEnter(double time, Thread &threadin, unsigned int stateid)
 {
 	/*If there is another state in the callstack then the state we are entering
 	* is a subroutine of the previous state.  The previous state's time is no 
@@ -403,7 +429,6 @@ Thread StateEnter(double time, Thread threadin, unsigned int stateid)
 				threadin.allstate[lastcall].allmi[loctoken].topCount=-1;
 			}
 		}
-		
 	}
 	/*Increase the number of times this state has been entered and mark
 	 * the time it spends on the top of the stack.*/
@@ -437,7 +462,7 @@ Thread StateEnter(double time, Thread threadin, unsigned int stateid)
 	threadin.allstate[stateid].countRec++;
 	threadin.callstack.push(stateid);
 	
-	return threadin;
+	//return threadin;
 }
 
 /***************************************************************************
@@ -447,26 +472,27 @@ Thread StateEnter(double time, Thread threadin, unsigned int stateid)
  ***************************************************************************/
 int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int stateid)
 {
-	SnapshotControl(time);
+	SnapshotControl(time,stateid);
 	
 	/*
 	 * If we are recording user defined events, all state control is managed by 'EventTrigger'
 	 */
+	int curid=ThreadID[pair<int,int>(nid,tid)];
 	if(miecount>0)
 	{
-		EOF_Trace[pair<int,int>(nid,tid)].second.lastState=stateid;
-		EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].lastaction=-1;
-		EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].holdvalue=time;
-		if(EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].countMIE>0)
+		ThreadMap[curid].lastState=stateid;
+		ThreadMap[curid].allstate[stateid].lastaction=-1;
+		ThreadMap[curid].allstate[stateid].holdvalue=time;
+		if(ThreadMap[curid].allstate[stateid].countMIE>0)
 		{
 			cout << "User Event Couting Fault (LeaveState)" << endl;
 		}
-		EOF_Trace[pair<int,int>(nid,tid)].second.allstate[stateid].countMIE++;
+		ThreadMap[curid].allstate[stateid].countMIE++;
 		return 0;
 	}
 	
-	EOF_Trace[pair<int,int>(nid,tid)].second=
-	StateLeave(time,(EOF_Trace[pair<int,int>(nid,tid)].second),stateid);
+	//ThreadMap[curid]=
+	StateLeave(time,(ThreadMap[curid]),stateid);
 
 	return 0;
 }
@@ -477,7 +503,7 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, 
  * It returns 'threadin' with these modifications.
  * 
  ***************************************************************************/
-Thread StateLeave(double time, Thread threadin, unsigned int stateid)
+void StateLeave(double time, Thread &threadin, unsigned int stateid)
 {
 	/*Add the exclusive time recorded since the routine was last on the top 
 	 * of the stack.  It is no longer on the stack so stop recording topTime.
@@ -515,7 +541,6 @@ Thread StateLeave(double time, Thread threadin, unsigned int stateid)
 				(*miit).second.fullCount=-1;
 			}
 		}
-		
 	}
 	/*Pop this routine off of the callstack.  If there is another routine start
 	 * recording its exclusive time again.*/
@@ -536,12 +561,12 @@ Thread StateLeave(double time, Thread threadin, unsigned int stateid)
 			}
 		}
 	}
-	return threadin;
+	//return threadin;
 }
 
-/*
+/***************************************************************************
  * This routine runs through the relevant callback methods
- */
+ ***************************************************************************/
 void ReadFile()
 {
 	/* in the first pass, we determine the no. of cpus and other group related
@@ -590,13 +615,13 @@ void ReadFile()
 	
 	/* reset the position of the trace to the first record 
 	Initialize global id map*/
-	for (map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >:: iterator it = 
-	EOF_Trace.begin(); 
-	it != EOF_Trace.end(); it++)
+	for (map< int, Thread >:: iterator it = //, less< pair<int,int> > 
+	ThreadMap.begin(); 
+	it != ThreadMap.end(); it++)
 	{ /* Explicilty mark end of trace to be not over */ 
-		(*it).second.second.allstate=allstate;
-		(*it).second.second.allevents=allevents;
-		(*it).second.first = 0;
+		(*it).second.allstate=allstate;
+		(*it).second.allevents=allevents;
+		(*it).second.finished = 0;
 	}
 	EndOfTrace = 0;
 	/* now reset the position of the trace to the first record */ 
@@ -637,14 +662,14 @@ void ReadFile()
 
 	/* dummy records */
 	Ttf_CloseFile(fh);
-	PrintProfiles(EOF_Trace);
+	PrintProfiles(ThreadMap);
 }
 
-/*
+/***************************************************************************
  * Given a map 'mainmap' conforming to the 'whole trace' data structure, this routine will cycle
  * through each thread and state to print out the profile statistics for the whole program
- */
-void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > > mainmap){
+ ***************************************************************************/
+void PrintProfiles(map<int,Thread> &mainmap){//, less< pair<int,int> > 
 	char prefix [32];
 	string s_out="";
 	string s_prefix="";
@@ -681,11 +706,11 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 		if((*stateCount).second.calls>0)
 			countFunc++;
 	}
-	for (map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >:: iterator it = mainmap.begin(); 
+	for (map< int,Thread >:: iterator it = mainmap.begin(); // less< pair<int,int> > 
 	it != mainmap.end(); it++)
 	{
 		char filename [32];
-		sprintf(filename,"profile.%d.0.%d",((*it).first).first,((*it).first).second);
+		sprintf(filename,"profile.%d.0.%d",((*it).second).nodeToken,((*it).second).threadToken);
 		s_prefix=s_out+filename;
 		profile.open(s_prefix.c_str());
 		profile.precision(16);
@@ -696,8 +721,8 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 		}
 		profile << endl;
 		profile << "# Name Calls Subrs Excl Incl ProfileCalls" << endl;
-		for(map<int,State>::iterator st = ((*it).second).second.allstate.begin(); 
-		st !=((*it).second).second.allstate.end();st++)
+		for(map<int,State>::iterator st = ((*it).second).allstate.begin(); 
+		st !=((*it).second).allstate.end();st++)
 		{
 			if(allstate[(*st).second.stateToken].calls>0)
 			profile << ((*st).second).stateName << " " << ((*st).second).calls 
@@ -710,8 +735,8 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 		{
 			profile << allevents.size() << " userevents" << endl 
 			<<  "# eventname numevents max min mean sumsqr" << endl;
-			for(map<int,UserEvent>::iterator st = ((*it).second).second.allevents.begin(); 
-			st !=((*it).second).second.allevents.end();st++)
+			for(map<int,UserEvent>::iterator st = ((*it).second).allevents.begin(); 
+			st !=((*it).second).allevents.end();st++)
 			{
 				mean = 0;
 				if(((*st).second).numevents>0)
@@ -765,18 +790,18 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 				if((*stateCount).second.calls>0)
 					countFunc++;
 			}
-			for (map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >:: iterator it = mainmap.begin(); 
+			for (map< int,Thread >:: iterator it = mainmap.begin(); //, less< pair<int,int> > 
 			it != mainmap.end(); it++)
 			{
 				char filename [32];
-				sprintf(filename,"profile.%d.0.%d",((*it).first).first,((*it).first).second);
+				sprintf(filename,"profile.%d.0.%d",(*it).second.nodeToken,((*it).second).threadToken);
 				s_prefix=s_out+filename;
 				profile.open(s_prefix.c_str());
 				profile.precision(16);
 				profile << countFunc << " templated_functions_" << "MULTI_" << eventname << endl;
 				profile << "# Name Calls Subrs Excl Incl ProfileCalls" << endl;
-				for(map<int,State>::iterator st = ((*it).second).second.allstate.begin(); 
-				st !=((*it).second).second.allstate.end();st++)
+				for(map<int,State>::iterator st = ((*it).second).allstate.begin(); 
+				st !=((*it).second).allstate.end();st++)
 				{
 					if(allstate[(*st).second.stateToken].calls>0)
 					profile << ((*st).second).stateName << " " << ((*st).second).calls 
@@ -789,8 +814,8 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 				{
 					profile << allevents.size() << " userevents" << endl 
 					<<  "# eventname numevents max min mean sumsqr" << endl;
-					for(map<int,UserEvent>::iterator st = ((*it).second).second.allevents.begin(); 
-					st !=((*it).second).second.allevents.end();st++)
+					for(map<int,UserEvent>::iterator st = ((*it).second).allevents.begin(); 
+					st !=((*it).second).allevents.end();st++)
 					{
 						mean = 0;
 						if(((*st).second).numevents>0)
@@ -811,32 +836,33 @@ void PrintProfiles(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >
 	return;	
 }
 
-/*
+/***************************************************************************
  * Given the time stamp for the cut-off time, this routine will iterate through the current trace-state
  * and exit every state on every stack, effectively creating a snapshot profile up to the given time.
  * The profile generated will then be printed.
- */
+ ***************************************************************************/
 void PrintSnapshot(double time)
 {
-	map<pair<int,int>,pair<int,Thread>, less<pair<int,int> > > finalizer = EOF_Trace;
+	map<int,Thread> finalizer = ThreadMap;//, less<pair<int,int> > 
 	printshot=1;
-	for(map< pair<int,int>, pair<int,Thread>, less< pair<int,int> > >:: iterator it = finalizer.begin(); 
+	for(map< int, Thread >:: iterator it = finalizer.begin(); //, less< pair<int,int> > 
 	it != finalizer.end(); it++)
 	{
-		while((*it).second.second.callstack.size()>0)
+		while((*it).second.callstack.size()>0)
 		{
-			(*it).second.second=StateLeave(time,(*it).second.second,(*it).second.second.callstack.top());
+			//(*it).second=
+			StateLeave(time,(*it).second,(*it).second.callstack.top());
 		}
 	}
 	PrintProfiles(finalizer);
 	printshot=0;
 }
 
-/*
+/***************************************************************************
  * If 'time' is greater than or equal to the end of the next specified interval this will
  * cut print out the snapshot as of the specified interval and set the time for the next one.
- */
-void SnapshotControl(double time)
+ ***************************************************************************/
+void SnapshotControl(double time, int token)
 {
 	if(snapshot>-1 && time>=nextShot)
 	{
@@ -844,8 +870,22 @@ void SnapshotControl(double time)
 		nextShot+=segmentInterval;
 		snapshot++;
 	}
+	else
+	if(token==trigEvent)
+	{
+		trigSeen++;
+		if(trigSeen==trigCount)
+		{
+			PrintSnapshot(time);
+			snapshot++;
+			trigSeen=0;
+		}
+	}
 }
 
+/***************************************************************************
+ * Prints usage info
+ ***************************************************************************/
 void Usage()
 {
 	cout << "You must specify a valid .trc and .edf file for conversion."<<endl;
@@ -857,9 +897,9 @@ void Usage()
 	cout << "e.g. $tau2profile tau.trc tau.edf -s 25000"  << endl;
 }
 
-/*
+/***************************************************************************
  * The main function reads user input and starts conversion procedure.
- */
+ ***************************************************************************/
 int main(int argc, char **argv)
 {
 	int i; 
@@ -891,21 +931,43 @@ int main(int argc, char **argv)
 			}
 			else*/
 			if(strcmp(argv[i],"-s")==0)
-			{
+			{/*Segment interval*/
 				if(argc>i+1)
 				{
 					i++;
 					segmentInterval=atof(argv[i]);
+					trigEvent=-1;
 				}
 				break;
 			}
 			else
 			if(strcmp(argv[i],"-d")==0)
-			{
+			{/*Output Directory*/
 				if(argc>i+1)
 				{
 					i++;
 					out=argv[i];
+				}
+				break;
+			}
+			else
+			if(strcmp(argv[i],"-e")==0)
+			{/*Event Trigger*/
+				if(argc>i+1)
+				{
+					i++;
+					trigEvent=atoi(argv[i]);
+					segmentInterval=0;
+				}
+				break;
+			}
+			else
+			if(strcmp(argv[i],"-c")==0)
+			{/*Event count*/
+				if(argc>i+1)
+				{
+					i++;
+					trigCount=atoi(argv[i]);
 				}
 				break;
 			}
@@ -922,6 +984,11 @@ int main(int argc, char **argv)
 	{
 		snapshot=0;
 		nextShot=segmentInterval;
+	}
+	else
+	if(trigEvent>-1)
+	{
+		snapshot=0;
 	}
 	ReadFile();
 }
