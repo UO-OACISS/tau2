@@ -5,7 +5,7 @@
 # David Skinner   May 2005 (dskinner@nersc.gov)
 #
 
-if [ $1 != "32" && $1 != "64" ] ; then
+if [ "x$1" != "x32" -a "x$1" != "x64" ] ; then
     echo "rebuild_mpi 32|64"
     exit
 fi
