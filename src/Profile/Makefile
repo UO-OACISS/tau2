@@ -260,25 +260,26 @@ $(INSTALLDEST)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 
 
 libmpi_r.a: $(TAU_SHLIB) $(MPI_WRAPPER)
-	@echo Creating libmpi_r.a
-	@$(RM) $(BITS)
-	@mkdir -p $(BITS)/tau
-	@cp $(TAU_TARGET) libTauMpi$(TAU_CONFIG)$(LSX) $(BITS)/tau
-	@./rebuild_libmpi $(BITS)
-	@cp $(BITS)/libmpi_r.a .
-	@$(RM) $(BITS)
+	echo Creating libmpi_r.a
+	$(RM) $(BITS)
+	mkdir -p $(BITS)/tau
+	cp $(TAU_TARGET) libTauMpi$(TAU_CONFIG)$(LSX) $(BITS)/tau
+	./rebuild_libmpi $(BITS)
+	cp $(BITS)/libmpi_r.a .
+	$(RM) $(BITS)
 
 $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
-	@echo Installing libmpi_r.a in $(TAUPOE_BINDINGSDIR)
-	@if [ -d $(INSTALLDEST) ] ; then true; \
+	echo Installing libmpi_r.a in $(TAUPOE_BINDINGSDIR)
+	if [ -d $(INSTALLDEST) ] ; then true; \
 	   else mkdir $(INSTALLDEST) ;fi
-	@if [ -d $(TAUPOE_BINDINGSDIR) ] ; then true; \
+	if [ -d $(TAUPOE_BINDINGSDIR) ] ; then true; \
 	    else mkdir $(TAUPOE_BINDINGSDIR); fi
-	@$(RM) $(TAUPOE_BINDINGSDIR)/libmpi_r.a
-	@$(RM) -f $(TAUPOE_BINDINGSDIR)/libmpi_r.a
-	@$(RM) -f $(INSTALLDEST)/libmpi_r.a
-	@cp libmpi_r.a $(TAUPOE_BINDINGSDIR)
-	@ln -s bindings$(TAU_CONFIG) $(INSTALLDEST)/bindings-default
+	$(RM) $(TAUPOE_BINDINGSDIR)/libmpi_r.a
+	$(RM) -f $(TAUPOE_BINDINGSDIR)/libmpi_r.a
+	$(RM) -f $(INSTALLDEST)/libmpi_r.a
+	cp libmpi_r.a $(TAUPOE_BINDINGSDIR)
+	$(RM) -f $(INSTALLDEST)/bindings-default
+	ln -s $(TAUPOE_BINDINGSDIR) $(INSTALLDEST)/bindings-default
 
 install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL)
 
