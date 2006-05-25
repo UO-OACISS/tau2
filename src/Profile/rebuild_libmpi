@@ -5,13 +5,18 @@
 # David Skinner   May 2005 (dskinner@nersc.gov)
 #
 
-if [ "x$1" != "x32" -a "x$1" != "x64" ] ; then
+if [ $1 != "32" -a $1 != "64" ] ; then
     echo "rebuild_mpi 32|64"
     exit
 fi
 
+
 export BITS=$1
 export BITSUFFIX=$BITS
+shift
+
+# We get TAU_LINKER_OPTS from the makefile (on the command line)
+TAU_LINKER_OPTS=$*
 
 #rm -rf $BITS
 #mkdir $BITS
@@ -41,24 +46,27 @@ mkdir lib
 ar -X $BITS xv $ORIGMPIPATH/lib/libmpi_r.a
 cp $ORIGMPIPATH/lib/libmpi_r.a .
 
+
 for o in $OBJ ; do
     news=`echo $o | sed -e 's/\.o/.sh/'`
  #rtl_enable -X $BITS -l -R -s $o -L. -lmpi_r -lc_r -lpthreads 
-    rtl_enable -X $BITS -l -R -s $o -L. -lc_r -lpthreads  -lpmapi
+    rtl_enable -X $BITS -l -R -s $o -L. -lc_r -lpthreads  -lpmapi $TAU_LINKER_OPTS
     if [ $o = "mpicore_r.o" ] ; then
 
-	sed -e 's#mpicore_r.o -b#tau/* /usr/lib/libC.a mpicore_r.o -b#' $news > tmp.$nnews
+
+	sed -e 's#mpicore_r.o -b#tau/* mpicore_r.o -b#' $news > tmp.$nnews
 #  sed -e 's/mpicore_r.o -b/libipm.o mpicore_r.o -b/' $news > tmp.$nnews
 	mv tmp.$nnews $news
     fi
     if [ $o = "mpicore64_r.o" ] ; then
 #  sed -e 's/mpicore64_r.o -b/libipm_64.o mpicore64_r.o -b/' $news > tmp.$nnews 
-	sed -e 's#mpicore64_r.o -b#tau/* /usr/lib/libC.a mpicore64_r.o -b#' $news > tmp.$nnews 
+	sed -e 's#mpicore64_r.o -b#tau/* mpicore64_r.o -b#' $news > tmp.$nnews 
 	mv tmp.$nnews $news
     fi
-    sed -e 's/-bnortllib -bnosymbolic -bnoautoexp/-bM:SRE -H512 -T512 -bnoentry -bnoobjreorder/' $news > tmp.$nnews
+    sed -e 's/-bnortllib -bnosymbolic -bnoautoexp/-bM:SRE -H512 -T512 -bnoentry -bnoobjreorder/' $news | sed -e 's/$LD/xlC/' > tmp.$nnews
     mv tmp.$nnews $news
-#    cat $news 
+
+    #cat $news 
     chmod a+rx $news
     ./$news
 done
