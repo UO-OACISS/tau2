@@ -264,7 +264,7 @@ libmpi_r.a: $(TAU_SHLIB) $(MPI_WRAPPER)
 	$(RM) $(BITS)
 	mkdir -p $(BITS)/tau
 	cp $(TAU_TARGET) libTauMpi$(TAU_CONFIG)$(LSX) $(BITS)/tau
-	./rebuild_libmpi $(BITS)
+	./rebuild_libmpi $(BITS) $(TAU_LINKER_OPTS)
 	cp $(BITS)/libmpi_r.a .
 	$(RM) $(BITS)
 
