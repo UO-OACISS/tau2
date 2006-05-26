@@ -572,8 +572,10 @@ while [ $tempCounter -lt $numFiles ]; do
 	#Here arrays holding sourcefiles, .inst. and .pdb files
 	#are created based on the baseName of the source file.
 	echoIfDebug "FileName: ${arrFileName[$tempCounter]}" 
-	base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//'`
+	base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
+	# this transforms /this/file\ name/has/spaces/ver1.0.2/foo.pp.F90 to foo.pp for base
 	suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
+	# suf gets .F90 in the example above.
 	#echoIfDebug "suffix here is -- $suf"
 	# If we need to pre-process the source code, we should do so here!
 	if [ $preprocess = $TRUE -a $groupType == $group_f_F ]; then
