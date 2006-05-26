@@ -611,7 +611,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	  evalWithDebugMessage "$pdbcommentCmd" "Using pdbcomment:" 
 
 	  ompcheck=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_ompcheck@'` 
-	  ompcheckCmd="$ompcheck ${base}.comment.pdb ${base}${suf} -o ${base}.chk${suf}"
+	  ompcheckCmd="$ompcheck ${base}.comment.pdb ${arrFileName[$tempCounter]} -o ${base}.chk${suf}"
 	  arrFileName[$tempCounter]=$base.chk$suf
 	  base=${base}.chk
 	  evalWithDebugMessage "$ompcheckCmd" "Using tau_ompcheck:" 
