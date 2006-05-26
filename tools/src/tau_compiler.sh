@@ -819,7 +819,7 @@ if [ $gotoNextStep == $TRUE ]; then
 		#The number of files could be more than one. Check for creation of each .o file.
 		tempCounter=0
 		while [ $tempCounter -lt $numFiles ]; do
-			base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//'`
+			base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//'  -e's/.*\///'`
 			suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 			outputFile=${base##*/}.o	#strip it off the directory
 			# Remove the .pomp from the name of the output file. 
@@ -873,7 +873,7 @@ if [ $gotoNextStep == $TRUE ]; then
 		tempCounter=0
 		while [ $tempCounter -lt $numFiles ]; do
 
-			base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//'`
+			base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//'  -e's/.*\///'`
 			suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 			outputFile=${base##*/}.o	#strip it off the directory
 
