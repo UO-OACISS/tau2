@@ -197,7 +197,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
         DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<"," 
 	  << RtsLayer::myContext() << ", " << tid 
           << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName() 
-	  << " Group :  " << MyProfileGroup_ 
+          << " Group :  " << GetProfileGroup()
 	  << " Type : " << GetType() << endl;);
 
 #ifdef TAU_PROFILEMEMORY
@@ -431,7 +431,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
   }
 }
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: anataraj $
- * $Revision: 1.42 $   $Date: 2005/12/01 02:46:35 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.42 2005/12/01 02:46:35 anataraj Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
+ * $Revision: 1.43 $   $Date: 2006/05/27 00:26:58 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.43 2006/05/27 00:26:58 sameer Exp $ 
  ***************************************************************************/
