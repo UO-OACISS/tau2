@@ -5,8 +5,12 @@ TAU_LIB=bindings-default
 
 for arg in "$@"; do
   case $arg in
+      -help)
+	  echo "Usage: tau_poe [-XrunTAUsh-<options>] ..."
+	  exit
+	  ;;
       -XrunTAU*)
-	  myarg=`echo $arg | sed 's/-XrunTAU//'`
+	  myarg=`echo $arg | sed 's/-XrunTAUsh//' | sed 's/-XrunTAU//'`
 	  TAU_LIB=bindings$myarg
 	  ;;
       *)
