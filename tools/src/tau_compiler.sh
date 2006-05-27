@@ -580,7 +580,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	# If we need to pre-process the source code, we should do so here!
 	if [ $preprocess = $TRUE -a $groupType == $group_f_F ]; then
 	  base=${base}.pp
-	  cmdToExecute="${preprocessor} $preprocessorOpts $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
+	  cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
 	  evalWithDebugMessage "$cmdToExecute" "Preprocessing"
           if [ ! -f $base$suf ]; then
             echoIfVerbose "ERROR: Did not generate .pp file"
