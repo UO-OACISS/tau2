@@ -32,6 +32,7 @@ int lang;
 int verbosity;
 ostream* output;
 
+
 enum {Fortran, C};
 enum {Standard, Verbose, Debug};
 
@@ -154,7 +155,7 @@ bool operator< (const Directive& a, const Directive& b)
 /***************************************************************
   *
   * Class CompleteDirective: A collection of functions that finds 
-  * and completes unclosed directives which a routine.
+  * and completes unclosed directives within a routine.
   * 
   *************************************************************/
 class CompleteDirectives
@@ -345,7 +346,7 @@ class CompleteDirectives
   * findOMPStmt     : initalizes the recursive processing of each statemet in
   *                   the routine.
   * IN:
-  * pdbStmt *s      : The statement of which to begin processing.
+  * pdbStmt *s      : The statement to begin processing.
   * PDB& pdb        : The pdb root object.
   *
   * OUTPUT:
@@ -354,9 +355,9 @@ class CompleteDirectives
   */
   list<Directive>& findOMPStmt(const pdbStmt *s, PDB& pdb)
   {
-    /* We need to make sure the entire routine is processed to insure that it is
+    /* We need to make sure the entire routine is processed to insure this
      * we will create two statements. The first as the head of each routine
-     * enclosing all the statement in the routine. The second is place at the
+     * enclosing all the statement in the routine. The second is placed at the
      * close of the routine.
      *
      *      Head statement (created) -> s1 -> ... -> s2
@@ -469,10 +470,12 @@ class CompleteDirectives
             loop && openDirectives.front().getType() > 1 && verbosity == Debug)
         cerr << "Could be a missing directive." << endl;
       
-      //Are we expecting any more pragmas to be closed before this statement?
+			int nextStmtLine = block->stmtEnd().line();
+			
+			//Are we expecting any more pragmas to be closed before this statement?
       while (openDirectives.size() != 0 && openDirectives.front().getDepth() ==
       loop && openDirectives.front().getType() > 1 && ( directives.size() == 0
-      || !((s->stmtBegin().line()+1) >= directives.front().getLine() &&
+      || !((nextStmtLine-1) >= directives.front().getLine() &&
       directives.front().getType() + openDirectives.front().getType() == 0)))
       {
         if (verbosity >= Verbose)
@@ -535,7 +538,8 @@ class CompleteDirectives
           cerr <<" -" << (*s->nextStmt()).stmtBegin().line();
         else
           cerr << " -NA";
-        cerr <<" L" << block->stmtBegin().line() << "  D" << directives.size();
+        cerr << " L" << block->stmtBegin().line() << "  N" << nextStmtLine;
+				cerr << "  D" << directives.size();
         cerr << "  O" << openDirectives.size() << "  L" << loop << endl;
       }  
       //Move to the next statement
@@ -844,6 +848,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.11 $   $Date: 2006/04/27 19:18:19 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.11 2006/04/27 19:18:19 scottb Exp $
+ * $Revision: 1.12 $   $Date: 2006/05/30 19:25:22 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.12 2006/05/30 19:25:22 scottb Exp $
  ***************************************************************************/
