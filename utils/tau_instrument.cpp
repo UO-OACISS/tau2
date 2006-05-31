@@ -35,6 +35,7 @@ using namespace std;
 //#define DEBUG 1
 extern bool wildcardCompare(char *wild, char *string, char kleenestar);
 extern bool instrumentEntity(const string& function_name);
+extern bool fuzzyMatch(const string& a, const string& b);
 
 /* Globals */
 ///////////////////////////////////////////////////////////////////////////
@@ -809,13 +810,13 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 }
 
 /* Process list of C routines */
-int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec) 
+int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec, pdbFile *file) 
 {
   /* compare the names of routines with our instrumentation request routine name */
 
   PDB::croutinevec::const_iterator rit;
   PDB::croutinevec croutines = p.getCRoutineVec();
-  bool cmpResult1, cmpResult2; 
+  bool cmpResult1, cmpResult2, cmpFileResult; 
   pdbRoutine::locvec::iterator rlit;
   for(rit = croutines.begin(); rit != croutines.end(); ++rit)
   { /* iterate over all routines */
@@ -827,6 +828,28 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
 	(char *)(*rit)->fullName().c_str(), '#');
     if (cmpResult1 || cmpResult2)
     { /* there is a match */
+      /* is this routine in the same file that we are instrumenting? */
+      if ((*rit) && (*rit)->location().file() && file)
+      {
+        cmpFileResult = fuzzyMatch((*rit)->location().file()->name(), file->name()); 
+      }
+      else cmpFileResult = false;
+      if (!cmpFileResult)
+      { 
+#ifdef DEBUG
+        cout <<"File names do not match... continuing ..."<<endl;
+#endif /* DEBUG */
+        continue;
+      }
+      else
+      {
+#ifdef DEBUG
+        cout <<"File names "<<(*rit)->location().file()->name()<<" and "
+	     << file->name()<<" match!"<<endl;
+#endif /* DEBUG */
+
+      }
+
 #ifdef DEBUG
       cout <<"Examining Routine "<<(*rit)->fullName()<<" and "<<(*it)->getRoutineName()<<endl;
 #endif /* DEBUG */
@@ -870,11 +893,11 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
   return 0;
 }
 /* Process list of F routines */
-int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec) 
+int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec, pdbFile *file) 
 {
   PDB::froutinevec::const_iterator rit;
   PDB::froutinevec froutines = p.getFRoutineVec();
-  bool cmpResult; 
+  bool cmpResult, cmpFileResult; 
   pdbRoutine::locvec::iterator rlit;
   for(rit = froutines.begin(); rit != froutines.end(); ++rit)
   { /* iterate over all routines */  
@@ -882,6 +905,28 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
     cmpResult = wildcardCompare((char *)((*it)->getRoutineName()).c_str(), (char *)(*rit)->name().c_str(), '#');
     if (cmpResult)
     { /* there is a match */
+      /* is this routine in the same file that we are instrumenting? */
+      if ((*rit) && (*rit)->location().file() && file)
+      {
+        cmpFileResult = fuzzyMatch((*rit)->location().file()->name(), file->name()); 
+      }
+      else cmpFileResult = false;
+      if (!cmpFileResult)
+      { 
+#ifdef DEBUG
+        cout <<"File names do not match... continuing ..."<<endl;
+#endif /* DEBUG */
+        continue;
+      }
+      else
+      {
+#ifdef DEBUG
+        cout <<"File names "<<(*rit)->location().file()->name()<<" and "
+	     << file->name()<<" match!"<<endl;
+#endif /* DEBUG */
+
+      }
+
 #ifdef DEBUG
       cout <<"Examining Routine "<<(*rit)->fullName()<<" and "<<(*it)->getRoutineName()<<endl;
 #endif /* DEBUG */
@@ -994,13 +1039,14 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 #ifdef DEBUG
 	  cout <<"C routine!"<<endl; 
 #endif /* DEBUG */
-          processCRoutinesInstrumentation(p, it, itemvec); 
+          processCRoutinesInstrumentation(p, it, itemvec, file); 
+	  /* Add file name to the routine instrumentation! */
           break; 
         case PDB::LA_FORTRAN:
 #ifdef DEBUG
 	  cout <<"F routine!"<<endl; 
 #endif /* DEBUG */
-          processFRoutinesInstrumentation(p, it, itemvec); 
+          processFRoutinesInstrumentation(p, it, itemvec, file); 
           break;
         default:
           break;
@@ -1023,6 +1069,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2006/05/18 17:35:50 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.15 2006/05/18 17:35:50 sameer Exp $
+ * $Revision: 1.16 $   $Date: 2006/05/31 22:31:20 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.16 2006/05/31 22:31:20 sameer Exp $
  ***************************************************************************/
