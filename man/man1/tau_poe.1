@@ -1,0 +1,39 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_POE" "1" "06/01/2006" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau_poe \- Instruments a MPI application while it is being executed with poe.
+.SH "SYNOPSIS"
+.HP 8
+\fBtau_poe\fR [\fB\-XrunTAUsh\-\fR\ \fItauOptions\fR] {\fIapplcation\fR} [\fIpoe\ options\fR]
+.SH "DESCRIPTION"
+.PP
+This tool dynamically instruments a mpi application by loading a specific mpi library file.
+.SH "OPTIONS"
+.PP
+\fBtauOptions\fR
+To instrument a mpi application a specific TAU library file is loaded when the application is executed. To select which library is loaded use this option. The library files are build according to the options set when TAU is configured. The library file that have been build and thus available for use are in the [TAU_HOME]/[arch]/lib directory. The file are listed as libTAUsh\-*.so where * is the instrumentation options. For example to use the libTAUsh\-pdt\-openmp\-opari.so file let the comman line option be \-XrunTAUsh\-pdt\-openmp\-opari.
+.SH "EXAMPLES"
+.PP
+Instrument a.out wit the currently configured options and then run it on four nodes:
+.sp
+.nf
+%>tau_poe ./a.out \-procs 4
+    
+.fi
+.sp
+.PP
+Select the libTAUsh\-mpi.so library to instrument a.out with:
+.sp
+.nf
+%>tau_poe \-XrunTAUsh\-mpi ./a.out \-procs 4
+		
+.fi
+.sp
+
