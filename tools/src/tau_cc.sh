@@ -19,6 +19,8 @@ then
   exit 1
 fi
 
+THEARGS=
+
 for arg in "$@"
 do
   case $arg in 
@@ -37,6 +39,8 @@ do
 # hack to get proper .d generation support for eclipse
       ;;
     *)
+	  mod_arg=`echo $arg | sed -e 's/"/\\\"/g'`
+	  THEARGS="$THEARGS \"$mod_arg\""
        ;;
   esac
 done
@@ -76,7 +80,7 @@ else
 cat <<EOF > /tmp/makefile.tau$$
 include $MAKEFILE
 all:
-	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_CC) $* 
+	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_CC) $THEARGS
 
 EOF
 fi
