@@ -107,6 +107,8 @@ rm -f .last_config
 echo $* > .last_config
 echo $* >> .all_configs
 
+START_DIR=$PWD
+
 # Record all the arguments
 arguments=$*
 
@@ -4436,6 +4438,10 @@ fi
 
     sedout="./utils/FixMakefile.sed"
 echo "Applying script to all Makefiles, please wait, this may take a while..."
+
+# Change back to $START_DIR (defined at the top) to ensure we're in the tau2 directory
+# before we execute this fairly dangerous 'find' command
+cd $START_DIR
 for i in `find . -name Makefile -print `
 #for i in $tauroot/include/Makefile $tauroot/src/Profile/Makefile $tauroot/utils/Makefile $tauroot/Makefile
   do 
