@@ -117,7 +117,7 @@ printError() {
 evalWithDebugMessage() {
 	echoIfVerbose "\n\nDebug: $2"
 	echoIfVerbose "Executing>  $1"
-	$1
+	eval $1
 # NEVER add additional statements below $1, users of this function need the return code ($?)
 #	echoIfVerbose "....."
 }
@@ -147,7 +147,9 @@ for name in "$@"; do
 			CMD=$name
 			#The first command (immediately) after the -opt sequence is the compiler.
 		fi
-		regularCmd="$regularCmd  $name"	
+
+		mod_arg=`echo $name | sed -e 's/"/\\\"/g'`
+		regularCmd="$regularCmd \"$mod_arg\""	
 		tempCounter=tempCounter+1
 		;;
 
@@ -469,11 +471,12 @@ for arg in "$@"
 			;;
 
 		-I*|-D*)
-			optPdtCFlags="$arg $optPdtCFlags"
-			optPdtCxxFlags="$arg $optPdtCxxFlags"
-			optPdtF95="$arg $optPdtF95"
-			optCompile="$arg $optCompile"
-			optIncludeDefs="$arg $optIncludeDefs"
+		        mod_arg=`echo $arg | sed -e 's/"/\\\"/g'`
+			optPdtCFlags="\"$mod_arg\" $optPdtCFlags"
+			optPdtCxxFlags="\"$mod_arg\" $optPdtCxxFlags"
+			optPdtF95="\"$mod_arg\" $optPdtF95"
+			optCompile="\"$mod_arg\" $optCompile"
+			optIncludeDefs="\"$mod_arg\" $optIncludeDefs"
 			;;
 
 		-c)
