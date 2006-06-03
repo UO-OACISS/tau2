@@ -149,7 +149,16 @@ for name in "$@"; do
 		fi
 
 		mod_arg=`echo $name | sed -e 's/"/\\\"/g'`
-		regularCmd="$regularCmd \"$mod_arg\""	
+		mod_arg2=`echo $mod_arg | sed "s/[^ ]//g"`
+
+		if [ "${mod_arg2:0:1}" = " " ] ; then
+		    # contains a space, quote it
+		    regularCmd="$regularCmd \"$mod_arg\""	
+		else
+		    regularCmd="$regularCmd $mod_arg"	
+		fi
+		
+
 		tempCounter=tempCounter+1
 		;;
 
