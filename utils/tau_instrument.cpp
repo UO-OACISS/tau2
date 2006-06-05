@@ -810,10 +810,11 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 }
 
 /* Process list of C routines */
-int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec, pdbFile *file) 
+bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec, pdbFile *file) 
 {
   /* compare the names of routines with our instrumentation request routine name */
 
+  bool retval = true; 
   PDB::croutinevec::const_iterator rit;
   PDB::croutinevec croutines = p.getCRoutineVec();
   bool cmpResult1, cmpResult2, cmpFileResult; 
@@ -890,10 +891,10 @@ int processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
     }
   }
 
-  return 0;
+  return retval;
 }
 /* Process list of F routines */
-int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec, pdbFile *file) 
+bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec, pdbFile *file) 
 {
   PDB::froutinevec::const_iterator rit;
   PDB::froutinevec froutines = p.getFRoutineVec();
@@ -977,26 +978,36 @@ int processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& 
     } /* end of match */
   } /* iterate over all routines */
 
-  return 0;
+  return true; /* everything is ok -- return true */
 }
-int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& itemvec)
+bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& itemvec)
 {
   /* Let us iterate over the list of instrumentation requests and see if 
    * any requests match this file */
   vector<tauInstrument *>::iterator it;
   bool cmpResult; 
   int column ;
+  bool retval;
   PDB::lang_t lang;
   PDB::croutinevec croutines;
   PDB::froutinevec froutines; 
 
   for (it = instrumentList.begin(); it != instrumentList.end(); it++) 
   {
+    if ((*it)->getFileSpecified())
+    { /* a file is specified, does its name match? */
 #ifdef DEBUG
-    cout <<"Checking "<<file->name().c_str()<<" and "<<(*it)->getFileName().c_str()<<endl; 
+      cout <<"Checking "<<file->name().c_str()<<" and "<<(*it)->getFileName().c_str()<<endl; 
 #endif /* DEBUG */
-    /* the first argument contains the wildcard, the second is the string */
-    cmpResult = wildcardCompare((char *)(*it)->getFileName().c_str(), (char *)file->name().c_str(), '*');
+      /* the first argument contains the wildcard, the second is the string */
+      cmpResult = wildcardCompare((char *)(*it)->getFileName().c_str(), (char *)file->name().c_str(), '*');
+    } /* is file specified?*/
+    else 
+    {
+      cmpResult = false; 
+      /* this file is either not specified or it doesn't match */
+    }
+
     if (cmpResult)
     { /* check if the current file is to be instrumented */
 #ifdef DEBUG
@@ -1028,6 +1039,18 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
     /* Create a list of routines */
     if ((*it)->getRoutineSpecified())
     {
+	/* is a file specified as well? If it is specified, does it match 
+	   the file name properly? cmpResult answers that*/
+	if ((*it)->getFileSpecified() && !cmpResult)
+	{ /* a file was specified but it does not match! we do not need to 
+	     instrument this routine */
+#ifdef DEBUG
+	  cout <<"File was specified and its name didn't match... not examining routines here"<<endl;
+#endif /* DEBUG */
+	  return 1; /* we are done! */
+	} /* either a file was not specified or if it was, it matched and 
+	     cmpResult was true, so we carry on... */
+
 #ifdef DEBUG
       cout <<"A routine is specified! "<<endl;
 #endif /* DEBUG */
@@ -1039,14 +1062,14 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 #ifdef DEBUG
 	  cout <<"C routine!"<<endl; 
 #endif /* DEBUG */
-          processCRoutinesInstrumentation(p, it, itemvec, file); 
+          retval = processCRoutinesInstrumentation(p, it, itemvec, file); 
 	  /* Add file name to the routine instrumentation! */
           break; 
         case PDB::LA_FORTRAN:
 #ifdef DEBUG
 	  cout <<"F routine!"<<endl; 
 #endif /* DEBUG */
-          processFRoutinesInstrumentation(p, it, itemvec, file); 
+          retval = processFRoutinesInstrumentation(p, it, itemvec, file); 
           break;
         default:
           break;
@@ -1054,7 +1077,7 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
     }
 
   }
-  return 1;
+  return retval;
 }
 
    
@@ -1069,6 +1092,6 @@ int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& ite
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2006/05/31 22:31:20 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.16 2006/05/31 22:31:20 sameer Exp $
+ * $Revision: 1.17 $   $Date: 2006/06/05 17:50:54 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.17 2006/06/05 17:50:54 sameer Exp $
  ***************************************************************************/

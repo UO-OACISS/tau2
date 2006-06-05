@@ -93,7 +93,7 @@ itemRef::itemRef(const pdbItem *i, bool isT, int l, int c)
 #endif /* OLD */
 
 /* Prototypes for selective instrumentation */
-extern int addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& itemvec);
+extern bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& itemvec);
 
 
 void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *i, pdbRoutine::callvec & c); /* in this file below */
@@ -131,12 +131,14 @@ static bool itemEqual(const itemRef* r1, const itemRef* r2) {
 /* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
-void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
+bool getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
+bool retval;
 
   if (!isInstrumentListEmpty()) 
   { /* there are finite instrumentation requests, add requests for this file */
-    addFileInstrumentationRequests(pdb, file, itemvec);
+    retval = addFileInstrumentationRequests(pdb, file, itemvec);
+    if (!retval) return retval; /* if there's an error, propagate it up */
   }
 
   PDB::croutinevec routines = pdb.getCRoutineVec();
@@ -249,6 +251,36 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     }
   }
   sort(itemvec.begin(), itemvec.end(), locCmp);
+/* Now we examine if there are two instrumentation requests in the same line */
+#ifdef DEBUG
+  cout <<"Examining if there are two C++ instrumentation requests on the same line"<<endl;
+#endif /* DEBUG */
+  int prevline, prevcol;
+  prevline = 0;
+  prevcol = 0;
+  for (vector<itemRef *>::iterator iit = itemvec.begin();
+	iit != itemvec.end(); iit++)
+  {
+#ifdef DEBUG
+   cout <<"getCXXReferences: comparing <"<<(*iit)->line<<", "<<(*iit)->col<<">"
+	<<" and <"<<prevline<<", "<<prevcol<<">"<<endl;
+#endif /* DEBUG */
+   if (((*iit)->line == prevline) && (*iit)->col != prevcol) 
+   {
+#ifdef DEBUG
+     cout <<"Uh Oh! We have two instrumentation requests on the same line for C++. We should instrument this file as if it was a C file. We can still handle it... "<<endl;
+#endif /* DEBUG */
+     /* first we need to delete all the items in itemvec so C instrumentation 
+        can re-create it */
+     itemvec.erase(itemvec.begin(), itemvec.end());
+     return false; /* do not instrument this as a C++ file! */
+   }
+   prevline = (*iit)->line;
+   prevcol = (*iit)->col;
+
+  } /* iterate over the list of requests */
+  
+  return true; /* everything is ok */
 }
 
 /* -------------------------------------------------------------------------- */
@@ -498,9 +530,10 @@ void defineTauGroup(ofstream& ostr, string& group_name)
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C++ program ----------------------------- */
 /* -------------------------------------------------------------------------- */
-int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string &header_file)
+bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string &header_file)
 {
   int inbufLength, k;
+  bool retval;
   bool print_cr; 
   int write_upto, i, space; 
   string file(f->name());
@@ -525,7 +558,13 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
 
   // initialize reference vector
   vector<itemRef *> itemvec;
-  getCXXReferences(itemvec, pdb, f);
+  retval = getCXXReferences(itemvec, pdb, f);
+  if (!retval){
+#ifdef DEBUG
+  cout <<"instrumentCXXFile: propagating error from getCXXReferences..."<<endl;
+#endif /* DEBUG */
+    return retval; /* return error if we catch one */
+  }
 
   // put in code to insert <Profile/Profiler.h> 
   ostr<< "#include <"<<header_file<<">"<<endl;
@@ -706,6 +745,7 @@ the open brace. */
 #ifdef DEBUG
 	    cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
 	    cout <<"col = "<<(*it)->col<<endl;
+	    cout <<"inbuf = "<<inbuf<<endl;
 #endif /* DEBUG */
   	    for (i = 0; i < (*it)->col-1 ; i++) ostr << inbuf[i];
 	    if ((*it)->attribute == BEFORE)
@@ -725,7 +765,7 @@ the open brace. */
 #ifdef DEBUG
 		  cout <<"There were other requests for the same line write_upto = "<<write_upto<<endl;
 #endif /* DEBUG */
-		  print_cr = false;
+		  print_cr = true;
 		  instrumented = true; /* let it get instrumented in the next round */
 		}
                 else
@@ -777,7 +817,7 @@ the open brace. */
   // written everything. quit and debug!
   ostr.close();
 
-  return 0;
+  return true; /* everything is ok */
 }
 
 char return_nonvoid_string[256] = "return";
@@ -1862,6 +1902,7 @@ int main(int argc, char **argv)
   string outFileName("out.ins.C");
   string group_name("TAU_USER"); /* Default: if nothing else is defined */
   string header_file("Profile/Profiler.h"); 
+  bool retval;
 	/* Default: if nothing else is defined */
 
   if (argc < 3) 
@@ -2017,7 +2058,12 @@ int main(int argc, char **argv)
        { /* language explicitly specified on command line*/
 	 switch (tau_language) { 
 	   case tau_cplusplus : 
-         	instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+         	retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+	        if (!retval) {
+		  cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... Please do not force a C++ instrumentation API on this file: "<<(*it)->name()<<endl;
+         	  instrumentCFile(p, *it, outFileName, group_name, header_file);
+	 	}
+		
 		break;
 	   case tau_c :
          	instrumentCFile(p, *it, outFileName, group_name, header_file);
@@ -2033,7 +2079,13 @@ int main(int argc, char **argv)
        else 
        { /* implicit detection of language */
          if (l == PDB::LA_CXX)
-           instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+	 {
+           retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+#ifdef DEBUG
+	   cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... "<<endl;
+#endif /* DEBUG */
+           instrumentCFile(p, *it, outFileName, group_name, header_file);
+	 }
          if (l == PDB::LA_C)
            instrumentCFile(p, *it, outFileName, group_name, header_file);
          if (l == PDB::LA_FORTRAN)
@@ -2091,8 +2143,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.90 $   $Date: 2006/05/19 00:37:44 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.90 2006/05/19 00:37:44 sameer Exp $
+ * $Revision: 1.91 $   $Date: 2006/06/05 17:50:55 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.91 2006/06/05 17:50:55 sameer Exp $
  ***************************************************************************/
 
 
