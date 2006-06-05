@@ -148,15 +148,8 @@ for name in "$@"; do
 			#The first command (immediately) after the -opt sequence is the compiler.
 		fi
 
-		mod_arg=`echo $name | sed -e 's/"/\\\"/g'`
-		mod_arg2=`echo $mod_arg | sed "s/[^ ]//g"`
-
-		if [ "${mod_arg2:0:1}" = " " ] ; then
-		    # contains a space, quote it
-		    regularCmd="$regularCmd \"$mod_arg\""	
-		else
-		    regularCmd="$regularCmd $mod_arg"	
-		fi
+		mod_arg=`echo $name | sed -e 's/"/\\\"/g' | sed -e 's/ /\\\ /g'`
+		regularCmd="$regularCmd $mod_arg"	
 		
 
 		tempCounter=tempCounter+1
@@ -470,7 +463,6 @@ for arg in "$@"
 			;;
 
 		-WF,-D*)
-		        #theDefine=`echo "$arg" | sed s/-WF,//` 
 			theDefine=${arg#"-WF,"}
 			optPdtCFlags="$theDefine $optPdtCFlags"
 			optPdtCxxFlags="$theDefine $optPdtCxxFlags"
@@ -480,12 +472,14 @@ for arg in "$@"
 			;;
 
 		-I*|-D*)
-		        mod_arg=`echo $arg | sed -e 's/"/\\\"/g'`
-			optPdtCFlags="\"$mod_arg\" $optPdtCFlags"
-			optPdtCxxFlags="\"$mod_arg\" $optPdtCxxFlags"
-			optPdtF95="\"$mod_arg\" $optPdtF95"
-			optCompile="\"$mod_arg\" $optCompile"
-			optIncludeDefs="\"$mod_arg\" $optIncludeDefs"
+
+		        mod_arg=`echo $arg | sed -e 's/"/\\\"/g' | sed -e 's/ /\\\ /g'`
+			optPdtCFlags="$mod_arg $optPdtCFlags"
+			optPdtCxxFlags="$mod_arg $optPdtCxxFlags"
+			optPdtF95="$mod_arg $optPdtF95"
+			optCompile="$mod_arg $optCompile"
+			optIncludeDefs="$mod_arg $optIncludeDefs"
+
 			;;
 
 		-c)
