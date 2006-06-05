@@ -770,10 +770,10 @@ the open brace. */
 		}
                 else
 		{
+                  write_upto = strlen(inbuf);
 #ifdef DEBUG
 		  cout <<"There were no other requests for the same line write_upto = "<<write_upto<<endl;
 #endif /* DEBUG */
-                  write_upto = strlen(inbuf);
 		  print_cr = true;
 		  instrumented = true; /* let it get instrumented in the next round */
 		}
@@ -817,6 +817,9 @@ the open brace. */
   // written everything. quit and debug!
   ostr.close();
 
+#ifdef DEBUG
+  cout <<"Everything is ok!"<<endl;
+#endif /* DEBUG */
   return true; /* everything is ok */
 }
 
@@ -2081,9 +2084,12 @@ int main(int argc, char **argv)
          if (l == PDB::LA_CXX)
 	 {
            retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+           if (!retval)
+	   {
 #ifdef DEBUG
-	   cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... "<<endl;
+	     cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... "<<endl;
 #endif /* DEBUG */
+	   }
            instrumentCFile(p, *it, outFileName, group_name, header_file);
 	 }
          if (l == PDB::LA_C)
@@ -2143,8 +2149,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.91 $   $Date: 2006/06/05 17:50:55 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.91 2006/06/05 17:50:55 sameer Exp $
+ * $Revision: 1.92 $   $Date: 2006/06/05 22:13:28 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.92 2006/06/05 22:13:28 sameer Exp $
  ***************************************************************************/
 
 
