@@ -2089,8 +2089,8 @@ int main(int argc, char **argv)
 #ifdef DEBUG
 	     cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... "<<endl;
 #endif /* DEBUG */
+             instrumentCFile(p, *it, outFileName, group_name, header_file);
 	   }
-           instrumentCFile(p, *it, outFileName, group_name, header_file);
 	 }
          if (l == PDB::LA_C)
            instrumentCFile(p, *it, outFileName, group_name, header_file);
@@ -2149,8 +2149,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.92 $   $Date: 2006/06/05 22:13:28 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.92 2006/06/05 22:13:28 sameer Exp $
+ * $Revision: 1.93 $   $Date: 2006/06/05 22:37:15 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.93 2006/06/05 22:37:15 sameer Exp $
  ***************************************************************************/
 
 
