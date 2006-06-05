@@ -412,7 +412,15 @@ echo " " > wishver
     ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt -dyninst=$dyninstdir < wishver
     make clean; make install
   fi
-   
+
+# One final library to build with -PROFILEPARAM and MPI!
+  if [ "x$mpiopts" != "x" ]
+  then
+# Configuring with -PROFILEPARAM
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -PROFILEPARAM"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts $commopt <wishver
+    make clean; make install
+  fi
 
 # Set file permissions
   chmod -R go+rX *
