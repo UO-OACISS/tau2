@@ -251,35 +251,6 @@ bool retval;
     }
   }
   sort(itemvec.begin(), itemvec.end(), locCmp);
-/* Now we examine if there are two instrumentation requests in the same line */
-#ifdef DEBUG
-  cout <<"Examining if there are two C++ instrumentation requests on the same line"<<endl;
-#endif /* DEBUG */
-  int prevline, prevcol;
-  prevline = 0;
-  prevcol = 0;
-  for (vector<itemRef *>::iterator iit = itemvec.begin();
-	iit != itemvec.end(); iit++)
-  {
-#ifdef DEBUG
-   cout <<"getCXXReferences: comparing <"<<(*iit)->line<<", "<<(*iit)->col<<">"
-	<<" and <"<<prevline<<", "<<prevcol<<">"<<endl;
-#endif /* DEBUG */
-   if (((*iit)->line == prevline) && (*iit)->col != prevcol) 
-   {
-#ifdef DEBUG
-     cout <<"Uh Oh! We have two instrumentation requests on the same line for C++. We should instrument this file as if it was a C file. We can still handle it... "<<endl;
-#endif /* DEBUG */
-     /* first we need to delete all the items in itemvec so C instrumentation 
-        can re-create it */
-     itemvec.erase(itemvec.begin(), itemvec.end());
-     return false; /* do not instrument this as a C++ file! */
-   }
-   prevline = (*iit)->line;
-   prevcol = (*iit)->col;
-
-  } /* iterate over the list of requests */
-  
   return true; /* everything is ok */
 }
 
@@ -728,6 +699,39 @@ the open brace. */
 		}            
             break;
 
+	  case START_LOOP_TIMER:
+		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
+		ostr<<"{ TAU_PROFILE(\""<<(*it)->snippet<<"\", \" \", TAU_USER);"<<endl;
+		for (k = 0; k < (*it)->col-1; k++) ostr<<" "; /* put spaces */
+		/* if there is another instrumentation request on the same line */
+		
+		instrumented = true;
+	        if ((it+1) != itemvec.end())
+	        { /* there are other instrumentation requests */
+	          if (((*it)->line == (*(it+1))->line) && ((*(it+1))->kind == STOP_LOOP_TIMER))
+		  {
+                    write_upto = (*(it+1))->col - 1 ; 
+#ifdef DEBUG
+		    cout <<"There was a stop timer on the same line: "<<(*it)->line<<endl;
+#endif /* DEBUG */
+		    for (k=(*it)->col-1; k < write_upto; k++) ostr<<inbuf[k];
+		    ostr <<" } ";
+		    for (k=write_upto; k < strlen(inbuf); k++) ostr<<inbuf[k];
+		    ostr<<endl;
+		    it++; /* increment the iterator so this request is not processed again */
+		    break; /* finish the processing for this special case */
+		  } /* there is no stop timer on the same line */
+	        } /* or there are no more instrumentation requests -- flush out */
+		for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
+		  ostr<<inbuf[k]; 
+	    	break;
+	  case STOP_LOOP_TIMER:
+		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
+		ostr <<"}"<<endl;
+		for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
+		  ostr<<inbuf[k]; 
+		instrumented = true;
+	    	break;
 	  case GOTO_STOP_TIMER:
 		/* first flush all the characters till we reach the goto */
 		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
@@ -2199,8 +2203,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.94 $   $Date: 2006/06/06 02:27:07 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.94 2006/06/06 02:27:07 sameer Exp $
+ * $Revision: 1.95 $   $Date: 2006/06/06 04:28:59 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.95 2006/06/06 04:28:59 sameer Exp $
  ***************************************************************************/
 
 
