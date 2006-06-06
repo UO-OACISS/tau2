@@ -1808,6 +1808,12 @@ int TRACE_Open( const char filespec[], TRACE_file *fp )
   currentkind = -1;
   tot_types = (*fp)->num_types;
   
+/*  if(maxnode==0)
+  {
+     multiThreaded=0;
+     ycordsets=0;
+  }
+  else*/
   if(multiThreaded)
   {
   	int i;
@@ -1817,6 +1823,7 @@ int TRACE_Open( const char filespec[], TRACE_file *fp )
 	offset = (int *)malloc((numnodes+1)*sizeof(int));
 	
 	offset[0] = 0;
+	if(maxnode>0)
 	for(i = 0; i<=maxnode; i++)
 	{
 		offset[i+1] = offset[i] + countthreads[i];
@@ -1932,7 +1939,7 @@ int TRACE_Peek_next_kind( const TRACE_file fp, TRACE_Rec_Kind_t *next_kind )
 		return 0;
 	}
 	
-	if(ycordsets > 0 && posteof==1)
+	if(ycordsets > 0 && posteof==1 && maxnode>0)
 	{
 		*next_kind = TRACE_YCOORDMAP;
 		ycordsets--;
