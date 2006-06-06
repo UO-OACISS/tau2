@@ -64,7 +64,8 @@ struct TaultLong
  }
 };
 
-#define TAU_USER_EVENT_TYPE TauContextUserEvent
+//#define TAU_USER_EVENT_TYPE TauContextUserEvent
+#define TAU_USER_EVENT_TYPE TauUserEvent
 #define TAU_MALLOC_MAP_TYPE long*, TAU_USER_EVENT_TYPE *, Tault2Longs
 
 map<TAU_MALLOC_MAP_TYPE >& TheTauMallocMap(void)
@@ -109,12 +110,13 @@ map<TAU_POINTER_SIZE_MAP_TYPE >& TheTauPointerSizeMap(void)
 //////////////////////////////////////////////////////////////////////
 TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
 {
-  long *key = new long[2];
+  //long *key = new long[2];
+  long *key = (long *) malloc(sizeof(long) * 2);
   key[0] = (long) file;
   key[1] = (long) line;
  
   /* We've set the key */
-  map<TAU_MALLOC_MAP_TYPE >::iterator it = TheTauMallocMap().find(key);
+  map<TAU_MALLOC_MAP_TYPE >::iterator it = TheTauMallocMap().find((long *)key);
 
   if (it == TheTauMallocMap().end())
   {
@@ -123,7 +125,8 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
     sprintf(s, "malloc size <file=%s, line=%d>",file, line);
     TAU_USER_EVENT_TYPE *e = new TAU_USER_EVENT_TYPE(s);
     e->TriggerEvent(size);
-    TheTauMallocMap().insert(map<TAU_MALLOC_MAP_TYPE >::value_type(key, e));
+    TheTauMallocMap().insert(map<TAU_MALLOC_MAP_TYPE >::value_type((long *)key, e));
+    delete[] (s);
   }
   else
   { /* found it */
@@ -141,7 +144,9 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
 #else
   char *p1 = ptr;
 #endif
+  /* store the size of memory allocated with the address of the pointer */
   TheTauPointerSizeMap()[(long)p1] = size; 
+  free(key);
   return ptr;
 }
 
@@ -150,6 +155,7 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
 //////////////////////////////////////////////////////////////////////
 size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
 {
+  size_t result; 
 #ifdef TAU_WINDOWS
   char *p1 = (char*) (void*)p;
 #else
@@ -159,14 +165,20 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
   if (it == TheTauPointerSizeMap().end())
     return 0; // don't know the size 
   else
-    return (*it).second;  
+  {
+    result = (*it).second;
+    /* We need to delete this entry in the free map */
+    TheTauPointerSizeMap().erase(it);
+    return result;
+  }
 }
 //////////////////////////////////////////////////////////////////////
 // Tau_free for C++ has file and line information
 //////////////////////////////////////////////////////////////////////
 void Tau_free(const char *file, int line, TauVoidPointer p)
 {
-  long *key = new long[2];
+  //long *key = new long[2];
+  long *key = (long *) malloc(sizeof(long) * 2);
   key[0] = (long) file;
   key[1] = (long) line;
  
@@ -182,6 +194,7 @@ void Tau_free(const char *file, int line, TauVoidPointer p)
     TAU_USER_EVENT_TYPE *e = new TAU_USER_EVENT_TYPE(s);
     e->TriggerEvent(sz);
     TheTauMallocMap().insert(map<TAU_MALLOC_MAP_TYPE >::value_type(key, e));
+    delete[] (s); 
   }
   else
   { /* found it */
@@ -191,6 +204,7 @@ void Tau_free(const char *file, int line, TauVoidPointer p)
   printf("C++: Tau_free: %s:%d\n", file, line);  
 #endif /* DEBUGPROF */
   free(p);
+  free(key);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -269,6 +283,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2006/06/06 00:19:13 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.12 2006/06/06 00:19:13 sameer Exp $ 
+ * $Revision: 1.13 $   $Date: 2006/06/06 21:23:02 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.13 2006/06/06 21:23:02 sameer Exp $ 
  ***************************************************************************/
