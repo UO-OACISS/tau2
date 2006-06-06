@@ -26,14 +26,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-	/*
+
 void *malloc (size_t size);
+void *Tau_malloc_C( const char *file, int line, size_t size);
+void Tau_free_C(const char *file, int line, void *p);
 void free(void *p);
 
 void *calloc(size_t nmemb, size_t size);
 void *realloc(void *ptr, size_t size);
 
-*/
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
@@ -51,17 +53,19 @@ void *realloc(void *ptr, size_t size);
 /********************************************************************/
 
 #include <sys/types.h>
-#ifndef __cplusplus
+#ifndef TAU_USE_CXX_MALLOC_API
 /* For C */ 
 
-void *Tau_malloc_C( const char *file, int line, size_t size);
+/* void *Tau_malloc_C( const char *file, int line, size_t size);
+*/
 #define malloc(size) Tau_malloc_C(__FILE__, __LINE__, size)
 
-void free (void *);
-void Tau_free_C(const char *file, int line, void *p);
+/* void free (void *);
+  void Tau_free_C(const char *file, int line, void *p);
+*/
 #define free(p) Tau_free_C(__FILE__, __LINE__, p)
 
-#else
+#else /* TAU_USE_CXX_MALLOC_API */
 /* For C++ */
 
 class TauVoidPointer {
@@ -77,7 +81,7 @@ void Tau_free(const char *file, int line, TauVoidPointer p);
 #define malloc(size) Tau_malloc(__FILE__, __LINE__, size)
 #define free(p) Tau_free(__FILE__, __LINE__, p)
 
-#endif /* __cplusplus */
+#endif /* TAU_USE_CXX_MALLOC_API */
 
 
 
