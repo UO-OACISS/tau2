@@ -63,7 +63,9 @@ struct TaultLong
    return l1 < l2; 
  }
 };
-#define TAU_MALLOC_MAP_TYPE long*, TauUserEvent *, Tault2Longs
+
+#define TAU_USER_EVENT_TYPE TauContextUserEvent
+#define TAU_MALLOC_MAP_TYPE long*, TAU_USER_EVENT_TYPE *, Tault2Longs
 
 map<TAU_MALLOC_MAP_TYPE >& TheTauMallocMap(void)
 {
@@ -119,7 +121,7 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
     /* Couldn't find it */
     char *s = new char [strlen(file)+32];  
     sprintf(s, "malloc size <file=%s, line=%d>",file, line);
-    TauUserEvent *e = new TauUserEvent(s);
+    TAU_USER_EVENT_TYPE *e = new TAU_USER_EVENT_TYPE(s);
     e->TriggerEvent(size);
     TheTauMallocMap().insert(map<TAU_MALLOC_MAP_TYPE >::value_type(key, e));
   }
@@ -177,7 +179,7 @@ void Tau_free(const char *file, int line, TauVoidPointer p)
     /* Couldn't find it */
     char *s = new char [strlen(file)+32];  
     sprintf(s, "free size <file=%s, line=%d>",file, line);
-    TauUserEvent *e = new TauUserEvent(s);
+    TAU_USER_EVENT_TYPE *e = new TAU_USER_EVENT_TYPE(s);
     e->TriggerEvent(sz);
     TheTauMallocMap().insert(map<TAU_MALLOC_MAP_TYPE >::value_type(key, e));
   }
@@ -267,6 +269,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2006/04/04 19:09:01 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.11 2006/04/04 19:09:01 sameer Exp $ 
+ * $Revision: 1.12 $   $Date: 2006/06/06 00:19:13 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.12 2006/06/06 00:19:13 sameer Exp $ 
  ***************************************************************************/
