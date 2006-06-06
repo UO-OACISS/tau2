@@ -756,9 +756,14 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 	    addRequestForLoopInstrumentation(ro, start, stop, itemvec); 
 	}
 	if (s->downStmt())
-  	  processBlock(s->downStmt(), ro, itemvec, level+1, s);
+	{
+	  if (level == 1)
+  	    processBlock(s->downStmt(), ro, itemvec, level+1, s);
+ 	  else 
+  	    processBlock(s->downStmt(), ro, itemvec, level+1, parentDO);
 	/* NOTE: We are passing s as the parentDO argument for subsequent 
 	 * processing of the DO loop. We also increment the level by 1 */
+        }
         break;
       case pdbStmt::ST_GOTO:
 #ifndef PDT_NOFSTMTS
@@ -1095,6 +1100,6 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 2006/06/06 02:27:07 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.18 2006/06/06 02:27:07 sameer Exp $
+ * $Revision: 1.19 $   $Date: 2006/06/06 23:42:32 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.19 2006/06/06 23:42:32 sameer Exp $
  ***************************************************************************/
