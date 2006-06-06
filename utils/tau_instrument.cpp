@@ -698,10 +698,13 @@ void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start,
 #ifdef DEBUG
   printf("Adding instrumentation at %s\n", timername->c_str());
 #endif /* DEBUG */
-  string startsnippet(string("{ TAU_PROFILE_TIMER(lt, \"")+(*timername)+"\", \" \", TAU_USER); TAU_PROFILE_START(lt); ");
+  /*string startsnippet(string("{ TAU_PROFILE_TIMER(lt, \"")+(*timername)+"\", \" \", TAU_USER); TAU_PROFILE_START(lt); ");
   string stopsnippet(string("TAU_PROFILE_STOP(lt); } "));
   itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, start.line(), start.col(), startsnippet, BEFORE));
   itemvec.push_back( new itemRef((const pdbItem *)ro, INSTRUMENTATION_POINT, stop.line(), stop.col()+1, stopsnippet, AFTER));
+*/
+  itemvec.push_back( new itemRef((const pdbItem *)ro, START_LOOP_TIMER, start.line(), start.col(), *timername, BEFORE));
+  itemvec.push_back( new itemRef((const pdbItem *)ro, STOP_LOOP_TIMER, stop.line(), stop.col()+1, *timername, AFTER));
 /*
   printf("Adding instrumentation at routine %s, file %s, start %d:%d, stop %d:%d\n",
     ro->fullName().c_str(), f->name(), start.line(), start.col(), stop.line(), stop.col());
@@ -1092,6 +1095,6 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 2006/06/05 17:50:54 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.17 2006/06/05 17:50:54 sameer Exp $
+ * $Revision: 1.18 $   $Date: 2006/06/06 02:27:07 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.18 2006/06/06 02:27:07 sameer Exp $
  ***************************************************************************/

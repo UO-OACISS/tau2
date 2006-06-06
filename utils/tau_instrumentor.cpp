@@ -922,15 +922,37 @@ bool isBlankString(string& s)
 
 
 /* -------------------------------------------------------------------------- */
+/* -- Close the loop timer before the return                 ---------------- */
+/* -------------------------------------------------------------------------- */
+void processCloseLoopTimer(ostream& ostr)
+{
+  for (list<string>::iterator siter = current_timer.begin(); 
+    siter != current_timer.end(); siter++)
+  { /* it is not empty -- we must shut the timer before exiting! */
+#ifdef DEBUG 
+    cout <<"Shutting timer "<<(*siter)<<" before stopping the profiler "<<endl;
+#endif /* DEBUG */
+    ostr <<" TAU_PROFILE_STOP(lt); ";
+  }
+ 
+}
+/* -------------------------------------------------------------------------- */
 /* -- Writes the return expression to the instrumented file  ---------------- */
 /* -------------------------------------------------------------------------- */
 void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it, char *use_string)
 {
   if (isReturnTypeReference(it) || isBlankString(ret_expression))
-    ostr <<"{ TAU_PROFILE_STOP(tautimer); "<<use_string<<" "<< (ret_expression)<<"; }" <<endl;
+  {
+    ostr <<"{ ";
+    processCloseLoopTimer(ostr);
+    ostr <<"TAU_PROFILE_STOP(tautimer); " << use_string<<" "<< (ret_expression)<<"; }" <<endl;
+  }
   else 
-    ostr <<"{ tau_ret_val = " << ret_expression << "; TAU_PROFILE_STOP(tautimer); "<<
-	use_string<<" (tau_ret_val); }"<<endl;
+  {
+    ostr <<"{ tau_ret_val = " << ret_expression << "; ";
+    processCloseLoopTimer(ostr);
+    ostr<<"TAU_PROFILE_STOP(tautimer); " << use_string<<" (tau_ret_val); }"<<endl;
+  }
 }
 
 
@@ -940,11 +962,12 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
 /* -------------------------------------------------------------------------- */
 bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string& header_file) 
 { 
-  int inbufLength, i, j;
+  int inbufLength, i, j, space;
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
+  string timercode; /* for outer-loop level timer-based instrumentation */
   if (!ostr) {
     cerr << "Error: Cannot open '" << outfile << "'" << endl;
     return false;
@@ -972,7 +995,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
   int inputLineNo = 0;
   vector<itemRef *>::iterator lit = itemvec.begin();
-  while (lit != itemvec.end() & !istr.eof())
+  while (lit != itemvec.end() && !istr.eof())
   {
     // Read one line each till we reach the desired line no.
 #ifdef DEBUG
@@ -1196,12 +1219,38 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 	
     case INSTRUMENTATION_POINT:
 #ifdef DEBUG
-	cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
+	cout <<"Instrumentation point in C -> line = "<< (*it)->line<<endl;
 #endif /* DEBUG */
 	if ((*it)->attribute == AFTER) ostr<<endl;
 	ostr << (*it)->snippet<<endl;
 	instrumented = true;
 	break;
+
+    case START_LOOP_TIMER: 
+	if ((*it)->attribute == AFTER) ostr<<endl;
+	timercode = string(string("{ TAU_PROFILE_TIMER(lt, \"")+(*it)->snippet+"\", \" \", TAU_USER); TAU_PROFILE_START(lt); ");
+
+#ifdef DEBUG
+	cout <<"Inserting timercode: "<<timercode<<endl;
+#endif /* DEBUG */
+	ostr <<timercode <<endl;
+	/* insert spaces to make it look better */
+	for(space = 0; space < (*it)->col-1; space++) ostr<<" ";
+	instrumented = true;
+	current_timer.push_front((*it)->snippet); 
+	/* Add this timer to the list of currently open timers */
+	break;
+
+    case STOP_LOOP_TIMER: 
+	if ((*it)->attribute == AFTER) ostr<<endl;
+	/* insert spaces to make it look better */
+	for(space = 0; space < (*it)->col-1; space++) ostr<<" ";
+	ostr << "TAU_PROFILE_STOP(lt); } "<<endl;
+	instrumented = true;
+        /* pop the current timer! */
+	if (!current_timer.empty()) current_timer.pop_front();
+	break;
+
     case GOTO_STOP_TIMER:
 	ostr <<"{ TAU_PROFILE_STOP(lt);"; 
 	for (k = (*it)->col-1; k < strlen(inbuf); k++)
@@ -1210,6 +1259,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 	write_from = k+1;
 	instrumented = true;
 	break;
+
     default:
 	cout <<"Unknown option in instrumentCFile:"<<(*it)->kind<<endl;
 	instrumented = true; 
@@ -2149,8 +2199,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.93 $   $Date: 2006/06/05 22:37:15 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.93 2006/06/05 22:37:15 sameer Exp $
+ * $Revision: 1.94 $   $Date: 2006/06/06 02:27:07 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.94 2006/06/06 02:27:07 sameer Exp $
  ***************************************************************************/
 
 
