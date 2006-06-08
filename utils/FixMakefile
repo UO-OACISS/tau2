@@ -1042,6 +1042,10 @@ ALPHATIMERS)
         echo "NOTE:  Using PROFILECALLSTACK for callstack tracing"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     INTELCXXLIBICC)
+	echo "NOTE: Using INTEL's -cxxlib-icc compilation option"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      INTELTFLOP)
 	echo "NOTE: Using INTEL TeraFlop Profiling Options -DPOOMA_TFLOP"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

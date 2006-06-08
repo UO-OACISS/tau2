@@ -24,9 +24,10 @@ TAUROOT=
  
 include include/Makefile
 
+#INTELCXXLIBICC#INTELOPTS = -cxxlib-icc #ENDIF#
 ############# Standard Defines ##############
 CC = $(CONFIG_CC) $(ABI) $(ISA)
-CXX = $(CONFIG_CXX) $(ABI) $(ISA)
+CXX = $(CONFIG_CXX) $(ABI) $(ISA) $(INTELOPTS)
 TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
 LSX = .a

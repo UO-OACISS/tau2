@@ -165,6 +165,7 @@ fujitsu=no
 guidef90=no
 stdcxxlib=no
 inteltflop=no
+inteltcxxlibicc=no
 intelifort=no
 intel=no
 profile=no
@@ -868,6 +869,11 @@ do
     shift
     ;;
 
+  -INTELCXXLIBICC)
+    intelcxxlibicc=yes
+    shift
+    ;; 
+
   -INTELTFLOP)
     inteltflop=yes
     shift
@@ -976,6 +982,7 @@ do
     echo "-JAVACPUTIME ...................... Use JVMPI thread specific cpu time."
     echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
     echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
+    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
     echo "-noex .................. Use no exceptions while compiling the library."
     echo "-help ...................................... display this help message."
     exit
@@ -1819,6 +1826,10 @@ case $cxx_compiler in
         extradir=`which efc | sed s/efc/../`
       fi
 
+      if [ $intelcxxlibicc = yes ]
+      then
+        fixmakeargs="$fixmakeargs INTELCXXLIBICC"
+      fi
 
       ;;
 	
@@ -1836,6 +1847,10 @@ case $cxx_compiler in
         then 
           extradir=`which ifort | sed s/ifort/../`
         fi
+      fi
+      if [ $intelcxxlibicc = yes ]
+      then
+        fixmakeargs="$fixmakeargs INTELCXXLIBICC"
       fi
 
       ;;
