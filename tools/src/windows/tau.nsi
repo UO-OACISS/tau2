@@ -106,6 +106,8 @@ Section "" ;No components page, name is not important
   !insertmacro SED_REPLACE $INSTDIR\bin\paraprof.bat
   !insertmacro SED_REPLACE $INSTDIR\bin\jumpshot.bat
   !insertmacro SED_REPLACE $INSTDIR\bin\perfdmf_configure.bat
+  !insertmacro SED_REPLACE $INSTDIR\bin\perfexplorer_configure.bat
+  !insertmacro SED_REPLACE $INSTDIR\bin\perfexplorer.bat
   !insertmacro SED_REPLACE $INSTDIR\bin\tau2slog2.bat
   
   ; Write the uninstall keys for Windows
@@ -120,7 +122,9 @@ Section "" ;No components page, name is not important
   CreateShortCut "$SMPROGRAMS\${NAME}\ParaProf.lnk" $INSTDIR\bin\paraprof.bat "" "$INSTDIR\bin\tau.ico"
   CreateShortCut "$SMPROGRAMS\${NAME}\Readme.lnk" $INSTDIR\Readme.txt
   CreateShortCut "$SMPROGRAMS\${NAME}\JumpShot.lnk" $INSTDIR\bin\jumpshot.bat
-  CreateShortCut "$SMPROGRAMS\${NAME}\PerfDMF.lnk" $INSTDIR\bin\perfdmf_configure.bat "" "$INSTDIR\bin\tau.ico"
+  CreateShortCut "$SMPROGRAMS\${NAME}\PerfDMF_Configure.lnk" $INSTDIR\bin\perfdmf_configure.bat "" "$INSTDIR\bin\tau.ico"
+  CreateShortCut "$SMPROGRAMS\${NAME}\PerfExplorer_Configure.lnk" $INSTDIR\bin\perfexplorer_configure.bat "" "$INSTDIR\bin\tau.ico"
+  CreateShortCut "$SMPROGRAMS\${NAME}\PerfExplorer.lnk" $INSTDIR\bin\perfexplorer.bat "" "$INSTDIR\bin\tau.ico"
   CreateShortCut "$SMPROGRAMS\${NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe"
   
   
