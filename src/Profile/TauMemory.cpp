@@ -66,8 +66,8 @@ struct TaultLong
  }
 };
 
-//#define TAU_USER_EVENT_TYPE TauContextUserEvent
-#define TAU_USER_EVENT_TYPE TauUserEvent
+#define TAU_USER_EVENT_TYPE TauContextUserEvent
+//#define TAU_USER_EVENT_TYPE TauUserEvent
 //#define TAU_MALLOC_MAP_TYPE long*, TAU_USER_EVENT_TYPE *, Tault2Longs
 #define TAU_MALLOC_MAP_TYPE pair<long,long>, TAU_USER_EVENT_TYPE *, less<pair<long,long> >
 
@@ -288,6 +288,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2006/06/08 05:09:03 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.14 2006/06/08 05:09:03 sameer Exp $ 
+ * $Revision: 1.15 $   $Date: 2006/06/08 05:38:43 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.15 2006/06/08 05:38:43 sameer Exp $ 
  ***************************************************************************/
