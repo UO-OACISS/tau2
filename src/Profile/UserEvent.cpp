@@ -561,12 +561,12 @@ int& TauGetContextCallPathDepth(void)
 ////////////////////////////////////////////////////////////////////////////
 // Formulate Context Comparison Array
 //////////////////////////////////////////////////////////////////////
-long* TauFormulateContextComparisonArray(Profiler *p)
+long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent)
 {
   int depth = TauGetContextCallPathDepth();
   /* Create a long array with size depth+1. We need to put the depth
    * in it as the 0th index */
-  long *ary = new long [depth+1];
+  long *ary = new long [depth+2];
 
   int i = 0;
   int j;
@@ -590,6 +590,7 @@ long* TauFormulateContextComparisonArray(Profiler *p)
       current = current->ParentProfiler;
     }
   }
+  ary[i] = (long) uevent; 
   return ary;
 }
 
@@ -660,15 +661,17 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
     TauUserEvent *ue;
     /* context tracking is enabled */
     Profiler *current = Profiler::CurrentProfiler[tid];
-    comparison = TauFormulateContextComparisonArray(current); 
+    comparison = TauFormulateContextComparisonArray(current, uevent); 
 
     map<TAU_CONTEXT_MAP_TYPE>::iterator it = TheContextMap().find(comparison);
     if (it == TheContextMap().end())
     {
-      string contextname(uevent->EventName  + " : " + *TauFormulateContextNameString(current));
+      string *ctxname = TauFormulateContextNameString(current);
+      string contextname(uevent->EventName  + " : " + *ctxname);
       DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
       ue = new TauUserEvent((const char *)(contextname.c_str()), MonotonicallyIncreasing);
       TheContextMap().insert(map<TAU_CONTEXT_MAP_TYPE>::value_type(comparison, ue));
+      delete ctxname; /* free up the string memory */
     }
     else
     {
@@ -684,7 +687,7 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 }
 
 /***************************************************************************
- * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.17 $   $Date: 2005/11/11 03:46:50 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.17 2005/11/11 03:46:50 amorris Exp $ 
+ * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
+ * $Revision: 1.18 $   $Date: 2006/06/08 05:37:45 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.18 2006/06/08 05:37:45 sameer Exp $ 
  ***************************************************************************/
