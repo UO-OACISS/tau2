@@ -1,5 +1,12 @@
 package client;
 /**
+ * This class was found on this web page:
+ * http://home.online.no/~pjacklam/notes/invnorm/
+ * found by: Kevin Huck
+ */
+
+
+/**
  * Class contains the implementation of:
  * - Inverse Normal Cummulative Distribution Function Algorythm
  * - Error Function Algorythm
