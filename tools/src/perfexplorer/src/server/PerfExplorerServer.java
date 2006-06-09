@@ -23,7 +23,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.33 2006/04/28 22:01:21 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.34 2006/06/09 03:17:19 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -101,6 +101,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			System.out.println("Connected to database.");
 		} catch (Exception e) {
 			System.err.println("Error connecting to Database!");
+			System.err.println(e.getMessage());
+			System.exit(1);
 		}
 		timer = new TimerThread(this, analysisEngine);
 		timerThread = new java.lang.Thread(timer);
