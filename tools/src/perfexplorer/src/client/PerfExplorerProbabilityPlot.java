@@ -101,9 +101,9 @@ public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
 		}
 
         JFreeChart chart = ChartFactory.createXYLineChart(
-            "Probability Plot", 
-            "X", 
-            "Y", 
+            "Normal Probability Plot", 
+            "Normal N(0,1) Ordered Statistic Medians", 
+            "Ordered Measurements", 
             dataset, 
             PlotOrientation.VERTICAL, 
             true, 
@@ -113,12 +113,14 @@ public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
 		
 		XYPlot plot = chart.getXYPlot();
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        renderer.setSeriesLinesVisible(0, false);
+		for (int y = 0 ; y < rawData.getRows() ; y++) {
+        	renderer.setSeriesLinesVisible(y, false);
+		}
         plot.setRenderer(renderer);
 
         // change the auto tick unit selection to integer units only...
-        //NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-        //rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
 		return new PerfExplorerProbabilityPlot(chart, "TEST");
     }

@@ -52,6 +52,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String CREATE_NEW_SUB_VIEW = "Create New Sub-view";
 	public final static String DO_IQR_BOXCHART = "Create BoxChart";
 	public final static String DO_HISTOGRAM = "Create Histograms";
+	public final static String DO_PROBABILITY_PLOT = "Create Normal Probability Plot";
 
 	private PerfExplorerClient mainFrame;
 
@@ -103,6 +104,9 @@ public class PerfExplorerActionListener implements ActionListener {
 				} else if (arg.equals(DO_VARIATION_ANALYSIS)) {
 					if (valid3DSelection())
 						PerfExplorerVariation.doVariationAnalysis();
+				} else if (arg.equals(DO_PROBABILITY_PLOT)) {
+					if (valid3DSelection())
+						PerfExplorerProbabilityPlot.doProbabilityPlot();
 			// chart items
 				} else if (arg.equals(SET_PROBLEM_SIZE)) {
 					checkAndSetProblemSize(true);

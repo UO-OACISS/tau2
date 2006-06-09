@@ -90,6 +90,11 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		histogramItem.addActionListener(listener);
 		visualizationMenu.add(histogramItem);
 
+		//Add a menu item.
+		JMenuItem probabilityPlotItem = new JMenuItem(
+				PerfExplorerActionListener.DO_PROBABILITY_PLOT);
+		probabilityPlotItem.addActionListener(listener);
+		visualizationMenu.add(probabilityPlotItem);
 		
 		this.add(visualizationMenu);
 	}
