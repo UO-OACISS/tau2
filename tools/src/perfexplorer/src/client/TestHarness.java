@@ -63,6 +63,7 @@ public class TestHarness {
 			if (test.equals("viz") || test.equals("all")) {
 				System.out.println("Testing visualization...");
 				// derby/postgres
+				//setSelection("sweep3d", "150.1 Strong Scaling 1", "128", "time");
 				setSelection("sweep3d", "150.1 Strong Scaling 2", "128", "time");
 
 				// DB2
@@ -224,10 +225,10 @@ public class TestHarness {
 	public void testVisualization() throws Exception {
 	/*
 		PerfExplorerCube.doCorrelationCube();
-		*/
 		PerfExplorerVariation.doVariationAnalysis();
 		PerfExplorerBoxChart.doIQRBoxChart();
 		PerfExplorerHistogramChart.doHistogram();
+		*/
 		PerfExplorerProbabilityPlot.doProbabilityPlot();
 	}
 
