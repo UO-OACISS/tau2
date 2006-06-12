@@ -15,6 +15,10 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.chart.labels.StandardXYToolTipGenerator;
+import java.text.DecimalFormat;
+import java.text.FieldPosition;
 
 public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
 
@@ -50,6 +54,12 @@ public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
 			else
         		renderer.setSeriesLinesVisible(y, false);
 		}
+        renderer.setToolTipGenerator(new StandardXYToolTipGenerator() {
+            public String generateToolTip(XYDataset inDataset, int arg1, int arg2) {
+				ProbabilityPlotDataset dataset = (ProbabilityPlotDataset) inDataset;
+				return dataset.getTooltip(arg1, arg2);
+            }
+        });
         plot.setRenderer(renderer);
 
         // change the auto tick unit selection to integer units only...
