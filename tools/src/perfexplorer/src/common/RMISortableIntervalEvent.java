@@ -19,7 +19,7 @@ import java.text.FieldPosition;
  * This class is the RMI class which contains the tree of views to be 
  * constructed in the PerfExplorerClient.
  *
- * <P>CVS $Id: RMISortableIntervalEvent.java,v 1.1 2006/06/14 03:57:02 khuck Exp $</P>
+ * <P>CVS $Id: RMISortableIntervalEvent.java,v 1.2 2006/06/14 04:25:00 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -46,7 +46,7 @@ public class RMISortableIntervalEvent extends IntervalEvent implements Serializa
         try {
 			DecimalFormat format = new DecimalFormat("00.00");
 			FieldPosition f = new FieldPosition(0);
-			format.format(this.getMeanSummary().getExclusivePercentage(), buf, f);
+			format.format(this.getMeanSummary().getExclusivePercentage(metricIndex), buf, f);
 			buf.append("%");
         } catch (Exception exception) {}
 		buf.append(" : ");
