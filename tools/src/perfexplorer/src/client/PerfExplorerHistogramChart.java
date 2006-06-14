@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.util.List;
 import javax.swing.JFrame;
 import java.lang.Math;
+import org.jfree.data.Range;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -118,14 +120,17 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
     private static JFreeChart createChart(IntervalXYDataset dataset) {
         JFreeChart chart = ChartFactory.createHistogram(
             "Significant (>2.0% of runtime) Event Histograms", 
-            null, 
-            null, 
+            "Percentiles", 
+            "Count", 
             dataset, 
             PlotOrientation.VERTICAL, 
             true, 
             false, 
             false
         );
+		NumberAxis axis = new NumberAxis("Percentiles");
+		axis.setRange(new Range(0,1.0));
+        chart.getXYPlot().setDomainAxis(0, axis);
         chart.getXYPlot().setForegroundAlpha(0.75f);
         return chart;
     }
