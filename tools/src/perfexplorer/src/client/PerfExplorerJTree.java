@@ -73,7 +73,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addApplicationNodes (DefaultMutableTreeNode parent, boolean getExperiments) {
-		System.out.println("application nodes...");
+		//System.out.println("application nodes...");
 		DefaultMutableTreeNode node = null;
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		if (server != null) {
@@ -96,7 +96,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addExperimentNodes (DefaultMutableTreeNode node, Application app, boolean getTrials) {
-		System.out.println("experiment nodes...");
+		//System.out.println("experiment nodes...");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the experiments
 		ListIterator experiments = server.getExperimentList(app.getID());
@@ -113,7 +113,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addTrialNodes (DefaultMutableTreeNode node, Experiment exp) {
-		System.out.println("trial nodes...");
+		//System.out.println("trial nodes...");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the trials
 		ListIterator trials = server.getTrialList(exp.getID());
@@ -138,7 +138,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addTrialsForView (DefaultMutableTreeNode node) {
-		System.out.println("trial nodes...");
+		//System.out.println("trial nodes...");
 		Object[] objects = node.getUserObjectPath();
 		List views = new ArrayList();
 		for (int i = 0 ; i < objects.length ; i++) {
@@ -165,7 +165,7 @@ public class PerfExplorerJTree extends JTree {
 
 
 	public static void addMetricNodes (DefaultMutableTreeNode node, Trial trial) {
-		System.out.println("metric nodes...");
+		//System.out.println("metric nodes...");
 		// get the metrics
 		List metricVector = trial.getMetrics();
 		int metricIndex = 0;
@@ -185,7 +185,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addEventNodes (DefaultMutableTreeNode node, Trial trial, int metricIndex) {
-		System.out.println("event nodes...");
+		//System.out.println("event nodes...");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the events
 		ListIterator events = server.getEventList(trial.getID(), metricIndex);

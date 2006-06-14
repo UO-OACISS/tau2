@@ -30,9 +30,17 @@ public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
 		// for each event, get the variation across all threads.
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
-		RMIChartData rawData = server.requestChartData(PerfExplorerModel.getModel(), RMIChartData.IQR_DATA);
+		// get the data
+		PerfExplorerModel model = PerfExplorerModel.getModel();
+        Object selection = model.getCurrentSelection();
+		RMIChartData data = null;
+        if (selection instanceof RMISortableIntervalEvent) {
+			data = server.requestChartData(model, RMIChartData.DISTRIBUTION_DATA);
+		} else {
+			data = server.requestChartData(model, RMIChartData.IQR_DATA);
+		}
 
-		ProbabilityPlotDataset dataset = new ProbabilityPlotDataset(rawData);
+		ProbabilityPlotDataset dataset = new ProbabilityPlotDataset(data);
 
         JFreeChart chart = ChartFactory.createXYLineChart(
             "Normal Probability Plot", 

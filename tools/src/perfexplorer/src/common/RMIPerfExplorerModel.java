@@ -8,7 +8,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.15 2006/06/14 03:57:02 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.16 2006/06/14 05:33:11 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -122,6 +122,14 @@ public class RMIPerfExplorerModel implements Serializable {
 
 	public Trial getTrial() {
 		return trial;
+	}
+
+	public Metric getMetric() {
+		return metric;
+	}
+
+	public IntervalEvent getEvent() {
+		return event;
 	}
 
 	public String getClusterMethod () {

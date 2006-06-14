@@ -225,10 +225,10 @@ public class TestHarness {
 	public void testVisualization() throws Exception {
 	/*
 		PerfExplorerCube.doCorrelationCube();
+		*/
 		PerfExplorerVariation.doVariationAnalysis();
 		PerfExplorerBoxChart.doIQRBoxChart();
 		PerfExplorerHistogramChart.doHistogram();
-		*/
 		PerfExplorerProbabilityPlot.doProbabilityPlot();
 	}
 

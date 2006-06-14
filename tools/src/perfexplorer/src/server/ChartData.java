@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.36 2006/06/12 19:02:28 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.37 2006/06/14 05:33:11 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -116,7 +116,7 @@ public class ChartData extends RMIChartData {
 			int columnCounter = 0;
 			while (results.next() != false) {
 				groupingName = results.getString(1);
-				if (dataType == IQR_DATA) {
+				if (dataType == IQR_DATA || dataType == DISTRIBUTION_DATA) {
 					numThreads = results.getDouble(2);
 					threadName = Double.toString(numThreads);
 					value = results.getDouble(3);
@@ -704,6 +704,45 @@ public class ChartData extends RMIChartData {
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());
 			statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
+		} else if (dataType == DISTRIBUTION_DATA) {
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select cast (ie.name as varchar(256)), ");
+			} else {
+				buf.append("select ie.name, ");
+			}
+			buf.append("(p.node * t.contexts_per_node * ");
+			buf.append("t.threads_per_context) + (p.context * ");
+			buf.append("t.threads_per_context) + p.thread as thread, ");
+            
+            if (db.getDBType().compareTo("oracle") == 0) {
+                buf.append("p.excl ");
+            } else {
+                buf.append("p.exclusive_percentage ");
+            }
+
+			buf.append("from interval_event ie ");
+			buf.append(" left outer join interval_location_profile p ");
+			buf.append("on ie.id = p.interval_event ");
+			buf.append("inner join trial t on ie.trial = t.id ");
+			buf.append("where ie.trial = ? ");
+			buf.append("and p.metric = ? ");
+			buf.append("and ie.id in (");
+			List selections = model.getMultiSelection();
+			if (selections == null) {
+				// just one selection
+				buf.append (model.getEvent().getID());
+			} else {
+				for (int i = 0 ; i < selections.size() ; i++) {
+					IntervalEvent event = (IntervalEvent)selections.get(i);
+					if (i > 0)
+						buf.append(",");
+					buf.append(event.getID());
+				}
+			}
+			buf.append(") order by 1,2 ");
+			statement = db.prepareStatement(buf.toString());
+			statement.setInt(1, model.getTrial().getID());
+			statement.setInt(2, model.getMetric().getID());
 		}
 		return statement;
 	}

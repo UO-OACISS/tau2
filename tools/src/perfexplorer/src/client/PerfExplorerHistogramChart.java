@@ -37,10 +37,16 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
 		// for each event, get the variation across all threads.
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
-		RMIChartData data = server.requestChartData(PerfExplorerModel.getModel(), RMIChartData.IQR_DATA);
+		PerfExplorerModel model = PerfExplorerModel.getModel();
+        Object selection = model.getCurrentSelection();
+		RMIChartData data = null;
+        if (selection instanceof RMISortableIntervalEvent) {
+			data = server.requestChartData(model, RMIChartData.DISTRIBUTION_DATA);
+		} else {
+			data = server.requestChartData(model, RMIChartData.IQR_DATA);
+		}
 
 		// build the chart
-		//BoxAndWhiskerCategoryDataset dataset = createDataset(data);
         IntervalXYDataset dataset = createDataset(data);
         JFreeChart chart = createChart(dataset);
         

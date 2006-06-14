@@ -9,6 +9,7 @@ import java.util.ListIterator;
 import edu.uoregon.tau.perfdmf.*;
 import constants.Constants;
 import common.RMIView;
+import common.RMISortableIntervalEvent;
 import common.RMIPerfExplorerModel;
 
 public class PerfExplorerActionListener implements ActionListener {
@@ -99,13 +100,13 @@ public class PerfExplorerActionListener implements ActionListener {
 					if (valid3DSelection())
 						PerfExplorerBoxChart.doIQRBoxChart();
 				} else if (arg.equals(DO_HISTOGRAM)) {
-					if (valid3DSelection())
+					if (validDistributionSelection())
 						PerfExplorerHistogramChart.doHistogram();
 				} else if (arg.equals(DO_VARIATION_ANALYSIS)) {
 					if (valid3DSelection())
 						PerfExplorerVariation.doVariationAnalysis();
 				} else if (arg.equals(DO_PROBABILITY_PLOT)) {
-					if (valid3DSelection())
+					if (validDistributionSelection())
 						PerfExplorerProbabilityPlot.doProbabilityPlot();
 			// chart items
 				} else if (arg.equals(SET_PROBLEM_SIZE)) {
@@ -478,6 +479,21 @@ public class PerfExplorerActionListener implements ActionListener {
 		// allow only Metrics
 		if ((selection == null) || !(selection instanceof Metric)) {
 			JOptionPane.showMessageDialog(mainFrame, "Please select a Metric.",
+				"Selection Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+		return true;
+	}
+
+	private boolean validDistributionSelection () {
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Object selection = theModel.getCurrentSelection();
+		// allow only Metrics or IntervalEvents
+		if ((selection == null) || 
+			(!(selection instanceof Metric) && 
+			 !(selection instanceof RMISortableIntervalEvent))) {
+			JOptionPane.showMessageDialog(mainFrame, 
+				"Please select an Metrics or one or more Events.",
 				"Selection Error", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
