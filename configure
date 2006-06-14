@@ -1845,7 +1845,7 @@ case $cxx_compiler in
         intelifort=`which ifort 2>/dev/null`
         if [ "y$intelifort" != "y"  -a -x $intelifort ]
         then 
-          extradir=`which ifort | sed s/ifort/../`
+          extradir=`which ifort | sed s/\/bin\/ifort$//`
         fi
       fi
       if [ $intelcxxlibicc = yes ]
@@ -2015,7 +2015,7 @@ case $fortran_compiler in
         intelifort=`which ifort 2>/dev/null`
         if [ "y$intelifort" != "y"  -a -x $intelifort ]
         then 
-          extradir=`which ifort | sed s/ifort/../`
+          extradir=`which ifort | sed s/\/bin\/ifort$//`
         fi
       fi
       ;;
