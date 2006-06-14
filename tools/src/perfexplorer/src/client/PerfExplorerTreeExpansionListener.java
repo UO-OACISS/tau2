@@ -5,6 +5,7 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -53,6 +54,13 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 				Trial trial = (Trial)object;
 				PerfExplorerJTree.addMetricNodes (node, trial);
 			} else if (object instanceof Metric) {
+				// get the trial
+				Metric metric = (Metric)object;
+				DefaultMutableTreeNode pNode = (DefaultMutableTreeNode)node.getParent();
+				object = pNode.getUserObject();
+				Trial trial = (Trial)object;
+				PerfExplorerJTree.addEventNodes (node, trial, 0);
+			} else if (object instanceof IntervalEvent) {
 				// do nothing
 			} else if (object instanceof RMIView) {
 				RMIView view = (RMIView) object;

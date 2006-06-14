@@ -163,6 +163,7 @@ public class PerfExplorerJTree extends JTree {
 	public static void addMetricNodes (DefaultMutableTreeNode node, Trial trial) {
 		// get the metrics
 		List metricVector = trial.getMetrics();
+		int metricIndex = 0;
 		if (metricVector != null) {
 			ListIterator metrics = metricVector.listIterator();
 			Metric metric = null;
@@ -171,9 +172,25 @@ public class PerfExplorerJTree extends JTree {
 			while(metrics.hasNext())
 			{
 				metric = (Metric) metrics.next();
-				metricNode = new PerfExplorerTreeNode (metric, false);
+				metricNode = new PerfExplorerTreeNode (metric, true);
+				addEventNodes(metricNode, trial, metricIndex++);
 				node.add(metricNode);
 			}
+		}
+	}
+
+	public static void addEventNodes (DefaultMutableTreeNode node, Trial trial, int metricIndex) {
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		// get the events
+		ListIterator events = server.getEventList(trial.getID(), metricIndex);
+		IntervalEvent event = null;
+		DefaultMutableTreeNode eventNode = null;
+		// loop through all the events, and print out some info
+		while(events.hasNext())
+		{
+			event = (IntervalEvent) events.next();
+			eventNode = new PerfExplorerTreeNode (event, false);
+			node.add(eventNode);
 		}
 	}
 }

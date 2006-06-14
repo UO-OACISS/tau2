@@ -5,6 +5,7 @@ import java.rmi.server.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Collections;
 import java.util.HashMap;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
@@ -23,7 +24,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.34 2006/06/09 03:17:19 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.35 2006/06/14 03:57:02 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1308,6 +1309,29 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return session.db().getConnectString();
 	}
 	
+	/**
+	 * Requests an EventList object from the PerfDMF database,
+	 * based on the trial id which is passed in.
+	 * 
+	 * @param trialID
+	 * @return List of PerfDMF IntervalEvent objects.
+	 */
+	public List getEventList(int trialID, int metricIndex) {
+		try {
+			this.session.setTrial(trialID);
+		} catch (DatabaseException e) {}
+		dbControl.WAIT("getEventList");
+		List events = this.session.getIntervalEvents();
+		dbControl.SIGNAL("getEventList");
+		List sortedEvents = new ArrayList();
+		for (Iterator i = events.iterator() ; i.hasNext() ; ) {
+			IntervalEvent e = (IntervalEvent)i.next();
+			sortedEvents.add(new RMISortableIntervalEvent(e, this.session, metricIndex));
+		}
+		Collections.sort(sortedEvents);
+		return sortedEvents;
+	}
+
 	/**
 	 * The main method to create the PerfExplorerServer.
 	 * 

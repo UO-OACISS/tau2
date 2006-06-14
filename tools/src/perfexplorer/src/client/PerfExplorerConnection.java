@@ -285,4 +285,14 @@ public class PerfExplorerConnection {
 		return conn;
 	}
 
+    public ListIterator getEventList(int trialID, int metricIndex) {
+	ListIterator tmpIterator = null;
+	try {
+	    tmpIterator = server.getEventList(trialID, metricIndex).listIterator();
+	} catch (RemoteException e) {
+	    handleError(e, "getTrialList(" + trialID + ")");
+	}
+	return tmpIterator;
+    }
+
 }

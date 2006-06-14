@@ -39,7 +39,7 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 			// don't allow heterogeneous selections
 			if (!PerfExplorerModel.getModel().setMultiSelection(multiSelection)) {
 				JOptionPane.showMessageDialog(null, 
-					"Please select only one type (Application, Experiment, Trial, Metric) of level.",
+					"Please select only one type (Application, Experiment, Trial, Metric, Event) of level.",
 					"Selection Error", JOptionPane.ERROR_MESSAGE);
 				// un-select the new ones
 				tree.clearSelection();

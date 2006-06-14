@@ -21,16 +21,14 @@ public class PerfExplorerTreeCellRenderer extends DefaultTreeCellRenderer{
 		ImageIcon icon = null;
 		this.setIcon(icon);
 	}
-	if(userObject instanceof Metric){
+	if (userObject instanceof Metric){
 		ImageIcon icon = createImageIcon("green-ball.gif");
 		this.setIcon(icon);
 	}
-	//else if (expanded) {
-		//this.setIcon(openIcon);
-	//}
-	//else {
-		//this.setIcon(closedIcon);
-	//}
+	if (userObject instanceof IntervalEvent){
+		ImageIcon icon = createImageIcon("blue-ball.gif");
+		this.setIcon(icon);
+	}
 	return this;
 	}
 
