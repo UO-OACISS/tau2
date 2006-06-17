@@ -1507,6 +1507,7 @@ int Profiler::StoreData(int tid)
 #endif /* TAUKTAU */
 
 	DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
+	TauDetectMemoryLeaks();
 
 #ifdef TRACING_ON
 #ifdef TAU_EPILOG 
@@ -2545,6 +2546,7 @@ int Profiler::StoreData(int tid){
 #endif //PROFILING_ON
 
   DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
+  TauDetectMemoryLeaks();
 
 #ifdef TRACING_ON
 #ifdef TAU_EPILOG 
@@ -3278,8 +3280,8 @@ double& Profiler::TheTauThrottlePerCall(void)
 }
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.134 $   $Date: 2006/03/27 20:11:35 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.134 2006/03/27 20:11:35 sameer Exp $ 
+ * $Revision: 1.135 $   $Date: 2006/06/17 04:46:53 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.135 2006/06/17 04:46:53 sameer Exp $ 
  ***************************************************************************/
 
 	
