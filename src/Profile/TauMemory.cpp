@@ -70,12 +70,24 @@ struct TaultLong
 //#define TAU_USER_EVENT_TYPE TauUserEvent
 //#define TAU_MALLOC_MAP_TYPE long*, TAU_USER_EVENT_TYPE *, Tault2Longs
 #define TAU_MALLOC_MAP_TYPE pair<long,long>, TAU_USER_EVENT_TYPE *, less<pair<long,long> >
+#define TAU_MEMORY_LEAK_MAP_TYPE long, TauUserEvent *, TaultLong
 
+//////////////////////////////////////////////////////////////////////
 map<TAU_MALLOC_MAP_TYPE >& TheTauMallocMap(void)
 {
   static map<TAU_MALLOC_MAP_TYPE > mallocmap;
   return mallocmap;
 }
+
+//////////////////////////////////////////////////////////////////////
+// We store the leak detected events here 
+//////////////////////////////////////////////////////////////////////
+map<TAU_MEMORY_LEAK_MAP_TYPE >& TheTauMemoryLeakMap(void)
+{
+  static map<TAU_MEMORY_LEAK_MAP_TYPE > leakmap;
+  return leakmap;
+}
+
 
  
 
@@ -98,10 +110,10 @@ class TauVoidPointer {
 //////////////////////////////////////////////////////////////////////
 // 
 //////////////////////////////////////////////////////////////////////
-#define TAU_POINTER_SIZE_MAP_TYPE long, size_t, TaultLong
+#define TAU_POINTER_SIZE_MAP_TYPE long, pair<size_t, long>, TaultLong
 
 //////////////////////////////////////////////////////////////////////
-// 
+// This map stores the memory allocated and its associations
 //////////////////////////////////////////////////////////////////////
 map<TAU_POINTER_SIZE_MAP_TYPE >& TheTauPointerSizeMap(void)
 {
@@ -110,12 +122,14 @@ map<TAU_POINTER_SIZE_MAP_TYPE >& TheTauPointerSizeMap(void)
 }
 
 //////////////////////////////////////////////////////////////////////
-// Tau_malloc for C++ has file and line information
+// Tau_malloc_before creates/access the event associated with tracking
+// memory allocation for the specified line and file. 
 //////////////////////////////////////////////////////////////////////
-TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
+TAU_USER_EVENT_TYPE* Tau_malloc_before(const char *file, int line, size_t size)
 {
 /* we use pair<long,long> (line, file) as the key to index the mallocmap */
   map<TAU_MALLOC_MAP_TYPE >::iterator it = TheTauMallocMap().find(pair<long, long>(line,(long)file));
+  TAU_USER_EVENT_TYPE *e ;
 
   if (it == TheTauMallocMap().end())
   {
@@ -125,7 +139,7 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
 #ifdef DEBUGPROF
     printf("C++: Tau_malloc: creating new user event %s\n", s);
 #endif /* DEBUGPROF */
-    TAU_USER_EVENT_TYPE *e = new TAU_USER_EVENT_TYPE(s);
+    e = new TAU_USER_EVENT_TYPE(s);
     e->TriggerEvent(size);
     TheTauMallocMap()[pair<long,long>(line, (long)file)] = e;
     delete[] (s);
@@ -135,31 +149,56 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
 #ifdef DEBUGPROF
     printf("Found it! Name = %s\n", (*it).second->GetEventName());
 #endif /* DEBUGPROF */
-    (*it).second->TriggerEvent(size);
+    e = (*it).second;
+    e->TriggerEvent(size);
   }
 #ifdef DEBUGPROF
   printf("C++: Tau_malloc: %s:%d:%d\n", file, line, size);
 #endif /* DEBUGPROF */
 
-  /* Add the size to the map */
-  TauVoidPointer ptr = malloc(size);
+  return e; /* the event that is created in this routine */
+}
 
+//////////////////////////////////////////////////////////////////////
+// Tau_malloc_after associates the event and size with the address allocated
+//////////////////////////////////////////////////////////////////////
+void Tau_malloc_after(TauVoidPointer ptr, size_t size, TAU_USER_EVENT_TYPE *e)
+{
 #ifdef TAU_WINDOWS
   char *p1 = (char*) (void*)ptr;
 #else
   char *p1 = ptr;
 #endif
   /* store the size of memory allocated with the address of the pointer */
-  TheTauPointerSizeMap()[(long)p1] = size; 
-  return ptr;
+  TheTauPointerSizeMap()[(long)p1] = pair<size_t, long>(size, (long) e); 
+  return;
 }
 
+//////////////////////////////////////////////////////////////////////
+// Tau_malloc calls the before and after routines and allocates memory
+//////////////////////////////////////////////////////////////////////
+TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
+{
+  TAU_USER_EVENT_TYPE *e; 
+
+  /* We get the event that is created */
+  e = Tau_malloc_before(file, line, size);
+
+  TauVoidPointer ptr = malloc(size);
+
+  /* associate the event generated and its size with the address of memory
+   * allocated by malloc. This is used later for memory leak detection and
+   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
+
+  Tau_malloc_after(ptr, size, e);
+  return ptr;  /* what was allocated */
+}
 //////////////////////////////////////////////////////////////////////
 // TauGetMemoryAllocatedSize returns the size of the pointer p
 //////////////////////////////////////////////////////////////////////
 size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
 {
-  size_t result; 
+  pair<size_t, long> result; 
 #ifdef TAU_WINDOWS
   char *p1 = (char*) (void*)p;
 #else
@@ -173,16 +212,18 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
     result = (*it).second;
     /* We need to delete this entry in the free map */
     TheTauPointerSizeMap().erase(it);
-    return result;
+    return result.first; /* or size_t, the first entry of the pair */
   }
 }
+
 //////////////////////////////////////////////////////////////////////
-// Tau_free for C++ has file and line information
+// Tau_free_before does everything prior to free'ing the memory
 //////////////////////////////////////////////////////////////////////
-void Tau_free(const char *file, int line, TauVoidPointer p)
+void Tau_free_before(const char *file, int line, TauVoidPointer p)
 {
   /* We've set the key */
   map<TAU_MALLOC_MAP_TYPE >::iterator it = TheTauMallocMap().find(pair<long,long>(line,(long)file));
+  TAU_USER_EVENT_TYPE *e;
 
   size_t sz = TauGetMemoryAllocatedSize(p);
   if (it == TheTauMallocMap().end())
@@ -193,7 +234,7 @@ void Tau_free(const char *file, int line, TauVoidPointer p)
 #ifdef DEBUGPROF
     printf("C++: Tau_free: creating new user event %s\n", s);
 #endif /* DEBUGPROF */
-    TAU_USER_EVENT_TYPE *e = new TAU_USER_EVENT_TYPE(s);
+    e = new TAU_USER_EVENT_TYPE(s);
     e->TriggerEvent(sz);
     //mallocmap.insert(map<TAU_MALLOC_MAP_TYPE >::value_type(pair<long,long>(line,file), e));
     TheTauMallocMap()[pair<long,long>(line, (long) file)] = e;
@@ -204,12 +245,63 @@ void Tau_free(const char *file, int line, TauVoidPointer p)
 #ifdef DEBUGPROF
     printf("Found it! Name = %s\n", (*it).second->GetEventName());
 #endif /* DEBUGPROF */
-    (*it).second->TriggerEvent(sz);
+    e = (*it).second; 
+    e->TriggerEvent(sz);
   }
 #ifdef DEBUGPROF
   printf("C++: Tau_free: %s:%d\n", file, line);  
 #endif /* DEBUGPROF */
+}
+
+//////////////////////////////////////////////////////////////////////
+// Tau_free calls Tau_free_before and free's the memory allocated 
+//////////////////////////////////////////////////////////////////////
+void Tau_free(const char *file, int line, TauVoidPointer p)
+{
+  Tau_free_before(file, line, p);
+
+  /* and actually free the memory */
   free(p);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TauDetectMemoryLeaks iterates over the list of pointers and checks
+// which blocks have not been freed. This is called at the very end of
+// the program from Profiler::StoreData
+//////////////////////////////////////////////////////////////////////
+int TauDetectMemoryLeaks(void)
+{
+  if (TheTauPointerSizeMap().empty()) return 0; /* do nothing */
+  map<TAU_POINTER_SIZE_MAP_TYPE >::iterator it;
+
+  for( it = TheTauPointerSizeMap().begin(); it != TheTauPointerSizeMap().end();
+	it++)
+  {
+    pair<size_t, long> leak = (*it).second;
+    size_t sz = leak.first; 
+    TAU_USER_EVENT_TYPE *e = (TAU_USER_EVENT_TYPE *) leak.second;
+#ifdef DEBUGPROF
+    printf("Found leak for block of memory of size %d from memory allocated at:%s\n", 
+    sz, e->GetEventName());
+#endif /* DEBUGPROF */
+    /* Have we seen e before? */
+    map<TAU_MEMORY_LEAK_MAP_TYPE >::iterator it = TheTauMemoryLeakMap().find((long) e);
+    if (it == TheTauMemoryLeakMap().end())
+    { /* didn't find it! */
+      string s (string("MEMORY LEAK! ")+e->GetEventName());
+      TauUserEvent *leakevent = new TauUserEvent(s.c_str());
+
+      TheTauMemoryLeakMap()[(long)e] = leakevent; 
+      leakevent->TriggerEvent(sz);
+    }
+    else
+    {
+      (*it).second->TriggerEvent(sz);
+    }
+    /* Instead of making a new leakevent each time, we should use another
+     * map that maps the event e with the newevent and triggers it multiple times */
+  }
+  return 1;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -288,6 +380,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2006/06/08 05:38:43 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.15 2006/06/08 05:38:43 sameer Exp $ 
+ * $Revision: 1.16 $   $Date: 2006/06/17 04:44:00 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.16 2006/06/17 04:44:00 sameer Exp $ 
  ***************************************************************************/
