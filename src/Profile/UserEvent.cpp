@@ -639,6 +639,7 @@ TauContextUserEvent::TauContextUserEvent(const char *EName, bool MonoIncr)
 TauContextUserEvent::~TauContextUserEvent()
 {
   delete uevent; 
+  delete contextevent; 
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -650,6 +651,16 @@ void TauContextUserEvent::SetDisableContext(bool value)
   DisableContext = value;
 }
 
+////////////////////////////////////////////////////////////////////////////
+// GetEventName() returns the name of the context event 
+////////////////////////////////////////////////////////////////////////////
+const char * TauContextUserEvent::GetEventName(void)
+{
+  if (contextevent)
+    return contextevent->GetEventName();
+  else 
+    return (const char *)NULL;
+}
 ////////////////////////////////////////////////////////////////////////////
 // Trigger the context event
 ////////////////////////////////////////////////////////////////////////////
@@ -681,13 +692,17 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
     }
     /* Now we trigger this event */
     if (ue)
-     ue->TriggerEvent(data, tid);
+    { /* it is not null, trigger it */
+      contextevent = ue;
+      /* store this context event, so we can get its name */
+      contextevent->TriggerEvent(data, tid);
+    }
   }
   uevent->TriggerEvent(data, tid);
 }
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 2006/06/08 05:37:45 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.18 2006/06/08 05:37:45 sameer Exp $ 
+ * $Revision: 1.19 $   $Date: 2006/06/17 04:41:16 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.19 2006/06/17 04:41:16 sameer Exp $ 
  ***************************************************************************/
