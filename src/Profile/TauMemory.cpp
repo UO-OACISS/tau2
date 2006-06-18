@@ -96,16 +96,6 @@ map<TAU_MEMORY_LEAK_MAP_TYPE >& TheTauMemoryLeakMap(void)
 //////////////////////////////////////////////////////////////////////
 
 
-//////////////////////////////////////////////////////////////////////
-// This class allows us to convert void * to the desired type in malloc
-//////////////////////////////////////////////////////////////////////
-
-class TauVoidPointer {
-  void *p;
-  public:
-    TauVoidPointer (void *pp) : p (pp) { }
-    template <class T> operator T *() { return (T *) p; }
-};
 
 //////////////////////////////////////////////////////////////////////
 // 
@@ -115,9 +105,9 @@ class TauVoidPointer {
 //////////////////////////////////////////////////////////////////////
 // This map stores the memory allocated and its associations
 //////////////////////////////////////////////////////////////////////
-map<TAU_POINTER_SIZE_MAP_TYPE >& TheTauPointerSizeMap(void)
+multimap<TAU_POINTER_SIZE_MAP_TYPE >& TheTauPointerSizeMap(void)
 {
-  static map<TAU_POINTER_SIZE_MAP_TYPE > pointermap;
+  static multimap<TAU_POINTER_SIZE_MAP_TYPE > pointermap;
   return pointermap;
 }
 
@@ -170,7 +160,8 @@ void Tau_malloc_after(TauVoidPointer ptr, size_t size, TAU_USER_EVENT_TYPE *e)
   char *p1 = ptr;
 #endif
   /* store the size of memory allocated with the address of the pointer */
-  TheTauPointerSizeMap()[(long)p1] = pair<size_t, long>(size, (long) e); 
+  //TheTauPointerSizeMap()[(long)p1] = pair<size_t, long>(size, (long) e); 
+  TheTauPointerSizeMap().insert(pair<long, pair<size_t, long> >((long)p1, pair<size_t, long>(size, (long) e))); 
   return;
 }
 
@@ -193,6 +184,20 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
   Tau_malloc_after(ptr, size, e);
   return ptr;  /* what was allocated */
 }
+
+//////////////////////////////////////////////////////////////////////
+// Tau_track_memory_allocation does everything that Tau_malloc does except
+// allocate memory
+//////////////////////////////////////////////////////////////////////
+void Tau_track_memory_allocation(const char *file, int line, size_t size, TauVoidPointer ptr)
+{
+#ifdef DEBUGPROF
+  printf("allocation: %d, ptr = %lx\n", line, ptr);
+#endif /* DEBUGPROF */
+  Tau_malloc_after(ptr, size, Tau_malloc_before(file, line, size));
+}
+		  
+
 //////////////////////////////////////////////////////////////////////
 // TauGetMemoryAllocatedSize returns the size of the pointer p
 //////////////////////////////////////////////////////////////////////
@@ -204,7 +209,7 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
 #else
   char *p1 = p;
 #endif
-  map<TAU_POINTER_SIZE_MAP_TYPE >::iterator it = TheTauPointerSizeMap().find((long)p1);
+  multimap<TAU_POINTER_SIZE_MAP_TYPE >::iterator it = TheTauPointerSizeMap().find((long)p1);
   if (it == TheTauPointerSizeMap().end())
     return 0; // don't know the size 
   else
@@ -265,6 +270,18 @@ void Tau_free(const char *file, int line, TauVoidPointer p)
 }
 
 //////////////////////////////////////////////////////////////////////
+// Tau_track_memory_deallocation does everything that Tau_free does except
+// de-allocate memory
+//////////////////////////////////////////////////////////////////////
+void Tau_track_memory_deallocation(const char *file, int line, TauVoidPointer ptr)
+{
+#ifdef DEBUGPROF
+  printf("DEallocation: %d, ptr = %lx\n", line, ptr);
+#endif /* DEBUGPROF */
+  Tau_free_before(file, line, ptr);
+}
+
+//////////////////////////////////////////////////////////////////////
 // TauDetectMemoryLeaks iterates over the list of pointers and checks
 // which blocks have not been freed. This is called at the very end of
 // the program from Profiler::StoreData
@@ -272,7 +289,7 @@ void Tau_free(const char *file, int line, TauVoidPointer p)
 int TauDetectMemoryLeaks(void)
 {
   if (TheTauPointerSizeMap().empty()) return 0; /* do nothing */
-  map<TAU_POINTER_SIZE_MAP_TYPE >::iterator it;
+  multimap<TAU_POINTER_SIZE_MAP_TYPE >::iterator it;
 
   for( it = TheTauPointerSizeMap().begin(); it != TheTauPointerSizeMap().end();
 	it++)
@@ -380,6 +397,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2006/06/17 04:44:00 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.16 2006/06/17 04:44:00 sameer Exp $ 
+ * $Revision: 1.17 $   $Date: 2006/06/18 02:44:55 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.17 2006/06/18 02:44:55 sameer Exp $ 
  ***************************************************************************/
