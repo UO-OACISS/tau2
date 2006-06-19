@@ -389,14 +389,17 @@ int main(int argc, char **argv)
   char *edf_file;
   char *out_file = NULL; 
   int no_message_flag=0;
+  int compress_flag = 0; /* by default do not compress traces */
+  OTF_FileCompression compression = OTF_FILECOMPRESSION_UNCOMPRESSED; 
   int i; 
   /* main program: Usage app <trc> <edf> [-a] [-nomessage] */
   if (argc < 3)
   {
-    printf("Usage: %s <TAU trace> <edf file> <out file> [-n streams] [-nomessage]  [-v]\n", 
+    printf("Usage: %s <TAU trace> <edf file> <out file> [-n streams] [-nomessage]  [-z] [-v]\n", 
 		    argv[0]);
     printf(" -n <streams> : Specifies the number of output streams (default 1)\n");
     printf(" -nomessage : Suppress printing of message information in the trace\n");
+    printf(" -z : Enable compression of trace files. By default it is uncompressed.\n");
     printf(" -v         : Verbose\n");
     printf(" Trace format of <out file> is OTF \n");
 
@@ -429,6 +432,10 @@ int main(int argc, char **argv)
 	{
 	  no_message_flag = 1;
 	}
+	if (strcmp(argv[i], "-z")==0)
+	{
+	  compress_flag = 1;
+	}
 	if (strcmp(argv[i], "-v") == 0)
         {
 	  debugPrint = 1;
@@ -454,11 +461,19 @@ int main(int argc, char **argv)
   /* Define the file control block for output trace file */
   void *fcb = (void *) OTF_Writer_open(out_file, num_streams, manager);
 
+
   /* check and verify that it was opened properly */
   if (fcb == 0)
   {
     perror(out_file);
     exit(1);
+  }
+
+  /* enble compression if it is specified by the user */
+  if (compress_flag)
+  {
+    compression = OTF_FILECOMPRESSION_COMPRESSED; 
+    OTF_Writer_setCompression((OTF_Writer *)fcb, compression);
   }
 
   /* Write the trace file header */
@@ -636,8 +651,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2otf.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2005/10/22 03:22:28 $
- * VERSION_ID: $Id: tau2otf.cpp,v 1.1 2005/10/22 03:22:28 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2006/06/19 08:45:58 $
+ * VERSION_ID: $Id: tau2otf.cpp,v 1.2 2006/06/19 08:45:58 sameer Exp $
  ***************************************************************************/
 
 
