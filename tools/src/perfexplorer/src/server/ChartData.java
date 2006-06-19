@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.37 2006/06/14 05:33:11 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.38 2006/06/19 19:29:13 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -93,8 +93,8 @@ public class ChartData extends RMIChartData {
 					numThreads = results.getDouble(2) * results.getDouble(3) *
 						results.getDouble(4);
 					value = results.getDouble(5);
-					//if (metricName.toLowerCase().indexOf("time") != -1)
-						//value = value/1000000;
+					if (metricName.toLowerCase().indexOf("time") != -1)
+						value = value/1000000;
 	
 					if (!currentExperiment.equals(groupingName)) {
 						experimentIndex++;
@@ -126,9 +126,9 @@ public class ChartData extends RMIChartData {
 					threadName = Double.toString(numThreads);
 					value = results.getDouble(5);
 				}
-				//if ((metricName.toLowerCase().indexOf("time") != -1) 
-					//&& (dataType != FRACTION_OF_TOTAL))
-					//value = value/1000000;
+				if ((metricName.toLowerCase().indexOf("time") != -1) 
+					&& (dataType != FRACTION_OF_TOTAL))
+					value = value/1000000;
 
 				if (!currentExperiment.equals(groupingName)) {
 					experimentIndex++;
@@ -164,9 +164,9 @@ public class ChartData extends RMIChartData {
 						results.getDouble(3);
 					threadName = Double.toString(numThreads);
 					value = results.getDouble(4);
-					//if ((metricName.toLowerCase().indexOf("time") != -1) 
-						//&& (dataType != FRACTION_OF_TOTAL))
-						//value = value/1000000;
+					if ((metricName.toLowerCase().indexOf("time") != -1) 
+						&& (dataType != FRACTION_OF_TOTAL))
+						value = value/1000000;
 	
 					if (!currentExperiment.equals(groupingName)) {
 						experimentIndex++;
@@ -313,7 +313,7 @@ public class ChartData extends RMIChartData {
 			buf.append(tmpBuf.toString());
 			buf.append(", t.node_count, t.contexts_per_node, t.threads_per_context ");
 			buf.append("order by 1, 2, 3, 4");
-			//System.out.println(buf.toString());
+			System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		} else if (dataType == TOTAL_FOR_GROUP) {
@@ -683,7 +683,7 @@ public class ChartData extends RMIChartData {
             if (db.getDBType().compareTo("oracle") == 0) {
                 buf.append("p.excl ");
             } else {
-                buf.append("p.exclusive_percentage ");
+                buf.append("p.exclusive ");
             }
 
 			buf.append("from interval_event ie ");
@@ -717,7 +717,7 @@ public class ChartData extends RMIChartData {
             if (db.getDBType().compareTo("oracle") == 0) {
                 buf.append("p.excl ");
             } else {
-                buf.append("p.exclusive_percentage ");
+                buf.append("p.exclusive ");
             }
 
 			buf.append("from interval_event ie ");

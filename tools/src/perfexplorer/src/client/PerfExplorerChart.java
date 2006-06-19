@@ -468,14 +468,20 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			PerfExplorerModel.getModel(), 
 			RMIChartData.RELATIVE_EFFICIENCY);
 
+		int decreasing = 0, total = 0;
+		double lastValue = 0.0;
         XYSeriesCollection dataset = new XYSeriesCollection();
 		List rowLabels = rawData.getRowLabels();
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
         	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+			total = total + row.size();
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
         		s.add(values[0], values[1]);
+				if (lastValue > values[1])
+					decreasing++;
+				lastValue = values[1];
 			}
         	dataset.addSeries(s);
 		}
@@ -494,14 +500,17 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
 		customizeChart(chart, rawData.getRows(), false);
 
-        XYPlot plot = chart.getXYPlot();
-        LogarithmicAxis axis = new LogarithmicAxis(
-			PerfExplorerModel.getModel().getMetricName());
-        axis.setAutoRangeIncludesZero(true);
-        axis.setAllowNegativesFlag(true);
-        axis.setLog10TickLabelsFlag(true);
-        plot.setRangeAxis(0, axis);
- 
+		// if decreasing, assume strong scaling, and do Log axis for range.
+		if (decreasing > total/2) {
+        	XYPlot plot = chart.getXYPlot();
+        	LogarithmicAxis axis = new LogarithmicAxis(
+				PerfExplorerModel.getModel().getMetricName());
+        	axis.setAutoRangeIncludesZero(true);
+        	axis.setAllowNegativesFlag(true);
+        	axis.setLog10TickLabelsFlag(true);
+        	plot.setRangeAxis(0, axis);
+ 		}
+
 		return new PerfExplorerChart(chart, "Total Execution Time");
 	}
 
