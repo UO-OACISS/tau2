@@ -490,7 +490,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
             "Total Execution:" +
 			PerfExplorerModel.getModel().getMetricName(),  // chart title
             "Number of Processors",          // domain axis label
-            PerfExplorerModel.getModel().getMetricName(),     // range axis label
+            PerfExplorerModel.getModel().getMetricNameUnits(),     // range axis label
             dataset,                         // data
             PlotOrientation.VERTICAL,        // the plot orientation
             true,                            // legend

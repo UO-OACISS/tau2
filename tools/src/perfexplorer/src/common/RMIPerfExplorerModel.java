@@ -8,7 +8,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.17 2006/06/19 21:05:15 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.18 2006/06/19 23:37:51 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -422,6 +422,16 @@ public class RMIPerfExplorerModel implements Serializable {
 		// otherwise, just return the null String
 		return metricName;
 	}
+
+	public String getMetricNameUnits() {
+		// similar to getMetricName, but add "seconds" if metric == time
+		String name = getMetricName();
+		if (name != null && name.equalsIgnoreCase("time")) {
+			return name + " (seconds)";
+		}
+		return name;
+	}
+
 
 	public void setMetricName (String metricName) {
 		this.metricName = metricName;
