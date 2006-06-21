@@ -1363,7 +1363,63 @@ int CPDB_GetSubstringCol(const char *haystack, const char *needle)
       break;
     }
   }
-  const char *res = strstr(local_haystack, needle);
+  /* We need to ensure that characters immediately before/after are not
+     alpha numeric. i.e., it does not return the column associated with
+     rcToReturn when we are searching for return. Same applies for after */
+
+  bool check_before = false;
+  bool check_after = false;
+  const char *res;
+  int col_found; 
+  int needle_length = strlen(needle); /* how many characters are we searching */
+  while (check_before == false || check_after == false)
+  { /* keep searching until before and after are ok */
+#ifdef DEBUG
+    printf("Examining: %s, and %s\n", local_haystack, needle); 
+#endif /* DEBUG */
+    res = strstr(local_haystack, needle);
+    /* is res non null? Did it find a match? */
+    if (!res) break; /* out of the loop - it is null */
+    /* we found something, examine the columns before and after it */
+    col_found = res - local_haystack; 
+#ifdef DEBUG 
+    printf("Found col_found %d value= %c\n", col_found, local_haystack[col_found]);
+#endif /* DEBUG */
+    if (col_found == 0) break; /* no need to continue, didn't find anything! */
+    if ((col_found) &&isalnum(local_haystack[col_found - 1])) {
+      /* hey, the string has another needle which shouldn't match - rcToReturn */	
+      local_haystack[col_found] = '^'; /* set it to something else rcTo^eturn*/
+      continue; /* searching */
+    }
+    else {
+      check_before = true; /* its ok, proceed */
+    }
+    /* what about after return? */
+    /* is it safe to examine after the column? */
+    int hay_length = strlen(local_haystack);  /* we modified local_haystack, tolower,
+	so we need to measure this length again : rctoreturn */
+    
+    if (col_found+needle_length >= hay_length) {
+      /* it's fine */
+      check_after = true; /* ok */
+      continue;
+    }
+    /* aha! there is something else going on -- returned for instance */ 
+#ifdef DEBUG
+    printf("Col after return = %d, value  = %c, length=%d\n",
+	col_found +needle_length, local_haystack[col_found+needle_length], hay_length);
+#endif /* DEBUG */
+    if (isalnum(local_haystack[col_found+needle_length])) {
+      local_haystack[col_found] = '^'; /* check again ^eturned */
+      continue; /* searching again */
+    }
+    else { /* character is ok */
+      check_after = true; 
+      continue; 
+    }
+
+  } /* keep searching until before and after are ok */
+ 
   int diff = 0;
   if (res)
   {
@@ -2203,8 +2259,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.95 $   $Date: 2006/06/06 04:28:59 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.95 2006/06/06 04:28:59 sameer Exp $
+ * $Revision: 1.96 $   $Date: 2006/06/21 20:41:19 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.96 2006/06/21 20:41:19 sameer Exp $
  ***************************************************************************/
 
 
