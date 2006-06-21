@@ -132,6 +132,8 @@ typedef struct Ttf_file
   GroupNameMapT *groupNameMap;
   bool		initialized;
   double        lastTimestamp;
+
+  bool          forWriting;
 } Ttf_fileT;
 
 
@@ -147,6 +149,6 @@ extern "C" int isEventIDRegistered(Ttf_fileT *tFile, long int eid);
 
 /***************************************************************************
  * $RCSfile: TAU_tf_decl.h,v $   $Author: amorris $
- * $Revision: 1.5 $   $Date: 2005/10/11 19:16:27 $
- * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.5 2005/10/11 19:16:27 amorris Exp $ 
+ * $Revision: 1.6 $   $Date: 2006/06/21 18:50:45 $
+ * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.6 2006/06/21 18:50:45 amorris Exp $ 
  ***************************************************************************/

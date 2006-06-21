@@ -81,6 +81,7 @@ extern "C" {
     }
     tFile->tracePosition = 1; // 0 will be the EV_INIT record
     tFile->initialized = false;
+    tFile->forWriting = true;
 
     /* Open the trace file */
     if ((tFile->Fid = open (name, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0600)) < 0) {
@@ -299,6 +300,9 @@ extern "C" {
   int Ttf_CloseOutputFile(Ttf_FileHandleT file) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
+    if (tFile->forWriting == false) {
+      return (int)Ttf_CloseFile(tFile);
+    }
 
     for (NidTidMapT::iterator it = tFile->NidTidMap->begin(); it != tFile->NidTidMap->end(); ++it) {
       pair<int, int> nidtid = (*it).first;

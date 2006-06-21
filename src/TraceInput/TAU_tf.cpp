@@ -284,6 +284,7 @@ Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
   
   tFile->subtractFirstTimestamp = true;
   tFile->nonBlocking = false;
+  tFile->forWriting = false;
 
   /* Open the trace file */
   if ( (tFile->Fid = open (filename, O_RDONLY | O_BINARY | LARGEFILE_OPTION)) < 0 )
@@ -354,6 +355,11 @@ Ttf_FileHandleT Ttf_CloseFile( Ttf_FileHandleT fileHandle )
 
   if (tFile == (Ttf_file *) NULL)
     return NULL;
+
+  if (tFile->forWriting == true) {
+    return (Ttf_FileHandleT) Ttf_CloseOutputFile(tFile);
+  }
+
 
   /* Close the trace file using the handle */
   if (close(tFile->Fid) < 0)
@@ -880,6 +886,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.18 $   $Date: 2006/05/11 19:12:12 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.18 2006/05/11 19:12:12 amorris Exp $ 
+ * $Revision: 1.19 $   $Date: 2006/06/21 18:50:45 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.19 2006/06/21 18:50:45 amorris Exp $ 
  ***************************************************************************/
