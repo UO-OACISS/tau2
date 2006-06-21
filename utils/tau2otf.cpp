@@ -567,7 +567,7 @@ int main(int argc, char **argv)
   unsigned int *idarray = new unsigned int[totalnidtids];
   for (i = 0; i < totalnidtids; i++)
   { /* assign i to each entry */
-    idarray[i] = i;
+    idarray[i] = i+1;
   }
   
   /* create a callstack on each thread/process id */
@@ -651,8 +651,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2otf.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2006/06/19 08:45:58 $
- * VERSION_ID: $Id: tau2otf.cpp,v 1.2 2006/06/19 08:45:58 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2006/06/21 11:43:44 $
+ * VERSION_ID: $Id: tau2otf.cpp,v 1.3 2006/06/21 11:43:44 sameer Exp $
  ***************************************************************************/
 
 
