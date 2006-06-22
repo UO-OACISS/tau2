@@ -301,7 +301,7 @@ extern "C" {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
     if (tFile->forWriting == false) {
-      return (int)Ttf_CloseFile(tFile);
+      return (int)((long)Ttf_CloseFile(tFile));
     }
 
     for (NidTidMapT::iterator it = tFile->NidTidMap->begin(); it != tFile->NidTidMap->end(); ++it) {
