@@ -43,6 +43,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     private JCheckBox reverseCallPathsBox = new JCheckBox("Reverse Call Paths");
     private JCheckBox meanIncludeNullBox = new JCheckBox(
             "<html>Interpret threads that do not call a given function as a 0 value for statistics computation</html>");
+    private JCheckBox generateIntermediateCallPathDataBox = new JCheckBox(
+            "<html>Generate data for reverse calltree<br>(requires lots of memory)</html>");
 
     public PreferencesWindow(Preferences preferences) {
         this.preferences = preferences;
@@ -56,6 +58,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
         meanIncludeNullBox.setToolTipText("<html>There are two methods for computing the mean for a given function over all threads:<br>1. Add up the values for that function for each thread and divide by the total number of threads.<br>2. Add up the values for that function for each thread and divide by the number of threads that actually called that function.<br><br>This has the effect that if a particular function is only called by 2 threads:<br>The first method will show the mean value as 1/N where N is the total number of threads.<br>The second method will only divide by 2.<br><br>This option also affects standard deviation computation.");
         reverseCallPathsBox.setToolTipText("<html>If this option is enabled, call path names will be shown in reverse<br>(e.g. \"C &lt;= B &lt;= A\" vs. \"A =&gt; B =&gt; C\")");
+        generateIntermediateCallPathDataBox.setToolTipText("<html>If this option is enabled, then the reverse calltree will be available.<br>However, it requires additional memory and should be disabled if the JVM<br>runs out of memory on large callpath datasets.</html>");
 
         if (preferences.getLoaded()) {
             // Set preferences based on saved values.
@@ -67,6 +70,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             showPathTitleInReverseBox.setSelected(preferences.getShowPathTitleInReverse());
             reverseCallPathsBox.setSelected(preferences.getReversedCallPaths());
             meanIncludeNullBox.setSelected(!preferences.getComputeMeanWithoutNulls());
+            generateIntermediateCallPathDataBox.setSelected(preferences.getGenerateIntermediateCallPathData());
         }
 
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -89,7 +93,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         setTitle("ParaProf Preferences");
 
         int windowWidth = 550;
-        int windowHeight = 400;
+        int windowHeight = 450;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
         //There is really no need to resize this window.
@@ -181,6 +185,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProfUtils.addCompItem(settingsPanel, showPathTitleInReverseBox, gbc, 0, 2, 2, 1);
         ParaProfUtils.addCompItem(settingsPanel, reverseCallPathsBox, gbc, 0, 3, 2, 1);
         ParaProfUtils.addCompItem(settingsPanel, meanIncludeNullBox, gbc, 0, 4, 2, 1);
+        ParaProfUtils.addCompItem(settingsPanel, generateIntermediateCallPathDataBox, gbc, 0, 5, 2, 1);
 
         gbc.fill = GridBagConstraints.BOTH;
 
@@ -320,6 +325,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setShowPathTitleInReverse(showPathTitleInReverseBox.isSelected());
         ParaProf.preferences.setReversedCallPaths(reverseCallPathsBox.isSelected());
         ParaProf.preferences.setComputeMeanWithoutNulls(!meanIncludeNullBox.isSelected());
+        ParaProf.preferences.setGenerateIntermediateCallPathData(generateIntermediateCallPathDataBox.isSelected());
     }
 
     public String getFontName() {
@@ -418,7 +424,6 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                             fontStyle = Font.PLAIN;
                         }
                     }
-                    
 
                     prefSpacingPanel.repaint();
                 } else if (arg.equals("Italic")) {
@@ -459,6 +464,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     showPathTitleInReverseBox.setSelected(false);
                     reverseCallPathsBox.setSelected(false);
                     meanIncludeNullBox.setSelected(true);
+                    generateIntermediateCallPathDataBox.setSelected(false);
                     setControls();
                 }
 

@@ -35,7 +35,8 @@ public class Preferences implements Serializable {
     private int units = 2;
     private boolean reversedCallPaths = false;
     private boolean computeMeanWithoutNulls = false;
-
+    private boolean generateIntermediateCallPathData = false;
+    
     static final long serialVersionUID = 183442743456314793L;
 
     public void setLoaded(boolean b) {
@@ -194,6 +195,14 @@ public class Preferences implements Serializable {
     // behavior (they go to false if not found)
     public void setComputeMeanWithoutNulls(boolean computeMeanWithoutNulls) {
         this.computeMeanWithoutNulls = computeMeanWithoutNulls;
+    }
+
+    public boolean getGenerateIntermediateCallPathData() {
+        return generateIntermediateCallPathData;
+    }
+
+    public void setGenerateIntermediateCallPathData(boolean generateIntermediateCallPathData) {
+        this.generateIntermediateCallPathData = generateIntermediateCallPathData;
     }
 
 }
