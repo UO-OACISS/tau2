@@ -32,9 +32,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.2 2006/03/30 03:03:52 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.3 2006/06/23 17:49:48 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ImageExport, Printable, ParaProfWindow {
@@ -1856,13 +1856,14 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     public void keyTyped(KeyEvent evt) {
         try {
+            char key = evt.getKeyChar();
             // zoom in and out on +/-
-            if (evt.getKeyChar() == '+') {
+            if (key == '+' || key == '=') {
                 scale = scale + 0.10;
                 if (scale > 5.0)
                     scale = 5.0;
                 graph.setScale(scale);
-            } else if (evt.getKeyChar() == '-') {
+            } else if (key == '-' || key == '_') {
                 scale = scale - 0.10;
                 if (scale < 0.10)
                     scale = 0.10;
