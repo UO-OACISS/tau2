@@ -9,9 +9,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.7 2006/04/03 18:16:40 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.8 2006/06/23 17:48:35 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		TrialData
  * @see		NCT
  */
@@ -50,6 +50,10 @@ public abstract class DataSource {
     private Map userEvents = new TreeMap();
     private List allThreads;
 
+    
+    private boolean generateIntermediateCallPathData;
+    private boolean reverseDataAvailable;
+    
     // just a holder for the output of getMaxNCTNumbers(), makes subsequent calls instantaneous
     private int[] maxNCT = null;
 
@@ -405,6 +409,7 @@ public abstract class DataSource {
         int numThreads = allThreads.size();
 
         Group derivedGroup = this.addGroup("TAU_CALLPATH_DERIVED");
+        reverseDataAvailable = true;
 
         for (Iterator l = functions.iterator(); l.hasNext();) {
             Function function = (Function) l.next();
@@ -463,7 +468,9 @@ public abstract class DataSource {
             setCallPathDataPresent(true);
         }
         
-        generateBonusCallPathData();
+        if (generateIntermediateCallPathData) {
+            generateBonusCallPathData();
+        }
         
         checkForPhases();
 
@@ -1033,6 +1040,18 @@ public abstract class DataSource {
      */
     public Function getTopLevelPhase() {
         return topLevelPhase;
+    }
+
+    public boolean getGenerateIntermediateCallPathData() {
+        return generateIntermediateCallPathData;
+    }
+
+    public void setGenerateIntermediateCallPathData(boolean generateIntermediateCallPathData) {
+        this.generateIntermediateCallPathData = generateIntermediateCallPathData;
+    }
+
+    public boolean getReverseDataAvailable() {
+        return reverseDataAvailable;
     }
 
 }
