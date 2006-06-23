@@ -19,6 +19,7 @@ declare -i hasMpi=$TRUE
 declare -i needToCleanPdbInstFiles=$TRUE
 declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
+declare -i optDetectMemoryLeaks=$FALSE
 
 declare -i isVerbose=$FALSE
 declare -i isDebug=$FALSE
@@ -67,6 +68,7 @@ printUsage () {
 	echo -e "  -optCompile=\"\"\t\tOptions passed to the compiler by the user."
 	echo -e "  -optTauDefs=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_DEFS)"
 	echo -e "  -optTauIncludes=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE)"
+	echo -e "  -optIncludeMemory=\"\"\t\tFlags for replacement of malloc/free. Typically -I\$(TAU_DIR)/include/Memory"
 	echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
 	echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
 	echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
@@ -313,8 +315,9 @@ for arg in "$@"
 				;;
 
 			-optTau=*)
-				optTau=${arg#"-optTau="}
+				optTauInstrOpts=${arg#"-optTau="}
 				echoIfDebug "\tTau Options are: $optTau"
+				optTau="$optTauInstrOpts $optTau"
 				;;
 
 			-optLinking*)
@@ -337,6 +340,18 @@ for arg in "$@"
 				echoIfDebug "\tCompiling Include Options from TAU are: $optTauIncludes"
 				echoIfDebug "\tFrom optTauIncludes: $optTauIncludes"
 				optIncludes="$optIncludes $optTauIncludes"
+				;;
+			-optIncludeMemory=*)
+				optIncludeMemory="${arg#"-optIncludeMemory="}"
+				echoIfDebug "\tCompiling Include Memory Options from TAU are: $optIncludeMemory"
+				echoIfDebug "\tFrom optIncludeMemory: $optIncludeMemory"
+				;;
+			-optDetectMemoryLeaks)
+				optDetectMemoryLeaks=$TRUE
+				optIncludes="$optIncludes $optIncludeMemory"
+				optTau="-memory $optTau"
+				echoIfDebug "\Including Memory directory for malloc/free replacement and calling tau_instrumentor with -memory"
+				echoIfDebug "\tFrom optIncludes: $optIncludes"
 				;;
 			-optCompile*)
 				optCompile="${arg#"-optCompile="} $optCompile"
