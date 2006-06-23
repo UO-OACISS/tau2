@@ -43,6 +43,7 @@ extern void writeAdditionalFortranInvocations(ofstream& ostr, const pdbRoutine *
 /* For Pooma, add a -noinline flag */
 bool noinline_flag = false; /* instrument inlined functions by default */
 bool noinit_flag = false;   /* initialize using TAU_INIT(&argc, &argv) by default */
+bool memory_flag = false;   /* by default, do not insert malloc.h in instrumented C/C++ files */
 bool lang_specified = false; /* implicit detection of source language using PDB file */
 bool process_this_return = false; /* for C instrumentation using a different return keyword */
 char exit_keyword[256] = "exit"; /* You can define your own exit keyword */
@@ -539,6 +540,9 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
 
   // put in code to insert <Profile/Profiler.h> 
   ostr<< "#include <"<<header_file<<">"<<endl;
+  if (memory_flag)
+    ostr<< "#include <malloc.h>"<<endl;
+
   defineTauGroup(ostr, group_name); 
   
   int inputLineNo = 0;
@@ -1435,8 +1439,151 @@ int CPDB_GetSubstringCol(const char *haystack, const char *needle)
 }
 
 
+/* -------------------------------------------------------------------------- */
+/* -- Does the statement contain this keyword? ------------------------------ */
+/* -------------------------------------------------------------------------- */
+bool isKeywordPresent(char *line, char *keyword)
+{
+   bool present;
+   if ((!((line[0] == 'c') || (line[0] == 'C') || (line[0] == '!'))) && 
+	  	    ( CPDB_GetSubstringCol(line, keyword) > 0 ))
+     present = true;
+   else
+     present = false;
+
+   /* is it present? */
+#ifdef DEBUG
+   cout <<"isKeywordPresent:"<<line<<" keyword: "<<keyword<<"? "<<present<<endl;
+#endif /* DEBUG */
+   return present; /* is it present? */
+}
 
 
+/* -------------------------------------------------------------------------- */
+/* -- is it a continuation line? Checking the previous line for an &          */
+/* -------------------------------------------------------------------------- */
+bool continuedFromLine(char *line)
+{
+  int length = strlen(line);
+
+  int i = length-1;
+#ifdef DEBUG 
+  cout <<"Starting check from "<<line[i]<<endl;
+#endif /* DEBUG */
+  if (line[i] == '&') return true; /* it is contued */
+  else return false; /* no continuation characters found */
+}
+/* -------------------------------------------------------------------------- */
+/* -- is it a continuation line? Check for a ) from the end of current line
+ * -- and check for a & at the end of the previous line (preferrably after
+ * -- removing comments from the line i.e., all characters before ! comm      */
+/* -------------------------------------------------------------------------- */
+bool isContinuationLine(char *currentline, char *previousline, int columnToCheckFrom)
+{
+  int c;
+  /* Check to see if return is in a continuation line */
+  /* such as :
+  *     if(  (ii/=jj  .or. kk<=0)  .and. &
+  *           & (kcheck==0  .or. ii/=lsav+1 .or. kk>0) ) return
+  */
+#ifdef DEBUG
+  cout <<"columnToCheckFrom = "<<columnToCheckFrom<<endl;
+  cout <<"currentline = "<<currentline <<" prevline = "<<previousline<<" colToCheck "<<columnToCheckFrom<<endl;
+#endif /* DEBUG */
+  for(c = columnToCheckFrom; c > 0; c--)
+  {
+#ifdef DEBUG
+    cout <<"c = "<<c<<"currentline[c] = "<<currentline[c]<<endl;
+#endif /* DEBUG */
+    if (currentline[c] == ' ' || currentline[c] == '\t') continue;
+    if (currentline[c] == ')' || currentline[c] == '&')
+    { /* return is in a continuation line - has " ) return" */
+      /* or something like:
+       * if (x .gt. 3) &
+       *   & return
+       */
+#ifdef DEBUG
+      cout <<"currentline[c] = "<<currentline[c]<<endl;
+#endif /* DEBUG */
+      return true; /* it is a continuation line. Well, that it found a ) from if */
+    }
+    else
+    { /* we found a character that was not a ) or a blank. Hmm could it be in the 6th column? */
+      return false; /* nope there was something else */
+    }
+  } /* keep checking all the columns from the end */
+  /* we haven't checked the previous line yet... */
+#ifdef DEBUG
+  cout <<"Reached here: currentline= "<<currentline<<endl;
+#endif /* DEBUG */
+  if (continuedFromLine(previousline))
+    return true; /* put in a then/endif clause as there is continuation */
+  else
+    return false; /* by default return a false */
+}
+
+/* -------------------------------------------------------------------------- */
+/* -- Should we add a then and endif clause --------------------------------- */
+/* -------------------------------------------------------------------------- */
+bool addThenEndifClauses(char *currentline, char *previousline, int currentcol)
+{
+  char *checkbuf;  
+  bool is_if_stmt = false; /* initialized to a false value */
+  int i; 
+
+  /* create a copy of the currentline */
+  checkbuf = new char [strlen(currentline)+1];
+  if (checkbuf == (char *) NULL) 
+  {
+    perror("ERROR: addThenEndifClauses: new returns NULL while creating checkbuf");
+    exit(1);
+  }
+
+  /* fill in checkbuf until the current construct */
+  for  (i = 0; i < currentcol; i++)
+  { /* currentcol is (*it)->col - 1; */
+    checkbuf[i] = currentline[i];
+  }
+  checkbuf[i] = '\0'; 
+
+  /* now that it is filled in, let us see if it has a "if" in it */
+  is_if_stmt = isKeywordPresent(checkbuf, "if");
+
+  /* Before we declare that we should insert the then clause,
+   * we need to ensure that a then does not appear in the statement already */
+
+  if (is_if_stmt == true)
+  {
+    /* does a then appear? */
+    if (isKeywordPresent(checkbuf, "then"))
+    is_if_stmt = false;
+
+    /* here we are merely checking if we are inside a single-if
+     * statement, one that does not have a then clause. If there
+     * is a then clause in the same statement, then we classify
+     * is_if_stmt as false */
+   }
+
+   /* Check to see if return is in a continuation line */
+   /* such as :
+    *     if(  (ii/=jj  .or. kk<=0)  .and. &
+    *           & (kcheck==0  .or. ii/=lsav+1 .or. kk>0) ) return
+    */
+
+   if (is_if_stmt == false) 
+   {
+     if(isContinuationLine(currentline, previousline, currentcol - 1 ))
+     { /* check from one less than the current column number: (*it)->col - 2. */
+       is_if_stmt = true; 
+     }
+   }
+   /* Here, either is_if_stmt is true or it is a plain return*/
+#ifdef DEBUG
+   cout <<"if_stmt = "<<is_if_stmt<<endl;
+#endif /* DEBUG */
+  delete[] checkbuf;  /* checkbuf has served its purpose - get rid of it! */
+  return is_if_stmt; 
+}
 
 /* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
@@ -1446,6 +1593,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   string file(f->name());
   string codesnippet; /* for START_TIMER, STOP_TIMER */
   static char inbuf[INBUF_SIZE]; // to read the line
+  static char previousline[INBUF_SIZE]; // to read the line
   char *checkbuf=NULL; // Assign inbuf to checkbuf for return processing
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
@@ -1465,6 +1613,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   cout << "Processing " << file << " in instrumentFFile..." << endl;
 #endif
 
+  memset(previousline, INBUF_SIZE, 0); // reset to zero
   memset(inbuf, INBUF_SIZE, 0); // reset to zero
   // initialize reference vector
   vector<itemRef *> itemvec;
@@ -1657,7 +1806,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    cout <<"inbuf = "<<inbuf<<endl;
 	    cout <<"line ="<<(*it)->line<<" col = "<<(*it)->col<<endl;
 #endif /* DEBUG */
-		/* Check to see if it is not a comment and has a "if" in the string */
+	    /* Check to see if it is not a comment and has a "if" in the string */
 
 	    /* search for 'return', since preprocessing may have 
 	       moved it and given us a bogus column, if we can't find it
@@ -1669,8 +1818,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
             /* When the return is at an incorrect location in the pdb file,
                we need to flush the buffer from the current location to the 
 	       correct location */
-		/* Also check to see if lit is the same as it or in other 
-	words, has the body begin written the statement? */
+	    /* Also check to see if lit is the same as it or in other 
+	       words, has the body begin written the statement? */
 	    if (col && col > (*it)->col && lit!=it)
 	    {
 	      for(i=(*it)->col-1; i < col-1; i++)
@@ -1693,98 +1842,28 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	      fprintf(stderr, "ERROR: specified column number (%d) is beyond the end of the line (%d in length)\n",(*it)->col,strlen(inbuf));
 	      fprintf(stderr, "line = %s\n",inbuf);
 	      exit(-1);
+	    } 
+            is_if_stmt = addThenEndifClauses(inbuf, previousline, (*it)->col - 1);
+	    if (lit == it)
+	    { /* Has body begin already written the beginning of the statement? */
+	      /* No. Write it (since it is same as lit) */
+              for(i=0; i< ((*it)->col)-1; i++)
+	      { 
+#ifdef DEBUG
+	  	cout << "Writing (1): "<<inbuf[i]<<endl;
+#endif /* DEBUG */
+	  	ostr <<inbuf[i]; 
+	      }
 	    }
-                checkbuf = new char[strlen(inbuf)+1]; 
-                if (checkbuf == (char *) NULL) 
-                {
-                  perror("ERROR: new returns NULL while creating checkbuf");
-                  exit(1);
-                }
-                for  (i = 0; i < (*it)->col; i++)
-                {
-	           checkbuf[i] = inbuf[i];
-                }
-                checkbuf[i] = '\0'; 
-      		if ((!((inbuf[0] == 'c') || (inbuf[0] == 'C') || (inbuf[0] == '!'))) && 
-	  	    (strstr(checkbuf,"if") != NULL))
-		  is_if_stmt = true;
-                else
-		  is_if_stmt = false;
 
-      		if ((is_if_stmt == false) && (!((inbuf[0] == 'c') || (inbuf[0] == 'C') || (inbuf[0] == '!'))) && 
-	  	    (strstr(checkbuf,"IF") != NULL))
-                { /* only if the earlier clause was false will this be executed */
-		  is_if_stmt = true;
-                }
-		/* Before we declare that we should insert the then clause,
-		 * we need to ensure that a then does not appear in the 
-		 * statement already */
-		if (is_if_stmt == true)
- 		{
-		  /* does a then appear? */
-		  if (strstr(checkbuf, "THEN") != NULL) 
-		    is_if_stmt = false;
-		  if (strstr(checkbuf, "then") != NULL) 
-		    is_if_stmt = false;
-		}
-
-		/* Check to see if return is in a continuation line */
-		/* such as :
-		 *     if(  (ii/=jj  .or. kk<=0)  .and. &
-		 *           & (kcheck==0  .or. ii/=lsav+1 .or. kk>0) ) return
-		 */
-
-		if (is_if_stmt == false) 
-		{
-#ifdef DEBUG
-		  cout <<"col = "<<(*it)->col <<endl;
-#endif /* DEBUG */
-		  for(c = ((*it)->col)-2; c > 0; c--)
-		  {
-#ifdef DEBUG
-		    cout <<"c = "<<c<<"inbuf[c] = "<<inbuf[c]<<endl;
-#endif /* DEBUG */
-	            if (inbuf[c] == ' ' || inbuf[c] == '\t') continue;
-		    if (inbuf[c] == ')' ) 
-		    { /* return is in a continuation line - has " ) return" */
-#ifdef DEBUG
-		       cout <<"inbuf[c] = "<<inbuf[c]<<endl;
-#endif /* DEBUG */
-		       is_if_stmt = true;
-		       break;
-		    }
-		    else
-		    {
-		       is_if_stmt = false;
-		       break;
-		    }
-		  }
-		}
-		/* Here, either is_if_stmt is true or it is a plain return*/
-#ifdef DEBUG
-	cout <<"if_stmt = "<<is_if_stmt<<endl;
-#endif /* DEBUG */
-
-	        if (lit == it)
-		{ /* Has body begin already written the beginning of the statement? */
-		  /* No. Write it (since it is same as lit) */
-        	  for(i=0; i< ((*it)->col)-1; i++)
-		  { 
-#ifdef DEBUG
-	  	    cout << "Writing (1): "<<inbuf[i]<<endl;
-#endif /* DEBUG */
-	  	    ostr <<inbuf[i]; 
-		  }
-		}
-
-		if (is_if_stmt)
-		{ 
-		  ostr << "then"<<endl;
-		  ostr << "          ";
-		}
+	    if (is_if_stmt)
+	    { 
+	       ostr << "then"<<endl;
+	       ostr << "          ";
+	    }
 	
-		WRITE_TAB(ostr,(*it)->col);
-		/* before writing stop/exit examine the kind */
+	    WRITE_TAB(ostr,(*it)->col);
+	    /* before writing stop/exit examine the kind */
 		if ((*it)->kind == EXIT)
 		{ /* Turn off the timers. This is similar to abort/exit in C */
 		  ostr <<"call TAU_PROFILE_EXIT('exit')"<<endl;
@@ -1864,14 +1943,19 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		     <<" timer = "<<(*it)->snippet<<endl;
 #endif /* DEBUG */
 		/* we need to check if this goto occurs on a line with an if */
-		ifcol = CPDB_GetSubstringCol(inbuf,"if");
 		gotocol = CPDB_GetSubstringCol(inbuf,"goto");
+                if (addThenEndifClauses(inbuf, previousline, gotocol))
+	        {
+			/* old code: 
+		ifcol = CPDB_GetSubstringCol(inbuf,"if");
 		thencol = CPDB_GetSubstringCol(inbuf,"then");
 		if (ifcol && gotocol && !thencol)
 		{
 #ifdef DEBUG
 		  cout <<"ifcol = "<<ifcol<<" goto col = "<<gotocol
 		        <<" thencol = " << thencol<<endl;
+#endif */ /* DEBUG */
+#ifdef DEBUG
                   cout <<"GOTO_STOP_TIMER INSIDE SINGLE_IF "<<endl;
 #endif /* DEBUG */
 		  
@@ -1908,6 +1992,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
         } /* for it/lit */
         lit = it;		
       } /* reached line */
+      strcpy(previousline, inbuf); /* save the current line */
       memset(inbuf, INBUF_SIZE, 0); // reset to zero
     } /* while */
   } /* while lit!= end */
@@ -1915,6 +2000,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   while (istr.getline(inbuf, INBUF_SIZE) )
   {
     ostr << inbuf <<endl;
+    strcpy(previousline, inbuf); /* save the current line. Hmm... not necessary here?  */
   }
   // written everything. quit and debug!
   ostr.close();
@@ -2020,7 +2106,24 @@ int main(int argc, char **argv)
 
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>]"<<endl;
+    cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
+    cout <<"-noinline: disables the instrumentation of inline functions in C++"<<endl;
+    cout <<"-noinit: does not call TAU_INIT(&argc,&argv). This disables a.out --profile <group[+<group>]> processing."<<endl;
+    cout <<"-memory: calls #include <malloc.h> at the beginning of each C/C++ file for malloc/free replacement."<<endl;
+    cout <<"-g groupname: puts all routines in a profile group. "<<endl;
+    cout <<"-i headerfile: instead of <Profile/Profiler.h> a user can specify a different header file for TAU macros"<<endl;
+    cout<<"-c : Force a C++ program to be instrumented as if it were a C program with explicit timer start/stops"<<endl;
+    cout<<"-c++ : Force instrumentation of file using TAU's C++ API in case it cannot infer the language"<<endl;
+    cout<<"-fortran : Force instrumentation using TAU's Fortran API in case it cannot infer the language"<<endl;
+    cout<<"-f <inst_req_file>: Specify an instrumentation specification file"<<endl;
+    cout<<"-rn <return_keyword>: Specify a different keyword for return (e.g., a  macro that calls return"<<endl;
+    cout<<"-rv <return_void_keyword>: Specify a different keyword for return in a void routine"<<endl;
+    cout<<"-e <exit_keyword>: Specify a different keyword for exit (e.g., a macro that calls exit"<<endl;
+    cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
+    cout<<"e.g.,"<<endl;
+    cout<<"% "<<argv[0]<<" foo.pdb foo.cpp -o foo.inst.cpp -f select.tau"<<endl;
+    cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -2065,6 +2168,13 @@ int main(int argc, char **argv)
           printf("Noinit flag\n");
 #endif /* DEBUG */
           noinit_flag = true;
+        }
+        if (strcmp(argv[i], "-memory")==0)
+ 	{
+#ifdef DEBUG
+          printf("Memory profiling flag\n");
+#endif /* DEBUG */
+          memory_flag = true;
         }
         if (strcmp(argv[i], "-c")==0)
  	{
@@ -2259,8 +2369,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.96 $   $Date: 2006/06/21 20:41:19 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.96 2006/06/21 20:41:19 sameer Exp $
+ * $Revision: 1.97 $   $Date: 2006/06/23 20:09:45 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.97 2006/06/23 20:09:45 sameer Exp $
  ***************************************************************************/
 
 
