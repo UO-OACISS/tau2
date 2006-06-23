@@ -1,5 +1,5 @@
 include ../../include/Makefile
-TAUOPTS = -optVerbose -optKeepFiles -optCompile=$(TAU_INCLUDE_MEMORY) 
+TAUOPTS = -optVerbose -optKeepFiles -optDetectMemoryLeaks
 CXX= $(TAU_COMPILER) $(TAUOPTS) $(TAU_CXX)
 
 simple: simple.o
