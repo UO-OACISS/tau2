@@ -682,6 +682,7 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
       DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
       ue = new TauUserEvent((const char *)(contextname.c_str()), MonotonicallyIncreasing);
       TheContextMap().insert(map<TAU_CONTEXT_MAP_TYPE>::value_type(comparison, ue));
+      ue->ctxevt = this; /* store the current object in the user event */
       delete ctxname; /* free up the string memory */
     }
     else
@@ -703,6 +704,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 2006/06/17 04:41:16 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.19 2006/06/17 04:41:16 sameer Exp $ 
+ * $Revision: 1.20 $   $Date: 2006/06/27 19:26:56 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.20 2006/06/27 19:26:56 sameer Exp $ 
  ***************************************************************************/
