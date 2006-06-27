@@ -494,8 +494,18 @@ for arg in "$@"
 			optPdtF95="$mod_arg $optPdtF95"
 			optCompile="$mod_arg $optCompile"
 			optIncludeDefs="$mod_arg $optIncludeDefs"
-
 			;;
+
+
+	        -qfixed*)
+		        optPdtF95="-R fixed $optPdtF95"
+			argsRemaining="$argsRemaining $arg"
+		        ;;
+
+	        -qfree*)
+		        optPdtF95="-R free $optPdtF95"
+			argsRemaining="$argsRemaining $arg"
+		        ;;
 
 		-c)
 			isForCompilation=$TRUE
