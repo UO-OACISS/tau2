@@ -22,6 +22,10 @@ public class DataSourceExport {
 
     public static void writeDelimited(DataSource dataSource, File file) throws FileNotFoundException, IOException {
         FileOutputStream out = new FileOutputStream(file);
+        writeDelimited(dataSource, out);
+    }
+    public static void writeDelimited(DataSource dataSource, OutputStream out) throws IOException
+    {
         OutputStreamWriter outWriter = new OutputStreamWriter(out);
         BufferedWriter bw = new BufferedWriter(outWriter);
 
@@ -90,6 +94,10 @@ public class DataSourceExport {
     public static void writePacked(DataSource dataSource, File file) throws FileNotFoundException, IOException {
         //File file = new File("/home/amorris/test.ppk");
         FileOutputStream ostream = new FileOutputStream(file);
+        writePacked(dataSource, ostream);
+    }
+    public static void writePacked(DataSource dataSource, OutputStream ostream) throws IOException 
+    {
         GZIPOutputStream gzip = new GZIPOutputStream(ostream);
         BufferedOutputStream bw = new BufferedOutputStream(gzip);
         DataOutputStream p = new DataOutputStream(bw);

@@ -13,6 +13,7 @@ public class Group implements Serializable, Comparable {
     private Color color = null;
     private Color specificColor = null;
     
+    private double time;
 
     public Group(String name, int id) {
         this.name = name;
@@ -27,6 +28,10 @@ public class Group implements Serializable, Comparable {
         return id;
     }
 
+    public double getTime()
+    {
+    	return time;
+    }
     public int compareTo(Object inObject) {
         return name.compareTo(((Group) inObject).getName());
     }
@@ -45,7 +50,10 @@ public class Group implements Serializable, Comparable {
     public void setColorFlag(boolean colorFlag) {
         this.colorFlag = colorFlag;
     }
-
+    public void setTime(double t)
+    {
+    	time = t;
+    }
     public boolean isColorFlagSet() {
         return colorFlag;
     }

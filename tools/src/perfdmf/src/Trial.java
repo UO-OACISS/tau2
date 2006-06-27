@@ -22,7 +22,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.4 2006/04/10 19:55:50 khuck Exp $
+ * CVS $Id: Trial.java,v 1.5 2006/06/27 03:02:16 scottb Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -355,9 +355,10 @@ public class Trial implements Serializable {
 	}
 
    public static void getMetaData(DB db) {
-        // see if we've already have them
-        if (Trial.fieldNames != null)
-            return;
+       // see if we've already have them
+	   // need to load each time in case we are working with a new database. 
+//        if (Trial.fieldNames != null)
+//            return;
 
         try {
             ResultSet resultSet = null;
@@ -537,6 +538,7 @@ public class Trial implements Serializable {
             if (itExists) {
                 statement.setInt(pos, trialID);
             }
+
             statement.executeUpdate();
             statement.close();
             if (itExists) {
@@ -750,6 +752,14 @@ public class Trial implements Serializable {
         aOutputStream.defaultWriteObject();
         aOutputStream.writeObject(fieldNames);
         aOutputStream.writeObject(fieldTypes);
+    }
+    /**
+     *  hack - needed to delete meta so that it is reloaded each time a new database is created.
+     */
+    public void removeMetaData()
+    {
+    	fieldNames = null;
+    	fieldTypes = null;
     }
 
 }

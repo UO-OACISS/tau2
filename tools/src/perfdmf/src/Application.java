@@ -20,7 +20,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.5 2006/04/10 19:55:50 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.6 2006/06/27 03:02:15 scottb Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -39,7 +39,7 @@ public class Application implements Serializable {
     // numFields, the number of optional fields found in the DB
     public Application() {
         if (Application.fieldNames == null) {
-            this.fields = new String[0];
+            fields = new String[0];
         } else {
             this.fields = new String[Application.fieldNames.length];
         }
@@ -81,8 +81,8 @@ public class Application implements Serializable {
 
     public static void getMetaData(DB db) {
         // see if we've already have them
-        if (Application.fieldNames != null)
-            return;
+//       if (Application.fieldNames != null)
+//            return;
 
         try {
             ResultSet resultSet = null;
@@ -413,6 +413,14 @@ public class Application implements Serializable {
         aOutputStream.defaultWriteObject();
         aOutputStream.writeObject(fieldNames);
         aOutputStream.writeObject(fieldTypes);
+    }
+    /**
+     *  hack - needed to delete meta so that it is reloaded each time a new database is created.
+     */
+    public void removeMetaData()
+    {
+    	fieldNames = null;
+    	fieldTypes = null;
     }
 
 }

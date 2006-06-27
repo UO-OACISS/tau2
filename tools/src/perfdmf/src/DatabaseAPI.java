@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.7 2006/04/11 02:22:42 khuck Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.8 2006/06/27 03:02:15 scottb Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class DatabaseAPI {
 
@@ -88,6 +88,15 @@ public class DatabaseAPI {
         Application.getMetaData(db);
         Experiment.getMetaData(db);
         Trial.getMetaData(db);
+    }
+    public void initialize(ParseConfig parser, String password) throws SQLException
+    {
+    	connector = new ConnectionManager(parser, password);
+    	connector.connect();
+    	db = connector.getDB();
+    	Application.getMetaData(db);
+    	Experiment.getMetaData(db);
+    	Trial.getMetaData(db);
     }
 
     public void initialize(Object obj, String password) throws SQLException {

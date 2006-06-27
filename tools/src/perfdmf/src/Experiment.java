@@ -17,7 +17,7 @@ import java.io.IOException;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.4 2006/04/10 19:55:50 khuck Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.5 2006/06/27 03:02:16 scottb Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -409,5 +409,12 @@ public class Experiment implements Serializable {
         aOutputStream.writeObject(fieldNames);
         aOutputStream.writeObject(fieldTypes);
     }
-
+    /**
+     *  hack - needed to delete meta so that it is reloaded each time a new database is created.
+     */
+    public void removeMetaData()
+    {
+    	fieldNames = null;
+    	fieldTypes = null;
+    }
 }
