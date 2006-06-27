@@ -30,6 +30,7 @@ extern "C" {
 void *malloc (size_t size);
 void *Tau_malloc_C( const char *file, int line, size_t size);
 void Tau_free_C(const char *file, int line, void *p);
+void *Tau_realloc_C(const char *file, int line, void *p, size_t size);
 void free(void *p);
 
 void *calloc(size_t nmemb, size_t size);
@@ -64,6 +65,8 @@ void *realloc(void *ptr, size_t size);
   void Tau_free_C(const char *file, int line, void *p);
 */
 #define free(p) Tau_free_C(__FILE__, __LINE__, p)
+
+#define realloc(p, s) Tau_realloc_C(__FILE__, __LINE__, p, s)
 
 #else /* TAU_USE_CXX_MALLOC_API */
 /* For C++ */
