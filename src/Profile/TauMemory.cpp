@@ -288,7 +288,7 @@ void* Tau_realloc(const char *file, int line, TauVoidPointer p, size_t size)
 {
   Tau_free_before(file, line, p); 
   void *retval = realloc(p, size);
-  Tau_track_memory_allocation(file, line, size, p);
+  Tau_track_memory_allocation(file, line, size, retval);
   return retval;
 }
 
@@ -432,6 +432,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 2006/06/27 19:26:56 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.18 2006/06/27 19:26:56 sameer Exp $ 
+ * $Revision: 1.19 $   $Date: 2006/06/28 00:31:23 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.19 2006/06/28 00:31:23 sameer Exp $ 
  ***************************************************************************/
