@@ -33,6 +33,11 @@
 #include <string.h>
 #include "Profile/ProfileGroups.h"
 
+
+
+extern "C" void Tau_pure_start(char *name);
+extern "C" void Tau_pure_stop(char *name);
+
 /* 
 #define DEBUG_PROF
 */
@@ -160,6 +165,63 @@ void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name)
 }
 
 
+#ifdef TAU_PURE_FORTRAN_INSTRUMENTATION
+void tau_pure_start(char *fname, int flen) {
+  // make a copy so that we can null terminate it
+  char *localname = (char *) malloc((size_t)flen+1);
+  strncpy(localname, fname, flen);
+  localname[flen] = '\0';
+  
+  // check for unprintable characters
+  for(int i=0; i<strlen(localname); i++) {
+    if (!VALID_NAME_CHAR(localname[i])) { 
+      localname[i] = '\0';
+      break;
+    }
+  }
+
+  Tau_pure_start(localname);
+  free(localname);
+}
+
+void TAU_PURE_START(char *fname, int flen) {
+  tau_pure_start(fname, flen);
+}
+void tau_pure_start_(char *fname, int flen) {
+  tau_pure_start(fname, flen);
+}
+void tau_pure_start__(char *fname, int flen) {
+  tau_pure_start(fname, flen);
+}
+
+void tau_pure_stop(char *fname, int flen) {
+  // make a copy so that we can null terminate it
+  char *localname = (char *) malloc((size_t)flen+1);
+  strncpy(localname, fname, flen);
+  localname[flen] = '\0';
+  
+  // check for unprintable characters
+  for(int i=0; i<strlen(localname); i++) {
+    if (!VALID_NAME_CHAR(localname[i])) { 
+      localname[i] = '\0';
+      break;
+    }
+  }
+
+  Tau_pure_stop(localname);
+  free(localname);
+}
+void TAU_PURE_STOP(char *fname, int flen) {
+  tau_pure_stop(fname, flen);
+}
+void tau_pure_stop_(char *fname, int flen) {
+  tau_pure_stop(fname, flen);
+}
+void tau_pure_stop__(char *fname, int flen) {
+  tau_pure_stop(fname, flen);
+}
+#endif
+
 void tau_profile_timer_(void **ptr, char *fname, int flen)
 {
   
@@ -192,7 +254,18 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
       }
     }
 
-    EXTRACT_GROUP(localname, flen, gr, gr_name)
+    EXTRACT_GROUP(localname, flen, gr, gr_name);
+
+    // skip whitespace
+    while (*localname && *localname == ' ') {
+      localname++;
+    }
+
+    // remove proceeding &, usually comes from -qfixed=132, -132, etc on fixed form
+    if (*localname && *localname == '&') {
+      localname++;
+    }
+
     *ptr = Tau_get_profiler(localname, (char *)" ", gr, gr_name);
     free(tmp); 
 
@@ -1332,6 +1405,6 @@ void TAU_PROFILE_CALLSTACK(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.50 $   $Date: 2005/11/11 03:46:49 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.50 2005/11/11 03:46:49 amorris Exp $ 
+ * $Revision: 1.51 $   $Date: 2006/06/28 23:03:22 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.51 2006/06/28 23:03:22 amorris Exp $ 
  ***************************************************************************/
