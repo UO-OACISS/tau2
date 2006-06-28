@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.7 2006/06/23 17:52:37 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.8 2006/06/28 19:43:46 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -130,7 +130,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Applications");
         standard = new DefaultMutableTreeNode("Standard Applications");
         runtime = new DefaultMutableTreeNode("Runtime Applications");
-        dbApps = new DefaultMutableTreeNode("DB Apps " + getDatabaseName());
+        dbApps = new DefaultMutableTreeNode("DB (" + getDatabaseName() + ")");
 
         root.add(standard);
         //root.add(runtime);
@@ -1660,10 +1660,14 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 }
 
                 ParseConfig parser = new ParseConfig(ParaProf.preferences.getDatabaseConfigurationFile());
-                dbDisplayName = "[" + parser.getDBHost() + " (" + parser.getDBType() + ")]";
+                //dbDisplayName = "[" + parser.getDBHost() + " (" + parser.getDBType() + ")]";
+                dbDisplayName = parser.getConnectionString();
+                if (dbDisplayName.compareTo("") == 0) {
+                    dbDisplayName = "none";
+                }
             } catch (Exception e) {
                 // Forget it
-                dbDisplayName = "";
+                dbDisplayName = "none";
             }
         }
         return dbDisplayName;
