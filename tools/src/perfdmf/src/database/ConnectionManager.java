@@ -28,6 +28,16 @@ public class ConnectionManager {
     private ParseConfig parser = null;
     private DB db = null;
 
+    public ConnectionManager(ParseConfig prs, boolean prompt)
+    {
+    	parser = prs;
+    	initialize(this.getPassword(prompt));
+    }
+    public ConnectionManager(ParseConfig prs, String password)
+    {
+    	parser = prs;
+    	initialize(password);
+    }
     public ConnectionManager(String configFileName) {
         parser = new ParseConfig(configFileName);
         initialize(this.getPassword());
