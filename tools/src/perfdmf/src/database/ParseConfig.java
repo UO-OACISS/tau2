@@ -92,6 +92,21 @@ public class ParseConfig {
 
     }
 
+    public String getConnectionString() {
+        String connectionString;
+        if (getDBType().equals("derby")) {
+            connectionString = "jdbc:" + getDBType() + ":" + getDBName();
+        } else {
+            if (getDBType().equals("oracle")) {
+                connectionString = "jdbc:oracle:thin:@//" + getDBHost() + ":" + getDBPort() + "/" + getDBName();
+            } else {
+                connectionString = "jdbc:" + getDBType() + "://" + getDBHost() + ":" + getDBPort() + "/"
+                        + getDBName();
+            }
+        }
+        return connectionString;
+    }
+
     public String getValueToken(String aLine) {
         int i = aLine.indexOf(":");
         if (i > 0) {
