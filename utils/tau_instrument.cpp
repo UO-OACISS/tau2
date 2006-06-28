@@ -600,20 +600,20 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
   string declaration2(string("       save ")+varname);
 
   /* now we create the call to create the timer */
+  string createtimer(string("       call TAU_PROFILE_TIMER(")+varname+", '"+timername+"')");
 
-//   string createtimer(string("       call TAU_PROFILE_TIMER(")+varname+", '"+timername+"')");
-
-  /* We will always start the quote on the first line, then skip to the next
-     inserting an & at column 73, then at column 6.  TAU_PROFILE_TIMER will
-     clean up any mess made by -qfixed=132, etc */
-  string s1 = string("       call TAU_PROFILE_TIMER(")+varname+", '";
-  string s2 = "";
-  int length = s1.length();
-  for (int i=length; i < 73; i++) {
-    s2 = s2 + " ";
+  if (createtimer.length() > 72) {
+    /* We will always start the quote on the first line, then skip to the next
+       inserting an & at column 73, then at column 6.  TAU_PROFILE_TIMER will
+       clean up any mess made by -qfixed=132, etc */
+    string s1 = string("       call TAU_PROFILE_TIMER(")+varname+", '";
+    string s2 = "";
+    int length = s1.length();
+    for (int i=length; i < 73; i++) {
+      s2 = s2 + " ";
+    }
+    createtimer = s1+s2+"&\n"+"     &"+timername+"')";
   }
-  string createtimer(s1+s2+"&\n"+"     &"+timername+"')");
-
   
 
 
@@ -1116,6 +1116,6 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.20 $   $Date: 2006/06/28 23:04:20 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.20 2006/06/28 23:04:20 amorris Exp $
+ * $Revision: 1.21 $   $Date: 2006/06/28 23:17:18 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.21 2006/06/28 23:17:18 amorris Exp $
  ***************************************************************************/
