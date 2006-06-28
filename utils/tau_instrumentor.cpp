@@ -1496,11 +1496,19 @@ bool isContinuationLine(char *currentline, char *previousline, int columnToCheck
     cout <<"c = "<<c<<"currentline[c] = "<<currentline[c]<<endl;
 #endif /* DEBUG */
     if (currentline[c] == ' ' || currentline[c] == '\t') continue;
-    if (currentline[c] == ')' || currentline[c] == '&')
+    if (currentline[c] == ')' || currentline[c] == '&' || 
+       (c+1 == 6 && (currentline[c] != ' ' && currentline[c] != '0' && 
+        currentline[4] == ' ' && currentline[3] == ' ' && currentline[2] == ' '
+        && currentline[1] == ' ' && currentline[0] == ' ')) )
     { /* return is in a continuation line - has " ) return" */
+      /* if there's a non blank, non zero character in 6th column and columns
+       * 1 through 5 are blank, then it is a continuation line in Fixed form! */
       /* or something like:
        * if (x .gt. 3) &
-       *   & return
+       *   & return 
+       * if (x .gt. 3) 
+       *. return
+       * is there something in the 6th column besides the space? 
        */
 #ifdef DEBUG
       cout <<"currentline[c] = "<<currentline[c]<<endl;
@@ -2369,8 +2377,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.98 $   $Date: 2006/06/24 05:26:42 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.98 2006/06/24 05:26:42 sameer Exp $
+ * $Revision: 1.99 $   $Date: 2006/06/28 19:35:59 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.99 2006/06/28 19:35:59 sameer Exp $
  ***************************************************************************/
 
 
