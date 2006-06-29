@@ -3579,6 +3579,9 @@ then
 	else return 0;
   }
 EOF
+  if [ $machine = alpha -a $cxx_compiler = cxx ]; then
+    orig_useropt="$orig_useropt -x c++ -D__USE_STD_IOSTREAM"
+  fi
   if $cxx_compiler $orig_useropt -I$pdtdir/include -c checkpdt.cpp 1> /dev/null 2>&1
   then
     echo "PDT supports Fortran Loop Level information"
