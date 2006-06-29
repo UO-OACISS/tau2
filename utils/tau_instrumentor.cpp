@@ -999,6 +999,8 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
   // Begin Instrumentation
   // put in code to insert <Profile/Profiler.h>
   ostr<< "#include <"<<header_file<<">"<<endl;
+  if (memory_flag)
+    ostr<< "#include <malloc.h>"<<endl;
   defineTauGroup(ostr, group_name); 
 
   int inputLineNo = 0;
@@ -2377,8 +2379,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.99 $   $Date: 2006/06/28 19:35:59 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.99 2006/06/28 19:35:59 sameer Exp $
+ * $Revision: 1.100 $   $Date: 2006/06/29 06:46:04 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.100 2006/06/29 06:46:04 sameer Exp $
  ***************************************************************************/
 
 
