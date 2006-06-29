@@ -1011,7 +1011,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
   vector<tauInstrument *>::iterator it;
   bool cmpResult; 
   int column ;
-  bool retval;
+  bool retval = true;
   PDB::lang_t lang;
   PDB::croutinevec croutines;
   PDB::froutinevec froutines; 
@@ -1115,7 +1115,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.21 $   $Date: 2006/06/28 23:17:18 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.21 2006/06/28 23:17:18 amorris Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
+ * $Revision: 1.22 $   $Date: 2006/06/29 06:45:27 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.22 2006/06/29 06:45:27 sameer Exp $
  ***************************************************************************/
