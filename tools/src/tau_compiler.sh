@@ -47,6 +47,7 @@ preprocessorOpts="-P  -traditional-cpp"
 printUsage () {
 	echo -e "Usage: tau_compiler.sh"
 	echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
+	echo -e "  -optDetectMemoryLeaks\t\tTrack mallocs/frees using TAU's memory wrapper"
 	echo -e "  -optPdtDir=\"\"\t\t\tPDT architecture directory. Typically \$(PDTDIR)/\$(PDTARCHDIR)"
 	echo -e "  -optPdtF95Opts=\"\"\t\tOptions for Fortran parser in PDT (f95parse)"
 	echo -e "  -optPdtF95Reset=\"\"\t\tReset options to the Fortran parser to the given list"
