@@ -783,6 +783,7 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
         break;
       case pdbStmt::ST_GOTO:
 #ifndef PDT_NOFSTMTS
+      case pdbStmt::ST_FCYCLE:
       case pdbStmt::ST_FEXIT:
       case pdbStmt::ST_FGOTO:
 #endif /* PDT_NOFSTMTS */
@@ -1117,6 +1118,6 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.23 $   $Date: 2006/06/29 19:37:06 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.23 2006/06/29 19:37:06 amorris Exp $
+ * $Revision: 1.24 $   $Date: 2006/06/29 20:01:57 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.24 2006/06/29 20:01:57 amorris Exp $
  ***************************************************************************/
