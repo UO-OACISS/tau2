@@ -1954,6 +1954,14 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 		/* we need to check if this goto occurs on a line with an if */
 		gotocol = CPDB_GetSubstringCol(inbuf,"goto");
+                /* check for "go to <label>" instead of "goto <label>" */
+		if (gotocol == 0) 
+		{
+		  gotocol = CPDB_GetSubstringCol(inbuf,"go");
+		} 
+#ifdef DEBUG
+		printf("gotocol = %d, inbuf = %s\n", gotocol, inbuf);
+#endif /* DEBUG */
                 if (addThenEndifClauses(inbuf, previousline, gotocol-1))
 	        {
 			/* old code: 
@@ -2379,8 +2387,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.100 $   $Date: 2006/06/29 06:46:04 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.100 2006/06/29 06:46:04 sameer Exp $
+ * $Revision: 1.101 $   $Date: 2006/06/30 23:48:50 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.101 2006/06/30 23:48:50 sameer Exp $
  ***************************************************************************/
 
 
