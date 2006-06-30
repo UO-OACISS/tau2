@@ -2415,7 +2415,7 @@ then
     if [ -d $mpiinc/openmpi ]
 	then
 	echo "NOTE: Using OpenMPI"
-	additional_mpiincs="-I$mpiinc/openmpi/ompi"
+	additional_mpiincs="-I$mpiinc/openmpi/ompi -I$mpiinc/openmpi"
     fi
 
   if [ -d $mpiinc ]
