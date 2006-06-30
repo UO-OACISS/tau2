@@ -127,6 +127,7 @@ static int nodeprint = TRUE;
 static int dump = FALSE;      /* -- command line option - are we creating a dumpfile for RACY? -- */
 static int dumpminmax = FALSE;
 static int list = FALSE;      /* -- command line option - are we just listing the function names? -- */
+static int mseconly = FALSE;  /* -- command line option - suppress hr:mm:ss.mmm conversion -- nsc -- */
 static char lbuf[256];        /* -- temporary line buffer for reads -- */
 static char sbuf[128];        /* -- temporary string buffer -- */
 static int  hpcxx_flag = FALSE;
@@ -1308,22 +1309,37 @@ static char *strsave (const char *s){
 static char *ToTimeStr (double ti, char timbuf[]){
   long msec, sec, min, hour;
   if (hwcounters == false) { /* time */
-    msec = (long) fmod (ti / 1.0e3, 1.0e3);
-    sec  = (long) fmod (ti / 1.0e6, 60.0);
-    min  = (long) fmod (ti / 60.0e6, 60.0);
-    hour = (long) (ti / 36.0e8);
-  
-    if ( hour )
-      sprintf (timbuf, "%2d:%02d:%02d.%03d", hour, min, sec, msec);
-    else if ( min )
-      sprintf (timbuf, "   %2d:%02d.%03d", min, sec, msec);
-    else if ( sec )
-      sprintf (timbuf, "      %2d,%03d", sec, msec);
-    else
-      sprintf (timbuf, "         %3d", msec);
-    if (ti < 1.0e3) 
-      sprintf (timbuf, "   %9.3G",ti/1.0e3);
-  }//if 
+    if (mseconly == FALSE) { /* nsc */
+      msec = (long) fmod (ti / 1.0e3, 1.0e3);
+      sec  = (long) fmod (ti / 1.0e6, 60.0);
+      min  = (long) fmod (ti / 60.0e6, 60.0);
+      hour = (long) (ti / 36.0e8);
+    
+      if ( hour )
+        sprintf (timbuf, "%2d:%02d:%02d.%03d", hour, min, sec, msec);
+      else if ( min )
+        sprintf (timbuf, "   %2d:%02d.%03d", min, sec, msec);
+      else if ( sec )
+        sprintf (timbuf, "      %2d,%03d", sec, msec);
+      else
+        sprintf (timbuf, "         %3d", msec);
+      if (ti < 1.0e3) 
+        sprintf (timbuf, "   %9.3G",ti/1.0e3);
+    } else {  /* suppress time formatting but convert to msec */
+        /* nsc start */
+        /*  if less than 100 msec, keep fractions to retain precision */
+        /*  otherwise round to whole msecs */
+        if (ti >= 1.0e5) 
+          sprintf (timbuf, "%12.0f",ti/1.0e3);
+        else if (ti >= 1.0e4) 
+          sprintf (timbuf, "%12.1f",ti/1.0e3);
+        else if (ti >= 1.0e3) 
+          sprintf (timbuf, "%12.2f",ti/1.0e3);
+        else
+          sprintf (timbuf, "%12.3f",ti/1.0e3);
+        /* nsc end */
+    } // mseconly if
+  }// hwcounters if 
   else /* counters */
     sprintf(timbuf,"%12.4G", ti);
   return (timbuf);
@@ -2457,6 +2473,9 @@ int main (int argc, char *argv[]){
 		  cout << "The number given was : " << max << endl;
 		}
 		break;
+              case 'p': /* -- su*P*press the time conversions -- nsc -- */
+                mseconly = TRUE;
+                break;
 	      case 'r': /* -- *R*everse sorting order -- */
 		sign = -1;
 		break;
@@ -2487,7 +2506,7 @@ int main (int argc, char *argv[]){
   /* -- parse command line arguments ---------------------------------------- */
   int ch;       //to hold option character from command line
   errflag = FALSE;
-  while ( (ch = getopt (argc, argv, "cbdf:lmeivn:rstx")) != EOF ) {
+  while ( (ch = getopt (argc, argv, "cbdf:lmeivn:prstx")) != EOF ) {
     switch ( ch ) {
     case 'c': /* -- sort according to number of *C*alls -- */
       compar = CallCmp;
@@ -2516,6 +2535,9 @@ int main (int argc, char *argv[]){
     case 'n': /* -- print only first n *N*umber of funtions -- */
       max = atoi(optarg);
       break;
+    case 'p': /* -- su*P*press the hh:mm:ss:mmm time conversions -- nsc -- */
+      mseconly = TRUE;
+      break;
     case 'r': /* -- *R*everse sorting order -- */
       sign = -1;
       break;
@@ -2539,7 +2561,7 @@ int main (int argc, char *argv[]){
 #endif //TAU_WINDOWS
   //if there was an error, print out the usage and exit
   if ( errflag ) {
-    fprintf (stderr, "usage: %s [-c|-b|-m|-t|-e|-i|-v] [-r] [-s] [-n num] [-f filename] [-l] [-d] [node numbers]\n", argv[0]);
+    fprintf (stderr, "usage: %s [-c|-b|-m|-t|-e|-i|-v] [-r] [-s] [-n num] [-f filename] [-p] [-l] [-d] [node numbers]\n", argv[0]);
     fprintf(stderr," -c : Sort according to number of Calls \n");
     fprintf(stderr," -b : Sort according to number of suBroutines called by a function \n");
     fprintf(stderr," -m : Sort according to Milliseconds (exclusive time total)\n");
@@ -2551,6 +2573,7 @@ int main (int argc, char *argv[]){
     fprintf(stderr," -s : print only Summary profile information \n");
     fprintf(stderr," -n <num> : print only first <num> number of functions \n");
     fprintf(stderr," -f filename : specify full path and Filename without node ids\n");
+    fprintf(stderr," -p : suPpress conversion to hh:mm:ss:mmm format\n");
     fprintf(stderr," -l : List all functions and exit\n");
     fprintf(stderr," -d : Dump output format (for Racy)");
     fprintf(stderr," [node numbers] : prints only info about all contexts/threads of given node numbers\n");	
@@ -2694,7 +2717,7 @@ int main (int argc, char *argv[]){
   exit (0);
 }//main()
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: amorris $
- * $Revision: 1.46 $   $Date: 2005/11/11 03:46:51 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.46 2005/11/11 03:46:51 amorris Exp $                                
+ * $RCSfile: pprof.cpp,v $   $Author: sameer $
+ * $Revision: 1.47 $   $Date: 2006/06/30 20:11:12 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.47 2006/06/30 20:11:12 sameer Exp $                                
  ***************************************************************************/
