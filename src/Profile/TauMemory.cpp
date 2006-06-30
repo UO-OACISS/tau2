@@ -167,7 +167,7 @@ void Tau_malloc_after(TauVoidPointer ptr, size_t size, TAU_USER_EVENT_TYPE *e)
 #endif
   /* store the size of memory allocated with the address of the pointer */
   //TheTauPointerSizeMap()[(long)p1] = pair<size_t, long>(size, (long) e); 
-  TheTauPointerSizeMap().insert(pair<long, pair<size_t, long> >((long)p1, pair<size_t, long>(size, (long) e->contextevent))); 
+  TheTauPointerSizeMap().insert(pair<const long, pair<size_t, long> >((long)p1, pair<size_t, long>(size, (long) e->contextevent))); 
   return;
 }
 
@@ -436,6 +436,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 2006/06/30 00:10:42 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.20 2006/06/30 00:10:42 sameer Exp $ 
+ * $Revision: 1.21 $   $Date: 2006/06/30 19:20:20 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.21 2006/06/30 19:20:20 sameer Exp $ 
  ***************************************************************************/
