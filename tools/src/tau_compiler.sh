@@ -499,12 +499,12 @@ for arg in "$@"
 
 
 	        -qfixed*)
-		        optPdtF95="-R fixed $optPdtF95"
+		        optPdtF95="$optPdtF95 -R fixed"
 			argsRemaining="$argsRemaining $arg"
 		        ;;
 
 	        -qfree*)
-		        optPdtF95="-R free $optPdtF95"
+		        optPdtF95="$optPdtF95 -R free"
 			argsRemaining="$argsRemaining $arg"
 		        ;;
 
