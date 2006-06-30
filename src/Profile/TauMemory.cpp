@@ -183,7 +183,9 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
 
   TauVoidPointer ptr = malloc(size);
 
+#ifdef DEBUGPROF
   printf("TAU_MALLOC<%d>: %s:%d ptr = %p size = %d\n", RtsLayer::myNode(), file, line, ptr, size);
+#endif /* DEBUGPROF */
 
   /* associate the event generated and its size with the address of memory
    * allocated by malloc. This is used later for memory leak detection and
@@ -276,7 +278,9 @@ void Tau_free(const char *file, int line, TauVoidPointer p)
   Tau_free_before(file, line, p);
 
   
+#ifdef DEBUGPROF
   printf("TAU_FREE  <%d>: %s:%d ptr = %p\n", RtsLayer::myNode(), file, line, p);
+#endif /* DEBUGPROF */
   /* and actually free the memory */
   free(p);
 }
@@ -432,6 +436,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 2006/06/28 00:31:23 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.19 2006/06/28 00:31:23 sameer Exp $ 
+ * $Revision: 1.20 $   $Date: 2006/06/30 00:10:42 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.20 2006/06/30 00:10:42 sameer Exp $ 
  ***************************************************************************/
