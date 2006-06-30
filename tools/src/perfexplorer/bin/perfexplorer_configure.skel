@@ -203,14 +203,14 @@ if [ ! -r ${WEKA_JAR} ]; then
 	    
 		/bin/rm -f weka-redirect.html
 		#wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html
-		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html weka-redirect.html
+		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html weka-redirect.html false
 		URL=`grep URL weka-redirect.html | sed s/URL=//`
 		FILE=`grep FILE weka-redirect.html | sed s/FILE=//`
 		DIR=`grep DIR weka-redirect.html | sed s/DIR=//`
 		/bin/rm -f weka-redirect.html
 		echo "Getting $FILE... please be patient..."
 		#wget "$URL"
-		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE"
+		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
 		mv "$FILE" ${WEKA_ZIP_DIR}/.
 		cd ${WEKA_ZIP_DIR}/.
 		unzip ${FILE}
