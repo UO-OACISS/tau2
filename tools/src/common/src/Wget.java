@@ -6,6 +6,10 @@ import java.net.URLConnection;
 
 public class Wget {
 
+    public static void wget(String URL, String file) throws IOException {
+		wget(URL, file, false);
+	}
+
     public static void wget(String URL, String file, boolean status) throws IOException {
         URLConnection url = new URL(URL).openConnection();
         DataInputStream in = new DataInputStream(url.getInputStream());
