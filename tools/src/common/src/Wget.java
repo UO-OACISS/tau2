@@ -41,6 +41,7 @@ public class Wget {
 			}
 		} else {
 			System.out.println("Usage: Wget <url> <local filename>");
+			System.out.println("Failed getting " + args[0]);
 		}
 	}
 }
