@@ -140,7 +140,7 @@ public class Configure {
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
                 tau_root = tmpString;
-                perfdmf_home = tau_root + "/tools/src/dms";
+                perfdmf_home = tau_root + "/tools/src/perfdmf";
             }
 
             String old_jdbc_db_type = jdbc_db_type;
@@ -314,7 +314,7 @@ public class Configure {
 
                         	if (jdbc_db_type.compareToIgnoreCase("postgresql") == 0) {
                             	Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/postgresql-redirect.html",
-                                    	".perfdmf_tmp/postgresql-redirect.html");
+                                    	".perfdmf_tmp/postgresql-redirect.html", false);
                             	BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(new File(
                                     	".perfdmf_tmp/postgresql-redirect.html"))));
 	
@@ -330,12 +330,12 @@ public class Configure {
 	
                             	System.out.println("\nDownloading... " + URL);
                             	System.out.print("Please Wait...");
-                            	Wget.wget(URL, jdbc_db_jarfile);
+                            	Wget.wget(URL, jdbc_db_jarfile, true);
                             	System.out.println(" Done");
                         	}
                         	if (jdbc_db_type.compareToIgnoreCase("mysql") == 0) {
                             	Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html",
-                                    	".perfdmf_tmp/mysql-redirect.html");
+                                    	".perfdmf_tmp/mysql-redirect.html", false);
 
                             	BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(new File(
                                     	".perfdmf_tmp/mysql-redirect.html"))));
@@ -357,7 +357,7 @@ public class Configure {
 
                             	System.out.println("\nDownloading... " + URL);
                             	System.out.print("Please Wait...");
-                            	Wget.wget(URL, ".perfdmf_tmp/" + FILE);
+                            	Wget.wget(URL, ".perfdmf_tmp/" + FILE, true);
                             	System.out.println(" Done");
                             	System.out.println("\nUncompressing...");
                             	Tar.guntar(".perfdmf_tmp/" + FILE);
