@@ -740,7 +740,8 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
   pdbStmt::stmt_t k = s->kind();
 
 #ifdef DEBUG
-    printf("Examining statement \n");
+    if (parentDO)
+    printf("Examining statement parentDo line=%d\n", parentDO->stmtEnd().line());
 #endif /* DEBUG */
     /* NOTE: We currently do not support goto in C/C++ to close the timer.
      * This needs to be added at some point -- similar to Fortran */
@@ -794,8 +795,8 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 #endif /* DEBUG */
 	  /* if the GOTO leaves the boundary of the calling do loop, decrement
 	   * the level by one. Else keep it as it is */
-	  if (labelOutsideStatementBoundary(s->extraStmt(), parentDO))
-	  {
+	  if (parentDO && labelOutsideStatementBoundary(s->extraStmt(), parentDO))
+	  { /* if the goto is within the boundary of the parent and the label is outside the boundary, then stop the timer */
 	    /* Uh oh! The go to is leaving the current do loop. We need to 
 	     * stop the timer */
 	    string timertoclose;
@@ -1117,7 +1118,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.25 $   $Date: 2006/06/29 20:52:08 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.25 2006/06/29 20:52:08 amorris Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
+ * $Revision: 1.26 $   $Date: 2006/07/01 00:49:34 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.26 2006/07/01 00:49:34 sameer Exp $
  ***************************************************************************/
