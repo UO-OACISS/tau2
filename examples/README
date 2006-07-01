@@ -249,3 +249,15 @@ param           - TAU can profile routines based on runtime parameters. This is
                   illustrates how we can use it in an application to track 
                   its execution time based on an argument. 
                   
+memoryleakdetect- TAU can instrument C/C++ programs that use malloc/free/realloc
+                  calls to track the location and extent of memory leaks using 
+                  TAU's wrapper for memory tracking. Simply add 
+                  -optDetectMemoryLeaks to your TAU_COMPILER options 
+                  (TAU_OPTIONS env. variable) to enable this feature. 
+                  Not only does TAU detect the location based on line and 
+                  file name, it also correlates the callstack at the time of 
+                  memory allocation, so you can examine the callpaths in the 
+                  program that led to memory allocations where corresponding 
+                  deallocations were missing. See examples/memoryleakdetect.
+
+ 
