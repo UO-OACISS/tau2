@@ -609,10 +609,20 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
     string s1 = string("       call TAU_PROFILE_TIMER(")+varname+", '";
     string s2 = "";
     int length = s1.length();
-    for (int i=length; i < 73; i++) {
+    for (int i=length; i < 72; i++) {
       s2 = s2 + " ";
     }
-    createtimer = s1+s2+"&\n"+"     &"+timername+"')";
+
+    createtimer = s1 + s2 + "&\n";
+
+    // continue to break lines in the correct spot
+    while (timername.length() > 66) {
+      string first = timername.substr(0,66);
+      timername.erase(0,66);
+      createtimer = createtimer + "     &"+first+"&\n";
+    }
+
+    createtimer = createtimer + "     &"+timername+"')";
   }
   
 
@@ -1118,7 +1128,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 2006/07/01 00:49:34 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.26 2006/07/01 00:49:34 sameer Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
+ * $Revision: 1.27 $   $Date: 2006/07/03 19:17:09 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.27 2006/07/03 19:17:09 amorris Exp $
  ***************************************************************************/
