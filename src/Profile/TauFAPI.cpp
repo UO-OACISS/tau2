@@ -240,9 +240,13 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
 
     // make a copy so that we can null terminate it
     char *localname = (char *) malloc((size_t)flen+1);
+    char *modname = (char *) malloc((size_t)flen+1);
     // hold on to the original pointer to free it since EXTRACT_GROUP
     // might change fname
     char *tmp = localname;
+    char *tmp2 = modname;
+    int skipwhite = 1;
+    int idx = 0;
     strncpy(localname, fname, flen);
     localname[flen] = '\0';
 
@@ -254,21 +258,27 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
       }
     }
 
+    // fix continuation lines
+    for(int i=0; i<strlen(localname); i++) {
+      if (localname[i] == '&') {
+	skipwhite = 1;
+      } else {
+	if (skipwhite && localname[i] == ' ') {
+	  
+	} else {
+	  modname[idx++] = localname[i];
+	  skipwhite = 0;
+	}
+      }
+    }
+    modname[idx] = 0;
+    localname = modname;
+
     EXTRACT_GROUP(localname, flen, gr, gr_name);
-
-    // skip whitespace
-    while (*localname && *localname == ' ') {
-      localname++;
-    }
-
-    // remove proceeding &, usually comes from -qfixed=132, -132, etc on fixed form
-    if (*localname && *localname == '&') {
-      localname++;
-    }
 
     *ptr = Tau_get_profiler(localname, (char *)" ", gr, gr_name);
     free(tmp); 
-
+    free(tmp2);
 #ifdef TAU_OPENMP
       }
     }
@@ -1405,6 +1415,6 @@ void TAU_PROFILE_CALLSTACK(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.51 $   $Date: 2006/06/28 23:03:22 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.51 2006/06/28 23:03:22 amorris Exp $ 
+ * $Revision: 1.52 $   $Date: 2006/07/03 19:22:36 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.52 2006/07/03 19:22:36 amorris Exp $ 
  ***************************************************************************/
