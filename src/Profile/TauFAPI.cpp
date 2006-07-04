@@ -259,14 +259,14 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
     }
 
     // fix continuation lines
-    for(int i=0; i<strlen(localname); i++) {
-      if (localname[i] == '&') {
+    for(int j=0; j<strlen(localname); j++) {
+      if (localname[j] == '&') {
 	skipwhite = 1;
       } else {
-	if (skipwhite && localname[i] == ' ') {
-	  
+	if (skipwhite && localname[j] == ' ') {
+	  // nothing, skip over it
 	} else {
-	  modname[idx++] = localname[i];
+	  modname[idx++] = localname[j];
 	  skipwhite = 0;
 	}
       }
@@ -1415,6 +1415,6 @@ void TAU_PROFILE_CALLSTACK(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.52 $   $Date: 2006/07/03 19:22:36 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.52 2006/07/03 19:22:36 amorris Exp $ 
+ * $Revision: 1.53 $   $Date: 2006/07/04 02:58:05 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.53 2006/07/04 02:58:05 amorris Exp $ 
  ***************************************************************************/
