@@ -4,8 +4,8 @@
 #Makefile creates the ParaProf jar file.
 ##########################
 
-CONFIG_ARCH=apple
-TAUROOT=/Users/khuck/tau2
+CONFIG_ARCH=i386_linux
+TAUROOT=/home/amorris/tau2
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java \
              ParaProfTreeCellRenderer.java \
@@ -54,12 +54,10 @@ new: $(TOOLS_SRC)/paraprof/bin/paraprof.jar
 
 old: ../bin/paraprof-1.3.jar
 
-wrapper/ParaProf.java : src/ParaProf.java
-	sed "s/XXXXX/$(NOW)/" src/ParaProf.java > wrapper/ParaProf.java
-
 $(TOOLS_SRC)/paraprof/bin/paraprof.jar: $(NEW_SOURCES)
 	rm -rf classes
 	mkdir classes
+	sed "s/XXXXX/$(NOW)/" src/ParaProf.java > wrapper/ParaProf.java
 	$(CC) -d ./classes -classpath $(CP14) $(NEW_SOURCES)
 	cp ./src/resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	jar -cvf bin/paraprof.jar -C ./classes edu
@@ -69,6 +67,7 @@ $(TOOLS_SRC)/paraprof/bin/paraprof.jar: $(NEW_SOURCES)
 ../bin/paraprof-1.3.jar: $(OLD_SOURCES) classes
 	rm -rf classes
 	mkdir classes
+	sed "s/XXXXX/$(NOW)/" src/ParaProf.java > wrapper/ParaProf.java
 	$(CC) -d ./classes -classpath $(CP13) $(OLD_SOURCES)
 	cp ./src/resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	jar -cvf bin/paraprof-1.3.jar -C ./classes edu
