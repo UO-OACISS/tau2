@@ -33,6 +33,21 @@
 #endif /* TAU_WINDOWS */
 
 #ifndef TAU_LIBRARY_SOURCE
+
+#ifdef TAU_WRAP_FORK
+#include <sys/types.h>
+#include <unistd.h>
+
+#undef fork
+#define fork() \
+        tau_fork()
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+pid_t tau_fork (void);
+#endif /* TAU_WRAP_FORK */
+
 #ifdef PTHREADS
 /* pthread_create wrapper */
 
@@ -295,7 +310,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.69 $   $Date: 2006/06/17 04:27:30 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.69 2006/06/17 04:27:30 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: amorris $
+ * $Revision: 1.70 $   $Date: 2006/07/05 22:38:23 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.70 2006/07/05 22:38:23 amorris Exp $ 
  ***************************************************************************/

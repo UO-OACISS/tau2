@@ -736,10 +736,23 @@ extern "C" void Tau_pure_stop(char *name) {
   Tau_stop_timer(fi);
 }
 
+extern "C" pid_t tau_fork() {
+  pid_t pid;
+  
+  pid = fork();
+  if (pid == 0) {
+    /* nothing */
+  } else {
+    TAU_REGISTER_FORK(pid, TAU_EXCLUDE_PARENT_DATA);
+  }
+
+  return pid;
+}
+
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.57 $   $Date: 2006/04/07 22:56:34 $
- * VERSION: $Id: TauCAPI.cpp,v 1.57 2006/04/07 22:56:34 amorris Exp $
+ * $Revision: 1.58 $   $Date: 2006/07/05 22:38:24 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.58 2006/07/05 22:38:24 amorris Exp $
  ***************************************************************************/
 
