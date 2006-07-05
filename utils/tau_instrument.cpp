@@ -646,16 +646,14 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
 
   additionalInvocations.push_back(pair<int, list<string> >(ro->id(), calls)); /* assign the list of strings to the list */
 
-  if (instrumentEntity(ro->fullName()))
-  { /* if it is ok to instrument this routine, invoke the start/stop functions */
-    string startsnippet(string("        call TAU_PROFILE_START(")+varname+")");
-    string stopsnippet (string("        call TAU_PROFILE_STOP(") +varname+")");
-    itemvec.push_back( new itemRef((const pdbItem *)ro, START_DO_TIMER, start.line(), start.col(), varname, BEFORE));
-    itemvec.push_back( new itemRef((const pdbItem *)ro, STOP_TIMER, stop.line(), stop.col()+1, varname, AFTER));
+  /* We have removed the check to see if the function should be instrumented here. It is now done in ProcessBlock */
+  string startsnippet(string("        call TAU_PROFILE_START(")+varname+")");
+  string stopsnippet (string("        call TAU_PROFILE_STOP(") +varname+")");
+  itemvec.push_back( new itemRef((const pdbItem *)ro, START_DO_TIMER, start.line(), start.col(), varname, BEFORE));
+  itemvec.push_back( new itemRef((const pdbItem *)ro, STOP_TIMER, stop.line(), stop.col()+1, varname, AFTER));
 #ifdef DEBUG
-    printf("instrumenting routine %s\n", ro->fullName().c_str());
+  printf("instrumenting routine %s\n", ro->fullName().c_str());
 #endif /* DEBUG */
-  }
 
 #ifdef DEBUG 
   printf("routine: %s, line,col = <%d,%d> to <%d,%d>\n", 
@@ -746,6 +744,7 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
   if (!s) return 1;
   if (!ro) return 1; /* if null, do not instrument */
 
+  if (!instrumentEntity(ro->fullName())) return 1;  /* we shouldn't instrument it? */
   
   pdbStmt::stmt_t k = s->kind();
 
@@ -1129,7 +1128,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.28 $   $Date: 2006/07/03 19:25:47 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.28 2006/07/03 19:25:47 amorris Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
+ * $Revision: 1.29 $   $Date: 2006/07/05 18:28:12 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.29 2006/07/05 18:28:12 sameer Exp $
  ***************************************************************************/
