@@ -1850,7 +1850,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
 	    if ((*it)->col > strlen(inbuf)) {
 	      fprintf(stderr, "ERROR: specified column number (%d) is beyond the end of the line (%d in length)\n",(*it)->col,strlen(inbuf));
-	      fprintf(stderr, "line = %s\n",inbuf);
+	      fprintf(stderr, "line = %s (%d)\n",inbuf,(*it)->line);
 	      exit(-1);
 	    } 
             is_if_stmt = addThenEndifClauses(inbuf, previousline, (*it)->col - 1);
@@ -1928,17 +1928,30 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
             case START_DO_TIMER:
             case START_TIMER:
 		docol = (*it)->col;
-		if ((*it)->kind == START_DO_TIMER)
-		{
 
-		  docol = CPDB_GetSubstringCol(inbuf,"do");
-#ifdef DEBUG
-                cout <<"START_DO_TIMER point Fortran -> line = "<< (*it)->line
-		     <<" col = "<< (*it)->col <<" write_upto = "<< write_upto
-		     <<" timer = "<<(*it)->snippet<< " docol = "<<docol<<endl;
-		cout <<"inbuf = "<<inbuf<<endl;
-#endif /* DEBUG */
-		}
+		/* I've commented this section out because it produces incorrect results
+		   for named loops, e.g.
+		   
+		   loopone: do i=1,6
+		     ...
+		   enddo loopone
+
+		   I believe it was intented to fix incorrect pdb files where the start
+		   of the do loop for a labeled do was pointing to the label instead
+		   of the D in DO.  This has been fixed in flint now though.
+		*/
+
+// 		if ((*it)->kind == START_DO_TIMER)
+// 		{
+
+// 		  docol = CPDB_GetSubstringCol(inbuf,"do");
+// #ifdef DEBUG
+//                 cout <<"START_DO_TIMER point Fortran -> line = "<< (*it)->line
+// 		     <<" col = "<< (*it)->col <<" write_upto = "<< write_upto
+// 		     <<" timer = "<<(*it)->snippet<< " docol = "<<docol<<endl;
+// 		cout <<"inbuf = "<<inbuf<<endl;
+// #endif /* DEBUG */
+// 		}
 		codesnippet = string("       call TAU_PROFILE_START(")+(*it)->snippet+")";
 		WRITE_SNIPPET((*it)->attribute, docol, write_upto, codesnippet);
                 instrumented = true;
@@ -2386,9 +2399,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.101 $   $Date: 2006/06/30 23:48:50 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.101 2006/06/30 23:48:50 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.102 $   $Date: 2006/07/05 17:48:46 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.102 2006/07/05 17:48:46 amorris Exp $
  ***************************************************************************/
 
 
