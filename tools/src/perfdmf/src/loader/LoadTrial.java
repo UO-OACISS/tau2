@@ -2,10 +2,9 @@ package edu.uoregon.tau.perfdmf.loader;
 
 import jargs.gnu.CmdLineParser;
 
-import java.io.*;
-import java.util.List;
-import java.util.Vector;
-
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import edu.uoregon.tau.perfdmf.*;
 
 public class LoadTrial {
@@ -311,10 +310,10 @@ public class LoadTrial {
         } else {
             if (sourceFiles.length == 1) {
                 String filename = sourceFiles[0];
-                if (filename.endsWith(".ppk")) {
+                if (filename.toLowerCase().endsWith(".ppk")) {
                     fileType = 7;
                 }
-                if (filename.endsWith(".cube")) {
+                if (filename.toLowerCase().endsWith(".cube")) {
                     fileType = 8;
                 }
             }
