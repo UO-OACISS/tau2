@@ -232,10 +232,14 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     MultipleCounterLayer::pclMCL_FP = -1;
 #endif//TAU_PCL
 
+
   //Get the counter names from the environment.
     for(int c=0; c<MAX_TAU_COUNTERS; c++)
     {
       MultipleCounterLayer::names[c] = getenv(environment[c]);
+      if (MultipleCounterLayer::names[c]) {
+	MultipleCounterLayer::names[c] = strdup(MultipleCounterLayer::names[c]);
+      }
     }
 
     //Initialize the function array with the correct active functions.
