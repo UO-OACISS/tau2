@@ -1530,8 +1530,14 @@ int Profiler::StoreData(int tid)
 	}
 	 
 	filename = new char[1024];
+
+#ifdef TAU_PID_AS_NODE
+	sprintf(filename,"%s/profile.%d.%d.%d",dirname, getpid(),
+		RtsLayer::myContext(), tid);
+#else 
 	sprintf(filename,"%s/profile.%d.%d.%d",dirname, RtsLayer::myNode(),
 		RtsLayer::myContext(), tid);
+#endif
 	DEBUGPROFMSG("Creating " << filename << endl;);
 	if ((fp = fopen (filename, "w+")) == NULL) {
 	 	errormsg = new char[1024];
@@ -2584,8 +2590,13 @@ int Profiler::StoreData(int tid){
 
       sprintf(newdirname,"%s/MULTI__%s",dirname,tmpChar);
 
+#ifdef TAU_PID_AS_NODE
+      sprintf(filename,"%s/profile.%d.%d.%d",newdirname, getpid(),
+	      RtsLayer::myContext(), tid);
+#else
       sprintf(filename,"%s/profile.%d.%d.%d",newdirname, RtsLayer::myNode(),
 	      RtsLayer::myContext(), tid);
+#endif
 
       DEBUGPROFMSG("Creating " << filename << endl;);
       if ((fp = fopen (filename, "w+")) == NULL) {
@@ -3279,9 +3290,9 @@ double& Profiler::TheTauThrottlePerCall(void)
   return throttlePercall;
 }
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.135 $   $Date: 2006/06/17 04:46:53 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.135 2006/06/17 04:46:53 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.136 $   $Date: 2006/07/06 03:41:07 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.136 2006/07/06 03:41:07 amorris Exp $ 
  ***************************************************************************/
 
 	
