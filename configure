@@ -1843,7 +1843,7 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
         fortran_compiler=intel
         intelifort=`which ifort 2>/dev/null`
-        if [ "y$intelifort" != "y"  -a -x $intelifort ]
+        if [ "y$intelifort" != "y"  -a -x "$intelifort" ]
         then 
           extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
         fi
@@ -2013,7 +2013,7 @@ case $fortran_compiler in
         echo "Default Fortran compiler will be Intel ifort"
         fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
         intelifort=`which ifort 2>/dev/null`
-        if [ "y$intelifort" != "y"  -a -x $intelifort ]
+        if [ "y$intelifort" != "y" -a -x "$intelifort" ]
         then 
           extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
         fi
