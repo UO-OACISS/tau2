@@ -203,7 +203,7 @@ public:
 	}
 	void SetExclTimeZero(int tid) {
           for(int i=0;i<MAX_TAU_COUNTERS;i++)
-            InclTime[tid][i] = 0;
+            ExclTime[tid][i] = 0;
         }
 
 
@@ -326,6 +326,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.39 $   $Date: 2006/02/13 22:50:32 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.39 2006/02/13 22:50:32 amorris Exp $ 
+ * $Revision: 1.40 $   $Date: 2006/07/06 21:39:36 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.40 2006/07/06 21:39:36 amorris Exp $ 
  ***************************************************************************/
