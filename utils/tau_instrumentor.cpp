@@ -40,7 +40,7 @@ extern void writeAdditionalFortranInvocations(ofstream& ostr, const pdbRoutine *
 #include "tau_datatypes.h"
 
 
-#define EXIT_KEYWORD_SIZE 1024
+#define EXIT_KEYWORD_SIZE 256
 /* For Pooma, add a -noinline flag */
 bool noinline_flag = false; /* instrument inlined functions by default */
 bool noinit_flag = false;   /* initialize using TAU_INIT(&argc, &argv) by default */
@@ -698,9 +698,10 @@ the open brace. */
 		} else {
 		  fprintf (stderr, "Warning: exit was found at line %d, column %d, but wasn't found in the source code.\n",(*it)->line, (*it)->col);
 		  fprintf (stderr, "If the exit call occurs in a macro (likely), make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear)\n");
+		  for (k = (*it)->col-1; k < strlen(inbuf); k++)
+		    ostr<<inbuf[k]; 
 		  instrumented = true;
 		  // write the input line in the output stream
-		  ostr << inbuf <<endl;
 		}            
             break;
 
@@ -967,10 +968,19 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
 /* -------------------------------------------------------------------------- */
 /* -- Writes the exit expression to the instrumented file  ------------------ */
 /* -------------------------------------------------------------------------- */
-void processExitExpression(ostream& ostr, string& exit_expression, itemRef *it, char *use_string)
+void processExitExpression(ostream& ostr, string& exit_expression, itemRef *it, char *use_string, bool abort_used)
 {
-  ostr <<"{ int tau_exit_val = " << exit_expression << "; ";
-  ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\"); " << use_string<<" (tau_exit_val); }"<<endl;
+
+  ostr <<"{ ";
+  if (abort_used){
+    ostr<<"int tau_exit_val = 0; ";
+    ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\"); " << use_string<<" (); }"<<endl;
+  }
+  else 
+  {
+    ostr<<"int tau_exit_val = "<<exit_expression<<";";
+    ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\"); " << use_string<<" (tau_exit_val); }"<<endl;
+  }
 }
 
 
@@ -984,6 +994,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
   static char inbuf[INBUF_SIZE]; // to read the line
   static char exit_type[EXIT_KEYWORD_SIZE]; // to read the line
   string exit_expression;
+  bool abort_used = false;
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
   string timercode; /* for outer-loop level timer-based instrumentation */
@@ -1222,9 +1233,11 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		cout <<"infbuf[(*it)->col-1] = "<<inbuf[(*it)->col-1]<<endl;
 #endif /* DEBUG */
                 memset(exit_type, EXIT_KEYWORD_SIZE, 0); // reset to zero
+		abort_used = false; /* initialize it */
 		if (strncmp(&inbuf[(*it)->col-1], "abort", strlen("abort")) == 0) 
 	        {
                    strcpy(exit_type, "abort");
+		   abort_used  = true; /* abort() takes void */
 	        }
 		if (strncmp(&inbuf[(*it)->col-1], "exit", strlen("exit")) == 0) 
 	        {
@@ -1239,8 +1252,8 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		    cout <<"Return for a non void routine "<<endl;
 #endif /* DEBUG */
 		exit_expression.clear();
-		if (exit_type)
-		{
+		if (exit_type != '\0')
+		{ /* is it null, or did we copy something into this string? */
 		  for (k = (*it)->col+strlen(exit_type)-1; (inbuf[k] != ';') && (k<inbufLength) ; k++)
 		    exit_expression.append(&inbuf[k], 1);
 #ifdef DEBUG
@@ -1280,14 +1293,13 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 #ifdef DEBUG 
 		    cout <<"exit_expression = "<<exit_expression<<endl;
 #endif /* DEBUG */
-		    processExitExpression(ostr, exit_expression, *it, exit_type); 
+		    processExitExpression(ostr, exit_expression, *it, exit_type, abort_used); 
 		}
-		else {
+		else { /* exit_type was null! Couldn't find anything here */
 		  fprintf (stderr, "Warning: exit was found at line %d, column %d, but wasn't found in the source code.\n",(*it)->line, (*it)->col);
 		  fprintf (stderr, "If the exit call occurs in a macro (likely), make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear)\n");
 		  instrumented = true;
 		  // write the input line in the output stream
-		  ostr << inbuf <<endl;
 		}            
 		break; 
 	
@@ -2214,7 +2226,7 @@ int main(int argc, char **argv)
     cout<<"-f <inst_req_file>: Specify an instrumentation specification file"<<endl;
     cout<<"-rn <return_keyword>: Specify a different keyword for return (e.g., a  macro that calls return"<<endl;
     cout<<"-rv <return_void_keyword>: Specify a different keyword for return in a void routine"<<endl;
-    cout<<"-e <exit_keyword>: Specify a different keyword for exit (e.g., a macro that calls exit"<<endl;
+    cout<<"-e <exit_keyword>: Specify a different keyword for exit (e.g., a macro that calls exit)"<<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
     cout<<"e.g.,"<<endl;
     cout<<"% "<<argv[0]<<" foo.pdb foo.cpp -o foo.inst.cpp -f select.tau"<<endl;
@@ -2464,8 +2476,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.103 $   $Date: 2006/07/06 00:32:46 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.103 2006/07/06 00:32:46 sameer Exp $
+ * $Revision: 1.104 $   $Date: 2006/07/06 01:28:19 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.104 2006/07/06 01:28:19 sameer Exp $
  ***************************************************************************/
 
 
