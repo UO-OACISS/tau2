@@ -40,13 +40,14 @@ extern void writeAdditionalFortranInvocations(ofstream& ostr, const pdbRoutine *
 #include "tau_datatypes.h"
 
 
+#define EXIT_KEYWORD_SIZE 1024
 /* For Pooma, add a -noinline flag */
 bool noinline_flag = false; /* instrument inlined functions by default */
 bool noinit_flag = false;   /* initialize using TAU_INIT(&argc, &argv) by default */
 bool memory_flag = false;   /* by default, do not insert malloc.h in instrumented C/C++ files */
 bool lang_specified = false; /* implicit detection of source language using PDB file */
 bool process_this_return = false; /* for C instrumentation using a different return keyword */
-char exit_keyword[256] = "exit"; /* You can define your own exit keyword */
+char exit_keyword[EXIT_KEYWORD_SIZE] = "exit"; /* You can define your own exit keyword */
 bool using_exit_keyword = false; /* By default, we don't use the exit keyword */
 tau_language_t tau_language; /* language of the file */
 
@@ -963,16 +964,26 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* -- Writes the exit expression to the instrumented file  ------------------ */
+/* -------------------------------------------------------------------------- */
+void processExitExpression(ostream& ostr, string& exit_expression, itemRef *it, char *use_string)
+{
+  ostr <<"{ int tau_exit_val = " << exit_expression << "; ";
+  ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\"); " << use_string<<" (tau_exit_val); }"<<endl;
+}
 
 
 /* -------------------------------------------------------------------------- */
-/* -- Instrumentation routine for a C++ program ----------------------------- */
+/* -- Instrumentation routine for a C program ------------------------------- */
 /* -------------------------------------------------------------------------- */
 bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string& header_file) 
 { 
   int inbufLength, i, j, space;
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
+  static char exit_type[EXIT_KEYWORD_SIZE]; // to read the line
+  string exit_expression;
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
   string timercode; /* for outer-loop level timer-based instrumentation */
@@ -1210,22 +1221,75 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		cout <<"exit_keyword = "<<exit_keyword<<endl;
 		cout <<"infbuf[(*it)->col-1] = "<<inbuf[(*it)->col-1]<<endl;
 #endif /* DEBUG */
-		if ((strncmp(&inbuf[(*it)->col-1], "abort", strlen("abort")) == 0) 
-		  ||(strncmp(&inbuf[(*it)->col-1], "exit", strlen("exit")) == 0) 
-		  ||(using_exit_keyword && (strncmp(&inbuf[(*it)->col-1], 
-				exit_keyword, strlen(exit_keyword)) == 0) ))
+                memset(exit_type, EXIT_KEYWORD_SIZE, 0); // reset to zero
+		if (strncmp(&inbuf[(*it)->col-1], "abort", strlen("abort")) == 0) 
+	        {
+                   strcpy(exit_type, "abort");
+	        }
+		if (strncmp(&inbuf[(*it)->col-1], "exit", strlen("exit")) == 0) 
+	        {
+		   strcpy(exit_type, "exit");
+		}
+		if (using_exit_keyword && (strncmp(&inbuf[(*it)->col-1], 
+				exit_keyword, strlen(exit_keyword)) == 0) )
                 {
-#ifdef DEBUG
-		  cout <<"WRITING EXIT RECORD "<<endl;
+		   strcpy(exit_type, exit_keyword);
+		}
+#ifdef DEBUG 
+		    cout <<"Return for a non void routine "<<endl;
 #endif /* DEBUG */
-		  ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
-		  for (k = (*it)->col-1; k < strlen(inbuf); k++)
-		    ostr<<inbuf[k]; 
-		  ostr <<" }";
-		  instrumented = true; 
-	  write_from = k+1;
-	}
-	break; 
+		exit_expression.clear();
+		if (exit_type)
+		{
+		  for (k = (*it)->col+strlen(exit_type)-1; (inbuf[k] != ';') && (k<inbufLength) ; k++)
+		    exit_expression.append(&inbuf[k], 1);
+#ifdef DEBUG
+		    cout <<"k = "<<k<<" inbuf = "<<inbuf[k]<<endl;
+#endif /* DEBUG */
+		    if (inbuf[k] == ';')
+		    { /* Got the semicolon. Return expression is in one line. */
+#ifdef DEBUG
+		      cout <<"No need to read in another line"<<endl;
+#endif /* DEBUG */
+	              write_from = k+1;
+		    }
+ 		    else	
+		    {
+		      int l;   
+		      do {
+#ifdef DEBUG
+ 		        cout <<"Need to read in another line to get ';' "<<endl;
+#endif /* DEBUG */
+			if(istr.getline(inbuf, INBUF_SIZE)==NULL)
+			{   
+			  perror("ERROR in reading file: looking for ;"); 
+			  exit(1); 
+			}
+			inbufLength = strlen(inbuf);
+                        inputLineNo ++;
+			/* Now search for ; in the string */
+			for(l=0; (inbuf[l] != ';') && (l < inbufLength); l++)
+			{
+			  exit_expression.append(&inbuf[l], 1);
+			}
+		      } while(inbuf[l] != ';');
+			/* copy the buffer into inbuf */
+		      write_from = l+1; 
+		    }
+			 
+#ifdef DEBUG 
+		    cout <<"exit_expression = "<<exit_expression<<endl;
+#endif /* DEBUG */
+		    processExitExpression(ostr, exit_expression, *it, exit_type); 
+		}
+		else {
+		  fprintf (stderr, "Warning: exit was found at line %d, column %d, but wasn't found in the source code.\n",(*it)->line, (*it)->col);
+		  fprintf (stderr, "If the exit call occurs in a macro (likely), make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear)\n");
+		  instrumented = true;
+		  // write the input line in the output stream
+		  ostr << inbuf <<endl;
+		}            
+		break; 
 	
     case INSTRUMENTATION_POINT:
 #ifdef DEBUG
@@ -2399,9 +2463,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.102 $   $Date: 2006/07/05 17:48:46 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.102 2006/07/05 17:48:46 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.103 $   $Date: 2006/07/06 00:32:46 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.103 2006/07/06 00:32:46 sameer Exp $
  ***************************************************************************/
 
 
