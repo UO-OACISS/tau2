@@ -2646,8 +2646,8 @@ then
     if [ -r $mpilib/libmpiif.a ]
     then
       echo "This looks like an Intel MPI installation."
-      mpilibargs="$mpilibargs -lmpiif -ldl"
-      mpiflibargs="$mpiflibargs -lmpiif -ldl"
+      mpilibargs="$mpilibargs -lmpiif -ldl -lrt"
+      mpiflibargs="$mpiflibargs -lmpiif -ldl -lrt"
     fi
     # Special check for HPMPI
     if [ -r $mpilib/libmpi_hmp.a ]
