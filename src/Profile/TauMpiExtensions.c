@@ -678,6 +678,7 @@ void mpi_type_get_extent__( MPI_Fint *  datatype, MPI_Aint * lb, MPI_Aint * exte
 #ifdef TAU_MPITYPEEX
 #ifndef TAU_BGL
 
+#ifdef TAU_MPITYPEEX_F90
 /******************************************************
 ***      MPI_Type_create_f90_real wrapper function 
 ******************************************************/
@@ -842,8 +843,8 @@ void mpi_type_create_f90_integer__( MPI_Fint *  r, MPI_Fint * newtype, MPI_Fint 
 /******************************************************/
 /******************************************************/
 
-#endif 
-/* TAU_BGL */
+#endif /* TAU_MPITYPEEX_F90 */
+#endif /* TAU_BGL */
 
 
 
