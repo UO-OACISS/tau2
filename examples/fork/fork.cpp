@@ -54,7 +54,7 @@ int someC()
 	printf("Inside someC before fork\n");
 
 	pID = fork();
-	if (pID == 0)
+	if (pID != 0)
 	{
 		printf("Parent : pid returned %d\n", pID);
 	}
@@ -81,8 +81,8 @@ int someD()
 }
 
 /***************************************************************************
- * $RCSfile: fork.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 2000/11/02 01:22:02 $
- * VERSION: $Id: fork.cpp,v 1.4 2000/11/02 01:22:02 sameer Exp $
+ * $RCSfile: fork.cpp,v $   $Author: amorris $
+ * $Revision: 1.5 $   $Date: 2006/07/08 00:52:52 $
+ * VERSION: $Id: fork.cpp,v 1.5 2006/07/08 00:52:52 amorris Exp $
  ***************************************************************************/
 
