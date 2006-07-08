@@ -140,10 +140,6 @@ class MultipleCounterLayer
   static int papiMCL_FP; 
   static int papiWallClockMCL_FP;
   static int papiVirtualMCL_FP;
-  //Data specific to the papiMCL function.
-  static int numberOfPapiHWCounters;
-  static int PAPI_CounterCodeList[MAX_TAU_COUNTERS];
-  static ThreadValue * ThreadList[TAU_MAX_THREADS];
 #endif//TAU_PAPI
 
 #ifdef TAU_PCL

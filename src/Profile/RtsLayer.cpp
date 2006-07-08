@@ -575,14 +575,14 @@ double RtsLayer::getUSecD (int tid) {
 #ifdef TAU_PAPI
   static const char *papi_env = getenv("PAPI_EVENT");
   if (papi_env != NULL)
-    return PapiLayer::getCounters(tid);
+    return PapiLayer::getSingleCounter(tid);
 #ifdef TAU_PAPI_WALLCLOCKTIME
   return PapiLayer::getWallClockTime();
 #else /* TAU_PAPI_WALLCLOCKTIME */
 #ifdef TAU_PAPI_VIRTUAL
   return PapiLayer::getVirtualTime();
 #else  /* TAU_PAPI_VIRTUAL */
-  return PapiLayer::getCounters(tid);
+  return PapiLayer::getSingleCounter(tid);
 #endif /* TAU_PAPI_VIRTUAL */
 #endif /* TAU_PAPI_WALLCLOCKTIME */
 #else  // TAU_PAPI
@@ -1349,7 +1349,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.75 $   $Date: 2006/04/20 23:44:45 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.75 2006/04/20 23:44:45 sameer Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.76 $   $Date: 2006/07/08 01:09:07 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.76 2006/07/08 01:09:07 amorris Exp $ 
  ***************************************************************************/

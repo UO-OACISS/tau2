@@ -111,9 +111,6 @@ int MultipleCounterLayer::papiVirtualMCL_CP[1];
 int MultipleCounterLayer::papiMCL_FP;
 int MultipleCounterLayer::papiWallClockMCL_FP;
 int MultipleCounterLayer::papiVirtualMCL_FP;
-int MultipleCounterLayer::numberOfPapiHWCounters;
-int MultipleCounterLayer::PAPI_CounterCodeList[MAX_TAU_COUNTERS];
-ThreadValue * MultipleCounterLayer::ThreadList[TAU_MAX_THREADS];
 #endif//TAU_PAPI
 #ifdef TAU_PCL
 int MultipleCounterLayer::pclMCL_CP[MAX_TAU_COUNTERS];
@@ -169,17 +166,20 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
       MultipleCounterLayer::numberOfCounters[a] = 0;
 #ifdef TAU_PAPI 
       MultipleCounterLayer::papiMCL_CP[a] = -1;
-      MultipleCounterLayer::PAPI_CounterCodeList[a] = -1;
-      MultipleCounterLayer::ThreadList[TAU_MAX_THREADS-1] = NULL;
 #endif//TAU_PAPI
 #ifdef TAU_PCL
       MultipleCounterLayer::pclMCL_CP[a] = -1;
       MultipleCounterLayer::PCL_CounterCodeList[a] = -1;
-      MultipleCounterLayer::threadInit[TAU_MAX_THREADS-1] = false;
-      MultipleCounterLayer::CounterList[MAX_TAU_COUNTERS-1] = 0;
-      MultipleCounterLayer::FpCounterList[MAX_TAU_COUNTERS-1] = 0;      
+      MultipleCounterLayer::CounterList[a] = 0;
+      MultipleCounterLayer::FpCounterList[a] = 0;      
 #endif//TAU_PCL
     }
+
+#ifdef TAU_PCL
+    for(int a=0; a<TAU_MAX_THREADS; a++){
+      MultipleCounterLayer::threadInit[a] = false;
+    }
+#endif
 
     MultipleCounterLayer::gettimeofdayMCL_CP[0] = -1;
     MultipleCounterLayer::gettimeofdayMCL_FP = -1;
@@ -225,7 +225,6 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     MultipleCounterLayer::papiMCL_FP = -1;
     MultipleCounterLayer::papiWallClockMCL_FP = -1;
     MultipleCounterLayer::papiVirtualMCL_FP = -1;
-    MultipleCounterLayer::numberOfPapiHWCounters = 0;
 #endif//TAU_PAPI
 #ifdef TAU_PCL
     MultipleCounterLayer::numberOfPCLHWCounters = 0;
@@ -545,46 +544,49 @@ bool MultipleCounterLayer::tauMPIMessageSizeMCLInit(int functionPosition){
 
 bool MultipleCounterLayer::papiMCLInit(int functionPosition){
 #ifdef TAU_PAPI
+
+  int rc = PapiLayer::initializePapiLayer();
+  if (rc != 0) {
+    return false;
+  }
+
   bool returnValue = false;
-  for(int i=0; i<MAX_TAU_COUNTERS; i++){
-      if(MultipleCounterLayer::names[i] != NULL){
-	if (strstr(MultipleCounterLayer::names[i],"PAPI") != NULL) {
-	  //Reset the name if this is a native event.
-	  if (strstr(MultipleCounterLayer::names[i],"NATIVE") != NULL) {
-	    //Shift the string down.
-	    int counter = 0;
-	    while(names[i][12+counter]!='\0'){
-	      MultipleCounterLayer::names[i][counter]=MultipleCounterLayer::names[i][12+counter];
-	      counter++;
-	    }
-	    MultipleCounterLayer::names[i][counter]='\0';
+  for (int i=0; i<MAX_TAU_COUNTERS; i++) {
+    if (MultipleCounterLayer::names[i] != NULL) {
+      if (strstr(MultipleCounterLayer::names[i],"PAPI") != NULL) {
+	//Reset the name if this is a native event.
+	if (strstr(MultipleCounterLayer::names[i],"NATIVE") != NULL) {
+	  //Shift the string down.
+	  int counter = 0;
+	  while (names[i][12+counter]!='\0') {
+	    MultipleCounterLayer::names[i][counter]=MultipleCounterLayer::names[i][12+counter];
+	    counter++;
+	  }
+	  MultipleCounterLayer::names[i][counter]='\0';
 #ifdef DEBUG_PROF
-	    cout << "Adjusted counter name is: " << names[i] << endl;
+	  cout << "Adjusted counter name is: " << names[i] << endl;
 #endif /* DEBUG_PROF */
-	  }
-	  PapiLayer::multiCounterPapiInit();
-	  int tmpCode = PapiLayer::map_eventnames(MultipleCounterLayer::names[i]);
-	  if(tmpCode != -1){
-	    if((PAPI_query_event(tmpCode) == PAPI_OK)){//Check if this is possible on this machine!
-	      papiMCL_CP[numberOfPapiHWCounters] = i;
-	      MultipleCounterLayer::PAPI_CounterCodeList[numberOfPapiHWCounters] = tmpCode;//Set the counter code.
-	      numberOfPapiHWCounters++;//Update the number of Papi counters.
-	      MultipleCounterLayer::counterUsed[i] = true;
-	      MultipleCounterLayer::numberOfCounters[i] = 1;
-	      returnValue = true;
-	    }
-	    else{
-	      cout << MultipleCounterLayer::names[i] << " is not available!" << endl;
-	    }
-	  }
+	}
+	
+	int counterID = PapiLayer::addCounter(MultipleCounterLayer::names[i]);
+
+	if (counterID >= 0) {
+	  papiMCL_CP[counterID] = i;
+	  MultipleCounterLayer::counterUsed[i] = true;
+	  MultipleCounterLayer::numberOfCounters[i] = 1;
+	  returnValue = true;
 	}
       }
     }
-  if(returnValue){
+  }
+  
+
+  if (returnValue) { // at least one PAPI counter was available
     MultipleCounterLayer::functionArray[functionPosition] = papiMCL;
     papiMCL_FP = functionPosition;
+    return true;
   }
-  return returnValue;
+  return false;
 #else //TAU_PAPI
   return false;
 #endif//TAU_PAPI
@@ -595,7 +597,7 @@ bool MultipleCounterLayer::papiWallClockMCLInit(int functionPosition){
   for(int i=0; i<MAX_TAU_COUNTERS; i++){
       if(MultipleCounterLayer::names[i] != NULL){
 	if(strcmp(MultipleCounterLayer::names[i], "P_WALL_CLOCK_TIME") == 0){
-	  PapiLayer::multiCounterPapiInit();
+	  PapiLayer::initializePapiLayer(false);
 	  papiWallClockMCL_CP[0] = i;
 	  MultipleCounterLayer::counterUsed[i] = true;
 	  MultipleCounterLayer::numberOfCounters[i] = 1;
@@ -616,7 +618,7 @@ bool MultipleCounterLayer::papiVirtualMCLInit(int functionPosition){
   for(int i=0; i<MAX_TAU_COUNTERS; i++){
       if(MultipleCounterLayer::names[i] != NULL){
         if(strcmp(MultipleCounterLayer::names[i], "P_VIRTUAL_TIME") == 0){
-          PapiLayer::multiCounterPapiInit();
+	  PapiLayer::initializePapiLayer(false);
           papiVirtualMCL_CP[0] = i;
 	  MultipleCounterLayer::counterUsed[i] = true;
 	  MultipleCounterLayer::numberOfCounters[i] = 1;
@@ -756,92 +758,16 @@ void MultipleCounterLayer::tauMPIMessageSizeMCL(int tid, double values[]){
 
 void MultipleCounterLayer::papiMCL(int tid, double values[]){
 #ifdef TAU_PAPI
-  //******************************************
-  //Start peformance counting.
-  //This section is run once for each thread.
-  //******************************************
 
-  //First check to see if the thread is already
-  //present.  If not, register the thread and
-  //then start the counters.
-  if(ThreadList[tid] == NULL){
-    //Register thread and start the counters.
-    //Since this is also the first call to
-    //getCounters for this thread, just return
-    //zero.
-    if(tid >= TAU_MAX_THREADS){
-      cout << "Exceeded max thread count of TAU_MAX_THREADS" << endl;
+  int numPapiValues;
+  long long *papiValues = PapiLayer::getAllCounters(tid, &numPapiValues);
+  
+  if (papiValues) {
+    for(int i=0; i<numPapiValues; i++) {
+      values[papiMCL_CP[i]] = papiValues[i];
     }
-    else{
-      ThreadList[tid] = new ThreadValue;
-      ThreadList[tid]->ThreadID = tid;
-      ThreadList[tid]->EventSet = PAPI_NULL;
-      ThreadList[tid]->CounterValues = new long long[numberOfPapiHWCounters];
-      
-      PAPI_create_eventset(&(ThreadList[tid]->EventSet));
-      
-#ifndef PAPI_VERSION
-/* PAPI 2 support goes here */
-      int resultCode = PAPI_add_events(&(ThreadList[tid]->EventSet),
-				       PAPI_CounterCodeList,
-				       numberOfPapiHWCounters);
-#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
-/* PAPI 3 support goes here */
-      int resultCode = PAPI_add_events(ThreadList[tid]->EventSet,
-				       PAPI_CounterCodeList,
-				       numberOfPapiHWCounters);
-#else
-/* PAPI future support goes here */
-#error "Compiling against a not yet released PAPI version"
-#endif 
-
-      if(resultCode != PAPI_OK){
-	cout << "Error adding Papi events!" << endl;
-	if(resultCode == PAPI_ECNFLCT){
-	  cout <<"The events you have chosen conflict."<<endl;
-	  cout <<"This could be a limit on either the number of events" << endl;
-	  cout <<"allowed by this hardware, or the combination of events chosen." << endl;
-	  cout << endl;
-	}
-	cout <<"The papi layer calls are being disabled!" << endl;
-	cout <<"Deleting papiMCL in position: " << papiMCL_FP << endl;
-	MultipleCounterLayer::functionArray[papiMCL_FP] = NULL;
-	cout <<"Setting papi flags in counterUsed array to false ... " << endl;
-	for(int h=0;h<numberOfPapiHWCounters;h++){
-	  MultipleCounterLayer::setCounterUsed(false, papiMCL_CP[h]);
-	  //MultipleCounterLayer::counterUsed[papiMCL_CP[h]] = false;
-	  cout <<"counterUsed[" << papiMCL_CP[h] << "] is now false ..." << endl;
-	  cout <<"Finished disabling papi layer calls!" << endl;
-	}
-      }
-
-      if((PAPI_start(ThreadList[tid]->EventSet)) != PAPI_OK){
-	  cout << "Error starting Papi counters!" << endl;
-      }
-
-      //Initialize the array the Papi portion of the passed in values
-      //array to zero.
-      for(int i=0;i<numberOfPapiHWCounters;i++){
-	values[papiMCL_CP[i]] = 0;
-      }
-    }    
   }
-  else{
-    //If here, it means that the thread has already been registered
-    //and we need to just read and update the counters.
-    
-    //*****************************************
-    //Reading the performance counters and
-    //outputting the counter values.
-    //*****************************************
-    if((PAPI_read(ThreadList[tid]->EventSet, ThreadList[tid]->CounterValues)) != PAPI_OK){
-	cout << "Error reading the Papi counters" << endl;
-      }
-    
-    for(int i=0;i<numberOfPapiHWCounters;i++){
-	values[papiMCL_CP[i]] = ThreadList[tid]->CounterValues[i];
-      }
-  }
+
 #endif//TAU_PAPI
 }
 

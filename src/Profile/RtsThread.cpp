@@ -55,6 +55,9 @@ void TraceCallStack(int tid, Profiler *current);
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::myNode(void)
 {
+#ifdef TAU_PID_AS_NODE
+  return getpid();
+#endif
   return TheNode();
 }
 
@@ -132,6 +135,11 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
   vector<FunctionInfo*>::iterator it;
   Profiler *current;
 #endif // PROFILING_ON
+
+#ifdef TAU_PAPI
+  // PAPI must be reinitialized in the child
+  PapiLayer::reinitializePAPI();
+#endif
 
   TAU_PROFILE_SET_NODE(nodeid);
   // First, set the new id 
@@ -302,8 +310,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.21 $   $Date: 2005/11/11 03:46:49 $
- * VERSION: $Id: RtsThread.cpp,v 1.21 2005/11/11 03:46:49 amorris Exp $
+ * $Revision: 1.22 $   $Date: 2006/07/08 01:09:07 $
+ * VERSION: $Id: RtsThread.cpp,v 1.22 2006/07/08 01:09:07 amorris Exp $
  ***************************************************************************/
 
 

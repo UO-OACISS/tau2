@@ -34,7 +34,6 @@
 
 #ifndef TAU_LIBRARY_SOURCE
 
-#ifdef TAU_WRAP_FORK
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -46,7 +45,6 @@
 extern "C" 
 #endif
 pid_t tau_fork (void);
-#endif /* TAU_WRAP_FORK */
 
 #ifdef PTHREADS
 /* pthread_create wrapper */
@@ -311,6 +309,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.70 $   $Date: 2006/07/05 22:38:23 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.70 2006/07/05 22:38:23 amorris Exp $ 
+ * $Revision: 1.71 $   $Date: 2006/07/08 01:09:07 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.71 2006/07/08 01:09:07 amorris Exp $ 
  ***************************************************************************/

@@ -36,6 +36,12 @@ using namespace std;
 #include <stdio.h>
 #include <stdlib.h>
 
+/* Needed for fork */
+#include <sys/types.h>
+#include <unistd.h>
+
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Wrappers for corresponding C++ functions follow
 
@@ -736,15 +742,20 @@ extern "C" void Tau_pure_stop(char *name) {
   Tau_stop_timer(fi);
 }
 
+
 extern "C" pid_t tau_fork() {
   pid_t pid;
-  
+
   pid = fork();
+
+#ifdef TAU_WRAP_FORK
   if (pid == 0) {
-    /* nothing */
+    TAU_REGISTER_FORK(getpid(), TAU_EXCLUDE_PARENT_DATA);
+//     fprintf (stderr, "[%d] Registered Fork!\n", getpid());
   } else {
-    TAU_REGISTER_FORK(pid, TAU_EXCLUDE_PARENT_DATA);
+    /* nothing */
   }
+#endif
 
   return pid;
 }
@@ -752,7 +763,7 @@ extern "C" pid_t tau_fork() {
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.58 $   $Date: 2006/07/05 22:38:24 $
- * VERSION: $Id: TauCAPI.cpp,v 1.58 2006/07/05 22:38:24 amorris Exp $
+ * $Revision: 1.59 $   $Date: 2006/07/08 01:09:07 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.59 2006/07/08 01:09:07 amorris Exp $
  ***************************************************************************/
 
