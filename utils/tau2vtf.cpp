@@ -36,10 +36,11 @@ map< pair<int,int>, int, less< pair<int,int> > > EOF_Trace;
 map< int,int, less<int > > numthreads; 
 //map< int,int > nodename;
 map <int, int> nodenum;
+map <int,int> threadnum;
 
 map<pair<int,int>,int, less< pair<int,int> > > GlobalId;
 
-int countnodes = 0;
+int countthreads = 0;
 /* numthreads[k] is no. of threads in rank k */
 
 int EndOfTrace = 0;  /* false */
@@ -162,7 +163,7 @@ const char *threadName )
   
 		  
   EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = 0; /* initialize it */
-  
+  countthreads++;
   
   numthreads[nodeToken] = numthreads[nodeToken] + 1;
   /*if(numthreads[nodeToken]==1)
@@ -532,6 +533,7 @@ int main(int argc, char **argv)
   { /* Explicilty mark end of trace to be not over */ 
      GlobalId[pair<int,int>((*it).first)]=global;
      nodenum[global]=((*it).first).first;
+	threadnum[global]=((*it).first).second;
      //printf("nodenum: %d, nodeid: %d, threadid: %d\n",global, ((*it).first).first,((*it).first).second);
      global++;
     (*it).second = 0;
@@ -569,22 +571,34 @@ int main(int argc, char **argv)
     }
     unsigned int *cpuidarray = new unsigned int[totalnidtids]; /* max */
     /* next, we write the cpu name and a group name for node/threads */
-    
-    for (i=0; i < nodes; i++)
+    char name[64];
+	int thisnode=-1;
+    for (i=0; i < countthreads; i++)
     {
-      char name[64];
-      for (tid = 0; tid < threadnumarray[i]; tid++)
-      {
-        sprintf(name, "node %d, thread %d", nodenum[i], tid);
-        int cpuid = GlobalId[pair<int,int>(nodenum[i],tid)];
-        cpuidarray[tid] = cpuid;
+      
+      //for (tid = 0; tid < threadnumarray[i]; tid++)
+      //{
+        sprintf(name, "node %d, thread %d", nodenum[i], threadnum[i]);
+        int cpuid = GlobalId[pair<int,int>(nodenum[i],threadnum[i])];
+        
         VTF3_WriteDefcpuname(fcb, cpuid, name);
-      }
-      sprintf(name, "Node %d", nodenum[i]);
-      groupid ++; /* let flat group for samples take the first one */
-      /* Define a group: threadnumarray[i] represents no. of threads in node */
-      VTF3_WriteDefcpugrp(fcb, groupid, threadnumarray[i], 
+	//printf("i: %d, nodenum[i]: %d, threadnum[i]: %d, cpuid: %d, name: %s\n",i,nodenum[i],threadnum[i],cpuid,name);
+      //}
+	if(thisnode!=nodenum[i])
+	{
+		thisnode=nodenum[i];
+    		sprintf(name, "Node %d", nodenum[i]);
+      		groupid ++; /* let flat group for samples take the first one */
+      		/* Define a group: threadnumarray[i] represents no. of threads in node */
+		for(int j=0;j<numthreads[thisnode];j++)
+		{
+			cpuidarray[j] = GlobalId[pair<int,int>(nodenum[i],threadnum[i+j])];
+			//printf("cpuidarray: %d",cpuidarray[j]);
+		}		
+		//printf("name: %s, numthreads:",)
+      		VTF3_WriteDefcpugrp(fcb, groupid, numthreads[thisnode], 
 		(const unsigned int *) cpuidarray, name);
+	}
     }
     delete[] cpuidarray;
   }
@@ -686,9 +700,9 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau2vtf.cpp,v $   $Author: amorris $
- * $Revision: 1.16 $   $Date: 2005/11/23 19:27:59 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.16 2005/11/23 19:27:59 amorris Exp $
+ * $RCSfile: tau2vtf.cpp,v $   $Author: wspear $
+ * $Revision: 1.17 $   $Date: 2006/07/11 21:44:29 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.17 2006/07/11 21:44:29 wspear Exp $
  ***************************************************************************/
 
 
