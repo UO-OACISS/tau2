@@ -149,6 +149,8 @@ int maxidx = 0;
 
 /*/Contains one element for each node, with each element holding the number of threads at that node*/
 int *countthreads = NULL;
+/*size of countthreads*/
+int sizectds = 8;
 
 /* FIX GlobalID so it takes into account numthreads */
 /* utilities*/
@@ -399,33 +401,38 @@ const char *threadName )
   /*/If this is the first thread entry we see*/
   if(countthreads == NULL)
   {/*/Create a new int array for count threads*/
-	countthreads = (int *) malloc((nodeToken+1)*sizeof(int));
+	countthreads = (int *) malloc((sizectds)*sizeof(int));
 	/*/Set the thread count for this node*/
 	countthreads[nodeToken] = threadToken;
 
-	for(i = 0; i<nodeToken;i++)
+	for(i = 0; i<sizectds;i++)
 		countthreads[i] = 0;
   }
   else
   {/*/Otherwise expand the size of the array and increase the thread counts as necessary*/
-	if(nodeToken<maxnode)
+	if(nodeToken<sizectds)
 	{
 		if(countthreads[nodeToken] < threadToken)
 			countthreads[nodeToken] = threadToken;
 	}
 	else
 	{
+		sizectds=2*nodeToken;
 		int i;
-		int *temp = (int *) malloc((nodeToken+1)*sizeof(int));
-		for(i  = 0; i<nodeToken; i++)
+		int *temp = (int *) malloc((sizectds)*sizeof(int));
+		for(i  = 0; i<sizectds; i++)
+		{
+			temp[i] = 0;//countthreads[i];
+		}
+		for(i=0;i<nodeToken;i++)
 		{
 			temp[i] = countthreads[i];
 		}
-		temp[nodeToken] = threadToken;
 		free(countthreads);
 		countthreads = NULL;
 		countthreads = temp;
 		temp = NULL;
+		countthreads[nodeToken]=threadToken;
 		}
   }
   /*/Set the maximum and minimum node size observed (Unused?!)*/
@@ -440,7 +447,7 @@ const char *threadName )
   if (threadToken > 0) multiThreaded = 1; 
   
   rows++;/*/Redundant with numthreaeds?!*/
-
+dprintf("node:%d, thrd:%d, stothd: %d\n",nodeToken,threadToken,countthreads[nodeToken]);
   
   return 0;
 }
@@ -1826,7 +1833,7 @@ int TRACE_Open( const char filespec[], TRACE_file *fp )
 	if(maxnode>0)
 	for(i = 0; i<=maxnode; i++)
 	{
-		offset[i+1] = offset[i] + countthreads[i];
+		offset[i+1] = offset[i] + countthreads[i]+1;
 	}
   }
   
@@ -2558,6 +2565,7 @@ int TRACE_Peek_next_ycoordmap( TRACE_file fp,
 			map_elems[idx] =  GlobalID(irow,icol);
 			map_elems[idx+1] = irow;
 			map_elems[idx+2] = icol;
+dprintf("glob: %d, row: %d, col: %d\n",map_elems[idx],map_elems[idx+1],map_elems[idx+2]);
 			idx+=3;
 		}
 	}	
