@@ -206,6 +206,16 @@ void Tau_track_memory_allocation(const char *file, int line, size_t size, TauVoi
 #endif /* DEBUGPROF */
   Tau_malloc_after(ptr, size, Tau_malloc_before(file, line, size));
 }
+
+//////////////////////////////////////////////////////////////////////
+// Tau_new returns the expression (new[] foo) and  does everything that 
+// Tau_track_memory_allocation does
+//////////////////////////////////////////////////////////////////////
+TauVoidPointer Tau_new(const char *file, int line, size_t size, TauVoidPointer ptr)
+{ /* the memory is already allocated by the time we see this ptr */
+  Tau_track_memory_allocation(file, line, size, ptr);
+  return ptr;
+}
 		  
 
 //////////////////////////////////////////////////////////////////////
@@ -436,6 +446,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.21 $   $Date: 2006/06/30 19:20:20 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.21 2006/06/30 19:20:20 sameer Exp $ 
+ * $Revision: 1.22 $   $Date: 2006/07/13 00:35:23 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.22 2006/07/13 00:35:23 sameer Exp $ 
  ***************************************************************************/
