@@ -121,6 +121,8 @@
 #define TAU_GLOBAL_TIMER_START(timer)
 #define TAU_GLOBAL_TIMER_STOP()
 #define TAU_PROFILE_PARAM1L(a,b)
+#define TAU_TRACK_NEW(expr, size) 		expr
+#define TAU_TRACK_DELETE(expr, variable) 	expr
 
 #endif /* PROFILING_ON || TRACING_ON */
 

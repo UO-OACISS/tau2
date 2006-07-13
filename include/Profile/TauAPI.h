@@ -308,6 +308,8 @@ extern "C" char * Tau_phase_enable(const char *group);
 #define TAU_DISABLE_TRACKING_MUSE_EVENTS()	TauDisableTrackingMuseEvents()
 #define TAU_TRACK_MUSE_EVENTS()			TauTrackMuseEvents()
 #define TAU_SET_INTERRUPT_INTERVAL(value)	TauSetInterruptInterval(value)
+#define TAU_TRACK_NEW(expr, size) 		Tau_new(__FILE__, __LINE__, size, expr)
+#define TAU_TRACK_DELETE(expr, variable) 	Tau_track_memory_deallocation(__FILE__, __LINE__, variable) , expr
 
 
 #ifdef NO_RTTI
@@ -397,6 +399,8 @@ extern "C" char * Tau_phase_enable(const char *group);
 #define TAU_DISABLE_CONTEXT_EVENT(event)
 #define TAU_ENABLE_CONTEXT_EVENT(event)
 #define TAU_PROFILE_PARAM1L(b,c)  
+#define TAU_TRACK_NEW(expr, size) 		expr
+#define TAU_TRACK_DELETE(expr, variable) 	expr
 
 
 
@@ -425,6 +429,6 @@ extern "C" char * Tau_phase_enable(const char *group);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.55 $   $Date: 2006/03/27 20:24:55 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.55 2006/03/27 20:24:55 sameer Exp $ 
+ * $Revision: 1.56 $   $Date: 2006/07/13 00:34:44 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.56 2006/07/13 00:34:44 sameer Exp $ 
  ***************************************************************************/
