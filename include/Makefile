@@ -91,6 +91,7 @@ TAU_PREFIX_INSTALL_DIR=
 #GNU#SUN_ABI	     	     = $(SUN_GNU_ABI)	  #ENDIF#
 #SOL2#ABI	     	     = $(SUN_ABI)	  #ENDIF#
 #SUNX86_64#ABI		     = $(SUN_ABI)	  #ENDIF#
+#FORCEIA32#ABI               = -m32#ENDIF#
 #######################################################################
 F90_ABI	= $(ABI) 
 #IBM64_FORTRAN#F90_ABI	     = -q64 		  #ENDIF#
@@ -336,7 +337,6 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #WEAKMPIINIT#PROFILEOPT67  = -DTAU_WEAK_MPI_INIT   #ENDIF#
 
 
-
 #For F90 support for all platforms
 FWRAPPER	       = TauFMpi.o       
 #MPI2#MPI2EXTENSIONS	       = TauMpiExtensions.o       #ENDIF#
@@ -358,7 +358,7 @@ FWRAPPER	       = TauFMpi.o
 #SGI64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi64 #ENDIF#
 #ALPHAPAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a /usr/lib/dcpi/dadd.a -lclu -lrt #ENDIF#
 
-##PAPI#TAU_PAPI_RPATH	= -rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
+#PAPI#TAU_PAPI_RPATH	= -rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
 #PPC64PAPI#TAU_PAPI_RPATH = #ENDIF#
 #BGLPAPI#TAU_PAPI_RPATH = #ENDIF#
 #USE_INTELCXX#TAU_PAPI_RPATH	=  #ENDIF#

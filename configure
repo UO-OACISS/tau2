@@ -1111,6 +1111,11 @@ if [ $tauarch = unknown -o $tauarch = none ]
     fi
 fi
 
+# use -m32 when specifying 32 bit on an Opteron/EM64T
+if [ "x$detectarch" = "xx86_64" -a "x$machine" = "xi386_linux" ] ; then
+    fixmakeargs="$fixmakeargs FORCEIA32"
+fi
+    
 
 ######################################################################
 # If the default gcc/g++ is not used, Modify the Makefiles...
