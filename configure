@@ -3095,7 +3095,7 @@ case $machine in
 	fi
 	;;
      x86_64|xt3)
-	echo "Found an AMD Opteron configuration definition"
+	echo "Found an x86_64 configuration definition"
 	fixmakeargs="arch=$machine $fixmakeargs"
 	
 	if [ $papi = yes ]
