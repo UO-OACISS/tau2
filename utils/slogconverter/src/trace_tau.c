@@ -306,7 +306,6 @@ void Category_head_copy(       TRACE_Category_head_t *hdr_copy,
 DRAW_Primitive *Primitive_alloc( int num_vtxs )
 {
     DRAW_Primitive    *prime;
-
     prime               = (DRAW_Primitive *) malloc( sizeof(DRAW_Primitive) );
     prime->num_info     = 0;
     prime->info         = NULL;
@@ -1204,6 +1203,7 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid,
 
   
 	struct event_stack *temp = top;
+	struct event_stack *prev = NULL;
 	int found = 0;
 	DRAW_Category  *type;
     DRAW_Primitive *prime;
@@ -1224,21 +1224,28 @@ enters--;
 		if((nid == temp->nid) && (tid == temp->tid))
 		{
 			found = 1;
+
+			if (prev) {
+			  prev->next = temp->next;
+			} else {
+			  top = top->next;
+			}
 			
-			if(temp->next != NULL)
-				temp->next->last = temp->last;
+/* 			if(temp->next != NULL) */
+/* 				temp->next->last = temp->last; */
 			
-			if(temp->last != NULL && temp->next != NULL)
-				temp->last->next = temp->next; 
+/* 			if(temp->last != NULL && temp->next != NULL) */
+/* 				temp->last->next = temp->next; */
 				
-			if(temp->last == NULL)
-				top = temp->next;
+/* 			if(temp->last == NULL) */
+/* 				top = temp->next; */
 				
 			
 			((TRACE_file)userData)->event_count--;
 		}
 		else
 		{
+			prev = temp;
 			temp = temp->next;
 		}
 		
