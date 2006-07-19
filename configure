@@ -2341,15 +2341,15 @@ EOF
     fi
   fi
 
-  #if $mpicompiler $orig_useropt $mpi_include -c mpi2iorequest.$msuf  1> /dev/null 2>&1
-  #then
-  #  if [ $mpi2 = yes ]  
-  #  then 
-  #    echo "MPI-2 MPIO_Request Interface is defined..."
-  #    fixmakeargs="$fixmakeargs MPIOREQUEST"
-  #    mpiio=yes
-  #  fi
-  #fi
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2iorequest.$msuf  1> /dev/null 2>&1
+  then
+   if [ $mpi2 = yes ]  
+   then 
+     echo "MPI-2 MPIO_Request Interface is defined..."
+     fixmakeargs="$fixmakeargs MPIOREQUEST"
+     mpiio=yes
+   fi
+  fi
 
   if $mpicompiler $orig_useropt $mpi_include -c mpi2datarep.$msuf  1> /dev/null 2>&1
   then
