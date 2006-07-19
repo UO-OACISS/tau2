@@ -152,10 +152,17 @@ int PapiLayer::initializeThread(int tid) {
 ////////////////////////////////////////////////////
 long long PapiLayer::getSingleCounter(int tid) {
 
+
+
   int rc;
   if (!papiInitialized) {
     rc = initializePAPI();
     if (rc != 0) {
+      return rc;
+    }
+
+    rc = initializeSingleCounter();
+    if (rc != PAPI_OK) {
       return rc;
     }
   }
@@ -332,17 +339,6 @@ int PapiLayer::initializePAPI() {
     return -1;
   }
 #endif /* __alpha */
-
-
-  // When using multiple counters, code in MultipleCounters.cpp will
-  // call addCounter.  It needs to do a mapping from COUNTER<1-N> to
-  // our counterList ID's.
-#ifndef TAU_MULTIPLE_COUNTERS
-  rc = initializeSingleCounter();
-  if (rc != 0) {
-    return rc;
-  }
-#endif
 
   return 0;
 }
