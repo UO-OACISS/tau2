@@ -35,11 +35,12 @@ class TauVoidPointer {
 int TauDetectMemoryLeaks(void);
 void Tau_track_memory_allocation(const char *file, int line, size_t size, TauVoidPointer ptr);
 void Tau_track_memory_deallocation(const char *file, int line, TauVoidPointer ptr);
+TauVoidPointer Tau_new(const char *file, int line, size_t size, TauVoidPointer ptr);
 
 #endif /* _TAU_MEMORY_H_ */
 
 /***************************************************************************
  * $RCSfile: TauMemory.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2006/06/18 02:45:36 $
- * TAU_VERSION_ID: $Id: TauMemory.h,v 1.2 2006/06/18 02:45:36 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 2006/07/24 15:49:21 $
+ * TAU_VERSION_ID: $Id: TauMemory.h,v 1.3 2006/07/24 15:49:21 sameer Exp $ 
  ***************************************************************************/
