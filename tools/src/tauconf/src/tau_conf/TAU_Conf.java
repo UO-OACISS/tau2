@@ -5925,7 +5925,7 @@ if(pclCheckBox.isSelected()){
     }//GEN-LAST:event_craytimeCheckBoxStateChanged
 
     private void linuxtimeCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_linuxtimeCheckBoxStateChanged
-	String entry=" -LINUXTIME ";
+	String entry=" -LINUXTIMERS ";
 	if(linuxtimeCheckBox.isSelected()){
 	    if(sgitimeCheckBox.isSelected()){
 		sgitimeCheckBox.setSelected(false);;
