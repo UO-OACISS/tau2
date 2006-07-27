@@ -138,20 +138,20 @@ fi
 #constitute the regular command, with the first command (immediately) 
 #after the sequence, being the compiler.  In this "for" loops, the 
 #regular command is being read.
-for name in "$@"; do
+for arg in "$@"; do
 
-	case $name in
+	case $arg in
 
 	-opt*)
 		;;
 
 	*)
 		if [ $tempCounter == 0 ]; then
-			CMD=$name
+			CMD=$arg
 			#The first command (immediately) after the -opt sequence is the compiler.
 		fi
 
-		mod_arg=`echo $name | sed -e 's/"/\\\"/g' | sed -e 's/ /\\\ /g'`
+		mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/\\\'\''/g' -e 's/ /\\\ /g'`
 		regularCmd="$regularCmd $mod_arg"	
 		
 
@@ -489,7 +489,7 @@ for arg in "$@"
 
 		-I*|-D*)
 
-		        mod_arg=`echo $arg | sed -e 's/"/\\\"/g' | sed -e 's/ /\\\ /g'`
+		        mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/\\\'\''/g' -e 's/ /\\\ /g'`
 			optPdtCFlags="$mod_arg $optPdtCFlags"
 			optPdtCxxFlags="$mod_arg $optPdtCxxFlags"
 			optPdtF95="$mod_arg $optPdtF95"

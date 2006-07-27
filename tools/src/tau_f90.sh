@@ -37,7 +37,10 @@ do
 # hack to get proper .d generation support for eclipse
       ;;
     *)
-       ;;
+      # Thanks to Berd Mohr for the following that handles quotes and spaces
+      mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/\\\'\''/g' -e 's/ /\\\ /g'`
+      THEARGS="$THEARGS $mod_arg"
+      ;;
   esac
 done
 if [ $makefile_specified = no ]
@@ -70,13 +73,17 @@ then
 cat <<EOF > /tmp/makefile.tau$$
   include $MAKEFILE
   all:
-	@\$(TAU_F90) $*
+	@\$(TAU_F90) $THEARGS
 EOF
 else
 cat <<EOF > /tmp/makefile.tau$$
 include $MAKEFILE
 all:
-	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_F90) $* 
+ifeq (\$(TAU_F90),)
+	echo "Error, no fortran compiler specified in TAU configure (use -fortran=<>)"
+else
+	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_F90) $THEARGS
+endif
 
 EOF
 fi

@@ -39,9 +39,10 @@ do
 # hack to get proper .d generation support for eclipse
       ;;
     *)
-	  mod_arg=`echo $arg | sed -e 's/"/\\\"/g'`
-	  THEARGS="$THEARGS \"$mod_arg\""
-       ;;
+      # Thanks to Berd Mohr for the following that handles quotes and spaces
+      mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/\\\'\''/g' -e 's/ /\\\ /g'`
+      THEARGS="$THEARGS $mod_arg"
+      ;;
   esac
 done
 if [ $makefile_specified = no ]
@@ -74,7 +75,7 @@ then
 cat <<EOF > /tmp/makefile.tau$$
   include $MAKEFILE
   all:
-	@\$(TAU_CC) $*
+	@\$(TAU_CC) $THEARGS
 EOF
 else
 cat <<EOF > /tmp/makefile.tau$$
