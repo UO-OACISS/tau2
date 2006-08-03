@@ -27,6 +27,7 @@
 #define DRAW_TRUE    1
 #define DRAW_FALSE   0
 
+
 #define  MAX_LEGEND_LEN  128
 #define  MAX_LABEL_LEN   512
 #define  MAX_LINE_LEN    1024
@@ -150,7 +151,7 @@ int maxidx = 0;
 /*/Contains one element for each node, with each element holding the number of threads at that node*/
 int *countthreads = NULL;
 /*size of countthreads*/
-int sizectds = 8;
+int sizectds = 0;
 
 /* FIX GlobalID so it takes into account numthreads */
 /* utilities*/
@@ -306,6 +307,7 @@ void Category_head_copy(       TRACE_Category_head_t *hdr_copy,
 DRAW_Primitive *Primitive_alloc( int num_vtxs )
 {
     DRAW_Primitive    *prime;
+
     prime               = (DRAW_Primitive *) malloc( sizeof(DRAW_Primitive) );
     prime->num_info     = 0;
     prime->info         = NULL;
@@ -393,22 +395,10 @@ int rows = 0;
 int DefThread(void *userData, unsigned int nodeToken, unsigned int threadToken,
 const char *threadName )
 {
-	int i;
- dprintf("DefThread nid %d tid %d, thread name %s\n", 
+	dprintf("DefThread nid %d tid %d, thread name %s\n", 
 		  nodeToken, threadToken, threadName);
-    numthreads++;/*/Increment the total number of threads*/
-  /*/If this is the first thread entry we see*/
-  if(countthreads == NULL)
-  {/*/Create a new int array for count threads*/
-	countthreads = (int *) malloc((sizectds)*sizeof(int));
-	/*/Set the thread count for this node*/
-	countthreads[nodeToken] = threadToken;
-
-	for(i = 0; i<sizectds;i++)
-		countthreads[i] = 0;
-  }
-  else
-  {/*/Otherwise expand the size of the array and increase the thread counts as necessary*/
+	numthreads++;/*/Increment the total number of threads*/
+/*/Otherwise expand the size of the array and increase the thread counts as necessary*/
 	if(nodeToken<sizectds)
 	{
 		if(countthreads[nodeToken] < threadToken)
@@ -416,38 +406,31 @@ const char *threadName )
 	}
 	else
 	{
-		sizectds=2*nodeToken;
 		int i;
-		int *temp = (int *) malloc((sizectds)*sizeof(int));
-		for(i  = 0; i<sizectds; i++)
+		int tempsize = sizectds;
+		sizectds=nodeToken*2;
+		countthreads=realloc(countthreads,sizectds*sizeof(int));
+		for(i=tempsize;i<sizectds;i++)
 		{
-			temp[i] = 0;//countthreads[i];
-		}
-		for(i=0;i<nodeToken;i++)
-		{
-			temp[i] = countthreads[i];
-		}
-		free(countthreads);
-		countthreads = NULL;
-		countthreads = temp;
-		temp = NULL;
-		countthreads[nodeToken]=threadToken;
-		}
-  }
+			countthreads[i]=0;
+		}		
+		countthreads[nodeToken] = threadToken;
+	}
   /*/Set the maximum and minimum node size observed (Unused?!)*/
-  if(nodeToken > maxnode)
-	maxnode = nodeToken;
-	
+	if(nodeToken > maxnode)
+		maxnode = nodeToken;
+
 	if(threadToken > maxthrd)
 		maxthrd = threadToken;
 		/*/If we have any threads this is a threaded program*/
-    
 
-  if (threadToken > 0) multiThreaded = 1; 
-  
-  rows++;/*/Redundant with numthreaeds?!*/
-dprintf("node:%d, thrd:%d, stothd: %d\n",nodeToken,threadToken,countthreads[nodeToken]);
-  
+	if (threadToken > 0) multiThreaded = 1; 
+	rows++;/*/Redundant with numthreaeds?!*/
+/*printf("%d X %d\n",nodeToken, threadToken);
+int x;
+for(x=0;x<sizectds;x++)
+	printf("%d: %d\n",x,countthreads[x]);
+printf("%d - %d\n",maxnode, sizectds);*/
   return 0;
 }
 
@@ -896,7 +879,7 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
     TRACE_Category_head_t *hdr;
 
     int             type_idx = stateToken;
-    int             line_pos;
+    //int             line_pos;
 
     char           *newline;
     
@@ -930,7 +913,7 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 
 	memcpy(legend,  name, strlen(name)+1);
     legend_len  = strlen( legend );
-    newline     = (char *) (((TRACE_file)userData)->line + line_pos);
+    newline     = (char *) (((TRACE_file)userData)->line);// + line_pos
 
         label_len = 0;
 #if defined( DEBUG )
@@ -1219,7 +1202,7 @@ enters--;
 
 	while(found == 0)
 	{
-		if(temp == NULL){dprintf("BROKE!\n"); break;}
+		if(temp == NULL){printf("Fault: Exit Without Enter.\n"); break;}
 		
 		if((nid == temp->nid) && (tid == temp->tid))
 		{
@@ -1822,12 +1805,6 @@ int TRACE_Open( const char filespec[], TRACE_file *fp )
   currentkind = -1;
   tot_types = (*fp)->num_types;
   
-/*  if(maxnode==0)
-  {
-     multiThreaded=0;
-     ycordsets=0;
-  }
-  else*/
   if(multiThreaded)
   {
   	int i;
@@ -1837,7 +1814,7 @@ int TRACE_Open( const char filespec[], TRACE_file *fp )
 	offset = (int *)malloc((numnodes+1)*sizeof(int));
 	
 	offset[0] = 0;
-	if(maxnode>0)
+	//if(maxnode>0)
 	for(i = 0; i<=maxnode; i++)
 	{
 		offset[i+1] = offset[i] + countthreads[i]+1;
@@ -1937,6 +1914,7 @@ int TRACE_Peek_next_kind( const TRACE_file fp, TRACE_Rec_Kind_t *next_kind )
 			if(recs_read==0){break;}
 		}
 		thispeak = 0;
+//printf("Upper: %d\n",currentkind);
 		if(currentkind==(int)TRACE_EOF){posteof=1;}
 		else{
 			*next_kind = (TRACE_Rec_Kind_t)currentkind;
@@ -1948,12 +1926,13 @@ int TRACE_Peek_next_kind( const TRACE_file fp, TRACE_Rec_Kind_t *next_kind )
 	the events are shown.   */
 	if(enters>0&&posteof==1){
 
-		LeaveState(fp,finexit,top->nid,top->tid,0);
+		LeaveState(fp,finexit,top->nid,top->tid,top->sid);//top->sid was 0
 		*next_kind = (TRACE_Rec_Kind_t)currentkind;
+		//printf("Batt: %d\n",currentkind);
 		return 0;
 	}
 	
-	if(ycordsets > 0 && posteof==1 && maxnode>0)
+	if(ycordsets > 0 && posteof==1)
 	{
 		*next_kind = TRACE_YCOORDMAP;
 		ycordsets--;
@@ -1963,13 +1942,13 @@ int TRACE_Peek_next_kind( const TRACE_file fp, TRACE_Rec_Kind_t *next_kind )
 	if(posteof==1)
 	{
 		*next_kind = (int)TRACE_EOF;
-
+		//printf("Done: %d\n",currentkind);
 		return 0;
 	}
 
 	
 	*next_kind = (TRACE_Rec_Kind_t)currentkind;
-
+printf("Out: %d\n",currentkind);
 	return 0;
 }
 
@@ -2572,7 +2551,6 @@ int TRACE_Peek_next_ycoordmap( TRACE_file fp,
 			map_elems[idx] =  GlobalID(irow,icol);
 			map_elems[idx+1] = irow;
 			map_elems[idx+2] = icol;
-dprintf("glob: %d, row: %d, col: %d\n",map_elems[idx],map_elems[idx+1],map_elems[idx+2]);
 			idx+=3;
 		}
 	}	
