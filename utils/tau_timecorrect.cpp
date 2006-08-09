@@ -142,7 +142,7 @@ bool multiThreaded = false;   //This is incase the processors are multi-threaded
 
 /* event type -- unordered set */
 typedef enum  //This enum is for figuring out which type of record the algorithm is dealing with.
-{ EV_receive, EV_send, EV_internal } EVtype;
+{ EV_receive, EV_send, EV_internal, EV_user } EVtype;
 typedef enum
 { Delta_LCa_C, Delta_LCa_LC } qij_type;
 typedef enum
@@ -173,6 +173,8 @@ typedef struct _tau_rec
   unsigned int messageSize; //Only used for send and recieves
   unsigned int messageTag;  //Only used for send and recieves
   unsigned int messageComm; //Only used for send and recieves
+  
+  long long userEventValue;
 
 }
 tau_rec;
@@ -601,13 +603,57 @@ event_entry* setEventEntry(procnum i)
 */
 
 int EventTrigger( void *userData, double time, 
-		unsigned int nodeToken,
-		unsigned int threadToken,
+		unsigned int nodeid,
+		unsigned int tid,
 	       	unsigned int userEventToken,
 		long long userEventValue)
 {
 //	Ttf_EventTrigger(userData,time,nodeToken,threadToken,userEventToken, userEventValue);
 //	dprintf("EventTrigger: time %g, nid %d tid %d event id %d triggered value %lld \n", time, nodeToken, threadToken, userEventToken, userEventValue);
+	procnum i;
+	tau_rec* currentRecord;
+	procnum input_processable_next;
+	event_entry *input_entry;
+
+	//printf("Entering EnterState \n");
+
+	//Enough memory to create a tau_record.
+	if ((currentRecord = (tau_rec*)malloc(sizeof(tau_rec))) == NULL)  {
+		printf("memory allocation error");
+		exit(EXIT_FAILURE);
+	}
+
+	i = single_lid = GlobalId(nodeid, tid);  //Get the global idea for the record
+
+	//Does this global id exist and does it fall into the range of existing processors
+	if (i == NO_ID || i >= n) {
+		printf("invalid location id %d", i);
+		exit(EXIT_FAILURE);
+	}
+
+	input_entry = setEventEntry(i);
+	
+	//Fill out the currentRecord to be stored.
+	currentRecord->rec_type = EV_user;
+	currentRecord->nodeid = nodeid;
+	currentRecord->tid = tid;
+	currentRecord->stateid = userEventToken;
+	currentRecord->Cij = time;
+	currentRecord->globalID = i;
+	currentRecord->state = Enter_State;
+	currentRecord->userEventValue = userEventValue;
+
+	input_entry->record = currentRecord;
+	input_entry->Cj = time;
+
+	//printf("I'm in internal message.  \n");
+    input_entry->event_type = EV_user;
+
+	//input_entry has been setup.  Now process the event
+
+	input_processable_next = i;  //Which process has the next event to be processed.
+	correct_time_exec(input_processable_next, userData,false);  //Call the algorithm and point to the process to be looked at.
+	
 	return 0;
 }
 
@@ -949,6 +995,9 @@ void tau_Write_Record(Ttf_FileHandleT OutFile,tau_rec* OutRec)
 		}
 
 	break;
+	case EV_user:
+		Ttf_EventTrigger(OutFile,OutRec->Cij,OutRec->nodeid,OutRec->tid,OutRec->stateid, OutRec->userEventValue);
+	break;
 
     default:
 		printf("This is an unknown message type.  \n"); 
@@ -1190,7 +1239,7 @@ void handle_event_record(Ttf_FileHandleT inputFile,Ttf_FileHandleT outputFile)
 	cb.DefStateGroup = 0;
 	cb.DefState = 0;
 	cb.DefUserEvent = 0;
-	cb.EventTrigger = 0; 
+	cb.EventTrigger = EventTrigger; 
 	cb.EndTrace = EndTrace;
     cb.EnterState = EnterState;
     cb.LeaveState = LeaveState;
