@@ -2646,8 +2646,8 @@ then
       then
 # This is a Linux box, add -lutil to the mpi libraries
         echo "Adding -lutil to link command line for LAM MPI"
-        mpilibargs="$mpilibargs -lutil"
-        mpiflibargs="$mpiflibargs -lutil"
+        mpilibargs="$mpilibargs -lutil -ldl -lpthread"
+        mpiflibargs="$mpiflibargs -lutil -ldl -lpthread"
       fi
     fi 
     # Special check for Intel MPI
