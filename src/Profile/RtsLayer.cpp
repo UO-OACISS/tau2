@@ -565,10 +565,19 @@ double TauWindowsUsecD(void)
 
 #ifdef TAU_MULTIPLE_COUNTERS
 void RtsLayer::getUSecD (int tid, double *values){
+#if (defined(TAU_EPILOG) || !defined(PROFILING_ON)) 
+  return;
+#endif /* TAU_EPILOG, PROFILING_ON */
   MultipleCounterLayer::getCounters(tid, values);
 }
 #else //TAU_MULTIPLE_COUNTERS
 double RtsLayer::getUSecD (int tid) {
+
+#if (defined(TAU_EPILOG) || !defined(PROFILING_ON)) 
+  return 0;
+#endif /* TAU_EPILOG, PROFILING_ON */
+
+
 #ifdef TAU_PCL
   return PCL_Layer::getCounters(tid);
 #else  // TAU_PCL
@@ -1350,6 +1359,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.76 $   $Date: 2006/07/08 01:09:07 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.76 2006/07/08 01:09:07 amorris Exp $ 
+ * $Revision: 1.77 $   $Date: 2006/08/10 22:55:57 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.77 2006/08/10 22:55:57 amorris Exp $ 
  ***************************************************************************/

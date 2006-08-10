@@ -128,7 +128,7 @@ int PapiLayer::initializeThread(int tid) {
   rc = PAPI_add_events(ThreadList[tid]->EventSet, counterList, numCounters);
 #else
 /* PAPI future support goes here */
-#error "Compiling against a not yet released PAPI version"
+#error "TAU does not support this version of PAPI, please contact tau-bugs@cs.uoregon.edu"
 #endif 
   if (rc != PAPI_OK) {
     cerr << "Error adding PAPI events: " << PAPI_strerror(rc) << endl;
@@ -142,8 +142,6 @@ int PapiLayer::initializeThread(int tid) {
     return -1;
   }
   
-  //Now return zero as this thread has only just begun
-  //counting(as mentioned before).
   return 0;
 }
 
@@ -151,8 +149,6 @@ int PapiLayer::initializeThread(int tid) {
 
 ////////////////////////////////////////////////////
 long long PapiLayer::getSingleCounter(int tid) {
-
-
 
   int rc;
   if (!papiInitialized) {
@@ -167,12 +163,18 @@ long long PapiLayer::getSingleCounter(int tid) {
     }
   }
 
+  if (numCounters == 0) {
+    // adding must have failed, just return
+    return;
+  }
+
   if (ThreadList[tid] == NULL) {
     rc = initializeThread(tid);
     if (rc != 0) {
       return rc;
     }
   }
+
 
 #ifdef TAU_PAPI_DEBUG
   long long oldValue = ThreadList[tid]->CounterValues[0];
@@ -209,6 +211,12 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
       return NULL;
     }
   }
+
+  if (numCounters == 0) {
+    // adding must have failed, just return
+    return;
+  }
+
 
   if (ThreadList[tid] == NULL) {
     rc = initializeThread(tid);
@@ -283,17 +291,16 @@ int PapiLayer::initializeSingleCounter() {
   
   // Add the counter named by PAPI_EVENT
   char *papi_event = getenv("PAPI_EVENT");
-  if (papi_event != NULL) {
-    int counterID = addCounter(papi_event);
-    if (counterID < 0) {
-      return -1;
-    }
-  } else {
-#ifndef TAU_EPILOG
+  if (papi_event == NULL) {
     cout << "Error - You must define the PAPI_EVENT environment variable." << endl;
-#endif /* TAU_EPILOG */
     return -1;
   }
+
+  int counterID = addCounter(papi_event);
+  if (counterID < 0) {
+    return -1;
+  }
+
   return 0;
 }
 
