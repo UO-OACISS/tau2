@@ -328,8 +328,8 @@ echo " " > wishver
     if [ $papi = yes ]
     then
 # Add PAPI
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
 # Add -TRACE -papi multiplecounters to it
       echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS"
@@ -346,8 +346,8 @@ echo " " > wishver
 
     if [ $opari = yes -a $papi = yes ] 
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL   <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -papi=$papidir -MULTIPLECOUNTERS"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
     fi 
   fi
@@ -369,8 +369,8 @@ echo " " > wishver
 
     if [ $papi = yes ]
     then 
-      echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL "
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
+      echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS "
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
     fi
   fi 
@@ -393,16 +393,16 @@ echo " " > wishver
 # PAPI with PTHREAD 
     if [ $arch = no -o $archdir != bgl -a $archdir != xt3 ]
     then
-      echo "Configuring with -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL "
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
+      echo "Configuring with -pthread -papi=$papidir -MULTIPLECOUNTERS "
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
     fi
 
 # PAPI with -pdt 
     if [ $pdt = yes ]
     then
-      echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt  -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
+      echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -papi=$papidir -MULTIPLECOUNTERS"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt  -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
     fi
   fi
