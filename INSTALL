@@ -538,9 +538,10 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    
    Generates event-trace logs, rather than summary profiles. Traces show when 
    and where an event occurred, in terms of the location in the source code and
-   the process that executed it. Traces can be merged and converted using 
-   tau_merge and tau_convert utilities respectively, and  visualized using 
-   Vampir, a commercial trace visualization tool. [ Ref http://www.pallas.de ]
+   the process that executed it. Traces can be merged, converted and time-
+   corrected using tau_merge, tau_convert and tau_timecorrect utilities 
+   respectively, and visualized using Vampir, a commercial trace visualization 
+   tool. [ Ref http://www.pallas.de ]
 
 -muse
   
