@@ -104,8 +104,14 @@
 # No checking is done to ensure that it does so.
 
 rm -f .last_config
-echo $* > .last_config
-echo $* >> .all_configs
+
+# This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
+for arg in "$@"; do
+    modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/\\\'\''/g' -e 's/ /\\\ /g'`
+    modargs="$modargs $modarg"
+done
+echo "$modargs" >> .all_configs
+echo "$modargs" > .last_config
 
 START_DIR=$PWD
 
