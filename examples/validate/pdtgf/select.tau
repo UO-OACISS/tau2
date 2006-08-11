@@ -1,0 +1,3 @@
+BEGIN_INSTRUMENT_SECTION
+entry routine ="#" code = "       call TAU_PROFILE_SET_NODE(0)"
+END_INSTRUMENT_SECTION
