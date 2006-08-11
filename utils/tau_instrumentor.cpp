@@ -1776,11 +1776,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	  int pure = 0;
 #ifdef PDT_PURE
 	  /* When INSTRUMENTATION_POINT is used, sometimes the item is null */
-	  if ( (*it)->item != (pdbItem *) NULL) { 
-             if (((pdbRoutine *)(*it)->item)->fprefix() == pdbItem::FP_PURE ||
-	        ((pdbRoutine *)(*it)->item)->fprefix() == pdbItem::FP_ELEM) {
+	  if ( (*it)->item &&
+             (((pdbRoutine *)(*it)->item)->fprefix() == pdbItem::FP_PURE ||
+	        ((pdbRoutine *)(*it)->item)->fprefix() == pdbItem::FP_ELEM)) {
 	       pure = 1;
-             }
 	  }
 #endif
 
@@ -1790,6 +1789,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    case BODY_BEGIN:
 
 #ifdef DEBUG
+	  if ( (*it)->item != (pdbItem *) NULL)
 	    cout <<"Body Begin: Routine " <<(*it)->item->fullName()<<endl;
 #endif /* DEBUG */
              	for(i=0; i< ((*it)->col)-1; i++)
@@ -2479,8 +2479,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.105 $   $Date: 2006/08/11 19:16:43 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.105 2006/08/11 19:16:43 sameer Exp $
+ * $Revision: 1.106 $   $Date: 2006/08/11 20:49:03 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.106 2006/08/11 20:49:03 sameer Exp $
  ***************************************************************************/
 
 
