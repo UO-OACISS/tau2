@@ -974,11 +974,13 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #ifdef DEBUG
         cout <<"Instrumenting entry of routine "<<(*rit)->fullName()<<endl;
 #endif /* DEBUG */
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT,
-                (*rit)->firstExecStmtLocation().line(),
-                1, (*it)->getCode(), BEFORE));
-                /* start from 1st column instead of column: 
-		(*rit)->firstExecStmtLocation().col() */
+        /* We should treat snippet insertion code at routine entry like additional declarations
+           that must be placed inside the routine */
+        list<string> decls;
+        decls.push_back((*it)->getCode());
+
+        additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
+	/* assign the list of strings to the list */
       }
       if ((*it)->getKind() == TAU_ROUTINE_EXIT)
       {
@@ -1129,6 +1131,6 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.29 $   $Date: 2006/07/05 18:28:12 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.29 2006/07/05 18:28:12 sameer Exp $
+ * $Revision: 1.30 $   $Date: 2006/08/11 21:07:39 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.30 2006/08/11 21:07:39 sameer Exp $
  ***************************************************************************/
