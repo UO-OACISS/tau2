@@ -1,0 +1,576 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import popen2
+import string
+import glob
+
+# python 2.2 check
+if string.atof( ( string.split( sys.version )[0] ) [0:3]) < 2.3:
+    True = 1
+    False = 0
+
+
+def outputHeader(message):
+    if verbose == True:
+        if html == True:
+            print "</pre><h2><font color=blue>\n" + message + "\n</font></h2><pre>";
+        else:
+            print message + "\n";
+
+        
+
+def output(message):
+    if verbose == True:
+        if html == True:
+            print "</pre><h3><font color=green>\n" + message + "\n</font></h3><pre>";
+        else:
+            print message + "\n";
+
+
+def begin():
+    if html == True:
+        print "<HTML><PRE>\n"
+
+
+
+def end(code):
+    if (errorsFound == 0):
+        outputHeader ("No Errors!")
+    else:
+        print "Encountered %d errors" % errorsFound
+
+    if (html):
+        print "</PRE></HTML>\n"
+    sys.exit(code)
+
+
+
+
+
+def usesOption(makefile, option):
+    opts = makefile.split('-')
+    for opt in opts:
+#        print "opt = " + opt
+        if opt == option:
+            return True
+    return False
+
+
+def shortMakefile(makefile):
+    return makefile[makefile.find("/lib/")+5:]
+
+
+def system(command):
+    if verbose == True:
+        if html == True:
+            print "<b>" + os.getcwd() + "> " + command + "</b>"
+        else:
+            print os.getcwd() + "> " + command
+        sys.stdout.flush()
+        child = popen2.Popen4(command)
+        data = child.fromchild.readlines()
+        for line in data:
+            print line
+        retval = child.wait()
+        return retval
+    else:
+        child = popen2.Popen4(command)
+        data = child.fromchild.readlines()
+        retval = child.wait()
+        return retval
+
+def chdir(directory):
+    if verbose == True:
+        if html == True:
+            print "<b>" + os.getcwd() + "> cd " + directory + "</b>"
+        else:
+            print os.getcwd() + "> cd " + directory
+    if os.path.exists(directory) and os.path.isdir(directory):
+        os.chdir(directory)
+
+def prependPath(directory):
+    print "<b>" + os.getcwd() + "> PATH=" + directory + ":$PATH</b>"
+    os.environ['PATH'] = directory + os.pathsep + os.environ['PATH']
+
+def setEnviron(variable,value):
+    print "<b>" + os.getcwd() + "> export " + variable + "=" + value + "</b>"
+    os.environ[variable] = value
+
+def unsetEnviron(variable):
+    print "<b>" + os.getcwd() + "> unset " + variable + "</b>"
+    del os.environ[variable]
+
+
+def outputSummary(testgrid):
+    if verbose == True and html == False:
+        for makefile in testgrid.keys():
+            tests = testgrid[makefile]
+            for test in tests:
+                print "%4s : %40s : %s %s" % (test.buildresult, test.name, makefile, test.message)
+        return
+
+    if html == True:
+        print "<table border=1>"
+        first = 1
+        for makefile in testgrid.keys():
+            tests = testgrid[makefile]
+            if first == 1:
+                first = 0
+                print "<tr><td rowspan=2>Stub Makefile</td>"
+                for test in tests:
+                    print "<td colspan=2>"+test.name+"</td>"
+                print "</tr>"
+
+                print "<tr>"
+                for test in tests:
+                    print "<td colspan>build</td>"
+                    print "<td colspan>run</td>"
+                print "</tr>"
+
+                    
+            print "<tr><td>"+makefile+"</td>"
+            for test in tests:
+                if test.buildresult == "pass":
+                    print "<td bgcolor=#64FF64>pass</td>"
+                elif test.buildresult == "fail":
+                    print "<td bgcolor=#FF6464>fail</td>"
+                else:
+                    print "<td bgcolor=#CCCCCC>N/A</td>"
+
+                if test.runresult == "pass":
+                    print "<td bgcolor=#64FF64>pass</td>"
+                elif test.runresult == "fail":
+                    print "<td bgcolor=#FF6464>fail</td>"
+                else:
+                    print "<td bgcolor=#CCCCCC>N/A</td>"
+                    
+            print "</tr>"
+        print "</table>"
+
+
+class Test:
+    def __init__(self, name, makefile):
+        self.name = name
+        self.fullmakefile = makefile
+        self.buildresult = "na"
+        self.runresult = "na"
+        self.message = ""
+        self.makefile = shortMakefile(makefile)
+        self.buildpath = "build-" + self.makefile
+
+    def checkApplicable(self):
+        return True
+
+    def runTest(self):
+        self.error ("Base class runTest called")
+
+    def buildTest(self):
+        self.error ("Base class buildTest called")
+
+    def error(self,message):
+        global errorsFound
+        errorsFound = errorsFound + 1
+        if verbose == True:
+            if html == True:
+                print "</pre><h1><font color=red>\n" + message + "\n</font></h1><pre>";
+            else:
+                print message + "\n";
+
+
+class SimpleTest(Test):
+    def __init__(self, name, makefile):
+        Test.__init__(self, name, makefile)
+
+    def getActualTest(self):
+        return "simple"
+        
+    def buildTest(self):
+        outputHeader("SimpleTest("+self.getActualTest()+"), build (" + self.fullmakefile + ")")
+        if self.checkApplicable() == False:
+            return
+        chdir(TEST_ROOT + "/" + self.getActualTest())
+        system("rm -rf " + self.buildpath)
+        system("TAU_TEST_MAKEFILE="+self.fullmakefile+" make clean")
+        retval = system("TAU_TEST_MAKEFILE="+self.fullmakefile+" make")
+        if retval != 0 or os.path.exists("simple") == False:
+            self.error("Error: failed to build")
+            self.buildresult = "fail"
+            return
+        self.buildresult = "pass"
+        system("mkdir " + self.buildpath)
+        system("cp simple " + self.buildpath)
+
+    def runTest(self):
+        outputHeader("SimpleTest("+self.getActualTest()+", run (" + self.fullmakefile + ")")
+        if self.checkApplicable() == False:
+            return
+
+        chdir(TEST_ROOT + "/" + self.getActualTest())
+        if os.path.exists(self.buildpath) == False:
+            output("Nothing to run")
+            return
+        chdir(self.buildpath)
+        retval = system("./simple")
+        if retval != 0:
+            self.error("Error: failed to run")
+            self.runresult = "fail"
+        else:
+            self.runresult = "pass"
+
+
+class CTest(SimpleTest):
+    def __init__(self, makefile):
+        SimpleTest.__init__(self, "C", makefile)
+    def getActualTest(self):
+        return "c"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        return True
+
+class FflinkTest(SimpleTest):
+    def __init__(self, makefile):
+        SimpleTest.__init__(self, "Fortran (flink)", makefile)
+    def getActualTest(self):
+        return "fflink"
+
+    def checkApplicable(self):
+        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+            return False
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        return True
+
+
+class FcpplinkTest(SimpleTest):
+    def __init__(self, makefile):
+        SimpleTest.__init__(self, "Fortran (cpplink)", makefile)
+    def getActualTest(self):
+        return "fcpplink"
+
+    def checkApplicable(self):
+        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+            return False
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        return True
+    
+class FclinkTest(SimpleTest):
+    def __init__(self, makefile):
+        SimpleTest.__init__(self, "Fortran (clink)", makefile)
+    def getActualTest(self):
+        return "fclink"
+
+    def checkApplicable(self):
+        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+            return False
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        return True
+
+
+
+class MpiCTest(SimpleTest):
+    def __init__(self, makefile):
+        SimpleTest.__init__(self, "MPI (C)", makefile)
+    def getActualTest(self):
+        return "mpic"
+
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == False:
+            output("Skipping, not configured with MPI")
+            return False
+        return True
+
+    def runTest(self):
+        output ("Skipping Test (we won't run MPI tests yet)")
+
+class MpiFTest(SimpleTest):
+    def __init__(self, makefile):
+        SimpleTest.__init__(self, "MPI (Fortran)", makefile)
+    def getActualTest(self):
+        return "mpif"
+
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == False:
+            output("Skipping, not configured with MPI")
+            return False
+        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+            return False
+        return True
+
+    def runTest(self):
+        output ("Skipping Test (we won't run MPI tests yet)")
+        
+
+
+class PdtTest(Test):
+    def __init__(self, name, makefile):
+        Test.__init__(self, name, makefile)
+
+    def getActualTest(self):
+        return "pdt"
+
+    def buildTest(self):
+        outputHeader("PdtTest (" + self.fullmakefile + ")")
+
+        if usesOption(self.makefile, "pdt") == False:
+            output("Skipping, not configured with PDT")
+            return
+
+        if self.checkApplicable() == False:
+            return
+
+        chdir(TEST_ROOT + "/" + self.getActualTest())
+        system("rm -rf " + self.buildpath)
+
+        system("TAU_TEST_MAKEFILE="+self.fullmakefile+" make clean")
+        system("rm -f *.inst.*")
+        retval = system("TAU_TEST_MAKEFILE="+self.fullmakefile+" make")
+        if retval != 0:
+            self.error("Error: failed to build")
+            self.buildresult = "fail"
+            return
+
+        if len(glob.glob("*.inst.*")) != 1:
+            self.error("Error: failed to instrument")
+            self.buildresult = "fail"
+            return
+        
+        self.buildresult = "pass"
+        system("mkdir " + self.buildpath)
+        system("cp simple " + self.buildpath)
+        
+
+    def runTest(self):
+        outputHeader("PdtTest (" + self.fullmakefile + ")")
+
+        if usesOption(self.makefile, "pdt") == False:
+            output("Skipping, not configured with PDT")
+            return
+
+        if self.checkApplicable() == False:
+            return
+        
+        chdir(TEST_ROOT + "/" + self.getActualTest())
+        if os.path.exists(self.buildpath) == False:
+            output("Nothing to run")
+            return
+        chdir(self.buildpath)
+        retval = system("./simple")
+        if retval != 0:
+            self.error("Error: failed to run")
+            self.runresult = "fail"
+        else:
+            self.runresult = "pass"
+
+
+
+class PdtTestC(PdtTest):
+    def __init__(self, makefile):
+        PdtTest.__init__(self, "PDT (C)", makefile)
+    def getActualTest(self):
+        return "pdtc"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        return True
+    
+
+class PdtTestCPP(PdtTest):
+    def __init__(self, makefile):
+        PdtTest.__init__(self, "PDT (C++)", makefile)
+    def getActualTest(self):
+        return "pdtcpp"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        return True
+
+class PdtTestF(PdtTest):
+    def __init__(self, makefile):
+        PdtTest.__init__(self, "PDT (Fortran)", makefile)
+    def getActualTest(self):
+        return "pdtf"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+            return False
+        return True
+
+class PdtTestGF(PdtTest):
+    def __init__(self, makefile):
+        PdtTest.__init__(self, "PDT (GFortran)", makefile)
+    def getActualTest(self):
+        return "pdtgf"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+            return False
+        return True
+
+
+def usage():
+    print ""
+    print "Usage: tau_validate [-v] [--html] [--build] [--run] <target>"
+    print ""
+    print "Options:"
+    print ""
+    print "-v           Verbose output"
+    print "--html       Output results in HTML"
+    print "--build      Only build"
+    print "--run        Only run"
+    print "<target>     Specify an arch directory (e.g. rs6000), or the lib"
+    print "             directory (rs6000/lib), or a specific makefile"
+    print "             relative or absolute paths are ok."
+    print ""
+    print "Notes:"
+    print "tau_validate will attempt to validate a TAU installation by performing"
+    print "various tests on each TAU stub Makefile.  Some degree of logic exists"
+    print "to know where a given test applies to a given makefile, but it's not"
+    print "perfect."
+    print ""
+    
+    
+    sys.exit(-1)
+
+
+
+
+# execution starts here
+
+errorsFound = 0
+
+PWD = os.environ["PWD"]
+TEST_ROOT = PWD + "/examples/validate"
+
+
+
+args = sys.argv[1:]
+verbose = False
+html = False
+target = ""
+optRun = False
+optBuild = False
+optClean = False
+for arg in args:
+    if arg == "-v":
+        verbose = True
+    elif arg == "--html":
+        verbose = True
+        html = True
+    elif arg == "--build":
+        optRun = True
+    elif arg == "--run":
+        optBuild = True
+    elif arg == "--clean":
+        optClean = True
+    else:
+        if target != "":
+            usage()
+        target = arg
+
+if optClean:
+    print "Cleaning..."
+    verbose = True
+    chdir(TEST_ROOT)
+    system("find . -name \"build-*\" | xargs rm -rf")
+    system("find . -name \"profile.*\" | xargs rm")
+    system("find . -name \"*.trc\" | xargs rm")
+    system("find . -name \"*.edf\" | xargs rm")
+    system("find . -name \"*.pdb\" | xargs rm")
+    system("find . -name \"*.elg\" | xargs rm")
+    system("find . -name \"core.*\" | xargs rm")
+    system("find . -name \"*.o\" | xargs rm")
+    system("find . -name \"*.inst.*\" | xargs rm")
+    system("find . -name \"simple\" | xargs rm")
+    
+    sys.exit(0)
+    
+
+# if neither is specified, do both
+if not optRun and not optBuild:
+    optBuild = True
+    optRun = True
+
+if target == "":
+    usage()
+
+
+target = os.path.realpath(target)
+
+begin()
+
+
+def runTest(test,tests):
+    if optBuild:
+        test.buildTest()
+    if optRun:
+        test.runTest()
+    tests.append(test)
+    print "%4s : %-20s : %s %s" % (test.buildresult, test.name, makefile, test.message)
+    
+
+
+if not os.path.exists(target):
+    print "Couldn't find: " + target
+    usage()
+
+directory = False
+if os.path.isdir(target):
+    directory = True
+
+    if os.path.exists(target + "/lib"):
+        target = target + "/lib";
+
+    chdir(target)
+    print target
+    makefiles = glob.glob("Makefile.tau*")
+else:
+    makefiles = [ target ]
+
+testgrid = {}
+found = 0
+for makefile in makefiles:
+    found = 1
+#    print makefile
+
+    tests = []
+    if directory:
+        fullmakefile = target + "/" + makefile
+    else:
+        fullmakefile = os.path.realpath(target)
+            
+
+    runTest(CTest(fullmakefile),tests)
+    runTest(PdtTestC(fullmakefile),tests)
+    runTest(PdtTestCPP(fullmakefile),tests)
+    runTest(PdtTestF(fullmakefile),tests)
+    runTest(PdtTestGF(fullmakefile),tests)
+
+    runTest(FflinkTest(fullmakefile),tests)
+    runTest(FcpplinkTest(fullmakefile),tests)
+    runTest(FclinkTest(fullmakefile),tests)
+
+    runTest(MpiCTest(fullmakefile),tests)
+    runTest(MpiFTest(fullmakefile),tests)
+
+
+    testgrid[makefile] = tests
+
+if found == 0:
+    print "Couldn't find any makefiles in " + target
+
+outputSummary(testgrid)
+
+end(0)
+
+
+
+
+
+
