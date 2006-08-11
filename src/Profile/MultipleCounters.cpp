@@ -545,7 +545,7 @@ bool MultipleCounterLayer::tauMPIMessageSizeMCLInit(int functionPosition){
 bool MultipleCounterLayer::papiMCLInit(int functionPosition){
 #ifdef TAU_PAPI
 
-  int rc = PapiLayer::initializePapiLayer();
+  int rc = PapiLayer::initializePapiLayer(false); // do not lock, it's already locked
   if (rc != 0) {
     return false;
   }
