@@ -94,6 +94,16 @@ extern "C" char * Tau_phase_enable(const char *group);
 #define TAU_PHASE_STOP  TAU_PROFILE_STOP
 #endif /* TAU_PROFILEPHASE */
 
+/* The macros below refer to TAU's FunctionInfo object. This object is created with
+a new call for multi-threaded applications and with a static constructor when 
+a single thread of execution is used. Correspondingly we either use tauFI.method() 
+or tauFI->method();
+*/
+#define TAU_PROFILE_SET_GROUP_NAME(newname) tauFI.SetPrimaryGroupName(newname);
+#define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname) t##fi.SetPrimaryGroupName(newname);
+#define TAU_PROFILE_TIMER_SET_NAME(t, newname)	t##fi.SetName(newname);
+#define TAU_PROFILE_TIMER_SET_TYPE(t, newname)  t##fi.SetType(newname);
+#define TAU_PROFILE_TIMER_SET_GROUP(t, id) t##fi.SetProfileGroup(id); 
 
 
 #else  /* TAU_MAX_THREADS */
@@ -166,6 +176,17 @@ extern "C" char * Tau_phase_enable(const char *group);
 #else
 #define TAU_PHASE_STOP TAU_PROFILE_STOP
 #endif /* TAU_PROFILEPHASE */
+
+/* The macros below refer to TAU's FunctionInfo object. This object is created with
+a new call for multi-threaded applications and with a static constructor when 
+a single thread of execution is used. Correspondingly we either use tauFI.method() 
+or tauFI->method();
+*/
+#define TAU_PROFILE_SET_GROUP_NAME(newname) tauFI->SetPrimaryGroupName(newname);
+#define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname) t##fi->SetPrimaryGroupName(newname);
+#define TAU_PROFILE_TIMER_SET_NAME(t, newname)	t##fi->SetName(newname);
+#define TAU_PROFILE_TIMER_SET_TYPE(t, newname)  t##fi->SetType(newname);
+#define TAU_PROFILE_TIMER_SET_GROUP(t, id) t##fi->SetProfileGroup(id); 
 #endif  /* TAU_MAX_THREADS */
 
 #ifdef TAU_PROFILEPARAM
@@ -188,11 +209,6 @@ extern "C" char * Tau_phase_enable(const char *group);
 #define TAU_INIT(argc, argv) RtsLayer::ProfileInit(*argc, *argv);
 #define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
 #define TAU_PROFILE_SET_CONTEXT(context) RtsLayer::setMyContext(context);
-#define TAU_PROFILE_SET_GROUP_NAME(newname) tauFI.SetPrimaryGroupName(newname);
-#define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname) t##fi.SetPrimaryGroupName(newname);
-#define TAU_PROFILE_TIMER_SET_NAME(t, newname)	t##fi.SetName(newname);
-#define TAU_PROFILE_TIMER_SET_TYPE(t, newname)  t##fi.SetType(newname);
-#define TAU_PROFILE_TIMER_SET_GROUP(t, id) t##fi.SetProfileGroup(id); 
 
 #define TAU_GLOBAL_TIMER(timer, name, type, group) FunctionInfo& timer (void) { \
 	static FunctionInfo *timer##fi = NULL; \
@@ -429,6 +445,6 @@ extern "C" char * Tau_phase_enable(const char *group);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.57 $   $Date: 2006/07/24 15:49:21 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.57 2006/07/24 15:49:21 sameer Exp $ 
+ * $Revision: 1.58 $   $Date: 2006/08/11 18:42:50 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.58 2006/08/11 18:42:50 sameer Exp $ 
  ***************************************************************************/
