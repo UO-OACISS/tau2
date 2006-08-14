@@ -165,7 +165,7 @@ long long PapiLayer::getSingleCounter(int tid) {
 
   if (numCounters == 0) {
     // adding must have failed, just return
-    return;
+    return 0;
   }
 
   if (ThreadList[tid] == NULL) {
@@ -214,7 +214,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
 
   if (numCounters == 0) {
     // adding must have failed, just return
-    return;
+    return NULL;
   }
 
 
