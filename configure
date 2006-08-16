@@ -4665,7 +4665,9 @@ case $machine in
 	;;
     
     x86_64)
-	gunzip -c tools/src/contrib/i386_linux/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
+	gunzip -c tools/src/contrib/x86_64/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
+	# kind of screwy, but the ia64 jogl.jar is the 64-bit one
+	gunzip -c tools/src/contrib/ia64/jogl.jar.gz > $tautoplevel/$architecture/lib/jogl.jar
 	;;
 
     ia64)
