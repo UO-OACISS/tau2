@@ -11,8 +11,6 @@
 
       CALL MPI_Barrier(MPI_COMM_WORLD, err)
 
-      CALL MPI_Type_create_hindexed(5)
-
       IF (me .EQ. 0) THEN
         CALL MPI_Send(f, 10, MPI_INTEGER, 1, 4711, MPI_COMM_WORLD, err)
         CALL MPI_Recv(f, 10, MPI_INTEGER, proc-1, 4711, MPI_COMM_WORLD, s, err)
