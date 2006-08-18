@@ -28,8 +28,11 @@ using namespace std;
 #endif // JAVA_CPU_TIME
 
 #ifdef CRAY_TIMERS
+#ifndef TAU_CATAMOUNT
+/* These header files are for Cray X1 */
 #include <intrinsics.h>
 #include <sys/param.h>
+#endif /* TAU_CATAMOUNT */
 #endif // CRAY_TIMERS
 
 #ifdef TRACING_ON
