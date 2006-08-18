@@ -11,7 +11,7 @@ TARGET	      	= simple
 all:		$(TARGET)	
 
 $(TARGET):	$(TARGET).o
-	$(CXX) $(TARGET).o -o $@ -lpthread
+	$(CXX) $(TARGET).o -o $@
 
 $(TARGET).o : $(TARGET).cc
 	$(CXX) -c $(TARGET).cc
