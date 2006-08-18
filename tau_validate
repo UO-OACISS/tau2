@@ -425,13 +425,13 @@ def usage():
     print "--build      Only build"
     print "--run        Only run"
     print "<target>     Specify an arch directory (e.g. rs6000), or the lib"
-    print "             directory (rs6000/lib), or a specific makefile"
-    print "             relative or absolute paths are ok."
+    print "             directory (rs6000/lib), or a specific makefile."
+    print "             Relative or absolute paths are ok."
     print ""
     print "Notes:"
     print "tau_validate will attempt to validate a TAU installation by performing"
     print "various tests on each TAU stub Makefile.  Some degree of logic exists"
-    print "to know where a given test applies to a given makefile, but it's not"
+    print "to determine if a given test applies to a given makefile, but it's not"
     print "perfect."
     print ""
     
@@ -464,9 +464,9 @@ for arg in args:
         verbose = True
         html = True
     elif arg == "--build":
-        optRun = True
-    elif arg == "--run":
         optBuild = True
+    elif arg == "--run":
+        optRun = True
     elif arg == "--clean":
         optClean = True
     else:
