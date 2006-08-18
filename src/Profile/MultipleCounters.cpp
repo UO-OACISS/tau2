@@ -709,8 +709,12 @@ void MultipleCounterLayer::sgiTimersMCL(int tid, double values[]){
 
 void MultipleCounterLayer::crayTimersMCL(int tid, double values[]){
 #ifdef  CRAY_TIMERS
+#ifdef TAU_CATAMOUNT /* for Cray XT3 */
+  return dclock()*1.0e6;
+#else /* for Cray X1 */
   long long tick = _rtc();
-  values[crayTimersMCL_CP[0]] = (double) tick/HZ; 
+  return (double) tick/HZ;
+#endif /* TAU_CATAMOUNT */
 #endif // CRAY_TIMERS
 }
 
