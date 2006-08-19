@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.8 2006/06/28 19:43:46 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.9 2006/08/19 01:56:52 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -314,6 +314,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem = new JMenuItem("Add Trial");
         jMenuItem.addActionListener(this);
         dbAppPopup.add(jMenuItem);
+//        jMenuItem = new JMenuItem("Export Application to Filesystem");
+//        jMenuItem.addActionListener(this);
+//        dbAppPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
         dbAppPopup.add(jMenuItem);
@@ -674,7 +677,49 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         }
                     });
                     thread.start();
+                } else if (arg.equals("Export Application to Filesystem")) {
+                    //???
+                    
+                    ParaProfApplication dbApp= (ParaProfApplication) clickedOnObject;
+                    
+                    DatabaseAPI databaseAPI = this.getDatabaseAPI();
+                    if (databaseAPI != null) {
 
+                        boolean found = false;
+                        //ListIterator l = databaseAPI.getApplicationList().listIterator();
+                        //while (l.hasNext()) {
+                        //    ParaProfApplication dbApp = new ParaProfApplication((Application) l.next());
+
+                            String appname = dbApp.getName().replace('/', '%');
+                            boolean success = (new File(appname).mkdir());
+                            
+                            databaseAPI.setApplication(dbApp);
+                            for (Iterator it = databaseAPI.getExperimentList().iterator(); it.hasNext(); ) {
+                                ParaProfExperiment dbExp = new ParaProfExperiment((Experiment) it.next());
+
+                                String expname = appname + "/" + dbExp.getName().replace('/','%');
+                                success = (new File(expname).mkdir());
+
+                                databaseAPI.setExperiment(dbExp);
+                                for (Iterator it2 = databaseAPI.getTrialList().iterator(); it2.hasNext(); ) {
+                                    Trial trial = (Trial) it2.next();
+
+                                    databaseAPI.setTrial(trial.getID());
+                                    DBDataSource dbDataSource = new DBDataSource(databaseAPI);
+                                    dbDataSource.load();
+                                    
+                                    String filename = expname + "/" + trial.getName().replace('/','%') + ".ppk";
+                                    
+                                    DataSourceExport.writePacked(dbDataSource, new File(filename));
+
+                                }
+                                
+                            }
+                            
+                            
+                      //  }
+                    }
+                    
                 } else if (arg.equals("Upload Experiment to DB")) {
                     java.lang.Thread thread = new java.lang.Thread(new Runnable() {
                         public void run() {
@@ -1435,7 +1480,12 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         } else {
             ppTrial.setPaths(System.getProperty("user.dir"));
         }
-        ppTrial.getTrial().setName(ppTrial.getPathReverse());
+        if (!ParaProf.usePathNameInTrial && files.length == 1) {
+            ppTrial.getTrial().setName(files[0].toString());
+            ppTrial.setPaths(files[0].toString());
+        } else {
+            ppTrial.getTrial().setName(ppTrial.getPathReverse());
+        }
         if (experiment.dBExperiment()) {
             loadedDBTrials.add(ppTrial);
             ppTrial.setUpload(true); // This trial is not set to a db trial until after it has finished loading.

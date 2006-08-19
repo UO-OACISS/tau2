@@ -21,11 +21,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.51 2006/07/05 18:21:34 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.52 2006/08/19 01:56:52 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.51 $
+ * @version $Revision: 1.52 $
  */
 public class ParaProf implements ActionListener {
 
@@ -46,23 +46,22 @@ public class ParaProf implements ActionListener {
 
     private final static String VERSION = "XXXXX";
 
-    static ColorMap colorMap = new ColorMap();
+    public static ColorMap colorMap = new ColorMap();
 
-    //System wide stuff.
-    static File paraProfHomeDirectory = null;
+    public static File paraProfHomeDirectory = null;
     public static int defaultNumberPrecision = 6;
     //static ParaProfLisp paraProfLisp = null;
     public static Preferences preferences = null;
     public static ColorChooser colorChooser;
 
+    
     public static ParaProfManagerWindow paraProfManagerWindow = null;
     public static ApplicationManager applicationManager = new ApplicationManager();
     public static HelpWindow helpWindow = null;
     public static PreferencesWindow preferencesWindow;
     public static Runtime runtime = null;
     private static int numWindowsOpen = 0;
-    //End - System wide stuff.
-
+ 
     //Command line options related.
     private static int fileType = 0; //0:profile, 1:pprof, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun, 7:ppk, 8:cube
     private static File sourceFiles[] = new File[0];
@@ -71,7 +70,8 @@ public class ParaProf implements ActionListener {
     //End - Command line options related.
 
     public static boolean demoMode;
-
+    public static boolean usePathNameInTrial = false;
+    
     public static FunctionBarChartWindow theComparisonWindow;
 
     public static boolean JNLP = false;
@@ -174,7 +174,16 @@ public class ParaProf implements ActionListener {
         ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
 
         try {
-            paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames, monitorProfiles);
+  
+            if (fileType == 7) {
+                for (int i=0; i < sourceFiles.length; i++) {
+                    File files[] = new File[1];
+                    files[0] = sourceFiles[i];
+                    paraProfManagerWindow.addTrial(app, experiment, files, fileType, fixNames, monitorProfiles);
+                }
+            } else {
+                paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames, monitorProfiles);
+            }
         } catch (java.security.AccessControlException ace) {
             // running as Java Web Start without permission
         }
@@ -451,7 +460,7 @@ public class ParaProf implements ActionListener {
                 System.exit(-1);
             }
         } else {
-            if (sourceFilenames.length == 1) {
+//            if (sourceFilenames.length == 1) {
                 String filename = sourceFiles[0].getName();
                 if (filename.toLowerCase().endsWith(".ppk")) {
                     ParaProf.fileType = 7;
@@ -459,7 +468,7 @@ public class ParaProf implements ActionListener {
                 if (filename.toLowerCase().endsWith(".cube")) {
                     ParaProf.fileType = 8;
                 }
-            }
+//            }
         }
 
         ParaProf.runtime = Runtime.getRuntime();
