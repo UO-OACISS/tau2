@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.5 2006/06/23 17:52:38 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.6 2006/08/19 01:25:00 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -119,30 +119,54 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
             CheckBoxListItem item = (CheckBoxListItem) metricModel.getElementAt(i);
             if (item.getSelected()) {
 
+                boolean absSet = false;
+                boolean percentSet = false;
+                boolean percallSet = false;
                 for (int j = 0; j < valueModel.getSize(); j++) {
                     CheckBoxListItem valueItem = (CheckBoxListItem) valueModel.getElementAt(j);
                     if (valueItem.getSelected()) {
                         String str = (String) valueItem.getUserObject();
-                        if (str.equals("Absolute Value")) {
+                        if (str.equals("Exclusive Value") || str.equals("Inclusive Value")) {
                             if (showInclExclMenuItem.isSelected()) {
-                                columns.add(new InclusiveColumn(this, i));
-                                columns.add(new ExclusiveColumn(this, i));
+                                if (str.equals("Inclusive Value")) {
+                                    columns.add(new InclusiveColumn(this, i));
+                                }
+                                if (str.equals("Exclusive Value")) {
+                                    columns.add(new ExclusiveColumn(this, i));
+                                }
                             } else {
-                                columns.add(new RegularMetricColumn(this, i));
+                                if (absSet == false) {
+                                    columns.add(new RegularMetricColumn(this, i));
+                                    absSet = true;
+                                }
                             }
-                        } else if (str.equals("Percent Value")) {
+                        } else if (str.equals("Inclusive Percent Value") || str.equals("Exclusive Percent Value")) {
                             if (showInclExclMenuItem.isSelected()) {
-                                columns.add(new InclusivePercentColumn(this, i));
-                                columns.add(new ExclusivePercentColumn(this, i));
+                                if (str.equals("Inclusive Percent Value")) {
+                                    columns.add(new InclusivePercentColumn(this, i));
+                                }
+                                if (str.equals("Exclusive Percent Value")) {
+                                    columns.add(new ExclusivePercentColumn(this, i));
+                                }
                             } else {
-                                columns.add(new RegularPercentMetricColumn(this, i));
+                                if (percentSet == false) {
+                                    columns.add(new RegularPercentMetricColumn(this, i));
+                                    percentSet = true;
+                                }
                             }
-                        } else if (str.equals("Absolute Value Per Call")) {
+                        } else if (str.equals("Inclusive Value Per Call") || str.equals("Exclusive Value Per Call")) {
                             if (showInclExclMenuItem.isSelected()) {
-                                columns.add(new InclusivePerCallColumn(this, i));
-                                columns.add(new ExclusivePerCallColumn(this, i));
+                                if (str.equals("Inclusive Value Per Call")) {
+                                    columns.add(new InclusivePerCallColumn(this, i));
+                                }
+                                if (str.equals("Exclusive Value Per Call")) {
+                                    columns.add(new ExclusivePerCallColumn(this, i));
+                                }
                             } else {
-                                columns.add(new RegularPerCallMetricColumn(this, i));
+                                if (percallSet == false) {
+                                    columns.add(new RegularPerCallMetricColumn(this, i));
+                                    percallSet = true;
+                                }
                             }
                         }
                     }

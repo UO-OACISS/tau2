@@ -57,9 +57,12 @@ public class ColumnChooser extends JFrame {
         
         // create the value JList
         valueModel = new DefaultListModel();
-        valueModel.addElement(new CheckBoxListItem("Absolute Value", true));
-        valueModel.addElement(new CheckBoxListItem("Percent Value", false));
-        valueModel.addElement(new CheckBoxListItem("Absolute Value Per Call", false));
+        valueModel.addElement(new CheckBoxListItem("Exclusive Value", true));
+        valueModel.addElement(new CheckBoxListItem("Inclusive Value", true));
+        valueModel.addElement(new CheckBoxListItem("Exlusive Percent Value", false));
+        valueModel.addElement(new CheckBoxListItem("Inclusive Percent Value", false));
+        valueModel.addElement(new CheckBoxListItem("Exclusive Value Per Call", false));
+        valueModel.addElement(new CheckBoxListItem("Inclusive Value Per Call", false));
 
 
         statistics.add("Standard Deviation");
