@@ -21,11 +21,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.52 2006/08/19 01:56:52 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.53 2006/08/21 00:43:53 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.52 $
+ * @version $Revision: 1.53 $
  */
 public class ParaProf implements ActionListener {
 
@@ -460,7 +460,7 @@ public class ParaProf implements ActionListener {
                 System.exit(-1);
             }
         } else {
-//            if (sourceFilenames.length == 1) {
+            if (sourceFilenames.length >= 1) {
                 String filename = sourceFiles[0].getName();
                 if (filename.toLowerCase().endsWith(".ppk")) {
                     ParaProf.fileType = 7;
@@ -468,7 +468,7 @@ public class ParaProf implements ActionListener {
                 if (filename.toLowerCase().endsWith(".cube")) {
                     ParaProf.fileType = 8;
                 }
-//            }
+            }
         }
 
         ParaProf.runtime = Runtime.getRuntime();
