@@ -287,6 +287,11 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     LAMPI)
+        echo "NOTE: Using LA-MPI MPI_Request_c2f workaround"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      IBMMPI)
         echo "NOTE: Using TAU's IBM MPI extensions"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

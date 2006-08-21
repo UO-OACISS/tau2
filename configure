@@ -2369,6 +2369,11 @@ EOF
     fixmakeargs="$fixmakeargs MPI_THREADED"
   fi
 
+  if [ -d "$mpiinc/ulm" ] ; then
+      echo "LA-MPI detected, working around broken MPI_Request_c2f()"
+      fixmakeargs="$fixmakeargs LAMPI"
+  fi
+
   if $mpicompiler $orig_useropt $mpi_include -c mpi2.$msuf  1> /dev/null 2>&1
   then
     echo "MPI-2 Interface is defined..."

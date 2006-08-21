@@ -30,6 +30,24 @@
 #include <Profile/TauUtil.h>
 
 
+#ifdef TAU_LAMPI
+MPI_Fint TAU_MPI_Request_c2f(MPI_Request c_request) {
+  MPI_Fint f_request;
+  f_request = MPI_Request_c2f(c_request);
+  /* LA-MPI doesn't seem to translate MPI_REQUEST_NULL properly
+     so we'll check for it and set it to the proper value for fortran */
+  if (c_request == MPI_REQUEST_NULL) {
+    f_request = -1;
+  }
+  return f_request;
+}
+#else
+/* For all other implementations, just #define it to avoid a wrapper function call */
+#define TAU_MPI_Request_c2f MPI_Request_c2f
+#endif /* TAU_LAMPI */
+
+
+
 /******************************************************/
 /******************************************************/
 void  mpi_allgather_( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm , ierr)
@@ -2620,7 +2638,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request;
   *ierr = MPI_Bsend_init( buf, *count, MPI_Type_f2c(*datatype), *dest, *tag, MPI_Comm_f2c(*comm), &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_bsend_init__( buf, count, datatype, dest, tag, comm, request, ierr )
@@ -2773,7 +2791,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request = MPI_Request_f2c(*request);
   *ierr = MPI_Request_free( &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_request_free__( request, ierr )
@@ -2812,7 +2830,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request;
   *ierr = MPI_Recv_init( buf, *count, MPI_Type_f2c(*datatype), *source, *tag, MPI_Comm_f2c(*comm), &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_recv_init__( buf, count, datatype, source, tag, comm, request, ierr )
@@ -2869,7 +2887,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request;
   *ierr = MPI_Send_init( buf, *count, MPI_Type_f2c(*datatype), *dest, *tag, MPI_Comm_f2c(*comm), &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 
@@ -3009,7 +3027,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request;
   *ierr = MPI_Ibsend( buf, *count, MPI_Type_f2c(*datatype), *dest, *tag, MPI_Comm_f2c(*comm), &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_ibsend__( buf, count, datatype, dest, tag, comm, request, ierr )
@@ -3115,7 +3133,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request;
   *ierr = MPI_Irecv( buf, *count, MPI_Type_f2c(*datatype), *source, *tag, MPI_Comm_f2c(*comm), &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_irecv__( buf, count, datatype, source, tag, comm, request, ierr )
@@ -3172,7 +3190,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request;
   *ierr = MPI_Irsend( buf, *count, MPI_Type_f2c(*datatype), *dest, *tag, MPI_Comm_f2c(*comm), &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_irsend__( buf, count, datatype, dest, tag, comm, request, ierr )
@@ -3229,7 +3247,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request;
   *ierr = MPI_Isend( buf, *count, MPI_Type_f2c(*datatype), *dest, *tag, MPI_Comm_f2c(*comm), &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_isend__( buf, count, datatype, dest, tag, comm, request, ierr )
@@ -3286,7 +3304,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request;
   *ierr = MPI_Issend( buf, *count, MPI_Type_f2c(*datatype), *dest, *tag, MPI_Comm_f2c(*comm), &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_issend__( buf, count, datatype, dest, tag, comm, request, ierr )
@@ -3597,7 +3615,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request;
   *ierr = MPI_Rsend_init( buf, *count, MPI_Type_f2c(*datatype), *dest, *tag, MPI_Comm_f2c(*comm), &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_rsend_init__( buf, count, datatype, dest, tag, comm, request, ierr )
@@ -3895,7 +3913,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request;
   *ierr = MPI_Ssend_init( buf, *count, MPI_Type_f2c(*datatype), *dest, *tag, MPI_Comm_f2c(*comm), &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_ssend_init__( buf, count, datatype, dest, tag, comm, request, ierr )
@@ -3946,7 +3964,7 @@ MPI_Fint *ierr;
 {
   MPI_Request local_request = MPI_Request_f2c(*request);
   *ierr = MPI_Start( &local_request );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
 }
 
 void  mpi_start__( request, ierr )
@@ -3981,7 +3999,7 @@ MPI_Fint *ierr;
   TAU_DECL_ALLOC_LOCAL(MPI_Request, local_requests, *count);
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *count, MPI_Request_f2c);
   *ierr = MPI_Startall( *count, local_requests );
-  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, MPI_Request_c2f);
+  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, TAU_MPI_Request_c2f);
   TAU_FREE_LOCAL(local_requests);
 }
 
@@ -4021,7 +4039,7 @@ MPI_Fint *ierr;
   MPI_Status local_status;
   MPI_Request local_request = MPI_Request_f2c(*request);
   *ierr = MPI_Test( &local_request, flag, &local_status );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
   MPI_Status_c2f(&local_status, status);
 }
 
@@ -4068,7 +4086,7 @@ MPI_Fint *ierr;
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *count, MPI_Request_f2c);
   TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *count, MPI_Status_f2c);
   *ierr = MPI_Testall( *count, local_requests, flag, local_statuses );
-  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, MPI_Request_c2f);
+  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, TAU_MPI_Request_c2f);
   TAU_ASSIGN_STATUS_C2F(array_of_statuses, local_statuses, *count, MPI_Status_c2f);
   TAU_FREE_LOCAL(local_requests);
   TAU_FREE_LOCAL(local_statuses);
@@ -4119,7 +4137,7 @@ MPI_Fint *ierr;
   TAU_DECL_ALLOC_LOCAL(MPI_Request, local_requests, *count);
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *count, MPI_Request_f2c);
   *ierr	 = MPI_Testany( *count, local_requests, index, flag, &local_status );
-  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, MPI_Request_c2f);
+  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, TAU_MPI_Request_c2f);
   MPI_Status_c2f(&local_status, status);
   TAU_FREE_LOCAL(local_requests);
   /* Increment the C index before returning it as a Fortran index as
@@ -4215,7 +4233,7 @@ MPI_Fint *ierr;
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *incount, MPI_Request_f2c);
   TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *incount, MPI_Status_f2c);
   *ierr = MPI_Testsome( *incount, local_requests, outcount, array_of_indices, local_statuses );
-  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *outcount, MPI_Request_c2f);
+  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *outcount, TAU_MPI_Request_c2f);
   TAU_ASSIGN_STATUS_C2F(array_of_statuses, local_statuses, *outcount, MPI_Status_c2f);
   TAU_FREE_LOCAL(local_requests);
   TAU_FREE_LOCAL(local_statuses);
@@ -4843,7 +4861,7 @@ MPI_Fint *ierr;
   MPI_Request local_request = MPI_Request_f2c(*request);
   MPI_Status local_status;
   *ierr = MPI_Wait( &local_request, &local_status );
-  *request = MPI_Request_c2f(local_request);
+  *request = TAU_MPI_Request_c2f(local_request);
   MPI_Status_c2f(&local_status, status);
 }
 
@@ -4886,7 +4904,7 @@ MPI_Fint *ierr;
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *count, MPI_Request_f2c);
   TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *count, MPI_Status_f2c);
   *ierr = MPI_Waitall( *count, local_requests, local_statuses );
-  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, MPI_Request_c2f);
+  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, TAU_MPI_Request_c2f);
   TAU_ASSIGN_STATUS_C2F(array_of_statuses, local_statuses, *count, MPI_Status_c2f);
   TAU_FREE_LOCAL(local_requests);
   TAU_FREE_LOCAL(local_statuses);
@@ -4933,7 +4951,7 @@ MPI_Fint *ierr;
   TAU_DECL_ALLOC_LOCAL(MPI_Request, local_requests, *count);
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *count, MPI_Request_f2c);
   *ierr = MPI_Waitany( *count, local_requests, index, &local_status );
-  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, MPI_Request_c2f);
+  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, TAU_MPI_Request_c2f);
   MPI_Status_c2f(&local_status, status);
   TAU_FREE_LOCAL(local_requests);
   /* Increment the C index before returning it as a Fortran index as
@@ -4991,7 +5009,7 @@ MPI_Fint *ierr;
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *incount, MPI_Request_f2c);
   TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *incount, MPI_Status_f2c);
   *ierr = MPI_Waitsome( *incount, local_requests, outcount, array_of_indices, local_statuses );
-  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *outcount, MPI_Request_c2f);
+  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *outcount, TAU_MPI_Request_c2f);
   TAU_ASSIGN_STATUS_C2F(array_of_statuses, local_statuses, *outcount, MPI_Status_c2f);
   TAU_FREE_LOCAL(local_requests);
   TAU_FREE_LOCAL(local_statuses);
