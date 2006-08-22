@@ -6,6 +6,9 @@ import popen2
 import string
 import glob
 
+
+uniqID = 1
+
 # python 2.2 check
 if string.atof( ( string.split( sys.version )[0] ) [0:3]) < 2.3:
     True = 1
@@ -32,6 +35,11 @@ def output(message):
 def begin():
     if html == True:
         print "<HTML><PRE>\n"
+    else:
+        print "------------------------------------------------------"
+        print "build/run : %-20s : %s" % ("test name", "stub makefile")
+        print "------------------------------------------------------"
+        
 
 
 
@@ -53,7 +61,6 @@ def end():
 def usesOption(makefile, option):
     opts = makefile.split('-')
     for opt in opts:
-#        print "opt = " + opt
         if opt == option:
             return True
     return False
@@ -136,14 +143,14 @@ def outputSummary(testgrid):
                 if test.buildresult == "pass":
                     print "<td bgcolor=#64FF64>pass</td>"
                 elif test.buildresult == "fail":
-                    print "<td bgcolor=#FF6464>fail</td>"
+                    print "<td bgcolor=#FF6464><a href=#%d>fail</a></td>" % (test.errorID)
                 else:
                     print "<td bgcolor=#CCCCCC>N/A</td>"
 
                 if test.runresult == "pass":
                     print "<td bgcolor=#64FF64>pass</td>"
                 elif test.runresult == "fail":
-                    print "<td bgcolor=#FF6464>fail</td>"
+                    print "<td bgcolor=#FF6464><a href=#%d>fail</a></td>" % (test.errorID)
                 else:
                     print "<td bgcolor=#CCCCCC>N/A</td>"
                     
@@ -160,6 +167,7 @@ class Test:
         self.message = ""
         self.makefile = shortMakefile(makefile)
         self.buildpath = "build-" + self.makefile
+        self.errorID = 0
 
     def checkApplicable(self):
         return True
@@ -172,13 +180,15 @@ class Test:
 
     def error(self,message):
         global errorsFound
+        global uniqID
         errorsFound = errorsFound + 1
         if verbose == True:
             if html == True:
-                print "</pre><h1><font color=red>\n" + message + "\n</font></h1><pre>";
+                print ("</pre><h1><font color=red><a name=%d>\n" + message + "\n</a></font></h1><pre>") % (uniqID);
+                self.errorID = uniqID
+                uniqID = uniqID + 1
             else:
                 print message + "\n";
-
 
 class SimpleTest(Test):
     def __init__(self, name, makefile):
@@ -527,7 +537,7 @@ def runTest(test,tests):
     if optRun:
         test.runTest()
     tests.append(test)
-    print "%4s : %-20s : %s %s" % (test.buildresult, test.name, makefile, test.message)
+    print "%4s/%-4s : %-20s : %s %s" % (test.buildresult, test.runresult, test.name, makefile, test.message)
     
 
 
@@ -543,7 +553,6 @@ if os.path.isdir(target):
         target = target + "/lib";
 
     chdir(target)
-    print target
     makefiles = glob.glob("Makefile.tau*")
 else:
     makefiles = [ target ]
