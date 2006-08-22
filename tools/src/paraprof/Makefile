@@ -4,8 +4,8 @@
 #Makefile creates the ParaProf jar file.
 ##########################
 
-CONFIG_ARCH=i386_linux
-TAUROOT=/home/amorris/tau2
+CONFIG_ARCH=default
+TAUROOT=
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java \
              ParaProfTreeCellRenderer.java \
@@ -30,7 +30,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
 VIS_SOURCES = ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java  
 OTHER_SRC = $(wildcard src/enums/*.java) $(wildcard src/interfaces/*.java) $(wildcard src/treetable/*.java) $(wildcard src/barchart/*.java) $(wildcard src/util/*.java) $(wildcard src/script/*.java)
 
-BASE_SRC=$(addprefix src/, $(BASE_SOURCES)) wrapper/ParaProf.java
+BASE_SRC=$(addprefix src/, $(BASE_SOURCES))
 VIS_SRC=$(addprefix src/, $(VIS_SOURCES))
 
 NEW_SOURCES=$(BASE_SRC) $(VIS_SRC) $(OTHER_SRC) src/ParaProfImageOutput.java src/JVMDependent.java 
@@ -58,7 +58,7 @@ $(TOOLS_SRC)/paraprof/bin/paraprof.jar: $(NEW_SOURCES)
 	rm -rf classes
 	mkdir classes
 	sed "s/XXXXX/$(NOW)/" src/ParaProf.java > wrapper/ParaProf.java
-	$(CC) -d ./classes -classpath $(CP14) $(NEW_SOURCES)
+	$(CC) -d ./classes -classpath $(CP14) $(NEW_SOURCES) wrapper/ParaProf.java
 	cp ./src/resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	jar -cvf bin/paraprof.jar -C ./classes edu
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/paraprof.jar
@@ -68,7 +68,7 @@ $(TOOLS_SRC)/paraprof/bin/paraprof.jar: $(NEW_SOURCES)
 	rm -rf classes
 	mkdir classes
 	sed "s/XXXXX/$(NOW)/" src/ParaProf.java > wrapper/ParaProf.java
-	$(CC) -d ./classes -classpath $(CP13) $(OLD_SOURCES)
+	$(CC) -d ./classes -classpath $(CP13) $(OLD_SOURCES) wrapper/ParaProf.java
 	cp ./src/resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	jar -cvf bin/paraprof-1.3.jar -C ./classes edu
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/paraprof-1.3.jar
