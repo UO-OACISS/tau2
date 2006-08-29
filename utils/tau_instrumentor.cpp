@@ -50,6 +50,7 @@ bool process_this_return = false; /* for C instrumentation using a different ret
 char exit_keyword[EXIT_KEYWORD_SIZE] = "exit"; /* You can define your own exit keyword */
 bool using_exit_keyword = false; /* By default, we don't use the exit keyword */
 tau_language_t tau_language; /* language of the file */
+bool use_perflib = false;   /* by default, do not insert calls for perflib package */
 
 list<string> current_timer; /* for Fortran loop level instrumentation. */
 
@@ -1801,6 +1802,15 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
 
 		WRITE_TAB(ostr,(*it)->col);
+		if (use_perflib) 
+		{
+                  ostr <<"call perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
+		  /* write the original statement */
+     		  for (k = 0; k < write_upto ; k++) 
+		    ostr<< inbuf[k];
+		  instrumented = true;
+		  break;
+		}
 
 		
 		if (pure) {
@@ -1971,7 +1981,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 			ostr <<"call TAU_PROFILE_STOP("<<(*siter)<<")"<<endl<<"\t";
 		    }
-		    ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
+		    if (use_perflib)
+		      ostr <<"call perf_update('"<<(*it)->item->fullName()<<"', .false.)"<<endl;
+		    else
+		      ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
 		  }
 		}
 
@@ -2216,7 +2229,7 @@ int main(int argc, char **argv)
 
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p]"<<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
     cout <<"-noinline: disables the instrumentation of inline functions in C++"<<endl;
     cout <<"-noinit: does not call TAU_INIT(&argc,&argv). This disables a.out --profile <group[+<group>]> processing."<<endl;
@@ -2230,6 +2243,7 @@ int main(int argc, char **argv)
     cout<<"-rn <return_keyword>: Specify a different keyword for return (e.g., a  macro that calls return"<<endl;
     cout<<"-rv <return_void_keyword>: Specify a different keyword for return in a void routine"<<endl;
     cout<<"-e <exit_keyword>: Specify a different keyword for exit (e.g., a macro that calls exit)"<<endl;
+    cout<<"-p : Generate instrumentation calls for perflib [LANL] instead of TAU" <<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
     cout<<"e.g.,"<<endl;
     cout<<"% "<<argv[0]<<" foo.pdb foo.cpp -o foo.inst.cpp -f select.tau"<<endl;
@@ -2334,6 +2348,10 @@ int main(int argc, char **argv)
           printf("Using instrumentation requests file: %s\n", argv[i]); 
 #endif /* DEBUG */
   	}
+        if (strcmp(argv[i], "-p") == 0)
+        {
+          use_perflib=true;
+        }
         if (strcmp(argv[i], "-rn") == 0)
 	{
 	  ++i;
@@ -2479,8 +2497,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.106 $   $Date: 2006/08/11 20:49:03 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.106 2006/08/11 20:49:03 sameer Exp $
+ * $Revision: 1.107 $   $Date: 2006/08/29 21:50:03 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.107 2006/08/29 21:50:03 sameer Exp $
  ***************************************************************************/
 
 
