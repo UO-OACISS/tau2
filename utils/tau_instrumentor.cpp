@@ -1808,6 +1808,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  /* write the original statement */
      		  for (k = 0; k < write_upto ; k++) 
 		    ostr<< inbuf[k];
+		  ostr<<endl;
 		  instrumented = true;
 		  break;
 		}
@@ -2497,8 +2498,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.107 $   $Date: 2006/08/29 21:50:03 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.107 2006/08/29 21:50:03 sameer Exp $
+ * $Revision: 1.108 $   $Date: 2006/08/29 22:02:39 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.108 2006/08/29 22:02:39 sameer Exp $
  ***************************************************************************/
 
 
