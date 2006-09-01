@@ -1,8 +1,8 @@
 /*
  * Plot.java
  *
- * Copyright 2005                                                 
- * Department of Computer and Information Science, University of Oregon
+ * Copyright 2005-2006                                
+ * Performance Research Laboratory, University of Oregon
  */
 package edu.uoregon.tau.vis;
 
@@ -17,9 +17,9 @@ import javax.swing.JPanel;
  * TODO: selected row/column only apply to a subset of the plots, maybe they 
  * don't belong here.
  *
- * <P>CVS $Id: Plot.java,v 1.2 2005/07/16 00:21:07 amorris Exp $</P>
+ * <P>CVS $Id: Plot.java,v 1.3 2006/09/01 20:18:08 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 public interface Plot extends Shape, Observer {
 

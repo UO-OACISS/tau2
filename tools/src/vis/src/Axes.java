@@ -1,8 +1,8 @@
 /*
  * Axes.java
  *
- * Copyright 2005                                                 
- * Department of Computer and Information Science, University of Oregon
+ * Copyright 2005-2006                                
+ * Performance Research Laboratory, University of Oregon
  */
 package edu.uoregon.tau.vis;
 
@@ -22,9 +22,9 @@ import net.java.games.jogl.util.GLUT;
 /**
  * Draws axes with labels.
  *
- * <P>CVS $Id: Axes.java,v 1.3 2006/03/29 19:54:02 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.4 2006/09/01 20:18:07 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class Axes implements Shape {
 
@@ -63,10 +63,14 @@ public class Axes implements Shape {
     private Color minorColor = new Color(0.5f,0.5f,0.5f);
 
 
+    // until I add a proper event interface, each component will just keep track of the old values
+    // and check on each render if it needs to recreate it's display lists
+    
     // this is to keep track of the old reverseVideo value
     // I need to come up with a better way of tracking the settings
     // we have to know whether to recreate the display list or not
     private boolean oldReverseVideo;
+    private boolean oldAntiAlias;
     
     /**
      * Typesafe enum for axes orientation
@@ -354,6 +358,11 @@ public class Axes implements Shape {
         }
         oldReverseVideo = visRenderer.getReverseVideo();
         
+        if (oldAntiAlias != visRenderer.getAntiAliasedLines()) {
+            dirty = true;
+        }
+        oldAntiAlias = visRenderer.getAntiAliasedLines();
+        
         if (!enabled)
             return;
 
@@ -496,16 +505,18 @@ public class Axes implements Shape {
         int zOffset = 0;
 
         gl.glDisable(GL.GL_LIGHTING);
-
-        //  gl.glColor3f(0.5f, 0.5f, 0.5f);
-
-        //        gl.glEnable(GL.GL_LINE_SMOOTH);
-        //        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-        //        gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
-        //        gl.glEnable(GL.GL_BLEND);
-
+        
+        if (visRenderer.getAntiAliasedLines()) {
+            gl.glEnable(GL.GL_LINE_SMOOTH);
+            gl.glEnable(GL.GL_BLEND);   
+            gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+            gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
+        } else {
+            gl.glDisable(GL.GL_LINE_SMOOTH);
+            gl.glDisable(GL.GL_BLEND);   
+        }                
+                
         gl.glLineWidth(1.0f);
-        gl.glDisable(GL.GL_LINE_SMOOTH);
 
         // grid for x-y plane
         drawGrid(visRenderer, numx, numy, xSize, ySize, this.xLabelSkip, this.yLabelSkip);

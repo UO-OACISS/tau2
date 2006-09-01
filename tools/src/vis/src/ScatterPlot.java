@@ -1,8 +1,8 @@
 /*
  * ScatterPlot.java
  *
- * Copyright 2005                                                 
- * Department of Computer and Information Science, University of Oregon
+ * Copyright 2005-2006                                
+ * Performance Research Laboratory, University of Oregon
  */
 package edu.uoregon.tau.vis;
 
@@ -20,9 +20,9 @@ import net.java.games.jogl.*;
  *
  * @author Alan Morris
  *
- * <P>CVS $Id: ScatterPlot.java,v 1.3 2005/11/23 23:45:48 amorris Exp $</P>
+ * <P>CVS $Id: ScatterPlot.java,v 1.4 2006/09/01 20:18:08 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class ScatterPlot implements Plot {
 
@@ -200,7 +200,7 @@ public class ScatterPlot implements Plot {
                 }
             }
         });
-
+        
         VisTools.addCompItem(panel, new JLabel("Point size"), gbc, 0, 0, 1, 1);
         VisTools.addCompItem(panel, sphereSizeSlider, gbc, 1, 0, 1, 1);
         VisTools.addCompItem(panel, new JLabel("Point detail"), gbc, 0, 1, 1, 1);

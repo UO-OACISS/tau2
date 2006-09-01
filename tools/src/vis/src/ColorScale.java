@@ -1,8 +1,8 @@
 /*
  * ColorScale.java
  *
- * Copyright 2005                                                 
- * Department of Computer and Information Science, University of Oregon
+ * Copyright 2005-2006                                
+ * Performance Research Laboratory, University of Oregon
  */
 package edu.uoregon.tau.vis;
 
@@ -12,6 +12,8 @@ import java.awt.event.ActionListener;
 import java.util.*;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import net.java.games.jogl.GL;
 import net.java.games.jogl.GLDrawable;
@@ -24,9 +26,9 @@ import net.java.games.jogl.util.GLUT;
  * allowing them to query values (0..1) and get colors in the current
  * color set. 
  *    
- * <P>CVS $Id: ColorScale.java,v 1.5 2006/09/01 00:29:54 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.6 2006/09/01 20:18:07 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 
 /* TODO: Provide control over font size perhaps? */
@@ -79,14 +81,27 @@ public class ColorScale extends Observable implements Shape {
     private boolean enabled = true;
     private ColorSet colorSet = ColorSet.RAINBOW;
     private String lowString, highString, label;
-    private double fontScale = 0.10;
+    private double fontScale = 0.12;
+    private float leftMargin = 25; // distance between left side and colorscale
+    private float leftTextMargin = 5; // minimum distance between the left side and text labels (high and low)
+    
     private int displayList;
-
+    
+    
+    private int width = 25;
+    private int height = 300;
+    private int topBottomMargin = 60;
+    
     // this is to keep track of the old reverseVideo value
     // I need to come up with a better way of tracking the settings
     // we have to know whether to recreate the display list or not
     private boolean oldReverseVideo;
+    // need to mark as dirty when size has changed
+    private int oldWidth;
+    private int oldHeight;
 
+    private boolean oldAntiAlias;
+    
     public ColorScale() {
     }
 
@@ -179,14 +194,32 @@ public class ColorScale extends Observable implements Shape {
                 visRenderer.redraw();
             }
         });
+        
+        final JSlider fontScaleSlider = new JSlider(0,100,(int)(getFontScale()*100));
+        fontScaleSlider.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent event) {
+                try {
+                    ColorScale.this.setFontScale(fontScaleSlider.getValue()/(double)100);
+                    visRenderer.redraw();
+                } catch (Exception e) {
+                    VisTools.handleException(e);
+                }
+            }
+        });    
 
+        VisTools.addCompItem(controlPanel, new JLabel("Font Size"),gbc,0,1,1,1);
+        gbc.fill = GridBagConstraints.BOTH;
+        VisTools.addCompItem(controlPanel, fontScaleSlider,gbc,1,1,1,1);
+        gbc.fill = GridBagConstraints.NONE;
+        
+        
         //        VisTools.addCompItem(controlPanel, new JLabel("ColorScale Selection"), gbc, 0, 1, 1, 1);
         ButtonGroup group = new ButtonGroup();
 
         final Map colorScaleMap = new HashMap();
 
         int x = 0;
-        int y = 1;
+        int y = 2;
         for (int i = 0; i < ColorSet.VALUES.length; i++) {
             ColorSet colorSet = ColorSet.VALUES[i];
             JRadioButton jrb = new JRadioButton(colorSet.toString(), this.colorSet == colorSet);
@@ -218,27 +251,80 @@ public class ColorScale extends Observable implements Shape {
         return controlPanel;
     }
 
-    private void drawText(GL gl, double x, double y, String text) {
+    
+    private float getTextWidth(GL gl, String text) {
+        StringTokenizer st = new StringTokenizer(text, "\n");
+        float maxWidth = 0;
+        while (st.hasMoreTokens()) {
+            String line = st.nextToken();
+            float width = glut.glutStrokeLength(font, line);
+            maxWidth = Math.max(maxWidth, width);
+        }
+        return (float)(maxWidth * fontScale);
+    }
+    
+    private void drawText(GL gl, double x, double y, String text, boolean growDown) {
         if (text == null)
             return;
 
         gl.glPushMatrix();
 
+        int numlines = 0;
         StringTokenizer st = new StringTokenizer(text, "\n");
+        numlines = st.countTokens();
+        
+        
+        double ascent = VisTools.fontAscent * fontScale;
+        double descent = VisTools.fontDescent * fontScale;
+        
+                
+        float rowHeight = (float)(VisTools.fontHeight * fontScale);
+        
+        // 10% extra spacing between rows
+        rowHeight = (float)((ascent+descent)*1.10);
+        
+        if (growDown) {
+            y = y - ascent - 5;
+        } else {
+            y = y + (rowHeight*(numlines-1)) + descent + 3;
+        }
+        
         while (st.hasMoreTokens()) {
-            double thisX = x;
+            String line = st.nextToken();
+            double startX = x;
             gl.glPushMatrix();
 
-            String line = st.nextToken();
+            
             float width = glut.glutStrokeLength(font, line);
+            
+     
+            
+            startX -= (width * fontScale / 2);
+//            thisX = Math.max(thisX, -20);
 
-            double fontScale = 0.10;
+//            gl.glBegin(GL.GL_LINES);
+//            gl.glVertex2f(0,0);
+//            gl.glVertex2f((float)x,(float)y);
+//            gl.glVertex2f((float)x,(float)y);
+//            gl.glVertex2f((float)startX,(float)y);
+//            gl.glEnd();
+//            
+            gl.glTranslated(startX, y, 0);
 
-            thisX -= (width * fontScale / 2);
-            thisX = Math.max(thisX, -20);
+//            // 112 seems to be the actual height
+//            float value = (float)(VisTools.fontHeight * fontScale);
+//            gl.glBegin(GL.GL_QUADS);
+//            gl.glVertex3f(0.0f,0.0f,0.0f);
+//            gl.glVertex3f(0.0f,value,0.0f);
+//            gl.glVertex3f(value,value,0.0f);
+//            gl.glVertex3f(value,0.0f,0.0f);
+//            gl.glEnd();
 
-            gl.glTranslated(thisX, y, 0);
+
             gl.glScaled(fontScale, fontScale, fontScale);
+
+
+            
 
             // Render The Text
             for (int c = 0; c < line.length(); c++) {
@@ -246,12 +332,9 @@ public class ColorScale extends Observable implements Shape {
                 glut.glutStrokeCharacter(gl, font, ch);
             }
 
-            gl.glTranslatef(-width / 2, 0, 0);
-            gl.glTranslated(0, -250.0f, 0);
-
             gl.glPopMatrix();
 
-            gl.glTranslated(0, -25.0f, 0);
+            gl.glTranslated(0, -rowHeight, 0);
 
         }
 
@@ -266,17 +349,31 @@ public class ColorScale extends Observable implements Shape {
     public void render(VisRenderer visRenderer) {
         GLDrawable glDrawable = visRenderer.getGLDrawable();
 
-        
         // If the reverse video setting has changed, we must redraw
         if (oldReverseVideo != visRenderer.getReverseVideo()) {
             dirty = true;
         }
         oldReverseVideo = visRenderer.getReverseVideo();
 
+        if (oldAntiAlias != visRenderer.getAntiAliasedLines()) {
+            dirty = true;
+        }
+        oldAntiAlias = visRenderer.getAntiAliasedLines();
+        
+        
         if (!enabled) {
             return;
         }
 
+        
+        int width = (int) glDrawable.getSize().getWidth();
+        int height = (int) glDrawable.getSize().getHeight();
+        if (width != oldWidth || height != oldHeight) {
+            dirty = true;
+            oldWidth = width;
+            oldHeight = height;
+        }
+        
         GL gl = glDrawable.getGL();
 
         if (dirty || displayList == 0) {
@@ -299,12 +396,12 @@ public class ColorScale extends Observable implements Shape {
         if (enabled == false)
             return;
 
-        int width = (int) glDrawable.getSize().getWidth();
-        int height = (int) glDrawable.getSize().getHeight();
+        int glWidth = (int) glDrawable.getSize().getWidth();
+        int glHeight = (int) glDrawable.getSize().getHeight();
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPushMatrix();
         gl.glLoadIdentity();
-        gl.glOrtho(0, width, 0, height, -1.0f, 1.0f);
+        gl.glOrtho(0, glWidth, 0, glHeight, -1.0f, 1.0f);
 
         gl.glMatrixMode(GL.GL_MODELVIEW);
         gl.glPushMatrix();
@@ -313,18 +410,27 @@ public class ColorScale extends Observable implements Shape {
 
         gl.glDisable(GL.GL_LIGHTING);
         gl.glDisable(GL.GL_DEPTH_TEST);
-        gl.glDisable(GL.GL_LINE_SMOOTH);
-        gl.glDisable(GL.GL_BLEND);
         gl.glLineWidth(1.0f);
+        
+        if (visRenderer.getAntiAliasedLines()) {
+            gl.glEnable(GL.GL_LINE_SMOOTH);
+            gl.glEnable(GL.GL_BLEND);   
+            gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+            gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
+        } else {
+            gl.glDisable(GL.GL_LINE_SMOOTH);
+            gl.glDisable(GL.GL_BLEND);   
+        }
 
-        int pixelHeight = Math.min(300, height - 60);
-        int pixelWidth = 25;
-        gl.glTranslated(25, (height / 2) - (pixelHeight / 2), 0);
+        int pixelHeight = Math.min(height, height - topBottomMargin);
+        int pixelWidth = width;
+        
+        gl.glTranslated(leftMargin, (glHeight / 2) - (pixelHeight / 2), 0);
 
+
+        // draw the actual scale as a set of 10 blended quads
         gl.glShadeModel(GL.GL_SMOOTH);
-
         gl.glFrontFace(GL.GL_CW);
-
         gl.glBegin(GL.GL_QUADS);
 
         int nBlocks = 10;
@@ -353,13 +459,37 @@ public class ColorScale extends Observable implements Shape {
             VisTools.glSetColor(gl, textColor);
         }
 
-        drawText(gl, pixelWidth / 2, pixelHeight + 10, highString);
-        drawText(gl, pixelWidth / 2, -15.0, lowString);
+        
+        // draw the upper string
+        float stringwidth;
+        float startx;
+        float bump;
+        
+        bump = 0;
+        stringwidth = getTextWidth(gl, highString);
+        startx = (pixelWidth / 2) - (stringwidth / 2);
+        if (startx < -leftMargin + leftTextMargin) {
+            bump = - startx - leftMargin + leftTextMargin;
+        }
+        drawText(gl, bump + pixelWidth / 2, pixelHeight, highString, false);
+        
 
+
+        // draw the lower string
+        bump = 0;
+        stringwidth = getTextWidth(gl, lowString);
+        startx = (pixelWidth / 2) - (stringwidth / 2);
+        if (startx < -leftMargin + leftTextMargin) {
+            bump = - startx - leftMargin + leftTextMargin;
+        }
+
+        drawText(gl, bump + pixelWidth / 2, 0, lowString, true);
+
+        // rotate and draw the label
         gl.glRotatef(90, 0, 0, 1);
-
-        drawText(gl, pixelHeight / 2, -pixelWidth - 15, label);
-
+        drawText(gl, pixelHeight / 2, -pixelWidth, label, true);
+        
+        
         gl.glPopMatrix();
 
         gl.glMatrixMode(GL.GL_PROJECTION);
@@ -369,6 +499,15 @@ public class ColorScale extends Observable implements Shape {
         gl.glEnable(GL.GL_LIGHTING);
         gl.glEnable(GL.GL_DEPTH_TEST);
 
+    }
+
+    public double getFontScale() {
+        return fontScale;
+    }
+
+    public void setFontScale(double fontScale) {
+        this.fontScale = fontScale;
+        this.dirty = true;
     }
 
 }

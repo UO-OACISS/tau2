@@ -1,8 +1,8 @@
 /*
  * VisTools.java
  *
- * Copyright 2005                                                 
- * Department of Computer and Information Science, University of Oregon
+ * Copyright 2005-2006                                
+ * Performance Research Laboratory, University of Oregon
  */
 package edu.uoregon.tau.vis;
 
@@ -12,15 +12,20 @@ import net.java.games.jogl.GL;
 /**
  * Various utility methods for the vis package.
  * 
- * <P>CVS $Id: VisTools.java,v 1.2 2005/07/16 00:21:08 amorris Exp $</P>
+ * <P>CVS $Id: VisTools.java,v 1.3 2006/09/01 20:18:08 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class VisTools {
-
+    
     // Exception handler for Swing elements
     private static ExceptionHandler exceptionHandler;
 
+    public static final double fontHeight = 105+34;
+    public static final double fontAscent = 105;
+    public static final double fontDescent = 34;
+    
+    
     /**
      * Helper function to call glColor3f.
      * @param gl GL object to use.

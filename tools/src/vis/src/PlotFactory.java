@@ -1,8 +1,8 @@
 /*
  * PlotFactory.java
  *
- * Copyright 2005                                                 
- * Department of Computer and Information Science, University of Oregon
+ * Copyright 2005-2006                                
+ * Performance Research Laboratory, University of Oregon
  */
 
 package edu.uoregon.tau.vis;
@@ -16,9 +16,9 @@ import java.util.List;
  *    
  * TODO: Implement other factory methods.
  *
- * <P>CVS $Id: PlotFactory.java,v 1.3 2005/11/11 02:55:17 amorris Exp $</P>
+ * <P>CVS $Id: PlotFactory.java,v 1.4 2006/09/01 20:18:08 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class PlotFactory {
 
@@ -83,7 +83,8 @@ public class PlotFactory {
         }
         
         axes.setStrings(xLabel, yLabel, zLabel, axisStrings[0], axisStrings[1], axisStrings[2]);
-        colorScale.setStrings((String)axisStrings[3].get(0), (String)axisStrings[3].get(4), colorLabel);
+        //colorScale.setStrings((String)axisStrings[3].get(0), (String)axisStrings[3].get(4), colorLabel);
+                colorScale.setStrings("Ggs\ngGo\nBob","asasdfasdfasdfasdfasdf\nbgr","ABCTGasdf\nted");
         
         // Initialize the scatterPlot
         scatterPlot.setSize(15, 15, 15);

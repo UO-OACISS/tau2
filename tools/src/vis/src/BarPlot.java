@@ -1,8 +1,8 @@
 /*
  * BarPlot.java
  *
- * Copyright 2005                                                 
- * Department of Computer and Information Science, University of Oregon
+ * Copyright 2005-2006                                
+ * Performance Research Laboratory, University of Oregon
  */
 package edu.uoregon.tau.vis;
 
@@ -24,9 +24,9 @@ import net.java.games.jogl.util.GLUT;
 /**
  * Draws a 3d bar plot.
  *
- * <P>CVS $Id: BarPlot.java,v 1.2 2005/07/16 00:21:07 amorris Exp $</P>
+ * <P>CVS $Id: BarPlot.java,v 1.3 2006/09/01 20:18:07 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 public class BarPlot implements Plot {
 

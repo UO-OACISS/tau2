@@ -1,8 +1,8 @@
 /*
  * VisRenderer.java
  *
- * Copyright 2005                                                 
- * Department of Computer and Information Science, University of Oregon
+ * Copyright 2005-2006                                
+ * Performance Research Laboratory, University of Oregon
  */
 package edu.uoregon.tau.vis;
 
@@ -23,9 +23,9 @@ import net.java.games.jogl.util.BufferUtils;
 /**
  * This object manages the JOGL interface.
  *    
- * <P>CVS $Id: VisRenderer.java,v 1.2 2005/07/16 00:21:08 amorris Exp $</P>
+ * <P>CVS $Id: VisRenderer.java,v 1.3 2006/09/01 20:18:08 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
@@ -95,7 +95,13 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     // auto-rotation capability
     private VisAnimator visAnimator;
     private volatile float rotateSpeed = 0.5f;
+    
+    private boolean antiAliasedLines = false;
 
+    private String glInfo_Vendor;
+    private String glInfo_Renderer;
+    private String glInfo_Version;
+    
     public VisRenderer() {
     }
 
@@ -167,11 +173,16 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         this.glDrawable = drawable;
 
         VisTools.verr(this, "Initializing OpenGL (JOGL)");
-        VisTools.verr(this, "INIT GL IS: " + gl.getClass().getName());
+        VisTools.verr(this, "JOGL Class: " + gl.getClass().getName());
         VisTools.verr(this, "GL_VENDOR: " + gl.glGetString(GL.GL_VENDOR));
         VisTools.verr(this, "GL_RENDERER: " + gl.glGetString(GL.GL_RENDERER));
         VisTools.verr(this, "GL_VERSION: " + gl.glGetString(GL.GL_VERSION));
+        glInfo_Vendor = gl.glGetString(GL.GL_VENDOR);
+        glInfo_Renderer = gl.glGetString(GL.GL_RENDERER);
+        glInfo_Version = gl.glGetString(GL.GL_VERSION);
 
+        
+        
         gl.glEnable(GL.GL_CULL_FACE);
         gl.glEnable(GL.GL_DEPTH_TEST);
 
@@ -634,6 +645,17 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
         });
 
+        final JCheckBox antialiasCheckBox = new JCheckBox("Anti-Aliased Lines", antiAliasedLines);
+        antialiasCheckBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                    setAntiAliasedLines(antialiasCheckBox.isSelected());
+                } catch (Exception e) {
+                    VisTools.handleException(e);
+                }
+            }
+        });
+
         final JSlider speedSlider = new JSlider(0, 200, (int) (Math.sqrt(rotateSpeed) * 100));
 
         speedSlider.addChangeListener(new ChangeListener() {
@@ -647,6 +669,23 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
         });
 
+        
+        final JButton glInfoButton = new JButton("GL Info");
+        glInfoButton.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                String message = "JOGL Class: " + gl.getClass().getName() + "\n" +
+                "GL_VENDOR: " + glInfo_Vendor + "\n" + 
+                "GL_RENDERER: " + glInfo_Renderer + "\n" +
+                "GL_VERSION: " + glInfo_Version;
+
+                JOptionPane.showMessageDialog(glInfoButton, message);
+            }
+           
+        
+        });
+        
+        
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.weighty = 0.2;
@@ -663,7 +702,9 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         gbc.fill = GridBagConstraints.HORIZONTAL;
         VisTools.addCompItem(panel, speedSlider, gbc, 1, 1, 1, 1);
 
-        VisTools.addCompItem(panel, reverseCheckBox, gbc, 0, 2, 2, 1);
+        VisTools.addCompItem(panel, reverseCheckBox, gbc, 0, 2, 1, 1);
+        VisTools.addCompItem(panel, antialiasCheckBox, gbc, 0, 3, 1, 1);
+        VisTools.addCompItem(panel, glInfoButton, gbc, 1, 2, 1, 2);
 
         return panel;
     }
@@ -700,6 +741,15 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
      */
     public Vec getViewDirection() {
         return viewDirection;
+    }
+
+    public boolean getAntiAliasedLines() {
+        return antiAliasedLines;
+    }
+
+    public void setAntiAliasedLines(boolean antiAliasedLines) {
+        this.antiAliasedLines = antiAliasedLines;
+        this.redraw();
     }
 
 }
