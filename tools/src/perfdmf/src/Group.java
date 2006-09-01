@@ -24,6 +24,10 @@ public class Group implements Serializable, Comparable {
         return name;
     }
     
+    public void setName(String name) {
+        this.name = name;
+    }
+    
     public int getID() {
         return id;
     }
