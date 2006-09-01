@@ -2,10 +2,13 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.ComboPopup;
+import javax.swing.plaf.metal.MetalComboBoxUI;
 
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
@@ -18,9 +21,9 @@ import edu.uoregon.tau.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.3 2006/03/30 03:03:54 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.4 2006/09/01 20:20:31 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -41,6 +44,35 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     private int selectedTab;
     private JTabbedPane tabbedPane; // keep a handle to remember the selected tab
 
+
+    public class SliderComboBox extends JComboBox {
+        public SliderComboBox() {
+            super();
+            setUI(new SliderComboUI());
+        }
+
+        public SliderComboBox(Object obj[]) {
+            super(obj);
+            setUI(new SliderComboUI());
+        }
+
+        public class SliderComboUI extends MetalComboBoxUI {
+            protected ComboPopup createPopup() {
+                BasicComboPopup popup = new BasicComboPopup(comboBox) {
+                    protected JScrollPane createScroller() {
+                        return new JScrollPane(list, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+                    }
+                };
+                return popup;
+            }
+        }
+    }
+
+
+    
+    
+    
     public ThreeDeeControlPanel(ThreeDeeWindow window, ThreeDeeSettings settings, ParaProfTrial ppTrial,
             VisRenderer visRenderer) {
         this.settings = settings;
@@ -124,14 +156,19 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         functionField.setEditable(false);
         functionField.setBorder(BorderFactory.createLoweredBevelBorder());
         functionField.setCaretPosition(0);
-
+        
         String[] items = new String[ppTrial.getNumberOfMetrics()];
         for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
             items[i] = ppTrial.getMetric(i).getName();
         }
 
-        final JComboBox valueBox = new JComboBox(ValueType.VALUES);
-        final JComboBox metricBox = new JComboBox(items);
+        final JComboBox valueBox = new SliderComboBox(ValueType.VALUES);
+        final JComboBox metricBox = new SliderComboBox(items);
+
+        metricBox.setMinimumSize(new Dimension(50,metricBox.getMinimumSize().height));
+        valueBox.setMinimumSize(new Dimension(50,valueBox.getMinimumSize().height));
+
+        
         valueBox.setSelectedItem(settings.getScatterValueTypes()[index]);
         metricBox.setSelectedIndex(settings.getScatterMetricIDs()[index]);
 
@@ -199,7 +236,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weightx = 0.5;
         gbc.weighty = 0.5;
         addCompItem(panel, valueBox, gbc, 1, 1, 1, 1);
-
         addCompItem(panel, metricBox, gbc, 2, 1, 1, 1);
 
         return panel;
@@ -224,12 +260,16 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weightx = 0.1;
         gbc.weighty = 0.1;
 
+        gbc.weightx = 0;
         addCompItem(panel, new JLabel("Width"), gbc, 0, 0, 1, 1);
         addCompItem(panel, createScatterSelectionPanel("Width", 0), gbc, 1, 0, 1, 1);
+        gbc.weightx = 0;
         addCompItem(panel, new JLabel("Depth"), gbc, 0, 1, 1, 1);
         addCompItem(panel, createScatterSelectionPanel("Depth", 1), gbc, 1, 1, 1, 1);
+        gbc.weightx = 0;
         addCompItem(panel, new JLabel("Height"), gbc, 0, 2, 1, 1);
         addCompItem(panel, createScatterSelectionPanel("Height", 2), gbc, 1, 2, 1, 1);
+        gbc.weightx = 0;
         addCompItem(panel, new JLabel("Color"), gbc, 0, 3, 1, 1);
         addCompItem(panel, createScatterSelectionPanel("Color", 3), gbc, 1, 3, 1, 1);
 
@@ -352,26 +392,30 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
             items[i] = ppTrial.getMetric(i).getName();
         }
 
-        heightValueBox = new JComboBox(ValueType.VALUES);
+        heightValueBox = new SliderComboBox(ValueType.VALUES);
         heightValueBox.setSelectedItem(settings.getHeightValue());
         heightValueBox.addActionListener(metricChanger);
+        heightValueBox.setMinimumSize(new Dimension(50,heightValueBox.getMinimumSize().height));
 
-        heightMetricBox = new JComboBox(items);
+        heightMetricBox = new SliderComboBox(items);
         heightMetricBox.setSelectedIndex(settings.getHeightMetricID());
         heightMetricBox.addActionListener(metricChanger);
+        heightMetricBox.setMinimumSize(new Dimension(50,heightMetricBox.getMinimumSize().height));
 
-        colorValueBox = new JComboBox(ValueType.VALUES);
+        colorValueBox = new SliderComboBox(ValueType.VALUES);
         colorValueBox.setSelectedItem(settings.getColorValue());
         colorValueBox.addActionListener(metricChanger);
+        colorValueBox.setMinimumSize(new Dimension(50,colorValueBox.getMinimumSize().height));
+
 
         items = new String[ppTrial.getNumberOfMetrics()];
         for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
             items[i] = ppTrial.getMetric(i).getName();
         }
 
-        colorMetricBox = new JComboBox(items);
+        colorMetricBox = new SliderComboBox(items);
         colorMetricBox.setSelectedIndex(settings.getColorMetricID());
-        colorMetricBox.addActionListener(metricChanger);
+        colorMetricBox.setMinimumSize(new Dimension(50,colorMetricBox.getMinimumSize().height));
 
         tabbedPane = new JTabbedPane();
         Plot plot = window.getPlot();
@@ -382,6 +426,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
         tabbedPane.setMinimumSize(new Dimension(290, 160));
         tabbedPane.setSelectedIndex(selectedTab);
+
 
         JPanel functionSelectorPanel = createSelectorPanel(-1, window.getFunctionNames().size(),
                 window.getFunctionNames(), 0);
@@ -394,9 +439,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weighty = 0.0;
 
         addCompItem(regularPanel, new JLabel("Height Metric"), gbc, 0, 0, 2, 1);
+        addCompItem(regularPanel, new JLabel("Color Metric"), gbc, 0, 2, 2, 1);
+        gbc.weightx = 0.5;
         addCompItem(regularPanel, heightValueBox, gbc, 0, 1, 1, 1);
         addCompItem(regularPanel, heightMetricBox, gbc, 1, 1, 1, 1);
-        addCompItem(regularPanel, new JLabel("Color Metric"), gbc, 0, 2, 2, 1);
         addCompItem(regularPanel, colorValueBox, gbc, 0, 3, 1, 1);
         addCompItem(regularPanel, colorMetricBox, gbc, 1, 3, 1, 1);
 
