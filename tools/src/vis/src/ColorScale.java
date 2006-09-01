@@ -24,9 +24,9 @@ import net.java.games.jogl.util.GLUT;
  * allowing them to query values (0..1) and get colors in the current
  * color set. 
  *    
- * <P>CVS $Id: ColorScale.java,v 1.4 2006/03/29 19:54:02 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.5 2006/09/01 00:29:54 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 
 /* TODO: Provide control over font size perhaps? */
@@ -100,6 +100,7 @@ public class ColorScale extends Observable implements Shape {
         this.lowString = low;
         this.highString = high;
         this.label = label;
+        this.dirty = true;
     }
 
     /**
