@@ -848,32 +848,39 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
   cout <<"Return type :" << return_type<<endl;
 #endif /* DEBUG */
   ostr <<"{\n\t"<<return_type<< " tau_ret_val; "<<endl;
-  ostr <<"\tTAU_PROFILE_TIMER(tautimer, \""<<
-    ((pdbRoutine *)(i->item))->fullName() << "\", \" " << "\",";
-    // ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
-
-  if (strcmp(i->item->name().c_str(), "main")==0)
-  { /* it is main() */
-     ostr << "TAU_DEFAULT);" <<endl; // give an additional line
-#ifdef SPACES
-     for (space = 0; space < (*it)->col ; space++) ostr << " " ;
-#endif
-     // leave some leading spaces for formatting...
-
-     print_tau_profile_init(ostr, (pdbCRoutine *) (i->item));
-     ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
-     ostr <<"#ifndef TAU_SHMEM" <<endl; // set node 0
-     ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
-     ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
-     ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+  if (use_perflib)
+  {
+    ostr<<"\tPerf_Update(\"" <<((pdbRoutine *)(i->item))->name() << "\", 1);"<<endl;
   }
   else
   {
-    ostr <<group_name<<");" <<endl; // give an additional line
-  }
+    ostr <<"\tTAU_PROFILE_TIMER(tautimer, \""<<
+      ((pdbRoutine *)(i->item))->fullName() << "\", \" " << "\",";
+      // ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
-  ostr <<"\tTAU_PROFILE_START(tautimer); "<<endl;
+    if (strcmp(i->item->name().c_str(), "main")==0)
+    { /* it is main() */
+      ostr << "TAU_DEFAULT);" <<endl; // give an additional line
+#ifdef SPACES
+      for (space = 0; space < (*it)->col ; space++) ostr << " " ;
+#endif
+      // leave some leading spaces for formatting...
+
+      print_tau_profile_init(ostr, (pdbCRoutine *) (i->item));
+      ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
+      ostr <<"#ifndef TAU_SHMEM" <<endl; // set node 0
+      ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
+      ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
+      ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+    }
+    else
+    {
+      ostr <<group_name<<");" <<endl; // give an additional line
+    }
+
+    ostr <<"\tTAU_PROFILE_START(tautimer); "<<endl;
 	
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -882,29 +889,36 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
 void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& group_name)
 {
   int space;
-  ostr <<"{ \n\tTAU_PROFILE_TIMER(tautimer, \""<<
-    ((pdbRoutine *)(i->item))->fullName() << "\", \" " << "\", ";
-    //((pdbRoutine *)(i->item))->signature()->name() << "\", ";
-
-  if (strcmp(i->item->name().c_str(), "main")==0)
-  { /* it is main() */
-     ostr << "TAU_DEFAULT);" <<endl; // give an additional line
-#ifdef SPACES
-     for (space = 0; space < (*it)->col ; space++) ostr << " " ;
-#endif
-     // leave some leading spaces for formatting...
-
-     print_tau_profile_init(ostr, (pdbCRoutine *) (i->item));
-     ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
-     ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
-     ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+  if (use_perflib)
+  {
+    ostr<<"{ \n\tPerf_Update(\"" <<((pdbRoutine *)(i->item))->name() << "\", 1);"<<endl;
   }
   else
   {
-    ostr <<group_name<<");" <<endl; // give an additional line
+    ostr <<"{ \n\tTAU_PROFILE_TIMER(tautimer, \""<<
+      ((pdbRoutine *)(i->item))->fullName() << "\", \" " << "\", ";
+      //((pdbRoutine *)(i->item))->signature()->name() << "\", ";
+  
+    if (strcmp(i->item->name().c_str(), "main")==0)
+    { /* it is main() */
+       ostr << "TAU_DEFAULT);" <<endl; // give an additional line
+#ifdef SPACES
+       for (space = 0; space < (*it)->col ; space++) ostr << " " ;
+#endif
+       // leave some leading spaces for formatting...
+  
+       print_tau_profile_init(ostr, (pdbCRoutine *) (i->item));
+       ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
+       ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
+       ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+    }
+    else
+    {
+      ostr <<group_name<<");" <<endl; // give an additional line
+    }
+  
+    ostr <<"\tTAU_PROFILE_START(tautimer);"<<endl;
   }
-
-  ostr <<"\tTAU_PROFILE_START(tautimer);"<<endl;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -956,13 +970,23 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
   {
     ostr <<"{ ";
     processCloseLoopTimer(ostr);
-    ostr <<"TAU_PROFILE_STOP(tautimer); " << use_string<<" "<< (ret_expression)<<"; }" <<endl;
+    if (use_perflib)
+    { 
+      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);"<<use_string<<" " << (ret_expression)<<"; }"<<endl;
+    }
+    else
+      ostr <<"TAU_PROFILE_STOP(tautimer); " << use_string<<" "<< (ret_expression)<<"; }" <<endl;
   }
   else 
   {
     ostr <<"{ tau_ret_val = " << ret_expression << "; ";
     processCloseLoopTimer(ostr);
-    ostr<<"TAU_PROFILE_STOP(tautimer); " << use_string<<" (tau_ret_val); }"<<endl;
+    if (use_perflib)
+    {
+      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);"<<use_string<<" " << "(tau_ret_val); }"<<endl;
+    }
+    else
+      ostr<<"TAU_PROFILE_STOP(tautimer); " << use_string<<" (tau_ret_val); }"<<endl;
   }
 }
 
@@ -975,12 +999,26 @@ void processExitExpression(ostream& ostr, string& exit_expression, itemRef *it, 
   ostr <<"{ ";
   if (abort_used){
     ostr<<"int tau_exit_val = 0; ";
-    ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\"); " << use_string<<" (); }"<<endl;
+    if (use_perflib)
+    {
+     ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);}"<<use_string<<" ();}"<<endl;
+    }
+    else 
+    {
+      ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\"); " << use_string<<" (); }"<<endl;
+    }
   }
   else 
   {
     ostr<<"int tau_exit_val = "<<exit_expression<<";";
-    ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\"); " << use_string<<" (tau_exit_val); }"<<endl;
+    if (use_perflib)
+    {
+      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);"<<use_string<<" (tau_exit_val); }"<<endl;
+    }
+    else
+    {
+      ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\"); " << use_string<<" (tau_exit_val); }"<<endl;
+    }
   }
 }
 
@@ -1021,7 +1059,10 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
   // Begin Instrumentation
   // put in code to insert <Profile/Profiler.h>
-  ostr<< "#include <"<<header_file<<">"<<endl;
+  if (use_perflib)
+    ostr<< "void Perf_Update(char *name, int entry);"<<endl;
+  else 
+    ostr<< "#include <"<<header_file<<">"<<endl;
   if (memory_flag)
     ostr<< "#include <malloc.h>"<<endl;
   defineTauGroup(ostr, group_name); 
@@ -1153,7 +1194,12 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		    cout <<" Return for a void routine" <<endl;
 #endif /* DEBUG */
 		    /* instrumentation code here */
-		    ostr << "{ TAU_PROFILE_STOP(tautimer); "<<use_return_void<<"; }" <<endl;
+		    if (use_perflib)
+		    {
+		      ostr<<"{ Perf_Update(\""<< ((pdbRoutine *)((*it)->item))->name()<<"\", 0);"<<use_return_void<<";}"<<endl;
+		    }
+		    else 
+		        ostr << "{ TAU_PROFILE_STOP(tautimer); "<<use_return_void<<"; }" <<endl;
 		    for (k=((*it)->col)-1; inbuf[k] !=';'; k++)
 		     ;
 		    write_from = k+1;
@@ -1223,7 +1269,14 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 #ifdef DEBUG 
 		cout <<"Body End "<<endl;
 #endif /* DEBUG */
-		ostr<<"\n}\n\tTAU_PROFILE_STOP(tautimer);\n"<<endl; 
+		if (use_perflib)
+		{
+		  ostr<<"\n}\n\tPerf_Update(\""<< ((pdbRoutine *)((*it)->item))->name()<<"\", 0);"<<endl;
+		}
+		else 
+		{
+		  ostr<<"\n}\n\tTAU_PROFILE_STOP(tautimer);\n"<<endl; 
+		}
 		instrumented = true; 
 		break;
 	    case EXIT:
@@ -1315,8 +1368,14 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
     case START_LOOP_TIMER: 
 	if ((*it)->attribute == AFTER) ostr<<endl;
-	timercode = string(string("{ TAU_PROFILE_TIMER(lt, \"")+(*it)->snippet+"\", \" \", TAU_USER); TAU_PROFILE_START(lt); ");
-
+	if (use_perflib)
+        {
+          timercode = string(string("{ Perf_Update(\"" )+(*it)->snippet+", 1); ");
+        }
+	else
+	{
+	  timercode = string(string("{ TAU_PROFILE_TIMER(lt, \"")+(*it)->snippet+"\", \" \", TAU_USER); TAU_PROFILE_START(lt); ");
+        }
 #ifdef DEBUG
 	cout <<"Inserting timercode: "<<timercode<<endl;
 #endif /* DEBUG */
@@ -1332,7 +1391,14 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 	if ((*it)->attribute == AFTER) ostr<<endl;
 	/* insert spaces to make it look better */
 	for(space = 0; space < (*it)->col-1; space++) ostr<<" ";
-	ostr << "TAU_PROFILE_STOP(lt); } "<<endl;
+	if (use_perflib)
+        {
+          timercode = string(string(" Perf_Update(\"" )+(*it)->snippet+", 0); } ");
+        }
+	else
+        {
+          ostr << "TAU_PROFILE_STOP(lt); } "<<endl;
+        }
 	instrumented = true;
         /* pop the current timer! */
 	if (!current_timer.empty()) current_timer.pop_front();
@@ -1804,7 +1870,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		WRITE_TAB(ostr,(*it)->col);
 		if (use_perflib) 
 		{
-                  ostr <<"call perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
+                  ostr <<"call f_perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
 		  /* write the original statement */
      		  for (k = 0; k < write_upto ; k++) 
 		    ostr<< inbuf[k];
@@ -1966,7 +2032,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    /* before writing stop/exit examine the kind */
 		if ((*it)->kind == EXIT)
 		{ /* Turn off the timers. This is similar to abort/exit in C */
-		  ostr <<"call TAU_PROFILE_EXIT('exit')"<<endl;
+		  if (use_perflib)
+		    ostr <<"call f_perf_update('"<<(*it)->item->fullName()<<"', .false.)"<<endl;
+		  else
+		    ostr <<"call TAU_PROFILE_EXIT('exit')"<<endl;
 		}
 		else
 		{ /* it is RETURN */
@@ -1983,7 +2052,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 			ostr <<"call TAU_PROFILE_STOP("<<(*siter)<<")"<<endl<<"\t";
 		    }
 		    if (use_perflib)
-		      ostr <<"call perf_update('"<<(*it)->item->fullName()<<"', .false.)"<<endl;
+		      ostr <<"call f_perf_update('"<<(*it)->item->fullName()<<"', .false.)"<<endl;
 		    else
 		      ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
 		  }
@@ -2498,8 +2567,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.108 $   $Date: 2006/08/29 22:02:39 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.108 2006/08/29 22:02:39 sameer Exp $
+ * $Revision: 1.109 $   $Date: 2006/09/03 17:38:32 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.109 2006/09/03 17:38:32 sameer Exp $
  ***************************************************************************/
 
 
