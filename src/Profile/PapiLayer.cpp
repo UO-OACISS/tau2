@@ -74,12 +74,12 @@ int PapiLayer::addCounter(char *name) {
 
   rc = PAPI_event_name_to_code(name, &code);
   if (rc != PAPI_OK) {
-    cout << "Error: Couldn't Identify Counter " << name << ": " << PAPI_strerror(rc) << endl;
+    fprintf (stderr, "Error: Couldn't Identify Counter '%s': %s\n", name, PAPI_strerror(rc));
     return -1;
   }
   
   if ((PAPI_query_event(code) != PAPI_OK)) {
-    cout << "Error: Counter " << name << " is not available!" << endl;
+    fprintf (stderr, "Error: Counter %s is not available!\n", name);
     return -1;
   }
 
@@ -100,7 +100,7 @@ int PapiLayer::initializeThread(int tid) {
 #endif
 
   if (tid >= TAU_MAX_THREADS) {
-    cout << "Exceeded max thread count of TAU_MAX_THREADS" << endl;
+    fprintf (stderr, "Exceeded max thread count of TAU_MAX_THREADS\n");
     return -1;
   }
   
@@ -115,7 +115,7 @@ int PapiLayer::initializeThread(int tid) {
   
   rc = PAPI_create_eventset(&(ThreadList[tid]->EventSet));
   if (rc != PAPI_OK) {
-    cerr << "Error creating PAPI event set: " << PAPI_strerror(rc) << endl;
+    fprintf (stderr, "Error creating PAPI event set: %s\n", PAPI_strerror(rc));
     return -1;
   }
   
@@ -131,14 +131,14 @@ int PapiLayer::initializeThread(int tid) {
 #error "TAU does not support this version of PAPI, please contact tau-bugs@cs.uoregon.edu"
 #endif 
   if (rc != PAPI_OK) {
-    cerr << "Error adding PAPI events: " << PAPI_strerror(rc) << endl;
+    fprintf (stderr, "Error adding PAPI events: %s\n", PAPI_strerror(rc));
     return -1;
   }
   
   rc = PAPI_start(ThreadList[tid]->EventSet);
   
   if (rc != PAPI_OK) {
-    cout << "Error calling PAPI_start: " << PAPI_strerror(rc) << endl;
+    fprintf (stderr, "Error calling PAPI_start: %s\n", PAPI_strerror(rc));
     return -1;
   }
   
@@ -194,7 +194,7 @@ long long PapiLayer::getSingleCounter(int tid) {
 #endif  
 
   if (rc != PAPI_OK) {
-    cerr << "Error reading PAPI counters: " << PAPI_strerror(rc) << endl;
+    fprintf (stderr, "Error reading PAPI counters: %s\n", PAPI_strerror(rc));
     return -1;
   }
 
@@ -251,7 +251,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
 #endif
 
   if (rc != PAPI_OK) {
-    cerr << "Error reading PAPI counters: " << PAPI_strerror(rc) << endl;
+    fprintf (stderr, "Error reading PAPI counters: %s\n", PAPI_strerror(rc));
     return NULL;
   }
   
@@ -292,7 +292,7 @@ int PapiLayer::initializeSingleCounter() {
   // Add the counter named by PAPI_EVENT
   char *papi_event = getenv("PAPI_EVENT");
   if (papi_event == NULL) {
-    printf ("Error - You must define the PAPI_EVENT environment variable.\n");
+    fprintf (stderr, "Error - You must define the PAPI_EVENT environment variable.\n");
     return -1;
   }
 
@@ -320,9 +320,9 @@ int PapiLayer::initializePAPI() {
   int papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
   if (papi_ver != PAPI_VER_CURRENT) {
     if (papi_ver > 0) {
-      cout << "Error initializing PAPI: version mismatch: " << papi_ver << endl;
+      fprintf(stderr, "Error initializing PAPI: version mismatch: %d\n", papi_ver);
     } else {
-      cout << "Error initializing PAPI: " << PAPI_strerror(papi_ver) << endl;
+      fprintf(stderr, "Error initializing PAPI: %s\n", PAPI_strerror(papi_ver));
     }
     return -1;
   }
@@ -342,7 +342,7 @@ int PapiLayer::initializePAPI() {
 #endif 
   
   if (rc != PAPI_OK) {
-    cerr << "Error Initializing PAPI: " << PAPI_strerror(rc) << endl;
+    fprintf(stderr, "Error Initializing PAPI: %s\n", PAPI_strerror(rc));
     return -1;
   }
 #endif /* __alpha */
