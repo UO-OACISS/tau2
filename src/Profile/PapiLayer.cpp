@@ -288,11 +288,11 @@ int PapiLayer::initializeSingleCounter() {
   if (numCounters != 0) { 
     return 0;
   }
-  
+
   // Add the counter named by PAPI_EVENT
   char *papi_event = getenv("PAPI_EVENT");
   if (papi_event == NULL) {
-    cout << "Error - You must define the PAPI_EVENT environment variable." << endl;
+    printf ("Error - You must define the PAPI_EVENT environment variable.\n");
     return -1;
   }
 
