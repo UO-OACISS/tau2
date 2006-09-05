@@ -1874,7 +1874,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  /* write the original statement */
      		  for (k = 0; k < write_upto ; k++) 
 		    ostr<< inbuf[k];
-		  ostr<<endl;
+		  if (print_cr)
+		    ostr<<endl;
 		  instrumented = true;
 		  break;
 		}
@@ -1960,6 +1961,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  ostr<< inbuf[k];
 
 		/* should we write the carriage return? */
+#ifdef DEBUG
+		printf("CHECKING print_cr: %d\n", print_cr);
+#endif /* DEBUG */
 	 	if (print_cr)
 		  ostr<< endl;
 
@@ -1991,6 +1995,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	      for(i=(*it)->col-1; i < col-1; i++)
 	      {
 		ostr<<inbuf[i];
+#ifdef DEBUG
+		cout <<"WRITING (5:RET..): "<<inbuf[i]<<endl;
+#endif /* DEBUG */
 	      }
 
 	    }
@@ -2025,7 +2032,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    if (is_if_stmt)
 	    { 
 	       ostr << "then"<<endl;
-	       ostr << "          ";
+	       ostr << "       ";
+#ifdef DEBUG
+		cout <<"WRITING (6:then..): then"<<endl;
+#endif /* DEBUG */
 	    }
 	
 	    WRITE_TAB(ostr,(*it)->col);
@@ -2567,8 +2577,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.109 $   $Date: 2006/09/03 17:38:32 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.109 2006/09/03 17:38:32 sameer Exp $
+ * $Revision: 1.110 $   $Date: 2006/09/05 20:20:01 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.110 2006/09/05 20:20:01 sameer Exp $
  ***************************************************************************/
 
 
