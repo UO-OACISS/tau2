@@ -165,7 +165,6 @@ void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name)
 }
 
 
-#ifdef TAU_PURE_FORTRAN_INSTRUMENTATION
 void tau_pure_start(char *fname, int flen) {
   // make a copy so that we can null terminate it
   char *localname = (char *) malloc((size_t)flen+1);
@@ -220,7 +219,6 @@ void tau_pure_stop_(char *fname, int flen) {
 void tau_pure_stop__(char *fname, int flen) {
   tau_pure_stop(fname, flen);
 }
-#endif
 
 void tau_profile_timer_(void **ptr, char *fname, int flen)
 {
@@ -1415,6 +1413,6 @@ void TAU_PROFILE_CALLSTACK(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.53 $   $Date: 2006/07/04 02:58:05 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.53 2006/07/04 02:58:05 amorris Exp $ 
+ * $Revision: 1.54 $   $Date: 2006/09/07 00:30:48 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.54 2006/09/07 00:30:48 amorris Exp $ 
  ***************************************************************************/
