@@ -392,7 +392,7 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 }
 
 
-const int INBUF_SIZE = 2048;
+const int INBUF_SIZE = 65536;
 
 /* -------------------------------------------------------------------------- */
 /* -- process exit or abort statement and generate a record for itemRef       */
@@ -1883,12 +1883,12 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		
 		if (pure) {
 		  ostr <<"interface\n";
-		  ostr <<"pure function TAU_PURE_START(name)\n";
+		  ostr <<"pure subroutine TAU_PURE_START(name)\n";
 		  ostr <<"character(*), intent(in) :: name\n";
-		  ostr <<"end function TAU_PURE_START\n";
-		  ostr <<"pure function TAU_PURE_STOP(name)\n";
+		  ostr <<"end subroutine TAU_PURE_START\n";
+		  ostr <<"pure subroutine TAU_PURE_STOP(name)\n";
 		  ostr <<"character(*), intent(in) :: name\n";
-		  ostr <<"end function TAU_PURE_STOP\n";
+		  ostr <<"end subroutine TAU_PURE_STOP\n";
 		  ostr <<"end interface\n";
 		} else {
 		  
@@ -2576,9 +2576,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.110 $   $Date: 2006/09/05 20:20:01 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.110 2006/09/05 20:20:01 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.111 $   $Date: 2006/09/07 00:16:39 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.111 2006/09/07 00:16:39 amorris Exp $
  ***************************************************************************/
 
 
