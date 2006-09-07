@@ -1,0 +1,28 @@
+This example shows how TAU handles PURE and ELEMENTAL routines.  It requires a
+relatively recent version of PDT.  It will instrument:
+
+pure function foo(x)
+  integer, intent(in) :: x
+  integer :: y
+  foo = x + 5
+end function foo
+
+as:
+
+pure function foo(x)
+  integer, intent(in) :: x
+  integer :: y
+ 	interface
+	pure subroutine TAU_PURE_START(name)
+	character(*), intent(in) :: name
+	end subroutine TAU_PURE_START
+	pure subroutine TAU_PURE_STOP(name)
+	character(*), intent(in) :: name
+	end subroutine TAU_PURE_STOP
+	end interface
+    	call TAU_PURE_START('FOO')
+  foo = x + 5
+	call TAU_PURE_STOP('FOO')
+end function foo
+
+
