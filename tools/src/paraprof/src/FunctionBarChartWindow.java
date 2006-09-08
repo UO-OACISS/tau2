@@ -26,9 +26,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.7 2006/05/15 23:43:24 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.8 2006/09/08 00:37:31 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -624,8 +624,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             jTextArea.append(this.getHeaderString());
             jTextArea.addKeyListener(this);
             jTextArea.setMargin(new Insets(3,3,3,3));
+            
             if (comparisonChart) {
-                
+                jTextArea.setSize(new Dimension(250,200));
                 JPanel legendPanel = new LegendPanel(((ComparisonBarChartModel) model).getLegendModel());
                 JPanel holder = new JPanel();
                 holder.setLayout(new GridBagLayout());
@@ -637,9 +638,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 ParaProfUtils.addCompItem(holder, jTextArea, gbc, 0,0,1,1);
                 gbc.weightx = 1;
                 gbc.weighty = 1;
-                gbc.anchor = GridBagConstraints.WEST;
+                gbc.anchor = GridBagConstraints.EAST;
                 ParaProfUtils.addCompItem(holder, legendPanel, gbc, 1,0,1,1);
-                
+
                 panel.setColumnHeaderView(holder);
             } else {
                 panel.setColumnHeaderView(jTextArea);
