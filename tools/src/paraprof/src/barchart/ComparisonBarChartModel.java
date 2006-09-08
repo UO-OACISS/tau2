@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.3 2006/03/30 03:03:54 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.4 2006/09/08 00:22:10 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -109,7 +109,6 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         dataSorter.setPpTrial(selectedTrial);
         List list = dataSorter.getFunctionProfiles(selectedThread);
-
         for (Iterator it = list.iterator(); it.hasNext();) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
             RowBlob blob = new RowBlob(ppFunctionProfile.getDisplayName());
@@ -123,8 +122,10 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             ParaProfTrial ppTrial = (ParaProfTrial) ppTrials.get(i);
             Thread thread = (Thread) threads.get(i);
 
-            dataSorter.setPpTrial(ppTrial);
-            list = dataSorter.getFunctionProfiles(thread);
+            // We now use the kludge wrapper so that the metric ids between trials get mapped
+            // dataSorter.setPpTrial(ppTrial);
+            DataSorter newDataSorter = new DataSorterWrapper(dataSorter, ppTrial);
+            list = newDataSorter.getFunctionProfiles(thread);
 
             for (Iterator it = list.iterator(); it.hasNext();) {
                 PPFunctionProfile fp = (PPFunctionProfile) it.next();
@@ -137,7 +138,6 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                         rows.add(blob);
                         rowMap.put(fp.getFunction(), blob);
                         blob.add(i, fp);
-
                     }
                 }
             }
