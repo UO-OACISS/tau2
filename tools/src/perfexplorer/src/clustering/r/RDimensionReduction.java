@@ -12,7 +12,7 @@ import org.omegahat.R.Java.REvaluator;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: RDimensionReduction.java,v 1.2 2005/09/28 01:06:58 khuck Exp $</P>
+ * <P>CVS $Id: RDimensionReduction.java,v 1.3 2006/09/13 23:28:20 khuck Exp $</P>
  * @author khuck
  *
  */
@@ -20,13 +20,13 @@ public class RDimensionReduction implements DimensionReductionInterface {
 
 	private RawDataInterface inputData = null;
 	private REvaluator rEvaluator = null;
-	private String method = RMIPerfExplorerModel.NONE;
+	private TransformationType method = TransformationType.NONE;
 	private int newDimension = 0;
 	
 	/**
 	 * Default constructor
 	 */
-	public RDimensionReduction(String method, int newDimension) {
+	public RDimensionReduction(TransformationType method, int newDimension) {
 		super();
 		this.rEvaluator = RSingletons.getREvaluator();
 		this.method = method;
@@ -34,7 +34,7 @@ public class RDimensionReduction implements DimensionReductionInterface {
 	}
 
 	public void reduce() throws ClusterException {
-		if (method.equals(RMIPerfExplorerModel.LINEAR_PROJECTION)) {
+		if (method.equals(TransformationType.LINEAR_PROJECTION)) {
 			System.out.print("Reducing Dimensions...");
 			int numReduced = inputData.numVectors() * newDimension;
 			rEvaluator.voidEval("reducer <- matrix((runif("+numReduced+",0,1)), nrow=" +

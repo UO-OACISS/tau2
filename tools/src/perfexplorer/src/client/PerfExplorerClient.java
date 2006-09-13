@@ -1,6 +1,7 @@
 package client;
 
 import server.AnalysisTaskWrapper;
+import common.EngineType;
 import common.PerfExplorerOutput;
 import jargs.gnu.CmdLineParser;
 import javax.swing.*;
@@ -22,7 +23,7 @@ public class PerfExplorerClient extends JFrame {
 	}
 
 	PerfExplorerClient (boolean standalone, String configFile,
-	int analysisEngine, boolean quiet) {
+	EngineType analysisEngine, boolean quiet) {
 		super("PerfExplorer Client");
 		PerfExplorerOutput.initialize(quiet);
 		PerfExplorerConnection.setStandalone(standalone);
@@ -129,7 +130,7 @@ public class PerfExplorerClient extends JFrame {
 		String engine = (String) parser.getOptionValue(engineOpt);
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
 
-		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
+		EngineType analysisEngine = EngineType.WEKA;
 
 		if (help != null && help.booleanValue()) {
 			System.err.println(USAGE);
@@ -153,9 +154,9 @@ public class PerfExplorerClient extends JFrame {
 				System.err.println(USAGE);
 				System.exit(-1);
 			} else if (engine.equalsIgnoreCase("R")) {
-				analysisEngine = AnalysisTaskWrapper.RPROJECT_ENGINE;
+				analysisEngine = EngineType.RPROJECT;
 			} else if (engine.equalsIgnoreCase("weka")) {
-				analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
+				analysisEngine = EngineType.WEKA;
 			} else {
 				System.err.println(USAGE);
 				System.exit(-1);

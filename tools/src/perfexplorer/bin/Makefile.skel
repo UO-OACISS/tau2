@@ -124,7 +124,7 @@ ${RMIC_CLASSES}: Makefile ${SERVER_SOURCES} ${SERVER_CLASSES}
 
 ${CLIENT_CLASSES}: Makefile ${CLIENT_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
 	${JAVAC} -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
-	cp src/client/resources/*.gif classes/client/.
+	cp src/client/*.gif classes/client/.
 
 ###
 ### THESE COMMANDS ARE FOR CLEANING

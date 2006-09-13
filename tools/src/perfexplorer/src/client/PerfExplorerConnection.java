@@ -13,7 +13,7 @@ public class PerfExplorerConnection {
     private RMIPerfExplorer server = null;
     private static boolean standalone = false;
     private static String configFile = null;
-    private static int analysisEngine = 0;
+    private static EngineType analysisEngine = EngineType.WEKA;
 
     private PerfExplorerConnection () {
 		makeConnection();
@@ -49,7 +49,7 @@ public class PerfExplorerConnection {
 	PerfExplorerConnection.configFile = configFile;
     }
 	
-    public static void setAnalysisEngine(int analysisEngine) {
+    public static void setAnalysisEngine(EngineType analysisEngine) {
 	PerfExplorerConnection.analysisEngine = analysisEngine;
     }
 

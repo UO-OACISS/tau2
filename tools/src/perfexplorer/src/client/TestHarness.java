@@ -20,7 +20,7 @@ public class TestHarness {
 	private boolean foundView = false;
 
 	private TestHarness (boolean standalone, String configFile,
-		int analysisEngine, boolean quiet, String test) {
+		EngineType analysisEngine, boolean quiet, String test) {
 
 		JFrame frame = new PerfExplorerClient(standalone, configFile, 
 			analysisEngine, quiet);
@@ -279,7 +279,7 @@ public class TestHarness {
 	}
 
 	public void testCluster() throws Exception {
-		model.setDimensionReduction(RMIPerfExplorerModel.OVER_X_PERCENT);
+		model.setDimensionReduction(TransformationType.OVER_X_PERCENT);
 		model.setNumberOfClusters("10");
 		model.setXPercent("2");
 		String status = connection.requestAnalysis(model, true);
@@ -290,8 +290,8 @@ public class TestHarness {
 	}
 
 	public void testCorrelation() throws Exception {
-		model.setClusterMethod(RMIPerfExplorerModel.CORRELATION_ANALYSIS);
-		model.setDimensionReduction(RMIPerfExplorerModel.OVER_X_PERCENT);
+		model.setClusterMethod(AnalysisType.CORRELATION_ANALYSIS);
+		model.setDimensionReduction(TransformationType.OVER_X_PERCENT);
 		model.setXPercent("2");
 		String status = connection.requestAnalysis(model, true);
 		System.out.println(status);
@@ -341,7 +341,7 @@ public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteExceptio
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
 		String test = (String) parser.getOptionValue(testOpt);
 
-		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
+		EngineType analysisEngine = EngineType.WEKA;
 
 		if (help != null && help.booleanValue()) {
 			System.err.println(USAGE);
@@ -370,9 +370,9 @@ public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteExceptio
 				System.err.println(USAGE);
 				System.exit(-1);
 			} else if (engine.equalsIgnoreCase("R")) {
-				analysisEngine = AnalysisTaskWrapper.RPROJECT_ENGINE;
+				analysisEngine = EngineType.RPROJECT;
 			} else if (engine.equalsIgnoreCase("weka")) {
-				analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
+				analysisEngine = EngineType.WEKA;
 			} else {
 				System.err.println(USAGE);
 				System.exit(-1);

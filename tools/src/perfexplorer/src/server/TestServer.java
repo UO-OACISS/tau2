@@ -9,7 +9,7 @@ import common.*;
 /**
  * This class exists as a unit test of the PerfExplorerServer class.
  *
- * <P>CVS $Id: TestServer.java,v 1.6 2005/11/07 20:20:17 khuck Exp $</P>
+ * <P>CVS $Id: TestServer.java,v 1.7 2006/09/13 23:28:21 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -20,7 +20,7 @@ public class TestServer {
 		System.out.println ("LIBRARY PATH: " + System.getProperty ("java.library.path"));
 		try {
 			//int engine = AnalysisTaskWrapper.RPROJECT_ENGINE;
-			int engine = AnalysisTaskWrapper.WEKA_ENGINE;
+			EngineType engine = EngineType.WEKA;
 			//int engine = AnalysisTaskWrapper.OCTAVE_ENGINE;
 			PerfExplorerServer server = PerfExplorerServer.getServer(args[0], engine);
 			System.out.println(server.sayHello());
@@ -64,7 +64,7 @@ public class TestServer {
 			}
 			RMIPerfExplorerModel model = new RMIPerfExplorerModel();
 			//model.setClusterMethod(RMIPerfExplorerModel.CORRELATION_ANALYSIS);
-			model.setDimensionReduction(RMIPerfExplorerModel.OVER_X_PERCENT);
+			model.setDimensionReduction(TransformationType.OVER_X_PERCENT);
 			model.setNumberOfClusters("10");
 			model.setXPercent("2");
 			model.setCurrentSelection(objects);

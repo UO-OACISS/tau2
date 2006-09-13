@@ -54,27 +54,14 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.16 2006/04/12 02:38:26 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.17 2006/09/13 23:28:21 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
 public class AnalysisTaskWrapper extends TimerTask {
 
-	public static final int RPROJECT_ENGINE = 0;
-	public static final int WEKA_ENGINE = 1;
-	public static final int OCTAVE_ENGINE = 2;
-	
-	public static final int DENDROGRAM = 0;
-	public static final int HISTOGRAM = 1;
-	public static final int VIRTUAL_TOPOLOGY = 2;
-	public static final int CLUSTER_AVERAGES = 3;
-	public static final int CLUSTER_MAXIMUMS = 4;
-	public static final int CLUSTER_MINIMUMS = 5;
-	public static final int PCA_SCATTERPLOT = 6;
-	public static final int CORRELATION_SCATTERPLOT = 7;
-	
-	private int chartType = 0;
+	private ChartType chartType = ChartType.DENDROGRAM;
 	private AnalysisFactory factory = null;
 	
 	private RMIPerfExplorerModel modelData = null;
@@ -100,31 +87,24 @@ public class AnalysisTaskWrapper extends TimerTask {
 	 * @param server
 	 * @param engine
 	 */
-	public AnalysisTaskWrapper (PerfExplorerServer server, int engine) {
+	public AnalysisTaskWrapper (PerfExplorerServer server, EngineType engine) {
 		super();
 		this.server = server;
-		switch (engine) {
 #ifdef USE_WEKA_ENGINE
-			case WEKA_ENGINE:
-				factory = WekaAnalysisFactory.getFactory();
-				break;
+		if (engine == EngineType.WEKA)
+			factory = WekaAnalysisFactory.getFactory();
 #endif
 #ifdef USE_R_ENGINE
-			case RPROJECT_ENGINE:
-				//rInterpreter = server.getRInterpreter();
-				//rEvaluator = server.getREvaluator();
-				factory = RAnalysisFactory.getFactory();
-				break;
+		if (engine == EngineType.RPROJECT)
+			factory = RAnalysisFactory.getFactory();
 #endif
 #ifdef USE_OCTAVE_ENGINE
-			case OCTAVE_ENGINE:
-				factory = OctaveAnalysisFactory.getFactory();
-				break;
+		if (engine == EngineType.OCTAVE)
+			factory = OctaveAnalysisFactory.getFactory();
 #endif
-			default:
-				System.out.println("Undefined analysis engine type.");
-				System.exit(1);
-				break;
+		if (factory == null) {
+			System.out.println("Undefined analysis engine type.");
+			System.exit(1);
 		}
 	}
 
@@ -157,7 +137,7 @@ public class AnalysisTaskWrapper extends TimerTask {
        		statement.setInt(4,(int)v_file.length());
        		statement.setBinaryStream(5,v_tis,(int)v_thumb.length());
        		statement.setBinaryStream(6,v_fis,(int)v_file.length());
-			statement.setInt(7, chartType);
+			statement.setString(7, chartType.toString());
        		statement.executeUpdate();
 			//db.commit();
        		v_fis.close();
@@ -204,7 +184,7 @@ public class AnalysisTaskWrapper extends TimerTask {
        		FileInputStream inStream2 = new FileInputStream(outfile);
        		statement.setInt(5,(int)outfile.length());
        		statement.setBinaryStream(6,inStream2,(int)outfile.length());
-			statement.setInt(7, chartType);
+			statement.setString(7, chartType.toString());
 			//System.out.println(statement.toString());
        		statement.executeUpdate();
        		statement.close();
@@ -275,7 +255,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			sql.append("from interval_event e ");
 			sql.append("left outer join interval_location_profile p ");
 			sql.append("on e.id = p.interval_event ");
-			if (modelData.getDimensionReduction().equals(RMIPerfExplorerModel.OVER_X_PERCENT)) {
+			if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 				sql.append("inner join interval_mean_summary s ");
 				sql.append("on e.id = s.interval_event and s.metric = p.metric ");
 				sql.append("and s.exclusive_percentage > ");
@@ -309,7 +289,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				// Next, get the event names, and count them
 				sql = new StringBuffer();
 				sql.append("select e.id, e.name from interval_event e ");
-				if (modelData.getDimensionReduction().equals(RMIPerfExplorerModel.OVER_X_PERCENT)) {
+				if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 					sql.append("inner join interval_mean_summary s on ");
 					sql.append("e.id = s.interval_event ");
 					sql.append("and s.exclusive_percentage > ");
@@ -326,7 +306,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				PerfExplorerServer.getServer().getControl().WAIT("getConstants");
 				statement = db.prepareStatement(sql.toString());
 				statement.setInt(1, modelData.getTrial().getID());
-				if (modelData.getDimensionReduction().equals(RMIPerfExplorerModel.OVER_X_PERCENT)) {
+				if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 					if (modelData.getCurrentSelection() instanceof Metric) {
 						statement.setInt(2, ((Metric)(modelData.getCurrentSelection())).getID());
 					}
@@ -432,7 +412,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			DB db = PerfExplorerServer.getServer().getDB();
 			PreparedStatement statement = null;
 			StringBuffer sql = new StringBuffer();
-			if (modelData.getDimensionReduction().equals(RMIPerfExplorerModel.OVER_X_PERCENT)) {
+			if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 				sql.append("select e.id, (p.node*");
 				sql.append(contexts * threads);
 				sql.append(") + (p.context*");
@@ -487,7 +467,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			// get the rows
 			while (results.next() != false) {
 				if (!(modelData.getDimensionReduction().equals(
-					RMIPerfExplorerModel.OVER_X_PERCENT)) || 
+					TransformationType.OVER_X_PERCENT)) || 
 					(results.getDouble(7) > modelData.getXPercent())) {
 					if (currentFunction != results.getInt(importantIndex)) {
 						functionIndex++;
@@ -586,7 +566,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				// find good initial centers
 				//makeDendrogram(reducedData);
 				// do it!
-				if (modelData.getClusterMethod().equals(RMIPerfExplorerModel.K_MEANS)) {
+				if (modelData.getClusterMethod().equals(AnalysisType.K_MEANS)) {
 					int maxClusters = (numTotalThreads <= modelData.getNumberOfClusters()) ? (numTotalThreads-1) : modelData.getNumberOfClusters();
 					for (int i = 2 ; i <= maxClusters ; i++) {
 						System.out.println("Doing " + i + " clusters:" + modelData.toString());
@@ -603,7 +583,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 						File thumbnail = generateThumbnail(clusterSizes, eventIDs);
 						File chart = generateImage(clusterSizes, eventIDs);
 						// TODO - fix this to save the cluster sizes, too!
-						chartType = HISTOGRAM;
+						chartType = ChartType.HISTOGRAM;
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
 						
 						if (modelData.getCurrentSelection() instanceof Metric) {
@@ -618,7 +598,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 						RawDataInterface[] clusters = pca.getClusters();
 						// do a scatterplot
 						rCorrelation = 0.0;
-						chartType = AnalysisTaskWrapper.PCA_SCATTERPLOT;
+						chartType = ChartType.PCA_SCATTERPLOT;
 						//for (int m = 0 ; m < i ; m++)
 							//clusters[m].normalizeData(true);
 						//System.out.println("PCA Dimensions: " + components.numDimensions());
@@ -634,17 +614,17 @@ public class AnalysisTaskWrapper extends TimerTask {
 						saveAnalysisResult("Virtual Topology", filename, nail, false);
 						
 						// do mins
-						chartType = CLUSTER_MINIMUMS;
+						chartType = ChartType.CLUSTER_MINIMUMS;
 						thumbnail = generateThumbnail(clusterer.getClusterMinimums(), deviations, eventIDs);
 						chart = generateImage(clusterer.getClusterMinimums(), deviations, eventIDs);
 						saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
 						// do averages
-						chartType = CLUSTER_AVERAGES;
+						chartType = ChartType.CLUSTER_AVERAGES;
 						thumbnail = generateThumbnail(centroids, deviations, eventIDs);
 						chart = generateImage(centroids, deviations, eventIDs);
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
 						// do maxes
-						chartType = CLUSTER_MAXIMUMS;
+						chartType = ChartType.CLUSTER_MAXIMUMS;
 						thumbnail = generateThumbnail(clusterer.getClusterMaximums(), deviations, eventIDs);
 						chart = generateImage(clusterer.getClusterMaximums(), deviations, eventIDs);
 						saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart);
@@ -653,7 +633,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 					System.out.println("Doing Correlation Analysis...");
 					// get the inclusive data
 					//reducedData;
-					chartType = AnalysisTaskWrapper.CORRELATION_SCATTERPLOT;
+					chartType = ChartType.CORRELATION_SCATTERPLOT;
 					/*
 					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
 						correlateToMain = true;
@@ -751,7 +731,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 	 */
 	public File generateThumbnail(RawDataInterface[] clusters) {
 		File outfile = null;
-		if (chartType == PCA_SCATTERPLOT) {
+		if (chartType == ChartType.PCA_SCATTERPLOT) {
 	        XYDataset data = new PCAPlotDataset(clusters);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
 	            null, null, null, data, PlotOrientation.VERTICAL, false, false, false);
@@ -771,7 +751,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 	 */
 	public File generateImage(RawDataInterface pcaData, RawDataInterface[] clusters) {
 		File outfile = null;
-		if (chartType == PCA_SCATTERPLOT) {
+		if (chartType == ChartType.PCA_SCATTERPLOT) {
 		/*
 			int max = pcaData.numDimensions();
 			int x = max - 1;
@@ -808,7 +788,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 	 */
 	public File generateThumbnail(RawDataInterface pcaData, int i, int j) {
 		File outfile = null;
-		if (chartType == CORRELATION_SCATTERPLOT) {
+		if (chartType == ChartType.CORRELATION_SCATTERPLOT) {
 			pcaData.normalizeData(true);
 	        XYDataset data = new ScatterPlotDataset(pcaData,
 			modelData.toString(), i, j, correlateToMain);
@@ -830,7 +810,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 	 */
 	public File generateImage(RawDataInterface pcaData, int i, int j) {
 		File outfile = null;
-		if (chartType == CORRELATION_SCATTERPLOT) {
+		if (chartType == ChartType.CORRELATION_SCATTERPLOT) {
 			pcaData.normalizeData(true);
 	        XYDataset data = new ScatterPlotDataset(pcaData,
 			modelData.toString(), i, j, correlateToMain);
@@ -932,13 +912,13 @@ public class AnalysisTaskWrapper extends TimerTask {
 			}
 		}
 		String chartTitle = modelData.toString();
-		if (chartType == CLUSTER_AVERAGES) {
+		if (chartType == ChartType.CLUSTER_AVERAGES) {
             chartTitle = chartTitle + " Average Values";
 		}
-		if (chartType == CLUSTER_MAXIMUMS) {
+		if (chartType == ChartType.CLUSTER_MAXIMUMS) {
             chartTitle = chartTitle + " Maximum Values";
 		}
-		if (chartType == CLUSTER_MINIMUMS) {
+		if (chartType == ChartType.CLUSTER_MINIMUMS) {
             chartTitle = chartTitle + " Minimum Values";
 		}
         JFreeChart chart = ChartFactory.createStackedBarChart(

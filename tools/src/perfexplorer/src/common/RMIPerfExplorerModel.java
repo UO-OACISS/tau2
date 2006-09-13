@@ -8,39 +8,18 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.18 2006/06/19 23:37:51 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.19 2006/09/13 23:28:20 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
  *
  */
 public class RMIPerfExplorerModel implements Serializable {
-	// constants for cluster analysis parameters
-	public final static String K_MEANS = "K Means";
-	public final static String K_HARMONIC_MEANS = "K Harmonic Means";
-	public final static String GEM = "Gaussian Expectation-Maximization";
-	public final static String FUZZY_K_MEANS = "Fuzzy K Means";
-	public final static String CORRELATION_ANALYSIS = "Correlation Analysis";
-	// constants for dimension reduction
-	public final static String LINEAR_PROJECTION = "Random Linear Projection (disabled)";
-	public final static String OVER_X_PERCENT = "Over X Percent";
-	public final static String REGRESSION = "PCA (disabled)";
-	public final static String NONE = "none";
-	public final static String PERCENTAGE_OF_TOTAL = "Percentage of Total";
-	public final static String RANGE_OF_TOTAL = "Range of Total";
 	public final static int MAX_CLUSTERS = 10;
 	public final static double X_PERCENT = 1.0;
 
-	// constants for chart selections
-	public final static int NO_MULTI = 0;
-	public final static int APPLICATION = 1;
-	public final static int EXPERIMENT = 2;
-	public final static int TRIAL = 3;
-	public final static int METRIC = 4;
-	public final static int VIEW = 5;
-	public final static int EVENT = 6;
 	protected List multiSelections = null;
-	protected int multiSelectionType = 0;
+	protected SelectionType multiSelectionType = SelectionType.NO_MULTI;
 
 	// constants for chart parameters
 	protected String groupName = null;
@@ -50,9 +29,9 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected Boolean constantProblem = null;
 
 	// more cluster settings
-	protected String clusterMethod = null;
-	protected String dimensionReduction = null;
-	protected String normalization = null;
+	protected AnalysisType clusterMethod = null;
+	protected TransformationType dimensionReduction = null;
+	protected TransformationType normalization = null;
 	protected int numberOfClusters = MAX_CLUSTERS;
 	protected double xPercent = X_PERCENT;
 
@@ -92,22 +71,6 @@ public class RMIPerfExplorerModel implements Serializable {
 		this.fullPath = source.fullPath;
 	}
 
-	public static Object[] getClusterMethods() {
-		Object[] options = {K_MEANS, K_HARMONIC_MEANS, GEM, FUZZY_K_MEANS};
-		return options;
-	}
-
-	public static Object[] getDimensionReductions() {
-		//Object[] options = {LINEAR_PROJECTION, REGRESSION, OVER_X_PERCENT, NONE};
-		Object[] options = {OVER_X_PERCENT, NONE};
-		return options;
-	}
-
-	public static Object[] getNormalizations() {
-		Object[] options = {PERCENTAGE_OF_TOTAL, RANGE_OF_TOTAL, NONE};
-		return options;
-	}
-
 	public Object getCurrentSelection () {
 		return currentSelection;
 	}
@@ -132,16 +95,16 @@ public class RMIPerfExplorerModel implements Serializable {
 		return event;
 	}
 
-	public String getClusterMethod () {
-		return (clusterMethod == null) ? K_MEANS : clusterMethod;
+	public AnalysisType getClusterMethod () {
+		return (clusterMethod == null) ? AnalysisType.K_MEANS : clusterMethod;
 	}
 
-	public String getDimensionReduction () {
-		return (dimensionReduction == null) ? NONE : dimensionReduction;
+	public TransformationType getDimensionReduction () {
+		return (dimensionReduction == null) ? TransformationType.NONE : dimensionReduction;
 	}
 
-	public String getNormalization () {
-		return (normalization == null) ? NONE : normalization;
+	public TransformationType getNormalization () {
+		return (normalization == null) ? TransformationType.NONE : normalization;
 	}
 
 	public int getNumberOfClusters () {
@@ -159,7 +122,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		totalTimesteps = null;
 		multiSelections = null;
 		constantProblem = null;
-		multiSelectionType = NO_MULTI;
+		multiSelectionType = SelectionType.NO_MULTI;
 		if (currentSelection instanceof Application) {
 			application = (Application)currentSelection;
 		} else if (currentSelection instanceof Experiment) {
@@ -183,7 +146,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		totalTimesteps = null;
 		multiSelections = null;
 		constantProblem = null;
-		multiSelectionType = NO_MULTI;
+		multiSelectionType = SelectionType.NO_MULTI;
 		fullPath = objectPath;
 		// application = null;
 		// experiment = null;
@@ -207,14 +170,18 @@ public class RMIPerfExplorerModel implements Serializable {
 	}
 
 	public void setClusterMethod (String clusterMethod) {
+		this.clusterMethod = AnalysisType.fromString(clusterMethod);
+	}
+
+	public void setClusterMethod (AnalysisType clusterMethod) {
 		this.clusterMethod = clusterMethod;
 	}
 
-	public void setDimensionReduction (String dimensionReduction) {
+	public void setDimensionReduction (TransformationType dimensionReduction) {
 		this.dimensionReduction = dimensionReduction;
 	}
 
-	public void setNormalization (String normalization) {
+	public void setNormalization (TransformationType normalization) {
 		this.normalization = normalization;
 	}
 
@@ -227,29 +194,29 @@ public class RMIPerfExplorerModel implements Serializable {
 	}
 
 	public String toString() {
-		if (multiSelectionType == APPLICATION) {
+		if (multiSelectionType == SelectionType.APPLICATION) {
 			return "Applications";
-		} else if (multiSelectionType == EXPERIMENT) {
+		} else if (multiSelectionType == SelectionType.EXPERIMENT) {
 			String tmpStr = (application == null) ? "" : application.getName();
 			return tmpStr;
-		} else if (multiSelectionType == TRIAL) {
+		} else if (multiSelectionType == SelectionType.TRIAL) {
 			String tmpStr1 = (application == null) ? "" : application.getName();
 			String tmpStr2 = experiment.getName();
 			String tmpStr = tmpStr1 + ":" + tmpStr2;
 			return tmpStr;
-		} else if (multiSelectionType == METRIC) {
+		} else if (multiSelectionType == SelectionType.METRIC) {
 			String tmpStr1 = (application == null) ? "" : application.getName();
 			String tmpStr2 = (experiment == null) ? "" : experiment.getName();
 			String tmpStr3 = trial.getName();
 			String tmpStr = tmpStr1 + ":" + tmpStr2 + ":" + tmpStr3;
 			return tmpStr;
-		} else if (multiSelectionType == EVENT) {
+		} else if (multiSelectionType == SelectionType.EVENT) {
 			String tmpStr1 = (application == null) ? "" : application.getName();
 			String tmpStr2 = (experiment == null) ? "" : experiment.getName();
 			String tmpStr3 = trial.getName();
 			String tmpStr = tmpStr1 + ":" + tmpStr2 + ":" + tmpStr3;
 			return tmpStr;
-		} else if (multiSelectionType == VIEW) {
+		} else if (multiSelectionType == SelectionType.VIEW) {
 			return "Custom View";
 		} else if (currentSelection instanceof IntervalEvent) {
 			IntervalEvent event = (IntervalEvent)currentSelection;
@@ -355,35 +322,35 @@ public class RMIPerfExplorerModel implements Serializable {
 	public boolean setMultiSelection(List objects) {
 		for (int i = 0 ; i < objects.size() ; i++) {
 			if (objects.get(i) instanceof Application) {
-				if (multiSelectionType != APPLICATION &&
-					multiSelectionType != NO_MULTI)
+				if (multiSelectionType != SelectionType.APPLICATION &&
+					multiSelectionType != SelectionType.NO_MULTI)
 					return false;
-				multiSelectionType = APPLICATION;
+				multiSelectionType = SelectionType.APPLICATION;
 			} else if (objects.get(i) instanceof Experiment) {
-				if (multiSelectionType != EXPERIMENT &&
-					multiSelectionType != NO_MULTI)
+				if (multiSelectionType != SelectionType.EXPERIMENT &&
+					multiSelectionType != SelectionType.NO_MULTI)
 					return false;
-				multiSelectionType = EXPERIMENT;
+				multiSelectionType = SelectionType.EXPERIMENT;
 			} else if (objects.get(i) instanceof Trial) {
-				if (multiSelectionType != TRIAL &&
-					multiSelectionType != NO_MULTI)
+				if (multiSelectionType != SelectionType.TRIAL &&
+					multiSelectionType != SelectionType.NO_MULTI)
 					return false;
-				multiSelectionType = TRIAL;
+				multiSelectionType = SelectionType.TRIAL;
 			} else if (objects.get(i) instanceof Metric) {
-				if (multiSelectionType != METRIC &&
-					multiSelectionType != NO_MULTI)
+				if (multiSelectionType != SelectionType.METRIC &&
+					multiSelectionType != SelectionType.NO_MULTI)
 					return false;
-				multiSelectionType = METRIC;
+				multiSelectionType = SelectionType.METRIC;
 			} else if (objects.get(i) instanceof RMIView) {
-				if (multiSelectionType != VIEW &&
-					multiSelectionType != NO_MULTI)
+				if (multiSelectionType != SelectionType.VIEW &&
+					multiSelectionType != SelectionType.NO_MULTI)
 					return false;
-				multiSelectionType = VIEW;
+				multiSelectionType = SelectionType.VIEW;
 			} else if (objects.get(i) instanceof IntervalEvent) {
-				if (multiSelectionType != EVENT &&
-					multiSelectionType != NO_MULTI)
+				if (multiSelectionType != SelectionType.EVENT &&
+					multiSelectionType != SelectionType.NO_MULTI)
 					return false;
-				multiSelectionType = EVENT;
+				multiSelectionType = SelectionType.EVENT;
 			}
 		}
 

@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.ListIterator;
 import edu.uoregon.tau.perfdmf.*;
 import constants.Constants;
+import common.AnalysisType;
 import common.RMIView;
 import common.RMISortableIntervalEvent;
 import common.RMIPerfExplorerModel;
+import common.TransformationType;
 
 public class PerfExplorerActionListener implements ActionListener {
 
@@ -212,45 +214,46 @@ public class PerfExplorerActionListener implements ActionListener {
 	}
 
 	public void createMethodWindow() {
-		Object[] options = PerfExplorerModel.getClusterMethods();
+		Object[] options = AnalysisType.getClusterMethods();
 		String reply = (String)JOptionPane.showInputDialog (mainFrame,
 			"Select a cluster method:",
 			"Cluster Method",
 			JOptionPane.PLAIN_MESSAGE,
 			null,
 			options,
-			PerfExplorerModel.K_MEANS);
+			AnalysisType.K_MEANS);
 		PerfExplorerModel.getModel().setClusterMethod(reply);
 	}
 
 	public void createDimensionWindow() {
-		Object[] options = PerfExplorerModel.getDimensionReductions();
-		String reply = (String)JOptionPane.showInputDialog (mainFrame,
+		Object[] options = TransformationType.getDimensionReductions();
+		Object obj = (String)JOptionPane.showInputDialog (mainFrame,
 			"Select a dimension reduction method:",
 			"Dimension Reduction",
 			JOptionPane.PLAIN_MESSAGE,
 			null,
 			options,
-			PerfExplorerModel.NONE);
+			TransformationType.NONE);
+        TransformationType reply = (TransformationType)obj;
 		PerfExplorerModel.getModel().setDimensionReduction(reply);
 		if (PerfExplorerModel.getModel().getDimensionReduction().equals(reply)) {
-			reply = (String)JOptionPane.showInputDialog (mainFrame,
+			String reply2 = (String)JOptionPane.showInputDialog (mainFrame,
 				"Only select events with exclusive time % greater than X:\n(where 0 <= X < 100)",
 				"Minimum Percentage", JOptionPane.PLAIN_MESSAGE);
 			if (reply != null && !reply.equals(""))
-				PerfExplorerModel.getModel().setXPercent(reply);
+				PerfExplorerModel.getModel().setXPercent(reply2);
 		}
 	}
 
 	public void createNormalizationWindow() {
-		Object[] options = PerfExplorerModel.getNormalizations();
-		String reply = (String)JOptionPane.showInputDialog (mainFrame,
+		Object[] options = TransformationType.getNormalizations();
+		TransformationType reply = (TransformationType)JOptionPane.showInputDialog (mainFrame,
 			"Select a normalization method:",
 			"Normalization",
 			JOptionPane.PLAIN_MESSAGE,
 			null,
 			options,
-			PerfExplorerModel.NONE);
+			TransformationType.NONE);
 		PerfExplorerModel.getModel().setNormalization(reply);
 	}
 
@@ -395,7 +398,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		if ((selection instanceof Trial) || (selection instanceof Metric)) {
 //			String tmp = theModel.getClusterMethod();
 			RMIPerfExplorerModel modelCopy = theModel.copy();
-			modelCopy.setClusterMethod(PerfExplorerModel.CORRELATION_ANALYSIS);
+			modelCopy.setClusterMethod(AnalysisType.CORRELATION_ANALYSIS);
 			int reply = getConfirmation(modelCopy);
 			if (reply == 1) {
 				// request some analysis!
@@ -418,10 +421,10 @@ public class PerfExplorerActionListener implements ActionListener {
 		StringBuffer buf = new StringBuffer();
 		buf.append("Analysis method: " + theModel.getClusterMethod());
 		buf.append("\nDimension Reduction: " + theModel.getDimensionReduction());
-		if (theModel.getDimensionReduction().equals(PerfExplorerModel.OVER_X_PERCENT)) 
+		if (theModel.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) 
 			buf.append("\n\t\t Minimum percentage: " + theModel.getXPercent());
 		buf.append("\nNormalization: " + theModel.getNormalization());
-		if (!theModel.getClusterMethod().equals(PerfExplorerModel.CORRELATION_ANALYSIS))
+		if (!theModel.getClusterMethod().equals(AnalysisType.CORRELATION_ANALYSIS))
 			buf.append("\nMax Clusters: " + theModel.getNumberOfClusters());
 		buf.append("\nTrial: " + theModel.toString());
 		buf.append("\n\nPerform clustering with the these options?");

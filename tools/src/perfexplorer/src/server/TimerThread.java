@@ -2,13 +2,15 @@ package server;
 
 import java.util.Timer;
 
+import common.EngineType;
+
 
 /**
  * This is the main server thread which processes long-executing analysis 
  * requests.  It is created by the PerfExplorerServer object, and 
  * checks the queue every 1 seconds to see if there are any new requests.
  *
- * <P>CVS $Id: TimerThread.java,v 1.3 2005/09/28 01:06:59 khuck Exp $</P>
+ * <P>CVS $Id: TimerThread.java,v 1.4 2006/09/13 23:28:21 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -20,13 +22,13 @@ public class TimerThread extends Timer implements Runnable {
 	 *  reference to the server which created this thread
 	 */
 	private PerfExplorerServer server = null;
-	private int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
+	private EngineType analysisEngine = EngineType.WEKA;
 
 	/**
 	 * Constructor.  Expects a reference to a PerfExplorerServer.
 	 * @param server
 	 */
-	public TimerThread (PerfExplorerServer server, int analysisEngine) {
+	public TimerThread (PerfExplorerServer server, EngineType analysisEngine) {
 		this.server = server;
 		this.analysisEngine = analysisEngine;
 	}

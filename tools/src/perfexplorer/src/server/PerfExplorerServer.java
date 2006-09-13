@@ -24,7 +24,7 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.35 2006/06/14 03:57:02 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.36 2006/09/13 23:28:21 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -70,7 +70,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param configFile
 	 * @return
 	 */
-	public static PerfExplorerServer getServer (String configFile, int analysisEngine) {
+	public static PerfExplorerServer getServer (String configFile, EngineType analysisEngine) {
 		try {
 			if (theServer == null)
 				theServer = new PerfExplorerServer (configFile, analysisEngine, 0, false);
@@ -89,7 +89,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param configFile
 	 * @throws RemoteException
 	 */
-	private PerfExplorerServer(String configFile, int analysisEngine,
+	private PerfExplorerServer(String configFile, EngineType analysisEngine,
 	int port, boolean quiet) throws RemoteException {
 		super(port);
 		PerfExplorerOutput.initialize(quiet);
@@ -243,13 +243,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				statement.setInt(2, model.getExperiment().getID());
 				statement.setInt(3, model.getTrial().getID());
 				statement.setInt(4, ((Metric)(model.getCurrentSelection())).getID());
-				statement.setString(5, RMIPerfExplorerModel.CORRELATION_ANALYSIS);
+				statement.setString(5, AnalysisType.CORRELATION_ANALYSIS.toString());
 			}else {
 				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric is null and method = ? order by id desc");
 				statement.setInt(1, model.getApplication().getID());
 				statement.setInt(2, model.getExperiment().getID());
 				statement.setInt(3, model.getTrial().getID());
-				statement.setString(4, RMIPerfExplorerModel.CORRELATION_ANALYSIS);
+				statement.setString(4, AnalysisType.CORRELATION_ANALYSIS.toString());
 			}
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
@@ -269,7 +269,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					"thumbnail, image_size, image, result_type from analysis_result where " + 
 					"analysis_settings = ? and result_type = ? order by id asc");
 			statement.setInt(1, analysisID);
-			statement.setInt(2, AnalysisTaskWrapper.CORRELATION_SCATTERPLOT);
+			statement.setString(2, ChartType.CORRELATION_SCATTERPLOT.toString());
 			//System.out.println(statement.toString());
 			results = statement.executeQuery();
 			while (results.next() != false) {
@@ -371,13 +371,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				statement.setInt(2, model.getExperiment().getID());
 				statement.setInt(3, model.getTrial().getID());
 				statement.setInt(4, ((Metric)(model.getCurrentSelection())).getID());
-				statement.setString(5, RMIPerfExplorerModel.K_MEANS);
+				statement.setString(5, AnalysisType.K_MEANS.toString());
 			} else {
 				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric is null and method = ? order by id desc");
 				statement.setInt(1, model.getApplication().getID());
 				statement.setInt(2, model.getExperiment().getID());
 				statement.setInt(3, model.getTrial().getID());
-				statement.setString(4, RMIPerfExplorerModel.K_MEANS);
+				statement.setString(4, AnalysisType.K_MEANS.toString());
 			}
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
@@ -518,9 +518,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			statement.setInt(2, modelData.getExperiment().getID());
 			statement.setInt(3, modelData.getTrial().getID());
 			statement.setInt(4, ((Metric)(modelData.getCurrentSelection())).getID());
-			statement.setString(5, modelData.getClusterMethod());
-			statement.setString(6, modelData.getDimensionReduction());
-			statement.setString(7, modelData.getNormalization());
+			statement.setString(5, modelData.getClusterMethod().toString());
+			statement.setString(6, modelData.getDimensionReduction().toString());
+			statement.setString(7, modelData.getNormalization().toString());
 			ResultSet results = statement.executeQuery();
 			if (results.next() != false) {
 				analysisID = results.getInt(1);
@@ -560,9 +560,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				statement.setInt(4, ((Metric)(modelData.getCurrentSelection())).getID());
 			else
 				statement.setNull(4, java.sql.Types.INTEGER);
-			statement.setString(5, modelData.getClusterMethod());
-			statement.setString(6, modelData.getDimensionReduction());
-			statement.setString(7, modelData.getNormalization());
+			statement.setString(5, modelData.getClusterMethod().toString());
+			statement.setString(6, modelData.getDimensionReduction().toString());
+			statement.setString(7, modelData.getNormalization().toString());
 			statement.execute();
 			statement.close();
 			String tmpStr = new String();
@@ -1359,7 +1359,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		Integer port = (Integer) parser.getOptionValue(portOpt);
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
 
-		int analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
+		EngineType analysisEngine = EngineType.WEKA;
 
 		if (help != null && help.booleanValue()) {
 			System.err.println(USAGE);
@@ -1380,9 +1380,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			System.err.println(USAGE);
 			System.exit(-1);
 		} else if (engine.equalsIgnoreCase("R")) {
-			analysisEngine = AnalysisTaskWrapper.RPROJECT_ENGINE;
+			analysisEngine = EngineType.RPROJECT;
 		} else if (engine.equalsIgnoreCase("weka")) {
-			analysisEngine = AnalysisTaskWrapper.WEKA_ENGINE;
+			analysisEngine = EngineType.WEKA;
 		} else {
 			System.err.println(USAGE);
 			System.exit(-1);
