@@ -463,9 +463,17 @@ public class PerfExplorerActionListener implements ActionListener {
 
 	private boolean validSelection (PerfExplorerModel theModel) {
 		Object selection = theModel.getCurrentSelection();
-		// allow Experiments or Trials or 1 view
+/*		// allow Experiments or Trials or 1 view
 		if (!(selection instanceof Experiment) && !(selection instanceof Trial) && !(selection instanceof RMIView)) {
 			JOptionPane.showMessageDialog(mainFrame, "Please select one or more Experiments or Trials.",
+				"Selection Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+*/		// allow Experiments or 1 view
+		if (!(selection instanceof Experiment) && !(selection instanceof RMIView)) {
+		// allow Experiments or 1 view
+		// if (!(selection instanceof Experiment) && !(selection instanceof RMIView)) {
+			JOptionPane.showMessageDialog(mainFrame, "Please select one or more Experiments or one View.",
 				"Selection Error", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
