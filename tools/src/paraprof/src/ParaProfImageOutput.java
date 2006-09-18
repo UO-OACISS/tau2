@@ -66,7 +66,7 @@ public class ParaProfImageOutput {
             //???
         }
         String extension = ImageFormatFileFilter.getExtension(file);
-        if (extension == null) {
+        if (extension == null || ((extension.toUpperCase().compareTo("JPG")!=0) && (extension.toUpperCase().compareTo("PNG")!=0)) ) {
             extension = paraProfImageFormatFileFilter.getExtension();
             path = path + "." + extension;
             file = new File(path);
@@ -108,12 +108,16 @@ public class ParaProfImageOutput {
         if (iter.hasNext()) {
             writer = (ImageWriter) iter.next();
         }
+        if (writer == null) {
+            JOptionPane.showMessageDialog((Component)ref, "Couldn't find Image Writer for extension '." + extension.toUpperCase() + "'");
+            return;
+        }
         ImageOutputStream imageOut = ImageIO.createImageOutputStream(file);
         writer.setOutput(imageOut);
         IIOImage iioImage = new IIOImage(bi, null, null);
 
         //Try setting quality.
-        if (extension.compareTo("jpg") == 0) {
+        if (extension.toUpperCase().compareTo("JPG") == 0) {
             ImageWriteParam iwp = writer.getDefaultWriteParam();
             iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
             iwp.setCompressionQuality(paraProfImageOptionsPanel.getImageQuality());
