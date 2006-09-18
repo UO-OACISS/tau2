@@ -47,8 +47,7 @@ public class VectorExport {
 
 
         String extension = ImageFormatFileFilter.getExtension(file);
-        if (extension == null) {
-
+        if (extension == null || ((extension.toUpperCase().compareTo("SVG")!=0) && (extension.toUpperCase().compareTo("EPS")!=0)) ) {
             javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
             if (fileFilter instanceof ImageFormatFileFilter) {
                 ImageFormatFileFilter paraProfImageFormatFileFilter = (ImageFormatFileFilter) fileFilter;
