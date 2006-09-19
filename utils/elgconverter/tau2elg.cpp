@@ -462,7 +462,11 @@ int main(int argc, char **argv)
 		endian = ELG_BIG_ENDIAN;
 	}
 	/* Define the file control block for output trace file */
+#ifdef ELG_UNCOMPRESSED
+	ElgOut* elgo = ElgOut_open(out_file, endian, ELG_UNCOMPRESSED);
+#else  /* ELG_UNCOMPRESSED */
 	ElgOut* elgo = ElgOut_open(out_file, endian);
+#endif /* ELG_UNCOMPRESSED */
 	/* check and verify that it was opened properly */
 	if (elgo == NULL)
 	{
