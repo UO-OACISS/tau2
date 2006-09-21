@@ -278,48 +278,7 @@ public class ParaProfUtils {
         return fileMenu;
     }
 
-    public static JMenu createThreadMenu(final ParaProfTrial ppTrial, final JFrame owner,
-            final edu.uoregon.tau.perfdmf.Thread thread) {
-
-        JMenu threadMenu = new JMenu("Thread");
-
-        JMenuItem menuItem;
-
-        menuItem = new JMenuItem("Function Graph");
-        threadMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Callpath Relations");
-        threadMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Call Graph");
-        threadMenu.add(menuItem);
-
-        menuItem = new JMenuItem("Function Statistics");
-        threadMenu.add(menuItem);
-
-        menuItem = new JMenuItem("User Event Statistics");
-        threadMenu.add(menuItem);
-
-        return threadMenu;
-
-    }
-
-    public static JMenu createFunctionMenu(final ParaProfTrial ppTrial, final JFrame owner,
-            final edu.uoregon.tau.perfdmf.Thread thread) {
-
-        JMenu menu = new JMenu("Function");
-
-        JMenuItem menuItem;
-
-        menuItem = new JMenuItem("Thread Graph");
-        menu.add(menuItem);
-
-        menuItem = new JMenuItem("Histogram");
-        menu.add(menuItem);
-
-        return menu;
-
-    }
+  
 
     private static JMenuItem createMenuItem(String text, ActionListener actionListener, boolean enabled) {
         JMenuItem menuItem = new JMenuItem(text);
@@ -508,6 +467,8 @@ public class ParaProfUtils {
                         (new CallGraphWindow(ppTrial, selectedThread, owner)).setVisible(true);
                     } else if (arg.equals("Call Path Relations")) {
                         (new CallPathTextWindow(ppTrial, selectedThread, owner)).setVisible(true);
+                    } else if (arg.equals("User Event Bar Chart")) {
+                        (new UserEventWindow(ppTrial, selectedThread, owner)).setVisible(true);
                     } else if (arg.equals("User Event Statistics")) {
                         (new StatWindow(ppTrial, selectedThread, true, null, owner)).setVisible(true);
                     }
@@ -522,6 +483,7 @@ public class ParaProfUtils {
         threadWindows.add(createMenuItem("Statistics Table", tActionListener, true));
         threadWindows.add(createMenuItem("Call Graph", tActionListener, ppTrial.callPathDataPresent()));
         threadWindows.add(createMenuItem("Call Path Relations", tActionListener, ppTrial.callPathDataPresent()));
+        threadWindows.add(createMenuItem("User Event Bar Chart", tActionListener, ppTrial.userEventsPresent()));
         threadWindows.add(createMenuItem("User Event Statistics", tActionListener, ppTrial.userEventsPresent()));
 
         windowsMenu.add(threadWindows);
