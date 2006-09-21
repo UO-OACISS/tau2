@@ -2068,7 +2068,8 @@ bool Profiler::createDirectories(){
       //system(mkdircommand);
       /* On IBM BGL, system command doesn't execute. So, we need to create
       these directories using our mkdir syscall instead. */
-      mkdir(newdirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      /* OLD: mkdir(newdirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); */
+      mkdir(newdirname, S_IRWXU | S_IRGRP | S_IXGRP);
      
     }
   }
@@ -3281,9 +3282,9 @@ double& Profiler::TheTauThrottlePerCall(void)
   return throttlePercall;
 }
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.137 $   $Date: 2006/07/08 01:09:07 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.137 2006/07/08 01:09:07 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.138 $   $Date: 2006/09/21 17:15:54 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.138 2006/09/21 17:15:54 sameer Exp $ 
  ***************************************************************************/
 
 	
