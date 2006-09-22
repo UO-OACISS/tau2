@@ -87,6 +87,40 @@ int EventTrigger( void *userData, double time,
   return 0;
 }
 
+int SendMessage ( void*  userData,
+                                double time,
+                                unsigned int sourceNodeToken, 
+                                unsigned int sourceThreadToken, 
+				unsigned int destinationNodeToken,
+				unsigned int destinationThreadToken,
+				unsigned int messageSize,
+				unsigned int messageTag,
+				unsigned int messageComm
+				)
+    {
+    printf("Message Send: time %g, nid %d, tid %d dest nid %d dest tid %d messageSize %d messageComm %d messageTag %lld \n", time, sourceNodeToken,
+    sourceThreadToken, destinationNodeToken,
+    destinationThreadToken, messageSize, messageComm, messageTag);
+    return 0;
+    }
+
+int RecvMessage ( void*  userData,
+                                double time,
+                                unsigned int sourceNodeToken, 
+                                unsigned int sourceThreadToken, 
+				unsigned int destinationNodeToken,
+				unsigned int destinationThreadToken,
+				unsigned int messageSize,
+				unsigned int messageTag,
+				unsigned int messageComm
+				)
+  {
+    printf("Message Recv: time %g, nid %d, tid %d dest nid %d dest tid %d messageSize %d messageComm %d messageTag %lld \n", time, sourceNodeToken,
+    sourceThreadToken, destinationNodeToken,
+    destinationThreadToken, messageSize, messageComm, messageTag);
+    return 0;
+    }
+
 /* Reader module */
 int main(int argc, char **argv)
 {
@@ -121,7 +155,8 @@ int main(int argc, char **argv)
   cb.LeaveState = LeaveState;
   cb.DefUserEvent = DefUserEvent;
   cb.EventTrigger = EventTrigger;
-
+  cb.SendMessage = SendMessage;
+  cb.RecvMessage = RecvMessage;
   pos = Ttf_RelSeek(fh,2);
   printf("Position returned %d\n", pos);
 
@@ -137,7 +172,7 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau_reader.c,v $   $Author: amorris $
- * $Revision: 1.4 $   $Date: 2005/10/11 19:18:37 $
- * TAU_VERSION_ID: $Id: tau_reader.c,v 1.4 2005/10/11 19:18:37 amorris Exp $ 
+ * $RCSfile: tau_reader.c,v $   $Author: scottb $
+ * $Revision: 1.5 $   $Date: 2006/09/22 18:15:20 $
+ * TAU_VERSION_ID: $Id: tau_reader.c,v 1.5 2006/09/22 18:15:20 scottb Exp $ 
  ***************************************************************************/
