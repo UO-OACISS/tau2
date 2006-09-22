@@ -747,6 +747,13 @@ static int IsDoubleParam(int id) {
   int h;
   EVDESCR *ev;
 
+  /* TAU uses doubles for internal representation but for some reason writes 64-bit unsigned integers to traces
+     I had added this IsDoubleParam and it is used below when I changed it to write doubles for the traces, but I
+     never commited the changes since I didn't want to break compatibility */
+  
+  /* comment this out if TAU stores user events as doubles */
+  return false;
+
   h = id % numEvent;
   ev = evtable[h];
 
