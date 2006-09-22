@@ -15,6 +15,7 @@
 
 #include "BPatch.h"
 #include "BPatch_Vector.h"
+#include "BPatch_function.h"
 #include "BPatch_thread.h"
 #include "BPatch_snippet.h" 
 
@@ -189,7 +190,9 @@ void checkCost(BPatch_snippet snippet){
 }//checkCost()
 
 int errorPrint = 0; // external "dyninst" tracing
-void errorFunc1(BPatchErrorLevel level, int num, const char **params){
+/* OLD void errorFunc1(BPatchErrorLevel level, int num, const char **params) */
+void errorFunc1(BPatchErrorLevel level, int num,  const char* const* params)
+{
     if (num == 0) {
       // conditional reporting of warnings and informational messages
       if (errorPrint) {
@@ -216,7 +219,9 @@ void errorFunc1(BPatchErrorLevel level, int num, const char **params){
 }//errorFunc1()
 
 // We've a null error function when we don't want to display an error
-void errorFuncNull(BPatchErrorLevel level, int num, const char **params){
+/* OLD void errorFuncNull(BPatchErrorLevel level, int num, const char **params) */
+void errorFuncNull(BPatchErrorLevel level, int num,  const char* const* params)
+{
   // It does nothing.
 }//errorFuncNull()
  
