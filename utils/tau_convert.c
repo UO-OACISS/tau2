@@ -752,7 +752,7 @@ static int IsDoubleParam(int id) {
      never commited the changes since I didn't want to break compatibility */
   
   /* comment this out if TAU stores user events as doubles */
-  return false;
+  return 0;
 
   h = id % numEvent;
   ev = evtable[h];
