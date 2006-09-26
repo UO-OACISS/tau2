@@ -107,13 +107,14 @@ void print_help()
             "                    before starting the timestamp corrections, they overwrite\n"
             "                    previous command line options.\n"
             "                    Options file kann be generated with -w or -W option\n"
-            "   -r               same as -R but uses default options file name 'timecorrect.opt'" 
+            "   -r               same as -R but uses default options file name 'timecorrect.opt'\n" 
             "   -v             : output trace statistics\n"
             "   -W   <filename>: write analyzed 'clock difference', 'minimal message delay',\n"
             "                    'individual minimal message delay', 'minimal local timestamp difference'\n"
             "                    to options file after all timestamp corrections.\n"
             "                    Use created options file with -r or -R option\n"
-            "   -w               same as -W but uses default options file name 'timecorrect.opt'" 
+            "   -w               same as -W but uses default options file name 'timecorrect.opt'\n" 
+	    "   -u             : ignore user defined events, reducing memory usage and file size\n"
             );
 
     fprintf(stderr,
@@ -363,6 +364,7 @@ static double sum16_LCa_C;
 static double max_sum16_LCa_C;
 static timestamp AM_cldiff_default;
 static double AM_maxerr;
+static UI1 ignoreUDE = 0; //Process user defined events
 
 
 /* support for single location */
@@ -607,7 +609,7 @@ event_entry* setEventEntry(procnum i)
 
     // store entry into the input queue 
 	if ((input_entry = (event_entry*) malloc(sizeof(event_entry))) == NULL)  {
-		printf("memory allocation error");
+		printf("memory allocation error, try -u to decrease memory usage\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -1097,7 +1099,13 @@ UI4 handle_def_record(Ttf_FileHandleT inputFile, Ttf_FileHandleT outputFile)
   cb.DefThread = DefThread;
   cb.DefStateGroup = DefStateGroup;
   cb.DefState = DefState;
-  cb.DefUserEvent = DefUserEvent;
+  if(ignoreUDE){
+     cb.DefUserEvent = 0;//DefUserEvent;
+   }
+  else
+  {
+     cb.DefUserEvent = DefUserEvent;
+  }
   cb.EventTrigger = 0; 
   cb.EndTrace = EndTrace;
   cb.EnterState = 0;
@@ -1109,7 +1117,7 @@ UI4 handle_def_record(Ttf_FileHandleT inputFile, Ttf_FileHandleT outputFile)
   do {
     recs_read = Ttf_ReadNumEvents(inputFile,cb, 1024);
     }
-  while ((recs_read >=0) && (!EndOfTrace));
+  while ((recs_read >0));//&& (!EndOfTrace)
   EndOfTrace=0;
 	if (multiThreaded)
 	{ /* create the thread ids */
@@ -1277,7 +1285,14 @@ void handle_event_record(Ttf_FileHandleT inputFile,Ttf_FileHandleT outputFile)
 	cb.DefStateGroup = 0;
 	cb.DefState = 0;
 	cb.DefUserEvent = 0;
-	cb.EventTrigger = EventTrigger; 
+	if(ignoreUDE)
+	{
+	     cb.EventTrigger = 0;//EventTrigger; 
+	}
+	else
+	{
+		cb.EventTrigger = EventTrigger;
+	}
 	cb.EndTrace = EndTrace;
     cb.EnterState = EnterState;
     cb.LeaveState = LeaveState;
@@ -1288,7 +1303,7 @@ void handle_event_record(Ttf_FileHandleT inputFile,Ttf_FileHandleT outputFile)
 	do {
 		recs_read = Ttf_ReadNumEvents(inputFile,cb, 1024);
 	}
-	while ((recs_read >=0) && (!EndOfTrace));
+	while ((recs_read >0));// && (!EndOfTrace)
 }
 
 /* Correct Time Exec
@@ -2501,6 +2516,9 @@ void parse_option(const char ch, const char* val)
         print_help();
         exit(0);
         break;
+    case 'u':
+	ignoreUDE=_TRUE_;
+	break;
     default:
         print_usage();
         printf("invalid option: '%c'", ch);
@@ -2551,7 +2569,7 @@ int parse_options(int argc, char* argv[])
     immd_entry *immd;
 
     /* read command line options */
-    while ((ch = getopt(argc, argv, "c:d:e:f:i:m:R:W:rwvh?")) != EOF)
+    while ((ch = getopt(argc, argv, "c:d:e:f:i:m:R:W:rwvuh?")) != EOF)
         parse_option(ch, optarg);
     
     /* read option file if any */
@@ -2602,10 +2620,10 @@ int main(int argc, char **argv)
         return 1;
     }
 
-	trace_file = argv[1];
-	edf_file = argv[2];
-	trace_file2 = argv[3];
-	edf_file2 = argv[4];
+	trace_file = argv[argc-4];
+	edf_file = argv[argc-3];
+	trace_file2 = argv[argc-2];
+	edf_file2 = argv[argc-1];
 	
 
     /* check if input and output file names differs */
