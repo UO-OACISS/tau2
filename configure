@@ -3815,8 +3815,15 @@ EOF
       else
         $cxx_compiler -c -cxxlib-icc f1.cpp 1>/dev/null 2>&1
         $cxx_compiler -c f1.cpp
-        taugcclibdir=`g++ -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
-        taugcclib=`g++ -print-libgcc-file-name `
+        tau_opt_bits=
+        if [ `uname -m` = x86_64 -a $machine = i386_linux ]; then
+          # if someone is using the 32-bit intel compilers on an x86_64
+          # then we need to use -m32 with g++ to get the 32-bit libstdc++
+          tau_opt_bits=-m32
+          fixmakeargs="$fixmakeargs INTEL32_ON_64" 
+        fi
+        taugcclibdir=`g++ $tau_opt_bits -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
+        taugcclib=`g++ $tau_opt_bits -print-libgcc-file-name `
         taugcclib2dir=`which g++ | sed s/g++/../`         
         if ifort f1.o f2.o -o foo -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1
         then
