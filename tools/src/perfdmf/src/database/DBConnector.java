@@ -1,14 +1,9 @@
 package edu.uoregon.tau.perfdmf.database;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.PreparedStatement;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.sql.*;
 import java.util.Properties;
-
-import java.sql.DatabaseMetaData;
 
 /*******************************************************
  * Implements access to a database
@@ -30,6 +25,44 @@ public class DBConnector implements DB {
     private String dbPassword;
 
     private String driverName;
+    private String JDBCjarFileName;
+
+    /*
+     * This class is here because the DriverManager refuses to use a driver that is not loaded
+     * by the system ClassLoader.  So we wrap it with this.
+     * From: http://www.kfu.com/~nsayer/Java/dyn-jdbc.html
+     */
+    class DriverShim implements Driver {
+        private Driver driver;
+
+        DriverShim(Driver d) {
+            this.driver = d;
+        }
+
+        public boolean acceptsURL(String u) throws SQLException {
+            return this.driver.acceptsURL(u);
+        }
+
+        public Connection connect(String u, Properties p) throws SQLException {
+            return this.driver.connect(u, p);
+        }
+
+        public int getMajorVersion() {
+            return this.driver.getMajorVersion();
+        }
+
+        public int getMinorVersion() {
+            return this.driver.getMinorVersion();
+        }
+
+        public DriverPropertyInfo[] getPropertyInfo(String u, Properties p) throws SQLException {
+            return this.driver.getPropertyInfo(u, p);
+        }
+
+        public boolean jdbcCompliant() {
+            return this.driver.jdbcCompliant();
+        }
+    }
 
     // it should be "org.postgresql.Driver" in PostgreSQL.
 
@@ -52,13 +85,15 @@ public class DBConnector implements DB {
         parseConfig = parser;
         setJDBC(parser);
         register();
-		if (createDatabase)
-        	connectAndCreate(user, password);
+        if (createDatabase) {
+            connectAndCreate(user, password);
+        }
     }
 
     public void setJDBC(ParseConfig parser) {
         driverName = parser.getJDBCDriver();
         dbaddress = parser.getConnectionString();
+        JDBCjarFileName = parser.getJDBCJarFile();
     }
 
     public void close() {
@@ -82,7 +117,7 @@ public class DBConnector implements DB {
     public void commit() throws SQLException {
         conn.commit();
     }
-    
+
     public void rollback() throws SQLException {
         conn.rollback();
     }
@@ -108,10 +143,10 @@ public class DBConnector implements DB {
         StringBuffer cs = new StringBuffer();
         try {
             cs.append(getConnectString());
-			cs.append(";create=true");
+            cs.append(";create=true");
             conn = DriverManager.getConnection(cs.toString(), user, password);
-			conn.close();
-			System.out.println("Database created, command: " + cs.toString());
+            conn.close();
+            System.out.println("Database created, command: " + cs.toString());
         } catch (SQLException ex) {
             System.err.println("Cannot create database.");
             System.err.println("Connection String: " + cs);
@@ -131,8 +166,8 @@ public class DBConnector implements DB {
             }
             statement = conn.createStatement();
         }
-//        conn.setAutoCommit(false);
-//        statement.setFetchSize(100);
+        //        conn.setAutoCommit(false);
+        //        statement.setFetchSize(100);
         //	System.out.println ("executing query: " + query.trim());
         return statement.executeQuery(query.trim());
     }
@@ -182,17 +217,17 @@ public class DBConnector implements DB {
 
     public String getDataItem(String query) throws SQLException {
         //returns the value of the first column of the first row
-       
-            ResultSet resultSet = executeQuery(query);
-            if (resultSet.next() == false) {
-                resultSet.close();
-                return null;
-            } else {
-                String result = resultSet.getString(1);
-                resultSet.close();
-                return result;
-            }
-      
+
+        ResultSet resultSet = executeQuery(query);
+        if (resultSet.next() == false) {
+            resultSet.close();
+            return null;
+        } else {
+            String result = resultSet.getString(1);
+            resultSet.close();
+            return result;
+        }
+
     }
 
     /*** Check if the connection to database is closed. ***/
@@ -213,8 +248,17 @@ public class DBConnector implements DB {
     //registers the driver
     public void register() {
         try {
-            // Class.forName(driverName);
-            Class.forName(driverName).newInstance();
+            // We now load the jar file dynamically based on the filename
+            // in the perfdmf configuration
+            URL[] urls = new URL[1];
+            urls[0] = new URL("file://" + JDBCjarFileName);
+            URLClassLoader cl = new URLClassLoader(urls);
+            Class drvCls = Class.forName(driverName, true, cl);
+            Driver driver = (Driver) drvCls.newInstance();
+            DriverManager.registerDriver(new DriverShim(driver));
+            
+            // old method
+            // Class.forName(driverName).newInstance();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -235,15 +279,13 @@ public class DBConnector implements DB {
     public String getSchemaPrefix() {
         if (this.getDBType().compareTo("oracle") == 0) {
 
-            if (this.parseConfig.getDBSchemaPrefix() != null
-                    && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
+            if (this.parseConfig.getDBSchemaPrefix() != null && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
                 return new String(this.parseConfig.getDBSchemaPrefix() + ".");
             else
                 return "";
         } else if (this.getDBType().compareTo("db2") == 0) {
 
-            if (this.parseConfig.getDBSchemaPrefix() != null
-                    && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
+            if (this.parseConfig.getDBSchemaPrefix() != null && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
                 return new String(this.parseConfig.getDBSchemaPrefix() + ".");
             else
                 return "";
@@ -297,19 +339,16 @@ public class DBConnector implements DB {
     //     }
 
     public static boolean isReadAbleType(int type) {
-        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB
-                || type == java.sql.Types.INTEGER || type == java.sql.Types.DECIMAL
-                || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
-                || type == java.sql.Types.LONGVARCHAR || type == java.sql.Types.TIME
-                || type == java.sql.Types.TIMESTAMP)
+        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB || type == java.sql.Types.INTEGER
+                || type == java.sql.Types.DECIMAL || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
+                || type == java.sql.Types.LONGVARCHAR || type == java.sql.Types.TIME || type == java.sql.Types.TIMESTAMP)
             return true;
         return false;
     }
 
     public static boolean isWritableType(int type) {
-        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB
-                || type == java.sql.Types.INTEGER || type == java.sql.Types.DECIMAL
-                || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
+        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB || type == java.sql.Types.INTEGER
+                || type == java.sql.Types.DECIMAL || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
                 || type == java.sql.Types.LONGVARCHAR)
             return true;
         return false;
@@ -338,14 +377,12 @@ public class DBConnector implements DB {
     // 	return false;
     //     }
 
-    public int checkTable(DatabaseMetaData dbMeta, String tableName, String columns[])
-            throws SQLException {
+    public int checkTable(DatabaseMetaData dbMeta, String tableName, String columns[]) throws SQLException {
         boolean checks[] = new boolean[columns.length];
 
         ResultSet resultSet = null;
-        if ((this.getDBType().compareTo("oracle") == 0) ||
-        	(this.getDBType().compareTo("derby") == 0) ||
-        	(this.getDBType().compareTo("db2") == 0)) {
+        if ((this.getDBType().compareTo("oracle") == 0) || (this.getDBType().compareTo("derby") == 0)
+                || (this.getDBType().compareTo("db2") == 0)) {
             resultSet = dbMeta.getColumns(null, null, tableName.toUpperCase(), "%");
         } else {
             resultSet = dbMeta.getColumns(null, null, tableName, "%");
@@ -372,8 +409,7 @@ public class DBConnector implements DB {
 
         for (int i = 0; i < columns.length; i++) {
             if (!checks[i]) {
-                System.out.println("Couldn't find column \"" + columns[i] + "\" in table \""
-                        + tableName + "\"");
+                System.out.println("Couldn't find column \"" + columns[i] + "\" in table \"" + tableName + "\"");
                 return -1;
             }
         }
@@ -410,9 +446,8 @@ public class DBConnector implements DB {
         if (checkTable(dbMeta, "atomic_event", aeColumns) != 0)
             return -1;
 
-        String ilpColumns[] = { "interval_event", "node", "context", "thread", "metric",
-                "inclusive_percentage", "inclusive", "exclusive_percentage", "exclusive", "call",
-                "subroutines", "inclusive_per_call" };
+        String ilpColumns[] = { "interval_event", "node", "context", "thread", "metric", "inclusive_percentage", "inclusive",
+                "exclusive_percentage", "exclusive", "call", "subroutines", "inclusive_per_call" };
 
         if (this.getDBType().compareTo("oracle") == 0) {
             ilpColumns[8] = "excl";
@@ -425,18 +460,17 @@ public class DBConnector implements DB {
         if (checkTable(dbMeta, "interval_location_profile", ilpColumns) != 0)
             return -1;
 
-        String alpColumns[] = { "atomic_event", "node", "context", "thread", "sample_count",
-                "maximum_value", "minimum_value", "mean_value", "standard_deviation" };
+        String alpColumns[] = { "atomic_event", "node", "context", "thread", "sample_count", "maximum_value", "minimum_value",
+                "mean_value", "standard_deviation" };
         if (checkTable(dbMeta, "atomic_location_profile", alpColumns) != 0)
             return -1;
 
-        String itsColumns[] = { "interval_event", "metric", "inclusive_percentage", "inclusive",
-                "exclusive_percentage", "exclusive", "call", "subroutines", "inclusive_per_call" };
+        String itsColumns[] = { "interval_event", "metric", "inclusive_percentage", "inclusive", "exclusive_percentage",
+                "exclusive", "call", "subroutines", "inclusive_per_call" };
 
         if (this.getDBType().compareTo("oracle") == 0) {
             itsColumns[5] = "excl";
-        }
-        else if (this.getDBType().compareTo("derby") == 0) {
+        } else if (this.getDBType().compareTo("derby") == 0) {
             itsColumns[6] = "num_calls";
         }
 
