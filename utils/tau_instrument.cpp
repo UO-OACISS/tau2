@@ -124,6 +124,12 @@ ostream& tauInstrument::print(ostream& ostr) const
 	 case TAU_LOOPS:
 		 ostr<<"loops: ";
 		 break;
+	 case TAU_IO:
+		 ostr<<"io: ";
+		 break;
+	 case TAU_MEMORY:
+		 ostr<<"memory: ";
+		 break;
 	 case TAU_LINE:
 		 ostr<<"line:";
 		 break;
@@ -254,6 +260,9 @@ void parseInstrumentationCommand(char *line, int lineno)
   char pfile[INBUF_SIZE]; /* parsed filename */
   char plineno[INBUF_SIZE]; /* parsed lineno */
   char pcode[INBUF_SIZE]; /* parsed code */
+  int m1, m2, m3; 
+  instrumentKind_t kind = TAU_NOT_SPECIFIED;
+  m1 = m2 = m3 = 1; /* does not match by default -- for matching loops/io/mem */
 
 #ifdef DEBUG
   printf("Inside parseInstrumentationCommand: line %s lineno: %d\n",
@@ -318,6 +327,9 @@ void parseInstrumentationCommand(char *line, int lineno)
     if (strncmp(line, "entry", 5) == 0)
     {
       line+=5; 
+#ifdef DEBUG
+      printf("Found ENTRY!\n");
+#endif /* DEBUG */
       WSPACE(line);
       if (strncmp(line, "file", 4) == 0)
       {
@@ -431,9 +443,27 @@ void parseInstrumentationCommand(char *line, int lineno)
       } /* end of exit */
       else 
       { /* loops */
-        if (strncmp(line, "loops", 5) == 0)
-	{
-	  line+= 5; /* move 5 spaces */
+	m1 = strncmp(line, "loops", 5);
+	m2 = strncmp(line, "io", 2);
+	m3 = strncmp(line, "memory", 6);
+        if ((m1 == 0) || (m2 == 0) || (m3 == 0)) {
+	  if (m1 == 0) { 
+	    kind = TAU_LOOPS; 
+	    line += 5; /* move the pointer 5 spaces (loops) for next token */
+	  }
+	  else {  
+            if (m2 == 0) {
+	      kind = TAU_IO;
+	      line += 2;/* move the pointer 2 spaces (io) for next token */
+	    }
+	    else {
+	      if (m3 == 0) {
+	        kind = TAU_MEMORY;
+	        line += 6;/* move the pointer 6 spaces (memory) for next token */
+	      }
+	   }
+	 }
+
 	  /* check for WSPACE */
 	  WSPACE(line);
           if (strncmp(line, "file", 4) == 0)
@@ -464,11 +494,11 @@ void parseInstrumentationCommand(char *line, int lineno)
 #endif /* DEBUG */
 	    if (filespecified)
 	    {
-	      instrumentList.push_back(new tauInstrument(string(pfile), string(pname), TAU_LOOPS));
+	      instrumentList.push_back(new tauInstrument(string(pfile), string(pname), kind));
 	    }
 	    else
 	    {
-	      instrumentList.push_back(new tauInstrument(string(pname), TAU_LOOPS));
+	      instrumentList.push_back(new tauInstrument(string(pname), kind));
 	    }
 	  }
 	  else parseError("<routine> token not found", line, lineno, line - original);
@@ -855,6 +885,10 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
   PDB::croutinevec::const_iterator rit;
   PDB::croutinevec croutines = p.getCRoutineVec();
   bool cmpResult1, cmpResult2, cmpFileResult; 
+
+#ifdef DEBUG
+  printf("Inside processCRoutinesInstrumentation!\n");
+#endif /* DEBUG */
   pdbRoutine::locvec::iterator rlit;
   for(rit = croutines.begin(); rit != croutines.end(); ++rit)
   { /* iterate over all routines */
@@ -924,6 +958,14 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       { /* we need to instrument all outer loops in this routine */
 	processBlock((*rit)->body(), (*rit), itemvec, 1, NULL);
 	/* level = 1 */
+      }
+      if ((*it)->getKind() == TAU_IO)
+      { /* we need to instrument all io statements in this routine */
+	printf("process I/O statements in C routine\n");
+      }
+      if ((*it)->getKind() == TAU_MEMORY)
+      { /* we need to instrument all memory statements in this routine */
+	printf("process memory allocate/de-allocate statements in C routine\n");
       }
     }
   }
@@ -1013,6 +1055,14 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       if ((*it)->getKind() == TAU_LOOPS)
       { /* we need to instrument all outer loops in this routine */
 	processBlock((*rit)->body(), (*rit), itemvec, 1, NULL); /* level = 1 */
+      }
+      if ((*it)->getKind() == TAU_IO)
+      { /* we need to instrument all io statements in this routine */
+	printf("process I/O statements in Fortran routine\n");
+      }
+      if ((*it)->getKind() == TAU_MEMORY)
+      { /* we need to instrument all memory statements in this routine */
+	printf("process memory allocate/de-allocate statements in Fortran routine\n");
       }
     } /* end of match */
   } /* iterate over all routines */
@@ -1131,6 +1181,6 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.30 $   $Date: 2006/08/11 21:07:39 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.30 2006/08/11 21:07:39 sameer Exp $
+ * $Revision: 1.31 $   $Date: 2006/10/02 10:57:40 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.31 2006/10/02 10:57:40 sameer Exp $
  ***************************************************************************/
