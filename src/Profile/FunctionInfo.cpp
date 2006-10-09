@@ -69,6 +69,21 @@ using namespace std;
 #endif // TRACING_ON 
 
 
+//////////////////////////////////////////////////////////////////////
+// The purpose of this subclass of vector is to give us a chance to execute
+// some code when TheFunctionDB is destroyed.  For Dyninst, this is necessary
+// when running with fortran programs
+//////////////////////////////////////////////////////////////////////
+class FIvector : public vector<FunctionInfo*> {
+public: 
+  ~FIvector() {
+    //printf ("FIvector destructor!\n");
+    if (TheSafeToDumpData()) {
+      TAU_PROFILE_EXIT("FunctionDB destructor");
+      TheSafeToDumpData() = 0;
+    }
+  }
+};
 
 //////////////////////////////////////////////////////////////////////
 // Instead of using a global var., use static inside a function  to
@@ -77,7 +92,10 @@ using namespace std;
 //////////////////////////////////////////////////////////////////////
 vector<FunctionInfo*>& TheFunctionDB(void)
 { // FunctionDB contains pointers to each FunctionInfo static object
-  static vector<FunctionInfo*> FunctionDB;
+
+  // we now use the above FIvector, which subclasses vector
+  //static vector<FunctionInfo*> FunctionDB;
+  static FIvector FunctionDB;
 
   return FunctionDB;
 }
@@ -91,6 +109,15 @@ int& TheSafeToDumpData()
   static int SafeToDumpData=1;
 
   return SafeToDumpData;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Set when uning Dyninst
+//////////////////////////////////////////////////////////////////////
+int& TheUsingDyninst()
+{ 
+  static int UsingDyninst=0;
+  return UsingDyninst;
 }
 
 #ifdef TAU_EPILOG 
@@ -431,7 +458,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
   }
 }
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.43 $   $Date: 2006/05/27 00:26:58 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.43 2006/05/27 00:26:58 sameer Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
+ * $Revision: 1.44 $   $Date: 2006/10/09 18:53:50 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.44 2006/10/09 18:53:50 amorris Exp $ 
  ***************************************************************************/

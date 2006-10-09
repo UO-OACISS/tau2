@@ -76,6 +76,9 @@ vector<FunctionInfo*>& TheTauDynFI(void)
 extern "C" {
 void TauInitCode(char *arg, int isMPI)
 {
+  // Register that we are using dyninst so that the FIvector destructor will
+  // perform cleanup for us
+  TheUsingDyninst() = 1;
   char *name;
   int tid = 0;
   TAU_MONITOR_ENTER(0);
@@ -253,6 +256,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: amorris $
- * $Revision: 1.22 $   $Date: 2005/11/11 03:46:50 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.22 2005/11/11 03:46:50 amorris Exp $ 
+ * $Revision: 1.23 $   $Date: 2006/10/09 18:53:50 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.23 2006/10/09 18:53:50 amorris Exp $ 
  ***************************************************************************/
