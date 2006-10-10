@@ -3506,7 +3506,12 @@ if [ $papi = yes ]
       then
         fixmakeargs="$fixmakeargs papisubdir=lib/cnos64"
       else
-        fixmakeargs="$fixmakeargs papisubdir=src"
+		if [ -f $papidir/lib64/libpapi.so ]
+		then 
+          fixmakeargs="$fixmakeargs papisubdir=lib64"
+	    else
+          fixmakeargs="$fixmakeargs papisubdir=src"
+		fi
       fi
     fi
 fi
