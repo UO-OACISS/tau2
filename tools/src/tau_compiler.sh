@@ -525,22 +525,6 @@ for arg in "$@"
 			;;
 
 
-		*.o)
-			objectOutputFile="$arg"
-			hasAnObjectOutputFile=$TRUE
-			listOfObjectFiles="$listOfObjectFiles $arg"
-			#List of object Files is simply passed
-			#at the linking stage. It is not
-			#processed anywhere.
-			temp=$counterForOutput+1
-
-			if [ $temp == $tempCounter ]; then
-				#Assumption: Executable/outputFile would appear immediately after -o option
-				passedOutputFile="$arg"
-				echoIfDebug "\tOutput file is $passedOutputFile"
-			fi
-			;;
-
 		-o)
 			hasAnOutputFile=$TRUE
 			counterForOutput=$tempCounter
@@ -564,6 +548,25 @@ for arg in "$@"
 				argsRemaining="$argsRemaining ""$arg"
  			fi
 			;;
+
+
+		*.o)
+			objectOutputFile="$arg"
+			hasAnObjectOutputFile=$TRUE
+			listOfObjectFiles="$listOfObjectFiles $arg"
+			#List of object Files is simply passed
+			#at the linking stage. It is not
+			#processed anywhere.
+			temp=$counterForOutput+1
+
+			if [ $temp == $tempCounter ]; then
+				#Assumption: Executable/outputFile would appear immediately after -o option
+				passedOutputFile="$arg"
+				echoIfDebug "\tOutput file is $passedOutputFile"
+			fi
+			;;
+
+
 
 		$CMD)
 			;;
