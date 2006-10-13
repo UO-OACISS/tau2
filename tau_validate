@@ -459,6 +459,11 @@ def usage():
     print "to determine if a given test applies to a given makefile, but it's not"
     print "perfect."
     print ""
+    print "Example:"
+    print ""
+    print "bash : ./tau_validate --html x86_64 &> results.html"
+    print "tcsh : ./tau_validate --html x86_64 >& results.html"
+    print ""
     
     
     sys.exit(-1)
