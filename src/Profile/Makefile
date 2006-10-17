@@ -366,7 +366,7 @@ TauKojakOpari.o : TauKojakOpari.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauLinuxTimers.o : TauLinuxTimers.c $(HDRS)
-	gcc -c $(@:.o=.c)
+	gcc -c $(USER_OPT) $(@:.o=.c)
 
 TauCallPath.o 	: TauCallPath.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
