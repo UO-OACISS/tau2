@@ -1544,6 +1544,17 @@ int CPDB_GetSubstringCol(const char *haystack, const char *needle)
       check_before = true; /* its ok, proceed */
     }
     /* what about after return? */
+
+    if ((col_found) && (isalnum(local_haystack[col_found+needle_length]) ||
+	ispunct(local_haystack[col_found+needle_length]))) {
+      /* hey, there is text after the return -- end subroutine return_foo */
+      local_haystack[col_found + needle_length - 1 ] = '^'; 
+      /* set it to /* retur^_foo */
+#ifdef DEBUG
+      printf("local_haystack = %s\n", local_haystack);
+#endif /* DEBUG */
+      continue; /* searching */
+    }
     /* is it safe to examine after the column? */
     int hay_length = strlen(local_haystack);  /* we modified local_haystack, tolower,
 	so we need to measure this length again : rctoreturn */
@@ -1870,6 +1881,16 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		WRITE_TAB(ostr,(*it)->col);
 		if (use_perflib) 
 		{
+		  if (pure) {
+		    ostr <<"interface\n";
+		    ostr <<"\t pure subroutine f_perf_update(name, flag)\n";
+		    ostr <<"\t character(*), intent(in) :: name\n";
+		    ostr <<"\t logical, intent(in) :: flag\n";
+		    ostr <<"\t end subroutine f_perf_update\n";
+		    ostr <<"\t end interface\n";
+		    WRITE_TAB(ostr,(*it)->col);
+		  }
+
                   ostr <<"call f_perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
 		  /* write the original statement */
      		  for (k = 0; k < write_upto ; k++) 
@@ -2050,7 +2071,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		else
 		{ /* it is RETURN */
 		  if (pure) {
-		    ostr <<"call TAU_PURE_STOP('" << (*it)->item->fullName()<< "')"<<endl;
+		    if (use_perflib)
+		      ostr <<"call f_perf_update('" << (*it)->item->fullName()<< "', .false.)"<<endl;
+		    else
+		      ostr <<"call TAU_PURE_STOP('" << (*it)->item->fullName()<< "')"<<endl;
 		  } else {
 		    /* we need to check if the current_timer (outer-loop level instrumentation) is set */
 		    for (list<string>::iterator siter = current_timer.begin(); 
@@ -2576,9 +2600,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.111 $   $Date: 2006/09/07 00:16:39 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.111 2006/09/07 00:16:39 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.112 $   $Date: 2006/10/17 22:47:50 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.112 2006/10/17 22:47:50 sameer Exp $
  ***************************************************************************/
 
 
