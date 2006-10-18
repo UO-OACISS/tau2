@@ -3620,6 +3620,7 @@ EOF
     echo "See http://www.cs.uoregon.edu/research/pdt"
     fixmakeargs="$fixmakeargs PDTNOFSTMTS"
   fi
+  /bin/rm -f checkpdt.o checkpdt.cpp
 fi
 
 
