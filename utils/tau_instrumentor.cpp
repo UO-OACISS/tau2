@@ -1888,7 +1888,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		    ostr <<"\t logical, intent(in) :: flag\n";
 		    ostr <<"\t end subroutine f_perf_update\n";
 		    ostr <<"\t end interface\n";
-		    WRITE_TAB(ostr,(*it)->col);
+		    ostr <<"\t";
 		  }
 
                   ostr <<"call f_perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
@@ -2601,8 +2601,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.112 $   $Date: 2006/10/17 22:47:50 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.112 2006/10/17 22:47:50 sameer Exp $
+ * $Revision: 1.113 $   $Date: 2006/10/18 00:06:45 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.113 2006/10/18 00:06:45 sameer Exp $
  ***************************************************************************/
 
 
