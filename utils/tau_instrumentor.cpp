@@ -1881,6 +1881,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		WRITE_TAB(ostr,(*it)->col);
 		if (use_perflib) 
 		{
+		     
 		  if (pure) {
 		    ostr <<"interface\n";
 		    ostr <<"\t pure subroutine f_perf_update(name, flag)\n";
@@ -1889,6 +1890,15 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		    ostr <<"\t end subroutine f_perf_update\n";
 		    ostr <<"\t end interface\n";
 		    ostr <<"\t";
+		  }
+
+		  /* should we call MPI_Init? Only if it is the main program */
+		  if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG)
+	          {
+		    ostr <<"INTEGER tau_mpi_init_err"<<endl;
+		    ostr <<"      call MPI_Init(tau_mpi_init_err)"<<endl;
+		    ostr <<"      call f_perf_init('"<<(*it)->item->fullName()<<"', 0, 0, 'UNKNOWN')"<<endl;
+		    ostr <<"      ";
 		  }
 
                   ostr <<"call f_perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
@@ -2601,8 +2611,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.113 $   $Date: 2006/10/18 00:06:45 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.113 2006/10/18 00:06:45 sameer Exp $
+ * $Revision: 1.114 $   $Date: 2006/10/19 02:09:48 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.114 2006/10/19 02:09:48 sameer Exp $
  ***************************************************************************/
 
 
