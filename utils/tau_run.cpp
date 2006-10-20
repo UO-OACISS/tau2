@@ -422,7 +422,7 @@ int main(int argc, char **argv){
 #ifdef __SP1__
   if (loadlib==true) {
 #else /* SP1 */
-  if ((loadlib == true) && (binaryRewrite == 0)) {
+  if (loadlib == true) {
 #endif /* SP1 */
     //try and load the library
     if (appThread->loadLibrary(libname, true) == true){  
