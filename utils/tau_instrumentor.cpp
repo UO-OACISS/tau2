@@ -29,6 +29,12 @@ using namespace std;
 #endif /* TAU_WINDOWS */
 
 
+#ifdef TAU_INSTRUMENT_PURE
+bool instrumentPure = true;
+#else
+bool instrumentPure = false;
+#endif
+
 /* For selective instrumentation */
 extern int processInstrumentationRequests(char *fname);
 extern bool instrumentEntity(const string& function_name);
@@ -1882,7 +1888,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		if (use_perflib) 
 		{
 		     
-		  if (pure) {
+		  if (pure && instrumentPure) {
 		    ostr <<"interface\n";
 		    ostr <<"\t pure subroutine f_perf_update(name, flag)\n";
 		    ostr <<"\t character(*), intent(in) :: name\n";
@@ -1913,14 +1919,16 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
 		
 		if (pure) {
-		  ostr <<"interface\n";
-		  ostr <<"pure subroutine TAU_PURE_START(name)\n";
-		  ostr <<"character(*), intent(in) :: name\n";
-		  ostr <<"end subroutine TAU_PURE_START\n";
-		  ostr <<"pure subroutine TAU_PURE_STOP(name)\n";
-		  ostr <<"character(*), intent(in) :: name\n";
-		  ostr <<"end subroutine TAU_PURE_STOP\n";
-		  ostr <<"end interface\n";
+		  if (instrumentPure) {
+		    ostr <<"interface\n";
+		    ostr <<"pure subroutine TAU_PURE_START(name)\n";
+		    ostr <<"character(*), intent(in) :: name\n";
+		    ostr <<"end subroutine TAU_PURE_START\n";
+		    ostr <<"pure subroutine TAU_PURE_STOP(name)\n";
+		    ostr <<"character(*), intent(in) :: name\n";
+		    ostr <<"end subroutine TAU_PURE_STOP\n";
+		    ostr <<"end interface\n";
+		  }
 		} else {
 		  
 #ifdef TAU_ALIGN_FORTRAN_INSTRUMENTATION
@@ -1982,7 +1990,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
 		WRITE_TAB(ostr,(*it)->col);
 		if (pure) {
-		  ostr << "call TAU_PURE_START('" << (*it)->item->fullName()<< "')"<<endl;
+		  if (instrumentPure) {
+		    ostr << "call TAU_PURE_START('" << (*it)->item->fullName()<< "')"<<endl;
+		  }
 		} else {
 		  ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
 		}
@@ -2081,10 +2091,12 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		else
 		{ /* it is RETURN */
 		  if (pure) {
-		    if (use_perflib)
-		      ostr <<"call f_perf_update('" << (*it)->item->fullName()<< "', .false.)"<<endl;
-		    else
-		      ostr <<"call TAU_PURE_STOP('" << (*it)->item->fullName()<< "')"<<endl;
+		    if (instrumentPure) {
+		      if (use_perflib)
+			ostr <<"call f_perf_update('" << (*it)->item->fullName()<< "', .false.)"<<endl;
+		      else
+			ostr <<"call TAU_PURE_STOP('" << (*it)->item->fullName()<< "')"<<endl;
+		    }
 		  } else {
 		    /* we need to check if the current_timer (outer-loop level instrumentation) is set */
 		    for (list<string>::iterator siter = current_timer.begin(); 
@@ -2610,9 +2622,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.114 $   $Date: 2006/10/19 02:09:48 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.114 2006/10/19 02:09:48 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.115 $   $Date: 2006/10/26 18:51:59 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.115 2006/10/26 18:51:59 amorris Exp $
  ***************************************************************************/
 
 
