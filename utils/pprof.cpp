@@ -126,6 +126,7 @@ static double max_total;
 static int nodeprint = TRUE;
 static int dump = FALSE;      /* -- command line option - are we creating a dumpfile for RACY? -- */
 static int dumpminmax = FALSE;
+static bool optShowLocation = false;
 static int list = FALSE;      /* -- command line option - are we just listing the function names? -- */
 static int mseconly = FALSE;  /* -- command line option - suppress hr:mm:ss.mmm conversion -- nsc -- */
 static char lbuf[256];        /* -- temporary line buffer for reads -- */
@@ -266,6 +267,17 @@ int ExtractName(char* func, char *line, int maxquotes)
 #ifdef DEBUG
     printf("INHERE: line[j+1] = %s\n", &line[j+1]);
 #endif /* DEBUG */
+
+
+    if (!optShowLocation && strstr(func, "Loop:") == NULL) {
+      // strip out location information (e.g. "[{simple.f90} {19,15}]")
+      // unless it's a loop, where we always show it
+  
+      if (strstr(func,"[{") != NULL && strstr(func,"}]") != NULL) {
+	*(strstr(func,"[{")) = 0;
+      }
+    }
+
 
     return j;
   
@@ -2397,6 +2409,9 @@ int main (int argc, char *argv[]){
       switch(argchar[0]){
 	case '-':{
 	    switch(argchar[1]){
+	      case 'a': 
+		optShowLocation = true;
+		break;
 	      case 'c': /* -- sort according to number of *C*alls -- */
 		compar = CallCmp;
 		break;
@@ -2506,8 +2521,11 @@ int main (int argc, char *argv[]){
   /* -- parse command line arguments ---------------------------------------- */
   int ch;       //to hold option character from command line
   errflag = FALSE;
-  while ( (ch = getopt (argc, argv, "cbdf:lmeivn:prstx")) != EOF ) {
+  while ( (ch = getopt (argc, argv, "acbdf:lmeivn:prstx")) != EOF ) {
     switch ( ch ) {
+    case 'a': 
+      optShowLocation = true;
+      break;
     case 'c': /* -- sort according to number of *C*alls -- */
       compar = CallCmp;
       break;
@@ -2562,6 +2580,7 @@ int main (int argc, char *argv[]){
   //if there was an error, print out the usage and exit
   if ( errflag ) {
     fprintf (stderr, "usage: %s [-c|-b|-m|-t|-e|-i|-v] [-r] [-s] [-n num] [-f filename] [-p] [-l] [-d] [node numbers]\n", argv[0]);
+    fprintf(stderr," -a : Show all location information available\n");
     fprintf(stderr," -c : Sort according to number of Calls \n");
     fprintf(stderr," -b : Sort according to number of suBroutines called by a function \n");
     fprintf(stderr," -m : Sort according to Milliseconds (exclusive time total)\n");
@@ -2717,7 +2736,7 @@ int main (int argc, char *argv[]){
   exit (0);
 }//main()
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.47 $   $Date: 2006/06/30 20:11:12 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.47 2006/06/30 20:11:12 sameer Exp $                                
+ * $RCSfile: pprof.cpp,v $   $Author: amorris $
+ * $Revision: 1.48 $   $Date: 2006/10/27 23:26:57 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.48 2006/10/27 23:26:57 amorris Exp $                                
  ***************************************************************************/
