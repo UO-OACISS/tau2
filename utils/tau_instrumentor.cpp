@@ -139,6 +139,38 @@ static bool itemEqual(const itemRef* r1, const itemRef* r2) {
            (r1->col  == r2->col) && (r1->kind == r2->kind)); 
 }
  
+
+
+string getInstrumentedName(const pdbItem *item, bool fat) {
+  // create the instrumented routine name
+  std::ostringstream oss;
+  pdbRoutine *pdbr = (pdbRoutine*)item;
+  pdbLoc loc = item->location();
+  const char *fullfile = item->location().file()->name().c_str();
+
+  while (strstr(fullfile,"/")) { // remove path
+    fullfile = strstr(fullfile,"/")+1;
+  }
+
+  if (fat) {
+    // we only have fat item data for C/C++ right now
+    pdbFatItem *fatItem = (pdbFatItem*)item;
+    oss << item->fullName() << " [{" << fullfile 
+	<< "} {" 
+	<< fatItem->headBegin().line() << "," << fatItem->headBegin().col() 
+	<< "}-{" 
+	<< fatItem->bodyEnd().line() << "," << fatItem->bodyEnd().col() 
+	<< "}]";
+  } else {
+    oss << item->fullName() << " [{" << fullfile << "} {" << loc.line() << "," << loc.col() << "}]";
+  }
+
+  string instrumentedName(oss.str());
+  
+  return instrumentedName;
+}
+
+
 /* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
@@ -616,7 +648,7 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
   #endif
   	      // leave some leading spaces for formatting...
   
-  	      ostr <<"  TAU_PROFILE(\"" << (*it)->item->fullName() ;
+  	      ostr <<"  TAU_PROFILE(\"" << getInstrumentedName((*it)->item, true) ;
   	      if (!((*it)->isTarget))
   	      { // it is a template member. Help it by giving an additional ()
   	      // if the item is a member function or a static member func give
@@ -848,34 +880,6 @@ char use_return_void[256] = "return";
 char use_return_nonvoid[256] = "return";
 
 
-string getInstrumentedName(const pdbItem *item, bool fat) {
-  // create the instrumented routine name
-  std::ostringstream oss;
-  pdbRoutine *pdbr = (pdbRoutine*)item;
-  pdbLoc loc = item->location();
-  const char *fullfile = item->location().file()->name().c_str();
-
-  while (strstr(fullfile,"/")) { // remove path
-    fullfile = strstr(fullfile,"/")+1;
-  }
-
-  if (fat) {
-    // we only have fat item data for C/C++ right now
-    pdbFatItem *fatItem = (pdbFatItem*)item;
-    oss << item->fullName() << " [{" << fullfile 
-	<< "} {" 
-	<< fatItem->headBegin().line() << "," << fatItem->headBegin().col() 
-	<< "}-{" 
-	<< fatItem->bodyEnd().line() << "," << fatItem->bodyEnd().col() 
-	<< "}]";
-  } else {
-    oss << item->fullName() << " [{" << fullfile << "} {" << loc.line() << "," << loc.col() << "}]";
-  }
-
-  string instrumentedName(oss.str());
-  
-  return instrumentedName;
-}
 
 
 void writeFortranTimer(ostream &ostr, string timername) {
@@ -2665,8 +2669,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.117 $   $Date: 2006/10/27 23:03:38 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.117 2006/10/27 23:03:38 amorris Exp $
+ * $Revision: 1.118 $   $Date: 2006/10/27 23:47:11 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.118 2006/10/27 23:47:11 amorris Exp $
  ***************************************************************************/
 
 
