@@ -2594,7 +2594,7 @@ int main (int argc, char *argv[]){
     fprintf(stderr," -f filename : specify full path and Filename without node ids\n");
     fprintf(stderr," -p : suPpress conversion to hh:mm:ss:mmm format\n");
     fprintf(stderr," -l : List all functions and exit\n");
-    fprintf(stderr," -d : Dump output format (for Racy)");
+    fprintf(stderr," -d : Dump output format (for tau_reduce)");
     fprintf(stderr," [node numbers] : prints only info about all contexts/threads of given node numbers\n");	
     exit (1);
   }//if(errflag)
@@ -2737,6 +2737,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: amorris $
- * $Revision: 1.48 $   $Date: 2006/10/27 23:26:57 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.48 2006/10/27 23:26:57 amorris Exp $                                
+ * $Revision: 1.49 $   $Date: 2006/10/27 23:27:59 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.49 2006/10/27 23:27:59 amorris Exp $                                
  ***************************************************************************/
