@@ -612,7 +612,6 @@ void getLoopTimerVariableName(string& varname, int line)
 /* Add request for instrumentation for Fortran loops */
 void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop, vector<itemRef *>& itemvec)
 {
-
   const pdbFile *f = start.file();
   char lines[256];
 
@@ -746,9 +745,9 @@ void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start,
 {
   const pdbFile *f = start.file();
   char lines[256];
-  sprintf(lines, "line,col = <%d,%d> to <%d,%d>", 
+  sprintf(lines, "{%d,%d}-{%d,%d}", 
 	start.line(), start.col(), stop.line(), stop.col());
-  string *timername = new string(string("Loop: " + ro->fullName() + "[ file = <"+f->name()+ "> "+ lines + " ]"));
+  string *timername = new string(string("Loop: " + ro->fullName() + " [{"+f->name()+ "} "+ lines + "]"));
 #ifdef DEBUG
   printf("Adding instrumentation at %s\n", timername->c_str());
 #endif /* DEBUG */
@@ -975,6 +974,7 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 /* Process list of F routines */
 bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec, pdbFile *file) 
 {
+
   PDB::froutinevec::const_iterator rit;
   PDB::froutinevec froutines = p.getFRoutineVec();
   bool cmpResult, cmpFileResult; 
@@ -1180,7 +1180,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 2006/10/02 10:57:40 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.31 2006/10/02 10:57:40 sameer Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
+ * $Revision: 1.32 $   $Date: 2006/10/27 01:44:19 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.32 2006/10/27 01:44:19 amorris Exp $
  ***************************************************************************/

@@ -11,12 +11,14 @@
 # include <fstream.h>
 # include <set.h>
 # include <algo.h>
+# include <sstream.h>
 #else
 # include <fstream>
 # include <set>
 # include <algorithm>
 # include <list> 
 # include <string> 
+# include <sstream>
 using namespace std;
 #endif
 #include "pdbAll.h"
@@ -844,6 +846,37 @@ char return_nonvoid_string[256] = "return";
 char return_void_string[256] = "return";
 char use_return_void[256] = "return";
 char use_return_nonvoid[256] = "return";
+
+
+string getInstrumentedName(const pdbItem *item, bool fat) {
+  // create the instrumented routine name
+  std::ostringstream oss;
+  pdbRoutine *pdbr = (pdbRoutine*)item;
+  pdbLoc loc = item->location();
+  const char *fullfile = item->location().file()->name().c_str();
+
+  while (strstr(fullfile,"/")) { // remove path
+    fullfile = strstr(fullfile,"/")+1;
+  }
+
+  if (fat) {
+    // we only have fat item data for C/C++ right now
+    pdbFatItem *fatItem = (pdbFatItem*)item;
+    oss << item->fullName() << " [{" << fullfile 
+	<< "} {" 
+	<< fatItem->headBegin().line() << "," << fatItem->headBegin().col() 
+	<< "}-{" 
+	<< fatItem->bodyEnd().line() << "," << fatItem->bodyEnd().col() 
+	<< "}]";
+  } else {
+    oss << item->fullName() << " [{" << fullfile << "} {" << loc.line() << "," << loc.col() << "}]";
+  }
+
+  string instrumentedName(oss.str());
+  
+  return instrumentedName;
+}
+
 /* -------------------------------------------------------------------------- */
 /* -- BodyBegin for a routine that does return some value ------------------- */
 /* -------------------------------------------------------------------------- */
@@ -861,7 +894,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
   else
   {
     ostr <<"\tTAU_PROFILE_TIMER(tautimer, \""<<
-      ((pdbRoutine *)(i->item))->fullName() << "\", \" " << "\",";
+      getInstrumentedName(i->item, true) << "\", \" " << "\",";
       // ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
     if (strcmp(i->item->name().c_str(), "main")==0)
@@ -902,7 +935,7 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
   else
   {
     ostr <<"{ \n\tTAU_PROFILE_TIMER(tautimer, \""<<
-      ((pdbRoutine *)(i->item))->fullName() << "\", \" " << "\", ";
+      getInstrumentedName(i->item, true) << "\", \" " << "\", ";
       //((pdbRoutine *)(i->item))->signature()->name() << "\", ";
   
     if (strcmp(i->item->name().c_str(), "main")==0)
@@ -1867,10 +1900,14 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	  }
 #endif
 
+	  // get the instrumented routine name
+	  string instrumentedName = getInstrumentedName((*it)->item, false);
+
 	  /* set instrumented = true after inserting instrumentation */
 	  switch((*it)->kind)
 	  {
 	    case BODY_BEGIN:
+
 
 #ifdef DEBUG
 	  if ( (*it)->item != (pdbItem *) NULL)
@@ -1963,7 +2000,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
 		  WRITE_TAB(ostr,(*it)->col);
 		  ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
-		    (*it)->item->fullName()<< "')"<<endl;
+		    instrumentedName<< "')"<<endl;
 		}
 		else { /* For all routines */
 
@@ -1973,13 +2010,13 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		      { /* Write the following lines only when -DTAU_GROUP=string is defined */
 			WRITE_TAB(ostr,(*it)->col);
 			ostr<<"call TAU_PROFILE_TIMER(profiler,'" <<
-			  group_name.substr(10)<<">"<< (*it)->item->fullName()<< "')"<<endl;
+			  group_name.substr(10)<<">"<< instrumentedName << "')"<<endl;
 		      }
 		    else 
 		      { /* group_name is not defined, write the default fullName of the routine */
 			WRITE_TAB(ostr,(*it)->col);
 			ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
-			  (*it)->item->fullName()<< "')"<<endl;
+			  instrumentedName<< "')"<<endl;
 		      }
 		  }
   		}
@@ -1991,7 +2028,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		WRITE_TAB(ostr,(*it)->col);
 		if (pure) {
 		  if (instrumentPure) {
-		    ostr << "call TAU_PURE_START('" << (*it)->item->fullName()<< "')"<<endl;
+		    ostr << "call TAU_PURE_START('" << instrumentedName << "')"<<endl;
 		  }
 		} else {
 		  ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
@@ -2095,7 +2132,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		      if (use_perflib)
 			ostr <<"call f_perf_update('" << (*it)->item->fullName()<< "', .false.)"<<endl;
 		      else
-			ostr <<"call TAU_PURE_STOP('" << (*it)->item->fullName()<< "')"<<endl;
+			ostr <<"call TAU_PURE_STOP('" << instrumentedName << "')"<<endl;
 		    }
 		  } else {
 		    /* we need to check if the current_timer (outer-loop level instrumentation) is set */
@@ -2623,8 +2660,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.115 $   $Date: 2006/10/26 18:51:59 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.115 2006/10/26 18:51:59 amorris Exp $
+ * $Revision: 1.116 $   $Date: 2006/10/27 01:44:18 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.116 2006/10/27 01:44:18 amorris Exp $
  ***************************************************************************/
 
 
