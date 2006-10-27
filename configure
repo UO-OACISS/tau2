@@ -2590,6 +2590,12 @@ then
 	# SGI MPT
 	fi
 
+	# OpenMPI
+	if [ -r $mpilib/libmpi_cxx.so ] 
+	then
+	  mpilibrary='-lmpi -lmpi_cxx'
+	fi
+
         # See if threaded MPI should be used on AIX
         if [ $ibmxlc_r = yes -a -r $mpilib/libmpi_r.a ]
         then 
