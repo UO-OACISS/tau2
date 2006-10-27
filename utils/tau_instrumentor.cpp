@@ -877,6 +877,39 @@ string getInstrumentedName(const pdbItem *item, bool fat) {
   return instrumentedName;
 }
 
+
+void writeFortranTimer(ostream &ostr, string timername) {
+  string fullstring = string("      call TAU_PROFILE_TIMER(profiler, '") + timername + string("')");
+
+  if (fullstring.length() <= 72) {
+    ostr << fullstring << endl;
+    return;
+  }
+
+  string s1 = string("      call TAU_PROFILE_TIMER(profiler, '");
+  string s2 = "";
+  int length = s1.length();
+  for (int i=length; i < 72; i++) {
+    s2 = s2 + " ";
+  }
+
+  string full = s1 + s2 + "&\n";
+
+  // continue to break lines in the correct spot
+  while (timername.length() > 64) {
+    string first = timername.substr(0,64);
+    timername.erase(0,64);
+    full = full + "     &"+first+"&\n";
+  }
+  
+  full = full + "     &"+timername+"')";
+
+  ostr << full << endl;
+
+}
+
+
+
 /* -------------------------------------------------------------------------- */
 /* -- BodyBegin for a routine that does return some value ------------------- */
 /* -------------------------------------------------------------------------- */
@@ -1908,116 +1941,88 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	  {
 	    case BODY_BEGIN:
 
+	      // write out the line up to the desired column
+	      for (i=0; i< ((*it)->col)-1; i++) {
+		ostr << inbuf[i];
+	      }
 
-#ifdef DEBUG
-	  if ( (*it)->item != (pdbItem *) NULL)
-	    cout <<"Body Begin: Routine " <<(*it)->item->fullName()<<endl;
-#endif /* DEBUG */
-             	for(i=0; i< ((*it)->col)-1; i++)
-		{ 
-#ifdef DEBUG
-	  	  cout << "Writing (1): "<<inbuf[i]<<endl;
-#endif /* DEBUG */
-	  	  WRITE_SPACE(ostr,inbuf[i])
+	      // break the line
+	      ostr << endl;
+
+	      if (use_perflib) {
+		if (pure && instrumentPure) {
+		  ostr << "      interface\n";
+		  ostr << "      pure subroutine f_perf_update(name, flag)\n";
+		  ostr << "      character(*), intent(in) :: name\n";
+		  ostr << "      logical, intent(in) :: flag\n";
+		  ostr << "      end subroutine f_perf_update\n";
+		  ostr << "      end interface\n";
 		}
-
-		WRITE_TAB(ostr,(*it)->col);
-		if (use_perflib) 
-		{
-		     
-		  if (pure && instrumentPure) {
-		    ostr <<"interface\n";
-		    ostr <<"\t pure subroutine f_perf_update(name, flag)\n";
-		    ostr <<"\t character(*), intent(in) :: name\n";
-		    ostr <<"\t logical, intent(in) :: flag\n";
-		    ostr <<"\t end subroutine f_perf_update\n";
-		    ostr <<"\t end interface\n";
-		    ostr <<"\t";
-		  }
-
-		  /* should we call MPI_Init? Only if it is the main program */
-		  if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG)
-	          {
-		    ostr <<"INTEGER tau_mpi_init_err"<<endl;
-		    ostr <<"      call MPI_Init(tau_mpi_init_err)"<<endl;
-		    ostr <<"      call f_perf_init('"<<(*it)->item->fullName()<<"', 0, 0, 'UNKNOWN')"<<endl;
-		    ostr <<"      ";
-		  }
-
-                  ostr <<"call f_perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
-		  /* write the original statement */
-     		  for (k = 0; k < write_upto ; k++) 
-		    ostr<< inbuf[k];
-		  if (print_cr)
-		    ostr<<endl;
-		  instrumented = true;
-		  break;
-		}
-
 		
-		if (pure) {
-		  if (instrumentPure) {
-		    ostr <<"interface\n";
-		    ostr <<"pure subroutine TAU_PURE_START(name)\n";
-		    ostr <<"character(*), intent(in) :: name\n";
-		    ostr <<"end subroutine TAU_PURE_START\n";
-		    ostr <<"pure subroutine TAU_PURE_STOP(name)\n";
-		    ostr <<"character(*), intent(in) :: name\n";
-		    ostr <<"end subroutine TAU_PURE_STOP\n";
-		    ostr <<"end interface\n";
-		  }
-		} else {
-		  
+		// should we call MPI_Init? Only if it is the main program
+		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG) {
+		  ostr << "      INTEGER tau_mpi_init_err"<<endl;
+		  ostr << "      call MPI_Init(tau_mpi_init_err)"<<endl;
+		  ostr << "      call f_perf_init('"<<(*it)->item->fullName()<<"', 0, 0, 'UNKNOWN')"<<endl;
+		  ostr << "      ";
+		}
+		
+		ostr << "      call f_perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
+		
+		// write the rest of the original statement
+		for (k = (*it)->col-1; k < write_upto ; k++) {
+		  ostr << inbuf[k];
+		}
+		if (print_cr) {
+		  ostr << endl;
+		}
+		instrumented = true;
+		break;
+	      }
+	      
+		
+	      if (pure) {
+		if (instrumentPure) {
+		  ostr << "      interface\n";
+		  ostr << "      pure subroutine TAU_PURE_START(name)\n";
+		  ostr << "      character(*), intent(in) :: name\n";
+		  ostr << "      end subroutine TAU_PURE_START\n";
+		  ostr << "      pure subroutine TAU_PURE_STOP(name)\n";
+		  ostr << "      character(*), intent(in) :: name\n";
+		  ostr << "      end subroutine TAU_PURE_STOP\n";
+		  ostr << "      end interface\n";
+		}
+	      } else {
+		
 #ifdef TAU_ALIGN_FORTRAN_INSTRUMENTATION
-		  // alignment issues on solaris2-64 require a value
-		  // that will be properly aligned
-		  ostr <<"DOUBLE PRECISION profiler / 0 /"<<endl;
-		  //ostr <<"integer*8 profiler / 0 /"<<endl;
+		// alignment issues on solaris2-64 and IRIX64 require a value that will be properly aligned
+		ostr << "      DOUBLE PRECISION profiler / 0 /"<<endl;
+		// a possible alternative
+		//ostr << "      integer*8 profiler / 0 /"<<endl;
 #else
-		  ostr <<"integer profiler(2) / 0, 0 /"<<endl;
+		ostr << "      integer profiler(2) / 0, 0 /"<<endl;
 #endif
-		  /* spaces */
-		  for (space = 0; space < (*it)->col-1 ; space++) 
-		    WRITE_SPACE(ostr, inbuf[space]);
-		      
-		  WRITE_TAB(ostr,(*it)->col);
-		  ostr <<"save profiler"<<endl<<endl;
-		}
+		ostr << "      save profiler"<<endl<<endl;
+	      }
+	      
                 writeAdditionalFortranDeclarations(ostr, (pdbRoutine *)((*it)->item));
-
-     		for (space = 0; space < (*it)->col-1 ; space++) 
-		  WRITE_SPACE(ostr, inbuf[space]) 
-		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG)
-		{
-#ifdef DEBUG
-	  	  cout <<"Routine is main fortran program "<<endl;
-#endif /* DEBUG */
-		  WRITE_TAB(ostr,(*it)->col);
-		  ostr <<"call TAU_PROFILE_INIT()"<<endl;
-		  /* put spaces on the next line */
-     		  for (space = 0; space < (*it)->col-1 ; space++) 
-		    WRITE_SPACE(ostr, inbuf[space]) 
-
-		  WRITE_TAB(ostr,(*it)->col);
-		  ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
-		    instrumentedName<< "')"<<endl;
-		}
-		else { /* For all routines */
-
+		
+		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG) {
+		  // main
+		  ostr << "      call TAU_PROFILE_INIT()"<<endl;
+		  writeFortranTimer(ostr, instrumentedName);
+		} else { 
+		  // For all routines
+		  
 		  if (!pure) {
-
-		    if (strcmp(group_name.c_str(), "TAU_USER") != 0)
-		      { /* Write the following lines only when -DTAU_GROUP=string is defined */
-			WRITE_TAB(ostr,(*it)->col);
-			ostr<<"call TAU_PROFILE_TIMER(profiler,'" <<
-			  group_name.substr(10)<<">"<< instrumentedName << "')"<<endl;
-		      }
-		    else 
-		      { /* group_name is not defined, write the default fullName of the routine */
-			WRITE_TAB(ostr,(*it)->col);
-			ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
-			  instrumentedName<< "')"<<endl;
-		      }
+		    if (strcmp(group_name.c_str(), "TAU_USER") != 0) { 
+		      // Write the following lines only when -DTAU_GROUP=string is defined
+		      ostr << "      call TAU_PROFILE_TIMER(profiler,'" <<
+			group_name.substr(10)<<">"<< instrumentedName << "')"<<endl;
+		    } else { 
+		      /* group_name is not defined, write the default fullName of the routine */
+		      writeFortranTimer(ostr, instrumentedName);
+		    }
 		  }
   		}
                 writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
@@ -2034,16 +2039,16 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
 		}
 
-		/* write the original statement */
-     		for (k = 0; k < write_upto ; k++) 
-		  ostr<< inbuf[k];
+		ostr << "      ";
+		// write the rest of the original statement
+     		for (k = (*it)->col-1; k < write_upto ; k++) {
+		  ostr << inbuf[k];
+		}
 
 		/* should we write the carriage return? */
-#ifdef DEBUG
-		printf("CHECKING print_cr: %d\n", print_cr);
-#endif /* DEBUG */
-	 	if (print_cr)
+	 	if (print_cr) {
 		  ostr<< endl;
+		}
 
 		instrumented = true;
 		break;
@@ -2660,8 +2665,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.116 $   $Date: 2006/10/27 01:44:18 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.116 2006/10/27 01:44:18 amorris Exp $
+ * $Revision: 1.117 $   $Date: 2006/10/27 23:03:38 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.117 2006/10/27 23:03:38 amorris Exp $
  ***************************************************************************/
 
 

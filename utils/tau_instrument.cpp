@@ -625,17 +625,17 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
   string varname;
   getLoopTimerVariableName(varname, start.line());
 
-  string declaration1(string("       integer ")+varname+"(2) / 0, 0 /");
-  string declaration2(string("       save ")+varname);
+  string declaration1(string("      integer ")+varname+"(2) / 0, 0 /");
+  string declaration2(string("      save ")+varname);
 
   /* now we create the call to create the timer */
-  string createtimer(string("       call TAU_PROFILE_TIMER(")+varname+", '"+timername+"')");
+  string createtimer(string("      call TAU_PROFILE_TIMER(")+varname+", '"+timername+"')");
 
   if (createtimer.length() > 72) {
     /* We will always start the quote on the first line, then skip to the next
        inserting an & at column 73, then at column 6.  TAU_PROFILE_TIMER will
        clean up any mess made by -qfixed=132, etc */
-    string s1 = string("       call TAU_PROFILE_TIMER(")+varname+", '";
+    string s1 = string("      call TAU_PROFILE_TIMER(")+varname+", '";
     string s2 = "";
     int length = s1.length();
     for (int i=length; i < 72; i++) {
@@ -676,8 +676,8 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
   additionalInvocations.push_back(pair<int, list<string> >(ro->id(), calls)); /* assign the list of strings to the list */
 
   /* We have removed the check to see if the function should be instrumented here. It is now done in ProcessBlock */
-  string startsnippet(string("        call TAU_PROFILE_START(")+varname+")");
-  string stopsnippet (string("        call TAU_PROFILE_STOP(") +varname+")");
+  string startsnippet(string("      call TAU_PROFILE_START(")+varname+")");
+  string stopsnippet (string("      call TAU_PROFILE_STOP(") +varname+")");
   itemvec.push_back( new itemRef((const pdbItem *)ro, START_DO_TIMER, start.line(), start.col(), varname, BEFORE));
   itemvec.push_back( new itemRef((const pdbItem *)ro, STOP_TIMER, stop.line(), stop.col()+1, varname, AFTER));
 #ifdef DEBUG
@@ -1181,6 +1181,6 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.32 $   $Date: 2006/10/27 01:44:19 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.32 2006/10/27 01:44:19 amorris Exp $
+ * $Revision: 1.33 $   $Date: 2006/10/27 23:03:38 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.33 2006/10/27 23:03:38 amorris Exp $
  ***************************************************************************/
