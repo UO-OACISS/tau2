@@ -40,7 +40,7 @@ do
       ;;
     *)
       # Thanks to Berd Mohr for the following that handles quotes and spaces
-      mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/\\\'\''/g' -e 's/ /\\\ /g'`
+      mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
       THEARGS="$THEARGS $mod_arg"
       ;;
   esac

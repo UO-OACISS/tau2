@@ -151,7 +151,7 @@ for arg in "$@"; do
 			#The first command (immediately) after the -opt sequence is the compiler.
 		fi
 
-		mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/\\\'\''/g' -e 's/ /\\\ /g'`
+		mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
 		regularCmd="$regularCmd $mod_arg"	
 		
 
@@ -489,7 +489,7 @@ for arg in "$@"
 
 		-I*|-D*)
 
-		        mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/\\\'\''/g' -e 's/ /\\\ /g'`
+		        mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
 			optPdtCFlags="$mod_arg $optPdtCFlags"
 			optPdtCxxFlags="$mod_arg $optPdtCxxFlags"
 			optPdtF95="$mod_arg $optPdtF95"
