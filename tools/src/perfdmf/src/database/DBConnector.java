@@ -32,7 +32,7 @@ public class DBConnector implements DB {
      * by the system ClassLoader.  So we wrap it with this.
      * From: http://www.kfu.com/~nsayer/Java/dyn-jdbc.html
      */
-    class DriverShim implements Driver {
+    public static class DriverShim implements Driver {
         private Driver driver;
 
         DriverShim(Driver d) {

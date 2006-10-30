@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.8 2006/09/01 00:10:47 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.9 2006/10/30 18:10:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		FunctionProfile
  */
 /**
@@ -42,7 +42,10 @@ public class Function implements Serializable, Comparable {
     private boolean colorFlag = false;
     private Color color = null;
     private Color specificColor = null;
-    
+
+    // source code link
+    private SourceRegion sourceLink;
+
     public Function(String name, int id, int numMetrics) {
         this.name = name;
         this.id = id;
@@ -55,7 +58,7 @@ public class Function implements Serializable, Comparable {
     public String getName() {
         return name;
     }
-    
+
     public void setName(String name) {
         this.name = name;
     }
@@ -99,6 +102,62 @@ public class Function implements Serializable, Comparable {
         return name;
     }
 
+    public SourceRegion getSourceLink() {
+        if (sourceLink == null) {
+            sourceLink = new SourceRegion();
+            int filenameStart = name.indexOf("[{");
+            if (filenameStart == -1) {
+                return sourceLink;
+            }
+            int filenameEnd = name.indexOf("}", filenameStart);
+            if (filenameEnd == -1) {
+                // quit, it's not valid
+                return sourceLink;
+            }
+
+            int openbracket1 = name.indexOf("{", filenameEnd + 1);
+            int openbracket2 = name.indexOf("{", openbracket1 + 1);
+            int comma1 = name.indexOf(",", filenameEnd + 1);
+            int comma2 = name.indexOf(",", comma1 + 1);
+            int closebracket1 = name.indexOf("}", filenameEnd + 1);
+            int closebracket2 = name.indexOf("}", closebracket1 + 1);
+
+            sourceLink.setFilename(name.substring(filenameStart + 2, filenameEnd));
+
+            if (openbracket1 == -1) {
+                return sourceLink;
+            }
+
+            if (comma1 == -1) {
+                // not a loop
+                if (closebracket1 == -1) {
+                    return sourceLink;
+                }
+                int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, closebracket1));
+                sourceLink.setStartLine(linenumber);
+                sourceLink.setEndLine(linenumber);
+                return sourceLink;
+            } else {
+                // loop
+                if (openbracket1 == -1 || openbracket2 == -1 || comma1 == -1 || comma2 == -1 || closebracket1 == -1
+                        || closebracket2 == -1) {
+                    return sourceLink;
+                }
+                int startLine = Integer.parseInt(name.substring(openbracket1 + 1, comma1));
+                int startColumn = Integer.parseInt(name.substring(comma1 + 1, closebracket1));
+                int endLine = Integer.parseInt(name.substring(openbracket2 + 1, comma2));
+                int endColumn = Integer.parseInt(name.substring(comma2 + 1, closebracket2));
+
+                sourceLink.setStartLine(startLine);
+                sourceLink.setStartColumn(startColumn);
+                sourceLink.setEndLine(endLine);
+                sourceLink.setEndColumn(endColumn);
+            }
+
+        }
+        return sourceLink;
+    }
+
     // Group section
     public void addGroup(Group group) {
         //Don't add group if already a member.
@@ -127,13 +186,13 @@ public class Function implements Serializable, Comparable {
         }
         return groupString;
     }
-    
+
     public boolean isPhaseMember(Function phase) {
 
         if (phase == this) {
             return true;
         }
-        
+
         if (phase == null) {
             return true;
         }
@@ -152,7 +211,6 @@ public class Function implements Serializable, Comparable {
         return false;
     }
 
-
     public boolean isCallPathFunction() {
         if (!callpathFunctionSet) {
             if (name.indexOf("=>") > 0) {
@@ -163,51 +221,48 @@ public class Function implements Serializable, Comparable {
         return callpathFunction;
     }
 
-//    public boolean isPhase() {
-//        if (!phaseSet) {
-//            for (int i = 0; i < groups.size(); i++) {
-//                if (((Group) groups.get(i)).getName().compareTo("TAU_PHASE") == 0) {
-//                    phase = true;
-//                }
-//            }
-//            phaseSet = true;
-//        }
-//        return phase;
-//    }
+    //    public boolean isPhase() {
+    //        if (!phaseSet) {
+    //            for (int i = 0; i < groups.size(); i++) {
+    //                if (((Group) groups.get(i)).getName().compareTo("TAU_PHASE") == 0) {
+    //                    phase = true;
+    //                }
+    //            }
+    //            phaseSet = true;
+    //        }
+    //        return phase;
+    //    }
 
-    
-//    private String getRightSide() {
-//        if (!getCallPathFunction()) {
-//            return null;
-//        } 
-//
-//        
-//        int location = name.indexOf("=>");
-//        String phaseRoot = name.substring(0, location).trim();
-//        String phaseChild = name.substring(location).trim();
-//        
-//        return phaseChild;
-//    }
-//    
-//    public boolean isPhase() {
-//        if (!phaseSet) {
-//
-//            if (name.indexOf("=>") > 0) {
-//                callpathFunction = true;
-//            }
-//
-//            for (int i = 0; i < groups.size(); i++) {
-//                if (((Group) groups.get(i)).getName().compareTo("TAU_PHASE") == 0) {
-//                    phase = true;
-//                }
-//            }
-//            phaseSet = true;
-//        }
-//        return phase;
-//    }
-    
-    
-    
+    //    private String getRightSide() {
+    //        if (!getCallPathFunction()) {
+    //            return null;
+    //        } 
+    //
+    //        
+    //        int location = name.indexOf("=>");
+    //        String phaseRoot = name.substring(0, location).trim();
+    //        String phaseChild = name.substring(location).trim();
+    //        
+    //        return phaseChild;
+    //    }
+    //    
+    //    public boolean isPhase() {
+    //        if (!phaseSet) {
+    //
+    //            if (name.indexOf("=>") > 0) {
+    //                callpathFunction = true;
+    //            }
+    //
+    //            for (int i = 0; i < groups.size(); i++) {
+    //                if (((Group) groups.get(i)).getName().compareTo("TAU_PHASE") == 0) {
+    //                    phase = true;
+    //                }
+    //            }
+    //            phaseSet = true;
+    //        }
+    //        return phase;
+    //    }
+
     // color section
     public void setColor(Color color) {
         this.color = color;

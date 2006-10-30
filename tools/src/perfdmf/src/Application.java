@@ -20,7 +20,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.6 2006/06/27 03:02:15 scottb Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.7 2006/10/30 18:10:26 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -81,8 +81,8 @@ public class Application implements Serializable {
 
     public static void getMetaData(DB db) {
         // see if we've already have them
-//       if (Application.fieldNames != null)
-//            return;
+        //       if (Application.fieldNames != null)
+        //            return;
 
         try {
             ResultSet resultSet = null;
@@ -92,9 +92,8 @@ public class Application implements Serializable {
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
-            if ((db.getDBType().compareTo("oracle") == 0) || 
-				(db.getDBType().compareTo("derby") == 0) || 
-				(db.getDBType().compareTo("db2") == 0)) {
+            if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)
+                    || (db.getDBType().compareTo("db2") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "APPLICATION", "%");
             } else {
                 resultSet = dbMeta.getColumns(null, null, "application", "%");
@@ -278,93 +277,86 @@ public class Application implements Serializable {
 
             return applications;
         } catch (SQLException e) {
-			if (buf != null)
-				System.out.println(buf.toString());
+            if (buf != null)
+                System.out.println(buf.toString());
             throw new DatabaseException("", e);
         }
 
     }
 
-    public int saveApplication(DB db) {
+    public int saveApplication(DB db) throws SQLException {
 
-        try {
-            boolean itExists = false;
+        boolean itExists = false;
 
-            // First, determine whether it exists already (whether we are doing an insert or update)
-            PreparedStatement statement = db.prepareStatement("SELECT name FROM " + db.getSchemaPrefix()
-                    + "application WHERE id = ?");
-            statement.setInt(1, this.getID());
-            ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next() != false) {
-                itExists = true;
-                break;
-            }
-            resultSet.close();
-            statement.close();
+        // First, determine whether it exists already (whether we are doing an insert or update)
+        PreparedStatement statement = db.prepareStatement("SELECT name FROM " + db.getSchemaPrefix() + "application WHERE id = ?");
+        statement.setInt(1, this.getID());
+        ResultSet resultSet = statement.executeQuery();
+        while (resultSet.next() != false) {
+            itExists = true;
+            break;
+        }
+        resultSet.close();
+        statement.close();
 
-            StringBuffer buf = new StringBuffer();
-            if (itExists) {
-                buf.append("UPDATE " + db.getSchemaPrefix() + "application SET name = ?");
-                for (int i = 0; i < this.getNumFields(); i++) {
-                    if (DBConnector.isWritableType(this.getFieldType(i)))
-                        buf.append(", " + this.getFieldName(i) + " = ?");
-                }
-                buf.append(" WHERE id = ?");
-            } else {
-                buf.append("INSERT INTO " + db.getSchemaPrefix() + "application (name");
-                for (int i = 0; i < this.getNumFields(); i++) {
-                    if (DBConnector.isWritableType(this.getFieldType(i)))
-                        buf.append(", " + this.getFieldName(i));
-                }
-                buf.append(") VALUES (?");
-                for (int i = 0; i < this.getNumFields(); i++) {
-                    if (DBConnector.isWritableType(this.getFieldType(i)))
-                        buf.append(", ?");
-                }
-                buf.append(")");
-            }
-
-            statement = db.prepareStatement(buf.toString());
-
-            int pos = 1;
-            statement.setString(pos++, this.getName());
-
+        StringBuffer buf = new StringBuffer();
+        if (itExists) {
+            buf.append("UPDATE " + db.getSchemaPrefix() + "application SET name = ?");
             for (int i = 0; i < this.getNumFields(); i++) {
                 if (DBConnector.isWritableType(this.getFieldType(i)))
-                    statement.setString(pos++, this.getField(i));
+                    buf.append(", " + this.getFieldName(i) + " = ?");
             }
-
-            if (itExists) {
-                statement.setInt(pos++, this.getID());
+            buf.append(" WHERE id = ?");
+        } else {
+            buf.append("INSERT INTO " + db.getSchemaPrefix() + "application (name");
+            for (int i = 0; i < this.getNumFields(); i++) {
+                if (DBConnector.isWritableType(this.getFieldType(i)))
+                    buf.append(", " + this.getFieldName(i));
             }
-            statement.executeUpdate();
-            statement.close();
-
-            int newApplicationID = 0;
-
-            if (itExists) {
-                newApplicationID = this.getID();
-            } else {
-                String tmpStr = new String();
-                if (db.getDBType().compareTo("mysql") == 0) {
-                    tmpStr = "select LAST_INSERT_ID();";
-                } else if (db.getDBType().compareTo("db2") == 0) {
-                    tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
-                } else if (db.getDBType().compareTo("derby") == 0) {
-                    tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
-                } else if (db.getDBType().compareTo("oracle") == 0) {
-                    tmpStr = "SELECT " + db.getSchemaPrefix() + "application_id_seq.currval FROM DUAL";
-                } else { // postgresql 
-                    tmpStr = "select currval('application_id_seq');";
-                }
-                newApplicationID = Integer.parseInt(db.getDataItem(tmpStr));
+            buf.append(") VALUES (?");
+            for (int i = 0; i < this.getNumFields(); i++) {
+                if (DBConnector.isWritableType(this.getFieldType(i)))
+                    buf.append(", ?");
             }
-            return newApplicationID;
-
-        } catch (SQLException e) { // this is unreal, I can't throw it because the base class Datasession doesn't throw it, why on earth does the base class have "getApplicationList"???
-            e.printStackTrace();
-            return -1;
+            buf.append(")");
         }
+
+        statement = db.prepareStatement(buf.toString());
+
+        int pos = 1;
+        statement.setString(pos++, this.getName());
+
+        for (int i = 0; i < this.getNumFields(); i++) {
+            if (DBConnector.isWritableType(this.getFieldType(i)))
+                statement.setString(pos++, this.getField(i));
+        }
+
+        if (itExists) {
+            statement.setInt(pos++, this.getID());
+        }
+        statement.executeUpdate();
+        statement.close();
+
+        int newApplicationID = 0;
+
+        if (itExists) {
+            newApplicationID = this.getID();
+        } else {
+            String tmpStr = new String();
+            if (db.getDBType().compareTo("mysql") == 0) {
+                tmpStr = "select LAST_INSERT_ID();";
+            } else if (db.getDBType().compareTo("db2") == 0) {
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
+            } else if (db.getDBType().compareTo("derby") == 0) {
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
+            } else if (db.getDBType().compareTo("oracle") == 0) {
+                tmpStr = "SELECT " + db.getSchemaPrefix() + "application_id_seq.currval FROM DUAL";
+            } else { // postgresql 
+                tmpStr = "select currval('application_id_seq');";
+            }
+            newApplicationID = Integer.parseInt(db.getDataItem(tmpStr));
+        }
+        return newApplicationID;
 
     }
 
@@ -414,13 +406,13 @@ public class Application implements Serializable {
         aOutputStream.writeObject(fieldNames);
         aOutputStream.writeObject(fieldTypes);
     }
+
     /**
      *  hack - needed to delete meta so that it is reloaded each time a new database is created.
      */
-    public void removeMetaData()
-    {
-    	fieldNames = null;
-    	fieldTypes = null;
+    public void removeMetaData() {
+        fieldNames = null;
+        fieldTypes = null;
     }
 
 }

@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.8 2006/06/27 03:02:15 scottb Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.9 2006/10/30 18:10:26 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class DatabaseAPI {
 
@@ -89,14 +89,14 @@ public class DatabaseAPI {
         Experiment.getMetaData(db);
         Trial.getMetaData(db);
     }
-    public void initialize(ParseConfig parser, String password) throws SQLException
-    {
-    	connector = new ConnectionManager(parser, password);
-    	connector.connect();
-    	db = connector.getDB();
-    	Application.getMetaData(db);
-    	Experiment.getMetaData(db);
-    	Trial.getMetaData(db);
+
+    public void initialize(ParseConfig parser, String password) throws SQLException {
+        connector = new ConnectionManager(parser, password);
+        connector.connect();
+        db = connector.getDB();
+        Application.getMetaData(db);
+        Experiment.getMetaData(db);
+        Trial.getMetaData(db);
     }
 
     public void initialize(Object obj, String password) throws SQLException {
@@ -527,7 +527,11 @@ public class DatabaseAPI {
     }
 
     public int saveApplication(Application app) {
-        return app.saveApplication(db);
+        try {
+            return app.saveApplication(db);
+        } catch (SQLException e) {
+            throw new DatabaseException("Error saving application", e);
+        }
     }
 
     public int saveExperiment(Experiment exp) throws DatabaseException {
@@ -731,9 +735,8 @@ public class DatabaseAPI {
         int fcount = 0;
         int ucount = 0;
 
-
         Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
-        
+
         // create the intervalEvents
         for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
             Function f = (Function) it.next();
@@ -896,9 +899,10 @@ public class DatabaseAPI {
         } catch (SQLException e) {
             try {
                 db.rollback();
-                throw new DatabaseException("Saving Trial Failed, rollback successful", e);
+                e.printStackTrace();
+                throw new DatabaseException("Saving Trial Failed, rollbacks successful", e);
             } catch (SQLException e2) {
-                throw new DatabaseException("Saving Trial Failed, rollback failed!", e2);
+                throw new DatabaseException("Saving Trial Failed, rollbacks failed!", e2);
             }
 
         }
@@ -950,7 +954,6 @@ public class DatabaseAPI {
     // fills the interval event table
     private Map uploadFunctions(int trialID, DataSource dataSource) throws SQLException {
         Map map = new HashMap();
-
 
         Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
         for (Iterator it = dataSource.getFunctions(); it.hasNext();) {
@@ -1068,18 +1071,19 @@ public class DatabaseAPI {
         this.itemsDone++;
 
         //stmt.addBatch();
-        //try {
+        try {
             stmt.executeUpdate();
-        //} catch (Exception e) {
-			//System.out.println(e);
-			//System.out.println(stmt.toString());
-            //System.out.println("exclusive: " + fp.getExclusive(metricID));
-            //System.out.println("numcalls: " + fp.getNumCalls());
-            //System.out.println("numsubr: " + fp.getNumSubr());
-            //System.out.println("inclusivepercall: " + fp.getInclusivePerCall(metricID));
-            //System.out.println("asdf");
-			//System.exit(9);
-        //}
+        } catch (Exception e) {
+            System.out.println(e);
+            System.out.println(stmt.toString());
+            System.out.println("exclusive: " + fp.getExclusive(metricID));
+            System.out.println("inclusive: " + fp.getInclusive(metricID));
+            System.out.println("numThreads: " + numThreads);
+            System.out.println("numcalls: " + fp.getNumCalls());
+            System.out.println("numsubr: " + fp.getNumSubr());
+            System.out.println("inclusivepercall: " + fp.getInclusivePerCall(metricID));
+            System.exit(9);
+        }
     }
 
     private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map functionMap, Map metricMap) throws SQLException {
@@ -1121,7 +1125,7 @@ public class DatabaseAPI {
         }
 
         Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
-        
+
         for (Iterator it5 = dataSource.getMetrics().iterator(); it5.hasNext();) {
             Metric metric = (Metric) it5.next();
             Integer dbMetricID = (Integer) metricMap.get(metric);
@@ -1276,9 +1280,10 @@ public class DatabaseAPI {
         } catch (SQLException e) {
             try {
                 db.rollback();
-                throw new DatabaseException("Saving Trial Failed, rollback successful", e);
+                e.printStackTrace();
+                throw new DatabaseException("Saving Trial Failed, rollbacks successful", e);
             } catch (SQLException e2) {
-                throw new DatabaseException("Saving Trial Failed, rollback failed!", e2);
+                throw new DatabaseException("Saving Trial Failed, rollbacks failed!", e2);
             }
 
         }
@@ -1299,16 +1304,24 @@ public class DatabaseAPI {
 
     public int saveApplication() {
         int appid = 0;
-        if (application != null) {
-            appid = application.saveApplication(db);
+        try {
+            if (application != null) {
+                appid = application.saveApplication(db);
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("Error saving application", e);
         }
         return appid;
     }
 
-    public int saveExperiment() throws SQLException {
+    public int saveExperiment() {
         int expid = 0;
-        if (experiment != null) {
-            expid = experiment.saveExperiment(db);
+        try {
+            if (experiment != null) {
+                expid = experiment.saveExperiment(db);
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("Error saving experiment", e);
         }
         return expid;
     }
@@ -1436,4 +1449,54 @@ public class DatabaseAPI {
         statement.close();
     }
 
+    public Application getApplication(String name, boolean create) {
+        List apps = getApplicationList();
+        for (Iterator it = apps.iterator(); it.hasNext();) {
+            Application app = (Application) it.next();
+            if (app.getName().equals(name)) {
+                return app;
+            }
+        }
+        // didn't find one with that name
+        if (create) {
+            Application newApp = new Application();
+            newApp.setName(name);
+            setApplication(newApp);
+            int appId = saveApplication();
+            newApp.setID(appId);
+            return newApp;
+        }
+        return null;
+    }
+
+    public Experiment getExperiment(Application app, String name, boolean create) {
+        setApplication(app);
+        List exps = getExperimentList();
+        for (Iterator it = exps.iterator(); it.hasNext();) {
+            Experiment exp = (Experiment) it.next();
+            if (exp.getName().equals(name)) {
+                return exp;
+            }
+        }
+
+        if (create) {
+            Experiment newExp = new Experiment();
+            newExp.setName(name);
+            newExp.setApplicationID(app.getID());
+            setExperiment(newExp);
+            int expId = saveExperiment();
+            newExp.setID(expId);
+            return newExp;
+        }
+
+        return null;
+    }
+
+    public Experiment getExperiment(String appName, String expName, boolean create) {
+        Application app = getApplication(appName, create);
+        if (app == null) {
+            return null;
+        }
+        return getExperiment(app, expName, create);
+    }
 };
