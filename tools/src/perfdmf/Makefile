@@ -1,6 +1,6 @@
 # settings set automatically by the configure script.
-CONFIG_ARCH=apple
-TAUROOT=/Users/khuck/tau2
+CONFIG_ARCH=default
+TAUROOT=
 
 
 # these are classpaths for the build.  The second classpath is for the 
