@@ -6,6 +6,7 @@ import java.awt.print.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.net.URL;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
@@ -24,6 +25,7 @@ import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.script.ParaProfFunctionScript;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
+import edu.uoregon.tau.paraprof.sourceview.SourceViewer;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
@@ -277,8 +279,6 @@ public class ParaProfUtils {
 
         return fileMenu;
     }
-
-  
 
     private static JMenuItem createMenuItem(String text, ActionListener actionListener, boolean enabled) {
         JMenuItem menuItem = new JMenuItem(text);
@@ -594,6 +594,12 @@ public class ParaProfUtils {
                         GlobalDataWindow fdw = new GlobalDataWindow(ppTrial, function.getActualPhase());
                         fdw.show();
                         ParaProf.incrementNumWindows();
+                    } else if (arg.equals("Show Source Code")) {
+                        
+                    	ParaProf.getDirectoryManager().showSourceCode(function.getSourceLink());
+                        //SourceViewer srcView = new SourceViewer();
+                        //srcView.setVisible(true);
+                        //ParaProf.eclipseHandler.openSourceLocation(ppTrial, function);
                     }
 
                 } catch (Exception e) {
@@ -604,6 +610,13 @@ public class ParaProfUtils {
         };
 
         JPopupMenu functionPopup = new JPopupMenu();
+
+        //if (ParaProf.insideEclipse && function.getSourceLink().getFilename() != null) {
+        if (1==1) {
+            JMenuItem functionDetailsItem = new JMenuItem("Show Source Code");
+            functionDetailsItem.addActionListener(actionListener);
+            functionPopup.add(functionDetailsItem);
+        }
 
         if (function.isPhase()) {
             JMenuItem functionDetailsItem = new JMenuItem("Open Profile for this Phase");
@@ -1128,7 +1141,17 @@ public class ParaProfUtils {
                 return toAppendTo.append(UtilFncs.getOutputString(units, number, 5));
             }
         };
+    }
 
+    public static URL getResource(String name) {
+        URL url;
+        
+        url = ParaProfUtils.class.getResource(name);
+        if (url == null) {
+            url = ParaProfUtils.class.getResource("/" + name);
+        }
+        
+        return url;
     }
 
 }

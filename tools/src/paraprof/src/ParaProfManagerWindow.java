@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.9 2006/08/19 01:56:52 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.10 2006/10/30 18:13:05 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -222,7 +222,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
         this.getContentPane().add(jSplitInnerPane, "Center");
 
-        this.show();
 
         jSplitInnerPane.setDividerLocation(0.5);
 

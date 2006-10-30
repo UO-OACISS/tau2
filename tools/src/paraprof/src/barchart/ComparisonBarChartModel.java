@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.4 2006/09/08 00:22:10 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.5 2006/10/30 18:13:06 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -227,7 +227,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
     public static void main(String[] args) {
         final ParaProf paraProf = new ParaProf();
-        paraProf.startSystem();
+        paraProf.initialize();
 
         File[] files = new File[1];
         files[0] = new File("/home/amorris/data/packed/lu.C.512.ppk");

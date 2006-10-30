@@ -268,7 +268,7 @@ public class JUnitParaProf extends JFCTestCase {
         System.out.println("---Setting up ParaProf---");
         
         final ParaProf paraProf = new ParaProf();
-        paraProf.startSystem();
+        paraProf.initialize();
         
         //String args[] = new String[0];
         //ParaProf.main(args);

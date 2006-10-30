@@ -274,7 +274,11 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         //        loadColorItem.addActionListener(this);
         //        fileMenu.add(loadColorItem);
 
-        JMenuItem newItem = new JMenuItem("Show Color Map");
+        JMenuItem newItem = new JMenuItem("Edit Source Directories");
+        newItem.addActionListener(this);
+        fileMenu.add(newItem);
+
+        newItem = new JMenuItem("Show Color Map");
         newItem.addActionListener(this);
         fileMenu.add(newItem);
 
@@ -358,6 +362,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
                 if (arg.equals("Show Color Map")) {
                     ParaProf.colorMap.showColorMap(this);
+                } else if (arg.equals("Edit Source Directories")) {
+                	ParaProf.getDirectoryManager().display(this);
                 } else if (arg.equals("Load Preferences...")) {
 
                     JFileChooser fileChooser = new JFileChooser();

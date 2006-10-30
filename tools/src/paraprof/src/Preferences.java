@@ -37,6 +37,8 @@ public class Preferences implements Serializable {
     private boolean computeMeanWithoutNulls = false;
     private boolean generateIntermediateCallPathData = false;
     
+    private ArrayList sourceLocations;
+    
     static final long serialVersionUID = 183442743456314793L;
 
     public void setLoaded(boolean b) {
@@ -204,5 +206,13 @@ public class Preferences implements Serializable {
     public void setGenerateIntermediateCallPathData(boolean generateIntermediateCallPathData) {
         this.generateIntermediateCallPathData = generateIntermediateCallPathData;
     }
+
+	public ArrayList getSourceLocations() {
+		return sourceLocations;
+	}
+
+	public void setSourceLocations(ArrayList sourceLocations) {
+		this.sourceLocations = sourceLocations;
+	}
 
 }

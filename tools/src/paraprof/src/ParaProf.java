@@ -4,7 +4,13 @@ import jargs.gnu.CmdLineParser;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -14,18 +20,23 @@ import java.util.List;
 import javax.swing.ToolTipManager;
 
 import edu.uoregon.tau.common.TauScripter;
+import edu.uoregon.tau.paraprof.interfaces.EclipseHandler;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.paraprof.sourceview.SourceManager;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.DataSourceExport;
+import edu.uoregon.tau.perfdmf.FileList;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.53 2006/08/21 00:43:53 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.54 2006/10/30 18:13:05 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.53 $
+ * @version $Revision: 1.54 $
  */
 public class ParaProf implements ActionListener {
 
@@ -46,81 +57,57 @@ public class ParaProf implements ActionListener {
 
     private final static String VERSION = "XXXXX";
 
+    public static int defaultNumberPrecision = 6;
+
+    public static File paraProfHomeDirectory;
+    public static Preferences preferences = new Preferences();
+    public static ColorChooser colorChooser;
     public static ColorMap colorMap = new ColorMap();
 
-    public static File paraProfHomeDirectory = null;
-    public static int defaultNumberPrecision = 6;
-    //static ParaProfLisp paraProfLisp = null;
-    public static Preferences preferences = null;
-    public static ColorChooser colorChooser;
-
-    
-    public static ParaProfManagerWindow paraProfManagerWindow = null;
+    public static ParaProfManagerWindow paraProfManagerWindow;
     public static ApplicationManager applicationManager = new ApplicationManager();
-    public static HelpWindow helpWindow = null;
+    public static HelpWindow helpWindow = new HelpWindow();
     public static PreferencesWindow preferencesWindow;
-    public static Runtime runtime = null;
+    public static Runtime runtime;
     private static int numWindowsOpen = 0;
- 
+
     //Command line options related.
     private static int fileType = 0; //0:profile, 1:pprof, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun, 7:ppk, 8:cube
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
     private static boolean monitorProfiles;
+    private static String args[];
     //End - Command line options related.
 
     public static boolean demoMode;
     public static boolean usePathNameInTrial = false;
-    
     public static FunctionBarChartWindow theComparisonWindow;
-
     public static boolean JNLP = false;
-
     public static List scripts = new ArrayList();
-
-    private static String args[];
-
     public static String scriptFile;
+    
+    public static boolean insideEclipse;
+    public static EclipseHandler eclipseHandler;
+    public static SourceManager directoryManager;
+    
+    // static initializer block
+    static {
+        ParaProf.runtime = Runtime.getRuntime();
+    }
 
+    
+    public static SourceManager getDirectoryManager() {
+    	if (directoryManager == null) {
+    		directoryManager = new SourceManager(ParaProf.preferences.getSourceLocations());
+    	}
+    	return directoryManager;
+    }
+    
     public static void registerScript(ParaProfScript pps) {
         scripts.add(pps);
     }
 
     public ParaProf() {
-
-        //        ParaProfScript pps = new ParaProfScript() {
-        //
-        //            public String getName() {
-        //                return "Filter Top Ten Exclusive";
-        //            }
-        //
-        //            public void run(ParaProfTrial ppTrial) {
-        //                // TODO Auto-generated method stub
-        //                System.out.println("Filtering!");
-        //                System.out.println("TODO: implement");
-        //            }
-        //        };
-        //        
-        //        scripts.add(pps);
-
-        try {
-            //            //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
-            //            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-            //
-            //            
-            //            UIManager.setLookAndFeel(
-            //                                     "com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
-            //     
-            //            UIManager.setLookAndFeel(
-            //            "javax.swing.plaf.metal.MetalLookAndFeel");
-            //
-            //            UIManager.setLookAndFeel(
-            //            "com.sun.java.swing.plaf.motif.MotifLookAndFeel");
-
-        } catch (Exception e) {
-
-        }
-
     }
 
     private static void usage() {
@@ -160,7 +147,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    public void loadDefaultTrial() {
+    public static void loadDefaultTrial() {
 
         // Create a default application.
         ParaProfApplication app = ParaProf.applicationManager.addApplication();
@@ -170,13 +157,12 @@ public class ParaProf implements ActionListener {
         ParaProfExperiment experiment = app.addExperiment();
         experiment.setName("Default Exp");
 
-        ParaProf.helpWindow = new HelpWindow();
-        ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
+        ParaProf.paraProfManagerWindow.setVisible(true);
 
         try {
-  
+
             if (fileType == 7) {
-                for (int i=0; i < sourceFiles.length; i++) {
+                for (int i = 0; i < sourceFiles.length; i++) {
                     File files[] = new File[1];
                     files[0] = sourceFiles[i];
                     paraProfManagerWindow.addTrial(app, experiment, files, fileType, fixNames, monitorProfiles);
@@ -188,24 +174,22 @@ public class ParaProf implements ActionListener {
             // running as Java Web Start without permission
         }
     }
-    
 
-    public void startSystem() {
-
-        ParaProf.preferences = new Preferences();
-
-        //Establish the presence of a .ParaProf directory. This is located
-        // by default in the user's home directory.
+    public static void initialize() {
 
         try {
             if (System.getProperty("jnlp.running") != null) {
                 ParaProf.JNLP = true;
             }
         } catch (java.security.AccessControlException ace) {
+            // if we get this security exception, we are definitely in JNLP
             ParaProf.JNLP = true;
         }
 
         if (ParaProf.JNLP == false) {
+
+            // Establish the presence of a .ParaProf directory. This is located
+            // by default in the user's home directory.
             ParaProf.paraProfHomeDirectory = new File(System.getProperty("user.home") + "/.ParaProf");
             if (paraProfHomeDirectory.exists()) {
 
@@ -273,10 +257,9 @@ public class ParaProf implements ActionListener {
             // running as Java Web Start without permission
         }
 
-        ParaProf.loadScripts();
 
-        loadDefaultTrial();
-
+        // Initialize, but do not show the manager window
+        ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
     }
 
     public static void loadScripts() {
@@ -336,19 +319,15 @@ public class ParaProf implements ActionListener {
     // This method is reponsible for any cleanup required in ParaProf 
     // before an exit takes place.
     public static void exitParaProf(int exitValue) {
-        //try {
-        //   throw new Exception();
-        //} catch (Exception e) {
-        //   e.printStackTrace();
-        //}
-
         try {
             savePreferences(new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf"));
         } catch (Exception e) {
             // we'll get an exception here if running under Java Web Start
         }
-
-        System.exit(exitValue);
+        if (!insideEclipse) {
+            // never call System.exit when invoked by the eclipse plugin, it will close the whole JVM, including the user's eclipse!
+            System.exit(exitValue);
+        }
     }
 
     public static boolean savePreferences(File file) {
@@ -356,9 +335,7 @@ public class ParaProf implements ActionListener {
         ParaProf.colorChooser.setSavedColors();
         ParaProf.preferences.setAssignedColors(ParaProf.colorMap.getMap());
         ParaProf.preferences.setManagerWindowPosition(ParaProf.paraProfManagerWindow.getLocation());
-
-        //        System.out.println ("saving manager position = " + preferences.getManagerWindowPosition());
-
+        ParaProf.preferences.setSourceLocations(getDirectoryManager().getCurrentElements());
         try {
             ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
             prefsOut.writeObject(ParaProf.preferences);
@@ -374,7 +351,6 @@ public class ParaProf implements ActionListener {
     // Main entry point
     static public void main(String[] args) {
         ParaProf.args = args;
-        final ParaProf paraProf = new ParaProf();
 
         // Set the tooltip delay to 20 seconds
         ToolTipManager.sharedInstance().setDismissDelay(20000);
@@ -471,8 +447,6 @@ public class ParaProf implements ActionListener {
             }
         }
 
-        ParaProf.runtime = Runtime.getRuntime();
-
         if (pack != null) {
             try {
 
@@ -513,7 +487,9 @@ public class ParaProf implements ActionListener {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    paraProf.startSystem();
+                    ParaProf.initialize();
+                    ParaProf.loadScripts();
+                    ParaProf.loadDefaultTrial();
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
