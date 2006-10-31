@@ -1,27 +1,13 @@
 package edu.uoregon.tau.paraprof.sourceview;
 
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.ListSelectionModel;
+import javax.swing.*;
 
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.WindowPlacer;
@@ -31,9 +17,10 @@ public class SourceManager extends JFrame {
 
     private DefaultListModel listModel;
     private JList dirList;
-
     private SourceRegion toFind;
 
+    private Map sourceViewers = new TreeMap();
+    
     public ArrayList getCurrentElements() {
         ArrayList list = new ArrayList();
         for (int i = 0; i < listModel.getSize(); i++) {
@@ -55,7 +42,12 @@ public class SourceManager extends JFrame {
         for (int j = 0; j < list.length; j++) {
             if (match(region.getFilename(), list[j].getName())) {
                 //System.out.println("found it");
-                SourceViewer sourceViewer = new SourceViewer(list[j], region);
+                SourceViewer sourceViewer = (SourceViewer) sourceViewers.get(list[j]);
+                if (sourceViewer == null) {
+                    sourceViewer = new SourceViewer(list[j]);
+                    sourceViewers.put(list[j],sourceViewer);
+                }
+                sourceViewer.highlightRegion(region);
                 sourceViewer.setVisible(true);
                 return true;
             }
