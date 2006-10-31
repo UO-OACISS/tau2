@@ -37,9 +37,9 @@ do
 # hack to get proper .d generation support for eclipse
       ;;
     *)
-      # Thanks to Berd Mohr for the following that handles quotes and spaces
-      mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
-      THEARGS="$THEARGS $mod_arg"
+      # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+      modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+      THEARGS="$THEARGS $modarg"
       ;;
   esac
 done

@@ -151,9 +151,10 @@ for arg in "$@"; do
 			#The first command (immediately) after the -opt sequence is the compiler.
 		fi
 
-		mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
-		regularCmd="$regularCmd $mod_arg"	
-		
+                # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+		modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+		THEARGS="$THEARGS $modarg"
+		regularCmd="$regularCmd $modarg"	
 
 		tempCounter=tempCounter+1
 		;;
