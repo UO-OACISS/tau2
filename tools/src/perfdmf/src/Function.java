@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.11 2006/10/31 03:20:48 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.12 2006/10/31 03:29:37 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		FunctionProfile
  */
 /**
@@ -104,11 +104,26 @@ public class Function implements Serializable, Comparable {
 
     public SourceRegion getSourceLink() {
         if (sourceLink == null) {
+            sourceLink = new SourceRegion();
             String name = this.name;
             if (isCallPathFunction()) {
                 name = name.substring(name.lastIndexOf("=>")+2);
             }
-            sourceLink = new SourceRegion();
+
+            if (name.indexOf("file:") != -1 && name.indexOf("line:") != -1) {
+                // MpiP source information
+                
+                int fileIndex = name.indexOf("file:");
+                int lineIndex = name.indexOf("line:");
+                
+                String filename = name.substring(fileIndex+5, lineIndex).trim();
+                sourceLink.setFilename(filename);
+                int lineNumber = Integer.parseInt(name.substring(lineIndex+5).trim());
+                sourceLink.setStartLine(lineNumber);
+                sourceLink.setEndLine(lineNumber);
+                return sourceLink;
+            }
+            
             int filenameStart = name.indexOf("[{");
             if (filenameStart == -1) {
                 return sourceLink;
