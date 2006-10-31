@@ -79,11 +79,11 @@ public class SourceManager extends JFrame {
         String filename = region.getFilename();
 
         File cwd = new File(".");
-        
+
         if (searchLocations(region, cwd.listFiles(), false)) {
             return;
         }
-        
+
         for (int i = 0; i < listModel.getSize(); i++) {
             String directory = (String) listModel.getElementAt(i);
             File file = new File(directory);
@@ -93,10 +93,17 @@ public class SourceManager extends JFrame {
             }
         }
 
-        JOptionPane.showMessageDialog(this, "ParaProf could not find \"" + filename
-                + "\", please add the containing directory, or a parent to the search list.");
-        toFind = region;
-        display(null);
+        //        JOptionPane.showMessageDialog(this, "ParaProf could not find \"" + filename
+        //                + "\", please add the containing directory, or a parent to the search list.");
+        int hr = JOptionPane.showOptionDialog(this, "ParaProf could not find \"" + filename
+                + "\", would you like to add the containing directory to the search list?", "Looking for \"" + filename + "\"",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+
+        toFind = null;
+        if (hr == JOptionPane.YES_OPTION) {
+            toFind = region;
+            display(null);
+        }
     }
 
     public SourceManager(List initialElements) {

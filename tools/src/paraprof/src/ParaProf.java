@@ -32,11 +32,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.54 2006/10/30 18:13:05 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.55 2006/10/31 04:07:50 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.54 $
+ * @version $Revision: 1.55 $
  */
 public class ParaProf implements ActionListener {
 
@@ -443,6 +443,9 @@ public class ParaProf implements ActionListener {
                 }
                 if (filename.toLowerCase().endsWith(".cube")) {
                     ParaProf.fileType = 8;
+                }
+                if (filename.toLowerCase().endsWith(".mpip")) {
+                    ParaProf.fileType = 3;
                 }
             }
         }

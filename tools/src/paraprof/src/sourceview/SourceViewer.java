@@ -46,7 +46,7 @@ public class SourceViewer extends JFrame {
         	
         	URL url = new URL("file",null,file.getAbsolutePath());
             final JTextPane ed = new JTextPane();
-            ed.setContentType("text/html");
+//            ed.setContentType("text/html");
             ed.setPage(url);
             ed.setFont(new Font("Monospaced", ParaProf.preferencesWindow.getFontStyle(), ParaProf.preferencesWindow.getFontSize()));
 

@@ -595,11 +595,13 @@ public class ParaProfUtils {
                         fdw.show();
                         ParaProf.incrementNumWindows();
                     } else if (arg.equals("Show Source Code")) {
-                        
-                    	ParaProf.getDirectoryManager().showSourceCode(function.getSourceLink());
-                        //SourceViewer srcView = new SourceViewer();
-                        //srcView.setVisible(true);
-                        //ParaProf.eclipseHandler.openSourceLocation(ppTrial, function);
+
+                        if (ParaProf.insideEclipse) {
+                            ParaProf.eclipseHandler.openSourceLocation(ppTrial, function);
+                        } else {
+                            // use internal viewer
+                            ParaProf.getDirectoryManager().showSourceCode(function.getSourceLink());
+                        }
                     }
 
                 } catch (Exception e) {
@@ -612,7 +614,7 @@ public class ParaProfUtils {
         JPopupMenu functionPopup = new JPopupMenu();
 
         //if (ParaProf.insideEclipse && function.getSourceLink().getFilename() != null) {
-        if (1==1) {
+        if (function.getSourceLink().getFilename() != null) {
             JMenuItem functionDetailsItem = new JMenuItem("Show Source Code");
             functionDetailsItem.addActionListener(actionListener);
             functionPopup.add(functionDetailsItem);
@@ -1145,12 +1147,12 @@ public class ParaProfUtils {
 
     public static URL getResource(String name) {
         URL url;
-        
+
         url = ParaProfUtils.class.getResource(name);
         if (url == null) {
             url = ParaProfUtils.class.getResource("/" + name);
         }
-        
+
         return url;
     }
 
