@@ -9,17 +9,15 @@ package edu.uoregon.tau.vis;
 import java.awt.Canvas;
 import java.awt.event.KeyListener;
 
-import net.java.games.jogl.GLCanvas;
-import net.java.games.jogl.GLCapabilities;
-import net.java.games.jogl.GLDrawableFactory;
+import net.java.games.jogl.*;
 
 /**
  * This class is merely a wrapper over GLCanvas which allows users of the Vis
  * package to build against vis alone (not jogl). 
  *
- * <P>CVS $Id: VisCanvas.java,v 1.5 2006/09/01 20:18:08 amorris Exp $</P>
+ * <P>CVS $Id: VisCanvas.java,v 1.6 2006/10/31 03:16:28 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class VisCanvas {
 
@@ -35,6 +33,10 @@ public class VisCanvas {
      
         GLCapabilities glCapabilities = new GLCapabilities();
 
+        //FSAA (Full Screen Anti-Aliasing)
+        //glCapabilities.setSampleBuffers(true);
+        //glCapabilities.setNumSamples(4);
+        
         //glCapabilities.setHardwareAccelerated(true);
 
         glCanvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
