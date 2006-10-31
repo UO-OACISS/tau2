@@ -108,7 +108,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         });
 
         //Set the help window text if required.
-        if (ParaProf.helpWindow.isVisible()) {
+        if (ParaProf.getHelpWindow().isVisible()) {
             this.help(false);
         }
 
@@ -414,19 +414,19 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     public void help(boolean display) {
         //Show the ParaProf help window.
-        ParaProf.helpWindow.clearText();
+        ParaProf.getHelpWindow().clearText();
         if (display)
-            ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("This is the statistics window");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("This window shows you textual statistics.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Right click on any line within this window to bring up a popup");
-        ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default color");
-        ParaProf.helpWindow.writeText(", or to show more details about the Function / User Event.");
-        ParaProf.helpWindow.writeText("You can also left click any line to highlight it in the system.");
+            ParaProf.getHelpWindow().show();
+        ParaProf.getHelpWindow().writeText("This is the statistics window");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("This window shows you textual statistics.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("Use the options menu to select different ways of displaying the data.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("Right click on any line within this window to bring up a popup");
+        ParaProf.getHelpWindow().writeText("menu. In this menu you can change or reset the default color");
+        ParaProf.getHelpWindow().writeText(", or to show more details about the Function / User Event.");
+        ParaProf.getHelpWindow().writeText("You can also left click any line to highlight it in the system.");
     }
 
     //Helper functionProfiles.

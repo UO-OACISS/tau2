@@ -44,7 +44,7 @@ public class SourceViewer extends JFrame {
         //      final int bonus20 = getLineStartOffset(ed, 118 - 1 + 50);
         final int startpos = getLineStartOffset(ed, Math.max(0, region.getStartLine() - 1));
         final int endpos = getLineEndOffset(ed, Math.max(0, region.getEndLine() - 1));
-        int tempvar = getLineStartOffset(ed, region.getStartLine() + 20);
+        int tempvar = getLineStartOffset(ed, region.getStartLine() + 50);
         if (tempvar == -1) {
             tempvar = endpos;
         }

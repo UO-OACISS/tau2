@@ -32,11 +32,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.55 2006/10/31 04:07:50 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.56 2006/10/31 18:15:51 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.55 $
+ * @version $Revision: 1.56 $
  */
 public class ParaProf implements ActionListener {
 
@@ -66,7 +66,7 @@ public class ParaProf implements ActionListener {
 
     public static ParaProfManagerWindow paraProfManagerWindow;
     public static ApplicationManager applicationManager = new ApplicationManager();
-    public static HelpWindow helpWindow = new HelpWindow();
+    private static HelpWindow helpWindow;
     public static PreferencesWindow preferencesWindow;
     public static Runtime runtime;
     private static int numWindowsOpen = 0;
@@ -95,6 +95,12 @@ public class ParaProf implements ActionListener {
         ParaProf.runtime = Runtime.getRuntime();
     }
 
+    public static HelpWindow getHelpWindow() {
+        if (helpWindow == null) {
+            helpWindow = new HelpWindow();
+        }
+        return helpWindow;
+    }
     
     public static SourceManager getDirectoryManager() {
     	if (directoryManager == null) {

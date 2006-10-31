@@ -21,9 +21,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * The UserEventWindow shows one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventWindow.java,v 1.23 2005/11/02 00:39:33 amorris Exp $</P>
+ * <P>CVS $Id: UserEventWindow.java,v 1.24 2006/10/31 18:15:52 amorris Exp $</P>
  * @author  Alan Morris, Robert Bell
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  * @see GlobalBarChartModel
  */
 public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -79,7 +79,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         });
 
         //Set the help window text if required.
-        if (ParaProf.helpWindow.isVisible()) {
+        if (ParaProf.getHelpWindow().isVisible()) {
             this.help(false);
         }
 
@@ -146,7 +146,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         });
 
         //Set the help window text if required.
-        if (ParaProf.helpWindow.isVisible()) {
+        if (ParaProf.getHelpWindow().isVisible()) {
             this.help(false);
         }
 
@@ -348,19 +348,19 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
     public void help(boolean display) {
         //Show the ParaProf help window.
-        ParaProf.helpWindow.clearText();
+        ParaProf.getHelpWindow().clearText();
         if (display)
-            ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("This is the userevent data window for:");
-        ParaProf.helpWindow.writeText(userEvent.getName());
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("This window shows you this userevent's statistics across all the threads.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
-        ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default color");
-        ParaProf.helpWindow.writeText("for this userevent.");
+            ParaProf.getHelpWindow().show();
+        ParaProf.getHelpWindow().writeText("This is the userevent data window for:");
+        ParaProf.getHelpWindow().writeText(userEvent.getName());
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("This window shows you this userevent's statistics across all the threads.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("Use the options menu to select different ways of displaying the data.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("Right click anywhere within this window to bring up a popup");
+        ParaProf.getHelpWindow().writeText("menu. In this menu you can change or reset the default color");
+        ParaProf.getHelpWindow().writeText("for this userevent.");
     }
 
     public DataSorter getDataSorter() {

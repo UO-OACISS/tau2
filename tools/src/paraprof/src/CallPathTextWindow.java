@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.26 2005/09/26 21:12:02 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.27 2006/10/31 18:15:51 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.26 $
+ * @version	$Revision: 1.27 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -85,7 +85,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         });
 
         //Set the help window text if required.
-        if (ParaProf.helpWindow.isVisible()) {
+        if (ParaProf.getHelpWindow().isVisible()) {
             this.help(false);
         }
 
@@ -319,23 +319,23 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     public void help(boolean display) {
         //Show the ParaProf help window.
-        ParaProf.helpWindow.clearText();
+        ParaProf.getHelpWindow().clearText();
         if (display)
-            ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("Call path text window.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("This window displays call path relationships in two ways:");
-        ParaProf.helpWindow.writeText("1- If this window has been invoked from the \"windows\" menu of");
-        ParaProf.helpWindow.writeText("ParaProf, the information displayed is all call path relations found.");
-        ParaProf.helpWindow.writeText("That is, all the parent/child relationships.");
-        ParaProf.helpWindow.writeText("Thus, in this case, given the parallel nature of ParaProf, this information");
-        ParaProf.helpWindow.writeText("might not be valid for a particular thread. It is however useful to observe");
-        ParaProf.helpWindow.writeText("all the realtionships that exist in the data.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("2- If this window has been invoked from the popup menu to the left of a thread bar");
-        ParaProf.helpWindow.writeText("in the main ParaProf window, the information dispayed will be specific to this thread,");
-        ParaProf.helpWindow.writeText("and will thus contain both parent/child relations and the data relating to those");
-        ParaProf.helpWindow.writeText("relationships.");
+            ParaProf.getHelpWindow().show();
+        ParaProf.getHelpWindow().writeText("Call path text window.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("This window displays call path relationships in two ways:");
+        ParaProf.getHelpWindow().writeText("1- If this window has been invoked from the \"windows\" menu of");
+        ParaProf.getHelpWindow().writeText("ParaProf, the information displayed is all call path relations found.");
+        ParaProf.getHelpWindow().writeText("That is, all the parent/child relationships.");
+        ParaProf.getHelpWindow().writeText("Thus, in this case, given the parallel nature of ParaProf, this information");
+        ParaProf.getHelpWindow().writeText("might not be valid for a particular thread. It is however useful to observe");
+        ParaProf.getHelpWindow().writeText("all the realtionships that exist in the data.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("2- If this window has been invoked from the popup menu to the left of a thread bar");
+        ParaProf.getHelpWindow().writeText("in the main ParaProf window, the information dispayed will be specific to this thread,");
+        ParaProf.getHelpWindow().writeText("and will thus contain both parent/child relations and the data relating to those");
+        ParaProf.getHelpWindow().writeText("relationships.");
     }
 
     public DataSorter getDataSorter() {

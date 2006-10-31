@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.6 2006/03/30 03:03:54 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.7 2006/10/31 18:15:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -195,21 +195,21 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
 
         PPThread ppThread = (PPThread) threads.get(row);
 
-        if (ParaProf.helpWindow.isShowing()) {
-            ParaProf.helpWindow.clearText();
+        if (ParaProf.getHelpWindow().isShowing()) {
+            ParaProf.getHelpWindow().clearText();
             if (ppThread.getNodeID() == -1) {
-                ParaProf.helpWindow.writeText("This line represents the mean statistics (over all threads).\n");
+                ParaProf.getHelpWindow().writeText("This line represents the mean statistics (over all threads).\n");
 
             } else if (ppThread.getNodeID() == -2) {
 
             } else if (ppThread.getNodeID() == -3) {
-                ParaProf.helpWindow.writeText("This line represents the standard deviation of each function (over threads).\n");
+                ParaProf.getHelpWindow().writeText("This line represents the standard deviation of each function (over threads).\n");
 
             } else {
-                ParaProf.helpWindow.writeText("n,c,t stands for: Node, Context and Thread.\n");
+                ParaProf.getHelpWindow().writeText("n,c,t stands for: Node, Context and Thread.\n");
             }
-            ParaProf.helpWindow.writeText("Right click to display options for viewing the data.");
-            ParaProf.helpWindow.writeText("Left click to go directly to the Thread Data Window");
+            ParaProf.getHelpWindow().writeText("Right click to display options for viewing the data.");
+            ParaProf.getHelpWindow().writeText("Left click to go directly to the Thread Data Window");
         }
 
         return "Right click for options";
@@ -250,12 +250,12 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     }
 
     public String getOtherToolTopText(int row) {
-        if (ParaProf.helpWindow.isShowing()) {
-            ParaProf.helpWindow.clearText();
-            ParaProf.helpWindow.writeText("Your mouse is over the misc. function section!\n");
-            ParaProf.helpWindow.writeText("These are functions which have a non zero value,"
+        if (ParaProf.getHelpWindow().isShowing()) {
+            ParaProf.getHelpWindow().clearText();
+            ParaProf.getHelpWindow().writeText("Your mouse is over the misc. function section!\n");
+            ParaProf.getHelpWindow().writeText("These are functions which have a non zero value,"
                     + " but whose screen representation is less than a pixel.\n");
-            ParaProf.helpWindow.writeText("To view these function, right or left click to the left of"
+            ParaProf.getHelpWindow().writeText("To view these function, right or left click to the left of"
                     + " this bar to bring up windows which will show more detailed information.");
         }
 

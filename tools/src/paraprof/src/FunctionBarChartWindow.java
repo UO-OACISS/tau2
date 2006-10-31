@@ -26,9 +26,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.8 2006/09/08 00:37:31 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.9 2006/10/31 18:15:51 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -181,7 +181,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         //dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
 
         //Set the help window text if required.
-        if (ParaProf.helpWindow.isVisible()) {
+        if (ParaProf.getHelpWindow().isVisible()) {
             this.help(false);
         }
 
@@ -515,33 +515,33 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
     public void help(boolean display) {
         //Show the ParaProf help window.
-        ParaProf.helpWindow.clearText();
+        ParaProf.getHelpWindow().clearText();
         if (display) {
-            ParaProf.helpWindow.show();
+            ParaProf.getHelpWindow().show();
         }
 
         if (function != null) {
-            ParaProf.helpWindow.writeText("This is the function data window for:");
-            ParaProf.helpWindow.writeText(ParaProfUtils.getDisplayName(function));
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
-            ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default color");
-            ParaProf.helpWindow.writeText("for this function.");
+            ParaProf.getHelpWindow().writeText("This is the function data window for:");
+            ParaProf.getHelpWindow().writeText(ParaProfUtils.getDisplayName(function));
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("This window shows you this function's statistics across all the threads.");
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("Use the options menu to select different ways of displaying the data.");
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("Right click anywhere within this window to bring up a popup");
+            ParaProf.getHelpWindow().writeText("menu. In this menu you can change or reset the default color");
+            ParaProf.getHelpWindow().writeText("for this function.");
         } else {
-            ParaProf.helpWindow.writeText("This is the thread data window");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("This window shows you the values for all functions on this thread.");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("Right click on any function within this window to bring up a popup");
-            ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default color");
-            ParaProf.helpWindow.writeText("for the function, or to show more details about the function.");
-            ParaProf.helpWindow.writeText("You can also left click any function to highlight it in the system.");
+            ParaProf.getHelpWindow().writeText("This is the thread data window");
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("This window shows you the values for all functions on this thread.");
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("Use the options menu to select different ways of displaying the data.");
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("Right click on any function within this window to bring up a popup");
+            ParaProf.getHelpWindow().writeText("menu. In this menu you can change or reset the default color");
+            ParaProf.getHelpWindow().writeText("for the function, or to show more details about the function.");
+            ParaProf.getHelpWindow().writeText("You can also left click any function to highlight it in the system.");
         }
     }
 

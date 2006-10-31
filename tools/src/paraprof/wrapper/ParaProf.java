@@ -32,11 +32,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.9 2006/10/31 02:09:29 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.10 2006/10/31 18:15:52 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class ParaProf implements ActionListener {
 
@@ -55,7 +55,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Mon Oct 30 18:07:22 PST 2006";
+    private final static String VERSION = "Tue Oct 31 10:15:14 PST 2006";
 
     public static int defaultNumberPrecision = 6;
 
@@ -66,7 +66,7 @@ public class ParaProf implements ActionListener {
 
     public static ParaProfManagerWindow paraProfManagerWindow;
     public static ApplicationManager applicationManager = new ApplicationManager();
-    public static HelpWindow helpWindow = new HelpWindow();
+    private static HelpWindow helpWindow;
     public static PreferencesWindow preferencesWindow;
     public static Runtime runtime;
     private static int numWindowsOpen = 0;
@@ -95,6 +95,12 @@ public class ParaProf implements ActionListener {
         ParaProf.runtime = Runtime.getRuntime();
     }
 
+    public static HelpWindow getHelpWindow() {
+        if (helpWindow == null) {
+            helpWindow = new HelpWindow();
+        }
+        return helpWindow;
+    }
     
     public static SourceManager getDirectoryManager() {
     	if (directoryManager == null) {
@@ -443,6 +449,9 @@ public class ParaProf implements ActionListener {
                 }
                 if (filename.toLowerCase().endsWith(".cube")) {
                     ParaProf.fileType = 8;
+                }
+                if (filename.toLowerCase().endsWith(".mpip")) {
+                    ParaProf.fileType = 3;
                 }
             }
         }

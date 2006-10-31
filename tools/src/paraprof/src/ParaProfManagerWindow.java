@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.10 2006/10/30 18:13:05 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.11 2006/10/31 18:15:52 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -540,36 +540,36 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 } else if (arg.equals("About ParaProf")) {
                     JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
                 } else if (arg.equals("Show Help Window")) {
-                    ParaProf.helpWindow.show();
+                    ParaProf.getHelpWindow().show();
                     //Clear the window first.
-                    ParaProf.helpWindow.clearText();
-                    ParaProf.helpWindow.writeText("This is ParaProf's manager window!");
-                    ParaProf.helpWindow.writeText("");
-                    ParaProf.helpWindow.writeText("This window allows you to manage all of ParaProf's data sources,"
+                    ParaProf.getHelpWindow().clearText();
+                    ParaProf.getHelpWindow().writeText("This is ParaProf's manager window!");
+                    ParaProf.getHelpWindow().writeText("");
+                    ParaProf.getHelpWindow().writeText("This window allows you to manage all of ParaProf's data sources,"
                             + " including loading data from local files, or from a database."
                             + " We also support the generation of derived metrics. Please see the"
                             + " items below for more help.");
-                    ParaProf.helpWindow.writeText("");
-                    ParaProf.helpWindow.writeText("------------------");
-                    ParaProf.helpWindow.writeText("");
+                    ParaProf.getHelpWindow().writeText("");
+                    ParaProf.getHelpWindow().writeText("------------------");
+                    ParaProf.getHelpWindow().writeText("");
 
-                    ParaProf.helpWindow.writeText("1) Navigation:"
+                    ParaProf.getHelpWindow().writeText("1) Navigation:"
                             + " The window is split into two halves, the left side gives a tree representation"
                             + " of all data. The right side gives information about items clicked on in the left"
                             + " half. You can also update information in the right half by double clicking in"
                             + " the fields, and entering new data.  This automatically updates the left half."
                             + " Right-clicking on the tree nodes in the left half displays popup menus which"
                             + " allow you to add/delete applications, experiments, or trials.");
-                    ParaProf.helpWindow.writeText("");
-                    ParaProf.helpWindow.writeText("2) DB Configuration:"
+                    ParaProf.getHelpWindow().writeText("");
+                    ParaProf.getHelpWindow().writeText("2) DB Configuration:"
                             + " By default, ParaProf looks in the .ParaProf home directory in your home"
                             + " directory for the database configuration file.  If that file is found, then"
                             + " you are done, and can just expand the DB Applications node.  If there was a"
                             + " problem finding the file, you can enter the location of the file by selecting"
                             + " File -> Database Configuration.  You can also override the configuration file"
                             + " password in the same manner.");
-                    ParaProf.helpWindow.writeText("");
-                    ParaProf.helpWindow.writeText("3) Deriving new metrics:"
+                    ParaProf.getHelpWindow().writeText("");
+                    ParaProf.getHelpWindow().writeText("3) Deriving new metrics:"
                             + " By selecting Options -> Show Derived Metric Panel, you will display the apply"
                             + " operations window.  Clicking on the metrics of a trial will update the"
                             + " arguments to the selected operation.  Currently, you can only derive metrics"
@@ -577,9 +577,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                             + " operations per second by taking PAPI_FP_INS and dividing it by GET_TIME_OF_DAY)."
                             + " The 2nd argument is a user editable textbox and can be filled in with scalar "
                             + " values using the keyword 'val' (e.g. \"val 1.5\".");
-                    ParaProf.helpWindow.writeText("");
-                    ParaProf.helpWindow.writeText("------------------");
-                    ParaProf.helpWindow.writeText("");
+                    ParaProf.getHelpWindow().writeText("");
+                    ParaProf.getHelpWindow().writeText("------------------");
+                    ParaProf.getHelpWindow().writeText("");
                 } else if (arg.equals("Delete")) {
                     handleDelete(clickedOnObject);
 
@@ -1779,58 +1779,58 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         } catch (Exception e) {
             //Try and determine what went wrong, and then popup the help window
             // giving the user some idea of what to do.
-            ParaProf.helpWindow.show();
+            ParaProf.getHelpWindow().show();
             //Clear the window first.
-            ParaProf.helpWindow.clearText();
-            ParaProf.helpWindow.writeText("There was an error connecting to the database!");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("Please see the help items below to try and resolve this issue."
+            ParaProf.getHelpWindow().clearText();
+            ParaProf.getHelpWindow().writeText("There was an error connecting to the database!");
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("Please see the help items below to try and resolve this issue."
                     + " If none of those work, send an email to tau-bugs@cs.uoregon.edu"
                     + " including as complete a description of the problem as possible.");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("------------------");
-            ParaProf.helpWindow.writeText("");
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("------------------");
+            ParaProf.getHelpWindow().writeText("");
 
-            ParaProf.helpWindow.writeText("1) JDBC driver issue:"
+            ParaProf.getHelpWindow().writeText("1) JDBC driver issue:"
                     + " The JDBC driver is required in your classpath. If you ran ParaProf using"
                     + " the shell script provided in tau (paraprof), then the default."
                     + " location used is $LOCATION_OF_TAU_ROOT/$ARCH/lib.");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText(" If you ran ParaProf manually, make sure that the location of"
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText(" If you ran ParaProf manually, make sure that the location of"
                     + " the JDBC driver is in your classpath (you can set this in your."
                     + " environment, or as a commmand line option to java. As an example, PostgreSQL"
                     + " uses postgresql.jar as its JDBC driver name.");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("2) Network connection issue:"
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("2) Network connection issue:"
                     + " Check your ability to connect to the database. You might be connecting to the"
                     + " incorrect port (PostgreSQL uses port 5432 by default). Also make sure that"
                     + " if there exists a firewall on you network (or local machine), it is not"
                     + " blocking you connection. Also check your database logs to ensure that you have"
                     + " permission to connect to the server.");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("3) Password issue:"
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("3) Password issue:"
                     + " Make sure that your password is set correctly. If it is not in the perfdmf"
                     + " configuration file, you can enter it manually by selecting"
                     + "  File -> Database Configuration in the ParaProfManagerWindow window.");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("------------------");
-            ParaProf.helpWindow.writeText("");
+            ParaProf.getHelpWindow().writeText("");
+            ParaProf.getHelpWindow().writeText("------------------");
+            ParaProf.getHelpWindow().writeText("");
 
-            ParaProf.helpWindow.writeText("The full error is given below:\n");
+            ParaProf.getHelpWindow().writeText("The full error is given below:\n");
 
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             if (e instanceof TauRuntimeException) { // unwrap
-                ParaProf.helpWindow.writeText(((TauRuntimeException) e).getMessage() + "\n\n");
+                ParaProf.getHelpWindow().writeText(((TauRuntimeException) e).getMessage() + "\n\n");
                 e = ((TauRuntimeException) e).getActualException();
             }
             e.printStackTrace(pw);
             pw.close();
-            ParaProf.helpWindow.writeText(sw.toString());
+            ParaProf.getHelpWindow().writeText(sw.toString());
 
             EventQueue.invokeLater(new Runnable() {
                 public void run() {
-                    ParaProf.helpWindow.getScrollPane().getVerticalScrollBar().setValue(0);
+                    ParaProf.getHelpWindow().getScrollPane().getVerticalScrollBar().setValue(0);
                 }
             });
 

@@ -580,17 +580,17 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
     public void help(boolean display) {
         //Show the ParaProf help window.
-        ParaProf.helpWindow.clearText();
+        ParaProf.getHelpWindow().clearText();
         if (display)
-            ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("This is the 3D Window");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("This window displays profile data in three dimensions through the Triangle Mesh Plot, the Bar Plot, and the ScatterPlot");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Change between the plots by selecting the desired type from the radio buttons in the upper right.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Experiment with the controls at the right.");
-        ParaProf.helpWindow.writeText("");
+            ParaProf.getHelpWindow().show();
+        ParaProf.getHelpWindow().writeText("This is the 3D Window");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("This window displays profile data in three dimensions through the Triangle Mesh Plot, the Bar Plot, and the ScatterPlot");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("Change between the plots by selecting the desired type from the radio buttons in the upper right.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("Experiment with the controls at the right.");
+        ParaProf.getHelpWindow().writeText("");
     }
 
     private long lastCall = 0;

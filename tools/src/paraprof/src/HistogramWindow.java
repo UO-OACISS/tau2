@@ -36,9 +36,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.3 2006/03/30 03:03:53 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.4 2006/10/31 18:15:51 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * @see     HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
@@ -81,7 +81,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         });
 
         //Set the help window text if required.
-        if (ParaProf.helpWindow.isVisible()) {
+        if (ParaProf.getHelpWindow().isVisible()) {
             this.help(false);
         }
 
@@ -302,15 +302,15 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public void help(boolean display) {
-        ParaProf.helpWindow.clearText();
+        ParaProf.getHelpWindow().clearText();
         if (display)
-            ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("This is the histogram window");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("This window shows you a histogram of all of the values for this function.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Use the options menu to select different types of data to display.");
-        ParaProf.helpWindow.writeText("");
+            ParaProf.getHelpWindow().show();
+        ParaProf.getHelpWindow().writeText("This is the histogram window");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("This window shows you a histogram of all of the values for this function.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("Use the options menu to select different types of data to display.");
+        ParaProf.getHelpWindow().writeText("");
     }
 
     private void sortLocalData() {

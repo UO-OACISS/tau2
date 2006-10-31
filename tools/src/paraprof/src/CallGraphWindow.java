@@ -32,9 +32,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.3 2006/06/23 17:49:48 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.4 2006/10/31 18:15:51 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ImageExport, Printable, ParaProfWindow {
@@ -296,7 +296,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         });
 
         //Set the help window text if required.
-        if (ParaProf.helpWindow.isVisible()) {
+        if (ParaProf.getHelpWindow().isVisible()) {
             this.help(false);
         }
 
@@ -1786,21 +1786,21 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     public void help(boolean display) {
         //Show the ParaProf help window.
-        ParaProf.helpWindow.clearText();
+        ParaProf.getHelpWindow().clearText();
         if (display)
-            ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("This is the Call Graph Window");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("This window shows you a graph of call paths present in the profile data.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Click on a box to highlight paths that go through that function.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Right-click on a box to access the Function Data Window for that function.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Experiment with the \"Box Width by...\" and \"Box Color by...\" menus (under Options) to display different types of data.");
-        ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("If you only see a single line of boxes (no edges connecting them), it probably means that your profile data does not contain call path data.  If you believe this to be incorrect please contact us with the data at tau-bugs@cs.uoregon.edu");
-        ParaProf.helpWindow.writeText("");
+            ParaProf.getHelpWindow().show();
+        ParaProf.getHelpWindow().writeText("This is the Call Graph Window");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("This window shows you a graph of call paths present in the profile data.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("Click on a box to highlight paths that go through that function.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("Right-click on a box to access the Function Data Window for that function.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("Experiment with the \"Box Width by...\" and \"Box Color by...\" menus (under Options) to display different types of data.");
+        ParaProf.getHelpWindow().writeText("");
+        ParaProf.getHelpWindow().writeText("If you only see a single line of boxes (no edges connecting them), it probably means that your profile data does not contain call path data.  If you believe this to be incorrect please contact us with the data at tau-bugs@cs.uoregon.edu");
+        ParaProf.getHelpWindow().writeText("");
     }
 
     public Dimension getViewportSize() {

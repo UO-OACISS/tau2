@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.6 2006/08/19 01:25:00 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.7 2006/10/31 18:15:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -85,7 +85,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
                     + thread.getThreadID() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         }
 
-        if (ParaProf.helpWindow.isVisible()) {
+        if (ParaProf.getHelpWindow().isVisible()) {
             this.help(false);
         }
 
@@ -369,13 +369,13 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     public void help(boolean display) {
         //Show the ParaProf help window.
-        ParaProf.helpWindow.clearText();
+        ParaProf.getHelpWindow().clearText();
         if (display)
-            ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("This is the Statistics Table.\n");
-        ParaProf.helpWindow.writeText("This window shows you function data across a given thread (or mean/std.dev.)\n");
-        ParaProf.helpWindow.writeText("If callpath data is present, it will be shown as a tree on the left.");
-        ParaProf.helpWindow.writeText("In this mode, the metric values will show Inclusive when the node is collapsed, and exclusive when the node is expanded.\n");
+            ParaProf.getHelpWindow().show();
+        ParaProf.getHelpWindow().writeText("This is the Statistics Table.\n");
+        ParaProf.getHelpWindow().writeText("This window shows you function data across a given thread (or mean/std.dev.)\n");
+        ParaProf.getHelpWindow().writeText("If callpath data is present, it will be shown as a tree on the left.");
+        ParaProf.getHelpWindow().writeText("In this mode, the metric values will show Inclusive when the node is collapsed, and exclusive when the node is expanded.\n");
     }
 
     public void closeThisWindow() {
