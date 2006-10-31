@@ -5,10 +5,7 @@ import java.awt.Rectangle;
 import java.io.File;
 import java.net.URL;
 
-import javax.swing.JEditorPane;
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 
@@ -29,7 +26,7 @@ public class SourceViewer extends JFrame {
         return lineElem.getStartOffset();
     }
 
-    public int getLineEndOffset(JEditorPane ed, int line) throws BadLocationException {
+    public int getLineEndOffset(JTextPane ed, int line) throws BadLocationException {
 
         Element map = ed.getDocument().getDefaultRootElement();
         Element lineElem = map.getElement(line);
@@ -48,15 +45,16 @@ public class SourceViewer extends JFrame {
         try {
         	
         	URL url = new URL("file",null,file.getAbsolutePath());
-            final JEditorPane ed = new JEditorPane();
+            final JTextPane ed = new JTextPane();
+            ed.setContentType("text/html");
             ed.setPage(url);
             ed.setFont(new Font("Monospaced", ParaProf.preferencesWindow.getFontStyle(), ParaProf.preferencesWindow.getFontSize()));
 
 //            final int startpos = getLineStartOffset(ed, 118 - 1);
 //            final int endpos = getLineEndOffset(ed, 227);
 //            final int bonus20 = getLineStartOffset(ed, 118 - 1 + 50);
-            final int startpos = getLineStartOffset(ed, region.getStartLine()-1);
-            final int endpos = getLineEndOffset(ed, region.getEndLine()-1);
+            final int startpos = getLineStartOffset(ed, Math.max(0,region.getStartLine()-1));
+            final int endpos = getLineEndOffset(ed, Math.max(0,region.getEndLine()-1));
             int tempvar = getLineStartOffset(ed, region.getStartLine()+20);
             if (tempvar == -1) {
             	tempvar=endpos;
@@ -72,9 +70,8 @@ public class SourceViewer extends JFrame {
             //ed.setSelectionStart(startpos);
             ed.setCaretPosition(startpos);
 
-            this.add(ed);
             scrollpane = new JScrollPane(ed);
-            this.add(scrollpane);
+            getContentPane().add(scrollpane);
 
             ed.setEditable(false);
             //ed.setCaretPosition(endpos);
