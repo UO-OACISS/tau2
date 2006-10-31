@@ -150,14 +150,21 @@ public class MpiPDataSource extends DataSource {
 
                 StringTokenizer st1 = new StringTokenizer(inputString, " ");
 
-                int id, level, line;
+                int id, level, line = 0;
                 String file, parent, mpiCall;
 
                 id = Integer.parseInt(st1.nextToken()); // callsite id
                 if (levelInformationPresent) {
                     level = Integer.parseInt(st1.nextToken()); // Level
                     file = st1.nextToken(); // Filename
-                    line = Integer.parseInt(st1.nextToken()); // Line
+
+                    boolean lineAndFile = true;
+                    try {
+                        line = Integer.parseInt(st1.nextToken()); // Line
+                    } catch (NumberFormatException e) {
+                        // no file/line number info
+                        lineAndFile = false;
+                    }
 
                     parent = "";
                     while (st1.hasMoreTokens()) {
@@ -172,10 +179,18 @@ public class MpiPDataSource extends DataSource {
                         mpiCall = parent.substring(loc + 1);
                         parent = parent.substring(0, loc);
 
-                        eventNames[id] = parent + " [file:" + file + " line:" + line + "] => " + "MPI_" + mpiCall;
+                        if (lineAndFile) {
+                            eventNames[id] = parent + " [file:" + file + " line:" + line + "] => " + "MPI_" + mpiCall;
+                        } else {
+                            eventNames[id] = parent + " [Address:" + file + "] => " + "MPI_" + mpiCall;
+                        }
 
                     } else {
-                        eventNames[id] = parent + " [file:" + file + " line:" + line + "] => " + eventNames[id];
+                        if (lineAndFile) {
+                            eventNames[id] = parent + " [file:" + file + " line:" + line + "] => " + eventNames[id];
+                        } else {
+                            eventNames[id] = parent + " [Address:" + file + "] => " + eventNames[id];
+                        }
                     }
 
                 } else {

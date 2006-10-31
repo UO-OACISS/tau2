@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.12 2006/10/31 03:29:37 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.13 2006/10/31 04:05:16 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		FunctionProfile
  */
 /**
@@ -105,25 +105,39 @@ public class Function implements Serializable, Comparable {
     public SourceRegion getSourceLink() {
         if (sourceLink == null) {
             sourceLink = new SourceRegion();
-            String name = this.name;
-            if (isCallPathFunction()) {
-                name = name.substring(name.lastIndexOf("=>")+2);
-            }
 
             if (name.indexOf("file:") != -1 && name.indexOf("line:") != -1) {
                 // MpiP source information
-                
+                String name = this.name;
+
+                // start with the last section of location information
+                // we may have: "main [file:ring.c line:37] =>  func [file:ring.c line:19] => MPI_Recv"
+                // and we want the last section (for now)
+                name = name.substring(name.lastIndexOf("["));
                 int fileIndex = name.indexOf("file:");
                 int lineIndex = name.indexOf("line:");
                 
                 String filename = name.substring(fileIndex+5, lineIndex).trim();
                 sourceLink.setFilename(filename);
-                int lineNumber = Integer.parseInt(name.substring(lineIndex+5).trim());
+                int lineNumber;
+                if (name.indexOf("]",lineIndex) != -1) {
+                    // new mpiP
+                    lineNumber = Integer.parseInt(name.substring(lineIndex+5,name.indexOf("]")));
+                } else {
+                    // old mpiP
+                    lineNumber = Integer.parseInt(name.substring(lineIndex+5).trim());
+                }
                 sourceLink.setStartLine(lineNumber);
                 sourceLink.setEndLine(lineNumber);
                 return sourceLink;
             }
-            
+
+            // for TAU, look at the leaf location information
+            String name = this.name;
+            if (isCallPathFunction()) {
+                name = name.substring(name.lastIndexOf("=>")+2);
+            }
+
             int filenameStart = name.indexOf("[{");
             if (filenameStart == -1) {
                 return sourceLink;
