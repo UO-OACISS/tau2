@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.9 2006/10/30 18:10:26 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.10 2006/10/31 02:06:30 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		FunctionProfile
  */
 /**
@@ -116,10 +116,11 @@ public class Function implements Serializable, Comparable {
             }
 
             int openbracket1 = name.indexOf("{", filenameEnd + 1);
-            int openbracket2 = name.indexOf("{", openbracket1 + 1);
             int comma1 = name.indexOf(",", filenameEnd + 1);
-            int comma2 = name.indexOf(",", comma1 + 1);
             int closebracket1 = name.indexOf("}", filenameEnd + 1);
+            int dash = name.indexOf("-", closebracket1 + 1);
+            int openbracket2 = name.indexOf("{", openbracket1 + 1);
+            int comma2 = name.indexOf(",", comma1 + 1);
             int closebracket2 = name.indexOf("}", closebracket1 + 1);
 
             sourceLink.setFilename(name.substring(filenameStart + 2, filenameEnd));
@@ -128,17 +129,17 @@ public class Function implements Serializable, Comparable {
                 return sourceLink;
             }
 
-            if (comma1 == -1) {
-                // not a loop
+            if (dash == -1) {
+                // fortran (e.g. "foo [{foo.cpp} {1,1}]")
                 if (closebracket1 == -1) {
                     return sourceLink;
                 }
-                int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, closebracket1));
+                int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, comma1));
                 sourceLink.setStartLine(linenumber);
                 sourceLink.setEndLine(linenumber);
                 return sourceLink;
             } else {
-                // loop
+                // loop or c/c++ (e.g. "foo [{foo.cpp} {1,1}-{5,5}]")
                 if (openbracket1 == -1 || openbracket2 == -1 || comma1 == -1 || comma2 == -1 || closebracket1 == -1
                         || closebracket2 == -1) {
                     return sourceLink;
