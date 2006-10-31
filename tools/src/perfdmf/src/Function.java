@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.10 2006/10/31 02:06:30 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.11 2006/10/31 03:20:48 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		FunctionProfile
  */
 /**
@@ -104,6 +104,10 @@ public class Function implements Serializable, Comparable {
 
     public SourceRegion getSourceLink() {
         if (sourceLink == null) {
+            String name = this.name;
+            if (isCallPathFunction()) {
+                name = name.substring(name.lastIndexOf("=>")+2);
+            }
             sourceLink = new SourceRegion();
             int filenameStart = name.indexOf("[{");
             if (filenameStart == -1) {
