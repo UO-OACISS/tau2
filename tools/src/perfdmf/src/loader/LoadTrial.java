@@ -5,6 +5,8 @@ import jargs.gnu.CmdLineParser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+
+import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.perfdmf.*;
 
 public class LoadTrial {
@@ -315,6 +317,9 @@ public class LoadTrial {
                 }
                 if (filename.toLowerCase().endsWith(".cube")) {
                     fileType = 8;
+                }
+                if (filename.toLowerCase().endsWith(".mpip")) {
+                    fileType = 3;
                 }
             }
         }
