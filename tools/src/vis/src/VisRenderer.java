@@ -23,9 +23,9 @@ import net.java.games.jogl.util.BufferUtils;
 /**
  * This object manages the JOGL interface.
  *    
- * <P>CVS $Id: VisRenderer.java,v 1.4 2006/11/01 01:50:33 amorris Exp $</P>
+ * <P>CVS $Id: VisRenderer.java,v 1.5 2006/11/01 03:20:48 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
@@ -229,18 +229,19 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         if (aim == null)
             return;
 
-        //System.out.println ("viewAngle now " + viewAngle);
-        //System.out.println ("viewDirection now " + viewDirection);
+        //System.out.println ("viewAltitude now " + viewAltitude);
+        //System.out.println ("viewAzimuth now " + viewAzimuth);
 
-        eye = new Vec((float) Math.cos(viewAltitude), 0.0f, (float) Math.sin(viewAltitude));
+        
+        Matrix rotateY = Matrix.createRotateY(-viewAltitude);
+        Matrix rotateZ = Matrix.createRotateZ(viewAzimuth);
 
-        eye.sety(eye.x() * Math.sin(viewAzimuth));
-        eye.setx(eye.x() * Math.cos(viewAzimuth));
-
+        eye = rotateZ.transform(rotateY.transform(new Vec(1,0,0)));
         eye.normalize();
 
-        vup = new Vec(0.0, 0.0, 1.0);
-        vup = vup.subtract(eye);
+        // set the canonical v-up vector
+        vup = rotateZ.transform(rotateY.transform(new Vec(0,0,1)));
+        
         eye.setx(eye.x() * viewDistance);
         eye.sety(eye.y() * viewDistance);
         eye.setz(eye.z() * viewDistance);
@@ -410,8 +411,10 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
                 
                 Vec vd = eye.subtract(aim);
                 Vec r = vd.cross(vup);
-                
-                r.scale((float)(1.0 / 15.0 / 2.0));
+                //r.normalize();
+                //System.out.println(r);
+                double separation = 1.0/25.0;
+                r.scale((float)(separation / 2.0));
                 
                 if (frame == 0) {
                     glu.gluLookAt(aim.x()-r.x(), aim.y()-r.y(), aim.z()-r.z(), eye.x()-r.x(), eye.y()-r.y(), eye.z()-r.z(), vup.x(), vup.y(), vup.z());
