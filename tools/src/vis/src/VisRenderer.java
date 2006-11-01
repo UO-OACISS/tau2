@@ -23,9 +23,9 @@ import net.java.games.jogl.util.BufferUtils;
 /**
  * This object manages the JOGL interface.
  *    
- * <P>CVS $Id: VisRenderer.java,v 1.3 2006/09/01 20:18:08 amorris Exp $</P>
+ * <P>CVS $Id: VisRenderer.java,v 1.4 2006/11/01 01:50:33 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
@@ -61,9 +61,9 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private GLU glu;
     private GLDrawable glDrawable;
 
-    private Vec eye;                            // The location of the eye
-    private Vec aim = new Vec(0, 0, 0);         // Where the eye is focused at
-    private Vec vup;                            // The canonical V-up vector
+    private Vec eye; // The location of the eye
+    private Vec aim = new Vec(0, 0, 0); // Where the eye is focused at
+    private Vec vup; // The canonical V-up vector
 
     private Vec viewDirection;
 
@@ -71,19 +71,19 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     final static private float lateralSense = 1 * rad;
     final static private float verticalSense = 1 * rad;
 
-    private double viewAltitude = -30 * rad;    // The angle from the x-y plane that the eye is placed 
-    private double viewAzimuth = -135 * rad;    // The angle on the x-y plane that the eye is placed
-    private double viewDistance = 50.0;         // The distance from the eye to the aim
-    private float fovy = 45.0f;                 // Field of view (y direction)
+    private double viewAltitude = -30 * rad; // The angle from the x-y plane that the eye is placed 
+    private double viewAzimuth = -135 * rad; // The angle on the x-y plane that the eye is placed
+    private double viewDistance = 50.0; // The distance from the eye to the aim
+    private float fovy = 45.0f; // Field of view (y direction)
 
     private boolean reverseVideo = false;
 
     private Color backColor = Color.white;
     private Color foreColor = Color.black;
 
-    private List shapes = new ArrayList();      // The list of shapes to draw
+    private List shapes = new ArrayList(); // The list of shapes to draw
 
-    private float fps;                          // Frames per Second
+    private float fps; // Frames per Second
     private int framesRendered;
 
     private int width, height;
@@ -95,13 +95,17 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     // auto-rotation capability
     private VisAnimator visAnimator;
     private volatile float rotateSpeed = 0.5f;
-    
+
     private boolean antiAliasedLines = false;
 
     private String glInfo_Vendor;
     private String glInfo_Renderer;
     private String glInfo_Version;
-    
+    private boolean stereo_available;
+    private boolean stereo;
+
+    private JCheckBox stereoCheckBox;
+   
     public VisRenderer() {
     }
 
@@ -181,8 +185,20 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         glInfo_Renderer = gl.glGetString(GL.GL_RENDERER);
         glInfo_Version = gl.glGetString(GL.GL_VERSION);
 
-        
-        
+        byte[] bytes = new byte[1];
+        gl.glGetBooleanv(GL.GL_STEREO, bytes);
+        if (bytes[0] != 0) {
+            stereo_available = true;
+            VisTools.verr(this, "OpenGL Stereo is available");
+        } else {
+            stereo_available = false;
+            VisTools.verr(this, "OpenGL Stereo is not available");
+        }
+
+        if (stereoCheckBox != null) {
+            stereoCheckBox.setEnabled(stereo_available);
+        }
+
         gl.glEnable(GL.GL_CULL_FACE);
         gl.glEnable(GL.GL_DEPTH_TEST);
 
@@ -354,41 +370,73 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
         reshape(drawable, 0, 0, this.getWidth(), this.getHeight());
 
-        //        gl = new DebugGL(drawable.getGL());
-
-        //        gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-        if (reverseVideo) {
-            //gl.glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
-            gl.glClearColor(238 / 255.0f, 238 / 255.0f, 238 / 255.0f, 1.0f);
-        } else {
-            gl.glClearColor(0, 0, 0, 0);
-        }
-        gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
-
-        gl.glPushMatrix();
-        gl.glTranslated(0, 0, -viewDistance);
-
-        setLighting();
-
-        if (aim == null) {
-            aim = new Vec(0, 0, 0);
-        }
-        glu.gluLookAt(aim.x(), aim.y(), aim.z(), eye.x(), eye.y(), eye.z(), vup.x(), vup.y(), vup.z());
-
-        viewDirection = eye.subtract(aim);
-
-        for (int i = 0; i < shapes.size(); i++) {
-            Shape shape = (Shape) shapes.get(i);
-            shape.render(this);
+        int n = 1;
+        if (stereo) {
+            n = 2;
         }
 
-        //        int err = gl.glGetError();
-        //        if (err != GL.GL_NO_ERROR)
-        //            System.out.println("err = " + glu.gluErrorString(err));
+        for (int frame = 0; frame < n; frame++) {
 
-        gl.glPopMatrix();
-        framesRendered++;
+            if (stereo) {
+                if (frame == 0) {
+                    gl.glDrawBuffer(GL.GL_BACK_LEFT);
+                } else {
+                    gl.glDrawBuffer(GL.GL_BACK_RIGHT);
+                }
+            } else {
+                gl.glDrawBuffer(GL.GL_BACK);
+            }
+            //        gl = new DebugGL(drawable.getGL());
+            //        gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+            if (reverseVideo) {
+                //gl.glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
+                gl.glClearColor(238 / 255.0f, 238 / 255.0f, 238 / 255.0f, 1.0f);
+            } else {
+                gl.glClearColor(0, 0, 0, 0);
+            }
+            gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+
+            gl.glPushMatrix();
+            gl.glTranslated(0, 0, -viewDistance);
+
+            setLighting();
+
+            if (aim == null) {
+                aim = new Vec(0, 0, 0);
+            }
+            
+            if (stereo) {
+                
+                Vec vd = eye.subtract(aim);
+                Vec r = vd.cross(vup);
+                
+                r.scale((float)(1.0 / 15.0 / 2.0));
+                
+                if (frame == 0) {
+                    glu.gluLookAt(aim.x()-r.x(), aim.y()-r.y(), aim.z()-r.z(), eye.x()-r.x(), eye.y()-r.y(), eye.z()-r.z(), vup.x(), vup.y(), vup.z());
+                } else {
+                    glu.gluLookAt(aim.x()+r.x(), aim.y()+r.y(), aim.z()+r.z(), eye.x()+r.x(), eye.y()+r.y(), eye.z()+r.z(), vup.x(), vup.y(), vup.z());
+                }
+            } else {
+                glu.gluLookAt(aim.x(), aim.y(), aim.z(), eye.x(), eye.y(), eye.z(), vup.x(), vup.y(), vup.z());
+            }
+
+            viewDirection = eye.subtract(aim);
+
+            for (int i = 0; i < shapes.size(); i++) {
+                Shape shape = (Shape) shapes.get(i);
+                shape.render(this);
+            }
+
+            //        int err = gl.glGetError();
+            //        if (err != GL.GL_NO_ERROR)
+            //            System.out.println("err = " + glu.gluErrorString(err));
+
+            gl.glPopMatrix();
+            framesRendered++;
+
+        }
 
         // if screenshot was requested since last draw
         if (makeScreenShot) {
@@ -516,7 +564,6 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         glDrawable.display();
     }
 
-    
     /**
      * Zooms the camera out by multiplying the distance between the <tt>aim</tt> and <tt>eye</tt> by <tt>1.1</tt>.
      */
@@ -574,7 +621,6 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         return width;
     }
 
-    
     /**
      * Returns the point (as a <tt>Vec</tt>) that the camera is located.
      * @return the point (as a <tt>Vec</tt>) that the camera is located.
@@ -656,6 +702,19 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
         });
 
+        stereoCheckBox = new JCheckBox("Stereo", stereo);
+        stereoCheckBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                    setStereo(stereoCheckBox.isSelected());
+                } catch (Exception e) {
+                    VisTools.handleException(e);
+                }
+            }
+        });
+        stereoCheckBox.setEnabled(stereo_available);
+        
+
         final JSlider speedSlider = new JSlider(0, 200, (int) (Math.sqrt(rotateSpeed) * 100));
 
         speedSlider.addChangeListener(new ChangeListener() {
@@ -669,23 +728,18 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
         });
 
-        
         final JButton glInfoButton = new JButton("GL Info");
         glInfoButton.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-                String message = "JOGL Class: " + gl.getClass().getName() + "\n" +
-                "GL_VENDOR: " + glInfo_Vendor + "\n" + 
-                "GL_RENDERER: " + glInfo_Renderer + "\n" +
-                "GL_VERSION: " + glInfo_Version;
+                String message = "JOGL Class: " + gl.getClass().getName() + "\n" + "GL_VENDOR: " + glInfo_Vendor + "\n"
+                        + "GL_RENDERER: " + glInfo_Renderer + "\n" + "GL_VERSION: " + glInfo_Version;
 
                 JOptionPane.showMessageDialog(glInfoButton, message);
             }
-           
-        
+
         });
-        
-        
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.weighty = 0.2;
@@ -704,7 +758,8 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
         VisTools.addCompItem(panel, reverseCheckBox, gbc, 0, 2, 1, 1);
         VisTools.addCompItem(panel, antialiasCheckBox, gbc, 0, 3, 1, 1);
-        VisTools.addCompItem(panel, glInfoButton, gbc, 1, 2, 1, 2);
+        VisTools.addCompItem(panel, stereoCheckBox, gbc, 0, 4, 1, 1);
+        VisTools.addCompItem(panel, glInfoButton, gbc, 1, 2, 1, 3);
 
         return panel;
     }
@@ -749,6 +804,15 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     public void setAntiAliasedLines(boolean antiAliasedLines) {
         this.antiAliasedLines = antiAliasedLines;
+        this.redraw();
+    }
+
+    public boolean getStereo() {
+        return stereo;
+    }
+
+    public void setStereo(boolean stereo) {
+        this.stereo = stereo;
         this.redraw();
     }
 

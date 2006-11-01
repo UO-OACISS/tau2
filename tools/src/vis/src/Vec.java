@@ -11,9 +11,9 @@ package edu.uoregon.tau.vis;
  * 
  * Note: many of the operations exclude 'w' from processing.
  *   
- * <P>CVS $Id: Vec.java,v 1.3 2006/09/01 20:18:08 amorris Exp $</P>
+ * <P>CVS $Id: Vec.java,v 1.4 2006/11/01 01:50:33 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see Matrix
  */
 public class Vec {
@@ -155,13 +155,26 @@ public class Vec {
         this.w = w;
     }
 
+    public void scale(float x, float y, float z) {
+        this.x *= x;
+        this.y *= y;
+        this.z *= z;
+    }
+    
+    public void scale(float value) {
+        this.x *= value;
+        this.y *= value;
+        this.z *= value;
+    }
+
+    
     /**
      * Adds two Vecs together.  Vec adding is commutative
      * @param a		the first Vec
      * @param b		the second Vec
      * @return		the sum of the two Vecs
      */
-    static Vec add(Vec a, Vec b) {
+    public static Vec add(Vec a, Vec b) {
         return new Vec(a.x() + b.x(), a.y() + b.y(), a.z() + b.z());
     }
 
@@ -214,6 +227,7 @@ public class Vec {
                 (this.x * rhs.y) - (this.y * rhs.x));
     }
 
+    
     /**
      * Returns a string representation of the Vec (for debug purposes)
      */

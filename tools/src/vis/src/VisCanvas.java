@@ -15,9 +15,9 @@ import net.java.games.jogl.*;
  * This class is merely a wrapper over GLCanvas which allows users of the Vis
  * package to build against vis alone (not jogl). 
  *
- * <P>CVS $Id: VisCanvas.java,v 1.6 2006/10/31 03:16:28 amorris Exp $</P>
+ * <P>CVS $Id: VisCanvas.java,v 1.7 2006/11/01 01:50:33 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class VisCanvas {
 
@@ -39,8 +39,14 @@ public class VisCanvas {
         
         //glCapabilities.setHardwareAccelerated(true);
 
-        glCanvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
-
+        glCapabilities.setStereo(true);
+        try {
+            glCanvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
+        } catch (GLException gle) {
+            glCapabilities.setStereo(false);
+            glCanvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
+        }
+        
         glCanvas.setSize(200, 200);
         glCanvas.addGLEventListener(visRenderer);
         
