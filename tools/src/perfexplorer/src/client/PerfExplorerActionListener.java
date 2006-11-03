@@ -227,7 +227,7 @@ public class PerfExplorerActionListener implements ActionListener {
 
 	public void createDimensionWindow() {
 		Object[] options = TransformationType.getDimensionReductions();
-		Object obj = (String)JOptionPane.showInputDialog (mainFrame,
+		Object obj = JOptionPane.showInputDialog (mainFrame,
 			"Select a dimension reduction method:",
 			"Dimension Reduction",
 			JOptionPane.PLAIN_MESSAGE,
