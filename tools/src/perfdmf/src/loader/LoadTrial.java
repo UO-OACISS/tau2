@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 
-import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.perfdmf.*;
 
 public class LoadTrial {
