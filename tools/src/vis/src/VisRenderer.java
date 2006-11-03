@@ -23,9 +23,9 @@ import net.java.games.jogl.util.BufferUtils;
 /**
  * This object manages the JOGL interface.
  *    
- * <P>CVS $Id: VisRenderer.java,v 1.5 2006/11/01 03:20:48 amorris Exp $</P>
+ * <P>CVS $Id: VisRenderer.java,v 1.6 2006/11/03 19:48:43 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
@@ -74,7 +74,6 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private double viewAltitude = -30 * rad; // The angle from the x-y plane that the eye is placed 
     private double viewAzimuth = -135 * rad; // The angle on the x-y plane that the eye is placed
     private double viewDistance = 50.0; // The distance from the eye to the aim
-    private float fovy = 45.0f; // Field of view (y direction)
 
     private boolean reverseVideo = false;
 
@@ -105,7 +104,15 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private boolean stereo;
 
     private JCheckBox stereoCheckBox;
-   
+
+    private float camera_aperture = 45.0f;
+    private float camera_near = 1.0f;
+    private float camera_far = 500.0f;
+    private float camera_focallength = 50.0f;
+
+    private float DTOR = 0.0174532925f;
+    private float RTOD = 57.2957795f;
+
     public VisRenderer() {
     }
 
@@ -232,16 +239,15 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         //System.out.println ("viewAltitude now " + viewAltitude);
         //System.out.println ("viewAzimuth now " + viewAzimuth);
 
-        
         Matrix rotateY = Matrix.createRotateY(-viewAltitude);
         Matrix rotateZ = Matrix.createRotateZ(viewAzimuth);
 
-        eye = rotateZ.transform(rotateY.transform(new Vec(1,0,0)));
+        eye = rotateZ.transform(rotateY.transform(new Vec(1, 0, 0)));
         eye.normalize();
 
         // set the canonical v-up vector
-        vup = rotateZ.transform(rotateY.transform(new Vec(0,0,1)));
-        
+        vup = rotateZ.transform(rotateY.transform(new Vec(0, 0, 1)));
+
         eye.setx(eye.x() * viewDistance);
         eye.sety(eye.y() * viewDistance);
         eye.setz(eye.z() * viewDistance);
@@ -354,9 +360,14 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     public void reshape(GLDrawable drawable, int x, int y, int width, int height) {
         this.width = width;
         this.height = height;
+
+        //camera_aperture = 45.0f;
+        camera_near = 1.0f;
+        camera_far = 500.0f;
+
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glLoadIdentity();
-        glu.gluPerspective(45, (float) width / (float) height, 1.0f, 500.0f);
+        glu.gluPerspective(camera_aperture, (float) width / (float) height, camera_near, camera_far);
         gl.glMatrixMode(GL.GL_MODELVIEW);
         gl.glLoadIdentity();
     }
@@ -406,20 +417,57 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             if (aim == null) {
                 aim = new Vec(0, 0, 0);
             }
-            
+
             if (stereo) {
-                
-                Vec vd = eye.subtract(aim);
-                Vec r = vd.cross(vup);
-                //r.normalize();
-                //System.out.println(r);
-                double separation = 1.0/25.0;
-                r.scale((float)(separation / 2.0));
-                
+
+                float eyesep, wd2, ratio, radians;
+
+                //camera_focallength = 50.0f;
+                //camera_aperture = 45.0f;
+                camera_near = 1.0f;
+                camera_far = 500.0f;
+
+                eyesep = camera_focallength / 20;
+
+                ratio = (float) this.width / (float) this.height;
+                radians = DTOR * camera_aperture / 2;
+                wd2 = (float) (camera_near * Math.tan(radians));
+
+                // direction vector
+                Vec direction = eye.subtract(aim);
+
+                // cross product of v-up and the view direction will give us the normal, which is the axis the eyes are on
+                // we will add and subtract this vector to move to the left and right eye
+                Vec crossRight = direction.cross(vup);
+                crossRight.normalize();
+                crossRight.scale((float) (eyesep / 2.0));
+
+                float leftRightFrustumShift;
+
                 if (frame == 0) {
-                    glu.gluLookAt(aim.x()-r.x(), aim.y()-r.y(), aim.z()-r.z(), eye.x()-r.x(), eye.y()-r.y(), eye.z()-r.z(), vup.x(), vup.y(), vup.z());
+                    leftRightFrustumShift = 0.5f;
                 } else {
-                    glu.gluLookAt(aim.x()+r.x(), aim.y()+r.y(), aim.z()+r.z(), eye.x()+r.x(), eye.y()+r.y(), eye.z()+r.z(), vup.x(), vup.y(), vup.z());
+                    leftRightFrustumShift = -0.5f;
+                }
+
+                // create a parallel axis asymmetric frustum perspective projection
+                float left, right, top, bottom;
+                gl.glMatrixMode(GL.GL_PROJECTION);
+                gl.glLoadIdentity();
+                float ndfl = camera_near / camera_focallength;
+                left = (float) (-ratio * wd2 + leftRightFrustumShift * eyesep * ndfl);
+                right = (float) (ratio * wd2 + leftRightFrustumShift * eyesep * ndfl);
+                top = wd2;
+                bottom = -wd2;
+                gl.glFrustum(left, right, bottom, top, camera_near, camera_far);
+                gl.glMatrixMode(GL.GL_MODELVIEW);
+
+                if (frame == 0) {
+                    glu.gluLookAt(aim.x() - crossRight.x(), aim.y() - crossRight.y(), aim.z() - crossRight.z(), eye.x()
+                            - crossRight.x(), eye.y() - crossRight.y(), eye.z() - crossRight.z(), vup.x(), vup.y(), vup.z());
+                } else {
+                    glu.gluLookAt(aim.x() + crossRight.x(), aim.y() + crossRight.y(), aim.z() + crossRight.z(), eye.x()
+                            + crossRight.x(), eye.y() + crossRight.y(), eye.z() + crossRight.z(), vup.x(), vup.y(), vup.z());
                 }
             } else {
                 glu.gluLookAt(aim.x(), aim.y(), aim.z(), eye.x(), eye.y(), eye.z(), vup.x(), vup.y(), vup.z());
@@ -665,7 +713,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         panel.setBorder(BorderFactory.createLoweredBevelBorder());
         panel.setLayout(new GridBagLayout());
 
-        final JCheckBox rotateCheckBox = new JCheckBox("Rotate", visAnimator != null);
+        final JCheckBox rotateCheckBox = new JCheckBox("Auto-Rotate", visAnimator != null);
         rotateCheckBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
@@ -716,10 +764,22 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
         });
         stereoCheckBox.setEnabled(stereo_available);
-        
+
+        final JSlider focalLengthSlider = new JSlider(0, 200, (int) camera_focallength);
+        focalLengthSlider.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent event) {
+                setCamera_focallength(focalLengthSlider.getValue());
+            }
+        });
+
+        final JSlider apertureSlider = new JSlider(0, 90, (int) camera_aperture);
+        apertureSlider.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent event) {
+                setCamera_aperture(apertureSlider.getValue());
+            }
+        });
 
         final JSlider speedSlider = new JSlider(0, 200, (int) (Math.sqrt(rotateSpeed) * 100));
-
         speedSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent event) {
                 try {
@@ -746,23 +806,35 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.weighty = 0.2;
-        gbc.weightx = 0.1;
+        gbc.weightx = 0.5;
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
-        VisTools.addCompItem(panel, rotateCheckBox, gbc, 0, 0, 1, 2);
+        VisTools.addCompItem(panel, rotateCheckBox, gbc, 0, 0, 2, 2);
 
         gbc.anchor = GridBagConstraints.CENTER;
-        gbc.weightx = 0.9;
+        gbc.weightx = 0.5;
         gbc.fill = GridBagConstraints.NONE;
-        VisTools.addCompItem(panel, new JLabel("Speed"), gbc, 1, 0, 1, 1);
+        VisTools.addCompItem(panel, new JLabel("Speed"), gbc, 2, 0, 1, 1);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        VisTools.addCompItem(panel, speedSlider, gbc, 1, 1, 1, 1);
+        VisTools.addCompItem(panel, speedSlider, gbc, 2, 1, 1, 1);
 
-        VisTools.addCompItem(panel, reverseCheckBox, gbc, 0, 2, 1, 1);
-        VisTools.addCompItem(panel, antialiasCheckBox, gbc, 0, 3, 1, 1);
-        VisTools.addCompItem(panel, stereoCheckBox, gbc, 0, 4, 1, 1);
-        VisTools.addCompItem(panel, glInfoButton, gbc, 1, 2, 1, 3);
+        VisTools.addCompItem(panel, reverseCheckBox, gbc, 0, 2, 3, 1);
+        VisTools.addCompItem(panel, antialiasCheckBox, gbc, 0, 3, 3, 1);
+        VisTools.addCompItem(panel, stereoCheckBox, gbc, 0, 4, 3, 1);
+        gbc.weightx = 0.1;
+        VisTools.addCompItem(panel, new JLabel("Separation"), gbc, 0, 5, 1, 1);
+        VisTools.addCompItem(panel, new JLabel("Aperture"), gbc, 0, 6, 1, 1);
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 0.9;
+        
+        gbc.anchor = GridBagConstraints.CENTER;
+        VisTools.addCompItem(panel, focalLengthSlider, gbc, 1, 5, 2, 1);
+        VisTools.addCompItem(panel, apertureSlider, gbc, 1, 6, 2, 1);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        VisTools.addCompItem(panel, glInfoButton, gbc, 0, 7, 3, 1);
 
         return panel;
     }
@@ -816,6 +888,24 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     public void setStereo(boolean stereo) {
         this.stereo = stereo;
+        this.redraw();
+    }
+
+    public float getCamera_focallength() {
+        return camera_focallength;
+    }
+
+    public void setCamera_focallength(float camera_focallength) {
+        this.camera_focallength = Math.max(1.0f, camera_focallength);
+        this.redraw();
+    }
+
+    public float getCamera_aperture() {
+        return camera_aperture;
+    }
+
+    public void setCamera_aperture(float camera_aperture) {
+        this.camera_aperture = camera_aperture;
         this.redraw();
     }
 

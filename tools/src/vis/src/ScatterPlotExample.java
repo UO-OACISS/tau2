@@ -94,9 +94,9 @@ public class ScatterPlotExample {
   
  * </pre>
  *    
- * <P>CVS $Id: ScatterPlotExample.java,v 1.4 2006/09/01 20:18:08 amorris Exp $</P>
+ * <P>CVS $Id: ScatterPlotExample.java,v 1.5 2006/11/03 19:48:43 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class ScatterPlotExample {
 
@@ -147,7 +147,7 @@ public class ScatterPlotExample {
         tabbedPane.addTab("Axes", scatterPlot.getAxes().getControlPanel(visRenderer));
         tabbedPane.addTab("ColorScale", colorScale.getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
-        tabbedPane.setMinimumSize(new Dimension(300, 160));
+        tabbedPane.setMinimumSize(new Dimension(300, 260));
 
         // Add everything to a JPanel and add the panel to the frame
         JPanel panel = new JPanel();
