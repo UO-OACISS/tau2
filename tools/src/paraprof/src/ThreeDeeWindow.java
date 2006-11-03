@@ -92,7 +92,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         String os = System.getProperty("os.name").toLowerCase();
         String cpu = System.getProperty("os.arch").toLowerCase();
         if (os.startsWith("linux") && cpu.equals("ia64")) {
-            this.show();
+            this.setVisible(true);
         }
 
         DataSource dataSource = ppTrial.getDataSource();
@@ -110,8 +110,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             count++;
         }
 
-        // if the number of threads is above this threshold, we default to the 
-        // scatterplot
+        // if the number of threads is above this threshold, we default to the scatterplot
         if (numThreads > defaultToScatter) {
             settings.setVisType(VisType.SCATTER_PLOT);
         }
@@ -168,7 +167,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         if (os.startsWith("linux") && cpu.equals("ia64")) {
             this.validate();
         }
-        this.show();
+        this.setVisible(true);
 
         if (System.getProperty("vis.fps") != null) {
             fpsTimer = new javax.swing.Timer(1000, this);
