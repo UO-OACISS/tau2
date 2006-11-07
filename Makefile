@@ -65,6 +65,8 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 # Trace Reader Library
 #TRACE#TRACEINPUT=src/TraceInput#ENDIF#
 
+#PERFLIB#BASIC=utils #ENDIF#
+
 #VTF#VTFCONVERTER=utils/vtfconverter#ENDIF#
 
 #SLOG2#SLOGCONVERTER=utils/slogconverter/src#ENDIF#

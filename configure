@@ -168,6 +168,10 @@ compensate=no
 smarts=no
 pcl=no
 papi=no
+perf=no
+perfincdir=
+perflibdir=
+perflibrary=
 task=no
 lwp=no
 tcltk=yes
@@ -489,6 +493,34 @@ do
         echo "Error: Cannot access PAPI directory $papidir"
         exit 1
       fi
+    shift
+    ;;
+
+  -perfinc=*)
+      perf=yes
+      perfincdir=`echo $arg | sed -e 's/-perfinc=//'`
+      if [ ! -d $perfincdir ]
+      then
+        echo "Error: Cannot access PERF include directory $perfincdir"
+        exit 1
+      fi
+    shift
+    ;;
+
+  -perflib=*)
+      perf=yes
+      perflibdir=`echo $arg | sed -e 's/-perflib=//'`
+      if [ ! -d $perflibdir ]
+      then
+        echo "Error: Cannot access PERF lib directory $perflibdir"
+        exit 1
+      fi
+    shift
+    ;;
+
+  -perflibrary=*)
+      perf=yes
+      perflibrary=`echo $arg | sed -e 's/-perflibrary=//'`
     shift
     ;;
 
@@ -965,6 +997,9 @@ do
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
+    echo "-perfinc=<dir> ............. Specify a Perflib[LANL] include directory."
+    echo "-perflib=<dir> ................. Specify a Perflib[LANL] lib directory."
+    echo "-perflibrary=<library> ... Specify a different perflib runtime library."
     echo "-ktau ........................................... Kernel TAU Profiling."
     echo "-ktau_merge ........................ Kernel TAU Profiling with merging."
     echo "                                                    user-space profile."
@@ -2505,6 +2540,31 @@ if [ $tauprefix != unknown ]
     tautoplevel=$tauroot
 fi
 
+if [ $perf = yes ] 
+then
+  fixmakeargs="$fixmakeargs PERFLIB"
+  tauoptions="${tauoptions}-perf"
+  if [ "x$perfincdir" != "x" ] 
+  then
+    fixmakeargs="$fixmakeargs perfincdir=$perfincdir"
+  fi
+  if [ "x$perflibdir" != "x" ] 
+  then
+    fixmakeargs="$fixmakeargs perflibdir=$perflibdir"
+  fi
+  if [ "x$perflibrary" != "x" ] 
+  then
+    fixmakeargs="$fixmakeargs perflibrary=$perflibrary"
+  else
+    if [ -f $perflibdir/libpapi.a ]
+    then 
+      perflibrary="-lperfrt#-lpapi"  
+    else
+      perflibrary="-lperfrt"
+    fi 
+    fixmakeargs="$fixmakeargs perflibrary=$perflibrary"
+  fi
+fi
 
 if [ $mpi = yes ]
 then
@@ -2523,6 +2583,11 @@ then
       wrapperlib="-L$epilogdir/$epiloglibdir -lelg.ompi"
     fi
   fi 
+
+  if [ $perf = yes ] 
+  then
+    wrapperlib="-L$\(PERFLIBDIR) \$(PERFLIBRARY)"
+  fi
      
   mpilibargs=$wrapperlib
 
@@ -2930,7 +2995,7 @@ EOF
   rm -f pgitest.o pgitest.C libpgitest.a
 fi
 ######################################################################
-# If epilog is used, check and see if it supports v2.1's write interface
+# If epilog is used, check and see if it supports v2.1s write interface
 if [ $epilog =  yes ]
 then
   echo "Checking epilog write interface:"
@@ -4751,6 +4816,10 @@ then
   done
 fi
     
+if [ $perf = yes ]
+then
+    cp include/Makefile $tautoplevel/$architecture/lib/Makefile.tau$tauoptions
+fi
   
 
 if [ $slog2 = yes ]

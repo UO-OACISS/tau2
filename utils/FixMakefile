@@ -134,6 +134,21 @@ fi
 	echo "s,^EPILOGDIR=.*$,EPILOGDIR=$epilogdir,g" >> $sedout
 	;;
 
+     perfincdir=*)
+        perfincdir=`echo $1 | sed -e 's/^perfincdir=//'`
+	echo "s,^PERFINCDIR=.*$,PERFINCDIR=$perfincdir,g" >> $sedout
+	;;
+
+     perflibdir=*)
+        perflibdir=`echo $1 | sed -e 's/^perflibdir=//'`
+	echo "s,^PERFLIBDIR=.*$,PERFLIBDIR=$perflibdir,g" >> $sedout
+	;;
+
+     perflibrary=*)
+        perflibrary=`echo $1 | sed -e 's/^perflibrary=//' -e 's/#/ /g'`
+	echo "s,^PERFLIBRARY=.*$,PERFLIBRARY=$perflibrary,g" >> $sedout
+	;;
+
      pdtdir=*)
         pdtdir=`echo $1 | sed -e 's/^pdtdir=//'`
 	echo "s,^PDTDIR=.*$,PDTDIR=$pdtdir,g" >> $sedout
@@ -836,6 +851,10 @@ fi
 	;;
      PAPI)
 	echo "NOTE: Using PAPI interface for Hardware Performance Counters ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PERFLIB)
+	echo "NOTE: Using PERFLIB measurement library instead of TAU's"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PYTHON)
