@@ -1964,14 +1964,17 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
 		
 		// should we call MPI_Init? Only if it is the main program
+/*
 		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG) {
 		  ostr << "      INTEGER tau_mpi_init_err"<<endl;
 		  ostr << "      call MPI_Init(tau_mpi_init_err)"<<endl;
 		  ostr << "      call f_perf_init('"<<(*it)->item->fullName()<<"', 0, 0, 'UNKNOWN')"<<endl;
 		  ostr << "      ";
 		}
+*/
 		
 		ostr << "      call f_perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
+		ostr << "      ";
 		
 		// write the rest of the original statement
 		for (k = (*it)->col-1; k < write_upto ; k++) {
@@ -2668,9 +2671,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.118 $   $Date: 2006/10/27 23:47:11 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.118 2006/10/27 23:47:11 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.119 $   $Date: 2006/11/07 23:39:26 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.119 2006/11/07 23:39:26 sameer Exp $
  ***************************************************************************/
 
 
