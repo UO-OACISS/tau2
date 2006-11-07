@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.39 2006/06/19 19:32:50 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.40 2006/11/07 21:35:56 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -310,8 +310,11 @@ public class ChartData extends RMIChartData {
 				buf.append(" and m.name = ? and ims.inclusive_percentage = 100.0 ");
 			}
 			buf.append(" group by ");
-			buf.append(tmpBuf.toString());
-			buf.append(", t.node_count, t.contexts_per_node, t.threads_per_context ");
+			if (!(object instanceof RMIView)) {
+				buf.append(tmpBuf.toString());
+				buf.append(", ");
+			}
+			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 			buf.append("order by 1, 2, 3, 4");
 			//System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
