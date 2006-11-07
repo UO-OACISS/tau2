@@ -9,6 +9,16 @@
 
 Change log:
 ------------
+Version 2.16 changes (from 2.15):
+1. Added a new tool for correcting network time drifts in traces (tau_timecorrect).
+2. Added support for an Eclipse analysis wizard and a graphical instrumentor.
+3. Added support for 3D stereo visualizations in ParaProf.
+4. Added support for a source browser in ParaProf.
+5. Added support for generating source code information in tau_instrumentor.
+6. Added support for Perflib based instrumentation and perf2tau [Jeff Brown, LANL]. 
+
+
+
 Version 2.15 changes (from 2.14):
 1. Added support for phase and comparative displays in ParaProf [UO]
 2. Updated PerfExplorer [UO]
