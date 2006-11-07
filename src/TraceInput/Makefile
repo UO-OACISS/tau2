@@ -59,6 +59,9 @@ RM		= /bin/rm -rf
 
 INSTALLDEST     = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
+#PERFLIB#TAU_INCLUDE     = -I$(TAU_PREFIX_INSTALL_DIR)/include #ENDIF#
+#PERFLIB#TAU_DEFS     = $(TAUDEFS) #ENDIF#
+
 CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) 
 
 CXXFLAGS        = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) -I.
@@ -106,7 +109,7 @@ clean:
 	$(RM) $(OBJS) $(LIBTARGET) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 ##############################################
 #/***************************************************************************
-# * $RCSfile: Makefile,v $   $Author: amorris $
-# * $Revision: 1.9 $   $Date: 2006/03/22 01:53:01 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.9 2006/03/22 01:53:01 amorris Exp $ 
+# * $RCSfile: Makefile,v $   $Author: sameer $
+# * $Revision: 1.10 $   $Date: 2006/11/07 23:11:14 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.10 2006/11/07 23:11:14 sameer Exp $ 
 # ***************************************************************************/
