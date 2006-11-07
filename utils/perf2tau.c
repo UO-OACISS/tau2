@@ -220,8 +220,6 @@ int main(int argc, char **argv)
 
   tree_cycle_ptr = (struct perf_forest_struct *)Perf_Build_Tree(data_directory, PERF_ALL_CYCLES, PERF_ALL_RANKS);
 
-  printf("tree_cycle_ptr: %p \n", tree_cycle_ptr);
-
   /* Gets the entire tree. Now examine aggregate data within this rank */
   all_context_cycle_ptr = (struct all_context_data_cycle_struct *)Perf_Build_All_Context_Data(tree_cycle_ptr);
 
