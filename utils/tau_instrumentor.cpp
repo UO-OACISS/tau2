@@ -1972,8 +1972,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  ostr << "      ";
 		}
 */
-		
-		ostr << "      call f_perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
+		if (!pure || instrumentPure)
+		{
+		  ostr << "      call f_perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
+		}
 		ostr << "      ";
 		
 		// write the rest of the original statement
@@ -2672,8 +2674,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.119 $   $Date: 2006/11/07 23:39:26 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.119 2006/11/07 23:39:26 sameer Exp $
+ * $Revision: 1.120 $   $Date: 2006/11/08 01:03:13 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.120 2006/11/08 01:03:13 sameer Exp $
  ***************************************************************************/
 
 
