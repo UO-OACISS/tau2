@@ -24,7 +24,7 @@ public class PerfExplorerCube {
     private static void createAndShowGUI(RMICubeData data) {
 
         // Create and set up the window.
-        JFrame frame = new JFrame("Correlation of top 4 variant events");
+        JFrame frame = new JFrame("TAU/PerfExplorer: Correlation of top 4 variant events");
 
 		// get the data values
         float values[][] = data.getValues();

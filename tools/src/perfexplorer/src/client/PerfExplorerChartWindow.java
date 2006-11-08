@@ -32,7 +32,7 @@ public class PerfExplorerChartWindow extends JFrame implements ActionListener, I
 	private ChartPanel panel = null;
 
 	public PerfExplorerChartWindow (JFreeChart chart, String name) {
-		super(name);
+		super("TAU/PerfExplorer: " + name);
 		this.panel = new ChartPanel(chart);
 		this.panel.setDisplayToolTips(true);
         this.getContentPane().add(this.panel);

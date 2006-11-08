@@ -119,7 +119,7 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
      */
     private static JFreeChart createChart(IntervalXYDataset dataset) {
         JFreeChart chart = ChartFactory.createHistogram(
-            "Significant (>2.0% of runtime) Event Histograms", 
+            "TAU/PerfExplorer: Significant (>2.0% of runtime) Event Histograms", 
             "Percentiles", 
             "Count", 
             dataset, 

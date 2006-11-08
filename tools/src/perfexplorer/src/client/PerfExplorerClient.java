@@ -24,7 +24,7 @@ public class PerfExplorerClient extends JFrame {
 
 	PerfExplorerClient (boolean standalone, String configFile,
 	EngineType analysisEngine, boolean quiet) {
-		super("PerfExplorer Client");
+		super("TAU: PerfExplorer Client");
 		PerfExplorerOutput.initialize(quiet);
 		PerfExplorerConnection.setStandalone(standalone);
 		PerfExplorerConnection.setConfigFile(configFile);

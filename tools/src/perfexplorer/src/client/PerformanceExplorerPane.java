@@ -95,7 +95,7 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
 		//JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), null, description, JOptionPane.PLAIN_MESSAGE, icon);
 
         // Create and set up the window.
-        JFrame frame = new JFrame(description);
+        JFrame frame = new JFrame("TAU/PerfExplorer: " + description);
 
         //Window Stuff.
         int windowWidth = 500;

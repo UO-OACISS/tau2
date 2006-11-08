@@ -35,7 +35,7 @@ public class PerfExplorerVariation {
 
 	private static void displayResults(RMIVarianceData data) {
         // Create and set up the window.
-        JFrame frame = new JFrame("Data Summary");
+        JFrame frame = new JFrame("TAU/PerfExplorer: Data Summary");
         //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // arrange the data
