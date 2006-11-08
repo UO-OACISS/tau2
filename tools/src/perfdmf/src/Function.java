@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.13 2006/10/31 04:05:16 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.14 2006/11/08 23:17:16 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		FunctionProfile
  */
 /**
@@ -164,7 +164,7 @@ public class Function implements Serializable, Comparable {
 
             if (dash == -1) {
                 // fortran (e.g. "foo [{foo.cpp} {1,1}]")
-                if (closebracket1 == -1) {
+                if (closebracket1 == -1 || comma1 == -1) {
                     return sourceLink;
                 }
                 int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, comma1));
