@@ -212,13 +212,13 @@ int main(int argc, char **argv)
   }
 
   /* Initialize Perf post processing library */
-  Perf_Init();
+  Perf_Init(data_directory);
 
   /* retrieve header that contains what kind of metrics were measured */
-  header_ptr = (struct header_struct *) Perf_Build_Header(data_directory);
+  header_ptr = (struct header_struct *) Perf_Build_Header();
 
 
-  tree_cycle_ptr = (struct perf_forest_struct *)Perf_Build_Tree(data_directory, PERF_ALL_CYCLES, PERF_ALL_RANKS);
+  tree_cycle_ptr = (struct perf_forest_struct *)Perf_Build_Tree(PERF_ALL_CYCLES, PERF_ALL_RANKS);
 
   /* Gets the entire tree. Now examine aggregate data within this rank */
   all_context_cycle_ptr = (struct all_context_data_cycle_struct *)Perf_Build_All_Context_Data(tree_cycle_ptr);
