@@ -124,6 +124,10 @@ using namespace std;
 
 #ifdef TAUKTAU
 #include <Profile/ktau_timer.h>
+#include <sys/time.h>
+#include <time.h>
+#include <unistd.h>
+#include <asm/unistd.h>
 #endif /* TAUKTAU */
 
 /////////////////////////////////////////////////////////////////////////
@@ -563,6 +567,13 @@ double TauWindowsUsecD(void)
 }
 ///////////////////////////////////////////////////////////////////////////
 
+#ifdef TAUKTAU_MERGE
+  //declare the sys_ktau_gettimeofday syscall
+  //#define __NR_ktau_gettimeofday ???
+  //_syscall2(int,ktau_gettimeofday,struct timeval *,tv,struct timezone *,tz);
+  extern "C" int ktau_gettimeofday(struct timeval *tv, struct timezone *tz);
+#endif // TAUKTAU_MERGE 
+
 #ifdef TAU_MULTIPLE_COUNTERS
 void RtsLayer::getUSecD (int tid, double *values){
 #if (defined(TAU_EPILOG) && !defined(PROFILING_ON)) 
@@ -601,6 +612,20 @@ double RtsLayer::getUSecD (int tid) {
 #ifdef JAVA_CPU_TIME
   return JavaThreadLayer::getCurrentThreadCpuTime();
 #else // JAVA_CPU_TIME
+#ifdef TAUKTAU_MERGE
+  struct timeval tp;
+  static double last_timestamp = 0.0;
+  double timestamp;
+  ktau_gettimeofday (&tp, 0);
+  timestamp = (double) tp.tv_sec * 1e6 + tp.tv_usec;
+  if (timestamp < last_timestamp)
+  {
+     DEBUGPROFMSG("RtsLayer::getUSecD(): ktau_gettimeofday() goes back in time. Fixing ...."<<endl;);
+     timestamp = last_timestamp;
+  }
+  last_timestamp = timestamp;
+  return timestamp;
+#else // TAUKTAU_MERGE
 #ifdef SGI_HW_COUNTERS
   return RtsLayer::GetEventCounter();
 #else  //SGI_HW_COUNTERS
@@ -711,6 +736,7 @@ double RtsLayer::getUSecD (int tid) {
 #endif // SGI_TIMERS
 
 #endif // SGI_HW_COUNTERS
+#endif // TAUKTAU_MERGE
 #endif // JAVA_CPU_TIME
 #endif // CPU_TIME
 #endif // TAU_PAPI
@@ -1358,7 +1384,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.78 $   $Date: 2006/08/10 23:25:43 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.78 2006/08/10 23:25:43 amorris Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: anataraj $
+ * $Revision: 1.79 $   $Date: 2006/11/08 07:55:17 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.79 2006/11/08 07:55:17 anataraj Exp $ 
  ***************************************************************************/
