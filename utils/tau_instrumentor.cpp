@@ -1826,6 +1826,21 @@ bool addThenEndifClauses(char *currentline, char *previousline, int currentcol)
 }
 
 /* -------------------------------------------------------------------------- */
+/* -- Strip the module name from the routine name. M1::f2 is returned as f2 - */
+/* -------------------------------------------------------------------------- */
+const char * stripModuleFromName(const string functionname)
+{
+  char *s = NULL;
+  const char *nm  = functionname.c_str();
+  /* traverse the string till you get rid of the :: using strstr */
+  while (s = strstr(nm, "::"))
+  {
+    nm += strlen(s)+1;
+  }
+  return nm;
+}
+
+/* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
 bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name) 
@@ -1974,7 +1989,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 */
 		if (!pure || instrumentPure)
 		{
-		  ostr << "      call f_perf_update('"<<(*it)->item->fullName()<<"', .true.)"<<endl;
+		  ostr << "      call f_perf_update('"<<stripModuleFromName((*it)->item->fullName())<<"', .true.)"<<endl;
 		}
 		ostr << "      ";
 		
@@ -2135,7 +2150,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		if ((*it)->kind == EXIT)
 		{ /* Turn off the timers. This is similar to abort/exit in C */
 		  if (use_perflib)
-		    ostr <<"call f_perf_update('"<<(*it)->item->fullName()<<"', .false.)"<<endl;
+		    ostr <<"call f_perf_update('"<<stripModuleFromName((*it)->item->fullName())<<"', .false.)"<<endl;
 		  else
 		    ostr <<"call TAU_PROFILE_EXIT('exit')"<<endl;
 		}
@@ -2144,7 +2159,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  if (pure) {
 		    if (instrumentPure) {
 		      if (use_perflib)
-			ostr <<"call f_perf_update('" << (*it)->item->fullName()<< "', .false.)"<<endl;
+			ostr <<"call f_perf_update('" << stripModuleFromName((*it)->item->fullName())<< "', .false.)"<<endl;
 		      else
 			ostr <<"call TAU_PURE_STOP('" << instrumentedName << "')"<<endl;
 		    }
@@ -2159,7 +2174,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 			ostr <<"call TAU_PROFILE_STOP("<<(*siter)<<")"<<endl<<"\t";
 		    }
 		    if (use_perflib)
-		      ostr <<"call f_perf_update('"<<(*it)->item->fullName()<<"', .false.)"<<endl;
+		      ostr <<"call f_perf_update('"<<stripModuleFromName((*it)->item->fullName())<<"', .false.)"<<endl;
 		    else
 		      ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
 		  }
@@ -2674,8 +2689,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.120 $   $Date: 2006/11/08 01:03:13 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.120 2006/11/08 01:03:13 sameer Exp $
+ * $Revision: 1.121 $   $Date: 2006/11/08 01:26:56 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.121 2006/11/08 01:26:56 sameer Exp $
  ***************************************************************************/
 
 
