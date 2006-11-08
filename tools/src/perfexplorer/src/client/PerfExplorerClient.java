@@ -164,12 +164,12 @@ public class PerfExplorerClient extends JFrame {
 		}
 
 
-	/*
+/*
 		try {
 			UIManager.setLookAndFeel(
 				UIManager.getCrossPlatformLookAndFeelClassName());
 		} catch (Exception e) { }
-	*/
+*/
 
 		JFrame frame = new PerfExplorerClient(standalone.booleanValue(),
 			configFile, analysisEngine, quiet.booleanValue());

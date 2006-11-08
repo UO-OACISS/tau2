@@ -203,14 +203,27 @@ public class PerfExplorerActionListener implements ActionListener {
 		String message = new String("PerfExplorer 1.0\n" +
 					getVersionString() + "\nJVM Heap Size: " + memUsage
 					+ "kb\n");
+		ImageIcon icon = createImageIcon("tau-logo-large.png");
 		JOptionPane.showMessageDialog(mainFrame, message, 
-			"About PerfExplorer", JOptionPane.PLAIN_MESSAGE);
+			"About PerfExplorer", JOptionPane.INFORMATION_MESSAGE, icon);
 	}
 
+    /** Returns an ImageIcon, or null if the path was invalid. */
+    protected static ImageIcon createImageIcon(String path) {
+        java.net.URL imgURL = PerfExplorerJTabbedPane.class.getResource(path);
+        if (imgURL != null) {
+            return new ImageIcon(imgURL);
+        } else {
+            System.err.println("Couldn't find file: " + path);
+            return null;
+        }
+    }
+
 	public void createHelpWindow() {
+		ImageIcon icon = createImageIcon("tau-logo-large.png");
 		JOptionPane.showMessageDialog(mainFrame, 
-			"Help not implemented.\nFor the most up-to-date documentation, please see\n<html><a href='http://www.cs.uoregon.edu/research/tau/'>http://www.cs.uoregon.edu/research/tau/</a></html>",
-			"PerfExplorer Help", JOptionPane.PLAIN_MESSAGE);
+			"Internal help not implemented.\nFor the most up-to-date documentation, please see\n<html><a href='http://www.cs.uoregon.edu/research/tau/'>http://www.cs.uoregon.edu/research/tau/</a></html>",
+			"PerfExplorer Help", JOptionPane.INFORMATION_MESSAGE, icon);
 	}
 
 	public void createMethodWindow() {
