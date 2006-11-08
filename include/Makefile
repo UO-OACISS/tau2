@@ -77,6 +77,8 @@ TAU_PREFIX_INSTALL_DIR=
 #ENABLE32BIT#ABI 	     = -32		  #ENDIF#
 
 #######################################################################
+#SP1#IBM_XLC_ABI	     = -q32 		  #ENDIF#
+#SP1#IBM_GNU_ABI	     = -maix32 		  #ENDIF#
 #IBM64#IBM_XLC_ABI	     = -q64 		  #ENDIF#
 #IBM64#IBM_GNU_ABI	     = -maix64 		  #ENDIF#
 #IBM64LINUX#IBM_XLC_ABI	     = -q64 		  #ENDIF#
@@ -567,6 +569,7 @@ TAU_RANLIB = echo "Built"
 
 ##############################################
 TAU_AR                 = ar             #ENDIF#
+#SP1#TAU_AR            = ar -X32        #ENDIF#
 #IBM64#TAU_AR          = ar -X64        #ENDIF#
 #PPC64#TAU_AR          = ar 		#ENDIF#
 #IBM64LINUX#TAU_AR     = ar             #ENDIF#
