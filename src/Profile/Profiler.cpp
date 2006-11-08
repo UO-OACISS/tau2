@@ -551,7 +551,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 
 #if defined(TAUKTAU)
 #ifdef KTAU_DEBUGPROF
-        printf("Profiler::Stop: --EXIT-- %s \n", CurrentProfiler[tid]->ThisFunction->GetName());
+	printf("Profiler::Stop: --EXIT-- %s \n", CurrentProfiler[tid]->ThisFunction->GetName());
 #endif /*KTAU_DEBUGPROF*/
 	ThisKtauProfiler->Stop(this, AddInclFlag);
 #endif /* TAUKTAU */
@@ -713,27 +713,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
 #ifdef KTAU_DEBUGPROF
-	/* Checking to see if kern_time is less than tot-time (user + kern time) */
-	double org_time     = ThisFunction->GetExclTime(tid); 
-	double kern_time     = (double)(ThisFunction->GetKtauFuncInfo(tid)->GetExclTicks())/KTauGetMHz();
-	
-	if(org_time > mod_time){
-	  cout <<"GOOD!!! Kernel space time is less than ExclTime: org_time:"<<
-		  org_time << " mod_time:"<< mod_time << endl;
-	}else{ 
-	  cout <<"ERROR!! Kernel space time is greater than ExclTime: org_time:"<<
-		  org_time << " mod_time:"<< mod_time << endl;
-
-	  cout << "KTauGetMHz:" << KTauGetMHz() <<
-		  " , Kernel Inc-ticks:" << ThisFunction->GetKtauFuncInfo(tid)->GetInclTicks() <<
-		  " , Kernel IncTime:" << (double)(ThisFunction->GetKtauFuncInfo(tid)->GetInclTicks())/KTauGetMHz()<<
-		  " , Kernel ExclTicks:" << ThisFunction->GetKtauFuncInfo(tid)->GetExclTicks()<<
-		  " , Kernel ExclTime:" << (double)(ThisFunction->GetKtauFuncInfo(tid)->GetExclTicks())/KTauGetMHz()<<
-		  " , User-ExclTime:" << ThisFunction->GetExclTime(tid)<<
-		  " , User-InclTime:" << ThisFunction->GetInclTime(tid)<<
-		  " , FuncName: " << ThisFunction->GetName() << endl;
-
-	}	
+	/* Checking to see if kern_time < tot-time (user+kern time) */
+        ThisKtauProfiler->VerifyMerge(ThisFunction);
 #endif /*KTAU_DEBUGPROF*/
 #endif /*TAUKTAU && TAUKTAU_MERGE*/
 
@@ -889,7 +870,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
               StoreData(tid);
 
 #if defined(TAUKTAU) 
-	      ThisKtauProfiler->KernProf.DumpKProfile();
+	      //AN Removed - New func inside 
+	      //ThisKtauProfiler->KernProf.DumpKProfile();
+	      ThisKtauProfiler->KernProf.DumpKProfileOut();
 #endif /*TAUKTAU */
 
 #ifdef TAU_OPENMP /* Check if we need to shut off .TAU applications on other tids */
@@ -969,6 +952,10 @@ void Profiler::ProfileExit(const char *message, int tid)
         }
       }
   
+#if defined(TAUKTAU)
+      KtauProfiler::PutKtauProfiler();
+#endif /* TAUKTAU */
+      
       current = CurrentProfiler[tid]; // Stop should set it
     }
   }
@@ -1574,7 +1561,7 @@ int Profiler::StoreData(int tid)
 #if defined(TAUKTAU_MERGE)
 	char* ktau_header = NULL;
 	ktau_header = new char[256];
-	sprintf(ktau_header,"%d %s\n", numFunc+(CurrentKtauProfiler->KernProf.GetNumKProfileFunc()), 
+	sprintf(ktau_header,"%d %s\n", (numFunc * 11)+(CurrentKtauProfiler->KernProf.GetNumKProfileFunc()+10), 
 			TauGetCounterString());
 #endif /*TAUKTAU_MERGE*/
 	sprintf(header,"%d %s\n", numFunc, TauGetCounterString());
@@ -1599,6 +1586,7 @@ int Profiler::StoreData(int tid)
 	int ktau_sz = strlen(ktau_header);
 	int ktau_ret = fprintf(ktau_fp, "%s",ktau_header);	
 	ktau_ret = fflush(ktau_fp);
+	bool top = 1;
 #endif /* TAUKTAU_MERGE */
 
 	/*
@@ -1657,12 +1645,40 @@ int Profiler::StoreData(int tid)
 #ifdef TAUKTAU_MERGE
 	    KtauFuncInfo* pKFunc = (*it)->GetKtauFuncInfo(tid);
 	    if(pKFunc) {
+		    if(top) {
+			    top = 0;
+			    double dZERO = 0;
+			    long lZERO = 0;
+			    for(int i=0; i<NO_MERGE_GRPS; i++) {
+				    fprintf(ktau_fp,"\"%s\" %ld %ld %.16G %.16G ",  
+				      merge_grp_name[i], (long)KtauFuncInfo::kernelGrpCalls[tid][i], lZERO, 
+				      KtauFuncInfo::kernelGrpExcl[tid][i]/KTauGetMHz(), KtauFuncInfo::kernelGrpIncl[tid][i]/KTauGetMHz());
+				    fprintf(ktau_fp,"0 "); // Indicating - profile calls is turned off
+				    fprintf(ktau_fp,"GROUP=\"%s\" \n", "KERNEL_GROUPS | TAU_KERNEL_MERGE");
+			    }
+
+		    }
 		    fprintf(ktau_fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
 		      (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid), 
-		      (*it)->GetExclTime(tid) - (pKFunc->GetExclTicks()/KTauGetMHz()), (*it)->GetInclTime(tid));
+		      (*it)->GetExclTime(tid) - (pKFunc->GetExclTicks(0)/KTauGetMHz()), (*it)->GetInclTime(tid));
 		    fprintf(ktau_fp,"0 "); // Indicating - profile calls is turned off
 		    fprintf(ktau_fp,"GROUP=\"%s\" ", (*it)->GetAllGroups());
-		    fprintf(ktau_fp,"%.16G \n", pKFunc->GetExclTicks()/KTauGetMHz());
+		    fprintf(ktau_fp,"%.16G \n", pKFunc->GetExclTicks(0)/KTauGetMHz());
+
+		    double dZERO = 0;
+		    long lZERO = 0;
+		    for(int i=0; i<NO_MERGE_GRPS; i++) {
+			    string grp_string = string((*it)->GetAllGroups());
+			    grp_string += " | KERNEL_GROUPS | TAU_KERNEL_MERGE | ";
+			    grp_string += (*it)->GetName();
+
+			    fprintf(ktau_fp,"\"%s %s => %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
+			      (*it)->GetType() ,merge_grp_name[i], (long)pKFunc->GetExclCalls(i), lZERO, 
+			      pKFunc->GetExclKExcl(i)/KTauGetMHz(), pKFunc->GetExclTicks(i)/KTauGetMHz());
+			    fprintf(ktau_fp,"0 "); // Indicating - profile calls is turned off
+			    fprintf(ktau_fp,"GROUP=\"%s\" \n", grp_string.c_str());//(*it)->GetAllGroups());
+		    }
+
 	    }
 #endif /* TAUKTAU_MERGE */
 
@@ -3282,9 +3298,9 @@ double& Profiler::TheTauThrottlePerCall(void)
   return throttlePercall;
 }
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.138 $   $Date: 2006/09/21 17:15:54 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.138 2006/09/21 17:15:54 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: anataraj $
+ * $Revision: 1.139 $   $Date: 2006/11/08 07:35:34 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.139 2006/11/08 07:35:34 anataraj Exp $ 
  ***************************************************************************/
 
 	
