@@ -187,7 +187,7 @@ int main(int argc, char **argv)
             if (argc == 1) {
 	      if ((fp = fopen(filename, "r")) == (FILE *)NULL) ShowUsage();
               fclose(fp); 
-              printf("After closing fp\n");
+              dprintf("After closing fp\n");
             }
           }
         }
