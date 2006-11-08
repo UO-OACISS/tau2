@@ -1136,7 +1136,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 #ifdef DEBUG
 	  cout <<"File was specified and its name didn't match... not examining routines here"<<endl;
 #endif /* DEBUG */
-	  return 1; /* we are done! */
+	  continue; /* we are done! (with this request) */
 	} /* either a file was not specified or if it was, it matched and 
 	     cmpResult was true, so we carry on... */
 
@@ -1181,6 +1181,6 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.33 $   $Date: 2006/10/27 23:03:38 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.33 2006/10/27 23:03:38 amorris Exp $
+ * $Revision: 1.34 $   $Date: 2006/11/08 22:30:59 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.34 2006/11/08 22:30:59 amorris Exp $
  ***************************************************************************/
