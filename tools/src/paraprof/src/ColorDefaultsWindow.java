@@ -58,7 +58,8 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
         //Window Stuff.
         setSize(new Dimension(855, 450));
         setLocation(WindowPlacer.getNewLocation(this, invoker));
-        setTitle("ParaProf: Edit Default Colors");
+        setTitle("TAU: ParaProf: Edit Default Colors");
+        ParaProfUtils.setFrameIcon(this);
 
         setupMenus();
         

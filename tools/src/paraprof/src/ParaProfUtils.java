@@ -6,7 +6,6 @@ import java.awt.print.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.net.URL;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
@@ -19,13 +18,13 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.script.ParaProfFunctionScript;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
-import edu.uoregon.tau.paraprof.sourceview.SourceViewer;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
@@ -168,7 +167,9 @@ public class ParaProfUtils {
                         String arg = evt.getActionCommand();
 
                         if (arg.equals("About ParaProf")) {
-                            JOptionPane.showMessageDialog(owner, ParaProf.getInfoString());
+                            ImageIcon icon = Utility.getImageIconResource("tau-medium.png");
+                            JOptionPane.showMessageDialog(owner, ParaProf.getInfoString(), "About ParaProf",
+                                    JOptionPane.INFORMATION_MESSAGE, icon);
                         } else if (arg.equals("Show Help Window")) {
                             ppWindow.help(true);
                         }
@@ -347,15 +348,15 @@ public class ParaProfUtils {
                     String arg = evt.getActionCommand();
 
                     if (arg.equals("ParaProf Manager")) {
-                        (new ParaProfManagerWindow()).show();
-                    } else if (arg.equals("Function Ledger")) {
-                        (new LedgerWindow(ppTrial, 0, owner)).show();
-                    } else if (arg.equals("Group Ledger")) {
-                        (new LedgerWindow(ppTrial, 1, owner)).show();
-                    } else if (arg.equals("User Event Ledger")) {
-                        (new LedgerWindow(ppTrial, 2, owner)).show();
-                    } else if (arg.equals("Phase Ledger")) {
-                        (new LedgerWindow(ppTrial, 3, owner)).show();
+                        (new ParaProfManagerWindow()).setVisible(true);
+                    } else if (arg.equals("Function Legend")) {
+                        (new LedgerWindow(ppTrial, 0, owner)).setVisible(true);
+                    } else if (arg.equals("Group Legend")) {
+                        (new LedgerWindow(ppTrial, 1, owner)).setVisible(true);
+                    } else if (arg.equals("User Event Legend")) {
+                        (new LedgerWindow(ppTrial, 2, owner)).setVisible(true);
+                    } else if (arg.equals("Phase Legend")) {
+                        (new LedgerWindow(ppTrial, 3, owner)).setVisible(true);
                     } else if (arg.equals("3D Visualization")) {
 
                         if (JVMDependent.version.equals("1.3")) {
@@ -369,7 +370,7 @@ public class ParaProfUtils {
 
                         try {
 
-                            (new ThreeDeeWindow(ppTrial, owner)).show();
+                            (new ThreeDeeWindow(ppTrial, owner)).setVisible(true);
                             //(new ThreeDeeWindow()).show();
                         } catch (UnsatisfiedLinkError e) {
                             JOptionPane.showMessageDialog(owner, "Unable to load jogl library.  Possible reasons:\n"
@@ -490,20 +491,20 @@ public class ParaProfUtils {
 
         windowsMenu.add(new JSeparator());
 
-        menuItem = new JMenuItem("Function Ledger");
+        menuItem = new JMenuItem("Function Legend");
         menuItem.addActionListener(actionListener);
         windowsMenu.add(menuItem);
 
-        final JMenuItem groupLedger = new JMenuItem("Group Ledger");
+        final JMenuItem groupLedger = new JMenuItem("Group Legend");
         groupLedger.addActionListener(actionListener);
         windowsMenu.add(groupLedger);
 
-        final JMenuItem userEventLedger = new JMenuItem("User Event Ledger");
+        final JMenuItem userEventLedger = new JMenuItem("User Event Legend");
         userEventLedger.addActionListener(actionListener);
         windowsMenu.add(userEventLedger);
 
         if (ppTrial.getDataSource().getPhasesPresent()) {
-            final JMenuItem phaseLedger = new JMenuItem("Phase Ledger");
+            final JMenuItem phaseLedger = new JMenuItem("Phase Legend");
             phaseLedger.addActionListener(actionListener);
             windowsMenu.add(phaseLedger);
         }
@@ -1144,16 +1145,9 @@ public class ParaProfUtils {
             }
         };
     }
-
-    public static URL getResource(String name) {
-        URL url;
-
-        url = ParaProfUtils.class.getResource(name);
-        if (url == null) {
-            url = ParaProfUtils.class.getResource("/" + name);
-        }
-
-        return url;
+    
+    public static void setFrameIcon(Frame frame) {
+        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(Utility.getResource("tau16x16.gif"))); 
     }
 
 }

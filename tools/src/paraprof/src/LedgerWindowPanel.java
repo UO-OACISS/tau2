@@ -15,11 +15,11 @@ import edu.uoregon.tau.common.ImageExport;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.7 2006/03/30 03:03:53 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.8 2006/11/08 23:17:58 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -65,7 +65,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     public void setupMenus() {
         JMenuItem jMenuItem = null;
 
-        if (windowType == LedgerWindow.GROUP_LEDGER) {
+        if (windowType == LedgerWindow.GROUP_LEGEND) {
 
             jMenuItem = new JMenuItem("Change Group Color");
             jMenuItem.addActionListener(this);
@@ -299,19 +299,19 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                             // not left click (middle and right)
                             clickedOnObject = lde;
 
-                            if (windowType == LedgerWindow.FUNCTION_LEDGER || windowType == LedgerWindow.PHASE_LEDGER) {
+                            if (windowType == LedgerWindow.FUNCTION_LEGEND || windowType == LedgerWindow.PHASE_LEGEND) {
                                 (ParaProfUtils.createFunctionClickPopUp(ppTrial, lde.getFunction(),
                                         ppTrial.getDataSource().getTotalData(), this)).show(this, evt.getX(), evt.getY());
-                            } else if (windowType == LedgerWindow.USEREVENT_LEDGER) {
+                            } else if (windowType == LedgerWindow.USEREVENT_LEGEND) {
                                 ParaProfUtils.handleUserEventClick(ppTrial, lde.getUserEvent(), this, evt);
                             } else {
                                 popup.show(this, evt.getX(), evt.getY());
                             }
                             return;
                         } else { // left click
-                            if (windowType == LedgerWindow.USEREVENT_LEDGER) {
+                            if (windowType == LedgerWindow.USEREVENT_LEGEND) {
                                 ppTrial.toggleHighlightedUserEvent(lde.getUserEvent());
-                            } else if (windowType == LedgerWindow.GROUP_LEDGER) {
+                            } else if (windowType == LedgerWindow.GROUP_LEGEND) {
                                 ppTrial.toggleHighlightedGroup(lde.getGroup());
                             } else {
                                 ppTrial.toggleHighlightedFunction(lde.getFunction());

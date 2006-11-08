@@ -199,10 +199,9 @@ public class SourceManager extends JFrame {
     public void display(Component invoker) {
         setSize(new Dimension(855, 450));
         setLocation(WindowPlacer.getNewLocation(this, invoker));
-        setTitle("ParaProf: Source Directory Manager");
-
+        setTitle("TAU: ParaProf: Source Directory Manager");
+        ParaProfUtils.setFrameIcon(this);
         setVisible(true);
-
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {

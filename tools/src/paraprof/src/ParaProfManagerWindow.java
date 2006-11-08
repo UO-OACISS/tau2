@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.11 2006/10/31 18:15:52 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.12 2006/11/08 23:17:58 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -32,6 +32,7 @@ import javax.swing.event.*;
 import javax.swing.tree.*;
 
 import edu.uoregon.tau.common.TauRuntimeException;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
@@ -112,8 +113,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         }
 
         setSize(ParaProfUtils.checkSize(new java.awt.Dimension(windowWidth, windowHeight)));
-        setTitle("ParaProf Manager");
-
+        setTitle("TAU: ParaProf Manager");
+        ParaProfUtils.setFrameIcon(this);
+        
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -123,10 +125,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
         setupMenus();
 
-        //####################################
-        //Create the tree.
-        //####################################
-        //Create the root node.
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Applications");
         standard = new DefaultMutableTreeNode("Standard Applications");
         runtime = new DefaultMutableTreeNode("Runtime Applications");

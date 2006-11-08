@@ -10,9 +10,9 @@ import edu.uoregon.tau.perfdmf.*;
 /**
  * A window that lets the user select a profile format and launch a JFileChooser
  * 
- * <P>CVS $Id: LoadTrialWindow.java,v 1.2 2006/03/15 22:32:27 amorris Exp $</P>
+ * <P>CVS $Id: LoadTrialWindow.java,v 1.3 2006/11/08 23:17:58 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class LoadTrialWindow extends JFrame implements ActionListener {
 
@@ -65,7 +65,9 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
 
         this.setLocation(xPosition, yPosition);
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
-        setTitle("Load Trial");
+        setTitle("TAU: ParaProf: Load Trial");
+        ParaProfUtils.setFrameIcon(this);
+
 
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {

@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.27 2006/10/31 18:15:51 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.28 2006/11/08 23:17:57 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.27 $
+ * @version	$Revision: 1.28 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -65,17 +65,15 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         //Now set the title.
         //if (windowType == 0) {
         if (thread.getNodeID() == -1) {
-            this.setTitle("Mean Call Path Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Mean Call Path Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -3) {
-            this.setTitle("Standard Deviation Call Path Data - "
+            this.setTitle("TAU: ParaProf: Standard Deviation Call Path Data - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {
-            this.setTitle("Call Path Data " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
+            this.setTitle("TAU: ParaProf: Call Path Data " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
                     + thread.getThreadID() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         }
-        //} else {
-        //    this.setTitle("Call Path Data Relations - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        // }
+        ParaProfUtils.setFrameIcon(this);
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {

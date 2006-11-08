@@ -32,11 +32,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.56 2006/10/31 18:15:51 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.57 2006/11/08 23:17:58 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.56 $
+ * @version $Revision: 1.57 $
  */
 public class ParaProf implements ActionListener {
 
@@ -292,7 +292,7 @@ public class ParaProf implements ActionListener {
     public static String getInfoString() {
         long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
 
-        return new String("ParaProf 3\n" + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\n");
+        return new String("ParaProf 3\n" + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\n" + "http://www.cs.uoregon.edu/research/tau\n");
     }
 
     public static String getVersionString() {

@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.7 2006/10/31 18:15:52 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.8 2006/11/08 23:18:00 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -74,16 +74,17 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 
         if (thread.getNodeID() == -1) {
-            this.setTitle("Mean Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Mean Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -2) {
-            this.setTitle("Total Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Total Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -3) {
-            this.setTitle("Std. Dev. Statistics - "
+            this.setTitle("TAU: ParaProf: Std. Dev. Statistics - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {
-            this.setTitle("Thread Statistics: " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
+            this.setTitle("TAU: ParaProf: Thread Statistics: " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
                     + thread.getThreadID() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         }
+        ParaProfUtils.setFrameIcon(this);
 
         if (ParaProf.getHelpWindow().isVisible()) {
             this.help(false);

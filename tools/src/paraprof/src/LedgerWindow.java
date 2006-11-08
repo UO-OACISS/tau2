@@ -18,18 +18,18 @@ import edu.uoregon.tau.perfdmf.UserEvent;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.3 2006/10/31 18:15:51 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.4 2006/11/08 23:17:58 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
 public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
-    public static final int FUNCTION_LEDGER = 0;
-    public static final int GROUP_LEDGER = 1;
-    public static final int USEREVENT_LEDGER = 2;
-    public static final int PHASE_LEDGER = 3;
+    public static final int FUNCTION_LEGEND = 0;
+    public static final int GROUP_LEGEND = 1;
+    public static final int USEREVENT_LEGEND = 2;
+    public static final int PHASE_LEGEND = 3;
     private int windowType = -1; //0:function, 1:group, 2:userevent, 3:phase
 
     private ParaProfTrial ppTrial = null;
@@ -61,21 +61,22 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
         
         //Now set the title.
         switch (windowType) {
-        case FUNCTION_LEDGER:
-            this.setTitle("Function Ledger: " + ppTrial.getTrialIdentifier(true));
+        case FUNCTION_LEGEND:
+            this.setTitle("TAU: ParaProf: Function Legend: " + ppTrial.getTrialIdentifier(true));
             break;
-        case GROUP_LEDGER:
-            this.setTitle("Group Ledger: " + ppTrial.getTrialIdentifier(true));
+        case GROUP_LEGEND:
+            this.setTitle("TAU: ParaProf: Group Legend: " + ppTrial.getTrialIdentifier(true));
             break;
-        case USEREVENT_LEDGER:
-            this.setTitle("User Event Ledger: " + ppTrial.getTrialIdentifier(true));
+        case USEREVENT_LEGEND:
+            this.setTitle("TAU: ParaProf: User Event Legend: " + ppTrial.getTrialIdentifier(true));
             break;
-        case PHASE_LEDGER:
-            this.setTitle("Phase Ledger: " + ppTrial.getTrialIdentifier(true));
+        case PHASE_LEGEND:
+            this.setTitle("TAU: ParaProf: Phase Legend: " + ppTrial.getTrialIdentifier(true));
             break;
         default:
-            throw new ParaProfException("Invalid Ledger Window Type: " + windowType);
+            throw new ParaProfException("Invalid Legend Window Type: " + windowType);
         }
+        ParaProfUtils.setFrameIcon(this);
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -158,19 +159,19 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
     //Updates this window's data copy.
     private void sortLocalData() {
         list = new Vector();
-        if (this.windowType == FUNCTION_LEDGER) {
+        if (this.windowType == FUNCTION_LEGEND) {
             for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
                 list.addElement(new LedgerDataElement((Function) it.next()));
             }
-        } else if (this.windowType == GROUP_LEDGER) {
+        } else if (this.windowType == GROUP_LEGEND) {
             for (Iterator it = ppTrial.getDataSource().getGroups(); it.hasNext();) {
                 list.addElement(new LedgerDataElement((Group) it.next()));
             }
-        } else if (this.windowType == USEREVENT_LEDGER) {
+        } else if (this.windowType == USEREVENT_LEGEND) {
             for (Iterator it = ppTrial.getDataSource().getUserEvents(); it.hasNext();) {
                 list.addElement(new LedgerDataElement((UserEvent) it.next()));
             }
-        } else if (this.windowType == PHASE_LEDGER) {
+        } else if (this.windowType == PHASE_LEGEND) {
             Group group = ppTrial.getDataSource().getGroup("TAU_PHASE");
             for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
                 Function function = (Function) it.next();

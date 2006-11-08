@@ -53,7 +53,9 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 
         this.setLocation(xPosition, yPosition);
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
-        setTitle("Loading...");
+        setTitle("TAU: ParaProf: Loading...");
+        ParaProfUtils.setFrameIcon(this);
+
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {

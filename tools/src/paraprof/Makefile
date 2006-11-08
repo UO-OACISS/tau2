@@ -59,7 +59,6 @@ $(TOOLS_SRC)/paraprof/bin/paraprof.jar: $(NEW_SOURCES)
 	mkdir classes
 	sed "s/XXXXX/$(NOW)/" src/ParaProf.java > wrapper/ParaProf.java
 	$(CC) -d ./classes -classpath $(CP14) $(NEW_SOURCES) wrapper/ParaProf.java
-	cp ./src/resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	jar -cvf bin/paraprof.jar -C ./classes edu
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/paraprof.jar
 	cp $(TOOLS_SRC)/paraprof/bin/paraprof.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
@@ -69,7 +68,6 @@ $(TOOLS_SRC)/paraprof/bin/paraprof.jar: $(NEW_SOURCES)
 	mkdir classes
 	sed "s/XXXXX/$(NOW)/" src/ParaProf.java > wrapper/ParaProf.java
 	$(CC) -d ./classes -classpath $(CP13) $(OLD_SOURCES) wrapper/ParaProf.java
-	cp ./src/resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	jar -cvf bin/paraprof-1.3.jar -C ./classes edu
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/paraprof-1.3.jar
 	cp $(TOOLS_SRC)/paraprof/bin/paraprof-1.3.jar $(TAUROOT)/$(CONFIG_ARCH)/lib

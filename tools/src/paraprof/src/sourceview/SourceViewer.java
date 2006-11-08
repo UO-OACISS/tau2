@@ -20,7 +20,7 @@ import edu.uoregon.tau.perfdmf.SourceRegion;
 public class SourceViewer extends JFrame implements ParaProfWindow {
 
    
-    LineNumberedTextPanel bob;
+    LineNumberedTextPanel textPanel;
     JTextPane ed = null;
 
     public int getLineStartOffset(JEditorPane ed, int line) throws BadLocationException {
@@ -93,7 +93,7 @@ public class SourceViewer extends JFrame implements ParaProfWindow {
 
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
-        mainMenu.add(ParaProfUtils.createFileMenu((ParaProfWindow) this, bob, bob));
+        mainMenu.add(ParaProfUtils.createFileMenu((ParaProfWindow) this, textPanel, textPanel));
         //mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
@@ -103,25 +103,20 @@ public class SourceViewer extends JFrame implements ParaProfWindow {
     
     public SourceViewer(File file) {
         //        String file = "/home/amorris/apps/NPB3.1-MPI/LU/erhs.f";
-        this.setTitle("Source Browser: " + file);
+        this.setTitle("TAU: ParaProf: Source Browser: " + file);
+        ParaProfUtils.setFrameIcon(this);
 
         try {
            
             URL url = new URL("file", null, file.getAbsolutePath());
-            bob = new LineNumberedTextPanel();
+            textPanel = new LineNumberedTextPanel();
             
-            ed = bob.getJTextPane();
-            //            ed.setContentType("text/html");
+            ed = textPanel.getJTextPane();
             ed.setPage(url);
             ed.setFont(new Font("Monospaced", ParaProf.preferencesWindow.getFontStyle(), ParaProf.preferencesWindow.getFontSize()));
 
-            //ed.setEditorKit(new NumberedEditorKit());
-
-            //scrollpane = new JScrollPane(ed);
-            //getContentPane().add(scrollpane);
-
-            getContentPane().add(bob, BorderLayout.WEST);
-            getContentPane().add(bob.scrollPane, BorderLayout.CENTER);
+            getContentPane().add(textPanel, BorderLayout.WEST);
+            getContentPane().add(textPanel.scrollPane, BorderLayout.CENTER);
             pack();
             
             

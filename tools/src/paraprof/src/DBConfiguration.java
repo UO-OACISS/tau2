@@ -55,7 +55,9 @@ public class DBConfiguration extends JFrame implements ActionListener {
 
         this.setLocation(xPosition, yPosition);
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
-        setTitle("Database Configuration");
+        setTitle("TAU: ParaProf: Database Configuration");
+        ParaProfUtils.setFrameIcon(this);
+
         //####################################
         //End -Window Stuff.
         //####################################

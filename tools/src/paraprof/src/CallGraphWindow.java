@@ -32,9 +32,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.4 2006/10/31 18:15:51 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.5 2006/11/08 23:17:57 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ImageExport, Printable, ParaProfWindow {
@@ -280,13 +280,14 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         //Now set the title.
         if (thread.getNodeID() == -1) {
-            this.setTitle("Mean Call Graph - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Mean Call Graph - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -3) {
-            this.setTitle("Standard Deviation Call Graph - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Standard Deviation Call Graph - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {
-            this.setTitle("Call Graph for n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
+            this.setTitle("TAU: ParaProf: Call Graph for n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
                     + thread.getThreadID() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         }
+        ParaProfUtils.setFrameIcon(this);
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {

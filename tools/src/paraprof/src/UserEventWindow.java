@@ -21,9 +21,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * The UserEventWindow shows one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventWindow.java,v 1.24 2006/10/31 18:15:52 amorris Exp $</P>
+ * <P>CVS $Id: UserEventWindow.java,v 1.25 2006/11/08 23:17:59 amorris Exp $</P>
  * @author  Alan Morris, Robert Bell
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  * @see GlobalBarChartModel
  */
 public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -69,7 +69,9 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 
         //Now set the title.
-        this.setTitle("User Event Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        this.setTitle("TAU: ParaProf: User Event Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        ParaProfUtils.setFrameIcon(this);
+
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {

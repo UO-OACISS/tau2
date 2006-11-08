@@ -22,9 +22,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.8 2006/10/31 18:15:51 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.9 2006/11/08 23:17:58 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -68,11 +68,13 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         dataSorter.setPhase(phase);
 
         if (phase == null) {
-            setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            setTitle("TAU: ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {
-            setTitle("ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + " Phase: "
+            setTitle("TAU: ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + " Phase: "
                     + phase.getName());
         }
+        ParaProfUtils.setFrameIcon(this);
+
 
         setSize(ParaProfUtils.checkSize(new java.awt.Dimension(defaultWidth, defaultHeight)));
         setLocation(WindowPlacer.getGlobalDataWindowPosition(this));

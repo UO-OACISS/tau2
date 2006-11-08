@@ -26,9 +26,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.9 2006/10/31 18:15:51 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.10 2006/11/08 23:17:58 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -81,7 +81,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         panel = new BarChartPanel(model, null);
         initialize(parent);
 
-        this.setTitle("Function Data Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        setTitle("TAU: ParaProf: Function Data Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        ParaProfUtils.setFrameIcon(this);
+
     }
 
     // Initializes Chart as a single thread across functions
@@ -105,18 +107,20 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         }
 
         if (thread.getNodeID() == -1) {
-            this.setTitle("Mean Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
+            this.setTitle("TAU: ParaProf: Mean Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
                     + phaseString);
         } else if (thread.getNodeID() == -2) {
-            this.setTitle("Total Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
+            this.setTitle("TAU: ParaProf: Total Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
                     + phaseString);
         } else if (thread.getNodeID() == -3) {
-            this.setTitle("Standard Deviation Data - "
+            this.setTitle("TAU: ParaProf: Standard Deviation Data - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
         } else {
-            this.setTitle(ppThread.getName() + " - "
+            this.setTitle("TAU: ParaProf: " + ppThread.getName() + " - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
         }
+        ParaProfUtils.setFrameIcon(this);
+
     }
 
     private FunctionBarChartWindow() {
@@ -131,7 +135,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     public static FunctionBarChartWindow CreateComparisonWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
         FunctionBarChartWindow window = new FunctionBarChartWindow();
 
-        window.setTitle("Comparison Window");
+        window.setTitle("ParaProf: Comparison Window");
+        ParaProfUtils.setFrameIcon(window);
+
         window.dataSorter = new DataSorter(ppTrial);
         window.ppTrial = ppTrial;
         window.comparisonChart = true;
@@ -229,8 +235,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         this.ppThread = new PPThread(thread, ppTrial);
         phaseDisplay = true;
 
-        this.setTitle(ParaProfUtils.getThreadIdentifier(thread) + " - Function Data: "
+        this.setTitle("TAU: ParaProf: " + ParaProfUtils.getThreadIdentifier(thread) + " - Function Data: "
                 + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        ParaProfUtils.setFrameIcon(this);
 
         // in case we were opened on "main => foo", switch to foo
         this.function = ppTrial.getDataSource().getFunction(UtilFncs.getLeftSide(function.getName()));

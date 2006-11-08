@@ -72,8 +72,9 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
             errorString = sw.toString();
         }
 
-        this.setTitle("ParaProf Error");
-        this.setSize(500, 300);
+        setTitle("TAU: ParaProf: Error");
+        ParaProfUtils.setFrameIcon(this);
+        setSize(500, 300);
 
         int windowWidth = 500;
         int windowHeight = 300;

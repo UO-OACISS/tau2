@@ -75,7 +75,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setSortType(SortType.NAME);
 
-        this.setTitle("ParaProf Visualizer: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        this.setTitle("TAU: ParaProf: 3D Visualizer: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        ParaProfUtils.setFrameIcon(this);
+
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {

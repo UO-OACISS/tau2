@@ -12,10 +12,15 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.tree.*;
-import java.net.*;
+import java.awt.Component;
+import java.net.URL;
+
+import javax.swing.ImageIcon;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+
+import edu.uoregon.tau.common.Utility;
 
 public class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer {
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
@@ -26,7 +31,7 @@ public class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer {
         Object userObject = node.getUserObject();
 
         if (node.isRoot()) {
-            URL url = ParaProfUtils.getResource("red-ball.gif");
+            URL url = Utility.getResource("red-ball.gif");
             this.setIcon(new ImageIcon(url));
         }
         //else if(parentNode.isRoot()){
@@ -34,7 +39,7 @@ public class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer {
         //this.setIcon(new ImageIcon(url));
         //}
         else if (userObject instanceof ParaProfMetric) {
-            URL url = ParaProfUtils.getResource("green-ball.gif");
+            URL url = Utility.getResource("green-ball.gif");
             this.setIcon(new ImageIcon(url));
         }
         return this;

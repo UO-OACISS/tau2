@@ -21,7 +21,8 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
 
         setSize(new Dimension(855, 450));
         setLocation(WindowPlacer.getNewLocation(this, invoker));
-        setTitle("ParaProf: Color Map");
+        setTitle("TAU: ParaProf: Color Map");
+        ParaProfUtils.setFrameIcon(this);
 
         setupMenus();
 

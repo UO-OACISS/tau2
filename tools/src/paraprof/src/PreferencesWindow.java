@@ -90,7 +90,9 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         prefSpacingPanel = new PrefSpacingPanel();
 
         //Window Stuff.
-        setTitle("ParaProf Preferences");
+        setTitle("TAU: ParaProf: Preferences");
+        ParaProfUtils.setFrameIcon(this);
+
 
         int windowWidth = 550;
         int windowHeight = 450;

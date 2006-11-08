@@ -37,7 +37,9 @@ public class HelpWindow extends JFrame implements ActionListener, Observer {
 
         //Set the preferend initial size for this window.
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
-        setTitle("ParaProf Help Window");
+        setTitle("TAU: ParaProf: Help Window");
+        ParaProfUtils.setFrameIcon(this);
+
 
         JMenuBar mainMenu = new JMenuBar();
 

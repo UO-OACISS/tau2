@@ -36,9 +36,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.4 2006/10/31 18:15:51 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.5 2006/11/08 23:17:58 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * @see     HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
@@ -69,7 +69,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         this.dataSorter = new DataSorter(ppTrial);
         this.function = function;
 
-        setTitle("Histogram: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        setTitle("TAU: ParaProf: Histogram: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        ParaProfUtils.setFrameIcon(this);
         setSize(ParaProfUtils.checkSize(new java.awt.Dimension(670, 630)));
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 

@@ -81,13 +81,13 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         String title;
         //Now set the title.
         if (nodeID == -1) {
-            title = "Mean Data Statistics: ";
+            title = "TAU: ParaProf: Mean Data Statistics: ";
         } else if (nodeID == -2) {
-            title = "Total Statistics: ";
+            title = "TAU: ParaProf: Total Statistics: ";
         } else if (nodeID == -3) {
-            title = "Standard Deviation Statistics: ";
+            title = "TAU: ParaProf: Standard Deviation Statistics: ";
         } else {
-            title = "n,c,t, " + nodeID + "," + contextID + "," + threadID;
+            title = "TAU: ParaProf: n,c,t, " + nodeID + "," + contextID + "," + threadID;
         }
 
         title = title + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse());
@@ -97,6 +97,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         } else {
             this.setTitle(title);
         }
+        ParaProfUtils.setFrameIcon(this);
 
         addKeyListener(this);
 
