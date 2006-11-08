@@ -203,7 +203,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		String message = new String("PerfExplorer 1.0\n" +
 					getVersionString() + "\nJVM Heap Size: " + memUsage
 					+ "kb\n");
-		ImageIcon icon = createImageIcon("tau-logo-large.png");
+		ImageIcon icon = createImageIcon("tau-large.png");
 		JOptionPane.showMessageDialog(mainFrame, message, 
 			"About PerfExplorer", JOptionPane.INFORMATION_MESSAGE, icon);
 	}
@@ -220,7 +220,7 @@ public class PerfExplorerActionListener implements ActionListener {
     }
 
 	public void createHelpWindow() {
-		ImageIcon icon = createImageIcon("tau-logo-large.png");
+		ImageIcon icon = createImageIcon("tau-large.png");
 		JOptionPane.showMessageDialog(mainFrame, 
 			"Internal help not implemented.\nFor the most up-to-date documentation, please see\n<html><a href='http://www.cs.uoregon.edu/research/tau/'>http://www.cs.uoregon.edu/research/tau/</a></html>",
 			"PerfExplorer Help", JOptionPane.INFORMATION_MESSAGE, icon);

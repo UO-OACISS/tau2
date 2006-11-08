@@ -3,6 +3,7 @@ package client;
 import server.AnalysisTaskWrapper;
 import common.EngineType;
 import common.PerfExplorerOutput;
+import edu.uoregon.tau.common.Utility;
 import jargs.gnu.CmdLineParser;
 import javax.swing.*;
 import java.awt.*;
@@ -85,6 +86,7 @@ public class PerfExplorerClient extends JFrame {
         } else {
             this.setLocation(savedPosition);
         }
+		setIconImage(Toolkit.getDefaultToolkit().getImage(Utility.getResource("tau16x16.gif")));
 		mainFrame = this;
 	}
 
