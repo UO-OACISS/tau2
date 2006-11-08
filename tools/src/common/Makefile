@@ -1,6 +1,6 @@
 
-CONFIG_ARCH=default
-TAUROOT=
+CONFIG_ARCH=x86_64
+TAUROOT=/home/amorris/tau2
 TOOLS_SRC=$(TAUROOT)/tools/src
 
 
@@ -11,6 +11,7 @@ CLASSPATH = $(TAUROOT)/$(CONFIG_ARCH)/lib/batik-combined.jar:$(TOOLS_SRC)/contri
 
 bin/tau-common.jar: $(SOURCES) classes
 	javac -d ./classes -classpath $(CLASSPATH) $(SOURCES)
+	cp -r ./resources ./classes/edu/uoregon/tau/common
 	jar -cvf bin/tau-common.jar -C ./classes edu
 	cp bin/tau-common.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 
