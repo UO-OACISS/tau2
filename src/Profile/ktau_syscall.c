@@ -23,7 +23,7 @@
 #endif
 
 /* Ktau merge & gettime overloaded syscall */
-//#include <asm/unistd.h>
+#include <asm/unistd.h>
 #include <sys/time.h>
 #include <errno.h>
 
@@ -37,5 +37,5 @@ int ktau_gettimeofday(struct timeval *tv, struct timezone *tz) {
 
 /***************************************************************************
  * $RCSfile: ktau_syscall.c,v $   $Author: anataraj $
- * $Revision: 1.2 $   $Date: 2006/11/09 06:14:06 $
+ * $Revision: 1.3 $   $Date: 2006/11/09 08:05:46 $
  ***************************************************************************/
