@@ -619,7 +619,14 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
   sprintf(lines, "{%d,%d}-{%d,%d}", 
 	start.line(), start.col(), stop.line(), stop.col());
   /* we use the line numbers in building the name of the timer */
-  string timername (string("Loop: " + ro->fullName() + " [{"+f->name()+ "} "+ lines + "]"));
+
+  const char *filename = f->name().c_str();
+  while (strchr(filename,TAU_DIR_CHARACTER)) { // remove path
+    filename = strchr(filename,TAU_DIR_CHARACTER)+1;
+  }
+
+  string timername (string("Loop: " + string(ro->fullName()) 
+			   + " [{" + string(filename) + "} " + lines + "]"));
 
   /* we embed the line from_to in the name of the timer. e.g., t */
   string varname;
@@ -747,7 +754,14 @@ void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start,
   char lines[256];
   sprintf(lines, "{%d,%d}-{%d,%d}", 
 	start.line(), start.col(), stop.line(), stop.col());
-  string *timername = new string(string("Loop: " + ro->fullName() + " [{"+f->name()+ "} "+ lines + "]"));
+
+  const char *filename = f->name().c_str();
+  while (strchr(filename,TAU_DIR_CHARACTER)) { // remove path
+    filename = strchr(filename,TAU_DIR_CHARACTER)+1;
+  }
+
+  string *timername = new string(string("Loop: " + ro->fullName() 
+					+ " [{"+string(filename)+ "} "+ lines + "]"));
 #ifdef DEBUG
   printf("Adding instrumentation at %s\n", timername->c_str());
 #endif /* DEBUG */
@@ -1181,6 +1195,6 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.34 $   $Date: 2006/11/08 22:30:59 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.34 2006/11/08 22:30:59 amorris Exp $
+ * $Revision: 1.35 $   $Date: 2006/11/09 00:06:45 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.35 2006/11/09 00:06:45 amorris Exp $
  ***************************************************************************/
