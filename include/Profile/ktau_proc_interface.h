@@ -244,6 +244,28 @@ extern void print_many_profiles(int type, FILE* fp, const ktau_output* profiles,
  */
 extern void print_ktau_output(int type, FILE* fp, const ktau_output* profile);
 
+
+/* aggr_many_profiles: Aggregates array of Profiles to provide single kernel-as-a-whole profile 
+ *****************************************************************
+ * Arguments:
+ * inprofiles:  ktau_output ptr to the Unpacked profile data.
+ *
+ * no_profiles: the number of profiles pointed to by profiles* (above)
+ *
+ * max_prof_entries: the maximum no of entries a single profile may have
+ *
+ * outprofile:  ptr to allocated memory for one profile with max_prof_size entries
+ *
+ * Returns:     0 on success, negative on error
+ * 
+ * Constraints:
+ * Can aggregate from only ktau_output (i.e unpacked profiles). Cannot 
+ * aggregate packed-binary profile data --> therefore unpack_bindata
+ * must be called on those before calling this.
+ */
+int aggr_many_profiles(const ktau_output* inprofiles, unsigned int no_profiles, unsigned int max_prof_entries, ktau_output* outprofile);
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
@@ -251,7 +273,7 @@ extern void print_ktau_output(int type, FILE* fp, const ktau_output* profile);
 #endif  /*_KTAU_PROC_INTERFACE_H */
 /***************************************************************************
  * $RCSfile: ktau_proc_interface.h,v $   $Author: anataraj $
- * $Revision: 1.1 $   $Date: 2005/12/01 02:50:56 $
- * POOMA_VERSION_ID: $Id: ktau_proc_interface.h,v 1.1 2005/12/01 02:50:56 anataraj Exp $ 
+ * $Revision: 1.2 $   $Date: 2006/11/09 05:34:47 $
+ * POOMA_VERSION_ID: $Id: ktau_proc_interface.h,v 1.2 2006/11/09 05:34:47 anataraj Exp $ 
  ***************************************************************************/
 
