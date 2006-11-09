@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.12 2006/11/08 23:17:58 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.13 2006/11/09 01:44:12 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -536,7 +536,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         jSplitOuterPane.setDividerLocation(1.00);
                     }
                 } else if (arg.equals("About ParaProf")) {
-                    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
+                    ImageIcon icon = Utility.getImageIconResource("tau-medium.png");
+                    JOptionPane.showMessageDialog(this, ParaProf.getInfoString(), "About ParaProf",
+                            JOptionPane.INFORMATION_MESSAGE, icon);
                 } else if (arg.equals("Show Help Window")) {
                     ParaProf.getHelpWindow().show();
                     //Clear the window first.
