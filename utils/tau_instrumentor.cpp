@@ -14,8 +14,8 @@
 # include <sstream.h>
 #else
 # include <fstream>
-# include <set>
 # include <algorithm>
+# include <set>
 # include <list> 
 # include <string> 
 # include <sstream>
@@ -44,6 +44,7 @@ extern bool processFileForInstrumentation(const string& file_name);
 extern bool isInstrumentListEmpty(void);
 extern void writeAdditionalFortranDeclarations(ofstream& ostr, const pdbRoutine *routine);
 extern void writeAdditionalFortranInvocations(ofstream& ostr, const pdbRoutine *routine);
+extern bool addMoreInvocations(int routine_id, string& snippet);
 
 #include "tau_datatypes.h"
 
@@ -121,6 +122,7 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
     { /* they're both equal */
       if (r1->kind == BODY_BEGIN) return true; 
       if (r2->kind == BODY_BEGIN) return false; 
+      if (r1->kind == INSTRUMENTATION_POINT) return false; 
       return true; 
     }
     else
@@ -2205,9 +2207,42 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		 
 	    case INSTRUMENTATION_POINT:
 #ifdef DEBUG
-		cout <<"Instrumentation point Fortran -> line = "<< (*it)->line<<" col "<<(*it)->col <<" write_upto = "<<write_upto<<" snippet = "<<(*it)->snippet<<endl;
+		cout <<"Instrumentation point Fortran -> Line = "<< (*it)->line<<" col "<<(*it)->col <<" write_upto = "<<write_upto<<" snippet = "<<(*it)->snippet<<endl;
 #endif /* DEBUG */
-		WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, (*it)->snippet);
+		/* are we at the entry of the routine. Are there other items that need to be done at this point? */
+	        /* if so, we should really add this snippet to other invocations. */
+		if (((it+1) != itemvec.end()) && ((*it)->line == (*(it+1))->line))
+	        {
+                  int rid = -1; 
+#ifdef DEBUG
+		  cout <<"NEXT Instrumentation point on the same line!"<<(*it)->line<<endl;
+#endif /* DEBUG */
+		  /* find out what routine no. is associated with it. iterate through 
+		     records till you find one that has a non-null item. Get its routine id */
+		  vector<itemRef *>::iterator institer = it; 	
+		  while ((*institer) && (*institer)->line == (*it)->line)
+                  {
+                    if ((*institer)->item) 
+		    {
+                      rid = ((pdbRoutine *)(*institer)->item)->id();
+#ifdef DEBUG
+		      cout <<"Found routine = "<<rid <<endl;
+#endif /* DEBUG */
+		      break;
+		    }
+		    institer++;
+		  }
+		  /* push snippet to the additionalInvocations */
+		  if (rid != -1)
+		  {
+		    addMoreInvocations(rid, (*it)->snippet); /* assign the list of strings to the list */
+		  }
+		  else
+		    WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, (*it)->snippet);
+		}
+		else {
+		  WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, (*it)->snippet);
+		}
 		instrumented = true;
 		break;
             case START_DO_TIMER:
@@ -2691,8 +2726,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.123 $   $Date: 2006/11/09 02:21:31 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.123 2006/11/09 02:21:31 sameer Exp $
+ * $Revision: 1.124 $   $Date: 2006/11/09 23:18:04 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.124 2006/11/09 23:18:04 sameer Exp $
  ***************************************************************************/
 
 
