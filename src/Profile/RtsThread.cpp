@@ -49,6 +49,12 @@ void TraceCallStack(int tid, Profiler *current);
 
 #include <stdio.h>
 
+#ifdef TAUKTAU
+#include <Profile/KtauProfiler.h>
+#ifdef TAUKTAU_MERGE
+#include <Profile/KtauFuncInfo.h>
+#endif //TAUKTAU_MERGE
+#endif //TAUKTAU
 
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
@@ -136,6 +142,16 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
   Profiler *current;
 #endif // PROFILING_ON
 
+#ifdef TAUKTAU
+  //If KTAU profiling (esp. merged, but even non-merged) is on
+  //then we ALWAYS do EXCLUDE_PARENT - i.e. KTAU doesnt currently 
+  //support INCLUDE_PARENT. Unlike in the case of TAU, there is a
+  // LOT of extra work that needs to be done in KTAU for INCLUDE.
+  // - TODO. : AN
+  opcode = TAU_EXCLUDE_PARENT_DATA;
+  DEBUGPROFMSG("KTAU Profiling On. Currently only supports EXCLUDE-PARENT on RegisterFork." << endl;);
+#endif //TAUKTAU
+
 #ifdef TAU_PAPI
   // PAPI must be reinitialized in the child
   PapiLayer::reinitializePAPI();
@@ -178,7 +194,16 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 #endif // PROFILE_STATS 
 	/* Do we need to change AlreadyOnStack? No*/
 	DEBUGPROFMSG("FI Zap: Inside "<< (*it)->GetName() <<endl;);
+#ifdef TAUKTAU_MERGE
+         DEBUGPROFMSG("RtsLayer::RegisterFork: GetKtauFuncInfo(tid)->ResetAllCounters(tid): Func:"<< (*it)->GetName() <<endl;);
+	 (*it)->GetKtauFuncInfo(tid)->ResetAllCounters(tid);
+#endif //TAUKTAU_MERGE
        }
+#ifdef TAUKTAU_MERGE
+       DEBUGPROFMSG("RtsLayer::RegisterFork: KtauFuncInfo::ResetAllGrpTotals(tid)"<<endl;);
+       KtauFuncInfo::ResetAllGrpTotals(tid);
+#endif //TAUKTAU_MERGE
+       DEBUGPROFMSG("RtsLayer::RegisterFork: Running-Up Stack\n");
        // Now that the FunctionDB is cleared, we need to add values to it 
        //	corresponding to the present state.
        current = Profiler::CurrentProfiler[tid];
@@ -210,6 +235,14 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
        TraceUnInitialize(tid); // Zap the earlier contents of the trace buffer  
        TraceCallStack(tid, Profiler::CurrentProfiler[tid]); 
 #endif   // TRACING_ON
+
+#ifdef TAUKTAU
+       DEBUGPROFMSG("RtsLayer::RegisterFork: CurrentProfiler:"<<Profiler::CurrentProfiler[tid]<<endl;);
+       if(Profiler::CurrentProfiler[tid] != NULL) {
+	       Profiler::CurrentProfiler[tid]->ThisKtauProfiler->RegisterFork(Profiler::CurrentProfiler[tid], tid, nodeid, opcode);
+       }
+#endif //TAUKTAU
+
      } // for tid loop
      // DONE! 
    }
@@ -309,9 +342,9 @@ void RtsLayer::UnLockEnv(void)
 
 
 /***************************************************************************
- * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.22 $   $Date: 2006/07/08 01:09:07 $
- * VERSION: $Id: RtsThread.cpp,v 1.22 2006/07/08 01:09:07 amorris Exp $
+ * $RCSfile: RtsThread.cpp,v $   $Author: anataraj $
+ * $Revision: 1.23 $   $Date: 2006/11/09 05:14:12 $
+ * VERSION: $Id: RtsThread.cpp,v 1.23 2006/11/09 05:14:12 anataraj Exp $
  ***************************************************************************/
 
 
