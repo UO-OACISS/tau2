@@ -413,6 +413,12 @@ TauMemory.o : TauMemory.cpp $(HDRS)
 ktau_proc_interface.o : ktau_proc_interface.c $(HDRS)
 	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
 
+ktau_diff_profiles.o : ktau_diff_profiles.c $(HDRS)
+	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
+
+ktau_syscall.o : ktau_syscall.c $(HDRS)
+	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
+
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
