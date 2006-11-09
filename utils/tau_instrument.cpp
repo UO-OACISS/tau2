@@ -1183,6 +1183,19 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
   return retval;
 }
 
+bool addMoreInvocations(int routine_id, string& snippet)
+{
+  list<string> code; 
+  code.push_back(snippet);
+  additionalInvocations.push_back(pair<int, list<string> >(routine_id, code)); 
+
+#ifdef DEBUG
+  cout <<"Adding invocations routine id = "<<routine_id<<" snippet  = "<<snippet<<endl;
+#endif /* DEBUG */
+  /* assign the list of strings to the list */
+  return true;
+}
+
    
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1194,7 +1207,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.35 $   $Date: 2006/11/09 00:06:45 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.35 2006/11/09 00:06:45 amorris Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
+ * $Revision: 1.36 $   $Date: 2006/11/09 23:25:55 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.36 2006/11/09 23:25:55 sameer Exp $
  ***************************************************************************/
