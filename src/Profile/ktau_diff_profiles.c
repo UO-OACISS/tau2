@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #ifndef CONFIG_KTAU_MERGE 
 #define CONFIG_KTAU_MERGE
+#endif
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -275,5 +276,5 @@ int ktau_diff_profiles(ktau_output* plist1, int size1, ktau_output* plist2, int 
 
 /***************************************************************************
  * $RCSfile: ktau_diff_profiles.c,v $   $Author: anataraj $
- * $Revision: 1.2 $   $Date: 2006/11/09 06:13:12 $
+ * $Revision: 1.3 $   $Date: 2006/11/09 06:40:53 $
  ***************************************************************************/
