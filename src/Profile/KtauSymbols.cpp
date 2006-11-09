@@ -32,6 +32,9 @@ using namespace std;
 
 #define DEBUG 0
 
+#define ktau_str2ll (unsigned int)strtoul
+
+
 KtauSymbols::KtauSymbols(const string& path):filepath(path) {
 	//dummy call to KTauGetMHz() - so that this time is not included in any function's time!
 	if(DEBUG) 
@@ -75,28 +78,28 @@ int KtauSymbols::ReadKallsyms()
 
                 if(!strcmp("T",flag) || !strcmp("t",flag)){
                         if(!found_stext && !strcmp("stext",func_name)){
-				table[strtoll(addr,NULL,16)] = string(func_name);
-                                //kallsyms_map[kallsyms_size].addr = strtoll(addr,NULL,16);
+				table[ktau_str2ll(addr,NULL,16)] = string(func_name);
+                                //kallsyms_map[kallsyms_size].addr = ktau_str2ll(addr,NULL,16);
                                 //strcpy(kallsyms_map[kallsyms_size++].name, func_name);
                                 found_stext = 1;
                                 if(DEBUG)printf("ReadKallsyms: address %llx , name %s \n",
-                                                strtoll(addr,NULL,16),
-                                                table[strtoll(addr,NULL,16)].c_str());
+                                                ktau_str2ll(addr,NULL,16),
+                                                table[ktau_str2ll(addr,NULL,16)].c_str());
                         } else{
-				table[strtoll(addr,NULL,16)] = string(func_name);
-                                //kallsyms_map[kallsyms_size].addr = strtoll(addr,NULL,16);
+				table[ktau_str2ll(addr,NULL,16)] = string(func_name);
+                                //kallsyms_map[kallsyms_size].addr = ktau_str2ll(addr,NULL,16);
                                 //strcpy(kallsyms_map[kallsyms_size++].name, func_name);
                                 if(DEBUG)printf("ReadKallsyms: address %llx , name %s \n",
-                                                strtoll(addr,NULL,16),
-                                                table[strtoll(addr,NULL,16)].c_str());
+                                                ktau_str2ll(addr,NULL,16),
+                                                table[ktau_str2ll(addr,NULL,16)].c_str());
                         }
                 }else if(!strcmp("_etext",func_name)){
-			table[strtoll(addr,NULL,16)] = string(func_name);
-                        //kallsyms_map[kallsyms_size].addr = strtoll(addr,NULL,16);
+			table[ktau_str2ll(addr,NULL,16)] = string(func_name);
+                        //kallsyms_map[kallsyms_size].addr = ktau_str2ll(addr,NULL,16);
                         //strcpy(kallsyms_map[kallsyms_size++].name, func_name);
 			if(DEBUG)printf("ReadKallsyms: address %llx , name %s \n",
-					strtoll(addr,NULL,16),
-					table[strtoll(addr,NULL,16)].c_str());
+					ktau_str2ll(addr,NULL,16),
+					table[ktau_str2ll(addr,NULL,16)].c_str());
                         break;
                 }
         }
