@@ -148,8 +148,8 @@ string getInstrumentedName(const pdbItem *item, bool fat) {
   pdbLoc loc = item->location();
   const char *fullfile = item->location().file()->name().c_str();
 
-  while (strstr(fullfile,"/")) { // remove path
-    fullfile = strstr(fullfile,"/")+1;
+  while (strchr(fullfile,TAU_DIR_CHARACTER)) { // remove path
+    fullfile = strchr(fullfile,TAU_DIR_CHARACTER)+1;
   }
 
   if (fat) {
@@ -2587,6 +2587,7 @@ int main(int argc, char **argv)
   {
      /* reset this variable at the beginning of the loop */
      instrumentThisFile = false;
+
      if ((fuzzyMatchResult = fuzzyMatch((*it)->name(), string(filename))) && 
          (instrumentThisFile = processFileForInstrumentation(string(filename))))
      { /* should we instrument this file? Yes */
@@ -2688,9 +2689,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.121 $   $Date: 2006/11/08 01:26:56 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.121 2006/11/08 01:26:56 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.122 $   $Date: 2006/11/09 00:08:28 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.122 2006/11/09 00:08:28 amorris Exp $
  ***************************************************************************/
 
 
