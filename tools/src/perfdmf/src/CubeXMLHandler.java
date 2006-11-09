@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.2 2006/11/09 01:27:42 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.3 2006/11/09 01:54:05 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -155,11 +155,11 @@ public class CubeXMLHandler extends DefaultHandler {
 
             cnodeStack.push(csiteID);
         } else if (localName.equalsIgnoreCase("matrix")) {
-            metricID = attributes.getValue("metricid");
+            metricID = getInsensitiveValue(attributes,"metricid");
             metric = (Metric) metricMap.get(metricID);
             currentMetric++;
         } else if (localName.equalsIgnoreCase("row")) {
-            cnodeID = attributes.getValue("cnodeid");
+            cnodeID = getInsensitiveValue(attributes,"cnodeid");
         } else if (localName.equalsIgnoreCase("process")) {
             cubeProcess = new CubeProcess(-1);
             cubeProcesses.add(cubeProcess);
