@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Performance Analysis"
+            id="org.eclipse.ptp.tau.perfdmf">
+      </category>
+      <view
+            name="Performance Data Manager"
+            icon="icons/tauLogo.gif"
+            category="org.eclipse.ptp.tau.perfdmf"
+            class="org.eclipse.ptp.tau.perfdmf.views.PerfDMFView"
+            id="org.eclipse.ptp.tau.perfdmf.views.PerfDMFView">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.ui.resourcePerspective">
+         <view
+               ratio="0.5"
+               relative="org.eclipse.ui.views.TaskList"
+               relationship="right"
+               id="org.eclipse.ptp.tau.perfdmf.views.PerfDMFView">
+         </view>
+      </perspectiveExtension>
+   </extension>
+
+</plugin>
