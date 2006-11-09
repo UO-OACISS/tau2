@@ -288,6 +288,13 @@ bool wildcardCompare(char *wild, char *string, char kleenestar)
 {
   char *cp, *mp;
 
+  // if the wildcard does not contain path information, strip it from the other string
+  if (!strchr(wild,TAU_DIR_CHARACTER)) {
+    while (strchr(string,TAU_DIR_CHARACTER)) { // remove path
+      string = strchr(string,TAU_DIR_CHARACTER)+1;
+    }
+  }
+
   /* check if it is not a ? */
   while ((*string) && (*wild != kleenestar)) {
     if ((*wild != *string) && (*wild != '?')) {
@@ -393,7 +400,7 @@ bool processFileForInstrumentation(const string& file_name)
 
 
 /***************************************************************************
- * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2006/02/18 15:36:41 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.12 2006/02/18 15:36:41 sameer Exp $
+ * $RCSfile: tau_selective.cpp,v $   $Author: amorris $
+ * $Revision: 1.13 $   $Date: 2006/11/09 00:13:15 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.13 2006/11/09 00:13:15 amorris Exp $
  ***************************************************************************/
