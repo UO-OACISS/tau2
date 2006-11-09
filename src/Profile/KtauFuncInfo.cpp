@@ -20,6 +20,11 @@
 
 #include "Profile/KtauFuncInfo.h"
 
+/* definition of statics need to be done outside the class */
+unsigned long long KtauFuncInfo::kernelGrpCalls[TAU_MAX_THREADS][merge_max_grp] = {{0}};
+unsigned long long KtauFuncInfo::kernelGrpIncl[TAU_MAX_THREADS][merge_max_grp] = {{0}};
+unsigned long long KtauFuncInfo::kernelGrpExcl[TAU_MAX_THREADS][merge_max_grp] = {{0}};
+
 /*-------------------------- CON/DESTRUCTOR ---------------------------*/
 /* 
  * Function 		: KtauFuncInfo::KtauFuncInfo
@@ -27,11 +32,16 @@
  */
 KtauFuncInfo::KtauFuncInfo()
 {
-	inclticks = 0;
-	exclticks = 0;
+	for(int i =0; i<merge_max_grp; i++) {
+		inclticks[i] = 0;
+		exclticks[i] = 0;
 
-	inclcalls = 0;
-	exclcalls = 0;
+		inclKExcl[i] = 0;
+		exclKExcl[i] = 0;
+
+		inclcalls[i] = 0;
+		exclcalls[i] = 0;
+	}
 }
 
 /* 
@@ -40,16 +50,21 @@ KtauFuncInfo::KtauFuncInfo()
  */
 KtauFuncInfo::~KtauFuncInfo()
 {
-	inclticks = 0;
-	exclticks = 0;
+	for(int i =0; i<merge_max_grp; i++) {
+		inclticks[i] = 0;
+		exclticks[i] = 0;
 
-	inclcalls = 0;
-	exclcalls = 0;
+		inclKExcl[i] = 0;
+		exclKExcl[i] = 0;
+
+		inclcalls[i] = 0;
+		exclcalls[i] = 0;
+	}
 }
 
 
 /***************************************************************************
  * $RCSfile: KtauFuncInfo.cpp,v $   $Author: anataraj $
- * $Revision: 1.1 $   $Date: 2005/12/01 02:55:08 $
+ * $Revision: 1.2 $   $Date: 2006/11/09 06:11:10 $
  ***************************************************************************/
 

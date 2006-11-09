@@ -28,6 +28,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <errno.h>
+
 #include <Profile/KtauProfiler.h>
 #include <Profile/TauKtau.h>
 #include <Profile/RtsLayer.h>
@@ -40,7 +42,27 @@
 // DONT #include <Profile/ktau_atomic.h>
 #include <Profile/ktau_proc_interface.h>
 //decl
-int read_kstate(ktau_state* pstate, volatile int cur_active, unsigned long long* ptime, unsigned long long* pcalls);
+int read_kstate_1buf(ktau_state* pstate, volatile int cur_active, unsigned long long* ptime, unsigned long long* pcalls, unsigned long long *pexcl);
+int read_kstate_2buf(ktau_state* pstate, volatile int cur_active, unsigned long long* ptime, unsigned long long* pcalls, unsigned long long *pexcl);
+
+#define read_kstate(pstate, cur_active, ptime, pcalls, pexcl) read_kstate_1buf(pstate, cur_active, ptime, pcalls, pexcl)
+
+#ifdef TAUKTAU_MERGE
+char* merge_grp_name[NO_MERGE_GRPS+1] = {
+	"KERNEL",
+	"SYSCALL",
+	"IRQ",
+	"BH",
+	"SCHED",
+	"EXCEPT",
+	"SIGNAL",
+	"SOCKET",
+	"TCP",
+	"ICMP",
+	"NONE"
+};
+#endif
+
 #endif /* defined(TAUKTAU_MERGE) */
 
 
@@ -145,6 +167,7 @@ void KtauProfiler::Start(Profiler *profiler, int tid) {
 		/* Setting ktau_state pointer in kernel-space to point
 		 * to the global current_state
 		 */
+		//AN REMOVED TEMPORSRILY TO CHECK EFFECT - TURN BACK ON ASAP!
 		ktau_set_state(NULL,current_ktau_state,NULL);
 
 		DEBUGPROFMSG(" Called ktau_set_state."  
@@ -159,7 +182,7 @@ void KtauProfiler::Start(Profiler *profiler, int tid) {
 	DEBUGPROFMSG(" Calling SetStartState."  
 			<< endl; );
 	//1. if merge, then read the start-merge-info
-	SetStartState(current_ktau_state, profiler);
+	SetStartState(current_ktau_state, profiler, tid, (refCount[tid] == 1));
 #endif /* TAUKTAU_MERGE */
 
 	DEBUGPROFMSG(" Leaving: tid:"<< tid 
@@ -182,7 +205,7 @@ void KtauProfiler::Stop(Profiler *profiler, bool AddInclFlag, int tid) {
 			<< endl; );
 
 	//1. if merge, then read the stop-merge-info and put into KtauFuncInfo
-	SetStopState(current_ktau_state, AddInclFlag, profiler);
+	SetStopState(current_ktau_state, AddInclFlag, profiler, tid, (refCount[tid] == 1));
 	//2. Also help calc parent's excl-kernel-time etc
 
 #endif /* TAUKTAU_MERGE */
@@ -255,7 +278,7 @@ KtauProfiler::~KtauProfiler() {
  * Function 		: KtauProfiler::SetStartState
  * Description		: 
  */
-int KtauProfiler::SetStartState(ktau_state* pstate, Profiler* pProfiler) {
+int KtauProfiler::SetStartState(ktau_state* pstate, Profiler* pProfiler, int tid, bool stackTop) {
 
 	DEBUGPROFMSG(" Entering: Profiler: "<< pProfiler
 			<< "current_ktau_state: " << pstate
@@ -263,10 +286,20 @@ int KtauProfiler::SetStartState(ktau_state* pstate, Profiler* pProfiler) {
 
 #if defined TAUKTAU_MERGE
 	if(pProfiler) {
-		unsigned long long s_ticks = 0;
-		unsigned long long s_calls = 0;
+		unsigned long long s_ticks[merge_max_grp] = {0};
+		unsigned long long s_excl[merge_max_grp] = {0};
+		unsigned long long s_calls[merge_max_grp] = {0};
 
-		active_merge_index = read_kstate(pstate, active_merge_index, &s_ticks, &s_calls);
+		active_merge_index = read_kstate(pstate, active_merge_index, &(s_ticks[0]), &(s_calls[0]), &(s_excl[0]));
+
+		//If stackTop then update for keeping KERNEL GRP totals
+		if(stackTop) {
+			for(int i=0; i<merge_max_grp; i++) {
+				KtauFuncInfo::kernelGrpCalls[tid][i] = s_calls[i];
+				KtauFuncInfo::kernelGrpIncl[tid][i] = s_ticks[i];
+				KtauFuncInfo::kernelGrpExcl[tid][i] = s_excl[i];
+			}
+		}
 
 		KtauMergeInfo* ThisMergeInfo = &(pProfiler->ThisKtauMergeInfo);
 
@@ -274,8 +307,11 @@ int KtauProfiler::SetStartState(ktau_state* pstate, Profiler* pProfiler) {
 				<<" StartCalls: " << ThisMergeInfo->GetStartCalls();
 				<< endl;)
 
-		ThisMergeInfo->SetStartTicks(s_ticks);
-		ThisMergeInfo->SetStartCalls(s_calls);
+		for(int i =0; i<merge_max_grp; i++) {
+			ThisMergeInfo->SetStartTicks(s_ticks[i], i);
+			ThisMergeInfo->SetStartCalls(s_calls[i], i);
+			ThisMergeInfo->SetStartKExcl(s_excl[i], i);
+		}
 
 		DEBUGPROFMSG(" Latest MergeInfo State: StartTicks: "<< ThisMergeInfo->GetStartTicks()
 				<< " StartCalls: " << ThisMergeInfo->GetStartCalls();
@@ -295,7 +331,7 @@ int KtauProfiler::SetStartState(ktau_state* pstate, Profiler* pProfiler) {
  * Function 		: KtauProfiler::SetStopState
  * Description		: 
  */
-int KtauProfiler::SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* pProfiler) {
+int KtauProfiler::SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* pProfiler, int tid, bool stackTop) {
 
 	DEBUGPROFMSG(" Entering: Profiler: "<< pProfiler
 			<< "current_ktau_state: " << pstate
@@ -309,15 +345,27 @@ int KtauProfiler::SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* p
 			<< endl;)
 
 	//inclusive kernel-mode ticks
-	unsigned long long inclticks = 0;
-	unsigned long long inclcalls = 0;
+	unsigned long long inclticks[merge_max_grp] = {0};
+	unsigned long long inclcalls[merge_max_grp] = {0};
+	unsigned long long inclExcl[merge_max_grp] = {0};
 
-	active_merge_index = read_kstate(pstate, active_merge_index, &inclticks, &inclcalls);
+	active_merge_index = read_kstate(pstate, active_merge_index, &(inclticks[0]), &(inclcalls[0]), &(inclExcl[0]));
+
+	//If stackTop then update for keeping KERNEL GRP totals
+	if(stackTop) {
+		for(int i=0; i<merge_max_grp; i++) {
+			KtauFuncInfo::kernelGrpCalls[tid][i] = inclcalls[i] - KtauFuncInfo::kernelGrpCalls[tid][i];
+			KtauFuncInfo::kernelGrpIncl[tid][i] = inclticks[i] - KtauFuncInfo::kernelGrpIncl[tid][i];
+			KtauFuncInfo::kernelGrpExcl[tid][i] = inclExcl[i] - KtauFuncInfo::kernelGrpExcl[tid][i];
+		}
+	}
 
 	DEBUGPROFMSG(" Stop-Ticks: "<< inclticks
 			<< endl;)
-
-	inclticks = inclticks - ThisMergeInfo->GetStartTicks();
+	
+	for(int i=0; i<merge_max_grp; i++) {
+		inclticks[i] = inclticks[i] - ThisMergeInfo->GetStartTicks(i);
+	}
 
 	DEBUGPROFMSG(" Start-Ticks: "<< ThisMergeInfo->GetStartTicks()
 			<< endl;)
@@ -329,20 +377,42 @@ int KtauProfiler::SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* p
 			<< endl;)
 
 	//exclusive kernel-mode ticks (without children's kernel-mode ticks)
-	unsigned long long exclticks = inclticks - ThisMergeInfo->GetChildTicks();
+	unsigned long long exclticks[merge_max_grp] = {0};
+	for(int i=0; i<merge_max_grp; i++) {
+		exclticks[i] = inclticks[i] - ThisMergeInfo->GetChildTicks(i);
+	}
 
-	if(ThisMergeInfo->GetChildTicks() > inclticks)
-		cout << "KtauProfiler::SetStopState: Kernel: ChildTicks > InclTicks: Child: " 
-			<< ThisMergeInfo->GetChildTicks() << "  Incl: " << inclticks << endl;
+	for(int i=0; i<merge_max_grp; i++) {
+		if(ThisMergeInfo->GetChildTicks(i) > inclticks[i])
+			cout << "KtauProfiler::SetStopState: Kernel: ChildTicks > InclTicks: Child: " 
+				<< ThisMergeInfo->GetChildTicks(i) << "  Incl: " << inclticks[i] << endl;
 
-	if(exclticks > inclticks)
-		cout << "KtauProfiler::SetStopState: Kernel: ExclTicks > InclTicks: Excl: " 
-			<< exclticks << "  Incl: " << inclticks << endl;
+		if(exclticks[i] > inclticks[i])
+			cout << "KtauProfiler::SetStopState: Kernel: ExclTicks > InclTicks: Excl: " 
+				<< exclticks[i] << "  Incl: " << inclticks[i] << endl;
+	}
 
-	//inclusive kernel-mode calls
-	inclcalls = inclcalls -  ThisMergeInfo->GetStartCalls();
+	for(int i=0; i<merge_max_grp; i++) {
+		//inclusive kernel-mode calls
+		inclcalls[i] = inclcalls[i] -  ThisMergeInfo->GetStartCalls(i);
+	}
+
 	//exclusive kernel-mode ticks (without children's kernel-mode ticks)
-	unsigned long long exclcalls = inclcalls - ThisMergeInfo->GetChildCalls();
+	unsigned long long exclcalls[merge_max_grp] = {0};
+	for(int i=0; i<merge_max_grp; i++) {
+		exclcalls[i] = inclcalls[i] - ThisMergeInfo->GetChildCalls(i);
+	}
+	
+	//ExclTime reported directly from kernel
+	for(int i=0; i<merge_max_grp; i++) {
+		//inclusive kernel-mode calls
+		inclExcl[i] = inclExcl[i] -  ThisMergeInfo->GetStartKExcl(i);
+	}
+	unsigned long long exclExcl[merge_max_grp] = {0};
+	for(int i=0; i<merge_max_grp; i++) {
+		exclExcl[i] = inclExcl[i] - ThisMergeInfo->GetChildKExcl(i);
+	}
+
 
 	DEBUGPROFMSG(" ParentProfiler: "<< pProfiler->ParentProfiler
 			<< endl;)
@@ -351,9 +421,12 @@ int KtauProfiler::SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* p
 
 		DEBUGPROFMSG(" Adding to Parent's Child-ticks." 
 				<< endl;)
-		//add our incl-ticks/calls to parent's so that it can calcultae its own excl-ticks
-		pProfiler->ParentProfiler->ThisKtauMergeInfo.AddChildTicks(inclticks);
-		pProfiler->ParentProfiler->ThisKtauMergeInfo.AddChildCalls(inclcalls);
+		for(int i=0; i<merge_max_grp; i++) {
+			//add our incl-ticks/calls to parent's so that it can calcultae its own excl-ticks
+			pProfiler->ParentProfiler->ThisKtauMergeInfo.AddChildTicks(inclticks[i], i);
+			pProfiler->ParentProfiler->ThisKtauMergeInfo.AddChildCalls(inclcalls[i], i);
+			pProfiler->ParentProfiler->ThisKtauMergeInfo.AddChildKExcl(inclExcl[i], i);
+		}
 	}
 
 	//Save the state to the KtauFunctionInfo
@@ -364,11 +437,17 @@ int KtauProfiler::SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* p
 	
 	if(pKFInfo) {
 		if(AddInclFlag) {
-			pKFInfo->AddInclTicks(inclticks);
-			pKFInfo->AddInclCalls(inclcalls);
+			for(int i=0; i<merge_max_grp; i++) {
+				pKFInfo->AddInclTicks(inclticks[i], i);
+				pKFInfo->AddInclCalls(inclcalls[i], i);
+				pKFInfo->AddInclKExcl(inclExcl[i], i);
+			}
 		}
-		pKFInfo->AddExclTicks(exclticks);
-		pKFInfo->AddExclCalls(exclcalls);
+		for(int i=0; i<merge_max_grp; i++) {
+			pKFInfo->AddExclTicks(exclticks[i], i);
+			pKFInfo->AddExclCalls(exclcalls[i], i);
+			pKFInfo->AddExclKExcl(exclExcl[i], i);
+		}
 	} else {
 		cout << "KtauProfiler::SetStopState: Null KtauFuncInfo Found!" << endl;
 	}
@@ -382,7 +461,9 @@ int KtauProfiler::SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* p
 	*/
 
 	//reset the counters
-	ThisMergeInfo->ResetCounters();
+	for(int i=0; i>merge_max_grp; i++) {
+		ThisMergeInfo->ResetCounters(i);
+	}
 
 #endif /* TAUKTAU_MERGE */
 
@@ -437,14 +518,64 @@ void KtauProfiler::CloseOutStream(FILE* ktau_fp) {
 
 
 /* returns the updated last active_index value */
-int read_kstate(ktau_state* pstate, volatile int cur_active, unsigned long long* ptime, unsigned long long* pcalls) {
+/* Single buf implementation */
+int read_kstate_1buf(ktau_state* pstate, volatile int cur_active, unsigned long long* ptime, unsigned long long* pcalls, unsigned long long *pexcl) {
+
+        //now read in the values from the 'old' cur_active index
+	for(int i =0; i<merge_max_grp; i++) {
+		ptime[i] = pstate->state[0].ktime[i];
+		pexcl[i] = pstate->state[0].kexcl[i];
+		pcalls[i] = pstate->state[0].knumcalls[i];
+	}
+
+	return 0;
+}
+
+/* Dbl-Buffer Implementation */
+int read_kstate_2buf(ktau_state* pstate, volatile int cur_active, unsigned long long* ptime, unsigned long long* pcalls, unsigned long long *pexcl) {
+
+        //1st change the active_index value atomically
+        pstate->active_index = 1 - cur_active; //AN-dblbuf
+
+        //now read in the values from the 'old' cur_active index
+	for(int i =0; i<merge_max_grp; i++) {
+		ptime[i] = pstate->state[cur_active].ktime[i];
+		pexcl[i] = pstate->state[cur_active].kexcl[i];
+		pcalls[i] = pstate->state[cur_active].knumcalls[i];
+	}
+
+        //make cur_active into new cur_actice
+        cur_active = 1 - cur_active; //AN-dbl-buf
+
+        //now add in the values from the other buffer after changing the active_index
+        pstate->active_index = 1 - cur_active;
+
+        //now read in the values from the 'old' cur_active index
+	for(int i =0; i<merge_max_grp; i++) {
+		ptime[i] += pstate->state[cur_active].ktime[i];
+		pexcl[i] += pstate->state[cur_active].kexcl[i];
+		pcalls[i] += pstate->state[cur_active].knumcalls[i];
+	}
+
+        //return the chaged cur_state
+        return (1 - cur_active);
+
+}
+
+/* Older Double buffer approach - current;ly its not so */
+/* returns the updated last active_index value */
+/*
+int read_kstate(ktau_state* pstate, volatile int cur_active, unsigned long long* ptime, unsigned long long* pcalls, unsigned long long *pexcl) {
 
         //1st change the active_index value atomically
         pstate->active_index = 1 - cur_active;
 
         //now read in the values from the 'old' cur_active index
-        *ptime = pstate->state[cur_active].ktime;
-        *pcalls = pstate->state[cur_active].knumcalls;
+	for(int i =0; i<merge_max_grp; i++) {
+		ptime[i] = pstate->state[cur_active].ktime[i];
+		pexcl[i] = pstate->state[cur_active].kexcl[i];
+		pcalls[i] = pstate->state[cur_active].knumcalls[i];
+	}
 
         //make cur_active into new cur_actice
         cur_active = 1 - cur_active;
@@ -453,18 +584,110 @@ int read_kstate(ktau_state* pstate, volatile int cur_active, unsigned long long*
         pstate->active_index = 1 - cur_active;
 
         //now read in the values from the 'old' cur_active index
-        *ptime += pstate->state[cur_active].ktime;
-        *pcalls += pstate->state[cur_active].knumcalls;
+	for(int i =0; i<merge_max_grp; i++) {
+		ptime[i] += pstate->state[cur_active].ktime[i];
+		pexcl[i] += pstate->state[cur_active].kexcl[i];
+		pcalls[i] += pstate->state[cur_active].knumcalls[i];
+	}
 
         //return the chaged cur_state
         return (1 - cur_active);
 }
+*/
 
+void KtauProfiler::RegisterFork(Profiler* profiler, int nodeid, int tid, enum TauFork_t opcode) {
+
+	//printf("KtauProfiler::RegisterFork: Enter\n");
+
+	//1. Handle like 1st call to start
+
+#if defined TAUKTAU_MERGE
+	//1.a. if merge - then set_ktau_state
+	//printf("KtauProfiler::RegisterFork: Freeing Previous current_ktau_state\n");
+	if(current_ktau_state != NULL) {
+		free(current_ktau_state);
+	}
+	//printf("KtauProfiler::RegisterFork: Allocating current_ktau_state\n");
+	current_ktau_state = (ktau_state*) calloc(4096,1);
+	if(!current_ktau_state) {
+		printf("KtauProfiler::RegisterFork: Allocating current_ktau_state FAILED.\n");
+		perror("calloc of current_ktau_state:");
+		exit(-1);
+	}
+
+	DEBUGPROFMSG(" Allocated current_ktau_state: "<< current_ktau_state
+				<< endl; );
+
+	//printf("KtauProfiler::RegisterFork: Setting Kernel State...\n");
+	/* Setting ktau_state pointer in kernel-space to point
+	 * to the global current_state
+	 */
+	ktau_set_state(NULL,current_ktau_state,NULL);
+	//printf("KtauProfiler::RegisterFork: Setting Kernel State DONE.\n");
+
+	DEBUGPROFMSG(" Called ktau_set_state."
+			<< endl; );
+
+	//1.b. re-init KtauProfiler state - such as active index etc
+	active_merge_index = 0;
+#endif /* TAUKTAU_MERGE */
+
+	//printf("KtauProfiler::RegisterFork: TauKtau Dest Call.\n");
+	//1.c. TauKtau state needs to be re-init - clean-it THEN do a start on it. 
+	TauKtau::RegisterFork(&KernProf, opcode);
+
+#ifdef TAUKTAU_MERGE
+	if(opcode == TAU_EXCLUDE_PARENT_DATA) {
+		//printf("KtauProfiler::RegisterFork: KtauMergeInfo Reseting.\n");
+		//2. Run-up Profiler Stack - Re-initing KtauMergeInfo
+		//2.a. set all counters in MergeInfo to Zero (for now)
+		Profiler* curP = profiler;
+		do {
+			KtauMergeInfo* ThisMergeInfo = &(curP->ThisKtauMergeInfo);
+			for(int i =0; i<merge_max_grp; i++) {
+				ThisMergeInfo->ResetCounters(i);
+			}
+			
+			curP = curP->ParentProfiler;
+
+		} while(curP != NULL);
+	}//EXCLUDE_PARENT_DATA
+#endif /* TAUKTAU_MERGE */
+
+	//printf("KtauProfiler::RegisterFork: Exit\n");
+}
+
+
+int KtauProfiler::VerifyMerge(FunctionInfo* thatFunction) {
+	double org_time     = thatFunction->GetExclTime(tid); 
+	double kern_time     = (double)(thatFunction->GetKtauFuncInfo(tid)->GetExclTicks(0))/KTauGetMHz();
+
+	if(org_time > kern_time){
+	  cout <<"GOOD!!! Kernel space time is less than ExclTime: org_time:"<<
+		  org_time << " kern_time:"<< kern_time << endl;
+	}else{ 
+	  cout <<"ERROR!! Kernel space time is greater than ExclTime: org_time:"<<
+		  org_time << " kern_time:"<< kern_time << endl;
+
+	  cout << "KTauGetMHz:" << KTauGetMHz() <<
+		  " , Kernel Inc-ticks:" << thatFunction->GetKtauFuncInfo(tid)->GetInclTicks(0) <<
+		  " , Kernel IncTime:" << (double)(thatFunction->GetKtauFuncInfo(tid)->GetInclTicks(0))/KTauGetMHz()<<
+		  " , Kernel ExclTicks:" << thatFunction->GetKtauFuncInfo(tid)->GetExclTicks(0)<<
+		  " , Kernel ExclTime:" << (double)(thatFunction->GetKtauFuncInfo(tid)->GetExclTicks(0))/KTauGetMHz()<<
+		  " , User-ExclTime:" << thatFunction->GetExclTime(tid)<<
+		  " , User-InclTime:" << thatFunction->GetInclTime(tid)<<
+		  " , FuncName: " << thatFunction->GetName() << endl;
+
+		return 0;	
+	}
+	
+	return 1;	
+}
 
 #endif /* TAUKTAU */
 
 /***************************************************************************
- * $RCSfile: KtauProfiler.cpp,v $   $Author: suravee $
- * $Revision: 1.3 $   $Date: 2005/12/30 04:23:06 $
+ * $RCSfile: KtauProfiler.cpp,v $   $Author: anataraj $
+ * $Revision: 1.4 $   $Date: 2006/11/09 06:11:10 $
  ***************************************************************************/
 

@@ -49,6 +49,16 @@ typedef int pid_t;
 /* User-Space Application Interface Functions */
 
 
+/* Ktau merge & gettime overloaded syscall */
+/*
+#include <asm/unistd.h>
+#include <sys/time.h>
+//declare the sys_ktau_gettimeofday syscall
+#define __NR_ktau_gettimeofday 271 //super-hack - 271 is only for neuronic
+_syscall2(int,ktau_gettimeofday,struct timeval *,tv,struct timezone *,tz);
+//_syscall1(int,ktau_gettimeofday,struct timeval *,tv);
+*/
+
 /* Read & Purge PIDs 				    *
  * If nopids = 1, then used for single pid          *
  * If nopids > 1, then used for multiple pids       *
@@ -883,10 +893,64 @@ long unpack_bindata_file(int type, char* path, ktau_output** output)
         return noprofs;
 }
 
+/* aggr_many_profiles: Aggregates array of Profiles to provide single kernel-as-a-whole profile 
+ *****************************************************************
+ * Arguments:
+ * inprofiles:  ktau_output ptr to the Unpacked profile data.
+ *
+ * no_profiles: the number of profiles pointed to by profiles* (above)
+ *
+ * max_prof_entries: the maximum no of entries a single profile may have
+ *
+ * outprofile:  ptr to allocated memory for one profile with max_prof_size entries
+ *
+ * Returns:     0 on success, negative on error
+ * 
+ * Constraints:
+ * Can aggregate from only ktau_output (i.e unpacked profiles). Cannot 
+ * aggregate packed-binary profile data --> therefore unpack_bindata
+ * must be called on those before calling this.
+ */
+int aggr_many_profiles(const ktau_output* inprofiles, unsigned int no_profiles, unsigned int max_prof_entries, ktau_output* outprofile)
+{
+        int ret_val = 0, profno = 0, entno = 0, cur_index = 0;
+        const ktau_output* curr_prof = NULL;
+        h_ent *out_hent, *cur_hent;
+        o_ent * out_oent = NULL;
+        int maxindex = 0;
+
+        for(profno = 0; profno<no_profiles; profno++) {
+                curr_prof = (inprofiles + profno);
+                for(entno = 0; entno < curr_prof->size; entno++) {
+                        cur_index = (curr_prof->ent_lst + entno)->index;
+                        cur_hent = &((curr_prof->ent_lst + entno)->entry);
+                        out_hent = &((outprofile->ent_lst + cur_index)->entry);
+                        out_oent = (outprofile->ent_lst + cur_index);
+                        out_oent->index = cur_index;
+                        out_hent->addr = cur_hent->addr;
+                        //assume data is timer for now!
+                        if(cur_hent->type == KTAU_TIMER) { 
+                                out_hent->data.timer.count += cur_hent->data.timer.count;
+                                out_hent->data.timer.incl += cur_hent->data.timer.incl;
+                                out_hent->data.timer.excl += cur_hent->data.timer.excl;
+                        }
+                }
+                
+                if(maxindex < cur_index) {
+                        maxindex = cur_index;
+                }
+        }
+        
+        outprofile->size = maxindex;
+        
+        return ret_val;
+}
+
+
 /***************************************************************************
  * $RCSfile: ktau_proc_interface.c,v $   $Author: anataraj $
- * $Revision: 1.1 $   $Date: 2005/12/01 02:55:09 $
- * POOMA_VERSION_ID: $Id: ktau_proc_interface.c,v 1.1 2005/12/01 02:55:09 anataraj Exp $ 
+ * $Revision: 1.2 $   $Date: 2006/11/09 06:11:10 $
+ * POOMA_VERSION_ID: $Id: ktau_proc_interface.c,v 1.2 2006/11/09 06:11:10 anataraj Exp $ 
  ***************************************************************************/
 
 
