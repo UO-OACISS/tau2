@@ -27,6 +27,13 @@ using std::ostream;
 
 #include "tau_datatypes.h"
 
+/* defines */
+#ifdef TAU_WINDOWS
+#define TAU_DIR_CHARACTER '\\'
+#else
+#define TAU_DIR_CHARACTER '/'
+#endif /* TAU_WINDOWS */
+
 
 /* This class contains entries that are read in from the BEGIN_INSTRUMENT_SECTION ... END_INSTRUMENT_SECTION */
 
@@ -90,7 +97,7 @@ extern bool isInstrumentListEmpty(void);
 
 #endif /* _TAU_INSTRUMENT_H_ */
 /***************************************************************************
- * $RCSfile: tau_instrument.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2005/11/10 02:00:58 $
- * VERSION_ID: $Id: tau_instrument.h,v 1.1 2005/11/10 02:00:58 sameer Exp $
+ * $RCSfile: tau_instrument.h,v $   $Author: amorris $
+ * $Revision: 1.2 $   $Date: 2006/11/09 00:08:57 $
+ * VERSION_ID: $Id: tau_instrument.h,v 1.2 2006/11/09 00:08:57 amorris Exp $
  ***************************************************************************/
