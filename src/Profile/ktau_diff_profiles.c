@@ -272,3 +272,8 @@ int ktau_diff_profiles(ktau_output* plist1, int size1, ktau_output* plist2, int 
 #ifdef __cplusplus
 }
 #endif
+
+/***************************************************************************
+ * $RCSfile: ktau_diff_profiles.c,v $   $Author: anataraj $
+ * $Revision: 1.2 $   $Date: 2006/11/09 06:13:12 $
+ ***************************************************************************/

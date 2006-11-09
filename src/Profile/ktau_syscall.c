@@ -34,3 +34,8 @@ int ktau_gettimeofday(struct timeval *tv, struct timezone *tz) {
 	return syscall(__NR_ktau_gettimeofday, tv, tz);
 }
 
+
+/***************************************************************************
+ * $RCSfile: ktau_syscall.c,v $   $Author: anataraj $
+ * $Revision: 1.2 $   $Date: 2006/11/09 06:14:06 $
+ ***************************************************************************/
