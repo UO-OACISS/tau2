@@ -41,12 +41,17 @@ class KtauProfiler {
 	void Start(Profiler *profiler, int tid = RtsLayer::myThread());
 	void Stop(Profiler *profiler, bool AddInclFlag, int tid = RtsLayer::myThread());
 
+	//RegisterFork - to handle forking
+	void RegisterFork(Profiler* profiler, int nodeid, int tid, enum TauFork_t opcode);
+
 	//output functions
 	static FILE* OpenOutStream(char* dirname, int node, int context, int tid);
 	static void CloseOutStream(FILE* ktau_fp);
 
-	int SetStartState(ktau_state* pstate, Profiler* pProfiler);
-	int SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* pProfiler);
+	int SetStartState(ktau_state* pstate, Profiler* pProfiler, int tid, bool stackTop);
+	int SetStopState(ktau_state* pstate, bool AddInclFlag, Profiler* pProfiler, int tid, bool stackTop);
+
+        int VerifyMerge(FunctionInfo* thatFunction);
 
 	//The actual profile state
 	TauKtau KernProf;
@@ -75,12 +80,17 @@ class KtauProfiler {
 	static KtauSymbols KtauSym; 
 };
 
+
+#ifdef TAUKTAU_MERGE
+#define NO_MERGE_GRPS 10
+extern char* merge_grp_name[NO_MERGE_GRPS+1];
+#endif /* TAUKTAU_MERGE */
 #endif /* TAUKTAU */
 
 #endif /* _KTAUPROFILER_H_ */
 /***************************************************************************
- * $RCSfile: KtauProfiler.h,v $   $Author: suravee $
- * $Revision: 1.3 $   $Date: 2005/12/30 04:22:06 $
- * POOMA_VERSION_ID: $Id: KtauProfiler.h,v 1.3 2005/12/30 04:22:06 suravee Exp $ 
+ * $RCSfile: KtauProfiler.h,v $   $Author: anataraj $
+ * $Revision: 1.4 $   $Date: 2006/11/09 05:41:33 $
+ * POOMA_VERSION_ID: $Id: KtauProfiler.h,v 1.4 2006/11/09 05:41:33 anataraj Exp $ 
  ***************************************************************************/
 

@@ -23,34 +23,53 @@
 #ifdef TAUKTAU
 
 #ifdef   TAUKTAU_MERGE 
+#include <linux/ktau/ktau_merge.h>
 
 class KtauMergeInfo {
 
 	public: //PUBLIC
-	KtauMergeInfo() { child_ticks = child_calls = start_ticks = start_calls = 0; }
-	~KtauMergeInfo() { child_ticks = child_calls = start_ticks = start_calls = 0; }
+	KtauMergeInfo() { 
+		for(int i=0; i<merge_max_grp; i++) {
+			child_ticks[i] = child_calls[i] = start_ticks[i] = start_calls[i] = start_KExcl[i] = child_KExcl[i] = 0; 
+		}
+	}
+	~KtauMergeInfo() { 
+		for(int i=0; i<merge_max_grp; i++) {
+			child_ticks[i] = child_calls[i] = start_ticks[i] = start_calls[i] = start_KExcl[i] = child_KExcl[i] = 0; 
+		}
+	}
 
-	void SetStartTicks(unsigned long long ticks) { start_ticks = ticks;  }
-	void SetStartCalls(unsigned long long calls) { start_calls = calls;  }
+	void SetStartTicks(unsigned long long ticks, int grp) { start_ticks[grp] = ticks;  }
+	void SetStartCalls(unsigned long long calls, int grp) { start_calls[grp] = calls;  }
+	void SetStartKExcl(unsigned long long kexcl, int grp) { start_KExcl[grp] = kexcl;  }
 
-        unsigned long long GetStartTicks() { return start_ticks; }
-        unsigned long long GetStartCalls() { return start_calls; }
+        unsigned long long GetStartTicks(int grp) { return start_ticks[grp]; }
+        unsigned long long GetStartCalls(int grp) { return start_calls[grp]; }
+        unsigned long long GetStartKExcl(int grp) { return start_KExcl[grp]; }
 
-        void AddChildTicks(unsigned long long ticks) { child_ticks += ticks; }
-        void AddChildCalls(unsigned long long calls) { child_calls += calls; }
+        void AddChildTicks(unsigned long long ticks, int grp) { child_ticks[grp] += ticks; }
+        void AddChildCalls(unsigned long long calls, int grp) { child_calls[grp] += calls; }
+        void AddChildKExcl(unsigned long long calls, int grp) { child_KExcl[grp] += calls; }
 
-        unsigned long long GetChildTicks() { return child_ticks; }
-        unsigned long long GetChildCalls() { return child_calls; }
+        unsigned long long GetChildTicks(int grp) { return child_ticks[grp]; }
+        unsigned long long GetChildCalls(int grp) { return child_calls[grp]; }
+        unsigned long long GetChildKExcl(int grp) { return child_KExcl[grp]; }
 
-	void ResetCounters() { child_ticks = child_calls = start_ticks = start_calls = 0;}
+	void ResetCounters(int i) { 
+			child_KExcl[i] = child_ticks[i] = child_calls[i] = start_KExcl[i] = start_ticks[i] = start_calls[i] = 0;
+	}
+
 
 	private: //PRIVATE
 
 	//ktau-function-info related
-	unsigned long long start_ticks;
-	unsigned long long start_calls;
-	unsigned long long child_ticks;
-	unsigned long long child_calls;
+	unsigned long long start_ticks[merge_max_grp];
+	unsigned long long start_calls[merge_max_grp];
+	unsigned long long start_KExcl[merge_max_grp];
+
+	unsigned long long child_ticks[merge_max_grp];
+	unsigned long long child_calls[merge_max_grp];
+	unsigned long long child_KExcl[merge_max_grp];
 
 };
 
@@ -61,7 +80,7 @@ class KtauMergeInfo {
 #endif /* _KTAUMERGEINFO_H_ */
 /***************************************************************************
  * $RCSfile: KtauMergeInfo.h,v $   $Author: anataraj $
- * $Revision: 1.1 $   $Date: 2005/12/01 02:50:55 $
- * POOMA_VERSION_ID: $Id: KtauMergeInfo.h,v 1.1 2005/12/01 02:50:55 anataraj Exp $ 
+ * $Revision: 1.2 $   $Date: 2006/11/09 05:41:33 $
+ * POOMA_VERSION_ID: $Id: KtauMergeInfo.h,v 1.2 2006/11/09 05:41:33 anataraj Exp $ 
  ***************************************************************************/
 
