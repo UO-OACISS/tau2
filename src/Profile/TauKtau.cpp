@@ -113,13 +113,13 @@ int TauKtau::RegisterFork(TauKtau* pKernProf, enum TauFork_t opcode)
 {
 	int i = 0;
 
-	printf("TauKtau::RegisterFork: Enter\n");
+	if(DEBUG)printf("TauKtau::RegisterFork: Enter\n");
 
-	printf("TauKtau::RegisterFork: Calling Dest ~TauKtau\n");
+	if(DEBUG)printf("TauKtau::RegisterFork: Calling Dest ~TauKtau\n");
 	//Call the destructor to cleanup
 	pKernProf->~TauKtau();
 
-	printf("TauKtau::RegisterFork: Redoing Cons Steps TauKtau\n");
+	if(DEBUG)printf("TauKtau::RegisterFork: Redoing Cons Steps TauKtau\n");
 	//Redo stuff done in the constructor
         pKernProf->startBuf = NULL;
         pKernProf->stopBuf  = NULL;
@@ -133,11 +133,11 @@ int TauKtau::RegisterFork(TauKtau* pKernProf, enum TauFork_t opcode)
         pKernProf->ThisKtauOutputInfo.templ_fun_counter = 0;
         pKernProf->ThisKtauOutputInfo.user_ev_counter = 0;
 
-	printf("TauKtau::RegisterFork: Calling StartKProfile\n");
+	if(DEBUG)printf("TauKtau::RegisterFork: Calling StartKProfile\n");
 	//Do a StartKProfile
 	i = pKernProf->StartKProfile();
 
-	printf("TauKtau::RegisterFork: Exit\n");
+	if(DEBUG)printf("TauKtau::RegisterFork: Exit\n");
 
 	return i;
 }
@@ -934,7 +934,7 @@ int TauKtau::MergingKProfileEvent(FILE* fp){
 
 /***************************************************************************
  * $RCSfile: TauKtau.cpp,v $   $Author: anataraj $
- * $Revision: 1.3 $   $Date: 2006/11/09 06:11:10 $
+ * $Revision: 1.4 $   $Date: 2006/11/09 08:43:58 $
  ***************************************************************************/
 
 	
