@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.common.Utility;
 import constants.Constants;
 import common.AnalysisType;
 import common.RMIView;
@@ -203,24 +204,23 @@ public class PerfExplorerActionListener implements ActionListener {
 		String message = new String("PerfExplorer 1.0\n" +
 					getVersionString() + "\nJVM Heap Size: " + memUsage
 					+ "kb\n");
-		ImageIcon icon = createImageIcon("tau-large.png");
+		ImageIcon icon = createImageIcon(Utility.getResource("tau-large.png"));
 		JOptionPane.showMessageDialog(mainFrame, message, 
 			"About PerfExplorer", JOptionPane.INFORMATION_MESSAGE, icon);
 	}
 
     /** Returns an ImageIcon, or null if the path was invalid. */
-    protected static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = PerfExplorerJTabbedPane.class.getResource(path);
+    protected static ImageIcon createImageIcon(java.net.URL imgURL) {
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {
-            System.err.println("Couldn't find file: " + path);
+            System.err.println("Couldn't find file: " + imgURL);
             return null;
         }
     }
 
 	public void createHelpWindow() {
-		ImageIcon icon = createImageIcon("tau-large.png");
+		ImageIcon icon = createImageIcon(Utility.getResource("tau-large.png"));
 		JOptionPane.showMessageDialog(mainFrame, 
 			"Internal help not implemented.\nFor the most up-to-date documentation, please see\n<html><a href='http://www.cs.uoregon.edu/research/tau/'>http://www.cs.uoregon.edu/research/tau/</a></html>",
 			"PerfExplorer Help", JOptionPane.INFORMATION_MESSAGE, icon);
