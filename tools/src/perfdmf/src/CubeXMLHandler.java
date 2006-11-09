@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.1 2005/09/26 20:24:26 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.2 2006/11/09 01:27:42 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -104,6 +104,16 @@ public class CubeXMLHandler extends DefaultHandler {
         return (String) regionMap.get(csiteMap.get(callSiteID));
     }
 
+    
+    private String getInsensitiveValue(Attributes attributes, String key) {
+        for (int i=0; i<attributes.getLength(); i++) {
+            if (attributes.getLocalName(i).equalsIgnoreCase(key)) {
+                return attributes.getValue(i);
+            }
+        }
+        return null;
+    }
+    
     /* (non-Javadoc)
      * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
      */
@@ -114,16 +124,16 @@ public class CubeXMLHandler extends DefaultHandler {
 
         if (localName.equalsIgnoreCase("metric")) {
             metricIDStack.push(metricID);
-            metricID = attributes.getValue("id");
+            metricID = getInsensitiveValue(attributes,"id");
         } else if (localName.equalsIgnoreCase("region")) {
-            regionID = attributes.getValue("id");
+            regionID = getInsensitiveValue(attributes,"id");
         } else
 
         if (localName.equalsIgnoreCase("csite")) {
-            csiteID = attributes.getValue("id");
+            csiteID = getInsensitiveValue(attributes,"id");
         } else if (localName.equalsIgnoreCase("cnode")) {
-            cnodeID = attributes.getValue("id");
-            csiteID = attributes.getValue("csiteId");
+            cnodeID = getInsensitiveValue(attributes,"id");
+            csiteID = getInsensitiveValue(attributes,"csiteid");
 
             String functionName = getFunctionName(csiteID);
 
@@ -145,11 +155,11 @@ public class CubeXMLHandler extends DefaultHandler {
 
             cnodeStack.push(csiteID);
         } else if (localName.equalsIgnoreCase("matrix")) {
-            metricID = attributes.getValue("metricId");
+            metricID = attributes.getValue("metricid");
             metric = (Metric) metricMap.get(metricID);
             currentMetric++;
         } else if (localName.equalsIgnoreCase("row")) {
-            cnodeID = attributes.getValue("cnodeId");
+            cnodeID = attributes.getValue("cnodeid");
         } else if (localName.equalsIgnoreCase("process")) {
             cubeProcess = new CubeProcess(-1);
             cubeProcesses.add(cubeProcess);
@@ -234,7 +244,7 @@ public class CubeXMLHandler extends DefaultHandler {
         } else if (localName.equalsIgnoreCase("row")) {
 
             Function function = (Function) cnodeMap.get(cnodeID);
-
+            
             String data = accumulator.toString();
 
             StringTokenizer tokenizer = new StringTokenizer(data, " \t\n\r");
