@@ -145,6 +145,7 @@ string getInstrumentedName(const pdbItem *item, bool fat) {
   // create the instrumented routine name
   std::ostringstream oss;
   pdbRoutine *pdbr = (pdbRoutine*)item;
+  if (!item) return string("");
   pdbLoc loc = item->location();
   const char *fullfile = item->location().file()->name().c_str();
 
@@ -2689,9 +2690,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.122 $   $Date: 2006/11/09 00:08:28 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.122 2006/11/09 00:08:28 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.123 $   $Date: 2006/11/09 02:21:31 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.123 2006/11/09 02:21:31 sameer Exp $
  ***************************************************************************/
 
 
