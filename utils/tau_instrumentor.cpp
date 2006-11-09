@@ -2052,7 +2052,6 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		    }
 		  }
   		}
-                writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
 		/* spaces */
      		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
@@ -2065,6 +2064,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		} else {
 		  ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
 		}
+                writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
 
 		ostr << "      ";
 		// write the rest of the original statement
@@ -2726,8 +2726,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.124 $   $Date: 2006/11/09 23:18:04 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.124 2006/11/09 23:18:04 sameer Exp $
+ * $Revision: 1.125 $   $Date: 2006/11/09 23:35:00 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.125 2006/11/09 23:35:00 sameer Exp $
  ***************************************************************************/
 
 
