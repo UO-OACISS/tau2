@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.cs.uoregon.edu/research/paracomp/tau    **
 *****************************************************************************
-**    Copyright 1997-2006 				   	           **
+**    Copyright 1997-2007 				   	           **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **	
@@ -17,8 +17,8 @@ Tuning and Analysis Utilities: TAU
 **********************************
 
 TAU is a program and performance analysis tool framework being developed for
-the DOE 2000 and ASCI initiatives at Los Alamos National Laboratory.  TAU
-provides a suite of static and dynamic tools that provide graphical user
+the DOE and ASC program at University of Oregon. TAU provides a suite of 
+static and dynamic tools that provide graphical user
 interaction and interoperation to form an integrated analysis environment for
 parallel Fortran 95, C and C++ applications.  In particular, a robust
 performance profiling facility availble in TAU has been applied extensively in
