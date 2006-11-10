@@ -59,7 +59,7 @@ public class PerfExplorerCube {
         tabbedPane.addTab("Axes", scatterPlot.getAxes().getControlPanel(visRenderer));
         tabbedPane.addTab("ColorScale", colorScale.getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
-        tabbedPane.setMinimumSize(new Dimension(300, 160));
+        tabbedPane.setMinimumSize(new Dimension(300, 300));
 
         // Add everything to a JPanel and add the panel to the frame
         JPanel panel = new JPanel();
