@@ -3920,7 +3920,11 @@ EOF
           echo "Intel v8.1+ compilers used"
           if [ "x$taugcclib2dir" != "x/usr/bin/../lib" ]
           then
-            tauextralibopts="taugcclibopts=-L$taugcclib2dir/lib"
+            if [ "x$machine" = "xx86_64" ] ; then
+              tauextralibopts="taugcclibopts=-L$taugcclib2dir/lib64"
+            else 
+              tauextralibopts="taugcclibopts=-L$taugcclib2dir/lib"
+            fi
 # Here a different version of gcc is used (other than the one installed in /usr/bin)
           fi
           fixmakeargs="$fixmakeargs $tauextralibopts taugcclibdir=$taugcclibdir INTEL81FIX" 
