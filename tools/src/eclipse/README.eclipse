@@ -1,0 +1,15 @@
+This directory contains Eclipse plugins that enable automatic instrumentation 
+and selective instrumentation of C, C++ and Fortran programs with TAU.  
+Performance data can be collected and stored in your local perfdmf database if 
+one is available.
+
+Your Eclipse installation must have the CDT and PTP plugins installed to make
+use of the TAU plugins.  The Photran plugins are also supported.
+
+In order to install the TAU Eclipse plugins, simply copy the plugins directory 
+to your Eclipse installation, along with the following jar files provided by
+TAU.  (A script to automatically perform this procedure will be provided soon).
+
+batik-combined.jar     jfreechart-0.9.21.jar  jython.jar       tau-common.jar
+jargs.jar              jgraph.jar             paraprof.jar     vis.jar
+jcommon-0.9.6.jar      jogl.jar               perfdmf.jar
