@@ -659,6 +659,7 @@ void KtauProfiler::RegisterFork(Profiler* profiler, int nodeid, int tid, enum Ta
 
 
 int KtauProfiler::VerifyMerge(FunctionInfo* thatFunction) {
+#ifdef TAUKTAU_MERGE
 	double org_time     = thatFunction->GetExclTime(tid); 
 	double kern_time     = (double)(thatFunction->GetKtauFuncInfo(tid)->GetExclTicks(0))/KTauGetMHz();
 
@@ -680,7 +681,7 @@ int KtauProfiler::VerifyMerge(FunctionInfo* thatFunction) {
 
 		return 0;	
 	}
-	
+#endif /*TAUKTAU_MERGE*/
 	return 1;	
 }
 
@@ -688,6 +689,6 @@ int KtauProfiler::VerifyMerge(FunctionInfo* thatFunction) {
 
 /***************************************************************************
  * $RCSfile: KtauProfiler.cpp,v $   $Author: anataraj $
- * $Revision: 1.4 $   $Date: 2006/11/09 06:11:10 $
+ * $Revision: 1.5 $   $Date: 2006/11/10 07:25:42 $
  ***************************************************************************/
 

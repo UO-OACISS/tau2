@@ -548,14 +548,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /* TAU_COMPENSATE */
 
 #ifndef TAU_MULTIPLE_COUNTERS
-
-#if defined(TAUKTAU)
-#ifdef KTAU_DEBUGPROF
-	printf("Profiler::Stop: --EXIT-- %s \n", CurrentProfiler[tid]->ThisFunction->GetName());
-#endif /*KTAU_DEBUGPROF*/
-	ThisKtauProfiler->Stop(this, AddInclFlag);
-#endif /* TAUKTAU */
-
         double CurrentTime; 
 	if (useLastTimeStamp) /* for openmp parallel regions */
         { /* .TAU Application needs to be stopped */
@@ -567,6 +559,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 	{ /* use the usual mechanism */
 	  CurrentTime = RtsLayer::getUSecD(tid);
         }
+
+#if defined(TAUKTAU)
+#ifdef KTAU_DEBUGPROF
+	printf("Profiler::Stop: --EXIT-- %s \n", CurrentProfiler[tid]->ThisFunction->GetName());
+#endif /*KTAU_DEBUGPROF*/
+	ThisKtauProfiler->Stop(this, AddInclFlag);
+#endif /* TAUKTAU */
 
 	double TotalTime = CurrentTime - StartTime;
 	TimeStamp += (x_uint64) CurrentTime; 
@@ -3299,8 +3298,8 @@ double& Profiler::TheTauThrottlePerCall(void)
 }
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: anataraj $
- * $Revision: 1.139 $   $Date: 2006/11/08 07:35:34 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.139 2006/11/08 07:35:34 anataraj Exp $ 
+ * $Revision: 1.140 $   $Date: 2006/11/10 07:25:42 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.140 2006/11/10 07:25:42 anataraj Exp $ 
  ***************************************************************************/
 
 	

@@ -235,12 +235,13 @@ int TauKtau::DumpKProfileOut() {
 		return(-1);	
 	};
 
+	/* AN: TODO: Disabling till a leader election method is settled on
 	ktau_output* aggr_profs = NULL;
 	AggrKProfiles(startBufTWO, startSizeTWO, stopBufTWO, stopSizeTWO, &aggr_profs);
 	if(DumpKProfileTWO(1, aggr_profs, "kernelwide") < 0){
 		return(-1);	
 	}
-
+	*/
 	return 0;
 }
 
@@ -934,7 +935,7 @@ int TauKtau::MergingKProfileEvent(FILE* fp){
 
 /***************************************************************************
  * $RCSfile: TauKtau.cpp,v $   $Author: anataraj $
- * $Revision: 1.4 $   $Date: 2006/11/09 08:43:58 $
+ * $Revision: 1.5 $   $Date: 2006/11/10 07:25:42 $
  ***************************************************************************/
 
 	
