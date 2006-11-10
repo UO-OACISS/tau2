@@ -70,6 +70,10 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
 				button.addActionListener(this);
 				imagePanel.add(button, BorderLayout.CENTER);
 				imagePanel2 = new JPanel(new GridLayout((results.getResultCount()-1)/imagesPerRow,imagesPerRow));
+			// if we have 5n images, then we have clustering of a trial.
+			} else if (results.getResultCount() % (imagesPerRow-1) == 0) {
+				imagePanel2 = new JPanel(new GridLayout(results.getResultCount()/(imagesPerRow-1),(imagesPerRow-1)));
+			// we have clustering of a metric.
 			} else {
 				imagePanel2 = new JPanel(new GridLayout(results.getResultCount()/imagesPerRow,imagesPerRow));
 			}
