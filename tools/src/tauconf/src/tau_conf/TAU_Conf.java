@@ -156,6 +156,18 @@ public class TAU_Conf extends javax.swing.JFrame {
         depthlimitCheckBox = new javax.swing.JCheckBox();
         phaseQjButton = new javax.swing.JButton();
         depthQjButton = new javax.swing.JButton();
+        perfjPanel = new javax.swing.JPanel();
+        perfincQjButton = new javax.swing.JButton();
+        perfincCheckBox = new javax.swing.JCheckBox();
+        perfincButton = new javax.swing.JButton();
+        perfincTextField = new javax.swing.JTextField();
+        perflibQjButton = new javax.swing.JButton();
+        perflibCheckBox = new javax.swing.JCheckBox();
+        perflibButton = new javax.swing.JButton();
+        perflibTextField = new javax.swing.JTextField();
+        altperfQjButton = new javax.swing.JButton();
+        altperfCheckBox = new javax.swing.JCheckBox();
+        altperfTextField = new javax.swing.JTextField();
         threadPanel = new javax.swing.JPanel();
         ompPanel = new javax.swing.JPanel();
         ompCheckBox = new javax.swing.JCheckBox();
@@ -366,28 +378,28 @@ public class TAU_Conf extends javax.swing.JFrame {
         papijPanel.setLayout(papijPanelLayout);
         papijPanelLayout.setHorizontalGroup(
             papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+            .add(papijPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+                    .add(papijPanelLayout.createSequentialGroup()
                         .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(papiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(papiwallQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+                            .add(papijPanelLayout.createSequentialGroup()
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(papiCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 112, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(papiButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(papiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 449, Short.MAX_VALUE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+                                .add(papiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE))
+                            .add(papijPanelLayout.createSequentialGroup()
                                 .add(23, 23, 23)
                                 .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(papivirtCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 197, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                     .add(papiwallCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 239, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
                     .add(papivirtQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+                    .add(papijPanelLayout.createSequentialGroup()
                         .add(multcountQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(multiplecountCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 284, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
@@ -395,7 +407,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         );
         papijPanelLayout.setVerticalGroup(
             papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, papijPanelLayout.createSequentialGroup()
+            .add(papijPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(papiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -486,7 +498,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pdtjPanel.setLayout(pdtjPanelLayout);
         pdtjPanelLayout.setHorizontalGroup(
             pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, pdtjPanelLayout.createSequentialGroup()
+            .add(pdtjPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, pdtjPanelLayout.createSequentialGroup()
@@ -503,14 +515,14 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(defpdtCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 106, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(defpdtTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 422, Short.MAX_VALUE)
+                    .add(defpdtTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE)
                     .add(pdtcppCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(pdtdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 422, Short.MAX_VALUE))
+                    .add(pdtdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE))
                 .addContainerGap())
         );
         pdtjPanelLayout.setVerticalGroup(
             pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, pdtjPanelLayout.createSequentialGroup()
+            .add(pdtjPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(pdtQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -633,22 +645,22 @@ public class TAU_Conf extends javax.swing.JFrame {
         compilerjPanel.setLayout(compilerjPanelLayout);
         compilerjPanelLayout.setHorizontalGroup(
             compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+            .add(compilerjPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+                    .add(compilerjPanelLayout.createSequentialGroup()
                         .add(cppQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(cppcompLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 149, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(defcppCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 106, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+                    .add(compilerjPanelLayout.createSequentialGroup()
                         .add(cQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(defccCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 106, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(cccompLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 115, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+                    .add(compilerjPanelLayout.createSequentialGroup()
                         .add(fortQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -656,20 +668,20 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(fortrancompLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 182, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+                    .add(compilerjPanelLayout.createSequentialGroup()
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(cppCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(ccCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(defcppTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE)))
+                            .add(defcppTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 477, Short.MAX_VALUE)))
                     .add(fortranCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(defccTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE)
-                    .add(deffortranTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE))
+                    .add(defccTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 477, Short.MAX_VALUE)
+                    .add(deffortranTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 477, Short.MAX_VALUE))
                 .addContainerGap())
         );
         compilerjPanelLayout.setVerticalGroup(
             compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, compilerjPanelLayout.createSequentialGroup()
+            .add(compilerjPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(cppQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -704,17 +716,17 @@ public class TAU_Conf extends javax.swing.JFrame {
         installationPanel.setLayout(installationPanelLayout);
         installationPanelLayout.setHorizontalGroup(
             installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, installationPanelLayout.createSequentialGroup()
+            .add(installationPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(papijPanel)
-                    .add(compilerjPanel)
-                    .add(pdtjPanel))
+                    .add(papijPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(compilerjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(pdtjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         installationPanelLayout.setVerticalGroup(
             installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, installationPanelLayout.createSequentialGroup()
+            .add(installationPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(compilerjPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -893,49 +905,49 @@ public class TAU_Conf extends javax.swing.JFrame {
         mpijPanel.setLayout(mpijPanelLayout);
         mpijPanelLayout.setHorizontalGroup(
             mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+            .add(mpijPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                    .add(mpijPanelLayout.createSequentialGroup()
                         .add(mpiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(mpiCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 91, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                    .add(mpijPanelLayout.createSequentialGroup()
                         .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                            .add(mpijPanelLayout.createSequentialGroup()
                                 .add(mpilibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(mpilibCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 190, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                            .add(mpijPanelLayout.createSequentialGroup()
                                 .add(mpiincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(mpiincCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 182, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                            .add(mpijPanelLayout.createSequentialGroup()
                                 .add(mpiincButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(mpiincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 371, Short.MAX_VALUE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                                .add(mpiincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE))
+                            .add(mpijPanelLayout.createSequentialGroup()
                                 .add(mpilibButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(mpilibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 371, Short.MAX_VALUE)
-                                    .add(altmpiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 371, Short.MAX_VALUE)
-                                    .add(tagTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 371, Short.MAX_VALUE)))))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                                    .add(mpilibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE)
+                                    .add(altmpiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE)
+                                    .add(tagTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE)))))
+                    .add(mpijPanelLayout.createSequentialGroup()
                         .add(altmpiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(altmpiCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 216, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                    .add(mpijPanelLayout.createSequentialGroup()
                         .add(tagQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(tagCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 101, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                    .add(mpijPanelLayout.createSequentialGroup()
                         .add(nocommQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(nocomCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 153, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+                    .add(mpijPanelLayout.createSequentialGroup()
                         .add(mpitraceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(mpitraceCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 167, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
@@ -943,7 +955,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         );
         mpijPanelLayout.setVerticalGroup(
             mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, mpijPanelLayout.createSequentialGroup()
+            .add(mpijPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(mpiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1089,42 +1101,42 @@ public class TAU_Conf extends javax.swing.JFrame {
         shmemjPanel.setLayout(shmemjPanelLayout);
         shmemjPanelLayout.setHorizontalGroup(
             shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+            .add(shmemjPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                    .add(shmemjPanelLayout.createSequentialGroup()
                         .add(shmemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(shmemCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 136, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                    .add(shmemjPanelLayout.createSequentialGroup()
                         .add(shmemincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(shmemincCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 224, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(shmemincButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(shmemincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 337, Short.MAX_VALUE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                        .add(shmemincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE))
+                    .add(shmemjPanelLayout.createSequentialGroup()
                         .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                            .add(shmemjPanelLayout.createSequentialGroup()
                                 .add(shmemlibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(shmemlibCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 224, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(shmemlibButton))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+                            .add(shmemjPanelLayout.createSequentialGroup()
                                 .add(altshmemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(altshmemCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 262, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(altshmemTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 337, Short.MAX_VALUE)
-                            .add(shmemlibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 337, Short.MAX_VALUE))))
+                            .add(altshmemTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE)
+                            .add(shmemlibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         shmemjPanelLayout.setVerticalGroup(
             shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createSequentialGroup()
+            .add(shmemjPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(shmemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1137,15 +1149,15 @@ public class TAU_Conf extends javax.swing.JFrame {
                     .add(shmemincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(shmemlibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .add(shmemlibCheckBox))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(shmemlibButton)
                         .add(shmemlibTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(altshmemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .add(altshmemCheckBox))
                     .add(altshmemTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -1156,16 +1168,16 @@ public class TAU_Conf extends javax.swing.JFrame {
         messagePannel.setLayout(messagePannelLayout);
         messagePannelLayout.setHorizontalGroup(
             messagePannelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, messagePannelLayout.createSequentialGroup()
+            .add(messagePannelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(messagePannelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(mpijPanel)
-                    .add(shmemjPanel))
+                    .add(mpijPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(shmemjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         messagePannelLayout.setVerticalGroup(
             messagePannelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, messagePannelLayout.createSequentialGroup()
+            .add(messagePannelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(mpijPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1265,10 +1277,10 @@ public class TAU_Conf extends javax.swing.JFrame {
         profilePanel.setLayout(profilePanelLayout);
         profilePanelLayout.setHorizontalGroup(
             profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+            .add(profilePanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+                    .add(profilePanelLayout.createSequentialGroup()
                         .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(profileQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(compensateQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1276,15 +1288,15 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(headroomQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+                            .add(profilePanelLayout.createSequentialGroup()
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(profileCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 135, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+                            .add(profilePanelLayout.createSequentialGroup()
                                 .add(2, 2, 2)
                                 .add(compensateCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 207, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                             .add(profcallpathCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 269, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(profheadroomCheckBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 280, Short.MAX_VALUE)))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+                    .add(profilePanelLayout.createSequentialGroup()
                         .add(memorypQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(profmemoryCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 244, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
@@ -1292,7 +1304,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         );
         profilePanelLayout.setVerticalGroup(
             profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanelLayout.createSequentialGroup()
+            .add(profilePanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(profileQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1474,27 +1486,27 @@ public class TAU_Conf extends javax.swing.JFrame {
         tracePanel.setLayout(tracePanelLayout);
         tracePanelLayout.setHorizontalGroup(
             tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+            .add(tracePanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                    .add(tracePanelLayout.createSequentialGroup()
                         .add(traceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(traceCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 119, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                    .add(tracePanelLayout.createSequentialGroup()
                         .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                            .add(tracePanelLayout.createSequentialGroup()
                                 .add(epilogQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(epilogCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 136, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                            .add(tracePanelLayout.createSequentialGroup()
                                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(slog2QjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                     .add(slog2eQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(slog2CheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 124, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                    .add(tracePanelLayout.createSequentialGroup()
                                         .add(21, 21, 21)
                                         .add(slog2exCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 241, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1503,20 +1515,20 @@ public class TAU_Conf extends javax.swing.JFrame {
                                             .add(slog2Button)
                                             .add(vtfButton)
                                             .add(jButton1)))))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                            .add(tracePanelLayout.createSequentialGroup()
                                 .add(vtfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(vtfCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 98, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                            .add(tracePanelLayout.createSequentialGroup()
                                 .add(otfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(otfCheckBox)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(vtfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
-                            .add(slog2TextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
-                            .add(epilogTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
-                            .add(otfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE))))
+                            .add(vtfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
+                            .add(slog2TextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
+                            .add(epilogTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
+                            .add(otfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         tracePanelLayout.setVerticalGroup(
@@ -1596,14 +1608,14 @@ public class TAU_Conf extends javax.swing.JFrame {
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel5Layout.createSequentialGroup()
+            .add(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel5Layout.createSequentialGroup()
+                    .add(jPanel5Layout.createSequentialGroup()
                         .add(phaseQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(profphaseCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 227, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel5Layout.createSequentialGroup()
+                    .add(jPanel5Layout.createSequentialGroup()
                         .add(depthQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(depthlimitCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 197, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
@@ -1611,7 +1623,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel5Layout.createSequentialGroup()
+            .add(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(phaseQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1623,28 +1635,175 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
+        perfjPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        perfincQjButton.setText("?");
+        perfincQjButton.setToolTipText("More Info");
+        perfincQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        perfincQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                perfincQjButtonActionPerformed(evt);
+            }
+        });
+
+        perfincCheckBox.setText("Perf Includes  [-perfinc=]:");
+        perfincCheckBox.setToolTipText("Specify location of MPI include dir and use the TAU MPI Profiling and Tracing Interface");
+        perfincCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                perfincCheckBoxStateChanged(evt);
+            }
+        });
+
+        perfincButton.setText("Browse");
+        perfincButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                perfincButtonActionPerformed(evt);
+            }
+        });
+
+        perfincTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        perfincTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                perfincTextFieldActionPerformed(evt);
+            }
+        });
+
+        perflibQjButton.setText("?");
+        perflibQjButton.setToolTipText("More Info");
+        perflibQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        perflibQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                perflibQjButtonActionPerformed(evt);
+            }
+        });
+
+        perflibCheckBox.setText("Perf Librararies [-perflib=]:");
+        perflibCheckBox.setToolTipText("Specify location of MPI library dir and use the TAU MPI Profiling and Tracing Interface.");
+        perflibCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                perflibCheckBoxStateChanged(evt);
+            }
+        });
+
+        perflibButton.setText("Browse");
+        perflibButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                perflibButtonActionPerformed(evt);
+            }
+        });
+
+        perflibTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        perflibTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                perflibTextFieldActionPerformed(evt);
+            }
+        });
+
+        altperfQjButton.setText("?");
+        altperfQjButton.setToolTipText("More Info");
+        altperfQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        altperfQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                altperfQjButtonActionPerformed(evt);
+            }
+        });
+
+        altperfCheckBox.setText("Alt. Perf LIbrary [-perflibrary=]:");
+        altperfCheckBox.setToolTipText("Specify a different MPI library e.g., -mpilibrary=-lmpi_r");
+        altperfCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                altperfCheckBoxStateChanged(evt);
+            }
+        });
+
+        altperfTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        altperfTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                altperfTextFieldActionPerformed(evt);
+            }
+        });
+
+        org.jdesktop.layout.GroupLayout perfjPanelLayout = new org.jdesktop.layout.GroupLayout(perfjPanel);
+        perfjPanel.setLayout(perfjPanelLayout);
+        perfjPanelLayout.setHorizontalGroup(
+            perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(perfjPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(perfjPanelLayout.createSequentialGroup()
+                        .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(perfjPanelLayout.createSequentialGroup()
+                                .add(perflibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(perflibCheckBox))
+                            .add(perfjPanelLayout.createSequentialGroup()
+                                .add(perfincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(perfincCheckBox)))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                            .add(perflibButton)
+                            .add(perfincButton))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(perfincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 405, Short.MAX_VALUE)
+                            .add(altperfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 405, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.TRAILING, perfjPanelLayout.createSequentialGroup()
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(perflibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 405, Short.MAX_VALUE))))
+                    .add(perfjPanelLayout.createSequentialGroup()
+                        .add(altperfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(altperfCheckBox)))
+                .add(44, 44, 44))
+        );
+        perfjPanelLayout.setVerticalGroup(
+            perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(perfjPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(perfincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(perfincCheckBox)
+                    .add(perfincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(perfincButton))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(perflibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(perflibCheckBox)
+                    .add(perflibButton)
+                    .add(perflibTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(altperfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(altperfTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(altperfCheckBox))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
         org.jdesktop.layout.GroupLayout outputPanelLayout = new org.jdesktop.layout.GroupLayout(outputPanel);
         outputPanel.setLayout(outputPanelLayout);
         outputPanelLayout.setHorizontalGroup(
             outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, outputPanelLayout.createSequentialGroup()
+            .add(outputPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(tracePanel)
-                    .add(profilePanel)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel5))
+                    .add(tracePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(profilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 736, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 736, Short.MAX_VALUE)
+                    .add(perfjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         outputPanelLayout.setVerticalGroup(
             outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, outputPanelLayout.createSequentialGroup()
+            .add(outputPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(profilePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(tracePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(32, Short.MAX_VALUE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(perfjPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         tabPane.addTab("Tracing/Profiling", outputPanel);
 
@@ -1737,7 +1896,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         ompPanel.setLayout(ompPanelLayout);
         ompPanelLayout.setHorizontalGroup(
             ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, ompPanelLayout.createSequentialGroup()
+            .add(ompPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(openmpQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1745,25 +1904,25 @@ public class TAU_Conf extends javax.swing.JFrame {
                     .add(opariregionQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(opariconstructQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, ompPanelLayout.createSequentialGroup()
+                    .add(ompPanelLayout.createSequentialGroup()
                         .add(23, 23, 23)
                         .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(opariconstructCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 202, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, ompPanelLayout.createSequentialGroup()
+                            .add(ompPanelLayout.createSequentialGroup()
                                 .add(opariCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 151, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(opariButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(opariTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 389, Short.MAX_VALUE))
+                                .add(opariTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 421, Short.MAX_VALUE))
                             .add(opariregionCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 166, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, ompPanelLayout.createSequentialGroup()
+                    .add(ompPanelLayout.createSequentialGroup()
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(ompCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 145, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         ompPanelLayout.setVerticalGroup(
             ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, ompPanelLayout.createSequentialGroup()
+            .add(ompPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(ompPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(openmpQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1823,7 +1982,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         charmPanel.setLayout(charmPanelLayout);
         charmPanelLayout.setHorizontalGroup(
             charmPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, charmPanelLayout.createSequentialGroup()
+            .add(charmPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(charmQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1831,12 +1990,12 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(charmButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(charmTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 401, Short.MAX_VALUE)
+                .add(charmTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 433, Short.MAX_VALUE)
                 .addContainerGap())
         );
         charmPanelLayout.setVerticalGroup(
             charmPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, charmPanelLayout.createSequentialGroup()
+            .add(charmPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(charmPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(charmQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1899,27 +2058,27 @@ public class TAU_Conf extends javax.swing.JFrame {
         tulipthreadsPanel.setLayout(tulipthreadsPanelLayout);
         tulipthreadsPanelLayout.setHorizontalGroup(
             tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, tulipthreadsPanelLayout.createSequentialGroup()
+            .add(tulipthreadsPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(tulipQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(smartQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, tulipthreadsPanelLayout.createSequentialGroup()
+                    .add(tulipthreadsPanelLayout.createSequentialGroup()
                         .add(tulipCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 207, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(tulipButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(tulipTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 354, Short.MAX_VALUE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, tulipthreadsPanelLayout.createSequentialGroup()
+                        .add(tulipTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE))
+                    .add(tulipthreadsPanelLayout.createSequentialGroup()
                         .add(21, 21, 21)
                         .add(smartCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 168, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         tulipthreadsPanelLayout.setVerticalGroup(
             tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, tulipthreadsPanelLayout.createSequentialGroup()
+            .add(tulipthreadsPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(tulipthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(tulipQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1955,7 +2114,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pthreadsPanel.setLayout(pthreadsPanelLayout);
         pthreadsPanelLayout.setHorizontalGroup(
             pthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, pthreadsPanelLayout.createSequentialGroup()
+            .add(pthreadsPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(pthreadsQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1964,7 +2123,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         );
         pthreadsPanelLayout.setVerticalGroup(
             pthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, pthreadsPanelLayout.createSequentialGroup()
+            .add(pthreadsPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(pthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(pthreadsQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1994,7 +2153,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         sprocPanel.setLayout(sprocPanelLayout);
         sprocPanelLayout.setHorizontalGroup(
             sprocPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, sprocPanelLayout.createSequentialGroup()
+            .add(sprocPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(sprocQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2003,7 +2162,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         );
         sprocPanelLayout.setVerticalGroup(
             sprocPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, sprocPanelLayout.createSequentialGroup()
+            .add(sprocPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(sprocPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(sprocQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2015,30 +2174,30 @@ public class TAU_Conf extends javax.swing.JFrame {
         threadPanel.setLayout(threadPanelLayout);
         threadPanelLayout.setHorizontalGroup(
             threadPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, threadPanelLayout.createSequentialGroup()
+            .add(threadPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(threadPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(pthreadsPanel)
-                    .add(ompPanel)
-                    .add(charmPanel)
-                    .add(sprocPanel)
-                    .add(tulipthreadsPanel))
+                    .add(pthreadsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
+                    .add(ompPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(charmPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(sprocPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
+                    .add(tulipthreadsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         threadPanelLayout.setVerticalGroup(
             threadPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, threadPanelLayout.createSequentialGroup()
+            .add(threadPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(pthreadsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(7, 7, 7)
                 .add(ompPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 135, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(charmPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(charmPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 59, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(sprocPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(tulipthreadsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(74, Short.MAX_VALUE))
+                .addContainerGap(167, Short.MAX_VALUE))
         );
         tabPane.addTab("Threads", threadPanel);
 
@@ -2080,7 +2239,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         dyninstPanel.setLayout(dyninstPanelLayout);
         dyninstPanelLayout.setHorizontalGroup(
             dyninstPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, dyninstPanelLayout.createSequentialGroup()
+            .add(dyninstPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(dyninstQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2088,12 +2247,12 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(dyninstButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(dyninstTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 407, Short.MAX_VALUE)
+                .add(dyninstTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE)
                 .addContainerGap())
         );
         dyninstPanelLayout.setVerticalGroup(
             dyninstPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, dyninstPanelLayout.createSequentialGroup()
+            .add(dyninstPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(dyninstPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(dyninstQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2139,7 +2298,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pclPanel.setLayout(pclPanelLayout);
         pclPanelLayout.setHorizontalGroup(
             pclPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, pclPanelLayout.createSequentialGroup()
+            .add(pclPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(pclQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2147,7 +2306,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(pclButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(pclTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
+                .add(pclTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 494, Short.MAX_VALUE)
                 .addContainerGap())
         );
         pclPanelLayout.setVerticalGroup(
@@ -2237,10 +2396,10 @@ public class TAU_Conf extends javax.swing.JFrame {
         timePanel.setLayout(timePanelLayout);
         timePanelLayout.setHorizontalGroup(
             timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, timePanelLayout.createSequentialGroup()
+            .add(timePanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, timePanelLayout.createSequentialGroup()
+                    .add(timePanelLayout.createSequentialGroup()
                         .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(craytQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(linuxtQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2248,12 +2407,12 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(craytimeCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 290, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, timePanelLayout.createSequentialGroup()
+                            .add(timePanelLayout.createSequentialGroup()
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(sgitimeCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 300, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                     .add(linuxtimeCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 300, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, timePanelLayout.createSequentialGroup()
+                    .add(timePanelLayout.createSequentialGroup()
                         .add(22, 22, 22)
                         .add(cputimeCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 280, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                     .add(jLabel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 120, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2340,18 +2499,18 @@ public class TAU_Conf extends javax.swing.JFrame {
         musePanel.setLayout(musePanelLayout);
         musePanelLayout.setHorizontalGroup(
             musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, musePanelLayout.createSequentialGroup()
+            .add(musePanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(musemQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, musePanelLayout.createSequentialGroup()
+                    .add(musePanelLayout.createSequentialGroup()
                         .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(museQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(museeQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(museCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 112, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, musePanelLayout.createSequentialGroup()
+                            .add(musePanelLayout.createSequentialGroup()
                                 .add(21, 21, 21)
                                 .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(musemultCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 229, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2360,7 +2519,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         );
         musePanelLayout.setVerticalGroup(
             musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, musePanelLayout.createSequentialGroup()
+            .add(musePanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(museQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2380,18 +2539,18 @@ public class TAU_Conf extends javax.swing.JFrame {
         generalPanel.setLayout(generalPanelLayout);
         generalPanelLayout.setHorizontalGroup(
             generalPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, generalPanelLayout.createSequentialGroup()
+            .add(generalPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(generalPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(pclPanel)
-                    .add(dyninstPanel)
-                    .add(musePanel)
-                    .add(timePanel))
+                    .add(pclPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(dyninstPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(musePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
+                    .add(timePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE))
                 .addContainerGap())
         );
         generalPanelLayout.setVerticalGroup(
             generalPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, generalPanelLayout.createSequentialGroup()
+            .add(generalPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(pclPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2400,7 +2559,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(musePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(timePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(78, Short.MAX_VALUE))
+                .addContainerGap(171, Short.MAX_VALUE))
         );
         tabPane.addTab("Data Tools", generalPanel);
 
@@ -2471,7 +2630,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pythonPanel.setLayout(pythonPanelLayout);
         pythonPanelLayout.setHorizontalGroup(
             pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, pythonPanelLayout.createSequentialGroup()
+            .add(pythonPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(pythonincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2486,13 +2645,13 @@ public class TAU_Conf extends javax.swing.JFrame {
                     .add(pythonlibButton))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(pythonincField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 342, Short.MAX_VALUE)
-                    .add(pythonlibField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 342, Short.MAX_VALUE))
+                    .add(pythonincField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 374, Short.MAX_VALUE)
+                    .add(pythonlibField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 374, Short.MAX_VALUE))
                 .addContainerGap())
         );
         pythonPanelLayout.setVerticalGroup(
             pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, pythonPanelLayout.createSequentialGroup()
+            .add(pythonPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(pythonincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2563,29 +2722,29 @@ public class TAU_Conf extends javax.swing.JFrame {
         jdkPanel.setLayout(jdkPanelLayout);
         jdkPanelLayout.setHorizontalGroup(
             jdkPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, jdkPanelLayout.createSequentialGroup()
+            .add(jdkPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(jdkPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jdkPanelLayout.createSequentialGroup()
+                    .add(jdkPanelLayout.createSequentialGroup()
                         .add(jdkPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, jdkPanelLayout.createSequentialGroup()
+                            .add(jdkPanelLayout.createSequentialGroup()
                                 .add(jdkQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(usejdkCheckBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 204, Short.MAX_VALUE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, jdkPanelLayout.createSequentialGroup()
+                            .add(jdkPanelLayout.createSequentialGroup()
                                 .add(javatQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(usejavatimersCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 204, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jdkButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(jdkField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 357, Short.MAX_VALUE))
+                        .add(jdkField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 389, Short.MAX_VALUE))
                     .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 405, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
         jdkPanelLayout.setVerticalGroup(
             jdkPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, jdkPanelLayout.createSequentialGroup()
+            .add(jdkPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(jLabel1)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2727,41 +2886,41 @@ public class TAU_Conf extends javax.swing.JFrame {
         dirarcPanel.setLayout(dirarcPanelLayout);
         dirarcPanelLayout.setHorizontalGroup(
             dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+            .add(dirarcPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                    .add(dirarcPanelLayout.createSequentialGroup()
                         .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                            .add(dirarcPanelLayout.createSequentialGroup()
                                 .add(custinstQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(installdirCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 279, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                            .add(dirarcPanelLayout.createSequentialGroup()
                                 .add(useroptQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(useroptCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 215, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                            .add(dirarcPanelLayout.createSequentialGroup()
                                 .add(archQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(archLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                                .add(archLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE))
+                            .add(dirarcPanelLayout.createSequentialGroup()
                                 .add(custarchQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(archdirCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 271, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                            .add(dirarcPanelLayout.createSequentialGroup()
                                 .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(installdirButton)
                                     .add(archdirButton))
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(installdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE)
-                                    .add(archdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE))
+                                    .add(installdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 280, Short.MAX_VALUE)
+                                    .add(archdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 280, Short.MAX_VALUE))
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
                             .add(archCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(useroptField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 354, Short.MAX_VALUE)))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                            .add(useroptField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 366, Short.MAX_VALUE)))
+                    .add(dirarcPanelLayout.createSequentialGroup()
                         .add(noexQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(noexceptCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 163, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
@@ -2769,7 +2928,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         );
         dirarcPanelLayout.setVerticalGroup(
             dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+            .add(dirarcPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(custinstQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2777,13 +2936,13 @@ public class TAU_Conf extends javax.swing.JFrame {
                     .add(installdirButton)
                     .add(installdirField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                    .add(dirarcPanelLayout.createSequentialGroup()
                         .add(6, 6, 6)
                         .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(custarchQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(archdirCheckBox)
                             .add(archdirButton)))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, dirarcPanelLayout.createSequentialGroup()
+                    .add(dirarcPanelLayout.createSequentialGroup()
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(archdirField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .add(7, 7, 7)
@@ -2807,24 +2966,24 @@ public class TAU_Conf extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel1Layout.createSequentialGroup()
+            .add(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(dirarcPanel)
-                    .add(pythonPanel)
-                    .add(jdkPanel))
+                    .add(dirarcPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(pythonPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(jdkPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel1Layout.createSequentialGroup()
+            .add(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(pythonPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jdkPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(dirarcPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(100, Short.MAX_VALUE))
+                .addContainerGap(193, Short.MAX_VALUE))
         );
         tabPane.addTab("Misc", jPanel1);
 
@@ -2873,27 +3032,27 @@ public class TAU_Conf extends javax.swing.JFrame {
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3Layout.createSequentialGroup()
+            .add(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(allconfComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 664, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(savedconfComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 664, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3Layout.createSequentialGroup()
+                    .add(jPanel3Layout.createSequentialGroup()
                         .add(loadsavedconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(removeconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                     .add(jLabel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(loadallconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3Layout.createSequentialGroup()
+                    .add(jPanel3Layout.createSequentialGroup()
                         .add(saveconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(custconfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 425, Short.MAX_VALUE)))
+                        .add(custconfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 457, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3Layout.createSequentialGroup()
+            .add(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jLabel3)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2919,17 +3078,17 @@ public class TAU_Conf extends javax.swing.JFrame {
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
+            .add(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .add(jPanel3)
+                .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
+            .add(jPanel2Layout.createSequentialGroup()
                 .add(10, 10, 10)
                 .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(253, Short.MAX_VALUE))
+                .addContainerGap(346, Short.MAX_VALUE))
         );
         tabPane.addTab("Configurations", jPanel2);
 
@@ -2974,12 +3133,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         commandPanel.setLayout(commandPanelLayout);
         commandPanelLayout.setHorizontalGroup(
             commandPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, commandPanelLayout.createSequentialGroup()
+            .add(commandPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(commandPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(instjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 700, Short.MAX_VALUE)
-                    .add(confjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 700, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, commandPanelLayout.createSequentialGroup()
+                    .add(instjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 732, Short.MAX_VALUE)
+                    .add(confjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 732, Short.MAX_VALUE)
+                    .add(commandPanelLayout.createSequentialGroup()
                         .add(confButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(makejButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -2988,7 +3147,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         );
         commandPanelLayout.setVerticalGroup(
             commandPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, commandPanelLayout.createSequentialGroup()
+            .add(commandPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(confjScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 38, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -3022,25 +3181,22 @@ public class TAU_Conf extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(commandPanel)
-                            .add(tabPane)))
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                        .add(378, 378, 378)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, tabPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 760, Short.MAX_VALUE)
+                    .add(layout.createSequentialGroup()
                         .add(resetButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(exitButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                        .add(exitButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(commandPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .add(5, 5, 5))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+            .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(tabPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 507, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(tabPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 600, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(commandPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -3050,8 +3206,188 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        setBounds((screenSize.width-755)/2, (screenSize.height-769)/2, 755, 769);
+        setBounds((screenSize.width-787)/2, (screenSize.height-862)/2, 787, 862);
     }// </editor-fold>//GEN-END:initComponents
+
+    private void altperfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_altperfTextFieldActionPerformed
+	if(this.altperfCheckBox.isSelected()){
+	    
+	    String id=" -perflibrary=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+altperfTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }//GEN-LAST:event_altperfTextFieldActionPerformed
+
+    private void altperfCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_altperfCheckBoxStateChanged
+	String entry =" -perflibrary=";
+	if(altperfCheckBox.isSelected()){
+	    if(configureline.indexOf(entry)==-1){
+		configureline+=entry;
+		configureline+=altperfTextField.getText()+" ";
+	    }
+	}
+	
+	else{
+	    int start = configureline.indexOf(entry);
+	    if(start>-1){
+		int end = configureline.indexOf(" ",  start+1);
+		if(end==-1){
+		    configureline = configureline.substring(0, start);
+		} else{
+		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
+		}
+		
+	    }
+	}
+	
+	commandTextArea.setText(configureline); updateITCommand();
+    }//GEN-LAST:event_altperfCheckBoxStateChanged
+
+    private void altperfQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_altperfQjButtonActionPerformed
+JOptionPane.showMessageDialog(null,
+"Specifies the directory where perf library files reside. This option should\n"+
+"be used in conjunction with the -perfinc=<dir> option to generate the TAU\n"+
+"Perflib library.",
+	"-perflibrary=<lib>",JOptionPane.INFORMATION_MESSAGE);        
+    }//GEN-LAST:event_altperfQjButtonActionPerformed
+
+    private void perflibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perflibTextFieldActionPerformed
+	if(this.perflibCheckBox.isSelected()){
+	    
+	    String id=" -perflib=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+perflibTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }//GEN-LAST:event_perflibTextFieldActionPerformed
+
+    private void perflibButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perflibButtonActionPerformed
+	int returnVal = jFileChooser1.showOpenDialog(null);
+	
+	if (returnVal == JFileChooser.APPROVE_OPTION) {
+	    File file = jFileChooser1.getSelectedFile();
+	    String filename = file.getAbsolutePath();
+	    perflibTextField.setText(filename);
+	}
+    }//GEN-LAST:event_perflibButtonActionPerformed
+
+    private void perflibCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_perflibCheckBoxStateChanged
+	String entry =" -perflib=";
+	if(perflibCheckBox.isSelected()){
+	    if(configureline.indexOf(entry)==-1){
+		configureline+=entry;
+		configureline+=perflibTextField.getText()+" ";
+	    }
+	}
+	
+	else{
+	    int start = configureline.indexOf(entry);
+	    if(start>-1){
+		int end = configureline.indexOf(" ",  start+1);
+		if(end==-1){
+		    configureline = configureline.substring(0, start);
+		} else{
+		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
+		}
+		
+	    }
+	}
+	
+	commandTextArea.setText(configureline); updateITCommand();
+    }//GEN-LAST:event_perflibCheckBoxStateChanged
+
+    private void perflibQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perflibQjButtonActionPerformed
+JOptionPane.showMessageDialog(null,
+"Specifies the directory where Perflib library files reside. This option should\n"+
+"be used in conjunction with the -perfinc=<dir> option to generate the TAU\n"+
+"Perflib library.",
+	"-perflib=<dir>",JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_perflibQjButtonActionPerformed
+
+    private void perfincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perfincTextFieldActionPerformed
+	if(this.perfincCheckBox.isSelected()){
+	    
+	    String id=" -perfinc=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+perfincTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+	}
+    }//GEN-LAST:event_perfincTextFieldActionPerformed
+
+    private void perfincButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perfincButtonActionPerformed
+	int returnVal = jFileChooser1.showOpenDialog(null);
+	
+	if (returnVal == JFileChooser.APPROVE_OPTION) {
+	    File file = jFileChooser1.getSelectedFile();
+	    String filename = file.getAbsolutePath();
+	    perfincTextField.setText(filename);
+	}
+    }//GEN-LAST:event_perfincButtonActionPerformed
+
+    private void perfincCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_perfincCheckBoxStateChanged
+
+	String entry =" -perfinc=";
+	if(perfincCheckBox.isSelected()){
+	    if(configureline.indexOf(entry)==-1){
+		configureline+=entry;
+		configureline+=perfincTextField.getText()+" ";
+	    }
+	}
+	
+	else{
+	    int start = configureline.indexOf(entry);
+	    if(start>-1){
+		int end = configureline.indexOf(" ",  start+1);
+		if(end==-1){
+		    configureline = configureline.substring(0, start);
+		} else{
+		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
+		}
+		
+	    }
+	}
+	
+	commandTextArea.setText(configureline); updateITCommand();
+    }//GEN-LAST:event_perfincCheckBoxStateChanged
+
+    private void perfincQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perfincQjButtonActionPerformed
+JOptionPane.showMessageDialog(null,
+"Specifies the directory  where Perflib header files reside\n"+
+"This option also generates the TAU Perflib library that\n"+
+"generates Perflib performance data.",
+	"-perfinc=<dir>",JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_perfincQjButtonActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 	int returnVal = jFileChooser1.showOpenDialog(null);
@@ -3661,7 +3997,7 @@ private void updateITCommand(){
     String[] varopts = {"arch", "fortran", "cc", "c++", "useropt", "pdt", 
 	    "pdtcompdir", "pdt_c++", "papi", "vtf", "slog2", "dyninst",
 	    "mpiinc","mpilib","mpilibrary","tag","opari","epilog","prefix",
-	    "exec-prefix"};
+	    "exec-prefix","perfinc","perflib","perflibrary"};
 
     String[] singopts = {"slog2", "mpi", "nocomm"};
     int start;
@@ -6271,6 +6607,9 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JCheckBox altmpiCheckBox;
     private javax.swing.JButton altmpiQjButton;
     private javax.swing.JTextField altmpiTextField;
+    private javax.swing.JCheckBox altperfCheckBox;
+    private javax.swing.JButton altperfQjButton;
+    private javax.swing.JTextField altperfTextField;
     private javax.swing.JCheckBox altshmemCheckBox;
     private javax.swing.JButton altshmemQjButton;
     private javax.swing.JTextField altshmemTextField;
@@ -6425,6 +6764,15 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JButton pdtcppQjButton;
     private javax.swing.JTextField pdtdirField;
     private javax.swing.JPanel pdtjPanel;
+    private javax.swing.JButton perfincButton;
+    private javax.swing.JCheckBox perfincCheckBox;
+    private javax.swing.JButton perfincQjButton;
+    private javax.swing.JTextField perfincTextField;
+    private javax.swing.JPanel perfjPanel;
+    private javax.swing.JButton perflibButton;
+    private javax.swing.JCheckBox perflibCheckBox;
+    private javax.swing.JButton perflibQjButton;
+    private javax.swing.JTextField perflibTextField;
     private javax.swing.JButton phaseQjButton;
     private javax.swing.JCheckBox profcallpathCheckBox;
     private javax.swing.JCheckBox profheadroomCheckBox;
