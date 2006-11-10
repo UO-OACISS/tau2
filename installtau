@@ -11,6 +11,10 @@ cxx=no
 fortran=no
 mpiopts=
 mpi=no
+perf=no
+perfincdir=
+perflibdir=
+perflibrary=
 mpiinc=no
 mpilib=no
 tag=no
@@ -61,7 +65,7 @@ do
 
   -useropt=*)
     useropt=yes
-    useroptspec=`echo $arg | sed -e 's/-useropt=//'`
+    useroptspec=`echo $arg | sed -e 's/-useropt=//' -e 's/ /#/g'`
     shift
     ;;
 
@@ -70,6 +74,38 @@ do
     papidir=`echo $arg | sed -e 's/-papi=//'`
     shift
     ;;
+
+  -perfinc=*)
+      perf=yes
+      perfincdir=`echo $arg | sed -e 's/-perfinc=//'`
+      if [ ! -d $perfincdir ]
+      then
+        echo "Error: Cannot access PERF include directory $perfincdir"
+        exit 1
+      fi
+      perfopts="$perfopts $arg"
+    shift
+    ;;
+
+  -perflib=*)
+      perf=yes
+      perflibdir=`echo $arg | sed -e 's/-perflib=//'`
+      if [ ! -d $perflibdir ]
+      then
+        echo "Error: Cannot access PERF lib directory $perflibdir"
+        exit 1
+      fi
+      perfopts="$perfopts $arg"
+    shift
+    ;;
+
+  -perflibrary=*)
+      perf=yes
+      perflibrary=`echo $arg | sed -e 's/-perflibrary=//' -e 's/ /#/g'`
+      perfopts="$perfopts -perflibrary=$perflibrary"
+    shift
+    ;;
+
 
   -dyninst=*)
     dyninst=yes
@@ -105,7 +141,7 @@ do
 
   -mpilibrary=*)
     mpilibrary=yes
-    mpilibraryspec=`echo $arg | sed -e 's/-mpilibrary=//'`
+    mpilibraryspec=`echo $arg | sed -e 's/-mpilibrary=//' -e 's/ /#/g'`
     mpiopt=-mpilibrary="$mpilibraryspec"
     shift
     ;;
@@ -195,6 +231,9 @@ do
     echo "-mpiinc=<mpiincdir>  "
     echo "-mpilib=<mpilibdir>  "
     echo "-mpilibrary=<mpilibrary>  "
+    echo "-perfinc=<dir> "
+    echo "-perflib=<dir> "
+    echo "-perflibrary=<library> "
     echo "-mpi"
     echo "-tag=<unique name> "
     echo "-nocomm"
@@ -282,7 +321,7 @@ echo " " > wishver
 
   if [ $useropt = yes ]
   then
-    useropts="-useropt='$useroptspec'"
+    useropts="-useropt=$useroptspec"
   fi
 
 # Configure TAU
@@ -298,6 +337,11 @@ echo " " > wishver
       ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -nocomm <wishver
       make clean; make install
     fi
+
+# configure with perflib  using perfopts
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt $perfopts"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts $commopt  $perfopts <wishver
+    make clean; make install
 
 # Add callpath profiling 
     echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -PROFILECALLPATH"
