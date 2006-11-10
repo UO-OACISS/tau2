@@ -3221,7 +3221,7 @@ public class TAU_Conf extends javax.swing.JFrame {
 	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
 	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
 	    String end = configureline.substring(stop);
-	    configureline = begin+altperfTextField.getText()+end;
+	    configureline = begin+multiArg(altperfTextField.getText())+end;
 		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
 		    
 		    //configureline.substring(stop);
@@ -3234,14 +3234,22 @@ public class TAU_Conf extends javax.swing.JFrame {
 	if(altperfCheckBox.isSelected()){
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
-		configureline+=altperfTextField.getText()+" ";
+		configureline+=multiArg(altperfTextField.getText())+" ";
 	    }
 	}
-	
 	else{
 	    int start = configureline.indexOf(entry);
 	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
+                String endline=" ";
+                int end=-1;
+                if(configureline.charAt(start+entry.length())=='\'')
+                {
+                    endline="'";
+                    end = configureline.indexOf(endline,  start+1);
+                    end = configureline.indexOf(endline,  end+1)+1;//for space
+                }
+                else
+       		    end = configureline.indexOf(endline,  start+1);
 		if(end==-1){
 		    configureline = configureline.substring(0, start);
 		} else{
@@ -3488,7 +3496,7 @@ JOptionPane.showMessageDialog(null,
 	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
 	    String end = configureline.substring(stop);
 	    
-	    configureline = begin+useroptField.getText()+end;
+	    configureline = begin+multiArg(useroptField.getText())+end;
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
@@ -3740,7 +3748,7 @@ JOptionPane.showMessageDialog(null,
 	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
 	    String end = configureline.substring(stop);
 	    
-	    configureline = begin+altshmemTextField.getText()+end;
+	    configureline = begin+multiArg(altshmemTextField.getText())+end;
 
 	    commandTextArea.setText(configureline); updateITCommand();
 	}
@@ -3818,7 +3826,7 @@ JOptionPane.showMessageDialog(null,
 	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
 	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
 	    String end = configureline.substring(stop);
-	    configureline = begin+altmpiTextField.getText()+end;
+	    configureline = begin+multiArg(altmpiTextField.getText())+end;
 		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
 		    
 		    //configureline.substring(stop);
@@ -4003,10 +4011,21 @@ private void updateITCommand(){
     int start;
     String addop;
     for(int i=0;i<varopts.length;i++){
-	//addop="-"+varopts[i]+"=";
-	start = configureline.indexOf(" -"+varopts[i]+"="); 
+	addop=" -"+varopts[i]+"=";//"-"+varopts[i]+"=";
+	start = configureline.indexOf(addop);//" -"+varopts[i]+"=" 
 	if(start>-1){
-	    instline+=configureline.substring(start, configureline.indexOf(" ", start+1));
+            
+                String endline=" ";
+                int end=-1;
+                if(configureline.charAt(start+addop.length())=='\'')
+                {
+                    endline="'";
+                    end = configureline.indexOf(endline,  start+1);
+                    end = configureline.indexOf(endline,  end+1)+1;//for space
+                }
+                else
+       		    end = configureline.indexOf(endline,  start+1);
+	    instline+=configureline.substring(start, end);//configureline.indexOf(" ", start+1)
 	}
     }
     
@@ -4843,14 +4862,23 @@ String entry=" -noex ";
 	if(useroptCheckBox.isSelected()){
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
-		configureline+=useroptField.getText()+" ";
+		configureline+=multiArg(useroptField.getText())+" ";
 	    }
 	}
 	
 	else{
 	    int start = configureline.indexOf(entry);
 	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
+                String endline=" ";
+                int end=-1;
+                if(configureline.charAt(start+entry.length())=='\'')
+                {
+                    endline="'";
+                    end = configureline.indexOf(endline,  start+1);
+                    end = configureline.indexOf(endline,  end+1)+1;//for space
+                }
+                else
+       		    end = configureline.indexOf(endline,  start+1);
 		if(end==-1){
 		    configureline = configureline.substring(0, start);
 		} else{
@@ -5400,14 +5428,23 @@ String entry=" -pthread ";
 	if(altshmemCheckBox.isSelected()){
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
-		configureline+=altshmemTextField.getText()+" ";
+		configureline+=multiArg(altshmemTextField.getText())+" ";
 	    }
 	}
 	
 	else{
 	    int start = configureline.indexOf(entry);
 	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
+                String endline=" ";
+                int end=-1;
+                if(configureline.charAt(start+entry.length())=='\'')
+                {
+                    endline="'";
+                    end = configureline.indexOf(endline,  start+1);
+                    end = configureline.indexOf(endline,  end+1)+1;//for space
+                }
+                else
+       		    end = configureline.indexOf(endline,  start+1);
 		if(end==-1){
 		    configureline = configureline.substring(0, start);
 		} else{
@@ -5559,14 +5596,23 @@ String entry=" -nocomm ";
 	if(altmpiCheckBox.isSelected()){
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
-		configureline+=altmpiTextField.getText()+" ";
+		configureline+=multiArg(altmpiTextField.getText())+" ";
 	    }
 	}
 	
 	else{
 	    int start = configureline.indexOf(entry);
 	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
+                String endline=" ";
+                int end=-1;
+                if(configureline.charAt(start+entry.length())=='\'')
+                {
+                    endline="'";
+                    end = configureline.indexOf(endline,  start+1);
+                    end = configureline.indexOf(endline,  end+1)+1;//for space
+                }
+                else
+       		    end = configureline.indexOf(endline,  start+1);
 		if(end==-1){
 		    configureline = configureline.substring(0, start);
 		} else{
@@ -6386,7 +6432,16 @@ if(pclCheckBox.isSelected()){
         cbholder.add(opariregionCheckBox);
         cbholder.add(papiCheckBox);
         cbholder.add(papivirtCheckBox);
+        
+        cbholder.add(perflibCheckBox);
+        cbholder.add(perfincCheckBox);
+        cbholder.add(altperfCheckBox);
+        
         //Set up the mapping between commands and checkboxes
+        commap.put(" -perflibrary",altperfCheckBox);
+        commap.put(" -perflib",perflibCheckBox);
+        commap.put(" -perfinc",perfincCheckBox);
+        
         commap.put(" -mpilibrary=",altmpiCheckBox);
         commap.put(" -shmemlibrary=",altshmemCheckBox);
         commap.put(" -exec-prefix=",archdirCheckBox);
@@ -6596,6 +6651,15 @@ if(pclCheckBox.isSelected()){
             //System.out.println((String)(confs.get(confs.size()-1)));
             bw.close();
         }catch(IOException e){e.printStackTrace();}
+    }
+    
+    private String multiArg(String argument)
+    {
+        if(argument.indexOf(" ")>-1)
+        {
+            argument="'"+argument+"'";
+        }    
+        return argument;
     }
     
 /*    private void getSavedConfs(){
