@@ -2222,7 +2222,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  vector<itemRef *>::iterator institer = it; 	
 		  while ((*institer) && (*institer)->line == (*it)->line)
                   {
-                    if ((*institer)->item) 
+                    if ((*institer)->item && (*institer)->kind== BODY_BEGIN) 
 		    {
                       rid = ((pdbRoutine *)(*institer)->item)->id();
 #ifdef DEBUG
@@ -2726,8 +2726,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.125 $   $Date: 2006/11/09 23:35:00 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.125 2006/11/09 23:35:00 sameer Exp $
+ * $Revision: 1.126 $   $Date: 2006/11/10 03:00:32 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.126 2006/11/10 03:00:32 sameer Exp $
  ***************************************************************************/
 
 
