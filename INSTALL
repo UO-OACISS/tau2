@@ -32,7 +32,8 @@ Microsoft Windows users should refer to instructions in README.WINDOWS.txt.
 
 The following instructions are meant for Unix Users.
 
-1.  Configure the package for your system.
+1.  Configure the package for your system. We strongly urge you to see the section
+"1) INSTALLING TAU" below for examples (Linux clusters, AIX, BGL, XT3)
 
 After uncompressing and untarring tau, the user needs to configure, compile and
 install the package. This is done by invoking:
@@ -586,15 +587,18 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    
    Lists all the available configure options and quits. 
 
-   Examples:
--------------
-1) To configure TAU for Linux clusters, first determine if MPI depends upon some
-other package such MPICH over GM. If so, please locate the path to the library. To 
-instrument Fortran/C/C++ code using say, Intel compilers and MPI. Then, install
-PDT [Ref: http://www.cs.uoregon.edu/research/pdt] for automatic source instrumentation.
+-----------------
+1) INSTALLING TAU
+-----------------
+
+i) To configure TAU for Linux clusters, first determine if your MPI depends upon some
+other package such MPICH over GM. If so, please locate the path to the other library. To 
+instrument Fortran/C/C++ code using say, Intel compilers and MPI you may install
+PDT [Ref: http://www.cs.uoregon.edu/research/pdt] for automatic source instrumentation, and 
+then install TAU. 
 
    If your MPICH resides in /usr/local/mpich-1.2.7 and it depends upon /opt/gm, you 
-may consider configuring TAU with:
+   may consider configuring TAU with:
    % configure -pdt=<dir> -c++=icpc -cc=icc -fortran=intel -mpiinc=/usr/local/mpich-1.2.7/include
      -mpilib=/usr/local/mpich-1.2.7/lib -mpilibrary='-lmpich -L/opt/gm/lib -lgm -lpthread -ldl'
    % make clean install
@@ -602,28 +606,33 @@ may consider configuring TAU with:
    To identify the dependencies of mpich, see mpif90 -v <file.f90> and identify the 
    libraries utilized to link in the application. 
 
-2) To configure TAU with PAPI, we strongly recommend using the -MULTIPLECOUNTERS option.
+ii) To configure TAU with PAPI, we strongly recommend using the -MULTIPLECOUNTERS option.
    % configure -papi=<dir> -MULTIPLECOUNTERS -c++=icpc -cc=icc -fortran=intel 
      -mpiinc=<dir> -mpilib=<dir>
    % make clean install
    and set COUNTER[1-25] environment variables while running the instrumented code.
 
-3) To configure TAU under AIX, we strongly recommend using the -mpi option rather than
+iii) To configure TAU under AIX, we strongly recommend using the -mpi option rather than
    manually specifying the mpi include and library directories.
    % configure -pdt=<dir> -mpi ; make clean install
    for rs6000 or 32 bits, and
    % configure -pdt=<dir> -arch=ibm64 -mpi ; make clean install
    for 64 bits. 
 
-4) To configure TAU for Cray XT3 or IBM BGL,
+iv) To configure TAU for Cray XT3 or IBM BGL,
 
+   First configure PDT using % configure -XLC -exec-prefix=bgl; make clean install
+   on BGL. On XT3 you will need to configure PDT using:
+   % configure -GNU -exec-prefix=xt3; make clean install
+
+   Then, configure TAU using:
    % configure -arch=bgl -mpi -pdt=<dir> -pdt_c++=xlC 
 	configures TAU with MPI and PDT on BGL. Use -arch=xt3 -pdt_c++=g++ on
 	Cray XT3. Then configure for the frontend using % ./configure 
 	This creates a backend library directory <taudir>/[bgl,xt3]/lib and a front-end 
         directory <taudir>/[rs6000,x86_64]/bin which should be put in your PATH. 
 
-5) To configure TAU for SGI Altix system, you may use
+v) To configure TAU for SGI Altix system, you may use
    % ./configure -c++=icpc  -cc=icc -fortran=intel -mpi ...
    Use TAU with Intel C++ compiler and use the MPI library in /usr/include and /usr/lib. 
  
@@ -983,3 +992,5 @@ III) Software Requirements :
      % setenv OMP_NUM_THREADS 2
      % mandel
      % pprof
+
+If you have any questions, please contact us at tau-bugs@cs.uoregon.edu. 
