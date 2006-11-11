@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.cs.uoregon.edu/research/tau             **
 *****************************************************************************
-**    Copyright 1997-2005				   	   	   **
+**    Copyright 1997-2007				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.15                          *
+ *                           Version 2.16                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -116,6 +116,9 @@ Usage: configure [OPTIONS]
 -pythoninc=<dir> ........ Specify location of Python include directory.
 -pythonlib=<dir> ............ Specify location of Python lib directory.
 -tag=<unique name> ........ Specify a tag to identify the installation.
+-perfinc=<dir> ............. Specify a Perflib[LANL] include directory.
+-perflib=<dir> ................. Specify a Perflib[LANL] lib directory.
+-perflibrary=<library> ... Specify a different perflib runtime library.
 -ktau ........................................... Kernel TAU Profiling.
 -ktau_merge ........................ Kernel TAU Profiling with merging.
                                                     user-space profile.
@@ -146,6 +149,7 @@ Usage: configure [OPTIONS]
 -JAVACPUTIME ...................... Use JVMPI thread specific cpu time.
 -PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi.
 -PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation.
+-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling.
 -noex .................. Use no exceptions while compiling the library.
 -help ...................................... display this help message.
 ***********************************************************************
@@ -312,6 +316,13 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    formerly known as vampir, a commercial trace visualization tool developed
    by TU. Dresden, Germany. 
 
+-otf=<directory>
+   Specifies the location of the OTF trace generation package. TAU's binary 
+   traces can be converted to the Open Trace format (OTF) using tau2otf, a 
+   tool that links with the OTF library. OTF traces are hierarchical (multi-stream), 
+   compact, support online compression, and can be read concurrently by a parallel trace
+   analysis tool such as VNG [ Ref: http://www.vampir-ng.de, http://www.paratools.com/otf].
+
 -slog2=<directory>
    Specifies the location of the SLOG2 SDK trace generation package. TAU's
    binary traces can be converted to the SLOG2 format using tau2slog2, a tool
@@ -369,6 +380,15 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    Allows the user to turn off tracking of messages (synchronous/asynchronous) in
    TAU's MPI wrapper interposition library. Entry and exit events for MPI routines 
    are still tracked. Affects both profiling and tracing.
+
+-perfinc=<dir>
+-perflib=<dir>
+-perflibrary=<library>
+   Specifies the use of the LANL Perflib packages for measurement. Perflib data
+   is generated when environment variables perf_trace, perf_mpitrace are set. It
+   also builds perf2tau, a tool that translates perflib data to the TAU profile 
+   format. The -perflibrary option allows you to alter the name of the perflib 
+   measurement library that is used. By default, we use -lperfrt -lpapi. 
    
 -epilog=<dir>
    
@@ -541,7 +561,7 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    the process that executed it. Traces can be merged, converted and time-
    corrected using tau_merge, tau_convert and tau_timecorrect utilities 
    respectively, and visualized using Vampir, a commercial trace visualization 
-   tool. [ Ref http://www.pallas.de ]
+   tool. [ Ref http://www.vampir-ng.de, www.paratools.com/otf ]
 
 -muse
   
@@ -567,36 +587,48 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    Lists all the available configure options and quits. 
 
    Examples:
+-------------
+1) To configure TAU for Linux clusters, first determine if MPI depends upon some
+other package such MPICH over GM. If so, please locate the path to the library. To 
+instrument Fortran/C/C++ code using say, Intel compilers and MPI. Then, install
+PDT [Ref: http://www.cs.uoregon.edu/research/pdt] for automatic source instrumentation.
+
+   If your MPICH resides in /usr/local/mpich-1.2.7 and it depends upon /opt/gm, you 
+may consider configuring TAU with:
+   % configure -pdt=<dir> -c++=icpc -cc=icc -fortran=intel -mpiinc=/usr/local/mpich-1.2.7/include
+     -mpilib=/usr/local/mpich-1.2.7/lib -mpilibrary='-lmpich -L/opt/gm/lib -lgm -lpthread -ldl'
+   % make clean install
+
+   To identify the dependencies of mpich, see mpif90 -v <file.f90> and identify the 
+   libraries utilized to link in the application. 
+
+2) To configure TAU with PAPI, we strongly recommend using the -MULTIPLECOUNTERS option.
+   % configure -papi=<dir> -MULTIPLECOUNTERS -c++=icpc -cc=icc -fortran=intel 
+     -mpiinc=<dir> -mpilib=<dir>
+   % make clean install
+   and set COUNTER[1-25] environment variables while running the instrumented code.
+
+3) To configure TAU under AIX, we strongly recommend using the -mpi option rather than
+   manually specifying the mpi include and library directories.
+   % configure -pdt=<dir> -mpi ; make clean install
+   for rs6000 or 32 bits, and
+   % configure -pdt=<dir> -arch=ibm64 -mpi ; make clean install
+   for 64 bits. 
+
+4) To configure TAU for Cray XT3 or IBM BGL,
 
    % configure -arch=bgl -mpi -pdt=<dir> -pdt_c++=xlC 
 	configures TAU with MPI and PDT on BGL. Use -arch=xt3 -pdt_c++=g++ on
 	Cray XT3. Then configure for the frontend using % ./configure 
+	This creates a backend library directory <taudir>/[bgl,xt3]/lib and a front-end 
+        directory <taudir>/[rs6000,x86_64]/bin which should be put in your PATH. 
 
-   % ./configure -c++=KCC 
-   Use TAU with KCC
+5) To configure TAU for SGI Altix system, you may use
+   % ./configure -c++=icpc  -cc=icc -fortran=intel -mpi ...
+   Use TAU with Intel C++ compiler and use the MPI library in /usr/include and /usr/lib. 
  
-   % ./configure -c++=CC -useropt='-g -I/local/apps/STL/'
-   Use TAU with SGI CC and add the above user defined options to the 
-   commandline.
-
    % ./configure -TRACE -PROFILE 
    Enable both profiling and tracing.
-
-   % ./configure -c++=KCC -SGITIMERS -tulipthread=/home/smarts/build/smarts-1.0
-     -smarts -arch=sgin32 -prefix=/usr/local/packages/tau
-   Use TAU with KCC and fast nanosecond timers on SGI and use SMARTS with -n32
-   options and install the files in /usr/local/packages/tau
-
-   % ./configure -c++=KCC -cc=cc -arch=sgi64 -mpiinc=/local/apps/mpich/include
-     -mpilib=/local/apps/mpich/lib/IRIX64/ch_p4 -SGITIMERS -pdt=/local/apps/pdt
-   Use TAU with KCC, and cc on 64 bit SGI systems and use MPI wrapper libraries
-   with SGI's low cost timers and use PDT for automated source code 
-   instrumentation.
-
-   % ./configure -c++=guidec++ -cc=guidec -papi=/usr/local/packages/papi -openmp
-     -mpiinc=/usr/packages/mpich/include -mpilib=/usr/packages/mpich/lib
-   Use OpenMP+MPI using KAI's Guide compiler suite and use PAPI for accessing
-   hardware performance counters for measurements.
 
 ***********************************************************************
    To install *multiple* (typical) configurations of TAU at a site, you may use the 
@@ -604,6 +636,7 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    invokes ./configure <opts>; make clean install;  to create multiple libraries that 
    may be requested by the users at a site. 
    % installtau -help
+
 
 TAU Configuration Utility 
 ***********************************************************************
@@ -625,6 +658,9 @@ Usage: installtau [OPTIONS]
 -mpiinc=<mpiincdir>  
 -mpilib=<mpilibdir>  
 -mpilibrary=<mpilibrary>  
+-perfinc=<dir> 
+-perflib=<dir> 
+-perflibrary=<library> 
 -mpi
 -tag=<unique name> 
 -nocomm
@@ -633,7 +669,6 @@ Usage: installtau [OPTIONS]
 -prefix=<dir>  
 -exec-prefix=<dir>  
 ***********************************************************************
-
 
 2. Compilation.
 
@@ -647,38 +682,52 @@ Usage: installtau [OPTIONS]
    Add to your .cshrc file the $(TAU_ARCH)/bin subdirectory.
    e.g.,
    # in .cshrc file
-   set path=($path /usr/local/packages/tau/sgi64/bin)
+   set path=($path /usr/local/packages/tau/x86_64/bin)
 
    See the examples included with this distribution in the examples/ directory.
    The README file in examples directory describes the examples. 
 
 3. Instrumentation.
+
+   TAU provides compilation scripts tau_f90.sh, tau_cc.sh and tau_cxx.sh. You may
+   use these scripts to automatically instrument your application if you have 
+   specified the use of -pdt=<dir> while configuring TAU. PDT provides source
+   code analysis for TAU to automatically insert TAU calls in a copy of the application
+   source code. These scripts also link in the TAU libraries. To use this approach,
+   simply set the TAU_MAKEFILE environment variable to point to the TAU stub
+   makefile that is created in the <arch>/lib directory corresponding to the measurement
+   option chosen. For instance, On AIX, when you configure TAU with:
+   % configure -pdt=<dir> -mpi -arch=ibm64; make clean install
+   % setenv TAU_MAKEFILE <taudir>/ibm64/lib/Makefile.tau-mpi-pdt
+   % tau_f90.sh -c app.f90 ; tau_f90.sh app.o -o app
+   % tau_cxx.sh foo.cpp -o foo
+   These scripts act similar to the MPI scripts (mpif90, mpxlf90_r, etc.) that internally
+   invoke the compiler that TAU was configured with. 
+
+   Instrumentation can be controlled by passing options to the TAU compiler. See:
+   tau_compiler.sh -help for a complete listing of options and see section 8 below. 
+
    JAVA requires no special instrumentation. To use TAU with JAVA, the 
    LD_LIBRARY_PATH environment variable must have the TAU <arch>/lib directory
    in its path. See README.JAVA on instructions regarding its usage.
-   For other languages such as C++, C, and Fortran 90, TAU instrumentation in 
-   the form of macros or routines must be added  to the source code to 
-   identify routine transitions. It can be done automatically using the C++ 
-   instrumentor - tau_instrumentor,  based on the Program Database Toolkit, or 
-   manually using the instrumentation API (Application Programmers Interface). 
-   The API is explained in detail in the documentation available at
-   http://www.cs.uoregon.edu/research/tau download page and can be 
-   seen in the examples directory. This process involves identifying 
-   functions and associating each function with one or more TAU profile 
-   groups. This enables selectively profiling groups of functions. By 
-   default all instrumented functions that are invoked are profiled.
    
-   % cd examples/instrument
-   % ./simple
+   % cd examples/taucompiler/f90; make
+   % mpirun -np 4 ./ring
    % pprof
    % paraprof
 
    To use tau_instrumentor, the C++ source code instrumentor: 
    a. Install pdtoolkit. [ Ref: http://www.cs.uoregon.edu/research/pdt ]
-      % ./configure -arch=IRIX64 -KCC
+      % ./configure -arch=ibm64 -XLC
+      % ./configure -XLC -exec-prefix=bgl
+      % ./configure -GNU -exec-prefix=xt3
+      % ./configure -ICPC
+
+      are commonly used values for AIX 64 bits, IBM BGL, Cray XT3 and Intel/AMD
+      Linux clusters. 
 
    b. Install TAU using the -pdt configuration option.
-      % ./configure -pdt=/usr/local/packages/pdtoolkit-1.0 -c++=KCC -arch=sgi64 
+      % ./configure -pdt=/usr/local/packages/pdtoolkit-3.9 -c++=icpc -cc=icc ...
 
    c. Modify the makefile to invoke tau_cxx.sh as the compiler. It generates a 
       program database file (.pdb) that contains program  entities (such as 
@@ -779,21 +828,20 @@ Usage: installtau [OPTIONS]
 7. TAU System Requirements :
    -------------------------
 I) The Profiling Library needs a recent C++ compiler. Our recommended list:
-	a) Kuck and Associates' (http://www.kai.com) KCC compiler
-	b) KAI's KAP/Pro (http://www.kai.com) OpenMP guidec++ compiler
-	c) SGI (http://www.sgi.com) MipsPro 7.2+ CC compiler 
-	d) PGI (http://www.pgroup.com) 3.0 pgCC compiler for Linux
-	e) GNU (http://www.gnu.org) gcc-2.95 g++ compiler
-	f) IBM (http://www.ibm.com) xlC C++ compiler for IBM SP
-        g) SUN (http://www.sun.com) Sun CC 5.0+ compiler
-        h) HP (http://www.hp.com) Tru64 cxx 6.x compiler  
-	i) HP (http://www.hp.com) aCC compiler 
-        j) Intel (http://www.intel.com) Intel 7.1, 8.x compilers. 
+	a) GNU (http://www.gnu.org) g++ compiler
+        b) Intel (http://www.intel.com) Intel compilers.
+	c) IBM (http://www.ibm.com) xlC C++ compiler for IBM SP
+	d) PGI (http://www.pgroup.com) pgCC compiler for Linux
+	e) SGI (http://www.sgi.com) MipsPro IRIX CC compiler 
+        f) SUN (http://www.sun.com) Sun CC compiler
+        g) HP (http://www.hp.com) Tru64 cxx compiler  
+	h) HP (http://www.hp.com) aCC compiler 
  
 II) Platforms :
    TAU has been tested on 
-	a) SGI IRIX 6.5 systems (Origin 2000) with KCC, CC, g++, guidec++.
-	b) LINUX x86 PC clusters with 
+	a) IBM AIX, Linux, BGL systems
+	b) Cray XT3, XD1, X1E, SV1, T3E systems
+	c) LINUX x86 PC clusters with 
 		i) 	KAI KCC compiler, 
 		ii) 	GNU g++/egcs compiler,
 		iii)	PGI pgCC, pgcc, pgf90 compiler suite,
@@ -803,23 +851,16 @@ II) Platforms :
                 vii)    NAGWare F90 compilers.
                 viii)   Leahy F90 compilers.
                 ix)     Absoft F90 compilers.
-	c) Sun Solaris2 with g++, KCC. 
-	d) HP PA-RISC systems running HP-UX with g++, and aCC. 
-	e) Cray T3E with Cray C++ compiler, and KAI KCC.
-	f) HP Tru64 Alpha with g++, cxx.
-        g) HP Alpha Linux clusters with g++.
-	i) Microsoft Windows. Tested with MS Visual C++ v6.0.
-	j) IBM SP AIX (RS6000) systems with KCC, and xlC compilers.
-	k) PowerPC Linux (Power4, Blue Gene/L) with g++ and xlC based compilers.
-	l) IA-64 Linux with g++, SGI Pro64 and Intel C++/C/F90 compilers.
-	m) Apple OS X (Darwin) with c++, IBM xlC, and xlf compilers.
-	n) Hitachi SR8000 with KCC, g++, Hitachi cc and f90 compilers. 
-        o) NEC SX-5 system with NEC c++, cc, and f90 compilers.
-        p) Cray SV-1 with Cray Compilers.
-        q) Cray X1 with Cray compilers.
-        r) AMD Opteron (Cray RedStorm) and IA-64 Linux systems with GNU compilers.
-        s) Cray XT3 with PGI compilers.
-	t) Sun Opteron Solaris with Sun CC compilers. 
+	d) Sun Solaris2 with g++, KCC. 
+	e) Microsoft Windows. Tested with MS Visual C++ v6.0.
+	f) Apple OS X ppc64, x86 with GNU, Absoft, IBM xlC, and xlf compilers.
+	g) HP PA-RISC systems running HP-UX with g++, and aCC. 
+	h) HP Tru64 Alpha with g++, cxx.
+        i) HP Alpha Linux clusters with g++.
+	j) EM64T, x86_64, IA-64 Linux with g++, PGI, Intel C++/C/F90 compilers.
+	k) Hitachi SR8000 with KCC, g++, Hitachi cc and f90 compilers. 
+        l) NEC SX-5 system with NEC c++, cc, and f90 compilers.
+	m) Sun Opteron Solaris with Sun CC compilers. 
 	   
 
    TAU may work with minor modifications on other platforms.
@@ -879,7 +920,7 @@ III) Software Requirements :
      Example II:
      Profiling an MPI program using the TAU MPI wrapper library.
      
-     % configure -mpiinc=/usr/lpp/ppe.poe/include -mpilib=/usr/lpp/ppe.poe/lib
+     % configure -mpi
      % make clean; make install
      % cd examples/pi
      % make 
@@ -889,23 +930,21 @@ III) Software Requirements :
        all MPI routines as well.
      
      Example III:
-     Profiling an application written in C++ (compiled with KCC) using automatic 
+     Profiling an application written in C++ (compiled with icpc) using automatic 
      source code instrumentation and using CPU time instead of (the default) 
      wallclock time.
-     [ For KCC you'll need % module load KCC]
      Download PDT (Program Database Toolkit) from http://www.cs.uoregon.edu/research/pdtoolkit ]
      
-     % cd pdtoolkit-1.x
-     % configure 
-     % make ; make install
-       This takes a while...
+     % cd pdtoolkit-<x>
+     % configure  -XLC -prefix=/usr/local/pdt
+     % make clean install
      
      Next configure TAU to use PDT for automatic source code instrumentation.
      % cd tau-2.x
-     % configure -c++=KCC -cc=cc -pdt=<pdtoolkit-1.x root directory> -CPUTIME
-     		e.g.,   ... -pdt=/u1/sameer/pdtoolkit-1.3 ...
+     % configure -c++=icpc -cc=icc -pdt=<pdtoolkit root directory> -CPUTIME
+     		e.g.,   ... -pdt=/usr/local/pdt ...
      % make clean; make install
-     % cd examples/autoinstrument
+     % cd examples/taucompiler/c++
      % make 
        This takes klargest.cpp, an uninstrumented file, parses it (PDT), and 
        invokes tau_instrumentor, which takes the PDT output and generates an 
@@ -916,31 +955,31 @@ III) Software Requirements :
      % paraprof
      
      Example IV:
-     Tracing an MPI program (compiled with KCC) and displaying the traces in 
-     Vampir.
+     Tracing an MPI program (compiled with xlC) and displaying the traces in 
+     Vampir or VNG using Open Trace Format (OTF).
      
-     % configure -c++=KCC -cc=cc -mpiinc=/usr/lpp/ppe.poe/include 
-       	  -mpilib=/usr/lpp/ppe.poe/lib -TRACE
+     % configure -c++=xlC -cc=xlc -fortran=ibm -mpi -otf=/usr/local/otf-1.2.6
+	-TRACE
      % make clean; make install
-     % cd examples/pi
-     % make CXX=mpKCC
-     % poe cpi -procs 4 -rmpool 2 2000
-       Calculate the value of pi using 2000 iterations. 
+     % cd examples/taucompiler/f90
+     % make 
+     % poe ./ring -procs 128 
      
-     % tau_merge tautrace.*.trc cpi.trc
-     % tau_convert -vampir cpi.trc tau.edf cpi.pv
+     % tau_treemerge.pl
+     % tau2otf tau.trc tau.edf app.otf -z -n 8
+	creates a compressed OTF trace (-z) with 8 parallel streams (-n 8). The
+        main OTF file is called app.otf.  
      
-     % vampir cpi.pv 
+     % vampir app.otf
      
      In the Menu, choose Preferences -> Color Styles -> Activities and choose a 
      distinct color for each activity. 
      
      Example V:
-     Profiling an OpenMPI (OpenMP + MPI) C program using xlC.
-     % configure -openmp -mpiinc=/usr/lpp/ppe.poe/include 
-         -mpilib=/usr/lpp/ppe.poe/lib  
-     % cd examples/openmpi
-     % make CXX=mpCC_r CC=mpcc_r
+     Profiling an OpenMP F90 program using IBM
+     % configure -c++=xlC -cc=xlc -fortran=ibm -mpi -opari=<dir> -pdt=<dir> -opari=<dir>
+     % cd examples/taucompiler/opari_f90
+     % make 
      % setenv OMP_NUM_THREADS 2
-     % poe stommel -procs 2 -rmpool 2 
+     % mandel
      % pprof
