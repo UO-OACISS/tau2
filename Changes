@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://www.cs.uoregon.edu/research/paracomp/tau    **
 *****************************************************************************
-**    Copyright 1997-2004						   **
+**    Copyright 1997-2007						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
@@ -16,6 +16,9 @@ Version 2.16 changes (from 2.15):
 4. Added support for a source browser in ParaProf.
 5. Added support for generating source code information in tau_instrumentor.
 6. Added support for Perflib based instrumentation and perf2tau [Jeff Brown, LANL]. 
+7. Updated KTAU support in TAU for registering fork for kernel profiling [ANL]. 
+8. Added tau_validate tool for checking if the TAU library is built correctly [UTK].
+9. Added support for loading multiple ppk files in paraprof on the commandline [ORNL]. 
 
 
 
