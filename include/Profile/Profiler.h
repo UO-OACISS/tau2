@@ -32,7 +32,7 @@
 #pragma warning( disable : 4786 )
 #endif /* TAU_WINDOWS */
 
-#ifndef TAU_LIBRARY_SOURCE
+#if (!defined(TAU_LIBRARY_SOURCE) && !defined(TAU_WINDOWS))
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -309,6 +309,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.71 $   $Date: 2006/07/08 01:09:07 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.71 2006/07/08 01:09:07 amorris Exp $ 
+ * $Revision: 1.72 $   $Date: 2006/11/11 16:47:42 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.72 2006/11/11 16:47:42 amorris Exp $ 
  ***************************************************************************/

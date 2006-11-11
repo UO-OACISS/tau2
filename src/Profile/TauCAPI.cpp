@@ -36,10 +36,11 @@ using namespace std;
 #include <stdio.h>
 #include <stdlib.h>
 
+#if (!defined(TAU_WINDOWS)) 
 /* Needed for fork */
 #include <sys/types.h>
 #include <unistd.h>
-
+#endif /* TAU_WINDOWS */
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -742,7 +743,7 @@ extern "C" void Tau_pure_stop(char *name) {
   Tau_stop_timer(fi);
 }
 
-
+#if (!defined(TAU_WINDOWS))
 extern "C" pid_t tau_fork() {
   pid_t pid;
 
@@ -759,11 +760,11 @@ extern "C" pid_t tau_fork() {
 
   return pid;
 }
-
+#endif /* TAU_WINDOWS */
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.59 $   $Date: 2006/07/08 01:09:07 $
- * VERSION: $Id: TauCAPI.cpp,v 1.59 2006/07/08 01:09:07 amorris Exp $
+ * $Revision: 1.60 $   $Date: 2006/11/11 16:48:15 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.60 2006/11/11 16:48:15 amorris Exp $
  ***************************************************************************/
 
