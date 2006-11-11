@@ -1,7 +1,7 @@
 /******************************************************************* 
  *                                                                 *
  *       	Tuning and Analysis Utilities Credits  		   *
- *                           Version 2.15                          *
+ *                           Version 2.16                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -11,7 +11,7 @@
  *        web browser.                                             *
  *    For more information, including updates and new releases,    *
  *        and documentation, see                                   *
- *        http://www.cs.uoregon.edu/research/paracomp/tau          *
+ *        http://www.cs.uoregon.edu/research/tau                   *
  *    For help, reporting bugs, and making suggestions, please     *
  *        send e-mail to tau-bugs@cs.uoregon.edu                   *
  *******************************************************************/
@@ -44,12 +44,12 @@ Prof. Allen Malony, University of Oregon
 Thanks to: 
 ----------
 Brian Miller
+Craig Rasmussen
 Bronis R. de Supinski
 Janice Cuny
-Susan Post
-Rod Oldehoeft
 Matt Sottile
-Craig Rasmussen
+Jeff Brown
+Rod Oldehoeft
 Todd Veldhuizen
 Suvas Vajracharya
 Lars Hansen
@@ -62,6 +62,7 @@ John Reynders
 Scott Haney
 James Crotinger
 Timothy Williams
+Susan Post
 Anthony Chan
 David Skinner
 Rolf Rabenseifner
