@@ -6,27 +6,40 @@
  */
 package edu.uoregon.tau.vis;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 
-import javax.swing.*;
+import javax.media.opengl.GL;
+import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GLAutoDrawable;
+import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import net.java.games.jogl.GL;
-import net.java.games.jogl.GLDrawable;
-import net.java.games.jogl.util.GLUT;
+import com.sun.opengl.util.GLUT;
+
+
+
+
 
 /**
  * Draws a 3d bar plot.
  *
- * <P>CVS $Id: BarPlot.java,v 1.3 2006/09/01 20:18:07 amorris Exp $</P>
+ * <P>CVS $Id: BarPlot.java,v 1.4 2006/11/16 17:50:36 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class BarPlot implements Plot {
 
@@ -381,7 +394,7 @@ public class BarPlot implements Plot {
         }
     }
 
-    private void renderOpaque(GLDrawable glDrawable) {
+    private void renderOpaque(GLAutoDrawable glDrawable) {
         GL gl = glDrawable.getGL();
 
         if (dirty || displayLists == null) {
@@ -530,7 +543,7 @@ public class BarPlot implements Plot {
 
     }
 
-    private void renderTranslucent(GLDrawable glDrawable, Vec direction) {
+    private void renderTranslucent(GLAutoDrawable glDrawable, Vec direction) {
         GL gl = glDrawable.getGL();
         gl.glEnable(GL.GL_DEPTH_TEST);
 
@@ -561,7 +574,7 @@ public class BarPlot implements Plot {
     }
 
     public void render(VisRenderer visRenderer) {
-        GLDrawable glDrawable = visRenderer.getGLDrawable();
+        GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
         Vec direction = visRenderer.getViewDirection();
 
         axes.render(visRenderer);

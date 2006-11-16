@@ -6,18 +6,30 @@
  */
 package edu.uoregon.tau.vis;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Observable;
+import java.util.StringTokenizer;
 
-import javax.swing.*;
+import javax.media.opengl.GL;
+import javax.media.opengl.GLAutoDrawable;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import net.java.games.jogl.GL;
-import net.java.games.jogl.GLDrawable;
-import net.java.games.jogl.util.GLUT;
+import com.sun.opengl.util.GLUT;
 
 /**
  * Draws a colorscale and also provides services to other vis components.
@@ -26,9 +38,9 @@ import net.java.games.jogl.util.GLUT;
  * allowing them to query values (0..1) and get colors in the current
  * color set. 
  *    
- * <P>CVS $Id: ColorScale.java,v 1.6 2006/09/01 20:18:07 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.7 2006/11/16 17:50:36 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  */
 
 /* TODO: Provide control over font size perhaps? */
@@ -329,7 +341,7 @@ public class ColorScale extends Observable implements Shape {
             // Render The Text
             for (int c = 0; c < line.length(); c++) {
                 char ch = line.charAt(c);
-                glut.glutStrokeCharacter(gl, font, ch);
+                glut.glutStrokeCharacter(font, ch);
             }
 
             gl.glPopMatrix();
@@ -347,7 +359,7 @@ public class ColorScale extends Observable implements Shape {
      * @param visRenderer the associated control panel
      */
     public void render(VisRenderer visRenderer) {
-        GLDrawable glDrawable = visRenderer.getGLDrawable();
+        GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
 
         // If the reverse video setting has changed, we must redraw
         if (oldReverseVideo != visRenderer.getReverseVideo()) {
@@ -366,8 +378,8 @@ public class ColorScale extends Observable implements Shape {
         }
 
         
-        int width = (int) glDrawable.getSize().getWidth();
-        int height = (int) glDrawable.getSize().getHeight();
+        int width = (int) glDrawable.getWidth();
+        int height = (int) glDrawable.getHeight();
         if (width != oldWidth || height != oldHeight) {
             dirty = true;
             oldWidth = width;
@@ -390,14 +402,14 @@ public class ColorScale extends Observable implements Shape {
     }
 
     private void privateRender(VisRenderer visRenderer) {
-        GLDrawable glDrawable = visRenderer.getGLDrawable();
+        GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
 
         GL gl = glDrawable.getGL();
         if (enabled == false)
             return;
 
-        int glWidth = (int) glDrawable.getSize().getWidth();
-        int glHeight = (int) glDrawable.getSize().getHeight();
+        int glWidth = (int) glDrawable.getWidth();
+        int glHeight = (int) glDrawable.getHeight();
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPushMatrix();
         gl.glLoadIdentity();

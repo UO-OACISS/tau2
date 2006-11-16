@@ -6,15 +6,14 @@
  */
 package edu.uoregon.tau.vis;
 
-import net.java.games.jogl.*;
 
 
 /**
  * This interface is implemented by anything that the visRenderer draws.
  *    
- * <P>CVS $Id: Shape.java,v 1.3 2006/09/01 20:18:08 amorris Exp $</P>
+ * <P>CVS $Id: Shape.java,v 1.4 2006/11/16 17:50:36 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public interface Shape {
 

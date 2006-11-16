@@ -6,23 +6,32 @@
  */
 package edu.uoregon.tau.vis;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.Observable;
 
-import javax.swing.*;
+import javax.media.opengl.GL;
+import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.glu.GLU;
+import javax.media.opengl.glu.GLUquadric;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import net.java.games.jogl.*;
 
 /**
  * Draws a scatterplot along 4 axes
  *
  * @author Alan Morris
  *
- * <P>CVS $Id: ScatterPlot.java,v 1.4 2006/09/01 20:18:08 amorris Exp $</P>
+ * <P>CVS $Id: ScatterPlot.java,v 1.5 2006/11/16 17:50:36 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class ScatterPlot implements Plot {
 
@@ -210,10 +219,10 @@ public class ScatterPlot implements Plot {
     }
 
     public void render(VisRenderer visRenderer) {
-        GLDrawable glDrawable = visRenderer.getGLDrawable();
+        GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
         Vec direction = visRenderer.getViewDirection();
 
-//    public void render(GLDrawable glDrawable, Vec direction) {
+//    public void render(GLAutoDrawable glDrawable, Vec direction) {
         if (axes != null) {
             axes.render(visRenderer);
         }
@@ -265,12 +274,12 @@ public class ScatterPlot implements Plot {
         }
     }
 
-    private void privateRender(GLDrawable glDrawable) {
+    private void privateRender(GLAutoDrawable glDrawable) {
         if (values == null)
             return;
         
         GL gl = glDrawable.getGL();
-        GLU glu = glDrawable.getGLU();
+        GLU glu = new GLU();
 
         gl.glShadeModel(GL.GL_SMOOTH);
 

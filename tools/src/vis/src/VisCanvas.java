@@ -9,15 +9,18 @@ package edu.uoregon.tau.vis;
 import java.awt.Canvas;
 import java.awt.event.KeyListener;
 
-import net.java.games.jogl.*;
+import javax.media.opengl.GLCanvas;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLDrawableFactory;
+import javax.media.opengl.GLException;
 
 /**
  * This class is merely a wrapper over GLCanvas which allows users of the Vis
  * package to build against vis alone (not jogl). 
  *
- * <P>CVS $Id: VisCanvas.java,v 1.7 2006/11/01 01:50:33 amorris Exp $</P>
+ * <P>CVS $Id: VisCanvas.java,v 1.8 2006/11/16 17:50:36 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class VisCanvas {
 
@@ -39,13 +42,15 @@ public class VisCanvas {
         
         //glCapabilities.setHardwareAccelerated(true);
 
-        glCapabilities.setStereo(true);
-        try {
-            glCanvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
-        } catch (GLException gle) {
-            glCapabilities.setStereo(false);
-            glCanvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
-        }
+        glCanvas = new GLCanvas();
+        
+//        glCapabilities.setStereo(true);
+//        try {
+//            glCanvas = GLAutoDrawableFactory.getFactory().createGLCanvas(glCapabilities);
+//        } catch (GLException gle) {
+//            glCapabilities.setStereo(false);
+//            glCanvas = GLAutoDrawableFactory.getFactory().createGLCanvas(glCapabilities);
+//        }
         
         glCanvas.setSize(200, 200);
         glCanvas.addGLEventListener(visRenderer);

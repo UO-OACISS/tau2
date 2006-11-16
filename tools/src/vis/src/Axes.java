@@ -6,25 +6,34 @@
  */
 package edu.uoregon.tau.vis;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.swing.*;
+import javax.media.opengl.GL;
+import javax.media.opengl.GLAutoDrawable;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 
-import net.java.games.jogl.GL;
-import net.java.games.jogl.GLDrawable;
-import net.java.games.jogl.util.GLUT;
+import com.sun.opengl.util.GLUT;
 
 /**
  * Draws axes with labels.
  *
- * <P>CVS $Id: Axes.java,v 1.4 2006/09/01 20:18:07 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.5 2006/11/16 17:50:36 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class Axes implements Shape {
 
@@ -350,7 +359,7 @@ public class Axes implements Shape {
     }
 
     public void render(VisRenderer visRenderer) {
-        GLDrawable glDrawable = visRenderer.getGLDrawable();
+        GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
 
         // If the reverse video setting has changed, we must redraw
         if (oldReverseVideo != visRenderer.getReverseVideo()) {
@@ -435,7 +444,7 @@ public class Axes implements Shape {
     }
 
     private void drawGrid(VisRenderer visRenderer, int numx, int numy, float xSize, float ySize, int xLabelSkip, int yLabelSkip) {
-        GL gl = visRenderer.getGLDrawable().getGL();
+        GL gl = visRenderer.getGLAutoDrawable().getGL();
         applyMinorColor(visRenderer);
 
         gl.glBegin(GL.GL_LINES);
@@ -481,7 +490,7 @@ public class Axes implements Shape {
         if (!enabled)
             return;
 
-        GL gl = visRenderer.getGLDrawable().getGL();
+        GL gl = visRenderer.getGLAutoDrawable().getGL();
 
         // don't highlight on if they're not both on
         if (selectedRow < 0 || selectedCol < 0) {
@@ -640,7 +649,7 @@ public class Axes implements Shape {
             boolean leftJustified, int selected) {
         // Draw the strings for an axis
 
-        GL gl = visRenderer.getGLDrawable().getGL();
+        GL gl = visRenderer.getGLAutoDrawable().getGL();
         double maxPoint = 0;
 
         applyTextColor(visRenderer);
@@ -687,7 +696,7 @@ public class Axes implements Shape {
                 // Render The Text
                 for (int c = 0; c < string.length(); c++) {
                     char ch = string.charAt(c);
-                    glut.glutStrokeCharacter(gl, font, ch);
+                    glut.glutStrokeCharacter(font, ch);
                 }
                 gl.glPopMatrix();
             } else {
@@ -731,7 +740,7 @@ public class Axes implements Shape {
                 // Render The Text
                 for (int c = 0; c < line.length(); c++) {
                     char ch = line.charAt(c);
-                    glut.glutStrokeCharacter(gl, font, ch);
+                    glut.glutStrokeCharacter(font, ch);
                 }
 
                 gl.glTranslatef(-width / 2, 0, 0);
@@ -753,7 +762,7 @@ public class Axes implements Shape {
                 // Render The Text
                 for (int c = 0; c < line.length(); c++) {
                     char ch = line.charAt(c);
-                    glut.glutStrokeCharacter(gl, font, ch);
+                    glut.glutStrokeCharacter(font, ch);
                 }
 
                 gl.glTranslatef(-width / 2, 0, 0);
@@ -775,7 +784,7 @@ public class Axes implements Shape {
         // Render The Text
         for (int i = 0; i < string.length(); i++) {
             char c = string.charAt(i);
-            glut.glutStrokeCharacter(gl, font, c);
+            glut.glutStrokeCharacter(font, c);
         }
     }
 

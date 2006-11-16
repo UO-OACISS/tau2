@@ -6,15 +6,19 @@
  */
 package edu.uoregon.tau.vis;
 
-import java.awt.*;
-import net.java.games.jogl.GL;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+
+import javax.media.opengl.GL;
 
 /**
  * Various utility methods for the vis package.
  * 
- * <P>CVS $Id: VisTools.java,v 1.3 2006/09/01 20:18:08 amorris Exp $</P>
+ * <P>CVS $Id: VisTools.java,v 1.4 2006/11/16 17:50:36 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class VisTools {
     
@@ -44,9 +48,9 @@ public class VisTools {
      */
     public static void glApplyInvertableColor(VisRenderer visRenderer, Color c) {
         if (visRenderer.getReverseVideo()) {
-            glSetColor(visRenderer.getGLDrawable().getGL(), invert(c));
+            glSetColor(visRenderer.getGLAutoDrawable().getGL(), invert(c));
         } else {
-            glSetColor(visRenderer.getGLDrawable().getGL(), c);
+            glSetColor(visRenderer.getGLAutoDrawable().getGL(), c);
         }
     }
 

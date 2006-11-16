@@ -1,6 +1,6 @@
 
-CONFIG_ARCH=default
-TAUROOT=
+CONFIG_ARCH=i386_linux
+TAUROOT=/home/amorris/tau2
 TOOLS_SRC=$(TAUROOT)/tools/src
 
 
@@ -9,7 +9,7 @@ SOURCES = $(wildcard src/*.java)
 
 
 bin/vis.jar: $(SOURCES) classes
-	javac -d ./classes -classpath $(TOOLS_SRC)/contrib/jogl.jar $(SOURCES)
+	javac -d ./classes -classpath $(TOOLS_SRC)/contrib/jogl/jogl.jar $(SOURCES)
 	jar -cvf bin/vis.jar -C ./classes edu
 	cp bin/vis.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 
