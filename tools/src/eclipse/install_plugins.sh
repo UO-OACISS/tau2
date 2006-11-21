@@ -23,7 +23,7 @@ cp ../contrib/jargs.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
 cp ../contrib/jcommon-0.9.6.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
 cp ../contrib/jfreechart-0.9.21.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
 cp ../contrib/jgraph.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-cp ../contrib/jogl.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../contrib/jogl/jogl.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
 cp ../contrib/jython.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
 
 cp ../paraprof/bin/paraprof.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
