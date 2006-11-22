@@ -17,6 +17,7 @@
 #include <stdio.h>
 
 int verbose = 0;
+int callpath = 1;  /* show callpaths */
 
 #define dprintf if (verbose) printf
 
@@ -30,13 +31,25 @@ extern int trace_enabled, mpitrace_enabled, memtrace_enabled, countertrace_enabl
 int GetNumRoutines(struct all_context_data_struct *all_context_data_ptr)
 {
   int numroutines = 0;
+  struct context_struct *context_ptr; /* are there callpaths that should be counted? */
 
   while(all_context_data_ptr)
   { /* iterate over all routines and increment the counter */
+    if (callpath)
+    { /* should we take into account all the callpaths as well? */
+      context_ptr = all_context_data_ptr->context_ptr; 
+      while(context_ptr) 	
+      { /* iterate over all contexts or callpaths for this routine */
+        numroutines++;
+        context_ptr = context_ptr->next_context; /* until it is null */
+      }
+    } /* callpaths */
+
+    /* now add the number for the node in the callgraph after the edges are counted */
     all_context_data_ptr = all_context_data_ptr->next_routine;
-    numroutines ++;
+    numroutines ++; /* the given routine */
   }
-  return numroutines;
+  return numroutines; /* or rather, the number of entities to be counted */
 }
 
 char * GetMetricName(enum metrics measurement)
@@ -81,12 +94,33 @@ double GetPerformanceDataValue(enum metrics measurement, struct data_struct dt)
   }
 }
    
+int WriteRoutineDataInFile(FILE *fp, char *name, double numcalls, double childcalls, double excl, double incl, char *group)
+{
+     if (incl < excl) incl = excl; 
+     /* ASSUMPTION: inclusive time is never less than exclusive time */
+
+     fprintf(fp, "\"%s\" %g %g %g %g 0 GROUP=\"%s\"\n",
+        name, numcalls, childcalls, excl, incl, group);
+     dprintf("\"%s\" %g %g %g %g 0 GROUP=\"%s\"\n",
+        name, numcalls, childcalls, excl, incl, group);
+
+     dprintf("*******************\n");
+     dprintf("name: %s\n", name);
+     dprintf("calls: %g\n", numcalls);
+     dprintf("child_calls: %g\n", childcalls);
+     dprintf("Exclusive metric: %g\n", excl);
+     dprintf("Inclusive metric: %g\n", incl);
+     dprintf("Group : %s\n", group);
+
+}
+
 int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, struct all_context_data_struct *all_context_data_ptr )
 {
   char *metric;
   char newdirname[1024];
   char filename[1024];
   FILE *fp;
+  struct context_struct *context_ptr; /* are there callpaths that should be counted? */
  
   metric = GetMetricName(measurement);
 
@@ -109,25 +143,30 @@ int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, 
   while (all_context_data_ptr)
   { /* iterate over each routine */
      
-     fprintf(fp, "\"%s\" %g %g %g %g 0 GROUP=\"TAU_DEFAULT\"\n",
+     WriteRoutineDataInFile(fp, 
 	all_context_data_ptr->name,
         all_context_data_ptr->calls,
         all_context_data_ptr->child_calls,
 	GetPerformanceDataValue(measurement, all_context_data_ptr->exclusive_data),
-	GetPerformanceDataValue(measurement, all_context_data_ptr->inclusive_data));
+	GetPerformanceDataValue(measurement, all_context_data_ptr->inclusive_data),
+	"TAU_DEFAULT");
 
-     dprintf("\"%s\" %g %g %g %g 0 GROUP=\"TAU_DEFAULT\"\n",
-	all_context_data_ptr->name,
-        all_context_data_ptr->calls,
-        all_context_data_ptr->child_calls,
-	GetPerformanceDataValue(measurement, all_context_data_ptr->exclusive_data),
-	GetPerformanceDataValue(measurement, all_context_data_ptr->inclusive_data));
-     dprintf("*******************\n");
-     dprintf("name: %s\n", all_context_data_ptr->name);
-     dprintf("calls: %g\n", all_context_data_ptr->calls);
-     dprintf("child_calls: %g\n", all_context_data_ptr->child_calls);
-     dprintf("Exclusive metric: %g\n", GetPerformanceDataValue(measurement, all_context_data_ptr->exclusive_data));
-     dprintf("Inclusive metric: %g\n", GetPerformanceDataValue(measurement, all_context_data_ptr->inclusive_data));
+     if (callpath)
+     { /* should we take into account all the callpaths as well? */
+       context_ptr = all_context_data_ptr->context_ptr;
+       while(context_ptr)        
+       { /* iterate over all contexts or callpaths for this routine */
+         WriteRoutineDataInFile(fp, 
+           context_ptr->path, /* NOTE: PATH not NAME */
+           context_ptr->calls,
+           context_ptr->child_calls,
+	   GetPerformanceDataValue(measurement, context_ptr->exclusive_data),
+	   GetPerformanceDataValue(measurement, context_ptr->inclusive_data),
+	   "TAU_CALLPATH");
+
+         context_ptr = context_ptr->next_context; /* until it is null */
+       }
+     } /* callpaths */
 
      all_context_data_ptr = all_context_data_ptr->next_routine;
   }
@@ -138,13 +177,16 @@ int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, 
 }
 void ShowUsage(void)
 {
-   printf("perf2tau [data_directory] [-h]\n");
+   printf("perf2tau [data_directory] [-h] [-v] [-flat] \n");
    printf("Converts perflib data to TAU format. \n");
    printf("If an argument is not specified, it checks the perf_data_directory environment variable\n");
    printf("e.g., \n");
    printf("> perf2tau timing\n");
    printf("opens perf_data.timing directory to read perflib data \n");
    printf("If no args are specified, it tries to read perf_data.<current_date> file\n");
+   printf("-h : help\n");
+   printf("-v : verbose\n");
+   printf("-flat: by default, callpath profiles are generated. -flat forces flat profile generation. \n");
    exit(1);
 }
 
@@ -152,8 +194,8 @@ int main(int argc, char **argv)
 {
 
   struct perf_forest_struct *tree_cycle_ptr;
-  struct all_context_data_cycle_struct *all_context_cycle_ptr;
-  struct all_context_data_rank_struct *all_context_rank_ptr;
+  struct all_context_cycle_struct *all_context_cycle_ptr;
+  struct all_context_rank_struct *all_context_rank_ptr;
   struct all_context_data_struct *all_context_data_ptr;
   struct header_struct *header_ptr;
   char filename[1024];
@@ -193,20 +235,16 @@ int main(int argc, char **argv)
         }
 	break;
 
-      case 1: 
-	if (strcmp(argv[i], "-h") == 0) ShowUsage();
-	else {
-	  if (strcmp(argv[i], "-v") == 0) verbose = 1;
-	  else {
-	    data_directory = argv[i]; 
-            dprintf("data_directory %s\n", data_directory);
-          }
-        } 
-        break;
-
-      default:
-	ShowUsage();
-        break;
+       default: 
+	 if (strcmp(argv[i], "-h") == 0) ShowUsage();
+	 if (strcmp(argv[i], "-v") == 0) verbose = 1;
+	 if (strcmp(argv[i], "-flat") == 0) callpath = 0; /* no callpath profiles */
+         if (argv[i][0] != '-') 
+         { /* retrieve the name of the data directory */
+	   data_directory = argv[i]; 
+           dprintf("data_directory %s\n", data_directory);
+         }
+         break;
     }
     dprintf("i = %d\n", i);
   }
@@ -221,7 +259,7 @@ int main(int argc, char **argv)
   tree_cycle_ptr = (struct perf_forest_struct *)Perf_Build_Tree(PERF_ALL_CYCLES, PERF_ALL_RANKS);
 
   /* Gets the entire tree. Now examine aggregate data within this rank */
-  all_context_cycle_ptr = (struct all_context_data_cycle_struct *)Perf_Build_All_Context_Data(tree_cycle_ptr);
+  all_context_cycle_ptr = (struct all_context_cycle_struct *)Perf_Build_All_Context_Data(tree_cycle_ptr);
 
   while (all_context_cycle_ptr)
   { /* cycle */
