@@ -68,12 +68,12 @@ public class PerfDMFUIPlugin extends AbstractUIPlugin {
         theView = view;
     }
 
-    public static boolean addPerformanceData(String projectName, String location) {
+    public static boolean addPerformanceData(String projectName, String projectType, String location) {
         try {
             PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("org.eclipse.ptp.tau.perfdmf.views.PerfDMFView");
 
             // when that class is initialized, it will call registerPerfDMFView so we can get a handle on it
-            theView.addProfile(projectName, location);
+            theView.addProfile(projectName, projectType, location);
             
             return true;
 

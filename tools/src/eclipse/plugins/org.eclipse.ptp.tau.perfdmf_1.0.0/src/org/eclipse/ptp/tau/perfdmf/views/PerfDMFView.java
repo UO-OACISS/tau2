@@ -7,7 +7,7 @@ import java.util.*;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.action.*;
-import org.eclipse.jface.dialogs.MessageDialog;
+//import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.ptp.tau.perfdmf.PerfDMFUIPlugin;
@@ -172,7 +172,7 @@ public class PerfDMFView extends ViewPart {
 
         try {
             IWorkspace workspace = ResourcesPlugin.getWorkspace();
-            IProject[] projects = workspace.getRoot().getProjects();
+            //IProject[] projects = workspace.getRoot().getProjects();
             IWorkspaceRoot root = workspace.getRoot();
 
             IFile file = getFile(sourceLink.getFilename(), root.members());
@@ -183,10 +183,16 @@ public class PerfDMFView extends ViewPart {
             IEditorInput iEditorInput = new FileEditorInput(file);
             
             IWorkbenchPage p = getActivePage();
-
+            String editorid="org.eclipse.cdt.ui.editor.CEditor";
+            if(file.getContentDescription().toString().contains("org.eclipse.photran.core.freeFormFortranSource")||file.getContentDescription().toString().contains("org.eclipse.photran.core.fortranSource"))
+            	editorid="org.eclipse.photran.ui.FreeFormFortranEditor";
+            else
+            if(file.getContentDescription().toString().contains("org.eclipse.photran.core.fixedFormFortranSource"))
+            	editorid="org.eclipse.photran.ui.FixedFormFortranEditor";
+            
             IEditorPart part = null;
             if (p != null) {
-                part = p.openEditor(iEditorInput, "org.eclipse.ui.DefaultTextEditor", true);
+                part = p.openEditor(iEditorInput, editorid, true);
             }
            
             
@@ -515,10 +521,10 @@ public class PerfDMFView extends ViewPart {
             }
         });
     }
-
+/*
     private void showMessage(String message) {
         MessageDialog.openInformation(viewer.getControl().getShell(), "Performance Data View", message);
-    }
+    }*/
 
     /**
      * Passing the focus request to the viewer's control.
@@ -527,7 +533,7 @@ public class PerfDMFView extends ViewPart {
         viewer.getControl().setFocus();
     }
 
-    public boolean addProfile(String project, String directory) {
+    public boolean addProfile(String project, String projectType, String directory) {
         try {
             File[] dirs = new File[1];
             dirs[0] = new File(directory);
@@ -549,8 +555,8 @@ public class PerfDMFView extends ViewPart {
             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(DATE_FORMAT);
             sdf.setTimeZone(TimeZone.getDefault());
 
-            trial.setName("The New Trial: " + sdf.format(cal.getTime()));
-            Experiment exp = dbApi.getExperiment(project, "Experiment", true);
+            trial.setName(sdf.format(cal.getTime()));
+            Experiment exp = dbApi.getExperiment(project, projectType, true);//"Experiment"
             trial.setExperimentID(exp.getID());
 
             // upload the trial
