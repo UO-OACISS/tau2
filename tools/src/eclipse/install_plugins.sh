@@ -13,22 +13,34 @@ if [ ! -d "$1" ] ; then
     exit 1
 fi
 
+if [ ! -d "$1"/plugins/ ] ; then
+    echo "Warning: No plugins directory in eclipse root.  Creating directory"
+    mkdir $1/plugins/
+fi
+
+CURRENT_DIR=`pwd`
+
+cd $1/plugins/
+PLUG_DIR=`pwd`
+cd $CURRENT_DIR
+
+cd `dirname $0`
 echo "Installing to $1/plugins"
 echo "..."
-cp ./plugins/*.jar $1/plugins/
-cp -r ./plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/ $1/plugins/
+cp ./plugins/*.jar $PLUG_DIR
+cp -r ./plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/ $PLUG_DIR
 
-cp ../contrib/batik-combined.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-cp ../contrib/jargs.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-cp ../contrib/jcommon-0.9.6.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-cp ../contrib/jfreechart-0.9.21.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-cp ../contrib/jgraph.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-cp ../contrib/jogl/jogl.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-cp ../contrib/jython.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../contrib/batik-combined.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../contrib/jargs.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../contrib/jcommon-0.9.6.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../contrib/jfreechart-0.9.21.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../contrib/jgraph.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../contrib/jogl/jogl.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../contrib/jython.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
 
-cp ../paraprof/bin/paraprof.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-cp ../perfdmf/bin/perfdmf.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-cp ../common/bin/tau-common.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-cp ../vis/bin/vis.jar $1/plugins/org.eclipse.ptp.tau.perfdmf_1.0.0/
-
+cp ../paraprof/bin/paraprof.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../perfdmf/bin/perfdmf.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../common/bin/tau-common.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../vis/bin/vis.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cd $CURRENT_DIR
 echo "Eclipse plugins installed!"
