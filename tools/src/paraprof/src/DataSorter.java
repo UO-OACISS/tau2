@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.3 2006/02/04 01:23:57 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.4 2006/11/29 20:09:46 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class DataSorter {
 
@@ -25,11 +25,15 @@ public class DataSorter {
     private double maxExclusives[];
 
     private int selectedMetricID;
-    private boolean descendingOrder;
-    private SortType sortType;
     private ValueType valueType;
     private UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
 
+    private boolean descendingOrder;
+    private SortType sortType;
+    private ValueType sortValueType;
+    private int sortMetric;
+    private boolean sortByVisible = true;
+    
     private Function phase;
     
     private static SortType defaultSortType = SortType.MEAN_VALUE;
@@ -42,6 +46,7 @@ public class DataSorter {
     
         this.sortType = DataSorter.defaultSortType;
         this.valueType = DataSorter.defaultValueType;
+        this.sortValueType = DataSorter.defaultValueType;
         this.descendingOrder = DataSorter.defaultSortOrder;
     }
 
@@ -391,6 +396,44 @@ public class DataSorter {
 
     public void setPpTrial(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
+    }
+
+
+    public int getSortMetric() {
+        if (getSortByVisible()) {
+            return selectedMetricID;
+        } else {
+            return sortMetric;
+        }
+    }
+
+
+    public void setSortMetric(int sortMetric) {
+        this.sortMetric = sortMetric;
+    }
+
+
+    public ValueType getSortValueType() {
+        if (getSortByVisible()) {
+            return valueType;
+        } else {
+            return sortValueType;
+        }
+    }
+
+
+    public void setSortValueType(ValueType sortValueType) {
+        this.sortValueType = sortValueType;
+    }
+
+
+    public boolean getSortByVisible() {
+        return sortByVisible;
+    }
+
+
+    public void setSortByVisible(boolean sortByVisible) {
+        this.sortByVisible = sortByVisible;
     }
 
 }

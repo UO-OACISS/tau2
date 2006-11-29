@@ -26,9 +26,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.10 2006/11/08 23:17:58 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.11 2006/11/29 20:09:46 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -70,7 +70,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     private boolean comparisonChart;
 
     private boolean defaultPercentValue;
-    
+
     // Initializes Chart as a single function across threads
     public FunctionBarChartWindow(ParaProfTrial ppTrial, Function function, Component parent) {
         this.ppTrial = ppTrial;
@@ -81,7 +81,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         panel = new BarChartPanel(model, null);
         initialize(parent);
 
-        setTitle("TAU: ParaProf: Function Data Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        setTitle("TAU: ParaProf: Function Data Window: "
+                + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         ParaProfUtils.setFrameIcon(this);
 
     }
@@ -107,11 +108,11 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         }
 
         if (thread.getNodeID() == -1) {
-            this.setTitle("TAU: ParaProf: Mean Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
-                    + phaseString);
+            this.setTitle("TAU: ParaProf: Mean Data - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
         } else if (thread.getNodeID() == -2) {
-            this.setTitle("TAU: ParaProf: Total Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
-                    + phaseString);
+            this.setTitle("TAU: ParaProf: Total Data - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
         } else if (thread.getNodeID() == -3) {
             this.setTitle("TAU: ParaProf: Standard Deviation Data - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
@@ -126,12 +127,10 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     private FunctionBarChartWindow() {
     }
 
-    
     public Function getFunction() {
         return function;
     }
 
-    
     public static FunctionBarChartWindow CreateComparisonWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
         FunctionBarChartWindow window = new FunctionBarChartWindow();
 
@@ -165,7 +164,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
     private void initialize(Component parent) {
 
-        
         defaultPercentValue = ParaProf.preferences.getShowValuesAsPercent();
         ppTrial.addObserver(this);
 
@@ -184,6 +182,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
         // Set up the data sorter
         dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
+        dataSorter.setSortMetric(ppTrial.getDefaultMetricID());
         //dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
 
         //Set the help window text if required.
@@ -198,9 +197,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
         BarChart barChart = panel.getBarChart();
 
-//        if (function != null) {
-//            barChart.setLeftJustified(true);
-//        }
+        //        if (function != null) {
+        //            barChart.setLeftJustified(true);
+        //        }
 
         JScrollBar vScrollBar = panel.getVerticalScrollBar();
         vScrollBar.setUnitIncrement(35);
@@ -252,7 +251,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         sortLocalData();
     }
 
-    private Component createMetricMenu(final ValueType valueType, boolean enabled, ButtonGroup group) {
+    private Component createMetricMenu(final ValueType valueType, boolean enabled, ButtonGroup group, final boolean sort) {
         JRadioButtonMenuItem button = null;
 
         if (ppTrial.getNumberOfMetrics() == 1) {
@@ -260,7 +259,12 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
             button.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    dataSorter.setValueType(valueType);
+                    if (sort) {
+                        dataSorter.setSortByVisible(false);
+                        dataSorter.setSortValueType(valueType);
+                    } else {
+                        dataSorter.setValueType(valueType);
+                    }
                     sortLocalData();
                     panel.repaint();
                 }
@@ -281,8 +285,14 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 button.addActionListener(new ActionListener() {
 
                     public void actionPerformed(ActionEvent evt) {
-                        dataSorter.setSelectedMetricID(metricID);
-                        dataSorter.setValueType(valueType);
+                        if (sort) {
+                            dataSorter.setSortByVisible(false);
+                            dataSorter.setSortMetric(metricID);
+                            dataSorter.setSortValueType(valueType);
+                        } else {
+                            dataSorter.setSelectedMetricID(metricID);
+                            dataSorter.setValueType(valueType);
+                        }
                         sortLocalData();
                         panel.repaint();
                     }
@@ -299,31 +309,89 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         sortLocalData();
         panel.repaint();
     }
+
     public int getMetricID() {
         return dataSorter.getSelectedMetricID();
     }
-    
+
     public void setValueType(ValueType type) {
         dataSorter.setValueType(type);
         sortLocalData();
         panel.repaint();
     }
+
     public ValueType getValueType() {
         return dataSorter.getValueType();
     }
-    
-    
+
+    public JMenu createMetricSelectionMenu(String name, final boolean sort) {
+        JRadioButtonMenuItem button;
+        JMenu subMenu = new JMenu(name);
+        ButtonGroup group = new ButtonGroup();
+
+        if (sort) {
+            button = new JRadioButtonMenuItem("Same as Visible Metric", dataSorter.getSortByVisible());
+            button.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    dataSorter.setSortByVisible(true);
+                    sortLocalData();
+                    panel.repaint();
+                }
+            });
+            group.add(button);
+            subMenu.add(button);
+        }
+
+        subMenu.add(createMetricMenu(ValueType.EXCLUSIVE, dataSorter.getValueType() == ValueType.EXCLUSIVE
+                || dataSorter.getValueType() == ValueType.EXCLUSIVE_PERCENT, group, sort));
+        subMenu.add(createMetricMenu(ValueType.INCLUSIVE, dataSorter.getValueType() == ValueType.INCLUSIVE
+                || dataSorter.getValueType() == ValueType.INCLUSIVE_PERCENT, group, sort));
+        subMenu.add(createMetricMenu(ValueType.INCLUSIVE_PER_CALL, dataSorter.getValueType() == ValueType.INCLUSIVE_PER_CALL,
+                group, sort));
+        subMenu.add(createMetricMenu(ValueType.EXCLUSIVE_PER_CALL, dataSorter.getValueType() == ValueType.EXCLUSIVE_PER_CALL,
+                group, sort));
+
+        button = new JRadioButtonMenuItem("Number of Calls", dataSorter.getValueType() == ValueType.NUMCALLS);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                if (sort) {
+                    dataSorter.setSortByVisible(false);
+                    dataSorter.setSortValueType(ValueType.NUMCALLS);
+                } else {
+                    dataSorter.setValueType(ValueType.NUMCALLS);
+                }
+                sortLocalData();
+                panel.repaint();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+
+        button = new JRadioButtonMenuItem("Number of Child Calls", dataSorter.getValueType() == ValueType.NUMSUBR);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                if (sort) {
+                    dataSorter.setSortByVisible(false);
+                    dataSorter.setSortValueType(ValueType.NUMSUBR);
+                } else {
+                    dataSorter.setValueType(ValueType.NUMSUBR);
+                }
+                sortLocalData();
+                panel.repaint();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+        return subMenu;
+    }
+
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
         mainMenu.addKeyListener(this);
-        JMenu subMenu = null;
-        JMenuItem menuItem = null;
+        JCheckBoxMenuItem box;
 
         optionsMenu = new JMenu("Options");
 
-        JCheckBoxMenuItem box = null;
-        ButtonGroup group = null;
-        JRadioButtonMenuItem button = null;
 
         box = new JCheckBoxMenuItem("Show Width Slider", false);
         box.addActionListener(this);
@@ -368,42 +436,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         optionsMenu.add(unitsSubMenu);
 
-        //Set the value type options.
-        subMenu = new JMenu("Select Metric...");
-        group = new ButtonGroup();
+        optionsMenu.add(createMetricSelectionMenu("Select Metric...", false));
+        optionsMenu.add(createMetricSelectionMenu("Sort Metric...", true));
 
-        subMenu.add(createMetricMenu(ValueType.EXCLUSIVE, dataSorter.getValueType() == ValueType.EXCLUSIVE
-                || dataSorter.getValueType() == ValueType.EXCLUSIVE_PERCENT, group));
-        subMenu.add(createMetricMenu(ValueType.INCLUSIVE, dataSorter.getValueType() == ValueType.INCLUSIVE
-                || dataSorter.getValueType() == ValueType.INCLUSIVE_PERCENT, group));
-        subMenu.add(createMetricMenu(ValueType.INCLUSIVE_PER_CALL, dataSorter.getValueType() == ValueType.INCLUSIVE_PER_CALL,
-                group));
-        subMenu.add(createMetricMenu(ValueType.EXCLUSIVE_PER_CALL, dataSorter.getValueType() == ValueType.EXCLUSIVE_PER_CALL,
-                group));
-
-        button = new JRadioButtonMenuItem("Number of Calls", dataSorter.getValueType() == ValueType.NUMCALLS);
-        button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                dataSorter.setValueType(ValueType.NUMCALLS);
-                sortLocalData();
-                panel.repaint();
-            }
-        });
-        group.add(button);
-        subMenu.add(button);
-
-        button = new JRadioButtonMenuItem("Number of Child Calls", dataSorter.getValueType() == ValueType.NUMSUBR);
-        button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                dataSorter.setValueType(ValueType.NUMSUBR);
-                sortLocalData();
-                panel.repaint();
-            }
-        });
-        group.add(button);
-        subMenu.add(button);
-
-        optionsMenu.add(subMenu);
         optionsMenu.addMenuListener(this);
 
         //Now, add all the menus to the main menu.
@@ -445,9 +480,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             ParaProfUtils.handleException(e);
         }
     }
-    
-    
-    
 
     public void stateChanged(ChangeEvent event) {
         try {
@@ -630,10 +662,10 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             jTextArea.setFont(ParaProf.preferencesWindow.getFont());
             jTextArea.append(this.getHeaderString());
             jTextArea.addKeyListener(this);
-            jTextArea.setMargin(new Insets(3,3,3,3));
-            
+            jTextArea.setMargin(new Insets(3, 3, 3, 3));
+
             if (comparisonChart) {
-                jTextArea.setSize(new Dimension(250,200));
+                jTextArea.setSize(new Dimension(250, 200));
                 JPanel legendPanel = new LegendPanel(((ComparisonBarChartModel) model).getLegendModel());
                 JPanel holder = new JPanel();
                 holder.setLayout(new GridBagLayout());
@@ -642,11 +674,11 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 gbc.anchor = GridBagConstraints.WEST;
                 gbc.weightx = 0;
                 gbc.weighty = 1;
-                ParaProfUtils.addCompItem(holder, jTextArea, gbc, 0,0,1,1);
+                ParaProfUtils.addCompItem(holder, jTextArea, gbc, 0, 0, 1, 1);
                 gbc.weightx = 1;
                 gbc.weighty = 1;
                 gbc.anchor = GridBagConstraints.EAST;
-                ParaProfUtils.addCompItem(holder, legendPanel, gbc, 1,0,1,1);
+                ParaProfUtils.addCompItem(holder, legendPanel, gbc, 1, 0, 1, 1);
 
                 panel.setColumnHeaderView(holder);
             } else {
@@ -776,30 +808,29 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     public void closeThisWindow() {
         try {
             setVisible(false);
-            
+
             if (comparisonChart) {
                 ParaProf.theComparisonWindow = null;
-                List trialList = ((ComparisonBarChartModel)model).getPpTrials();
-                for (Iterator it=trialList.iterator(); it.hasNext();) {
-                    ParaProfTrial trial = (ParaProfTrial)it.next();
+                List trialList = ((ComparisonBarChartModel) model).getPpTrials();
+                for (Iterator it = trialList.iterator(); it.hasNext();) {
+                    ParaProfTrial trial = (ParaProfTrial) it.next();
                     trial.deleteObserver(this);
                 }
             } else {
                 ppTrial.deleteObserver(this);
             }
             ParaProf.decrementNumWindows();
-            
+
         } catch (Exception e) {
             // do nothing
         }
         dispose();
     }
 
-    
     public int getUnits() {
         return units;
     }
-    
+
     public void setUnits(int units) {
         this.units = units;
         this.setHeader();
@@ -835,7 +866,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         return phase;
     }
 
-    
     public void setDescendingOrder(boolean order) {
         descendingOrderCheckBox.setSelected(order);
         sortLocalData();
@@ -851,17 +881,17 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         sortLocalData();
         panel.repaint();
     }
+
     public boolean getSortByName() {
         return sortByNameCheckBox.isSelected();
     }
-    
+
     public void setSortByNCT(boolean order) {
         sortByNCTCheckbox.setSelected(order);
     }
+
     public boolean getSortByNCT() {
         return sortByNCTCheckbox.isSelected();
     }
-    
-    
-    
+
 }

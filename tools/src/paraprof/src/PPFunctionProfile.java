@@ -144,7 +144,7 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public int compareTo(Object inObject) {
-        ValueType valueType = dataSorter.getValueType();
+        ValueType valueType = dataSorter.getSortValueType();
 
         PPFunctionProfile other = (PPFunctionProfile) inObject;
 
@@ -160,14 +160,14 @@ public class PPFunctionProfile implements Comparable {
             }
         } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
 
-            return checkDescending(compareToHelper(valueType.getValue(this.getMeanProfile(), dataSorter.getSelectedMetricID()),
-                    valueType.getValue(other.getMeanProfile(), dataSorter.getSelectedMetricID()), this.getMeanProfile(),
+            return checkDescending(compareToHelper(valueType.getValue(this.getMeanProfile(), dataSorter.getSortMetric()),
+                    valueType.getValue(other.getMeanProfile(), dataSorter.getSortMetric()), this.getMeanProfile(),
                     other.getMeanProfile()));
 
         } else if (dataSorter.getSortType() == SortType.VALUE) {
             return checkDescending(compareToHelper(
-                    valueType.getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID()), valueType.getValue(
-                            other.getFunctionProfile(), dataSorter.getSelectedMetricID())));
+                    valueType.getValue(this.getFunctionProfile(), dataSorter.getSortMetric()), valueType.getValue(
+                            other.getFunctionProfile(), dataSorter.getSortMetric())));
         } else {
             throw new ParaProfException("Unexpected sort type: " + dataSorter.getSortType());
         }
