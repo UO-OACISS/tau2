@@ -15,6 +15,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <string.h>
 
 int verbose = 0;
 int callpath = 1;  /* show callpaths */
@@ -111,7 +112,7 @@ int WriteRoutineDataInFile(FILE *fp, char *name, double numcalls, double childca
      dprintf("Exclusive metric: %g\n", excl);
      dprintf("Inclusive metric: %g\n", incl);
      dprintf("Group : %s\n", group);
-
+     return 0;
 }
 
 int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, struct all_context_data_struct *all_context_data_ptr )
@@ -172,7 +173,7 @@ int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, 
   }
   fprintf(fp, "0 aggregates\n");
   /* fclose(fp); */
-  
+  return 0;  
 
 }
 void ShowUsage(void)
@@ -206,6 +207,7 @@ int main(int argc, char **argv)
   int maxrank, cycle, rank, numroutines, i;
   char *data_directory;
   struct tm *broken_down_time;
+  struct perflib_struct *perflib_ptr;   
   time_t lt;
 
 
@@ -218,7 +220,7 @@ int main(int argc, char **argv)
         if (!data_directory)
         {
           lt = time(NULL);
-          data_directory = malloc(9);
+          data_directory = (char *) malloc(9);
           if (lt == -1)
             strcpy(data_directory, "00000000");
           else
@@ -250,13 +252,13 @@ int main(int argc, char **argv)
   }
 
   /* Initialize Perf post processing library */
-  Perf_Init(data_directory);
+  perflib_ptr = (struct perflib_struct *) Perf_Initpp(data_directory);
 
   /* retrieve header that contains what kind of metrics were measured */
-  header_ptr = (struct header_struct *) Perf_Build_Header();
+  header_ptr = perflib_ptr->header_ptr;
 
 
-  tree_cycle_ptr = (struct perf_forest_struct *)Perf_Build_Tree(PERF_ALL_CYCLES, PERF_ALL_RANKS);
+  tree_cycle_ptr = (struct perf_forest_struct *)Perf_Build_Forest(PERF_ALL_CYCLES, PERF_ALL_RANKS);
 
   /* Gets the entire tree. Now examine aggregate data within this rank */
   all_context_cycle_ptr = (struct all_context_cycle_struct *)Perf_Build_All_Context_Data(tree_cycle_ptr);
@@ -283,9 +285,9 @@ int main(int argc, char **argv)
 	rank, numroutines);
       while (all_context_data_ptr)
       { /* iterate over each routine */
-        if (header_ptr->trace_enabled)
+        if (header_ptr->profile_time_enabled)
           WriteMetricInTauFormat(TAU_WTIME, rank, numroutines, all_context_data_ptr);
-        if (header_ptr->memtrace_enabled)
+        if (header_ptr->profile_memory_enabled)
         { /* NOTE: memtrace flag turns on rss and pagefault tracking */
           WriteMetricInTauFormat(TAU_RSS, rank, numroutines, all_context_data_ptr);
           WriteMetricInTauFormat(TAU_PAGEFAULTS, rank, numroutines, all_context_data_ptr);
@@ -293,7 +295,7 @@ int main(int argc, char **argv)
           */
         }
 
-        if (header_ptr->countertrace_enabled)
+        if (header_ptr->profile_counters_enabled)
         { /* countertrace flag turns on tracking flops and processor time */
           WriteMetricInTauFormat(TAU_FPINS, rank, numroutines, all_context_data_ptr);
           WriteMetricInTauFormat(TAU_VIRTUALTIME, rank, numroutines, all_context_data_ptr);
