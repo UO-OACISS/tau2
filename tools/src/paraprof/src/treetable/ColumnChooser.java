@@ -59,7 +59,7 @@ public class ColumnChooser extends JFrame {
         valueModel = new DefaultListModel();
         valueModel.addElement(new CheckBoxListItem("Exclusive Value", true));
         valueModel.addElement(new CheckBoxListItem("Inclusive Value", true));
-        valueModel.addElement(new CheckBoxListItem("Exlusive Percent Value", false));
+        valueModel.addElement(new CheckBoxListItem("Exclusive Percent Value", false));
         valueModel.addElement(new CheckBoxListItem("Inclusive Percent Value", false));
         valueModel.addElement(new CheckBoxListItem("Exclusive Value Per Call", false));
         valueModel.addElement(new CheckBoxListItem("Inclusive Value Per Call", false));
