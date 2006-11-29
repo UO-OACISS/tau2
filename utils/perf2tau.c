@@ -39,7 +39,7 @@ int GetNumRoutines(struct all_context_data_struct *all_context_data_ptr)
     if (callpath)
     { /* should we take into account all the callpaths as well? */
       context_ptr = all_context_data_ptr->context_ptr; 
-      while(context_ptr) 	
+      while(context_ptr && IsCallpath(context_ptr->path)) 	
       { /* iterate over all contexts or callpaths for this routine */
         numroutines++;
         context_ptr = context_ptr->next_context; /* until it is null */
@@ -115,6 +115,14 @@ int WriteRoutineDataInFile(FILE *fp, char *name, double numcalls, double childca
      return 0;
 }
 
+int IsCallpath(char *path)
+{ /* is there a => in the name? */
+  if (strstr(path, "=>") == NULL)
+    return 0; /* not found */
+  else 
+    return 1; /* found */
+}
+
 int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, struct all_context_data_struct *all_context_data_ptr )
 {
   char *metric;
@@ -157,14 +165,15 @@ int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, 
        context_ptr = all_context_data_ptr->context_ptr;
        while(context_ptr)        
        { /* iterate over all contexts or callpaths for this routine */
-         WriteRoutineDataInFile(fp, 
-           context_ptr->path, /* NOTE: PATH not NAME */
-           context_ptr->calls,
-           context_ptr->child_calls,
-	   GetPerformanceDataValue(measurement, context_ptr->exclusive_data),
-	   GetPerformanceDataValue(measurement, context_ptr->inclusive_data),
-	   "TAU_CALLPATH");
-
+         if(IsCallpath(context_ptr->path)) {
+           WriteRoutineDataInFile(fp, 
+             context_ptr->path, /* NOTE: PATH not NAME */
+             context_ptr->calls,
+             context_ptr->child_calls,
+	     GetPerformanceDataValue(measurement, context_ptr->exclusive_data),
+	     GetPerformanceDataValue(measurement, context_ptr->inclusive_data),
+	     "TAU_CALLPATH");
+         }            
          context_ptr = context_ptr->next_context; /* until it is null */
        }
      } /* callpaths */
@@ -180,7 +189,7 @@ void ShowUsage(void)
 {
    printf("perf2tau [data_directory] [-h] [-v] [-flat] \n");
    printf("Converts perflib data to TAU format. \n");
-   printf("If an argument is not specified, it checks the perf_data_directory environment variable\n");
+   printf("If an argument is not specified, it checks the PERF_DATA_DIRECTORY environment variable\n");
    printf("e.g., \n");
    printf("> perf2tau timing\n");
    printf("opens perf_data.timing directory to read perflib data \n");
