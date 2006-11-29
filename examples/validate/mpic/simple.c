@@ -6,8 +6,8 @@
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
-// This application calculates the value of pi and e using a parallel 
-// algorithm for integrating a function using Riemann sum. Uses MPI.
+/* This application calculates the value of pi and e using a parallel  */
+/* algorithm for integrating a function using Riemann sum. Uses MPI. */
 #include "mpi.h"
 #include <stdio.h>
 #include <math.h>
