@@ -156,7 +156,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         jSplitPane.addKeyListener(this);
         this.getContentPane().add(jSplitPane);
 
-        setSize(ParaProfUtils.checkSize(new Dimension(1000, 700)));
+        setSize(ParaProfUtils.checkSize(new Dimension(1000, 750)));
         this.setLocation(WindowPlacer.getNewLocation(this, invoker));
 
         //        //Grab the screen size.
