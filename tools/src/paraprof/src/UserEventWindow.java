@@ -21,9 +21,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * The UserEventWindow shows one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventWindow.java,v 1.25 2006/11/08 23:17:59 amorris Exp $</P>
+ * <P>CVS $Id: UserEventWindow.java,v 1.26 2006/12/01 00:36:52 amorris Exp $</P>
  * @author  Alan Morris, Robert Bell
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  * @see GlobalBarChartModel
  */
 public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -201,7 +201,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
         displayWidthSlider = new JCheckBoxMenuItem("Show Width Slider", false);
         displayWidthSlider.addActionListener(this);
-        optionsMenu.add(displayWidthSlider);
+        //optionsMenu.add(displayWidthSlider);
 
         showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
         showMetaData.addActionListener(this);

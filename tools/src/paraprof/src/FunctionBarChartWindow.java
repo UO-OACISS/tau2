@@ -26,9 +26,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.11 2006/11/29 20:09:46 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.12 2006/12/01 00:36:51 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -395,7 +395,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
         box = new JCheckBoxMenuItem("Show Width Slider", false);
         box.addActionListener(this);
-        optionsMenu.add(box);
+        //optionsMenu.add(box);
 
         showFindPanelBox = new JCheckBoxMenuItem("Show Find Panel", false);
         showFindPanelBox.addActionListener(this);

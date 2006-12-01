@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.5 2006/10/30 18:13:06 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.6 2006/12/01 00:36:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -52,7 +52,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             }
             super.set(index, element);
         }
-        
+
         public Object get(int index) {
             if (index >= size()) {
                 return null;
@@ -60,7 +60,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                 return super.get(index);
             }
         }
-        
+
     }
 
     public ComparisonBarChartModel(FunctionBarChartWindow window, ParaProfTrial ppTrial, Thread thread, DataSorter dataSorter) {
@@ -68,7 +68,6 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
         this.dataSorter = dataSorter;
         addThread(ppTrial, thread);
     }
-
 
     public LegendModel getLegendModel() {
         if (legendModel == null) {
@@ -87,7 +86,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                 }
 
                 public Color getColor(int index) {
-                    return ComparisonBarChartModel.this.getValueColor(0,index);
+                    return ComparisonBarChartModel.this.getValueColor(0, index);
                 }
             };
         }
@@ -98,7 +97,6 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
         ppTrials.add(ppTrial);
         threads.add(thread);
     }
-
 
     public void reloadData() {
         rows.clear();
@@ -180,7 +178,14 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             return UtilFncs.getOutputString(0, value, 6) + "%";
 
         } else {
-            return UtilFncs.getOutputString(window.units(), value, ParaProf.defaultNumberPrecision);
+            String percentString = "";
+            if (getValue(row, 0) != 0 && subIndex != 0) {
+            //if (getValue(row, 0) != 0) {
+                // compute the ratio of this value to the first one
+                double ratio = value / getValue(row, 0) * 100.0f;
+                percentString = " (" + UtilFncs.getOutputString(0, ratio, 2) + "%)";
+            }
+            return UtilFncs.getOutputString(window.units(), value, ParaProf.defaultNumberPrecision) + percentString;
         }
     }
 
@@ -192,7 +197,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     public Color getValueColor(int row, int subIndex) {
         // we use the "default" colors for our legend and bars
         List colorList = ParaProf.colorChooser.getColors();
-        return (Color)colorList.get(subIndex % colorList.size());
+        return (Color) colorList.get(subIndex % colorList.size());
     }
 
     public Color getValueHighlightColor(int row, int subIndex) {
@@ -239,8 +244,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
         FunctionBarChartWindow window = FunctionBarChartWindow.CreateComparisonWindow(ppTrial,
                 ppTrial.getDataSource().getMeanData(), null);
         window.addThread(ppTrial, ppTrial.getDataSource().getThread(0, 0, 0));
-        window.addThread(ppTrial, ppTrial.getDataSource().getThread(1,0,0));
-
+        window.addThread(ppTrial, ppTrial.getDataSource().getThread(1, 0, 0));
 
         window.addThread(lu128, lu128.getDataSource().getMeanData());
 

@@ -22,9 +22,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.9 2006/11/08 23:17:58 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.10 2006/12/01 00:36:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -48,7 +48,6 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private JLabel barLengthLabel = new JLabel("Bar Width");
     private JSlider barLengthSlider = new JSlider(0, 2000, 600);
 
-
     private boolean visible = false;
 
     private static int defaultWidth = 750;
@@ -57,72 +56,72 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     public BarChartPanel getPanel() {
         return panel;
     }
-    
+
     public GlobalDataWindow(ParaProfTrial ppTrial, Function phase) {
         try {
-        this.ppTrial = ppTrial;
-        this.phase = phase;
-        ppTrial.addObserver(this);
+            this.ppTrial = ppTrial;
+            this.phase = phase;
+            ppTrial.addObserver(this);
 
-        dataSorter = new DataSorter(ppTrial);
-        dataSorter.setPhase(phase);
+            dataSorter = new DataSorter(ppTrial);
+            dataSorter.setPhase(phase);
 
-        if (phase == null) {
-            setTitle("TAU: ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        } else {
-            setTitle("TAU: ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + " Phase: "
-                    + phase.getName());
-        }
-        ParaProfUtils.setFrameIcon(this);
-
-
-        setSize(ParaProfUtils.checkSize(new java.awt.Dimension(defaultWidth, defaultHeight)));
-        setLocation(WindowPlacer.getGlobalDataWindowPosition(this));
-
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                thisWindowClosing(evt);
+            if (phase == null) {
+                setTitle("TAU: ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            } else {
+                setTitle("TAU: ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
+                        + " Phase: " + phase.getName());
             }
-        });
+            ParaProfUtils.setFrameIcon(this);
 
-        if (ParaProf.demoMode) { // for Scott's quicktime videos
-            barLengthSlider.setValue(500);
-        }
+            setSize(ParaProfUtils.checkSize(new java.awt.Dimension(defaultWidth, defaultHeight)));
+            setLocation(WindowPlacer.getGlobalDataWindowPosition(this));
 
-        getContentPane().setLayout(new GridBagLayout());
+            addWindowListener(new java.awt.event.WindowAdapter() {
+                public void windowClosing(java.awt.event.WindowEvent evt) {
+                    thisWindowClosing(evt);
+                }
+            });
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(2, 2, 2, 2);
+            if (ParaProf.demoMode) { // for Scott's quicktime videos
+                barLengthSlider.setValue(500);
+            }
 
-        model = new GlobalBarChartModel(this, dataSorter, ppTrial);
-        panel = new BarChartPanel(model, null);
-        setupMenus();
+            getContentPane().setLayout(new GridBagLayout());
 
-        panel.getBarChart().setLeftJustified(true);
-        panel.getBarChart().setBarLength(barLengthSlider.getValue());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(2, 2, 2, 2);
 
-        // more sane scrollbar sensitivity
-        panel.getVerticalScrollBar().setUnitIncrement(35);
+            model = new GlobalBarChartModel(this, dataSorter, ppTrial);
+            panel = new BarChartPanel(model, null);
+            setupMenus();
 
-        this.setHeader();
+            panel.getBarChart().setLeftJustified(true);
+            panel.getBarChart().setAutoResize(true);
+            //panel.getBarChart().setBarLength(barLengthSlider.getValue());
 
-        barLengthSlider.setPaintTicks(true);
-        barLengthSlider.setMajorTickSpacing(400);
-        barLengthSlider.setMinorTickSpacing(50);
-        barLengthSlider.setPaintLabels(true);
-        barLengthSlider.addChangeListener(this);
+            // more sane scrollbar sensitivity
+            panel.getVerticalScrollBar().setUnitIncrement(35);
 
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-        ParaProfUtils.addCompItem(this, panel, gbc, 0, 0, 1, 1);
+            this.setHeader();
 
-        sortLocalData();
+            barLengthSlider.setPaintTicks(true);
+            barLengthSlider.setMajorTickSpacing(400);
+            barLengthSlider.setMinorTickSpacing(50);
+            barLengthSlider.setPaintLabels(true);
+            barLengthSlider.addChangeListener(this);
 
-        panel.repaint();
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.CENTER;
+            gbc.weightx = 1;
+            gbc.weighty = 1;
+            ParaProfUtils.addCompItem(this, panel, gbc, 0, 0, 1, 1);
 
-        ParaProf.incrementNumWindows();
+            sortLocalData();
+
+            panel.repaint();
+
+            ParaProf.incrementNumWindows();
         } catch (Error e) {
             e.printStackTrace();
         }
@@ -139,7 +138,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
         slidersCheckBox = new JCheckBoxMenuItem("Show Width Slider", false);
         slidersCheckBox.addActionListener(this);
-        optionsMenu.add(slidersCheckBox);
+        //optionsMenu.add(slidersCheckBox);
 
         metaDataCheckBox = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
         metaDataCheckBox.addActionListener(this);

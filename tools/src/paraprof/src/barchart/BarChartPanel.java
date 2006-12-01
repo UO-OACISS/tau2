@@ -1,6 +1,8 @@
 package edu.uoregon.tau.paraprof.barchart;
 
 import java.awt.*;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
@@ -16,9 +18,9 @@ import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
 /**
  * Adds scroll ability, and handles image export/printing with header support.
  * 
- * <P>CVS $Id: BarChartPanel.java,v 1.5 2006/10/30 18:13:06 amorris Exp $</P>
+ * <P>CVS $Id: BarChartPanel.java,v 1.6 2006/12/01 00:36:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class BarChartPanel extends JScrollPane implements Printable, ImageExport, ScrollBarController {
 
@@ -31,6 +33,22 @@ public class BarChartPanel extends JScrollPane implements Printable, ImageExport
         this.setViewportView(barChart);
         this.setColumnHeaderView(header);
         this.getVerticalScrollBar().setUnitIncrement(35);
+            
+        addComponentListener(new ComponentListener() {
+
+            public void componentHidden(ComponentEvent e) {
+            }
+
+            public void componentMoved(ComponentEvent e) {
+            }
+
+            public void componentResized(ComponentEvent e) {
+                barChart.sizeChanged();
+            }
+
+            public void componentShown(ComponentEvent e) {
+            }
+        });
     }
 
    
