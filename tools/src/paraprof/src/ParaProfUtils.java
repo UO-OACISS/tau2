@@ -28,7 +28,16 @@ import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
-
+/**
+ * Utility class for ParaProf
+ * 
+ * <P>
+ * CVS $Id: ParaProfUtils.java,v 1.19 2006/12/01 18:19:56 amorris Exp $
+ * </P>
+ * 
+ * @author Alan Morris
+ * @version $Revision: 1.19 $
+ */
 public class ParaProfUtils {
 
     static boolean verbose;
@@ -426,10 +435,10 @@ public class ParaProfUtils {
 
                     if (arg.equals("Bar Chart")) {
                         FunctionBarChartWindow w = new FunctionBarChartWindow(ppTrial, selectedFunction, owner);
-                        w.show();
+                        w.setVisible(true);
                     } else if (arg.equals("Histogram")) {
                         HistogramWindow w = new HistogramWindow(ppTrial, selectedFunction, owner);
-                        w.show();
+                        w.setVisible(true);
                     }
                 }
             }
@@ -578,14 +587,14 @@ public class ParaProfUtils {
 
                     if (arg.equals("Show Function Bar Chart")) {
                         FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
-                        functionDataWindow.show();
+                        functionDataWindow.setVisible(true);
                     } else if (arg.equals("Show Function Data over Phases")) {
                         FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
                         functionDataWindow.changeToPhaseDisplay(thread);
-                        functionDataWindow.show();
+                        functionDataWindow.setVisible(true);
                     } else if (arg.equals("Show Function Histogram")) {
                         HistogramWindow hw = new HistogramWindow(ppTrial, function, owner);
-                        hw.show();
+                        hw.setVisible(true);
                     } else if (arg.equals("Assign Function Color")) {
                         ParaProf.colorMap.assignColor(owner, function);
                     } else if (arg.equals("Reset to Default Color")) {
@@ -593,7 +602,7 @@ public class ParaProfUtils {
                         ParaProf.colorMap.reassignColors();
                     } else if (arg.equals("Open Profile for this Phase")) {
                         GlobalDataWindow fdw = new GlobalDataWindow(ppTrial, function.getActualPhase());
-                        fdw.show();
+                        fdw.setVisible(true);
                         ParaProf.incrementNumWindows();
                     } else if (arg.equals("Show Source Code")) {
 
@@ -688,7 +697,7 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 StatWindow statWindow = new StatWindow(ppTrial, thread, userEvent, phase, owner);
-                statWindow.show();
+                statWindow.setVisible(true);
             }
 
         });
@@ -701,7 +710,7 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 TreeTableWindow ttWindow = new TreeTableWindow(ppTrial, thread, owner);
-                ttWindow.show();
+                ttWindow.setVisible(true);
             }
 
         });
@@ -714,7 +723,7 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, thread, owner);
-                tmpRef.show();
+                tmpRef.setVisible(true);
             }
 
         });
@@ -727,7 +736,7 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial, thread, owner);
-                callPathTextWindow.show();
+                callPathTextWindow.setVisible(true);
             }
 
         });
@@ -740,7 +749,7 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 FunctionBarChartWindow w = new FunctionBarChartWindow(ppTrial, thread, phase, owner);
-                w.show();
+                w.setVisible(true);
             }
 
         });
@@ -757,7 +766,7 @@ public class ParaProfUtils {
                 } else {
                     ParaProf.theComparisonWindow.addThread(ppTrial, thread);
                 }
-                ParaProf.theComparisonWindow.show();
+                ParaProf.theComparisonWindow.setVisible(true);
             }
 
         });
@@ -770,7 +779,7 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UserEventWindow w = new UserEventWindow(ppTrial, thread, owner);
-                w.show();
+                w.setVisible(true);;
             }
 
         });
@@ -788,7 +797,7 @@ public class ParaProfUtils {
                     String arg = e.getActionCommand();
                     if (arg.equals("Show User Event Bar Chart")) {
                         UserEventWindow tmpRef = new UserEventWindow(ppTrial, userEvent, owner);
-                        tmpRef.show();
+                        tmpRef.setVisible(true);
                     } else if (arg.equals("Change User Event Color")) {
 
                         Color tmpCol = userEvent.getColor();
@@ -848,10 +857,10 @@ public class ParaProfUtils {
         threadPopup.add(createStatisticsTableMenuItem("Show " + ident + " Statistics Table", ppTrial, phase, thread, owner));
         threadPopup.add(createCallGraphMenuItem("Show " + ident + " Call Graph", ppTrial, thread, owner));
         threadPopup.add(createCallPathThreadRelationMenuItem("Show " + ident + " Call Path Relations", ppTrial, thread, owner));
-        //if (thread.getNodeID() >= 0 && ppTrial.userEventsPresent()) {
-        threadPopup.add(createUserEventBarChartMenuItem("Show User Event Bar Chart", ppTrial, thread, owner));
-        threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
-        //}
+        if (ppTrial.userEventsPresent()) {
+            threadPopup.add(createUserEventBarChartMenuItem("Show User Event Bar Chart", ppTrial, thread, owner));
+            threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
+        }
         threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
         threadPopup.show(owner, evt.getX(), evt.getY());
 
@@ -1145,9 +1154,9 @@ public class ParaProfUtils {
             }
         };
     }
-    
+
     public static void setFrameIcon(Frame frame) {
-        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(Utility.getResource("tau16x16.gif"))); 
+        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(Utility.getResource("tau16x16.gif")));
     }
 
 }
