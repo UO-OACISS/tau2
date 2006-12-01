@@ -11,16 +11,15 @@ import java.awt.event.KeyListener;
 
 import javax.media.opengl.GLCanvas;
 import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLDrawableFactory;
 import javax.media.opengl.GLException;
 
 /**
  * This class is merely a wrapper over GLCanvas which allows users of the Vis
  * package to build against vis alone (not jogl). 
  *
- * <P>CVS $Id: VisCanvas.java,v 1.8 2006/11/16 17:50:36 amorris Exp $</P>
+ * <P>CVS $Id: VisCanvas.java,v 1.9 2006/12/01 01:22:38 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class VisCanvas {
 
@@ -34,23 +33,17 @@ public class VisCanvas {
      */
     public VisCanvas(VisRenderer visRenderer) {
      
-        GLCapabilities glCapabilities = new GLCapabilities();
+        GLCapabilities caps = new GLCapabilities();
 
         //FSAA (Full Screen Anti-Aliasing)
-        //glCapabilities.setSampleBuffers(true);
-        //glCapabilities.setNumSamples(4);
-        
-        //glCapabilities.setHardwareAccelerated(true);
+        //caps.setSampleBuffers(true);
+        //caps.setNumSamples(4);
 
-        glCanvas = new GLCanvas();
-        
-//        glCapabilities.setStereo(true);
-//        try {
-//            glCanvas = GLAutoDrawableFactory.getFactory().createGLCanvas(glCapabilities);
-//        } catch (GLException gle) {
-//            glCapabilities.setStereo(false);
-//            glCanvas = GLAutoDrawableFactory.getFactory().createGLCanvas(glCapabilities);
-//        }
+        //caps.setHardwareAccelerated(true);
+
+        // ask for stereo, if available
+        caps.setStereo(true);
+        glCanvas = new GLCanvas(caps);
         
         glCanvas.setSize(200, 200);
         glCanvas.addGLEventListener(visRenderer);
