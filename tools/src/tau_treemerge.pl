@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 use strict;
+use File::Basename;
+use Cwd qw(realpath);
 
 my $break = 250;
 
@@ -25,6 +27,14 @@ my $pattern = "tautrace.*.*.*";
 my $level = 0; # current tree level
 my $done = 0;  # done or not
 my @out;       # output from tau_merge
+
+my $tau_merge = "tau_merge";
+
+my $check_ex = realpath(dirname($0))."/$tau_merge";
+
+if(-x $check_ex) {
+     $tau_merge = $check_ex;
+}
 
 system("/bin/rm -f intermediate.*");
 
@@ -56,8 +66,8 @@ while ($done == 0) {
 	    $neednext = 1;
 	    my $basename = "intermediate.$level.$count";
 
-	    print "tau_merge -m $basename.edf -e @edfs @traces $basename.trc\n";
-	    @out = `tau_merge -m $basename.edf -e @edfs @traces $basename.trc`;
+	    print "$tau_merge -m $basename.edf -e @edfs @traces $basename.trc\n";
+	    @out = `$tau_merge -m $basename.edf -e @edfs @traces $basename.trc`;
 	    
 	    $numtraces = 0;
 	    @traces = ();
@@ -67,8 +77,8 @@ while ($done == 0) {
     }
 
     if ($neednext == 0) { 
-	print "tau_merge -m tau.edf -e @edfs @traces tau.trc\n";
-	@out = `tau_merge -m tau.edf -e @edfs @traces tau.trc`;
+	print "$tau_merge -m tau.edf -e @edfs @traces tau.trc\n";
+	@out = `$tau_merge -m tau.edf -e @edfs @traces tau.trc`;
 	$done = 1;
     }
 
