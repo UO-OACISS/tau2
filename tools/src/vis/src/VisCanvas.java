@@ -17,9 +17,9 @@ import javax.media.opengl.GLException;
  * This class is merely a wrapper over GLCanvas which allows users of the Vis
  * package to build against vis alone (not jogl). 
  *
- * <P>CVS $Id: VisCanvas.java,v 1.9 2006/12/01 01:22:38 amorris Exp $</P>
+ * <P>CVS $Id: VisCanvas.java,v 1.10 2006/12/01 21:55:40 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class VisCanvas {
 
@@ -42,8 +42,13 @@ public class VisCanvas {
         //caps.setHardwareAccelerated(true);
 
         // ask for stereo, if available
-        caps.setStereo(true);
-        glCanvas = new GLCanvas(caps);
+	try {
+	    caps.setStereo(true);
+	    glCanvas = new GLCanvas(caps);
+	} catch (GLException gle) {
+	    caps.setStereo(false);
+	    glCanvas = new GLCanvas(caps);
+	}
         
         glCanvas.setSize(200, 200);
         glCanvas.addGLEventListener(visRenderer);
