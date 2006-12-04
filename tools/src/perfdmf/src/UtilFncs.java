@@ -117,7 +117,7 @@ public class UtilFncs {
 
     // format a double for display within 'width' chars, kind of like C-printf's %G
     public static String formatDouble(double d, int width, boolean pad) {
-
+        
         // first check if the regular toString is in exponential form
         boolean exp = false;
         String str = Double.toString(d);
@@ -156,7 +156,7 @@ public class UtilFncs {
 
             // we don't want more than 4 digits past the decimal point
             // this 4 would be the old ParaProf.defaultNumberPrecision
-            if (formatString.indexOf('.') + 4 < min) {
+            if (formatString.indexOf('.') + 4 < formatString.length()) {
                 min = formatString.indexOf('.') + 4;
             }
 
@@ -528,11 +528,6 @@ public class UtilFncs {
 
         return dataSource;
     }
-
-    
-    
-    
-    
         
     
 }
