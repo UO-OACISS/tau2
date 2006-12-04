@@ -19,9 +19,9 @@ import edu.uoregon.tau.paraprof.Searcher;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.6 2006/12/01 00:36:52 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.7 2006/12/04 22:35:08 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, MouseMotionListener, BarChartModelListener {
@@ -289,8 +289,10 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         if (!maxValueLabelStringWidthSet) {
             maxValueLabelStringWidth = 0;
             for (int i = 0; i < model.getNumRows(); i++) {
-                String valueLabel = model.getValueLabel(i, 0);
-                maxValueLabelStringWidth = Math.max(maxValueLabelStringWidth, fontMetrics.stringWidth(valueLabel));
+                for (int j = 0; j < model.getSubSize(); j++) {
+                    String valueLabel = model.getValueLabel(i, j);
+                    maxValueLabelStringWidth = Math.max(maxValueLabelStringWidth, fontMetrics.stringWidth(valueLabel));
+                }
             }
             maxValueLabelStringWidthSet = true;
         }
@@ -312,10 +314,10 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
             int rowHeight = (fontHeight * model.getSubSize()) + 10;
             maxHeight = model.getNumRows() * rowHeight;
         }
-        
+
         if (autoResize) {
 
-            if (model.getSubSize() == 1) {
+            if (!leftJustified) {
                 maxWidth = leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple + horizSpacing
                         + getMaxRowLabelStringWidth() + rightMargin;
 
@@ -698,11 +700,10 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
     }
 
     public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow) {
-        
+
         Font font = ParaProf.preferencesWindow.getFont();
         g2D.setFont(font);
         fontMetrics = g2D.getFontMetrics(font);
-        
 
         rowLabelDrawObjects.clear();
         valueDrawObjects.clear();
@@ -713,8 +714,6 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         int leading = fontMetrics.getLeading();
         barHeight = maxDescent + maxAscent + leading - 2;
 
-        
-        
         if (autoResize) {
             if (autoWidth != getParent().getWidth()) {
                 sizeChanged();
@@ -722,7 +721,6 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
             autoWidth = getParent().getWidth();
         }
 
-        
         if (barLengthMultiple == 0) {
             sizeChanged();
         }
@@ -758,29 +756,33 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         //System.out.println("rowHeight = " + rowHeight);
 
         // uncomment this to see each segment of the bar graph shown with small lines at the top
-        //        if (leftJustified) {
-        //            g2D.setColor(Color.BLUE);
-        //            g2D.drawLine(leftMargin, 2, fulcrum, 2);
-        //            g2D.setColor(Color.RED);
-        //            g2D.drawLine(fulcrum + horizSpacing, 2, fulcrum + barLength + horizSpacing, 2);
-        //            g2D.setColor(Color.DARK_GRAY);
-        //            g2D.drawLine(0, 0, leftMargin, 0);
-        //            g2D.drawLine(fulcrum, 0, fulcrum + horizSpacing, 0);
-        //            g2D.drawLine(fulcrum + barLength + horizSpacing, 0, fulcrum + barLength + horizSpacing + rightMargin, 0);
-        //
-        //        } else {
-        //            g2D.setColor(Color.DARK_GRAY);
-        //            g2D.drawLine(0, 0, leftMargin, 0);
-        //            g2D.drawLine(leftMargin, 2, leftMargin + getMaxValueLabelStringWidth(), 2);
-        //            g2D.drawLine(leftMargin + getMaxValueLabelStringWidth(), 0, leftMargin + getMaxValueLabelStringWidth() + horizSpacing, 0);
-        //            g2D.drawLine(leftMargin + getMaxValueLabelStringWidth() + horizSpacing, 2, leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple, 2);
-        //            g2D.drawLine(leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple, 0, leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple + horizSpacing, 0);
-        //            g2D.drawLine(leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple + horizSpacing, 2, leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple + horizSpacing
-        //                    + getMaxRowLabelStringWidth(), 2);
-        //            g2D.drawLine(leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple + horizSpacing
-        //                    + getMaxRowLabelStringWidth(), 0, leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple + horizSpacing
-        //                    + getMaxRowLabelStringWidth() + rightMargin, 0);
-        //        }
+//                        if (leftJustified) {
+//            g2D.setColor(Color.BLUE);
+//            g2D.drawLine(leftMargin, 2, fulcrum, 2);
+//            g2D.setColor(Color.RED);
+//            g2D.drawLine(fulcrum + horizSpacing, 2, fulcrum + barLength + horizSpacing, 2);
+//            g2D.setColor(Color.DARK_GRAY);
+//            g2D.drawLine(0, 0, leftMargin, 0);
+//            g2D.drawLine(fulcrum, 0, fulcrum + horizSpacing, 0);
+//            g2D.drawLine(fulcrum + barLength + horizSpacing, 0, fulcrum + barLength + horizSpacing + rightMargin, 0);
+//
+//        } else {
+//            g2D.setColor(Color.DARK_GRAY);
+//            g2D.drawLine(0, 0, leftMargin, 0);
+//            g2D.drawLine(leftMargin, 2, leftMargin + getMaxValueLabelStringWidth(), 2);
+//            g2D.drawLine(leftMargin + getMaxValueLabelStringWidth(), 0,
+//                    leftMargin + getMaxValueLabelStringWidth() + horizSpacing, 0);
+//            g2D.drawLine(leftMargin + getMaxValueLabelStringWidth() + horizSpacing, 2, leftMargin + getMaxValueLabelStringWidth()
+//                    + horizSpacing + barLengthMultiple, 2);
+//            g2D.drawLine(leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple, 0, leftMargin
+//                    + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple + horizSpacing, 0);
+//            g2D.drawLine(leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple + horizSpacing, 2,
+//                    leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple + horizSpacing
+//                            + getMaxRowLabelStringWidth(), 2);
+//            g2D.drawLine(leftMargin + getMaxValueLabelStringWidth() + horizSpacing + barLengthMultiple + horizSpacing
+//                    + getMaxRowLabelStringWidth(), 0, leftMargin + getMaxValueLabelStringWidth() + horizSpacing
+//                    + barLengthMultiple + horizSpacing + getMaxRowLabelStringWidth() + rightMargin, 0);
+//        }
         int startY = rowHeight + topMargin;
 
         if (singleLine == false) {
