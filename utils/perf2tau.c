@@ -225,7 +225,7 @@ int main(int argc, char **argv)
     switch(i) {
       case 0: 
         /*  set up run date (default is today) - yyyymmdd format */
-        data_directory = getenv("perf_data_directory");
+        data_directory = getenv("PERF_DATA_DIRECTORY");
         if (!data_directory)
         {
           lt = time(NULL);
