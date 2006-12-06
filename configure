@@ -493,6 +493,12 @@ do
         echo "Error: Cannot access PAPI directory $papidir"
         exit 1
       fi
+
+      if [ -f $papidir/lib/libpfm.a ]
+	  then 
+	  fixmakeargs="$fixmakeargs PAPIPFM"
+      fi		
+
     shift
     ;;
 

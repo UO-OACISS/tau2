@@ -1122,6 +1122,10 @@ ALPHATIMERS)
 	echo "NOTE: Using PAPI with IA-64 options (-lpapi) ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PAPIPFM)
+	echo "NOTE: Using PAPI with -lpfm option ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PPC64PAPI)
 	echo "NOTE: Using PAPI with PPC64 options (-lpapi) ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
