@@ -372,6 +372,10 @@ FWRAPPER	       = TauFMpi.o
 #CRAYX1CC#TAU_PAPI_RPATH = #ENDIF#
 #PGI#TAU_PAPI_RPATH	= -R $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
 #GNU#TAU_PAPI_RPATH	= -Wl,-rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
+
+# if the user has specified -cc=gcc -c++=g++ -fortran=intel, we shouldn't use -rpath
+# because they are likely going to link with ifort
+#INTEL32_FORTRAN#TAU_PAPI_RPATH	=  #ENDIF#
 #SOL2PAPI#TAU_PAPI_RPATH	= #ENDIF#
 #IBMPAPI#TAU_PAPI_RPATH	= #ENDIF#
 #IBM64PAPI#TAU_PAPI_RPATH	= #ENDIF#
