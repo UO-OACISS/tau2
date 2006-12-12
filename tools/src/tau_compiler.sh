@@ -481,10 +481,13 @@ for arg in "$@"
 
 		-WF,-D*)
 			theDefine=${arg#"-WF,"}
+ 		        theDefine=`echo "x$theDefine" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
 			optPdtCFlags="$theDefine $optPdtCFlags"
 			optPdtCxxFlags="$theDefine $optPdtCxxFlags"
 			optPdtF95="$theDefine $optPdtF95"
-			optCompile="$arg $optCompile"
+		        mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
+
+			optCompile="$mod_arg $optCompile"
 			optIncludeDefs="$theDefine $optIncludeDefs"
 			;;
 
