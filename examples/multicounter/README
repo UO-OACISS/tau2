@@ -110,6 +110,7 @@ LIST OF COUNTERS:
 -----------------
 Set the following values for the COUNTER<1-25> environment variables.
 GET_TIME_OF_DAY    --- For the default profiling option using gettimeofday()
+BGL_TIMERS         --- For -BGLTIMERS configuration option on IBM BG/L
 SGI_TIMERS         --- For -SGITIMERS configuration option under IRIX
 LINUX_TIMERS       --- For -LINUXTIMERS configuration option under Linux
 CPU_TIME           --- For user+system time from getrusage() call with -CPUTIME

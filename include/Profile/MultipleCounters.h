@@ -23,8 +23,12 @@ extern "C" {
 }
 #endif /* TAU_PAPI */
 
+#ifdef BGL_TIMERS
+#include <bglpersonality.h>
+#include <rts.h>
+#endif
 
-#define SIZE_OF_INIT_ARRAY 12 //!!Change this if functions are added to the system!!
+#define SIZE_OF_INIT_ARRAY 13 //!!Change this if functions are added to the system!!
 
 
 //Some useful typedefs
@@ -58,6 +62,9 @@ class MultipleCounterLayer
 
   static bool linuxTimerMCLInit(int functionPosition);
   static void linuxTimerMCL(int tid, double values[]);
+
+  static bool bglTimersMCLInit(int functionPosition);
+  static void bglTimersMCL(int tid, double values[]);
 
   static bool sgiTimersMCLInit(int functionPosition);
   static void sgiTimersMCL(int tid, double values[]);
@@ -102,6 +109,11 @@ class MultipleCounterLayer
   static int linuxTimerMCL_CP[1];
   static int linuxTimerMCL_FP;
 #endif //TAU_LINUX_TIMERS
+
+#ifdef BGL_TIMERS
+  static int bglTimersMCL_CP[1];
+  static int bglTimersMCL_FP;
+#endif // BGL_TIMERS
 
 #ifdef SGI_TIMERS
   static int sgiTimersMCL_CP[1];

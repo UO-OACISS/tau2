@@ -65,6 +65,12 @@
 #endif /* TAU_CATAMOUNT */
 #endif // CRAY_TIMERS
 
+#ifdef BGL_TIMERS
+/* header files for BlueGene/L */
+#include <bglpersonality.h>
+#include <rts.h>
+#endif // BGL_TIMERS
+
 #ifdef TAU_XLC
 #define strcasecmp strcmp
 #define strncasecmp strncmp 
@@ -626,6 +632,17 @@ double RtsLayer::getUSecD (int tid) {
   last_timestamp = timestamp;
   return timestamp;
 #else // TAUKTAU_MERGE
+#ifdef BGL_TIMERS
+  static double bgl_clockspeed = 0.0;
+
+  if (bgl_clockspeed == 0.0)
+  {
+    BGLPersonality mybgl;
+    rts_get_personality(&mybgl, sizeof(BGLPersonality));
+    bgl_clockspeed = 1.0e6/(double)BGLPersonality_clockHz(&mybgl);
+  }
+  return (rts_get_timebase() * bgl_clockspeed);
+#else // BGL_TIMERS
 #ifdef SGI_HW_COUNTERS
   return RtsLayer::GetEventCounter();
 #else  //SGI_HW_COUNTERS
@@ -736,6 +753,7 @@ double RtsLayer::getUSecD (int tid) {
 #endif // SGI_TIMERS
 
 #endif // SGI_HW_COUNTERS
+#endif // BGL_TIMERS
 #endif // TAUKTAU_MERGE
 #endif // JAVA_CPU_TIME
 #endif // CPU_TIME
@@ -1384,7 +1402,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: anataraj $
- * $Revision: 1.79 $   $Date: 2006/11/08 07:55:17 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.79 2006/11/08 07:55:17 anataraj Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.80 $   $Date: 2006/12/12 01:04:24 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.80 2006/12/12 01:04:24 amorris Exp $ 
  ***************************************************************************/

@@ -201,6 +201,7 @@ profilecallstack=no
 trace=no
 mpitrace=no
 debugprof=no
+bgltimers=no
 sgitimers=no
 craytimers=no
 linuxtimers=no
@@ -883,6 +884,11 @@ do
     shift
     ;;
 
+  -BGLTIMERS)
+    bgltimers=yes
+    shift
+    ;;
+
   -SGITIMERS)
     sgitimers=yes
     shift
@@ -1032,6 +1038,7 @@ do
     echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
+    echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
     echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
     echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
@@ -1547,6 +1554,12 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
       fixmakeargs="$fixmakeargs SGITIMERS"
       tauoptions="${tauoptions}-sgitimers"
   fi
+fi
+
+if [ $bgltimers = yes ]
+then
+  fixmakeargs="$fixmakeargs BGLTIMERS"
+  tauoptions="${tauoptions}-bgltimers"
 fi
 
 if [ $craytimers = yes ]

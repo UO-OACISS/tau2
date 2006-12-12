@@ -81,6 +81,11 @@ int MultipleCounterLayer::crayTimersMCL_FP;
 #endif // CRAY_TIMERS
 
 
+#ifdef BGL_TIMERS
+int MultipleCounterLayer::bglTimersMCL_CP[1];
+int MultipleCounterLayer::bglTimersMCL_FP;
+#endif // BGL_TIMERS
+
 #ifdef SGI_TIMERS
 int MultipleCounterLayer::sgiTimersMCL_CP[1];
 int MultipleCounterLayer::sgiTimersMCL_FP;
@@ -133,6 +138,7 @@ TauUserEvent **MultipleCounterLayer::counterEvents;
 
 firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   linuxTimerMCLInit,
+						   bglTimersMCLInit,
 						   sgiTimersMCLInit,
 						   cpuTimeMCLInit,
 						   javaCpuTimeMCLInit,
@@ -190,6 +196,11 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     MultipleCounterLayer::linuxTimerMCL_CP[0] = -1;
     MultipleCounterLayer::linuxTimerMCL_FP = -1;
 #endif //TAU_LINUX_TIMERS
+
+#ifdef BGL_TIMERS
+    MultipleCounterLayer::bglTimersMCL_CP[0] = -1;
+    MultipleCounterLayer::bglTimersMCL_FP = -1;
+#endif // BGL_TIMERS
 
 #ifdef SGI_TIMERS
     MultipleCounterLayer::sgiTimersMCL_CP[0] = -1;
@@ -421,6 +432,26 @@ bool MultipleCounterLayer::gettimeofdayMCLInit(int functionPosition){
       }
     }
   return false;
+}
+
+bool MultipleCounterLayer::bglTimersMCLInit(int functionPosition){
+#ifdef BGL_TIMERS
+  for(int i=0; i<MAX_TAU_COUNTERS; i++){
+    if(MultipleCounterLayer::names[i] != NULL){
+      if(strcmp(MultipleCounterLayer::names[i], "BGL_TIMERS") == 0){
+	bglTimersMCL_CP[0] = i;
+	MultipleCounterLayer::counterUsed[i] = true;
+	MultipleCounterLayer::numberOfCounters[i] = 1;
+	MultipleCounterLayer::functionArray[functionPosition] = bglTimersMCL;
+	bglTimersMCL_FP = functionPosition;
+	return true;
+      }
+    }
+  }
+  return false;
+#else //BGL_TIMERS
+  return false;
+#endif//BGL_TIMERS
 }
 
 bool MultipleCounterLayer::sgiTimersMCLInit(int functionPosition){
@@ -699,6 +730,20 @@ void MultipleCounterLayer::gettimeofdayMCL(int tid, double values[]){
 
 }
 
+void MultipleCounterLayer::bglTimersMCL(int tid, double values[]){
+#ifdef  BGL_TIMERS
+   static double bgl_clockspeed = 0.0;
+
+   if (bgl_clockspeed == 0.0)
+   {
+     BGLPersonality mybgl;
+     rts_get_personality(&mybgl, sizeof(BGLPersonality));
+     bgl_clockspeed = 1.0e6/(double)BGLPersonality_clockHz(&mybgl);
+   }
+   values[bglTimersMCL_CP[0]] = (rts_get_timebase() * bgl_clockspeed);
+#endif//BGL_TIMERS
+}
+
 void MultipleCounterLayer::sgiTimersMCL(int tid, double values[]){
 #ifdef  SGI_TIMERS
   struct timespec tp;
@@ -710,10 +755,10 @@ void MultipleCounterLayer::sgiTimersMCL(int tid, double values[]){
 void MultipleCounterLayer::crayTimersMCL(int tid, double values[]){
 #ifdef  CRAY_TIMERS
 #ifdef TAU_CATAMOUNT /* for Cray XT3 */
-  return dclock()*1.0e6;
+  values[crayTimersMCL_CP[0]] = dclock()*1.0e6;
 #else /* for Cray X1 */
   long long tick = _rtc();
-  return (double) tick/HZ;
+  values[crayTimersMCL_CP[0]] = (double) tick/HZ;
 #endif /* TAU_CATAMOUNT */
 #endif // CRAY_TIMERS
 }
