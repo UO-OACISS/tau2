@@ -1834,7 +1834,7 @@ bool addThenEndifClauses(char *currentline, char *previousline, int currentcol)
 const char * stripModuleFromName(const string functionname)
 {
   char *s = NULL;
-  const char *nm  = functionname.c_str();
+  char *nm  = const_cast<char*>(functionname.c_str());
   /* traverse the string till you get rid of the :: using strstr */
   while (s = strstr(nm, "::"))
   {
@@ -2725,9 +2725,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.126 $   $Date: 2006/11/10 03:00:32 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.126 2006/11/10 03:00:32 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.127 $   $Date: 2006/12/13 02:38:32 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.127 2006/12/13 02:38:32 amorris Exp $
  ***************************************************************************/
 
 
