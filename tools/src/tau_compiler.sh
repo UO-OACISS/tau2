@@ -728,9 +728,9 @@ if [ $numFiles == 0 ]; then
 
 	if [ $hasAnOutputFile == $FALSE ]; then
 		passedOutputFile="a.out"
-		linkCmd="$regularCmd  $optLinking -o $passedOutputFile"
+		linkCmd="$compilerSpecified $regularCmd $optLinking -o $passedOutputFile"
 	else
-		linkCmd="$regularCmd  $optLinking"
+		linkCmd="$compilerSpecified $regularCmd $optLinking"
 		#Do not add -o, since the regular command has it already.
     fi	
 
