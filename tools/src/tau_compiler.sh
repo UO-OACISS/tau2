@@ -132,6 +132,11 @@ fi
 
 
 
+# We grab the first argument and remember it as the compiler
+# if the user doesn't specify a fallback compiler, we use it
+foundFirstArg=0
+compilerSpecified=""
+
 #All the script options must be passed as -opt*
 #including verbose option [as -optVerbose]. The reason being
 #script assumes that all any tokens passed after -opt* sequenece
@@ -154,11 +159,16 @@ for arg in "$@"; do
                 # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
 		modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
 		THEARGS="$THEARGS $modarg"
-		regularCmd="$regularCmd $modarg"	
+
+		if [ $foundFirstArg == 0 ]; then
+		    foundFirstArg=1
+		    compilerSpecified="$modarg"
+		else
+		    regularCmd="$regularCmd $modarg"	
+		fi
 
 		tempCounter=tempCounter+1
 		;;
-
 	esac
 done
 echoIfDebug "\nRegular command passed is --  $regularCmd "; 
@@ -195,7 +205,7 @@ for arg in "$@"
 				preprocess=$TRUE
 			# if a preprocessor has not been specified yet, use
 			# the default C preprocessor
-				if [ "x$preprocessor" = "x" ]; then
+				if [ "x$preprocessor" == "x" ]; then
 				  preprocessor=/usr/bin/cpp
 				fi
 				if [ ! -x $preprocessor ]; then
@@ -437,6 +447,20 @@ for arg in "$@"
 				echoIfDebug "\tOpari Tool used: $optOpariOpts"
 				;;
 
+			-optAppCC*)
+				optAppCC="${arg#"-optAppCC="}"
+				echoIfDebug "\tFallback C Compiler: $optAppCC"
+				;;
+
+			-optAppCXX*)
+				optAppCXX="${arg#"-optAppCXX="}"
+				echoIfDebug "\tFallback C++ Compiler: $optAppCXX"
+				;;
+
+			-optAppF90*)
+				optAppF90="${arg#"-optAppF90="}"
+				echoIfDebug "\tFallback Fortran Compiler: $optAppF90"
+				;;
 
 			esac #end case for parsing script Options
 			;;
@@ -993,7 +1017,34 @@ fi
 ####################################################################
 if [ $errorStatus == $TRUE ] ; then
 	if [ $revertOnError == $TRUE ]; then
-		evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
+
+	    if [ $groupType == $group_f_F ]; then
+		if [ "x$optAppF90" == "x" ]; then
+		    regularCmd="$compilerSpecified $regularCmd"
+		else
+		    regularCmd="$optAppF90 $regularCmd"
+		fi
+	    fi
+
+	    if [ $groupType == $group_c ]; then
+		if [ "x$optAppCC" == "x" ]; then
+		    regularCmd="$compilerSpecified $regularCmd"
+		else
+		    regularCmd="$optAppCC $regularCmd"
+		fi
+	    fi
+
+	    if [ $groupType == $group_C ]; then
+		if [ "x$optAppCXX" == "x" ]; then
+		    regularCmd="$compilerSpecified $regularCmd"
+		else
+		    regularCmd="$optAppCXX $regularCmd"
+		fi
+	    fi
+
+
+	    evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
+
 	else
 		echo "Reverting to uninstrumented command disabled. To enable reverting pass -optRevert to tau_compiler.sh."
 		exit 1
