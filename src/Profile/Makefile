@@ -206,7 +206,7 @@ $(TAU_DISABLE): TauDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
 		$(TAU_RANLIB) $(TAU_DISABLE)
 
-libTauMpi$(TAU_CONFIG)$(LSX): 
+libTauMpi$(TAU_CONFIG)$(LSX): TauMpi.c TauFMpi.c
 		$(MAKE) -f Makefile.wrapper  
 
 libTauShmem$(TAU_CONFIG)$(LSX): 
