@@ -1,3 +1,21 @@
+/****************************************************************************
+ *			Tuning and Analysis Utilities
+ *			http://www.cs.uoregon.edu/research/paracomp/tau
+ ****************************************************************************
+ * Copyright (c) 1997-2006
+ *    Department of Computer and Information Science, University of Oregon
+ *    Advanced Computing Laboratory, Los Alamos National Laboratory
+ *    Research Center Juelich, ZAM Germany	
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *    Alan Morris - initial API and implementation
+ *    Wyatt Spear - various modifications
+ ****************************************************************************/
 package org.eclipse.ptp.tau.perfdmf;
 
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -73,14 +91,15 @@ public class PerfDMFUIPlugin extends AbstractUIPlugin {
             PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("org.eclipse.ptp.tau.perfdmf.views.PerfDMFView");
 
             // when that class is initialized, it will call registerPerfDMFView so we can get a handle on it
-            theView.addProfile(projectName, projectType, location);
+            return theView.addProfile(projectName, projectType, location);
             
-            return true;
+            //return true;
 
         } catch (Throwable t) {
             t.printStackTrace();
+            return false;
         }
-        return true;
+        
     }
 
 }
