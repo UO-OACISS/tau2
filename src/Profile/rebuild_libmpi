@@ -10,6 +10,9 @@ if [ $1 != "32" -a $1 != "64" ] ; then
     exit
 fi
 
+# Very important, if $WRKDIR is set, then the outputs won't go in the local
+# directory, and our build with fail.
+unset WRKDIR
 
 export BITS=$1
 export BITSUFFIX=$BITS
