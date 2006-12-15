@@ -2206,7 +2206,7 @@ MPI_Status * status;
   returnVal = PMPI_Sendrecv( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status );
 
 #ifdef TAU_TRACK_MSG
-  if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+  if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
     PMPI_Get_count( status, MPI_BYTE, &count );
     TAU_TRACE_RECVMSG(status->MPI_TAG, translateRankToWorld(comm, status->MPI_SOURCE), count);
   }
