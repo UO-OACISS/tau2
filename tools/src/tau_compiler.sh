@@ -1028,24 +1028,21 @@ if [ $errorStatus == $TRUE ] ; then
 		else
 		    regularCmd="$optAppF90 $regularCmd"
 		fi
-	    fi
-
-	    if [ $groupType == $group_c ]; then
+	    elif [ $groupType == $group_c ]; then
 		if [ "x$optAppCC" == "x" ]; then
 		    regularCmd="$compilerSpecified $regularCmd"
 		else
 		    regularCmd="$optAppCC $regularCmd"
 		fi
-	    fi
-
-	    if [ $groupType == $group_C ]; then
+	    elif [ $groupType == $group_C ]; then
 		if [ "x$optAppCXX" == "x" ]; then
 		    regularCmd="$compilerSpecified $regularCmd"
 		else
 		    regularCmd="$optAppCXX $regularCmd"
 		fi
+	    else
+		    regularCmd="$compilerSpecified $regularCmd"
 	    fi
-
 
 	    evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
 
