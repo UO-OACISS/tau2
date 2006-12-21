@@ -83,6 +83,10 @@ printUsage () {
 	echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
 	echo -e "  -optRevert\t\t\tRevert to the original compilation rule on error (default)."
 	echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
+	echo -e "  -optAppCC=\"<cc>\"\t\tSpecifies the fallback C compiler."
+	echo -e "  -optAppCXX=\"<cxx>\"\t\tSpecifies the fallback C++ compiler."
+	echo -e "  -optAppF90=\"<f90>\"\t\tSpecifies the fallback F90 compiler."
+
 	if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 		exit
 	fi
