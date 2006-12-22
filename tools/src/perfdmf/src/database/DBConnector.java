@@ -452,9 +452,11 @@ public class DBConnector implements DB {
         if (this.getDBType().compareTo("oracle") == 0) {
             ilpColumns[8] = "excl";
         }
-
         else if (this.getDBType().compareTo("derby") == 0) {
             ilpColumns[9] = "num_calls";
+        }
+        else if (this.getDBType().compareTo("mysql") == 0) {
+            ilpColumns[9] = "`call`";
         }
 
         if (checkTable(dbMeta, "interval_location_profile", ilpColumns) != 0)
@@ -472,6 +474,8 @@ public class DBConnector implements DB {
             itsColumns[5] = "excl";
         } else if (this.getDBType().compareTo("derby") == 0) {
             itsColumns[6] = "num_calls";
+        } else if (this.getDBType().compareTo("mysql") == 0) {
+            itsColumns[6] = "`call`";
         }
 
         if (checkTable(dbMeta, "interval_total_summary", itsColumns) != 0)

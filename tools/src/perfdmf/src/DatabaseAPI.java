@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.9 2006/10/30 18:10:26 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.10 2006/12/22 22:32:39 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class DatabaseAPI {
 
@@ -1074,6 +1074,7 @@ public class DatabaseAPI {
         try {
             stmt.executeUpdate();
         } catch (Exception e) {
+            e.printStackTrace();
             System.out.println(e);
             System.out.println(stmt.toString());
             System.out.println("exclusive: " + fp.getExclusive(metricID));
@@ -1112,6 +1113,16 @@ public class DatabaseAPI {
             threadInsertStatement = db.prepareStatement("INSERT INTO "
                     + db.getSchemaPrefix()
                     + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        } else if (db.getDBType().compareTo("mysql") == 0) {
+            totalInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, `call`, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            meanInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, `call`, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            threadInsertStatement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, `call`, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         } else {
             totalInsertStatement = db.prepareStatement("INSERT INTO "
                     + db.getSchemaPrefix()
@@ -1411,6 +1422,10 @@ public class DatabaseAPI {
             statement = db.prepareStatement("INSERT INTO "
                     + db.getSchemaPrefix()
                     + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        } else if (db.getDBType().compareTo("derby") == 0) {
+            statement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, `call`, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         } else {
             statement = db.prepareStatement("INSERT INTO "
                     + db.getSchemaPrefix()

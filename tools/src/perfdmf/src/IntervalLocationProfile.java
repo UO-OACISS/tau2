@@ -26,7 +26,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.2 2006/02/08 01:25:45 khuck Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.3 2006/12/22 22:32:39 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -390,6 +390,8 @@ public class IntervalLocationProfile extends Object {
 
         if (db.getDBType().compareTo("derby") == 0) {
         	buf.append("ms.num_calls, ");
+        } else if (db.getDBType().compareTo("mysql") == 0) {
+        	buf.append("ms.`call`, ");
         } else {
         	buf.append("ms.call, ");
 		}
@@ -404,6 +406,8 @@ public class IntervalLocationProfile extends Object {
         }
         if (db.getDBType().compareTo("derby") == 0) {
         	buf.append("ts.num_calls, ");
+        } else if (db.getDBType().compareTo("mysql") == 0) {
+        	buf.append("ts.`call`, ");
         } else {
         	buf.append("ts.call, ");
 		}
@@ -458,6 +462,8 @@ public class IntervalLocationProfile extends Object {
         }
         if (db.getDBType().compareTo("derby") == 0) {
         	buf.append("p.num_calls, ");
+        } else if (db.getDBType().compareTo("mysql") == 0) {
+        	buf.append("p.`call`, ");
 		} else {
         	buf.append("p.call, ");
 		}
@@ -521,6 +527,10 @@ public class IntervalLocationProfile extends Object {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
                             + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                } else if (db.getDBType().compareTo("mysql") == 0) {
+                    statement = db.prepareStatement("INSERT INTO "
+                            + db.getSchemaPrefix()
+                            + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, `call`, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 } else {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
@@ -560,6 +570,10 @@ public class IntervalLocationProfile extends Object {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
                             + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                } else if (db.getDBType().compareTo("mysql") == 0) {
+                    statement = db.prepareStatement("INSERT INTO "
+                            + db.getSchemaPrefix()
+                            + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, `call`, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 } else {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
