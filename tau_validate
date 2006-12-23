@@ -389,7 +389,6 @@ class PdtTestC(PdtTest):
             return False
         return True
     
-
 class PdtTestCPP(PdtTest):
     def __init__(self, makefile):
         PdtTest.__init__(self, "PDT (C++)", makefile)
@@ -432,11 +431,93 @@ class PdtTestGF(PdtTest):
             pdtarchdir = os.popen("grep \"^TAU_ARCH=\" "+self.fullmakefile).read()[9:-1]
 
         gfparse = pdtdir + "/" + pdtarchdir + "/bin/gfparse"
-        if os.path.exists(pdtdir + pdtarchdir + "/bin/gfparse") == False:
+        if os.path.exists(gfparse) == False:
             return False
 
         print pdtdir
         return True
+
+
+
+class PdtMPITestC(PdtTest):
+    def __init__(self, makefile):
+        PdtTest.__init__(self, "PDT-MPI (C)", makefile)
+    def getActualTest(self):
+        return "pdtmpic"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        if usesOption(self.makefile, "mpi") == False:
+            output("Skipping, not configured with MPI")
+            return False
+        return True
+    def runTest(self):
+        output ("Skipping Test (we won't run MPI tests yet)")
+
+
+
+class PdtMPITestCPP(PdtTest):
+    def __init__(self, makefile):
+        PdtTest.__init__(self, "PDT-MPI (C++)", makefile)
+    def getActualTest(self):
+        return "pdtmpicpp"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        if usesOption(self.makefile, "mpi") == False:
+            output("Skipping, not configured with MPI")
+            return False
+        return True
+    def runTest(self):
+        output ("Skipping Test (we won't run MPI tests yet)")
+
+class PdtMPITestF(PdtTest):
+    def __init__(self, makefile):
+        PdtTest.__init__(self, "PDT-MPI (Fortran)", makefile)
+    def getActualTest(self):
+        return "pdtmpif"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        if usesOption(self.makefile, "mpi") == False:
+            output("Skipping, not configured with MPI")
+            return False
+        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+            return False
+        return True
+    def runTest(self):
+        output ("Skipping Test (we won't run MPI tests yet)")
+
+class PdtMPITestGF(PdtTest):
+    def __init__(self, makefile):
+        PdtTest.__init__(self, "PDT-MPI (GFortran)", makefile)
+    def getActualTest(self):
+        return "pdtmpigf"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        if usesOption(self.makefile, "mpi") == False:
+            output("Skipping, not configured with MPI")
+            return False
+        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+            return False
+
+
+        # strip off PDTDIR=, and newline
+        pdtdir = os.popen("grep \"^PDTDIR=\" "+self.fullmakefile).read()[7:-1]
+
+        pdtarchdir = os.popen("grep \"^PDTARCHDIR=\" "+self.fullmakefile).read()[11:-1]
+        if pdtarchdir == "$(TAU_ARCH)":
+            pdtarchdir = os.popen("grep \"^TAU_ARCH=\" "+self.fullmakefile).read()[9:-1]
+
+        gfparse = pdtdir + "/" + pdtarchdir + "/bin/gfparse"
+        if os.path.exists(gfparse) == False:
+            return False
+
+        print pdtdir
+        return True
+    def runTest(self):
+        output ("Skipping Test (we won't run MPI tests yet)")
 
 
 def usage():
@@ -587,6 +668,11 @@ for makefile in makefiles:
 
     runTest(MpiCTest(fullmakefile),tests)
     runTest(MpiFTest(fullmakefile),tests)
+
+    runTest(PdtMPITestC(fullmakefile),tests)
+    runTest(PdtMPITestCPP(fullmakefile),tests)
+    runTest(PdtMPITestF(fullmakefile),tests)
+    runTest(PdtMPITestGF(fullmakefile),tests)
 
 
     testgrid[makefile] = tests
