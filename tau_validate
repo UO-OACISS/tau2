@@ -556,7 +556,7 @@ def usage():
 
 errorsFound = 0
 
-PWD = os.environ["PWD"]
+PWD = os.getcwd()
 TEST_ROOT = PWD + "/examples/validate"
 
 
