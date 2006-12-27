@@ -189,6 +189,8 @@ public:
 	static int DumpData(bool increment = false,
 			    int tid = RtsLayer::myThread(), char *prefix = "dump"); 
 	static void PurgeData(int tid = RtsLayer::myThread());
+	static int Snapshot(char *name, bool finalize = false,
+			    int tid = RtsLayer::myThread()); 
 	static void theFunctionList(const char ***inPtr, int *numOfFunctions,
 				    bool addName = false, const char * inString = NULL);
 	static void dumpFunctionNames();
@@ -309,6 +311,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.72 $   $Date: 2006/11/11 16:47:42 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.72 2006/11/11 16:47:42 amorris Exp $ 
+ * $Revision: 1.73 $   $Date: 2006/12/27 02:50:21 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.73 2006/12/27 02:50:21 amorris Exp $ 
  ***************************************************************************/

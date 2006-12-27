@@ -61,6 +61,7 @@ using namespace std;
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/utsname.h> // for host identification (uname)
 
 #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
 #include <sys/time.h>
@@ -149,6 +150,30 @@ int& TauGetDepthLimit(void)
   } 
 	
   return depth; 
+}
+
+
+
+//////////////////////////////////////////////////////////////////////
+// Static holder for snapshot file handles
+//////////////////////////////////////////////////////////////////////
+static FILE **TauGetSnapshotFiles() {
+  static FILE **snapshotFiles = NULL;
+  if (!snapshotFiles) {
+    snapshotFiles = new FILE*[TAU_MAX_THREADS];
+    for (int i=0; i<TAU_MAX_THREADS; i++) {
+      snapshotFiles[i] = NULL;
+    }
+  }
+  return snapshotFiles;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Static holder for snapshot event counts
+//////////////////////////////////////////////////////////////////////
+static int *TauGetSnapshotEventCounts() {
+  static int eventCounts[TAU_MAX_THREADS];
+  return eventCounts;
 }
 
 
@@ -867,6 +892,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
               << ThisFunction->GetName() <<endl;);
   
               StoreData(tid);
+	      Snapshot("final", true, tid);
 
 #if defined(TAUKTAU) 
 	      //AN Removed - New func inside 
@@ -1474,6 +1500,8 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	return 1;
 }
 
+
+// This is ::StoreData for only a single metric
 int Profiler::StoreData(int tid)
 {
 #ifdef PROFILING_ON 
@@ -1768,6 +1796,7 @@ int Profiler::StoreData(int tid)
 	return 1;
 }
 
+// This is ::DumpData for only a single metric
 int Profiler::DumpData(bool increment, int tid, char *prefix)
 {
   	TAU_PROFILE("TAU_DUMP_DB()", " ", TAU_IO);
@@ -2549,7 +2578,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 
 
 
-
+// This is ::StoreData for multiple metrics
 int Profiler::StoreData(int tid){
 #ifdef PROFILING_ON
   vector<FunctionInfo*>::iterator it;
@@ -2704,6 +2733,8 @@ int Profiler::StoreData(int tid){
  
   return 1;
 }
+
+// This is ::DumpData for multiple metrics
 int Profiler::DumpData(bool increment, int tid, char *prefix){
 
   TAU_PROFILE("TAU_DB_DUMP()", " ", TAU_IO);
@@ -3296,10 +3327,381 @@ double& Profiler::TheTauThrottlePerCall(void)
   static double throttlePercall = TauGetThrottlePerCall();
   return throttlePercall;
 }
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////
+// Snapshot related routines
+//////////////////////////////////////////////////////////////////////
+
+
+#ifdef __linux__
+#include <sys/types.h>
+#include <linux/unistd.h>
+_syscall0(pid_t,gettid) 
+pid_t gettid(void);
+#endif /* __linux__ */
+
+
+static int ThisTauReadFullLine(char *line, FILE *fp) {
+  int ch;
+  int i = 0; 
+  while ( (ch = fgetc(fp)) && ch != EOF && ch != (int) '\n') {
+    line[i++] = (unsigned char) ch;
+  }
+  line[i] = '\0'; 
+  return i; 
+}
+
+
+static int writeMetaData(FILE *fp) {
+  // try to grab meta-data
+
+  char hostname[4096];
+  gethostname(hostname,4096);
+  fprintf (fp, "\t<hostname>%s</hostname>\n",hostname);
+
+  struct utsname archinfo;
+
+  uname (&archinfo);
+  fprintf (fp, "\t<sys_name>%s</sysname>\n", archinfo.sysname);
+  fprintf (fp, "\t<sys_release>%s</sys_release>\n", archinfo.release);
+  fprintf (fp, "\t<sys_version>%s</sys_version>\n", archinfo.version);
+  fprintf (fp, "\t<sys_machine>%s</sys_machine>\n", archinfo.machine);
+  fprintf (fp, "\t<sys_nodename>%s</sys_nodename>\n", archinfo.nodename);
+
+
+  fprintf (fp, "\t<pid>%d</pid>\n", getpid());
+
+#ifdef __linux__
+  // try to grab CPU info
+  fprintf (fp, "\t<linux_tid>%d</linux_tid>\n", gettid());
+  FILE *f = fopen("/proc/cpuinfo", "r");
+  if (f) {
+    char line[4096];
+    while (ThisTauReadFullLine(line, f)) {
+      char buf[4096];
+      if (strncmp(line, "cpu MHz", 7) == 0) {
+	fprintf (fp, "\t<cpu_mhz>%s</cpu_mhz>\n", strstr(line,":")+2);
+      }
+      if (strncmp(line, "model name", 10) == 0) {
+	fprintf (fp, "\t<cpu_type>%s</cpu_type>\n", strstr(line,":")+2);
+      }
+      if (strncmp(line, "cache size", 10) == 0) {
+	fprintf (fp, "\t<cache_size>%s</cache_size>\n", strstr(line,":")+2);
+      }
+      if (strncmp(line, "cpu cores", 9) == 0) {
+	fprintf (fp, "\t<cpu_cores>%s</cpu_cores>\n", strstr(line,":")+2);
+      }
+    }
+  }
+#endif
+  return 0;
+}
+
+
+static int writeSnapshotTime(FILE *fp) {
+
+
+   time_t theTime = time(NULL);
+//    char *stringTime = ctime(&theTime);
+//    fprintf (fp, "<time>%s</time>\n", stringTime);
+
+//    char *day = strtok(stringTime," ");
+//    char *month = strtok(NULL," ");
+//    char *dayInt = strtok(NULL," ");
+//    char *time = strtok(NULL," ");
+//    char *year = strtok(NULL," ");
+//    //Get rid of the mewline.
+//    year[4] = '\0';
+//    char *newStringTime = new char[1024];
+//    sprintf(newStringTime,"%s-%s-%s-%s-%s",day,month,dayInt,time,year);
+//    fprintf (fp, "<date>%s</date>\n", newStringTime);
+
+
+   char buf[4096];
+   struct tm *thisTime = gmtime(&theTime);
+   strftime (buf,4096,"%Y-%m-%dT%H:%M:%SZ", thisTime);
+//    fprintf (fp, "<utcTime>%s</utcTime>\n", buf);
+   fprintf (fp, "<utc_date>%s</utc_date>\n", buf);
+
+   thisTime = localtime(&theTime);
+   strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
+
+
+   char tzone[7];
+   strftime (tzone, 7, "%z", thisTime);
+   if (strlen(tzone) == 5) {
+     tzone[6] = 0;
+     tzone[5] = tzone[4];
+     tzone[4] = tzone[3];
+     tzone[3] = ':';
+   }
+   fprintf (fp, "<local_time>%s%s</local_time>\n", buf,tzone);
+
+   return 0;
+}
+
+
+static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler) {
+  
+#ifdef TAU_CALLPATH
+  if (fi == profiler->ThisFunction || fi == profiler->CallPathFunction) {
+#else
+  if (fi == profiler->ThisFunction) { 
+#endif
+    return true;
+  }
+  return false;
+}
+
+
+
+int Profiler::Snapshot(char *name, bool finalize, int tid) {
+   FILE *fp = TauGetSnapshotFiles()[tid];
+   if (finalize && !fp) { 
+     // finalize is true at the end of execution (regular profile output), if we haven't written a snapshot, don't bother
+     return 0;
+   }
+
+   TAU_PROFILE_TIMER(timer, "TAU_PROFILE_SNAPSHOT()", " ", TAU_IO);
+
+   if (!finalize) {
+     // don't start the timer here, otherwise we'll go into an infinite loop
+     // since our timer will always be on the stack
+     TAU_PROFILE_START(timer);
+   }
+
+
+   int numFunc, numEvents;
+
+   //  printf ("Writing Snapshot [node %d:%d]\n",  RtsLayer::myNode(), tid);
+
+
+#ifndef TAU_MULTIPLE_COUNTERS
+   double currentTime = RtsLayer::getUSecD(tid); 
+#else
+   double currentTime[MAX_TAU_COUNTERS];
+   for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+     currentTime[c] = 0;
+   }
+   RtsLayer::getUSecD(tid, currentTime);
+#endif	
+
+   char threadid[4096];
+   sprintf (threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, getpid());
+
+   RtsLayer::LockDB();
+   numFunc = TheFunctionDB().size();
+
+   if (!fp) {
+     // create file 
+     char *dirname;
+     char *currentDirectory = ".";
+     if ((dirname = getenv("PROFILEDIR")) == NULL) {
+       dirname = currentDirectory;
+     }
+
+     char filename[4096];
+     sprintf (filename,"%s/snapshot.%d.%d.%d", dirname, 
+	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
+
+     if ((fp = fopen (filename, "w+")) == NULL) {
+       char errormsg[4096];
+       sprintf(errormsg,"Error: Could not create %s",filename);
+       perror(errormsg);
+       RtsLayer::UnLockDB();
+       return 0;
+     }
+
+     // assign it back to the global structure for this thread
+     TauGetSnapshotFiles()[tid] = fp;
+
+     fprintf (fp, "<profile_xml>\n");
+
+     fprintf (fp, "<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", threadid,
+	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
+     writeMetaData(fp);
+     fprintf (fp, "</thread>\n");
+
+     fprintf (fp, "<definitions thread=\"%s\">\n", threadid);
+
+#ifndef TAU_MULTIPLE_COUNTERS
+     fprintf (fp, "<metric id=\"0\" name=\"%s\" units=\"unknown\"/>\n",  TauGetCounterString());
+#else
+      for(int i=0;i<MAX_TAU_COUNTERS;i++){
+	if(MultipleCounterLayer::getCounterUsed(i)){
+	  char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
+	  fprintf (fp, "<metric id=\"%d\" name=\"%s\" units=\"unknown\"/>\n", i, tmpChar);
+	}
+     }
+#endif
+
+
+     // write out events seen (so far)
+     for (int i=0; i < numFunc; i++) {
+       FunctionInfo *fi = TheFunctionDB()[i];
+       fprintf (fp, "<event id=\"%d\" name=\"%s\" group=\"%s\"/>\n",
+		i, fi->GetName(),  fi->GetAllGroups());
+     }
+
+     // remember the number of events we've written to the snapshot file
+     TauGetSnapshotEventCounts()[tid] = numFunc;
+
+     fprintf (fp, "</definitions>\n");
+   }
+
+
+   
+   // write out new events since the last snapshot
+   if (TauGetSnapshotEventCounts()[tid] != numFunc) {
+     fprintf (fp, "<definitions thread=\"%s\">\n", threadid);
+     for (int i=TauGetSnapshotEventCounts()[tid]; i < numFunc; i++) {
+       FunctionInfo *fi = TheFunctionDB()[i];
+       fprintf (fp, "<event id=\"%d\" name=\"%s\" group=\"%s\"/>\n",
+		i, fi->GetName(),  fi->GetAllGroups());
+     }
+     fprintf (fp, "</definitions>\n");
+     TauGetSnapshotEventCounts()[tid] = numFunc;
+   }
+
+
+   // now write the actual profile data for this snapshot
+   fprintf (fp, "\n<profile thread=\"%s\">\n", threadid);
+   fprintf (fp, "<snapshotname>%s</snapshotname>\n",name);
+   writeSnapshotTime(fp);
+
+#ifndef TAU_MULTIPLE_COUNTERS
+   fprintf (fp, "<interval_data metrics=\"0\">\n");
+#else
+   char metricList[4096];
+   char *loc = metricList;
+   for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+     if (MultipleCounterLayer::getCounterUsed(c)) {
+       loc += sprintf (loc,"%d ", c);
+     }
+   }
+   fprintf (fp, "<interval_data metrics=\"%s\">\n", metricList);
+#endif   
+
+
+ 
+   for (int i=0; i < numFunc; i++) {
+     FunctionInfo *fi = TheFunctionDB()[i];
+
+#ifndef TAU_MULTIPLE_COUNTERS
+     double excltime, incltime;
+#else
+     double *excltime = NULL, *incltime = NULL;
+#endif
+     
+     if (!fi->GetAlreadyOnStack(tid)) {
+       // not on the callstack, the data is complete
+
+       excltime = fi->GetExclTime(tid);
+       incltime = fi->GetInclTime(tid); 
+
+     } else {
+       // this routine is currently on the callstack
+       // we will have to compute the exclusive and inclusive time it has accumulated
+
+       // Start with the data already accumulated
+       // Then walk the entire stack, when this function the function in question is found we do two things
+       // 1) Compute the current amount that should be added to the inclusive time.
+       //    This is simply the current time minus the start time of our function.
+       //    If a routine is in the callstack twice, only the highest (top-most) value
+       //    will be retained, this is correct.
+       // 2) Add to the exclusive value by subtracting the start time of the current
+       //    child (if there is one) from the duration of this function so far.
+
+       incltime = fi->GetInclTime(tid); 
+       excltime = fi->GetExclTime(tid); 
+#ifndef TAU_MULTIPLE_COUNTERS
+       double inclusiveToAdd = 0;
+       double prevStartTime = 0;
+
+       for (Profiler *current = CurrentProfiler[tid]; current != 0; current = current->ParentProfiler) {
+	 if (helperIsFunction(fi, current)) {
+	   inclusiveToAdd = currentTime - current->StartTime; 
+	   excltime += inclusiveToAdd - prevStartTime;
+	 }
+	 prevStartTime = currentTime - current->StartTime;  
+       }
+       incltime += inclusiveToAdd;
+#else
+       double inclusiveToAdd[MAX_TAU_COUNTERS];
+       double prevStartTime[MAX_TAU_COUNTERS];
+       for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+	 inclusiveToAdd[c] = 0;
+	 prevStartTime[c] = 0;
+       }
+
+       for (Profiler *current = CurrentProfiler[tid]; current != 0; current = current->ParentProfiler) {
+	 if (helperIsFunction(fi, current)) {
+	   for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+	     inclusiveToAdd[c] = currentTime[c] - current->StartTime[c]; 
+	     excltime[c] += inclusiveToAdd[c] - prevStartTime[c];
+	   }
+	 }
+	 for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+	   prevStartTime[c] = currentTime[c] - current->StartTime[c];  
+	 }
+       }
+       for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+	 incltime[c] += inclusiveToAdd[c];
+       }
+#endif
+     }
+     
+#ifndef TAU_MULTIPLE_COUNTERS
+     fprintf (fp, "%d %ld %ld %.16G %.16G \n", i, fi->GetCalls(tid), fi->GetSubrs(tid), 
+	      excltime, incltime);
+#else
+     fprintf (fp, "%d %ld %ld ", i, fi->GetCalls(tid), fi->GetSubrs(tid));
+     for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+       if (MultipleCounterLayer::getCounterUsed(c)) {
+	 fprintf (fp, "%.16G %.16G ", excltime[c], incltime[c]);
+       }
+     }
+     fprintf (fp, "\n");
+
+#endif
+     
+   }
+
+
+   fprintf (fp, "</interval_data>\n");
+
+   fprintf (fp, "</profile>\n");
+
+   if (finalize) {
+     fprintf (fp, "</profile_xml>\n");
+     //     fclose(fp);
+     printf ("snapshot closed!\n");
+   }
+
+   RtsLayer::UnLockDB();
+   
+   if (!finalize) {
+     TAU_PROFILE_STOP(timer);
+   }
+
+   return 0;
+}
+
+
+
+
+
+
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: anataraj $
- * $Revision: 1.140 $   $Date: 2006/11/10 07:25:42 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.140 2006/11/10 07:25:42 anataraj Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.141 $   $Date: 2006/12/27 02:50:21 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.141 2006/12/27 02:50:21 amorris Exp $ 
  ***************************************************************************/
 
 	
