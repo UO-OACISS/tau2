@@ -3338,13 +3338,13 @@ double& Profiler::TheTauThrottlePerCall(void)
 // Snapshot related routines
 //////////////////////////////////////////////////////////////////////
 
-
-#ifdef __linux__
-#include <sys/types.h>
-#include <linux/unistd.h>
-_syscall0(pid_t,gettid) 
-pid_t gettid(void);
-#endif /* __linux__ */
+// doesn't work on ia64 for some reason
+// #ifdef __linux__
+// #include <sys/types.h>
+// #include <linux/unistd.h>
+// _syscall0(pid_t,gettid) 
+// pid_t gettid(void);
+// #endif /* __linux__ */
 
 
 static int ThisTauReadFullLine(char *line, FILE *fp) {
@@ -3368,7 +3368,7 @@ static int writeMetaData(FILE *fp) {
   struct utsname archinfo;
 
   uname (&archinfo);
-  fprintf (fp, "\t<sys_name>%s</sysname>\n", archinfo.sysname);
+  fprintf (fp, "\t<sys_name>%s</sys_name>\n", archinfo.sysname);
   fprintf (fp, "\t<sys_release>%s</sys_release>\n", archinfo.release);
   fprintf (fp, "\t<sys_version>%s</sys_version>\n", archinfo.version);
   fprintf (fp, "\t<sys_machine>%s</sys_machine>\n", archinfo.machine);
@@ -3378,8 +3378,10 @@ static int writeMetaData(FILE *fp) {
   fprintf (fp, "\t<pid>%d</pid>\n", getpid());
 
 #ifdef __linux__
+  // doesn't work on ia64 for some reason
+  //fprintf (fp, "\t<linux_tid>%d</linux_tid>\n", gettid());
+
   // try to grab CPU info
-  fprintf (fp, "\t<linux_tid>%d</linux_tid>\n", gettid());
   FILE *f = fopen("/proc/cpuinfo", "r");
   if (f) {
     char line[4096];
@@ -3523,12 +3525,12 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
      fprintf (fp, "<profile_xml>\n");
 
-     fprintf (fp, "<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", threadid,
+     fprintf (fp, "\n<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", threadid,
 	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
      writeMetaData(fp);
      fprintf (fp, "</thread>\n");
 
-     fprintf (fp, "<definitions thread=\"%s\">\n", threadid);
+     fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
 
 #ifndef TAU_MULTIPLE_COUNTERS
      fprintf (fp, "<metric id=\"0\" name=\"%s\" units=\"unknown\"/>\n",  TauGetCounterString());
@@ -3559,7 +3561,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
    
    // write out new events since the last snapshot
    if (TauGetSnapshotEventCounts()[tid] != numFunc) {
-     fprintf (fp, "<definitions thread=\"%s\">\n", threadid);
+     fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
      for (int i=TauGetSnapshotEventCounts()[tid]; i < numFunc; i++) {
        FunctionInfo *fi = TheFunctionDB()[i];
        fprintf (fp, "<event id=\"%d\" name=\"%s\" group=\"%s\"/>\n",
@@ -3572,7 +3574,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
    // now write the actual profile data for this snapshot
    fprintf (fp, "\n<profile thread=\"%s\">\n", threadid);
-   fprintf (fp, "<snapshotname>%s</snapshotname>\n",name);
+   fprintf (fp, "<name>%s</name>\n",name);
    writeSnapshotTime(fp);
 
 #ifndef TAU_MULTIPLE_COUNTERS
@@ -3679,7 +3681,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
    fprintf (fp, "</profile>\n");
 
    if (finalize) {
-     fprintf (fp, "</profile_xml>\n");
+     fprintf (fp, "\n</profile_xml>\n");
      //     fclose(fp);
      printf ("snapshot closed!\n");
    }
@@ -3700,8 +3702,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.141 $   $Date: 2006/12/27 02:50:21 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.141 2006/12/27 02:50:21 amorris Exp $ 
+ * $Revision: 1.142 $   $Date: 2006/12/27 18:54:02 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.142 2006/12/27 18:54:02 amorris Exp $ 
  ***************************************************************************/
 
 	
