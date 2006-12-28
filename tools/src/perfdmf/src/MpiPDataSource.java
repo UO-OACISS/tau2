@@ -29,7 +29,6 @@ public class MpiPDataSource extends DataSource {
 
     public MpiPDataSource(File file) {
         super();
-        this.setMetrics(new ArrayList());
         this.file = file;
     }
 

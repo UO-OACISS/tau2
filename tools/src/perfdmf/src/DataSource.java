@@ -9,11 +9,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.8 2006/06/23 17:48:35 amorris Exp $</P>
- * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
- * @see		TrialData
- * @see		NCT
+ * <P>CVS $Id: DataSource.java,v 1.9 2006/12/28 03:05:59 amorris Exp $</P>
+ * @author  Robert Bell, Alan Morris
+ * @version $Revision: 1.9 $
  */
 public abstract class DataSource {
 
@@ -50,10 +48,9 @@ public abstract class DataSource {
     private Map userEvents = new TreeMap();
     private List allThreads;
 
-    
     private boolean generateIntermediateCallPathData;
     private boolean reverseDataAvailable;
-    
+
     // just a holder for the output of getMaxNCTNumbers(), makes subsequent calls instantaneous
     private int[] maxNCT = null;
 
@@ -65,6 +62,12 @@ public abstract class DataSource {
 
     protected volatile boolean reloading;
 
+    
+    public DataSource() {
+        // nothing
+    }
+    
+    
     // by default no files
     public List getFiles() {
         return new ArrayList();
@@ -146,14 +149,15 @@ public abstract class DataSource {
 
     public Function addFunction(String name, int numMetrics) {
         name = name.trim();
-        Object obj = functions.get(name);
+        Function function = (Function) functions.get(name);
 
         // return the function if found
-        if (obj != null)
-            return (Function) obj;
+        if (function != null) {
+            return function;
+        }
 
         // otherwise, add it and return it
-        Function function = new Function(name, functions.size(), numMetrics);
+        function = new Function(name, functions.size(), numMetrics);
         functions.put(name, function);
         return function;
     }
@@ -173,11 +177,13 @@ public abstract class DataSource {
     public UserEvent addUserEvent(String name) {
         Object obj = userEvents.get(name);
 
-        if (obj != null)
+        if (obj != null) {
             return (UserEvent) obj;
+        }
 
         UserEvent userEvent = new UserEvent(name, userEvents.size() + 1);
         userEvents.put(name, userEvent);
+        setUserEventsPresent(true);
         return userEvent;
     }
 
@@ -209,6 +215,21 @@ public abstract class DataSource {
         return group;
     }
 
+    protected void addGroups(String groupNames, Function function) {
+        if (groupNames == null) {
+            return;
+        }
+        StringTokenizer st = new StringTokenizer(groupNames, "|");
+        while (st.hasMoreTokens()) {
+            String groupName = st.nextToken();
+            if (groupName != null) {
+                Group group = this.addGroup(groupName.trim());
+                function.addGroup(group);
+            }
+        }
+        this.setGroupNamesPresent(true);
+    }
+    
     public int getNumGroups() {
         return groups.size();
     }
@@ -229,20 +250,16 @@ public abstract class DataSource {
 
             for (Iterator it = this.getNodes(); it.hasNext();) {
                 Node node = (Node) it.next();
-                if (node.getNodeID() > maxNCT[0])
-                    maxNCT[0] = node.getNodeID();
+                maxNCT[0] = Math.max(maxNCT[0], node.getNodeID());
                 for (Iterator it2 = node.getContexts(); it2.hasNext();) {
                     Context context = (Context) it2.next();
-                    if (context.getContextID() > maxNCT[1])
-                        maxNCT[1] = context.getContextID();
+                    maxNCT[1] = Math.max(maxNCT[1], context.getContextID());
                     for (Iterator it3 = context.getThreads(); it3.hasNext();) {
                         edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it3.next();
-                        if (thread.getThreadID() > maxNCT[2])
-                            maxNCT[2] = thread.getThreadID();
+                        maxNCT[2] = Math.max(maxNCT[2], thread.getThreadID());
                     }
                 }
             }
-
         }
         return maxNCT;
     }
@@ -281,6 +298,17 @@ public abstract class DataSource {
     public void addMetric(Metric metric) {
         if (this.metrics == null) {
             this.metrics = new ArrayList();
+        } else {
+            for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
+                Thread thread = (Thread) it.next();
+                thread.addMetric();
+            }
+
+            if (meanData != null) {
+                meanData.addMetric();
+                totalData.addMetric();
+                stddevData.addMetric();
+            }
         }
 
         metric.setID(this.getNumberOfMetrics());
@@ -294,11 +322,13 @@ public abstract class DataSource {
      *            Name of metric to be added
      */
     public Metric addMetric(String metricName) {
+        //System.err.println("addMetric("+metricName+")");
         if (metrics != null) {
             for (Iterator it = metrics.iterator(); it.hasNext();) {
                 Metric metric = (Metric) it.next();
-                if (metric.getName().equals(metricName))
+                if (metric.getName().equals(metricName)) {
                     return metric;
+                }
             }
         }
 
@@ -308,20 +338,22 @@ public abstract class DataSource {
         return metric;
     }
 
+   
     /**
      * Get a the List of Metrics
      * 
      * @return List of Metrics
      */
     public List getMetrics() {
-        return this.metrics;
+        return metrics;
     }
 
     public Metric getMetric(String name) {
         for (Iterator it = metrics.iterator(); it.hasNext();) {
             Metric metric = (Metric) it.next();
-            if (metric.getName().equals(name))
+            if (metric.getName().equals(name)) {
                 return metric;
+            }
         }
         return null;
     }
@@ -372,7 +404,7 @@ public abstract class DataSource {
         if (this.metrics != null) {
             return metrics.size();
         } else {
-            return -1;
+            return 0;
         }
     }
 
@@ -467,11 +499,11 @@ public abstract class DataSource {
         if (CallPathUtilFuncs.checkCallPathsPresent(getFunctions())) {
             setCallPathDataPresent(true);
         }
-        
+
         if (generateIntermediateCallPathData) {
             generateBonusCallPathData();
         }
-        
+
         checkForPhases();
 
         for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
@@ -818,6 +850,15 @@ public abstract class DataSource {
         Node node = new Node(nodeID);
         nodes.put(new Integer(nodeID), node);
         return node;
+    }
+
+    public Thread addThread(int nodeID, int contextID, int threadID) {
+        Node node = addNode(nodeID);
+        Context context = node.addContext(contextID);
+        Thread thread = context.addThread(threadID, this.getNumberOfMetrics());
+        // reset the list of all threads so that it will be recreated
+        allThreads = null;
+        return thread;
     }
 
     /**

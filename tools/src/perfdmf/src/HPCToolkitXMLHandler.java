@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * XML Handler for cube data
  *
  * 
- * <P>CVS $Id: HPCToolkitXMLHandler.java,v 1.1 2005/09/26 20:24:29 amorris Exp $</P>
+ * <P>CVS $Id: HPCToolkitXMLHandler.java,v 1.2 2006/12/28 03:05:59 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see HPCToolkitDataSource.java
  */
 public class HPCToolkitXMLHandler extends DefaultHandler {
@@ -42,7 +42,7 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
     }
 
     public void startDocument() throws SAXException {
-        theThread = createThread(0, 0, 0);
+        theThread = dataSource.addThread(0, 0, 0);
         defaultGroup = dataSource.addGroup("HPC_DEFAULT");
         callpathGroup = dataSource.addGroup("HPC_CALLPATH");
 
@@ -51,16 +51,7 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
     public void endDocument() throws SAXException {
     }
 
-    private Thread createThread(int n, int c, int t) {
-        Thread thread = dataSource.getThread(0, 0, 0);
-        if (thread == null) {
-            Node node = dataSource.addNode(n);
-            Context context = node.addContext(c);
-            thread = context.addThread(t,0);
-        }
-        return thread;
-    }
-
+   
     private FunctionProfile createFunctionProfile(Thread thread, Function function) {
         FunctionProfile fp = thread.getFunctionProfile(function);
         if (fp == null) {
@@ -136,7 +127,6 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
             
             metricMap.put(shortName, metric);
             numMetrics++;
-            theThread.incrementStorage();
             
         } else if (localName.equalsIgnoreCase("PGM")) {
             stackName(attributes.getValue("n"));

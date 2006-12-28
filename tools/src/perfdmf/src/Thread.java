@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.2 2005/10/18 22:48:56 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.3 2006/12/28 03:06:00 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -18,28 +18,30 @@ import java.io.*;
  */
 public class Thread implements Comparable {
 
-    private int nodeID;
-    private int contextID;
-    private int threadID;
+    private int nodeID, contextID, threadID;
     private List functionProfiles = new ArrayList();
     private List userEventProfiles = new ArrayList();
-    private double[] doubleList;
+    private double[] maxData;
     private double maxNumCalls = 0;
     private double maxNumSubr = 0;
     private boolean trimmed = false;
     private boolean relationsBuilt = false;
     private int numMetrics = 0;
     private static final int METRIC_SIZE = 6;
-    
-    public Thread(int nodeID, int contextID, int threadID) {
-        this(nodeID, contextID, threadID, 1);
-    }
+
+    private List snapshots = new ArrayList();
+
+    //    
+    //    public Thread(int nodeID, int contextID, int threadID) {
+    //        this(nodeID, contextID, threadID, 1);
+    //    }
 
     public Thread(int nodeID, int contextID, int threadID, int numMetrics) {
+        numMetrics = Math.max(numMetrics, 1);
         this.nodeID = nodeID;
         this.contextID = contextID;
         this.threadID = threadID;
-        doubleList = new double[numMetrics * METRIC_SIZE];
+        maxData = new double[numMetrics * METRIC_SIZE];
         this.numMetrics = numMetrics;
     }
 
@@ -52,7 +54,7 @@ public class Thread implements Comparable {
         }
         return "n,c,t " + nodeID + "," + contextID + "," + threadID;
     }
-    
+
     public int getNodeID() {
         return nodeID;
     }
@@ -69,15 +71,32 @@ public class Thread implements Comparable {
         return this.numMetrics;
     }
 
-    public void incrementStorage() {
-        int currentLength = doubleList.length;
+    public void addMetric() {
+        int currentLength = maxData.length;
         double[] newArray = new double[currentLength + METRIC_SIZE];
 
         for (int i = 0; i < currentLength; i++) {
-            newArray[i] = doubleList[i];
+            newArray[i] = maxData[i];
         }
-        doubleList = newArray;
+        maxData = newArray;
         this.numMetrics++;
+
+        for (Iterator it = getFunctionProfiles().iterator(); it.hasNext();) {
+            FunctionProfile fp = (FunctionProfile) it.next();
+            if (fp != null) { // fp == null would mean this thread didn't call this function
+                fp.addMetric();
+            }
+        }
+    }
+
+    public Snapshot addSnapshot(String name) {
+        Snapshot snapshot = new Snapshot(name, snapshots.size());
+        snapshots.add(snapshot);
+        return snapshot;
+    }
+
+    public List getSnapshots() {
+        return snapshots;
     }
 
     public void addFunctionProfile(FunctionProfile fp) {
@@ -86,7 +105,7 @@ public class Thread implements Comparable {
         while (id >= functionProfiles.size()) {
             functionProfiles.add(null);
         }
-        
+
         functionProfiles.set(id, fp);
     }
 
@@ -211,10 +230,10 @@ public class Thread implements Comparable {
         return threadID - ((Thread) obj).getThreadID();
     }
 
-//    public String toString() {
-//        return this.getClass().getName() + ": " + this.getNodeID() + "," + this.getContextID() + ","
-//                + this.getThreadID();
-//    }
+    //    public String toString() {
+    //        return this.getClass().getName() + ": " + this.getNodeID() + "," + this.getContextID() + ","
+    //                + this.getThreadID();
+    //    }
 
     public void setThreadData(int metric) {
         setThreadValues(metric, metric);
@@ -226,12 +245,17 @@ public class Thread implements Comparable {
 
     private void insertDouble(int metric, int offset, double inDouble) {
         int actualLocation = (metric * METRIC_SIZE) + offset;
-        doubleList[actualLocation] = inDouble;
+        maxData[actualLocation] = inDouble;
     }
 
     private double getDouble(int metric, int offset) {
-        int actualLocation = (metric * METRIC_SIZE) + offset;
-        return doubleList[actualLocation];
+        try {
+            int actualLocation = (metric * METRIC_SIZE) + offset;
+            return maxData[actualLocation];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.err.println("poop");
+            return 0;
+        }
     }
 
     // compute max values and percentages for threads (not mean/total)
@@ -306,5 +330,4 @@ public class Thread implements Comparable {
         }
     }
 
-    
 }

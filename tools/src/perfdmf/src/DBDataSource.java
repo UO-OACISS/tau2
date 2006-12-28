@@ -1,8 +1,20 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
-import java.sql.*;
 
+import edu.uoregon.tau.perfdmf.database.DB;
+
+/**
+ * Reads data from the database
+ *  
+ * <P>CVS $Id: DBDataSource.java,v 1.4 2006/12/28 03:05:59 amorris Exp $</P>
+ * @author  Robert Bell, Alan Morris
+ * @version $Revision: 1.4 $
+ * @see     TrialData
+ * @see     NCT
+ */
 public class DBDataSource extends DataSource {
 
     private DatabaseAPI databaseAPI;
@@ -10,13 +22,11 @@ public class DBDataSource extends DataSource {
     private volatile int totalItems = 0;
     private volatile int itemsDone = 0;
 
-    
     public DBDataSource(DatabaseAPI dbAPI) {
         super();
         this.setMetrics(new Vector());
         this.databaseAPI = dbAPI;
     }
-
 
     public int getProgress() {
         return 0;
@@ -28,158 +38,199 @@ public class DBDataSource extends DataSource {
         return;
     }
 
+    private void getIntervalEventData(Map ieMap) throws SQLException {
+        int numMetrics = getNumberOfMetrics();
+        // get all the interval event data for all thread
+        ListIterator l = databaseAPI.getIntervalEventData().listIterator();
+        while (l.hasNext()) {
+            IntervalLocationProfile ilp = (IntervalLocationProfile) l.next();
+            Thread thread = addThread(ilp.getNode(), ilp.getContext(), ilp.getThread());
+
+            //Function function = this.getFunction(databaseAPI.getIntervalEvent(fdo.getIntervalEventID()).getName());
+            Function function = (Function) ieMap.get(new Integer(ilp.getIntervalEventID()));
+            FunctionProfile functionProfile = thread.getFunctionProfile(function);
+
+            if (functionProfile == null) {
+                functionProfile = new FunctionProfile(function, numMetrics);
+                thread.addFunctionProfile(functionProfile);
+            }
+
+            for (int i = 0; i < numMetrics; i++) {
+                functionProfile.setExclusive(i, ilp.getExclusive(i));
+                functionProfile.setInclusive(i, ilp.getInclusive(i));
+                functionProfile.setExclusivePercent(i, ilp.getExclusivePercentage(i));
+                functionProfile.setInclusivePercent(i, ilp.getInclusivePercentage(i));
+                // we don't store this as a value, it is derived
+                //functionProfile.setInclusivePerCall(i, fdo.getInclusivePerCall(i));
+                functionProfile.setNumCalls(ilp.getNumCalls());
+                functionProfile.setNumSubr(ilp.getNumSubroutines());
+            }
+        }
+    }
+
+    private void fastGetIntervalEventData(List intervalEvents, Map ieMap, Map metricMap) throws SQLException {
+        int numMetrics = getNumberOfMetrics();
+        DB db = databaseAPI.getDb();
+
+        
+        StringBuffer where = new StringBuffer();
+
+        where.append(" WHERE p.metric in (");
+        for (Iterator it = metricMap.keySet().iterator(); it.hasNext();) {
+            int metricID = ((Integer) it.next()).intValue();
+            where.append(metricID);
+            if (it.hasNext()) {
+                where.append(", ");
+            } else {
+                where.append(") ");
+            }
+        }
+        
+        // the much slower way
+//        where.append(" WHERE p.interval_event in (");
+//        for (Iterator it = ieMap.keySet().iterator(); it.hasNext();) {
+//            int id = ((Integer) it.next()).intValue();
+//            where.append(id);
+//            if (it.hasNext()) {
+//                where.append(", ");
+//            } else {
+//                where.append(") ");
+//            }
+//        }
+
+        StringBuffer buf = new StringBuffer();
+        buf.append("select p.interval_event, p.metric, p.node, p.context, p.thread, ");
+
+        if (db.getDBType().compareTo("oracle") == 0) {
+            buf.append("p.inclusive, p.excl, ");
+        } else {
+            buf.append("p.inclusive, p.exclusive, ");
+        }
+        if (db.getDBType().compareTo("derby") == 0) {
+            buf.append("p.num_calls, ");
+        } else {
+            buf.append("p.call, ");
+        }
+        buf.append("p.subroutines ");
+        buf.append("from interval_location_profile p ");
+        buf.append(where);
+        //buf.append(" order by p.interval_event, p.node, p.context, p.thread, p.metric ");
+        //System.out.println(buf.toString());
+
+        /*
+         1 - interval_event
+         2 - metric
+         3 - node
+         4 - context
+         5 - thread
+         6 - inclusive
+         7 - exclusive
+         8 - num_calls
+         9 - num_subrs
+         */
+        
+        // get the results
+        long time = System.currentTimeMillis();
+        ResultSet resultSet = db.executeQuery(buf.toString());
+        time = (System.currentTimeMillis()) - time;
+        //System.out.println("Query : " + time);
+
+        time = System.currentTimeMillis();
+        while (resultSet.next() != false) {
+
+            int intervalEventID = resultSet.getInt(1);
+            Function function = (Function) ieMap.get(new Integer(intervalEventID));
+
+            int nodeID = resultSet.getInt(3);
+            int contextID = resultSet.getInt(4);
+            int threadID = resultSet.getInt(5);
+
+            Thread thread = addThread(nodeID, contextID, threadID);
+            FunctionProfile functionProfile = thread.getFunctionProfile(function);
+
+            if (functionProfile == null) {
+                functionProfile = new FunctionProfile(function, numMetrics);
+                thread.addFunctionProfile(functionProfile);
+            }
+
+            int metricIndex = ((Metric)metricMap.get(new Integer(resultSet.getInt(2)))).getID();
+            double inclusive, exclusive;
+
+            inclusive = resultSet.getDouble(6);
+            exclusive = resultSet.getDouble(7);
+            double numcalls = resultSet.getDouble(8);
+            double numsubr = resultSet.getDouble(9);
+
+            functionProfile.setNumCalls(numcalls);
+            functionProfile.setNumSubr(numsubr);
+            functionProfile.setExclusive(metricIndex, exclusive);
+            functionProfile.setInclusive(metricIndex, inclusive);
+        }
+        time = (System.currentTimeMillis()) - time;
+        //System.out.println("Processing : " + time);
+
+        resultSet.close();
+    }
+
     public void load() throws SQLException {
-
-        Function function = null;
-        UserEvent userEvent = null;
-        FunctionProfile functionProfile = null;
-        UserEventProfile userEventProfile = null;
-
-        Node node = null;
-        Context context = null;
-        edu.uoregon.tau.perfdmf.Thread thread = null;
-        int nodeID = -1;
-        int contextID = -1;
-        int threadID = -1;
 
         // System.out.println("Processing data, please wait ......");
         long time = System.currentTimeMillis();
 
-        int numberOfMetrics = databaseAPI.getNumberOfMetrics();
-        for (int i = 0; i < numberOfMetrics; i++) {
-            this.addMetric(databaseAPI.getMetricName(i));
+       
+        DB db = databaseAPI.getDb();
+        StringBuffer joe = new StringBuffer();
+        joe.append("SELECT id, name ");
+        joe.append("FROM " + db.getSchemaPrefix() + "metric ");
+        joe.append("WHERE trial = ");
+        joe.append(databaseAPI.getTrial().getID());
+        joe.append(" ORDER BY id ");
+
+        Map metricMap = new HashMap();
+        
+        ResultSet resultSet = db.executeQuery(joe.toString());
+        int numberOfMetrics = 0;
+        while (resultSet.next() != false) {
+            int id = resultSet.getInt(1);
+            String name = resultSet.getString(2);
+            Metric metric = this.addMetric(name);
+            metricMap.put(new Integer(id), metric);
+            numberOfMetrics++;
         }
+        resultSet.close();
 
-        //Add the functionProfiles.
-        ListIterator l = databaseAPI.getIntervalEvents().listIterator();
+        // map Interval Event ID's to Function objects
+        Map ieMap = new HashMap();
 
-        meanData = new Thread(-1, -1, -1, numberOfMetrics);
-        totalData = new Thread(-2, -2, -2, numberOfMetrics);
-
-        totalItems += this.getNumFunctions();
-
+        // iterate over interval events (functions), create the function objects and add them to the map
+        List intervalEvents = databaseAPI.getIntervalEvents();
+        ListIterator l = intervalEvents.listIterator();
         while (l.hasNext()) {
             IntervalEvent ie = (IntervalEvent) l.next();
-
-            function = this.addFunction(ie.getName(), numberOfMetrics);
-
-            FunctionProfile meanProfile = new FunctionProfile(function, numberOfMetrics);
-            function.setMeanProfile(meanProfile);
-            meanData.addFunctionProfile(meanProfile);
-
-            FunctionProfile totalProfile = new FunctionProfile(function, numberOfMetrics);
-            function.setTotalProfile(totalProfile);
-            totalData.addFunctionProfile(totalProfile);
-
-            IntervalLocationProfile ilp = ie.getMeanSummary();
-
-            if (ie.getGroup() != null) {
-                
-                String groupNames = ie.getGroup();
-                StringTokenizer st = new StringTokenizer(groupNames, "|");
-                while (st.hasMoreTokens()) {
-                    String groupName = st.nextToken();
-                    if (groupName != null) {
-                        // The potential new group is added here. If the group is already present,
-                        // then the addGroup function will just return the
-                        // already existing group id. See the TrialData
-                        // class for more details.
-                        Group group = this.addGroup(groupName.trim());
-                        function.addGroup(group);
-                    }
-                }
-                
-                //Group group = this.addGroup(ie.getGroup());
-                //function.addGroup(group);
-                this.setGroupNamesPresent(true);
-            }
-
-            for (int i = 0; i < numberOfMetrics; i++) {
-                meanProfile.setExclusive(i, ilp.getExclusive(i));
-                meanProfile.setExclusivePercent(i, ilp.getExclusivePercentage(i));
-                meanProfile.setInclusive(i, ilp.getInclusive(i));
-                meanProfile.setInclusivePercent(i, ilp.getInclusivePercentage(i));
-                //meanProfile.setInclusivePerCall(i, ilp.getInclusivePerCall(i));
-                meanProfile.setNumCalls(ilp.getNumCalls());
-                meanProfile.setNumSubr(ilp.getNumSubroutines());
-
-            }
-
-
-            ilp = ie.getTotalSummary();
-            for (int i = 0; i < numberOfMetrics; i++) {
-                totalProfile.setExclusive(i, ilp.getExclusive(i));
-                totalProfile.setExclusivePercent(i, ilp.getExclusivePercentage(i));
-                totalProfile.setInclusive(i, ilp.getInclusive(i));
-                totalProfile.setInclusivePercent(i, ilp.getInclusivePercentage(i));
-                //totalProfile.setInclusivePerCall(i, ilp.getInclusivePerCall(i));
-                totalProfile.setNumCalls(ilp.getNumCalls());
-                totalProfile.setNumSubr(ilp.getNumSubroutines());
-            }
+            Function function = this.addFunction(ie.getName(), numberOfMetrics);
+            addGroups(ie.getGroup(), function);
+            ieMap.put(new Integer(ie.getID()), function);
         }
 
-        l = databaseAPI.getIntervalEventData().listIterator();
+        //getIntervalEventData(ieMap);
+        fastGetIntervalEventData(intervalEvents, ieMap, metricMap);
 
-        while (l.hasNext()) {
-            IntervalLocationProfile fdo = (IntervalLocationProfile) l.next();
-            node = this.getNode(fdo.getNode());
-            if (node == null)
-                node = this.addNode(fdo.getNode());
-            context = node.getContext(fdo.getContext());
-            if (context == null)
-                context = node.addContext(fdo.getContext());
-            thread = context.getThread(fdo.getThread());
-            if (thread == null) {
-                thread = context.addThread(fdo.getThread(), numberOfMetrics);
-            }
-
-            //Get Function and FunctionProfile.
-
-            function = this.getFunction(databaseAPI.getIntervalEvent(fdo.getIntervalEventID()).getName());
-            functionProfile = thread.getFunctionProfile(function);
-
-            if (functionProfile == null) {
-                functionProfile = new FunctionProfile(function, numberOfMetrics);
-                thread.addFunctionProfile(functionProfile);
-            }
-
-            for (int i = 0; i < numberOfMetrics; i++) {
-                functionProfile.setExclusive(i, fdo.getExclusive(i));
-                functionProfile.setInclusive(i, fdo.getInclusive(i));
-                functionProfile.setExclusivePercent(i, fdo.getExclusivePercentage(i));
-                functionProfile.setInclusivePercent(i, fdo.getInclusivePercentage(i));
-                //functionProfile.setInclusivePerCall(i, fdo.getInclusivePerCall(i));
-                functionProfile.setNumCalls(fdo.getNumCalls());
-                functionProfile.setNumSubr(fdo.getNumSubroutines());
-            }
-        }
+        // map Interval Event ID's to Function objects
+        Map aeMap = new HashMap();
 
         l = databaseAPI.getAtomicEvents().listIterator();
         while (l.hasNext()) {
-            AtomicEvent ue = (AtomicEvent) l.next();
-            this.addUserEvent(ue.getName());
-            setUserEventsPresent(true);
+            AtomicEvent atomicEvent = (AtomicEvent) l.next();
+            UserEvent userEvent = addUserEvent(atomicEvent.getName());
+            aeMap.put(new Integer(atomicEvent.getID()), userEvent);
         }
 
         l = databaseAPI.getAtomicEventData().listIterator();
         while (l.hasNext()) {
             AtomicLocationProfile alp = (AtomicLocationProfile) l.next();
-
-            // do we need to do this?
-            node = this.getNode(alp.getNode());
-            if (node == null)
-                node = this.addNode(alp.getNode());
-            context = node.getContext(alp.getContext());
-            if (context == null)
-                context = node.addContext(alp.getContext());
-            thread = context.getThread(alp.getThread());
-            if (thread == null) {
-                thread = context.addThread(alp.getThread(), numberOfMetrics);
-            }
-
-            userEvent = this.getUserEvent(databaseAPI.getAtomicEvent(alp.getAtomicEventID()).getName());
-
-            userEventProfile = thread.getUserEventProfile(userEvent);
+            Thread thread = addThread(alp.getNode(), alp.getContext(), alp.getThread());
+            UserEvent userEvent = (UserEvent) aeMap.get(new Integer(alp.getAtomicEventID()));
+            UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);
 
             if (userEventProfile == null) {
                 userEventProfile = new UserEventProfile(userEvent);
@@ -192,17 +243,13 @@ public class DBDataSource extends DataSource {
             userEventProfile.setMeanValue(alp.getMeanValue());
             userEventProfile.setSumSquared(alp.getSumSquared());
             userEventProfile.updateMax();
-
         }
 
-        
-
         time = (System.currentTimeMillis()) - time;
-//        System.out.println("Time to download file (in milliseconds): " + time);
+        //System.out.println("Time to download file (in milliseconds): " + time);
 
-
-        // yep, I'm going to do it anyway, I have other stats to compute, we're just discarding the
-        // database values.
+        // We actually discard the mean and total values by calling this
+        // But, we need to compute other statistics anyway
         generateDerivedData();
     }
 }

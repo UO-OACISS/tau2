@@ -9,9 +9,9 @@ import java.util.zip.GZIPInputStream;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.3 2006/03/29 20:14:38 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.4 2006/12/28 03:05:59 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -45,8 +45,9 @@ public class PackedProfileDataSource extends DataSource {
      * @return          progress
      */
     public int getProgress() {
-        if (totalBytes != 0)
+        if (totalBytes != 0) {
             return (int) ((float) tracker.byteCount() / (float) totalBytes * 100);
+        }
         return 0;
     }
 
@@ -138,9 +139,7 @@ public class PackedProfileDataSource extends DataSource {
             int contextID = p.readInt();
             int threadID = p.readInt();
 
-            Node node = this.addNode(nodeID);
-            Context context = node.addContext(contextID);
-            Thread thread = context.addThread(threadID, numMetrics);
+            Thread thread = addThread(nodeID, contextID, threadID);
 
             // get function profiles
             int numFunctionProfiles = p.readInt();

@@ -6,9 +6,16 @@ import java.lang.reflect.Array;
 
 public class GprofDataSource extends DataSource {
 
+    private int indexStart = 0;
+    private int percentStart = 0;
+    private int selfStart = 0;
+    private int descendantsStart = 0;
+    private int calledStart = 0;
+    private int nameStart = 0;
+    private boolean fixNames = false;
+    
     public GprofDataSource(File[] files, boolean fixNames) {
         super();
-        this.setMetrics(new Vector());
         this.fixNames = fixNames;
         this.files = files;
     }
@@ -39,15 +46,11 @@ public class GprofDataSource extends DataSource {
         int nodeID = -1;
 
         String inputString = null;
-        String s1 = null;
-        String s2 = null;
-
-        String tokenString;
-        StringTokenizer genericTokenizer;
+      
+      
 
         Function callPathFunction = null;
 
-        Vector v = null;
         //######
         //End - Frequently used items.
         //######
@@ -180,7 +183,6 @@ public class GprofDataSource extends DataSource {
                             // System.out.println(getSummaryLineData(inputString).s0);
                         }
                     }
-                    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
                 } // while lines in file
         } // for elements in vector v
 
@@ -463,11 +465,4 @@ index  % time    self  children called     name
         return outString;
     }
 
-    private int indexStart = 0;
-    private int percentStart = 0;
-    private int selfStart = 0;
-    private int descendantsStart = 0;
-    private int calledStart = 0;
-    private int nameStart = 0;
-    private boolean fixNames = false;
 }

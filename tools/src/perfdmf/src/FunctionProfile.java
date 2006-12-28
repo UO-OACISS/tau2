@@ -6,18 +6,25 @@ import java.text.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.1 2005/09/26 20:24:29 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.2 2006/12/28 03:05:59 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  * @see		Function
  */
 public class FunctionProfile implements Comparable {
     private static final int METRIC_SIZE = 4;
+    private static final int CALL_SIZE = 2;
+
+    private static final int INCLUSIVE = 3;
+    private static final int EXCLUSIVE = 0;
+    private static final int INCLUSIVE_PERCENT = 2;
+    private static final int EXCLUSIVE_PERCENT = 1;
 
     private Function function;
-    private double[] doubleList;
-    private double numCalls;
-    private double numSubr;
+    private double[] data;
+    private double[] calls;
+
+    private int numMetrics;
 
     // unused profile calls
     //private List calls;
@@ -32,7 +39,13 @@ public class FunctionProfile implements Comparable {
     }
 
     public FunctionProfile(Function function, int numMetrics) {
-        doubleList = new double[numMetrics * METRIC_SIZE];
+        this(function, numMetrics, 1);
+    }
+
+    public FunctionProfile(Function function, int numMetrics, int snapshots) {
+        this.numMetrics = numMetrics;
+        data = new double[numMetrics * METRIC_SIZE * snapshots];
+        calls = new double[CALL_SIZE * snapshots];
         this.function = function;
     }
 
@@ -44,57 +57,79 @@ public class FunctionProfile implements Comparable {
         return function.getName();
     }
 
+    private int getNumSnapshots() {
+        return calls.length / CALL_SIZE;
+    }
+
     public void setInclusive(int metric, double value) {
-        this.insertDouble(metric, 0, value);
+        this.putDouble(getNumSnapshots() - 1, metric, INCLUSIVE, value);
+    }
+
+    public void setInclusive(int snapshot, int metric, double value) {
+        this.putDouble(snapshot, metric, INCLUSIVE, value);
     }
 
     public double getInclusive(int metric) {
-        return this.getDouble(metric, 0);
+        return this.getDouble(getNumSnapshots() - 1, metric, INCLUSIVE);
+    }
+
+    public double getInclusive(int metric, int snapshot) {
+        return this.getDouble(snapshot, metric, INCLUSIVE);
     }
 
     public void setExclusive(int metric, double value) {
-        this.insertDouble(metric, 1, value);
+        //System.out.println(getName() + " : setExclusiveA(snapshot = " + (getNumSnapshots() - 1) + ", metric = " + metric + ", value = " + value);
+        this.putDouble(getNumSnapshots() - 1, metric, EXCLUSIVE, value);
     }
 
+    public void setExclusive(int snapshot, int metric, double value) {
+        //System.out.println(getName() + " : setExclusiveB(snapshot = " + snapshot + ", metric = " + metric + ", value = " + value);
+        this.putDouble(snapshot, metric, EXCLUSIVE, value);
+    }
+
+    
+    public double getExclusive(int snapshot, int metric) {
+        return this.getDouble(snapshot, metric, EXCLUSIVE);
+    }
     public double getExclusive(int metric) {
-//        if (function.isPhase()) {
-//            return this.getDouble(metric, 0);
-//        } else {
-//            return this.getDouble(metric, 1);
-//        }
-        return this.getDouble(metric, 1);
+        //        if (function.isPhase()) {
+        //            return this.getDouble(metric, 0);
+        //        } else {
+        //            return this.getDouble(metric, 1);
+        //        }
+        return this.getDouble(getNumSnapshots() - 1, metric, EXCLUSIVE);
     }
 
     public void setInclusivePercent(int metric, double value) {
-        this.insertDouble(metric, 2, value);
+        this.putDouble(getNumSnapshots() - 1, metric, INCLUSIVE_PERCENT, value);
     }
 
     public double getInclusivePercent(int metric) {
-        return this.getDouble(metric, 2);
+        return this.getDouble(getNumSnapshots() - 1, metric, INCLUSIVE_PERCENT);
     }
 
     public void setExclusivePercent(int metric, double value) {
-        this.insertDouble(metric, 3, value);
+        this.putDouble(getNumSnapshots() - 1, metric, EXCLUSIVE_PERCENT, value);
     }
 
     public double getExclusivePercent(int metric) {
-        return this.getDouble(metric, 3);
+        return this.getDouble(getNumSnapshots() - 1, metric, EXCLUSIVE_PERCENT);
     }
 
     public void setNumCalls(double value) {
-        numCalls = value;
+        calls[0] = value;
     }
 
     public double getNumCalls() {
-        return numCalls;
+        return calls[0];
     }
 
     public void setNumSubr(double value) {
-        numSubr = value;
+        calls[1] = value;
     }
 
     public double getNumSubr() {
-        return numSubr;
+        return calls[1];
     }
 
     public double getInclusivePerCall(int metric) {
@@ -121,18 +156,51 @@ public class FunctionProfile implements Comparable {
     //        calls.add(arr);
     //    }
 
-    public int getStorageSize() {
-        return doubleList.length / METRIC_SIZE;
+    public int getNumMetrics() {
+        //return doubleList.length / METRIC_SIZE;
+        return numMetrics;
     }
 
-    public void incrementStorage() {
-        int currentLength = doubleList.length;
-        double[] newArray = new double[currentLength + METRIC_SIZE];
+    public void addMetric() {
+        int newMetricSize = numMetrics + 1;
+        int currentLength = data.length;
+        int numSnapshots = calls.length / CALL_SIZE;
+
+        double[] newArray = new double[newMetricSize * METRIC_SIZE * numSnapshots];
+
+        for (int s = 0; s < numSnapshots; s++) {
+
+            int source = (s * METRIC_SIZE * numMetrics);
+            int dest = (s * METRIC_SIZE * newMetricSize);
+            for (int m = 0; m < METRIC_SIZE * numMetrics; m++) {
+                newArray[dest + m] = data[source + m];
+            }
+
+        }
+
+        data = newArray;
+        numMetrics = newMetricSize;
+    }
+
+    public void addSnapshot() {
+
+        int currentLength = data.length;
+        double[] newArray = new double[currentLength + (METRIC_SIZE * numMetrics)];
 
         for (int i = 0; i < currentLength; i++) {
-            newArray[i] = doubleList[i];
+            newArray[i] = data[i];
         }
-        doubleList = newArray;
+        data = newArray;
+        
+        
+        int newCallsLength = calls.length + CALL_SIZE;
+        double[] newCalls = new double[newCallsLength];
+        
+        for (int i = 0; i < calls.length; i++) {
+            newCalls[i] = calls[i];
+        }
+
+        calls = newCalls;
     }
 
     // call path section
@@ -217,14 +285,14 @@ public class FunctionProfile implements Comparable {
         return function.isCallPathFunction();
     }
 
-    private void insertDouble(int metric, int offset, double inDouble) {
-        int actualLocation = (metric * METRIC_SIZE) + offset;
-        doubleList[actualLocation] = inDouble;
+    private void putDouble(int snapshot, int metric, int offset, double inDouble) {
+        int actualLocation = (snapshot * METRIC_SIZE * numMetrics) + (metric * METRIC_SIZE) + offset;
+        data[actualLocation] = inDouble;
     }
 
-    private double getDouble(int metric, int offset) {
-        int actualLocation = (metric * METRIC_SIZE) + offset;
-        return doubleList[actualLocation];
+    private double getDouble(int snapshot, int metric, int offset) {
+        int location = (snapshot * METRIC_SIZE * numMetrics) + (metric * METRIC_SIZE) + offset;
+        return data[location];
     }
 
     public int compareTo(Object inObject) {

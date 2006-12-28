@@ -23,7 +23,19 @@ class NoOpEntityResolver implements EntityResolver {
 }
 
 public class PSRunDataSource extends DataSource {
-
+    private int metric = 0;
+    private Function function = null;
+    private FunctionProfile functionProfile = null;
+    private Node node = null;
+    private Context context = null;
+    private edu.uoregon.tau.perfdmf.Thread thread = null;
+    private int nodeID = -1;
+    private int contextID = -1;
+    private int threadID = -1;
+    private List v = null;
+    boolean initialized = false;
+    private Hashtable nodeHash = new Hashtable();
+    
     public PSRunDataSource(Object initializeObject) {
         super();
         this.setMetrics(new Vector());
@@ -130,8 +142,7 @@ public class PSRunDataSource extends DataSource {
     }
 
     private void processHardwareCounter(String key, String value) {
-        thread.incrementStorage();
-        functionProfile.incrementStorage();
+        thread.addMetric();
         double eventValue = 0;
         eventValue = Double.parseDouble(value);
 
@@ -147,24 +158,5 @@ public class PSRunDataSource extends DataSource {
         functionProfile.setNumSubr(0);
     }
 
-    private int metric = 0;
-    private Function function = null;
-    private FunctionProfile functionProfile = null;
-    private Node node = null;
-    private Context context = null;
-    private edu.uoregon.tau.perfdmf.Thread thread = null;
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
-    private String inputString = null;
-    private String s1 = null;
-    private String s2 = null;
-    private String tokenString;
-    private String groupNamesString = null;
-    private StringTokenizer genericTokenizer;
-    private List v = null;
-    private File[] files = null;
-    private BufferedReader br = null;
-    boolean initialized = false;
-    private Hashtable nodeHash = new Hashtable();
+ 
 }

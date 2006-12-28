@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.10 2006/12/22 22:32:39 khuck Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.11 2006/12/28 03:05:59 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class DatabaseAPI {
 
@@ -1513,5 +1513,13 @@ public class DatabaseAPI {
             return null;
         }
         return getExperiment(app, expName, create);
+    }
+
+    public DB getDb() {
+        return db;
+    }
+
+    public Trial getTrial() {
+        return trial;
     }
 };

@@ -108,26 +108,6 @@ public class TauDataSource extends DataSource {
             //Reset metricNameProcessed flag.
             metricNameProcessed = false;
 
-            //Only need to call addDefaultToVectors() if not the first run.
-            if (metric != 0) { // If this isn't the first metric, call incrementStorage
-                for (Iterator it = this.getNodes(); it.hasNext();) {
-                    Node node = (Node) it.next();
-                    for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                        Context context = (Context) it2.next();
-                        for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                            Thread thread = (Thread) it3.next();
-                            thread.incrementStorage();
-                            for (Iterator e6 = thread.getFunctionProfiles().iterator(); e6.hasNext();) {
-                                FunctionProfile fp = (FunctionProfile) e6.next();
-                                if (fp != null) // fp == null would mean this thread didn't call this function
-                                    fp.incrementStorage();
-                            }
-                        }
-                    }
-                }
-
-            }
-
             for (int i = 0; i < files.length; i++) {
 
                 boolean finished = false;
@@ -160,9 +140,7 @@ public class TauDataSource extends DataSource {
                         contextID = nct[1];
                         threadID = nct[2];
 
-                        Node node = this.addNode(nodeID);
-                        Context context = node.addContext(contextID);
-                        thread = context.addThread(threadID);
+                        thread = this.addThread(nodeID, contextID, threadID);
 
                         foundValidFile = true;
 
@@ -494,19 +472,8 @@ public class TauDataSource extends DataSource {
                 functionProfile.setNumSubr(functionProfile.getNumSubr() + numsubr);
             }
 
-            if (metric == 0 && groupNames != null) {
-                StringTokenizer st = new StringTokenizer(groupNames, "|");
-                while (st.hasMoreTokens()) {
-                    String groupName = st.nextToken();
-                    if (groupName != null) {
-                        // The potential new group is added here. If the group is already present,
-                        // then the addGroup function will just return the
-                        // already existing group id. See the TrialData
-                        // class for more details.
-                        Group group = this.addGroup(groupName.trim());
-                        func.addGroup(group);
-                    }
-                }
+            if (metric == 0) {
+                addGroups(groupNames, func);
             }
         }
     }

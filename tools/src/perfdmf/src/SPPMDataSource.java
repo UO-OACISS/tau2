@@ -15,6 +15,29 @@ import java.util.*;
 
 public class SPPMDataSource extends DataSource {
 
+    private int metric = 0;
+    private Function function = null;
+    private FunctionProfile functionProfile = null;
+    private Node node = null;
+    private Context context = null;
+    private edu.uoregon.tau.perfdmf.Thread thread = null;
+    private int nodeID = -1;
+    private int contextID = -1;
+    private int threadID = -1;
+    private String inputString = null;
+    private Vector v = null;
+    private File[] files = null;
+    private BufferedReader br = null;
+    private int deltaCount = 0;
+    private int timestepCount = 0;
+    private Hashtable methodIndexes = null;
+    private double cpuTime[] = null;
+    private double wallTime[] = null;
+    private int calls[] = null;
+    private int subroutines[] = null;
+    private String eventName = null;
+   
+    private LineData lineData = new LineData();
     public SPPMDataSource(Object initializeObject) {
         super();
         this.setMetrics(new Vector());
@@ -255,8 +278,8 @@ public class SPPMDataSource extends DataSource {
                     // save the first metric
                     saveFunctionData("cpu", cpuTime[index.intValue()], inclusiveEqualsExclusive);
                     // increment the storage to allow for second metric
-                    thread.incrementStorage();
-                    functionProfile.incrementStorage();
+                    thread.addMetric();
+                    functionProfile.addMetric();
                     // save the second metric
                     saveFunctionData("wall", wallTime[index.intValue()], inclusiveEqualsExclusive);
                     // save the data common to all metrics
@@ -300,48 +323,6 @@ public class SPPMDataSource extends DataSource {
         //function.setMaxInclusivePercentValue(metric, 0.0);
     }
 
-    //####################################
-    //End - Private Section.
-    //####################################
-
-    //######
-    //Frequently used items.
-    //######
-    private int metric = 0;
-    private Function function = null;
-    private FunctionProfile functionProfile = null;
-    private Node node = null;
-    private Context context = null;
-    private edu.uoregon.tau.perfdmf.Thread thread = null;
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
-    private String inputString = null;
-    private String s1 = null;
-    private String s2 = null;
-    private String tokenString;
-    private String groupNamesString = null;
-    private StringTokenizer genericTokenizer;
-    private Vector v = null;
-    private File[] files = null;
-    private BufferedReader br = null;
-    private int deltaCount = 0;
-    private int timestepCount = 0;
-    private Hashtable methodIndexes = null;
-    private double cpuTime[] = null;
-    private double wallTime[] = null;
-    private int calls[] = null;
-    private int subroutines[] = null;
-    private String eventName = null;
-    //######
-    //End - Frequently used items.
-    //######
-
-    //####################################
-    //Instance data.
-    //####################################
-    private LineData lineData = new LineData();
-    //####################################
-    //End - Instance data.
-    //####################################
+ 
+   
 }

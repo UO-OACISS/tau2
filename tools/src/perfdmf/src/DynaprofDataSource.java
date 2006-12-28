@@ -13,7 +13,6 @@ public class DynaprofDataSource extends DataSource {
 
     public DynaprofDataSource(File[] files) {
         super();
-        this.setMetrics(new Vector());
         this.files = files;
     }
 

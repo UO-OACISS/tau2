@@ -23,7 +23,6 @@ public class TauPprofDataSource extends DataSource {
 
     public TauPprofDataSource(Object initializeObject) {
         super();
-        this.setMetrics(new Vector());
         this.initializeObject = initializeObject;
     }
 
@@ -65,9 +64,7 @@ public class TauPprofDataSource extends DataSource {
         String s1 = null;
         String s2 = null;
 
-        String tokenString;
         String groupNamesString = null;
-        StringTokenizer genericTokenizer;
 
         //A loop counter.
         int bSDCounter = 0;
@@ -109,31 +106,6 @@ public class TauPprofDataSource extends DataSource {
             //Set the metric name.
             String metricName = getMetricName(inputString);
 
-            //Only need to call addDefaultToVectors() if not the first run.
-            if (!(this.getFirstMetric())) {
-
-
-                this.meanData.incrementStorage();
-
-                for (Iterator it = this.getNodes(); it.hasNext();) {
-                    Node node = (Node) it.next();
-                    for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                        Context context = (Context) it2.next();
-                        for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                            thread = (Thread) it3.next();
-                            thread.incrementStorage();
-                            for (Iterator e6 = thread.getFunctionProfiles().iterator(); e6.hasNext();) {
-                                FunctionProfile ref = (FunctionProfile) e6.next();
-                                //Only want to add an element if this function existed on this thread.
-                                //Check for this.
-                                if (ref != null)
-                                    ref.incrementStorage();
-                            }
-                        }
-                    }
-                }
-            }
-
             //Now set the metric name.
             if (metricName == null)
                 metricName = new String("Time");
@@ -166,7 +138,6 @@ public class TauPprofDataSource extends DataSource {
                     return;
 
                 bytesRead += inputString.length();
-                genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 
                 int lineType = -1;
                 /*

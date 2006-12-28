@@ -11,8 +11,6 @@ import java.util.*;
 
 public class HPMToolkitDataSource extends DataSource {
 
-
-    
     private Object initializeObject;
 
     //Frequently used items.
@@ -27,11 +25,6 @@ public class HPMToolkitDataSource extends DataSource {
     private int threadID = -1;
     private int timeMetric = -1;
     private String inputString = null;
-    private String s1 = null;
-    private String s2 = null;
-    private String tokenString;
-    private String groupNamesString = null;
-    private StringTokenizer genericTokenizer;
     private BufferedReader br = null;
     boolean initialized = false;
     Hashtable eventNames = new Hashtable();
@@ -41,11 +34,9 @@ public class HPMToolkitDataSource extends DataSource {
     private LineData header2 = new LineData();
     private LineData header3 = new LineData();
     private LineData header4 = new LineData();
-    private LineData header5 = new LineData();
     
     public HPMToolkitDataSource(Object initializeObject) {
         super();
-        this.setMetrics(new Vector());
         this.initializeObject = initializeObject;
     }
 
@@ -184,30 +175,20 @@ public class HPMToolkitDataSource extends DataSource {
 
     private void initializeThread() {
         // create the function, if necessary
-        if (header2.s1 == null)
+        if (header2.s1 == null) {
             function = this.addFunction(header1.s0 + ", " + header2.s0, 1);
-        else
+        } else {
             function = this.addFunction(header1.s0 + ", " + header2.s0 + " lines " + header2.s1, 1);
+        }
 
         // System.out.println("**** " + header1.s0 + ", " + header2.s0 + " lines
         // " +header2.s1 + " " + threadID + " ****");
 
-        // make sure we start at zero for all counters
         nodeID = (nodeID == -1) ? 0 : nodeID;
         contextID = (contextID == -1) ? 0 : contextID;
         threadID = (threadID == -1) ? 0 : threadID;
 
-        //Get the node,context,thread.
-        node = this.getNode(nodeID);
-        if (node == null)
-            node = this.addNode(nodeID);
-        context = node.getContext(contextID);
-        if (context == null)
-            context = node.addContext(contextID);
-        thread = context.getThread(threadID);
-        if (thread == null) {
-            thread = context.addThread(threadID);
-        }
+        thread = addThread(nodeID, contextID, threadID);
 
         functionProfile = thread.getFunctionProfile(function);
         if (functionProfile == null) {
@@ -334,13 +315,13 @@ public class HPMToolkitDataSource extends DataSource {
             initializeThread();
         } else {
             // thread.incrementStorage();
-            functionProfile.incrementStorage();
+            functionProfile.addMetric();
         }
         // System.out.println("Hardwoare counter");
         StringTokenizer st1 = new StringTokenizer(string, ":");
         String metricName = st1.nextToken().trim(); // hardware counter name
         String tmpStr = st1.nextToken().trim();
-        int metricCount = 0, newMetricCount = 0;
+
         // need to clean stuff out of the value, like % and M and whatnot
         st1 = new StringTokenizer(tmpStr, " ");
         double dEventValue = 0.0;
@@ -363,18 +344,11 @@ public class HPMToolkitDataSource extends DataSource {
             metricName += " (" + st1.nextToken() + ")";
         // System.out.println(metricName + " = " + dEventValue);
 
-        metricCount = this.getNumberOfMetrics();
         //Set the metric name.
         Metric newMetric = this.addMetric(metricName);
         metric = newMetric.getID();
-        newMetricCount = this.getNumberOfMetrics();
 
-        while (thread.getNumMetrics() < newMetricCount) {
-            thread.incrementStorage();
-        }
-        while (functionProfile.getStorageSize() < newMetricCount) {
-            functionProfile.incrementStorage();
-        }
+        
         // new code
         if (typeDouble) {
             // System.out.println("\t" + metricName + " " + metric);
@@ -408,7 +382,7 @@ public class HPMToolkitDataSource extends DataSource {
             initializeThread();
         } else {
             // thread.incrementStorage();
-            functionProfile.incrementStorage();
+            functionProfile.addMetric();
         }
         StringTokenizer st1 = new StringTokenizer(string, ":");
         String metricName = st1.nextToken().trim(); // hardware counter name
@@ -433,19 +407,19 @@ public class HPMToolkitDataSource extends DataSource {
         //metricName += " (" + st1.nextToken() + ")";
         // System.out.println(metricName + " = " + dEventValue);
 
-        metricCount = this.getNumberOfMetrics();
+//        metricCount = this.getNumberOfMetrics();
         //Set the metric name.
         Metric newMetric = this.addMetric(metricName);
         metric = newMetric.getID();
         timeMetric = metric;
-        newMetricCount = this.getNumberOfMetrics();
+  //      newMetricCount = this.getNumberOfMetrics();
 
-        while (thread.getNumMetrics() < newMetricCount) {
-            thread.incrementStorage();
-        }
-        while (functionProfile.getStorageSize() < newMetricCount) {
-            functionProfile.incrementStorage();
-        }
+//        while (thread.getNumMetrics() < newMetricCount) {
+//            thread.incrementStorage();
+//        }
+//        while (functionProfile.getNumMetrics() < newMetricCount) {
+//            functionProfile.addMetric();
+//        }
 
         dEventValue = dEventValue * 1000 * 1000;
 

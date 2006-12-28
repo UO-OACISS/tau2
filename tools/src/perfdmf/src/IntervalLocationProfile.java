@@ -26,7 +26,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.3 2006/12/22 22:32:39 khuck Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.4 2006/12/28 03:05:59 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -472,13 +472,18 @@ public class IntervalLocationProfile extends Object {
                 + "interval_location_profile p ");
         buf.append("on e.id = p.interval_event ");
         buf.append(whereClause);
+        
+        // must be ordered this way because of the assumption that all metrics for each function come together
         buf.append(" order by p.interval_event, p.node, p.context, p.thread, p.metric ");
         // System.out.println(buf.toString());
 
-        int size = 0;
         Vector intervalLocationProfiles = new Vector();
         // get the results
+        //long time = System.currentTimeMillis();
         ResultSet resultSet = db.executeQuery(buf.toString());
+        //time = (System.currentTimeMillis()) - time;
+        //System.out.println("Query : " + time);
+        
         while (resultSet.next() != false) {
 
             int metricIndex = 0;
