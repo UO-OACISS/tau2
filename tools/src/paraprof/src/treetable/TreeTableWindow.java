@@ -30,9 +30,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.8 2006/11/08 23:18:00 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.9 2006/12/28 03:14:42 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -200,11 +200,28 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         } else {
             showInclExclMenuItem.setEnabled(true);
 
-            gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.anchor = GridBagConstraints.NORTH;
-            gbc.weightx = 1.0;
             gbc.weighty = 0.0;
-            addCompItem(new ColorBar(), gbc, 0, 0, 1, 1);
+           
+            
+            if (ppTrial.getNumberOfMetrics() > 1) {
+                final JComboBox metricBox = new JComboBox(ppTrial.getMetrics().toArray());
+                metricBox.setSelectedIndex(ppTrial.getDefaultMetricID());
+
+                metricBox.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        model.setColorMetric(metricBox.getSelectedIndex());
+                        repaint();
+                    } });
+                gbc.weightx = 0.0;
+                gbc.fill = GridBagConstraints.NONE;
+                addCompItem(metricBox, gbc, 0, 0, 1, 1);
+            }
+            
+            
+            gbc.weightx = 1.0;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            addCompItem(new ColorBar(), gbc, 1, 0, 1, 1);
         }
 
         if (scrollPane != null) {

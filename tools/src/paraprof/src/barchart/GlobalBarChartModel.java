@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.7 2006/10/31 18:15:52 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.8 2006/12/28 03:14:42 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -45,7 +45,6 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         } else {
             return 0;
         }
-
     }
 
     public String getRowLabel(int row) {

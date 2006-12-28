@@ -17,17 +17,6 @@ import java.util.*;
 
 public class DerivedMetrics {
 
-    private static void incrementStorage(edu.uoregon.tau.perfdmf.Thread thread) {
-        thread.incrementStorage();
-
-        Iterator l = thread.getFunctionProfileIterator();
-        while (l.hasNext()) {
-            FunctionProfile functionProfile = (FunctionProfile) l.next();
-            if (functionProfile != null) {
-                functionProfile.incrementStorage();
-            }
-        }
-    }
 
     public static ParaProfMetric applyOperation(ParaProfMetric operand1, Object operand2, String inOperation) {
 
@@ -95,9 +84,7 @@ public class DerivedMetrics {
 
             Iterator l = trialOpA.getDataSource().getFunctions();
 
-            incrementStorage(trialOpA.getDataSource().getMeanData());
-            incrementStorage(trialOpA.getDataSource().getTotalData());
-            incrementStorage(trialOpA.getDataSource().getStdDevData());
+            
 
             //######
             //Calculate the raw values.
@@ -109,13 +96,12 @@ public class DerivedMetrics {
 
             for (Iterator it = trialOpA.getDataSource().getAllThreads().iterator(); it.hasNext();) {
                 edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
-                thread.incrementStorage();
+                thread.addMetric();
                 l = thread.getFunctionProfileIterator();
                 while (l.hasNext()) {
                     FunctionProfile functionProfile = (FunctionProfile) l.next();
                     if (functionProfile != null) {
                         Function function = functionProfile.getFunction();
-                        functionProfile.incrementStorage();
 
                         double d1 = 0.0;
                         double d2 = 0.0;

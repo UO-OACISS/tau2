@@ -3,7 +3,6 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -12,8 +11,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 
-import edu.uoregon.tau.paraprof.barchart.BarChartPanel;
-import edu.uoregon.tau.paraprof.barchart.GlobalBarChartModel;
+import edu.uoregon.tau.paraprof.barchart.*;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
@@ -22,9 +20,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.10 2006/12/01 00:36:52 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.11 2006/12/28 03:14:41 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
@@ -33,7 +31,8 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private Function phase; // null for non-phase profiles
 
     private BarChartPanel panel;
-    private GlobalBarChartModel model;
+//    private GlobalBarChartModel model;
+    private AbstractBarChartModel model;
     private DataSorter dataSorter;
 
     private JMenu optionsMenu;
@@ -93,7 +92,8 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             gbc.insets = new Insets(2, 2, 2, 2);
 
             model = new GlobalBarChartModel(this, dataSorter, ppTrial);
-            panel = new BarChartPanel(model, null);
+            //model = new ThreadSnapshotBarChartModel(this, dataSorter, ppTrial);
+            panel = new BarChartPanel(model);
             setupMenus();
 
             panel.getBarChart().setLeftJustified(true);
@@ -127,7 +127,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         }
     }
 
-    public GlobalBarChartModel getModel() {
+    public AbstractBarChartModel getModel() {
         return model;
     }
 

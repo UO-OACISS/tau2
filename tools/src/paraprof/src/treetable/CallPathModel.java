@@ -13,9 +13,9 @@ import edu.uoregon.tau.perfdmf.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.2 2006/03/30 03:03:55 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.3 2006/12/28 03:14:42 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -26,6 +26,7 @@ public class CallPathModel extends AbstractTreeTableModel {
     private double[] maxValues;
 
     private int sortColumn;
+    private int colorMetric;
     private boolean sortAscending;
 
     private boolean reversedCallPaths = true;
@@ -45,6 +46,8 @@ public class CallPathModel extends AbstractTreeTableModel {
         setupData();
 
     }
+    
+    
 
     private void setupData() {
 
@@ -234,6 +237,18 @@ public class CallPathModel extends AbstractTreeTableModel {
 
     public void setReversedCallPaths(boolean reversedCallPaths) {
         this.reversedCallPaths = reversedCallPaths;
+    }
+
+
+
+    public int getColorMetric() {
+        return colorMetric;
+    }
+
+
+
+    public void setColorMetric(int colorMetric) {
+        this.colorMetric = colorMetric;
     }
 
 }

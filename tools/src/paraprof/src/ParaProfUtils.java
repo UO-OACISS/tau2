@@ -32,11 +32,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.19 2006/12/01 18:19:56 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.20 2006/12/28 03:14:42 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  */
 public class ParaProfUtils {
 
@@ -772,6 +772,19 @@ public class ParaProfUtils {
         });
         return jMenuItem;
     }
+    
+    public static JMenuItem createSnapShotMenuItem(String text, final ParaProfTrial ppTrial,
+            final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
+        JMenuItem jMenuItem = new JMenuItem(text);
+        jMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                SnapshotThreadWindow w = new SnapshotThreadWindow(ppTrial, thread, owner);
+                w.setVisible(true);
+            }
+
+        });
+        return jMenuItem;
+    }
 
     public static JMenuItem createUserEventBarChartMenuItem(String text, final ParaProfTrial ppTrial,
             final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
@@ -861,6 +874,9 @@ public class ParaProfUtils {
             threadPopup.add(createUserEventBarChartMenuItem("Show User Event Bar Chart", ppTrial, thread, owner));
             threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
         }
+        
+        //threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
+        
         threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
         threadPopup.show(owner, evt.getX(), evt.getY());
 
