@@ -1,17 +1,6 @@
-# $Author: khuck $
-# $Date: 2006/12/28 18:44:59 $
-# $Header: /mnt/fast/tau2git/cvsroot/tau2/tools/src/perfexplorer/bin/Makefile.skel,v 1.19 2006/12/28 18:44:59 khuck Exp $
-# $Id: Makefile.skel,v 1.19 2006/12/28 18:44:59 khuck Exp $
-# $Name:  $
-# $Locker:  $
-# $Log: Makefile.skel,v $
-# Revision 1.19  2006/12/28 18:44:59  khuck
-# testing some CVS tags
-#
-# $RCSfile: Makefile.skel,v $
-# $Revision: 1.19 $
+# $Id: Makefile.skel,v 1.20 2006/12/28 18:48:49 khuck Exp $
 # $Source: /mnt/fast/tau2git/cvsroot/tau2/tools/src/perfexplorer/bin/Makefile.skel,v $
-# $State: Exp $
+# $Name:  $
 
 R_HOME = @RROOT@
 TAUROOT = @TAUROOT@
