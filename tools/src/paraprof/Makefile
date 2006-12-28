@@ -20,7 +20,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
              PPThread.java LedgerWindowPanel.java PPFunctionProfile.java \
              UserEventWindow.java DBConfiguration.java ParaProfMetric.java \
 	     PPUserEventProfile.java LoadTrialProgressWindow.java ColorBar.java \
-             ParaProfManagerWindow.java StatWindow.java LoadTrialWindow.java \
+             ParaProfManagerWindow.java StatWindow.java SnapshotThreadWindow.java LoadTrialWindow.java \
              ParaProfManagerTableModel.java StatWindowPanel.java \
              GlobalDataWindow.java ParaProfTreeNodeUserObject.java \
 	     ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java \
