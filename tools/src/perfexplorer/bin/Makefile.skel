@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.21 2006/12/28 18:51:22 khuck Exp $
+# $Id: Makefile.skel,v 1.22 2007/01/03 01:38:45 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -30,6 +30,7 @@ JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
 JDBC_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/postgresql.jar
 JOGL_JAR =${TAUROOT}/${CONFIG_ARCH}/lib/jogl.jar
 JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
+JYTHON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jython.jar
 VIS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/vis.jar
 OMEGAHAT_JARS = ${OMEGAHAT_HOME}:${OMEGAHAT_JARPATH}/Environment.jar:${OMEGAHAT_JARPATH}/antlr.jar:${OMEGAHAT_JARPATH}/jas.jar:${OMEGAHAT_JARPATH}/jhall.jar
 JFREECHART_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jfreechart-0.9.21.jar
@@ -45,12 +46,12 @@ SERVER_DYLD_LIBRARY_PATH=${OMEGAHAT_HOME}/libs:${R_HOME}/lib:${R_HOME}/bin:${R_H
 
 ##########################
 
-BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}
-CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}
+BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${JYTHON_JAR}
+CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}:${JYTHON_JAR}
 CLUSTERING_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${WEKA_JAR}:${OMEGAHAT_JARS}
-SERVER_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}
+SERVER_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}:${JYTHON_JAR}
 CLIENT_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${JDBC_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}
-SERVER_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}
+SERVER_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}:${JYTHON_JAR}
 STANDALONE_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:${JFREECHART_JAR}:${JCOMMON_JAR}:${WEKA_JAR}:${JOGL_JAR}:${VIS_JAR}
 
 ##########################
@@ -192,6 +193,9 @@ testviz: perfexplorer.jar
 testviews: perfexplorer.jar
 	perfexplorer -test=views
 
+testscript: perfexplorer.jar
+	perfexplorer -test=script
+
 install: perfexplorer.jar
 	mkdir -p PerfExplorer-0.1
 	rm -rf PerfExplorer-0.1/*.jar PerfExplorer-0.1/java.policy
@@ -199,6 +203,7 @@ install: perfexplorer.jar
 	cp perfexplorer.jar PerfExplorer-0.1/.
 	cp ${PERFDMF_JAR} PerfExplorer-0.1/.
 	cp ${JARGS_JAR} PerfExplorer-0.1/.
+	cp ${JYTHON_JAR} PerfExplorer-0.1/.
 	cp ${JDBC_JAR} PerfExplorer-0.1/.
 	cp ${JOGL_JAR} PerfExplorer-0.1/.
 	cp ${VIS_JAR} PerfExplorer-0.1/.
@@ -226,6 +231,8 @@ webstart: perfexplorer.jar
 	cp ${PERFDMF_JAR} ${WEBSTART_DIR}
 	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JARGS_JAR} khuck
 	cp ${JARGS_JAR} ${WEBSTART_DIR}
+	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JYTHON_JAR} khuck
+	cp ${JYTHON_JAR} ${WEBSTART_DIR}
 	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JOGL_JAR} khuck
 	cp ${JOGL_JAR} ${WEBSTART_DIR}
 	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${VIS_JAR} khuck

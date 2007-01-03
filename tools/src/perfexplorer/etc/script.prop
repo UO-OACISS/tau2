@@ -1,0 +1,8 @@
+# script.prop
+# Drivers for scripting support
+#script.drivers=scripting.FESIInterpreterDriver:scripting.JPythonInterpreterDriver:scripting.JaclInterpreterDriver:scripting.SkijInterpreterDriver
+script.drivers=common.JPythonInterpreterDriver
+
+# Mapping of application events to script files
+#event.start=scripts/py/setupMenus.py
+#event.end=scripts/py/sayGoodBye.py

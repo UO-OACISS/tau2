@@ -2,12 +2,13 @@ package client;
 
 import common.*;
 import server.AnalysisTaskWrapper;
+import common.InterpreterDriver.InterpreterException;
 
 import jargs.gnu.CmdLineParser;
 import edu.uoregon.tau.perfdmf.*;
 
 import javax.swing.*;
-
+import java.io.FileInputStream;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -101,6 +102,10 @@ public class TestHarness {
 				setSelection("FLASH", "hydro radiation scaling on BG/L", "tau64p.ppk/64p/scaling/hydro-radiation-scaling/flash/flash/taudata/packages/disk2/", "Time");
 
 				testCorrelation();
+			}
+			if (test.equals("script") || test.equals("all")) {
+				System.out.println("Testing scripting...");
+				testScripting();
 			}
 			//java.lang.Thread.sleep(1000);
 		} catch (Exception e) {
@@ -300,6 +305,30 @@ public class TestHarness {
 		java.lang.Thread.sleep(5000);
 	}
 
+	public void testScripting() throws Exception {
+        Properties _scriptProp = new Properties();
+        try {
+            _scriptProp.load(new FileInputStream("etc/script.prop"));
+        
+            String scriptDrivers = _scriptProp.getProperty("script.drivers");
+            StringTokenizer driverTokenizer 
+                = new StringTokenizer(scriptDrivers, ":");
+            while (driverTokenizer.hasMoreTokens()) {
+                Class.forName(driverTokenizer.nextToken());
+            }
+        } catch (Exception ex) {
+            System.err.println("Failed to load interpreter drivers " + ex);
+            throw ex;
+        }
+
+        try {
+            InterpreterDriverManager.executeScriptFile("etc/test.py");
+        } catch (InterpreterException e) {
+            System.err.println("Failed to execute test script");
+            throw e;
+        }
+	}
+
 /*
 public RMIPerformanceResults getPerformanceResults(RMIPerfExplorerModel model) throws RemoteException;
 public List getPotentialGroups(RMIPerfExplorerModel model) throws RemoteException;
@@ -381,7 +410,8 @@ public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteExceptio
 
 		if (!test.equals("chart") && !test.equals("cluster") &&
 			!test.equals("viz") && !test.equals("correlation") &&
-			!test.equals("views") && !test.equals("all")) {
+			!test.equals("script") && !test.equals("views") && 
+			!test.equals("all")) {
 			System.err.println("Please enter a valid test.");
 			System.err.println(USAGE);
 			System.exit(-1);
