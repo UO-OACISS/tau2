@@ -136,6 +136,28 @@ CREATE TABLE @DATABASE_PREFIX@interval_mean_summary (
 	FOREIGN KEY(metric) REFERENCES @DATABASE_PREFIX@metric(id) ON DELETE NO ACTION 
 );
 
+CREATE TABLE @DATABASE_PREFIX@machine_thread_map (
+    id                      INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, 
+    trial                     INT       not null,
+    node                      INT       not null,
+    context                   INT       not null,
+    thread                    INT       not null,
+    process_id                INT,
+    thread_id                 INT,
+    cpu_index                 INT,
+    operating_system_name     CLOB,
+    operating_system_version  CLOB,
+    system_nodename           CLOB,
+    system_architecthure      CLOB,
+    system_num_processors     INT,
+    cpu_type                  CLOB,
+    cpu_mhz                   CLOB,
+    cpu_cache_size            INT,
+    cpu_cache_alignment       INT,
+    cpu_num_cores             INT,
+	FOREIGN KEY(trial) REFERENCES @DATABASE_PREFIX@trial(id) ON DELETE NO ACTION
+);
+
 CREATE INDEX @DATABASE_PREFIX@exp_app_idx on @DATABASE_PREFIX@experiment (application);
 CREATE INDEX @DATABASE_PREFIX@trial_exp_idx on @DATABASE_PREFIX@trial (experiment);
 CREATE INDEX @DATABASE_PREFIX@ie_trial_idx on @DATABASE_PREFIX@interval_event (trial);

@@ -156,6 +156,28 @@ CREATE TABLE tracesum (
     FOREIGN KEY(trialid) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
+CREATE TABLE machine_thread_map (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT ATOMIC_EVENT_PK PRIMARY KEY,
+    trial                     INT       NOT NULL,
+    node                      INT       NOT NULL,
+    context                   INT       NOT NULL,
+    thread                    INT       NOT NULL,
+    process_id                INT,
+    thread_id                 INT,
+    cpu_index                 INT,
+    operating_system_name     VARCHAR(4000),
+    operating_system_version  VARCHAR(4000),
+    system_nodename           VARCHAR(4000),
+    system_architecthure      VARCHAR(4000),
+    system_num_processors     INT,
+    cpu_type                  VARCHAR(4000),
+    cpu_mhz                   VARCHAR(4000),
+    cpu_cache_size            INT,
+    cpu_cache_alignment       INT,
+    cpu_num_cores             INT,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
 
 CREATE INDEX interval_loc_interval_event_metric_index on interval_location_profile (interval_event, metric);
 CREATE INDEX interval_total_interval_event_metric_index on interval_total_summary (interval_event, metric);

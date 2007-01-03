@@ -138,6 +138,28 @@ CREATE TABLE interval_mean_summary (
 	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
+CREATE TABLE machine_thread_map (
+    id                        SERIAL NOT NULL PRIMARY KEY,
+    trial                     INTEGER       NOT NULL,
+    node                      INTEGER       NOT NULL,
+    context                   INTEGER       NOT NULL,
+    thread                    INTEGER       NOT NULL,
+    process_id                INTEGER,
+    thread_id                 INTEGER,
+    cpu_index                 INTEGER,
+    operating_system_name     TEXT,
+    operating_system_version  TEXT,
+    system_nodename           TEXT,
+    system_architecthure      TEXT,
+    system_num_processors     INTEGER,
+    cpu_type                  TEXT,
+    cpu_mhz                   TEXT,
+    cpu_cache_size            INTEGER,
+    cpu_cache_alignment       INTEGER,
+    cpu_num_cores             INTEGER,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
 
 CREATE TABLE trace (
     trialid		    INT		NOT NULL,

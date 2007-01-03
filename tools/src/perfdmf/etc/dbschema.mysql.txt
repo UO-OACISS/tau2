@@ -129,6 +129,29 @@ CREATE TABLE interval_mean_summary (
     CONSTRAINT mmfkey FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
+CREATE TABLE machine_thread_map (
+    id                      INT		NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    trial                     INT       NOT NULL,
+    node                      INT       NOT NULL,
+    context                   INT       NOT NULL,
+    thread                    INT       NOT NULL,
+    process_id                INT,
+    thread_id                 INT,
+    cpu_index                 INT,
+    operating_system_name     TEXT,
+    operating_system_version  TEXT,
+    system_nodename           TEXT,
+    system_architecthure      TEXT,
+    system_num_processors     INT,
+    cpu_type                  TEXT,
+    cpu_mhz                   TEXT,
+    cpu_cache_size            INT,
+    cpu_cache_alignment       INT,
+    cpu_num_cores             INT,
+    CONSTRAINT mtmtfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+
 CREATE INDEX experiment_application_index on experiment (application);
 CREATE INDEX trial_experiment_index on trial (experiment);
 CREATE INDEX interval_event_trial_index on interval_event (trial);

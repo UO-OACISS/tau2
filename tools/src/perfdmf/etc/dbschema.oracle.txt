@@ -263,6 +263,43 @@ CREATE TABLE interval_mean_summary (
 )
 /
 
+CREATE TABLE machine_thread_map (
+    id                        INT		NOT NULL,
+    trial                     INT       NOT NULL,
+    node                      INT       NOT NULL,
+    context                   INT       NOT NULL,
+    thread                    INT       NOT NULL,
+    process_id                INT,
+    thread_id                 INT,
+    cpu_index                 INT,
+    operating_system_name     VARCHAR2(4000),
+    operating_system_version  VARCHAR2(4000),
+    system_nodename           VARCHAR2(4000),
+    system_architecthure      VARCHAR2(4000),
+    system_num_processors     INT,
+    cpu_type                  VARCHAR2(4000),
+    cpu_mhz                   VARCHAR2(4000),
+    cpu_cache_size            INT,
+    cpu_cache_alignment       INT,
+    cpu_num_cores             INT,
+    FOREIGN KEY(trial) REFERENCES trial(id)
+)
+/
+
+CREATE SEQUENCE machine_thread_map_id_seq
+ start with 1
+ increment by 1
+ nomaxvalue
+/
+
+CREATE TRIGGER machine_thread_map_id_seq_trigger
+ before insert on machine_thread_map
+ for each row
+ begin
+ select machine_thread_map_id_seq.nextval into :new.id from dual;
+ end;
+/
+
 CREATE INDEX experiment_application_index on experiment (application)/
 CREATE INDEX trial_experiment_index on trial (experiment)/
 CREATE INDEX interval_event_trial_index on interval_event (trial)/
