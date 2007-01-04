@@ -124,6 +124,9 @@
 #define TAU_NEW(expr, size) 		expr
 #define TAU_DELETE(expr, variable) 	expr
 
+#define TAU_PROFILE_SNAPSHOT(name)
+#define TAU_PROFILE_SNAPSHOT_1L(name, expr)
+
 #endif /* PROFILING_ON || TRACING_ON */
 
 #endif /* _TAU_H_ */

@@ -42,6 +42,10 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void);
 extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 extern "C" char * Tau_phase_enable(const char *group);
 
+extern "C" void Tau_profile_snapshot(char *name);
+extern "C" void Tau_profile_snapshot_1l(char *name, int number);
+
+
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
 
 #if (TAU_MAX_THREADS == 1)
@@ -327,6 +331,8 @@ or tauFI->method();
 #define TAU_NEW(expr, size) 			Tau_new(__FILE__, __LINE__, size, expr)
 #define TAU_DELETE(expr, variable) 		Tau_track_memory_deallocation(__FILE__, __LINE__, variable) , expr
 
+#define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
+#define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
 
 #ifdef NO_RTTI
 /* #define CT(obj) string(#obj) */
@@ -419,6 +425,8 @@ or tauFI->method();
 #define TAU_TRACK_DELETE(expr, variable) 	expr
 
 
+#define TAU_PROFILE_SNAPSHOT(name)
+#define TAU_PROFILE_SNAPSHOT_1L(name, expr)
 
 #define CT(obj)
 
@@ -444,7 +452,7 @@ or tauFI->method();
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.58 $   $Date: 2006/08/11 18:42:50 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.58 2006/08/11 18:42:50 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.59 $   $Date: 2007/01/04 02:36:57 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.59 2007/01/04 02:36:57 amorris Exp $ 
  ***************************************************************************/
