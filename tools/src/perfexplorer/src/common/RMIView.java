@@ -1,7 +1,9 @@
 package common;
 
-import edu.uoregon.tau.perfdmf.database.*;
-import java.sql.*;
+import edu.uoregon.tau.perfdmf.database.DB;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.io.Serializable;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -14,7 +16,7 @@ import java.util.ArrayList;
  * This class is the RMI class which contains the tree of views to be 
  * constructed in the PerfExplorerClient.
  *
- * <P>CVS $Id: RMIView.java,v 1.7 2006/04/12 02:38:26 khuck Exp $</P>
+ * <P>CVS $Id: RMIView.java,v 1.8 2007/01/04 21:20:03 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -55,7 +57,7 @@ public class RMIView implements Serializable {
 				resultSet.close();
 
 			} catch (SQLException e) {
-				System.out.println("DATABASE EXCEPTION: " + e.toString());
+				System.err.println("DATABASE EXCEPTION: " + e.toString());
 				e.printStackTrace();
 			}
 		}

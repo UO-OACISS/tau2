@@ -1,8 +1,8 @@
 package server;
 
-import java.util.Timer;
-
 import common.EngineType;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import java.util.Timer;
 
 
 /**
@@ -10,7 +10,7 @@ import common.EngineType;
  * requests.  It is created by the PerfExplorerServer object, and 
  * checks the queue every 1 seconds to see if there are any new requests.
  *
- * <P>CVS $Id: TimerThread.java,v 1.4 2006/09/13 23:28:21 khuck Exp $</P>
+ * <P>CVS $Id: TimerThread.java,v 1.5 2007/01/04 21:20:04 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -23,13 +23,16 @@ public class TimerThread extends Timer implements Runnable {
 	 */
 	private PerfExplorerServer server = null;
 	private EngineType analysisEngine = EngineType.WEKA;
+	private DatabaseAPI workerSession = null;
 
 	/**
 	 * Constructor.  Expects a reference to a PerfExplorerServer.
 	 * @param server
 	 */
-	public TimerThread (PerfExplorerServer server, EngineType analysisEngine) {
+	TimerThread (PerfExplorerServer server, DatabaseAPI workerSession,
+			EngineType analysisEngine) {
 		this.server = server;
+		this.workerSession = workerSession;
 		this.analysisEngine = analysisEngine;
 	}
 
@@ -41,8 +44,8 @@ public class TimerThread extends Timer implements Runnable {
 	 * the analysisTask returns immediately.
 	 */
 	public void run() {
-		AnalysisTaskWrapper analysisTask = new
-		AnalysisTaskWrapper(this.server, this.analysisEngine);
+		AnalysisTask analysisTask = new
+		AnalysisTask(this.server, this.workerSession, this.analysisEngine);
 		schedule(analysisTask, 1000, 1000);
 	}
 }

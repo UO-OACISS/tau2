@@ -1,7 +1,6 @@
 package client;
 
 import common.*;
-import server.AnalysisTaskWrapper;
 import common.InterpreterDriver.InterpreterException;
 
 import jargs.gnu.CmdLineParser;
@@ -14,14 +13,14 @@ import java.awt.event.*;
 import java.util.*;
 
 public class TestHarness {
-	private static String USAGE = "Usage: TestHarness [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>] [{-t,--test}=<test_type>]\n  where analysis_engine = R or Weka and test_type = charts, cluster, correlation, viz or all ";
+	private static String USAGE = "Usage: TestHarness [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>] [{-t,--test}=<test_type>]\n  where analysis_engine = R or Weka and test_type = charts, cluster, correlation, viz, script or all ";
 	private PerfExplorerConnection connection = null;
 	private RMIPerfExplorerModel model = null;
 	private Object[] viewList = null;
 	private boolean foundView = false;
 
 	private TestHarness (boolean standalone, String configFile,
-		EngineType analysisEngine, boolean quiet, String test) {
+		EngineType analysisEngine, boolean quiet, TestType test) {
 
 		JFrame frame = new PerfExplorerClient(standalone, configFile, 
 			analysisEngine, quiet);
@@ -36,32 +35,45 @@ public class TestHarness {
 		try {
 			// test the connection
 			System.out.println(connection.sayHello());
+		} catch (Exception e) {
+			System.err.println("TestHarness exception: " + e.getMessage());
+			e.printStackTrace();
+		}
 
-			if (test.equals("chart") || test.equals("all")) {
+		try {
+			if (test == TestType.CHART || test == TestType.ALL) {
 				// derby settings
 				//setSelection("gyro-b1", "tg", null, null);
 				//model.setMetricName("Time");
 		
 				// postgres settings
-				//setSelection("gyro.B1-std", "B1-std.tg", null, null);
-				//model.setMetricName("WALL_CLOCK_TIME");
-				//model.setEventName("field");
-				//model.setGroupName("TRANSPOSE");
-				//model.setTotalTimesteps("100");
-				//model.setConstantProblem(true);
+				setSelection("gyro.B1-std", "B1-std.tg", null, null);
+				model.setMetricName("WALL_CLOCK_TIME");
+				model.setEventName("field");
+				model.setGroupName("TRANSPOSE");
+				model.setTotalTimesteps("100");
+				model.setConstantProblem(true);
 
 				// DB2 settings
+				/*
 				setSelection("FLASH", "hydro radiation scaling on BG/L", null, null);
 				model.setMetricName("Time");
 				model.setEventName("MPI_Barrier()");
 				model.setGroupName("MPI");
 				model.setTotalTimesteps("100");
 				model.setConstantProblem(false);
+				*/
 
 				System.out.println("Testing charts...");
 				testCharts();
 			}
-			if (test.equals("viz") || test.equals("all")) {
+		} catch (Exception e) {
+			System.err.println("TestHarness exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		try {
+			if (test == TestType.VIZ || test == TestType.ALL) {
 				System.out.println("Testing visualization...");
 				// derby/postgres
 				//setSelection("sweep3d", "150.1 Strong Scaling 1", "128", "time");
@@ -72,7 +84,13 @@ public class TestHarness {
 
 				testVisualization();
 			}
-			if (test.equals("views") || test.equals("all")) {
+		} catch (Exception e) {
+			System.err.println("TestHarness exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		try {
+			if (test == TestType.VIEWS || test == TestType.ALL) {
 				System.out.println("Testing views...");
 				viewList = null;
 				foundView = false;
@@ -89,21 +107,39 @@ public class TestHarness {
 				model.setConstantProblem(true);
 				testViews();
 			}
-			if (test.equals("cluster") || test.equals("all")) {
+		} catch (Exception e) {
+			System.err.println("TestHarness exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		try {
+			if (test == TestType.CLUSTER || test == TestType.ALL) {
 				System.out.println("Testing clustering...");
 				//setSelection("sweep3d", "150.1 Strong Scaling 2", "32", "time");
 				setSelection("FLASH", "hydro radiation scaling on BG/L", "tau64p.ppk/64p/scaling/hydro-radiation-scaling/flash/flash/taudata/packages/disk2/", "Time");
 
 				testCluster();
 			}
-			if (test.equals("correlation") || test.equals("all")) {
+		} catch (Exception e) {
+			System.err.println("TestHarness exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		try {
+			if (test == TestType.CORRELATION || test == TestType.ALL) {
 				System.out.println("Testing correlation...");
 				//setSelection("sweep3d", "150.1 Strong Scaling 2", "32", "time");
 				setSelection("FLASH", "hydro radiation scaling on BG/L", "tau64p.ppk/64p/scaling/hydro-radiation-scaling/flash/flash/taudata/packages/disk2/", "Time");
 
 				testCorrelation();
 			}
-			if (test.equals("script") || test.equals("all")) {
+		} catch (Exception e) {
+			System.err.println("TestHarness exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		try {
+			if (test == TestType.SCRIPT || test == TestType.ALL) {
 				System.out.println("Testing scripting...");
 				testScripting();
 			}
@@ -112,6 +148,7 @@ public class TestHarness {
 			System.err.println("TestHarness exception: " + e.getMessage());
 			e.printStackTrace();
 		}
+
 		/*
 		finally {
 			System.out.println("Shutting down server...");
@@ -238,19 +275,33 @@ public class TestHarness {
 	}
 
 	public void testViews() throws Exception {
+		PerfExplorerOutput.print("total time:   ");
 		PerfExplorerChart.doTotalTimeChart();
+		PerfExplorerOutput.print("timesteps:   ");
 		PerfExplorerChart.doTimestepsChart();
+		PerfExplorerOutput.print("efficiency:   ");
 		PerfExplorerChart.doEfficiencyChart();
+		PerfExplorerOutput.print("speedup:   ");
 		PerfExplorerChart.doSpeedupChart();
+		PerfExplorerOutput.print("efficiency one:   ");
 		PerfExplorerChart.doEfficiencyOneEventChart();
+		PerfExplorerOutput.print("speedup one:   ");
 		PerfExplorerChart.doSpeedupOneEventChart();
+		PerfExplorerOutput.print("efficiency all:   ");
 		PerfExplorerChart.doEfficiencyEventsChart();
+		PerfExplorerOutput.print("speedup all:   ");
 		PerfExplorerChart.doSpeedupEventsChart();
+		PerfExplorerOutput.print("group:   ");
 		PerfExplorerChart.doCommunicationChart();
+		PerfExplorerOutput.print("fraction:   ");
 		PerfExplorerChart.doFractionChart();
+		PerfExplorerOutput.print("correlation:   ");
 		PerfExplorerChart.doCorrelationChart();
+		PerfExplorerOutput.print("efficiency phases:   ");
 		PerfExplorerChart.doEfficiencyPhasesChart();
+		PerfExplorerOutput.print("speedup phases:   ");
 		PerfExplorerChart.doSpeedupPhasesChart();
+		PerfExplorerOutput.print("fraction phases:   ");
 		PerfExplorerChart.doFractionPhasesChart();
 //public int createNewView(String name, int parent, String tableName, String columnName, String oper, String value) throws RemoteException;
 	}
@@ -263,7 +314,7 @@ public class TestHarness {
 			System.out.println("VIEW: " + view.getField("NAME"));
 			//if (view.getField("VALUE").equals("gyro-b1"))
 			//if (view.getField("VALUE").equals("B1-std.tg"))
-			if (view.getField("VALUE").equals("gyro.B1-std"))
+			if (view.getField("VALUE").equals("gyro.B1-std.HPM"))
 				foundView = true;
 			ArrayList newList = new ArrayList(list);
 			newList.add(view);
@@ -394,24 +445,19 @@ public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteExceptio
 				System.err.println(USAGE);
 				System.exit(-1);
 			}
-			if (engine == null) {
+			try {
+				analysisEngine = EngineType.getType(engine);
+			} catch (Exception e) {
 				System.err.println("Please enter a valid engine type.");
-				System.err.println(USAGE);
-				System.exit(-1);
-			} else if (engine.equalsIgnoreCase("R")) {
-				analysisEngine = EngineType.RPROJECT;
-			} else if (engine.equalsIgnoreCase("weka")) {
-				analysisEngine = EngineType.WEKA;
-			} else {
 				System.err.println(USAGE);
 				System.exit(-1);
 			}
 		}
 
-		if (!test.equals("chart") && !test.equals("cluster") &&
-			!test.equals("viz") && !test.equals("correlation") &&
-			!test.equals("script") && !test.equals("views") && 
-			!test.equals("all")) {
+		TestType testType = null;
+		try {
+			testType = TestType.getType(test);
+		} catch (Exception e) {
 			System.err.println("Please enter a valid test.");
 			System.err.println(USAGE);
 			System.exit(-1);
@@ -426,7 +472,7 @@ public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteExceptio
 	*/
 
 		TestHarness harness = new TestHarness(standalone.booleanValue(),
-			configFile, analysisEngine, quiet.booleanValue(), test);
+			configFile, analysisEngine, quiet.booleanValue(), testType);
 	}
 
 }

@@ -7,14 +7,23 @@
 
 package clustering.r;
 
-import clustering.*;
+import clustering.PrincipalComponentsAnalysisInterface;
+import clustering.RawDataInterface;
+import clustering.KMeansClusterInterface;
+import clustering.ClusterException;
+import clustering.ClusterDescription;
 import common.RMICubeData;
 
 /**
- * @author khuck
+ * This class is the R implementation of the k-means clustering operation.
+ * This class is package private - it should only be accessed from the
+ * clustering class.  To access these methods, create an AnalysisFactory,
+ * and the factory will be able to create a k-means cluster object.
  *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
+ * <P>CVS $Id: RPrincipalComponents.java,v 1.3 2007/01/04 21:20:02 khuck Exp $</P>
+ * @author khuck
+ * @version 0.1
+ * @since   0.1
  */
 public class RPrincipalComponents implements PrincipalComponentsAnalysisInterface {
 
@@ -26,7 +35,12 @@ public class RPrincipalComponents implements PrincipalComponentsAnalysisInterfac
 	private KMeansClusterInterface clusterer = null;
 	private RawDataInterface[] clusters = null;
 	
-	/**
+    /**
+     * Default constructor is private to prevent instantiation this way
+     */
+    private RPrincipalComponents() {}
+
+    /**
 	 * Default constructor
 	 */
 	public RPrincipalComponents (RMICubeData cubeData) {

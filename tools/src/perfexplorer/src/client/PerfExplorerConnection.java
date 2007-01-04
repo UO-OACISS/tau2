@@ -165,7 +165,7 @@ public class PerfExplorerConnection {
 	}
     }
 
-    public RMIChartData requestChartData(PerfExplorerModel model, int dataType) {
+    public RMIChartData requestChartData(PerfExplorerModel model, ChartDataType dataType) {
 	RMIChartData data = null;
 	try {
 	    data = server.requestChartData(model, dataType);

@@ -4,7 +4,11 @@
  */
 package clustering.weka;
 
-import clustering.*;
+import clustering.KMeansClusterInterface;
+import clustering.RawDataInterface;
+import clustering.ClusterException;
+import clustering.ClusterDescription;
+import common.PerfExplorerOutput;
 import weka.core.Instances;
 import weka.attributeSelection.PrincipalComponents;
 
@@ -12,8 +16,10 @@ import weka.attributeSelection.PrincipalComponents;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaKMeansCluster.java,v 1.4 2005/11/03 01:56:25 khuck Exp $</P>
+ * <P>CVS $Id: WekaKMeansCluster.java,v 1.5 2007/01/04 21:20:03 khuck Exp $</P>
  * @author khuck
+ * @version 0.1
+ * @since 0.1
  *
  */
 public class WekaKMeansCluster implements KMeansClusterInterface {
@@ -31,9 +37,9 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 	private ImprovedSimpleKMeans kmeans = null;
 	
 	/**
-	 * Default constructor
+	 * Default constructor - package protected
 	 */
-	public WekaKMeansCluster() {
+	WekaKMeansCluster() {
 		super();
 		reset();
 	}
@@ -90,6 +96,8 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 			this.clusterStandardDeviations = kmeans.getClusterStandardDevs();
 			evaluateCluster();
 		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println(e.getMessage());
 		}
 	}
 
@@ -184,16 +192,16 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 	private void evaluateCluster() {
 		try {
 			double betweenError = kmeans.getBetweenError();
-			//System.out.println("Between Squared Error: " + betweenError);
+			//PerfExplorerOutput.println("Between Squared Error: " + betweenError);
 			double withinError = kmeans.getSquaredError();
-			//System.out.println("Within Squared Error: " + withinError);
-			//System.out.println("k-1: " + (k-1));
-			//System.out.println("n-k: " + (instances.numInstances()-k));
+			//PerfExplorerOutput.println("Within Squared Error: " + withinError);
+			//PerfExplorerOutput.println("k-1: " + (k-1));
+			//PerfExplorerOutput.println("n-k: " + (instances.numInstances()-k));
 			double maximizeMe = (betweenError * (k-1)) / 
 				(withinError * (instances.numInstances() - k));
-			//System.out.println("Maximize Me: " + maximizeMe);
+			//PerfExplorerOutput.println("Maximize Me: " + maximizeMe);
 		} catch (Exception e) {
-			System.out.println ("EXCEPTION: " + e.getMessage());
+			PerfExplorerOutput.println ("EXCEPTION: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}

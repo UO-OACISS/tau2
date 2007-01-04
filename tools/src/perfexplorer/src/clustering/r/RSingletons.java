@@ -5,12 +5,12 @@ import org.omegahat.R.Java.ROmegahatInterpreter;
 
 /**
  *
- * <P>CVS $Id: RSingletons.java,v 1.2 2005/09/28 01:06:58 khuck Exp $</P>
+ * <P>CVS $Id: RSingletons.java,v 1.3 2007/01/04 21:20:02 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
-public class RSingletons {
+class RSingletons {
 	private static ROmegahatInterpreter rInterpreter = null;
 	private static REvaluator rEvaluator = null;
 
@@ -20,7 +20,7 @@ public class RSingletons {
 	 * 
 	 * @return
 	 */
-	public static ROmegahatInterpreter getRInterpreter () {
+	static ROmegahatInterpreter getRInterpreter () {
 		if (rInterpreter == null) {
 			String myArgs[] = new String[2];
 			myArgs[0] = new String("--silent");
@@ -37,7 +37,7 @@ public class RSingletons {
 	 * 
 	 * @return
 	 */
-	public static REvaluator getREvaluator () {
+	static REvaluator getREvaluator () {
 		// make suer the interpreter is not null
 		getRInterpreter();
 		if (rEvaluator == null) {
@@ -49,7 +49,7 @@ public class RSingletons {
 	/**
 	 * End the R Session.  Currently only called on RAnalysisFactory.closeFactory().
 	 */
-	public static void endRSession() {
+	static void endRSession() {
 		try {
 			// call the method, to make sure the evaluator exists
 			getREvaluator().call("quit");

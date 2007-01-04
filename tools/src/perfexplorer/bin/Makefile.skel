@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.22 2007/01/03 01:38:45 khuck Exp $
+# $Id: Makefile.skel,v 1.23 2007/01/04 21:20:00 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -56,8 +56,6 @@ STANDALONE_RUN_CLASSPATH = classes:${PERFDMF_JAR}:${JDBC_JAR}:${OMEGAHAT_JARS}:$
 
 ##########################
 
-SERVER_CPP_INPUT = ${wildcard src/server/*.cpp}
-SERVER_CPP_OUTPUT = ${patsubst %.cpp, %.java, ${SERVER_CPP_INPUT}}
 CONSTANT_CPP_INPUT = ${wildcard src/constants/*.cpp}
 CONSTANT_CPP_OUTPUT = ${patsubst %.cpp, %.java, ${CONSTANT_CPP_INPUT}} 
 
@@ -65,8 +63,7 @@ CONSTANT_SOURCES = ${CONSTANT_CPP_OUTPUT}
 COMMON_SOURCES = ${wildcard src/common/*.java}
 CLUSTERING_SOURCES = ${wildcard src/clustering/*.java} ${wildcard src/clustering/${ENGINE_PACKAGE}/*.java} 
 CLIENT_SOURCES = ${wildcard src/client/*.java}
-SERVER_SOURCES_TMP = ${wildcard src/server/*.java}
-SERVER_SOURCES = ${subst ${SERVER_CPP_OUTPUT}, , ${SERVER_SOURCES_TMP}} ${SERVER_CPP_OUTPUT} 
+SERVER_SOURCES = ${wildcard src/server/*.java}
 SOURCES = ${COMMON_SOURCES} ${SERVER_SOURCES} ${CLIENT_SOURCES} ${CLUSTERING_SOURCES}
 
 CONSTANT_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CONSTANT_SOURCES}}} 
@@ -95,7 +92,7 @@ server: ${SERVER_CLASSES} ${RMIC_CLASSES}
 
 client: ${CLIENT_CLASSES}
 
-perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${SERVER_CPP_CLASSES} ${RMIC_CLASSES}
+perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
 	jar -cvf perfexplorer.jar -C classes .
 	cp perfexplorer.jar ${TAUROOT}/${CONFIG_ARCH}/lib/.
 
@@ -116,9 +113,6 @@ ${COMMON_CLASSES}: Makefile ${COMMON_SOURCES} ${CONSTANT_CLASSES}
 
 ${CLUSTERING_CLASSES}: Makefile ${CLUSTERING_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES}
 	${JAVAC} -classpath ${CLUSTERING_BUILD_CLASSPATH} -d classes ${CLUSTERING_SOURCES}
-
-${SERVER_CPP_OUTPUT}: Makefile ${SERVER_CPP_INPUT}
-	${CPP} ${SERVER_CPP_INPUT} ${SERVER_CPP_OUTPUT}
 
 ${SERVER_CLASSES}: Makefile ${SERVER_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES}
 	${JAVAC} -classpath ${SERVER_BUILD_CLASSPATH} -d classes ${SERVER_SOURCES}
@@ -143,7 +137,6 @@ cleanclient:
 
 cleanserver:
 	rm -rf classes/server
-	rm -rf ${SERVER_CPP_OUTPUT}
 
 cleancommon:
 	rm -rf classes/common

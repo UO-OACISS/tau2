@@ -7,6 +7,9 @@
 
 package client;
 
+import common.RMIChartData;
+import common.ChartDataType;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import javax.swing.JFrame;
@@ -25,7 +28,6 @@ import org.jfree.data.statistics.BoxAndWhiskerCategoryDataset;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
-import common.RMIChartData;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.labels.CategoryToolTipGenerator;
 import org.jfree.data.category.CategoryDataset;
@@ -44,7 +46,7 @@ public class PerfExplorerBoxChart extends PerfExplorerChartWindow {
 		// for each event, get the variation across all threads.
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
-		RMIChartData data = server.requestChartData(PerfExplorerModel.getModel(), RMIChartData.IQR_DATA);
+		RMIChartData data = server.requestChartData(PerfExplorerModel.getModel(), ChartDataType.IQR_DATA);
 
 		// build the chart
 		BoxAndWhiskerCategoryDataset dataset = createDataset(data);

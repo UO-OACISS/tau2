@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * This class is used as a typesafe enumeration.
  *
- * <P>CVS $Id: EngineType.java,v 1.1 2006/09/13 23:28:20 khuck Exp $</P>
+ * <P>CVS $Id: EngineType.java,v 1.2 2007/01/04 21:20:03 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -25,9 +25,9 @@ public final class EngineType implements Serializable {
     /**
      * Static instances of the engine.
      */
-    public final static EngineType WEKA = new EngineType("Weka");
-    public final static EngineType RPROJECT = new EngineType("R Project");
-    public final static EngineType OCTAVE = new EngineType("Octave");
+    public final static EngineType WEKA = new EngineType("weka");
+    public final static EngineType RPROJECT = new EngineType("r");
+    public final static EngineType OCTAVE = new EngineType("octave");
     
     /**
      * The constructor is private, so this class cannot be instantiated.
@@ -45,6 +45,26 @@ public final class EngineType implements Serializable {
         return this._name;
     }
     
+	/**
+	 * Convert a string value to an actual engine type
+	 *
+	 * @param type engine type string
+	 * @return EngineType
+	 */
+	public static EngineType getType (String type) throws PerfExplorerException {
+		PerfExplorerException e = new PerfExplorerException ("Unknown engine type.");
+		if (type == null)
+			throw (e);
+		String lowerType = type.toLowerCase();
+		if (type.equals(WEKA.toString()))
+			return WEKA;
+		if (type.equals(RPROJECT.toString()))
+			return RPROJECT;
+		if (type.equals(OCTAVE.toString()))
+			return OCTAVE;
+		throw (e);
+	}
+
     // The following declarations are necessary for serialization
     private static int nextOrdinal = 0;
     private final int ordinal = nextOrdinal++;

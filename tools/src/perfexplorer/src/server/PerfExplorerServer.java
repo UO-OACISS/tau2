@@ -1,21 +1,43 @@
 package server;
 
-import java.rmi.*;
-import java.rmi.server.*;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Collections;
-import java.util.HashMap;
+import common.*;
+
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.DatabaseException;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.database.DB;
+
+import jargs.gnu.CmdLineParser;
+
+import java.io.InputStream;
+
+import java.rmi.ConnectException;
+import java.rmi.Naming;
+import java.rmi.RMISecurityManager;
+import java.rmi.RemoteException;
+import java.rmi.ServerError;
+import java.rmi.ServerException;
+import java.rmi.StubNotFoundException;
+import java.rmi.server.UnicastRemoteObject;
+
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.io.InputStream;
 
-import common.*;
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfdmf.database.*;
-import jargs.gnu.CmdLineParser;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Collections;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+import java.util.Vector;
+
+
 
 /**
  * The main PerfExplorer Server class.  This class is defined as a singleton,
@@ -24,33 +46,20 @@ import jargs.gnu.CmdLineParser;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.37 2006/12/22 22:32:18 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.38 2007/01/04 21:20:04 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
-/**
- * @author khuck
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
-/**
- * @author khuck
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfExplorer {
+	private static PerfExplorerServer.Facade _instance = null;
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>] [{-p,--port}=<port_number>]\n  where analysis_engine = R or Weka";
-
 	private DatabaseAPI session = null;
-	private Semaphore dbControl = null;
 	private Queue requestQueue = null;
 	private java.lang.Thread timerThread = null;
 	private TimerThread timer = null;
-
 	private static PerfExplorerServer theServer = null;
+
 	/**
 	 * Static method to get the server instance reference.
 	 * Note: This method assumes the server has been instantiated.
@@ -92,37 +101,40 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private PerfExplorerServer(String configFile, EngineType analysisEngine,
 	int port, boolean quiet) throws RemoteException {
 		super(port);
-		PerfExplorerOutput.initialize(quiet);
+		_instance = new PerfExplorerServer.FacadeImpl(this);
+		PerfExplorerOutput.setQuiet(quiet);
 		theServer = this;
 		this.requestQueue = new Queue();
+		DatabaseAPI workerSession = null;
 		try {
 			this.session = new DatabaseAPI();
 			this.session.initialize(configFile, false);
-			this.dbControl = new Semaphore();
-			System.out.println("Connected to database.");
+			workerSession = new DatabaseAPI();
+			workerSession.initialize(configFile, false);
+			PerfExplorerOutput.println("Connected to database.");
 		} catch (Exception e) {
 			System.err.println("Error connecting to Database!");
 			System.err.println(e.getMessage());
+            StringBuffer buf = new StringBuffer();
+            buf.append("\nPlease make sure that your DBMS is ");
+            buf.append("configured correctly, and the database ");
+            buf.append("has been created.");
+            buf.append("\nSee the PerfExplorer and/or PerfDMF");
+            buf.append("configuration utilities for details.\n");
+            System.err.println(buf.toString());
 			System.exit(1);
 		}
-		timer = new TimerThread(this, analysisEngine);
+		timer = new TimerThread(this, workerSession, analysisEngine);
 		timerThread = new java.lang.Thread(timer);
 		this.timerThread.start();
 	}
-
-	/**
-	 * Returns the semaphore which controls access to the database connection.
-	 * 
-	 * @return
-	 */
-	public Semaphore getControl() { return dbControl; }
 
 	/**
 	 * Test method.
 	 * 
 	 */
 	public String sayHello() {
-		//System.out.println("sayHello()...");
+		PerfExplorerOutput.println("sayHello()...");
 		String howdy = new String("Hello, client - this is server!");
 		return howdy;
 	}
@@ -133,10 +145,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List of PerfDMF Application objects.
 	 */
 	public List getApplicationList() {
-		//System.out.println("getApplicationList()...");
-		dbControl.WAIT("getApplicationList");
+		//PerfExplorerOutput.println("getApplicationList()...");
 		List applications = this.session.getApplicationList();
-		dbControl.SIGNAL("getApplicationList");
 		return applications;
 	}
 
@@ -148,14 +158,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List of PerfDMF Experiment objects.
 	 */
 	public List getExperimentList(int applicationID) {
-		//System.out.println("getExperimentList(" + applicationID + ")...");
+		//PerfExplorerOutput.println("getExperimentList(" + applicationID + ")...");
 		this.session.setApplication(applicationID);
 		List experiments = null;
-		dbControl.WAIT("getExperimentList");
 		try {
 			experiments = this.session.getExperimentList();
 		} catch (DatabaseException e) {}
-		dbControl.SIGNAL("getExperimentList");
 
 		return experiments;
 	}
@@ -168,18 +176,16 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List of PerfDMF Trial objects.
 	 */
 	public List getTrialList(int experimentID) {
-		//System.out.println("getTrialList(" + experimentID + ")...");
+		//PerfExplorerOutput.println("getTrialList(" + experimentID + ")...");
 		try {
 			this.session.setExperiment(experimentID);
 		} catch (DatabaseException e) {}
-		dbControl.WAIT("getTrialList");
 		List trials = this.session.getTrialList();
-		dbControl.SIGNAL("getTrialList");
 		return trials;
 	}
 
 	public void stopServer() {
-		//System.out.println("stopServer()...");
+		PerfExplorerOutput.println("stopServer()...");
 		timer.cancel();
 		try{
 			java.lang.Thread.sleep(1000);
@@ -201,7 +207,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 */
 	public String requestAnalysis(RMIPerfExplorerModel model, boolean force) {
 		StringBuffer status = new StringBuffer();
-		//System.out.println("requestAnalysis(" + model.toString() + ")...");
+		//PerfExplorerOutput.println("requestAnalysis(" + model.toString() + ")...");
 		try {
 			if (!force && checkForRequest(model) != 0) {
 				throw new PerfExplorerException("Request already exists");
@@ -231,9 +237,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return RMIPerformanceResults
 	 */
 	public RMIPerformanceResults getCorrelationResults(RMIPerfExplorerModel model) {
-		//System.out.print("getCorrelationResults(" + model.toString() + ")... ");
+		//PerfExplorerOutput.print("getCorrelationResults(" + model.toString() + ")... ");
 		RMIPerformanceResults analysisResults = new RMIPerformanceResults();
-		dbControl.WAIT("getCorrelationResults");
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
@@ -251,7 +256,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				statement.setInt(3, model.getTrial().getID());
 				statement.setString(4, AnalysisType.CORRELATION_ANALYSIS.toString());
 			}
-			//System.out.println(statement.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			int analysisID = 0;
 			if (results.next() != false) {
@@ -259,7 +264,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else {
 				// no results for this combination
 				statement.close();
-				dbControl.SIGNAL("getCorrelationResults");
 				return analysisResults;
 			}
 			statement.close();
@@ -270,7 +274,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					"analysis_settings = ? and result_type = ? order by id asc");
 			statement.setInt(1, analysisID);
 			statement.setString(2, ChartType.CORRELATION_SCATTERPLOT.toString());
-			//System.out.println(statement.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			results = statement.executeQuery();
 			while (results.next() != false) {
 				String id = results.getString(1);
@@ -311,7 +315,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("order by ard.cluster_index, ie.name, ard.data_type ");
 				statement = db.prepareStatement(buf.toString());
 				statement.setString(1, id);
-				//System.out.println(statement.toString());
+				//PerfExplorerOutput.println(statement.toString());
 				results = statement.executeQuery();
 				String clusterID = new String("");
 				List centroids = null;
@@ -342,10 +346,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "\nERROR: Couldn't select the analysis settings from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getCorrelationResults");
 		}
-		dbControl.SIGNAL("getCorrelationResults");
-		//System.out.println(" Done!");
+		//PerfExplorerOutput.println(" Done!");
 		return analysisResults;
 	}
 
@@ -359,9 +361,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return RMIPerformanceResults
 	 */
 	public RMIPerformanceResults getPerformanceResults(RMIPerfExplorerModel model) {
-		System.out.print("getPerformanceResults(" + model.toString() + ")... ");
+		PerfExplorerOutput.print("getPerformanceResults(" + model.toString() + ")... ");
 		RMIPerformanceResults analysisResults = new RMIPerformanceResults();
-		dbControl.WAIT("getPerformanceResults");
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
@@ -379,7 +380,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				statement.setInt(3, model.getTrial().getID());
 				statement.setString(4, AnalysisType.K_MEANS.toString());
 			}
-			//System.out.println(statement.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			int analysisID = 0;
 			if (results.next() != false) {
@@ -387,7 +388,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else {
 				// no results for this combination
 				statement.close();
-				dbControl.SIGNAL("getPerformanceResults");
 				return analysisResults;
 			}
 			statement.close();
@@ -395,7 +395,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					"thumbnail, image_size, image, result_type from analysis_result where " + 
 					"analysis_settings = ? order by id asc");
 			statement.setInt(1, analysisID);
-			//System.out.println(statement.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			results = statement.executeQuery();
 			while (results.next() != false) {
 				String id = results.getString(1);
@@ -431,7 +431,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("order by ard.cluster_index, ie.name, ard.data_type ");
 				statement = db.prepareStatement(buf.toString());
 				statement.setString(1, id);
-				//System.out.println(statement.toString());
+				//PerfExplorerOutput.println(statement.toString());
 				//results = statement.executeQuery();
 				String clusterID = new String("");
 				List centroids = null;
@@ -462,10 +462,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "\nERROR: Couldn't select the analysis settings from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getPerformanceResults");
 		}
-		dbControl.SIGNAL("getPerformanceResults");
-		//System.out.println(" Done!");
+		//PerfExplorerOutput.println(" Done!");
 		return analysisResults;
 	}
 
@@ -476,7 +474,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 */
 	public void taskFinished () {
 		RMIPerfExplorerModel model = requestQueue.dequeue();
-		//System.out.println(model.toString() + " finished!");
+		//PerfExplorerOutput.println(model.toString() + " finished!");
 		// endRSession();
 	}
 
@@ -509,7 +507,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public int checkForRequest (RMIPerfExplorerModel modelData) throws PerfExplorerException {
 		int analysisID = 0;
 		// check to see if this request has already been done
-		dbControl.WAIT("checkForRequest");
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
@@ -531,10 +528,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't select the analysis settings from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("checkForRequest");
 			throw new PerfExplorerException(error, e);
 		}
-		dbControl.SIGNAL("checkForRequest");
 		return analysisID;
 	}
 
@@ -548,7 +543,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public int insertRequest (RMIPerfExplorerModel modelData) throws PerfExplorerException {
 		int analysisID = 0;
 		// insert a record into the database for this analysis
-		dbControl.WAIT("insertRequest");
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
@@ -582,10 +576,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't insert the analysis settings into the database!\nPlease make sure that the analysis_settings and analysis_results tables\nhave been created in the database, and that\nR and the Omegahat interface have been installed on this machine.";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("insertRequest");
 			throw new PerfExplorerException(error, e);
 		}
-		dbControl.SIGNAL("insertRequest");
 		return analysisID;
 	}
 
@@ -596,8 +588,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param dataType
 	 * @return RMIChartData
 	 */
-	public RMIChartData requestChartData(RMIPerfExplorerModel modelData, int dataType) {
-		//System.out.println("requestChartData(" + modelData.toString() + ")...");
+	public RMIChartData requestChartData(RMIPerfExplorerModel modelData, ChartDataType dataType) {
+		//PerfExplorerOutput.println("requestChartData(" + modelData.toString() + ")...");
 		ChartData chartData = ChartData.getChartData(modelData, dataType);
 		return chartData;
 	}
@@ -611,9 +603,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List
 	 */
 	public List getPotentialGroups(RMIPerfExplorerModel modelData) {
-		//System.out.println("getPotentialGroups()...");
+		//PerfExplorerOutput.println("getPotentialGroups()...");
 		List groups = new ArrayList();
-		dbControl.WAIT("getPotentialGroups");
 		try {
 			DB db = this.getDB();
 			StringBuffer buf;
@@ -648,9 +639,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't select the groups from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getPotentialGroups");
 		}
-		dbControl.SIGNAL("getPotentialGroups");
 		return groups;
 	}
 
@@ -664,9 +653,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List
 	 */
 	public List getPotentialMetrics(RMIPerfExplorerModel modelData) {
-		//System.out.println("getPotentialMetrics()...");
+		//PerfExplorerOutput.println("getPotentialMetrics()...");
 		List metrics = new ArrayList();
-		dbControl.WAIT("getPotentialMetrics");
 		try {
 			DB db = this.getDB();
 			StringBuffer buf = new StringBuffer();
@@ -700,7 +688,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else {
 				buf.append(" group by m.name order by count(m.name) desc");
 			}
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// only get the metrics that are in all trials.
@@ -717,9 +705,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't select the metrics from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getPotentialMetrics");
 		}
-		dbControl.SIGNAL("getPotentialMetrics");
 		return metrics;
 	}
 
@@ -732,9 +718,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List
 	 */
 	public List getPotentialEvents(RMIPerfExplorerModel modelData) {
-		//System.out.println("getPotentialEvents()...");
+		//PerfExplorerOutput.println("getPotentialEvents()...");
 		List events = new ArrayList();
-		dbControl.WAIT("getPotentialEvents");
 		try {
 			DB db = this.getDB();
 			StringBuffer buf = new StringBuffer();
@@ -764,7 +749,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append(")");
 			}
 			PreparedStatement statement = db.prepareStatement(buf.toString());
-			//System.out.println(statement.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
 				events.add(results.getString(1));
@@ -774,9 +759,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't select the events from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getPotentialEvents");
 		}
-		dbControl.SIGNAL("getPotentialEvents");
 		return events;
 	}
 
@@ -788,9 +771,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return String[]
 	 */
 	public String[] getMetaData (String tableName) {
-		//System.out.println("getMetaData()...");
+		//PerfExplorerOutput.println("getMetaData()...");
 		String[] columns = null;
-		dbControl.WAIT("getMetaData");
 		try {
 			if (tableName.equalsIgnoreCase("application")) {
 				columns = Application.getFieldNames(this.getDB());
@@ -803,9 +785,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't select the columns from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getMetaData");
 		}
-		dbControl.SIGNAL("getMetaData");
 		return columns;
 	}
 
@@ -820,9 +800,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List
 	 */
 	public List getPossibleValues (String tableName, String columnName) {
-		System.out.println("getPossibleValues()...");
+		PerfExplorerOutput.println("getPossibleValues()...");
 		List values = new ArrayList();
-		dbControl.WAIT("getPossibleValues");
 		try {
 			DB db = this.getDB();
 			StringBuffer buf = new StringBuffer("select distinct ");
@@ -845,9 +824,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't select the potential values from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getPossibleValues");
 		}
-		dbControl.SIGNAL("getPossibleValues");
 		return values;
 	}
 
@@ -866,9 +843,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return int
 	 */
 	public int createNewView(String name, int parent, String tableName, String columnName, String oper, String value) {
-		//System.out.println("createNewView()...");
+		//PerfExplorerOutput.println("createNewView()...");
 		int viewID = 0;
-		dbControl.WAIT("createNewView");
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
@@ -902,9 +878,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't select the columns from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("createNewView");
 		}
-		dbControl.SIGNAL("createNewView");
 		return viewID;
 	}
 
@@ -916,9 +890,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List of views
 	 */
 	public List getViews (int parent) {
-		//System.out.println("getViews()...");
+		//PerfExplorerOutput.println("getViews()...");
 		List views = new ArrayList();
-		dbControl.WAIT("getViews");
 		try {
 			DB db = this.getDB();
 			Iterator names = RMIView.getFieldNames(db);
@@ -943,7 +916,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append(parent);
 			}
 			PreparedStatement statement = db.prepareStatement(buf.toString());
-			//System.out.println(statement.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
 				RMIView view = new RMIView();
@@ -957,9 +930,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't select views from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getViews");
 		}
-		dbControl.SIGNAL("getViews");
 		return views;
 	}
 
@@ -973,9 +944,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @see common.RMIPerfExplorer#getTrialsForView(java.util.List)
 	 */
 	public List getTrialsForView (List views) {
-		//System.out.println("getTrialsForView()...");
+		//PerfExplorerOutput.println("getTrialsForView()...");
 		List trials = new ArrayList();
-		dbControl.WAIT("getTrialsForView");
 		try {
 			DB db = this.getDB();
 			StringBuffer whereClause = new StringBuffer();
@@ -1005,15 +975,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				whereClause.append ("' ");
 
 			}
-			System.out.println(whereClause.toString());
+			PerfExplorerOutput.println(whereClause.toString());
 			trials = Trial.getTrialList(db, whereClause.toString());
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select views from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getTrialsForView");
 		}
-		dbControl.SIGNAL("getTrialsForView");
 		return trials;
 	}
 
@@ -1091,7 +1059,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			statement.setInt(1, model.getTrial().getID());
 			Metric metric = (Metric)model.getCurrentSelection();
 			statement.setInt(2, metric.getID());
-			//System.out.println(statement.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
 				data.addEventName(results.getString(1));
@@ -1129,7 +1097,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't get variation from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getVariationAnalysis");
 		}
 		
 		return data;
@@ -1161,11 +1128,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("group by interval_event.id ");
 
 			statement = db.prepareStatement(buf.toString());
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			statement.setInt(1, model.getTrial().getID());
 			Metric metric = (Metric)model.getCurrentSelection();
 			statement.setInt(2, metric.getID());
-			//System.out.println(statement.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			StringBuffer idString = new StringBuffer();
 			boolean gotOne = false;
@@ -1180,7 +1147,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 						idString.append(",");
 					idString.append(results.getString(1));
 					gotOne = true;
-					//System.out.println(results.getInt(2));
+					//PerfExplorerOutput.println(results.getInt(2));
 					goodMethods.add(results.getString(1));
 				}
 			}
@@ -1233,10 +1200,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("group by interval_event.id, name ");
 			}
 			buf.append("order by 3 desc");
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
-			//System.out.println(buf.toString());
-			//System.out.println(statement.toString());
+			//PerfExplorerOutput.println(buf.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			results = statement.executeQuery();
 			int count = 0;
 			int ids[] = new int[4];
@@ -1283,10 +1250,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			buf.append(") and metric = ? ");
 			buf.append("order by 1, 2, 3, 4");
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, metric.getID());
-			//System.out.println(statement.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			results = statement.executeQuery();
 			int node = 0, context = 0, thread = 0;
 			float[] values = new float[count];
@@ -1308,7 +1275,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			String error = "ERROR: Couldn't get variation from the database!";
 			System.err.println(error);
 			e.printStackTrace();
-			dbControl.SIGNAL("getVariationAnalysis");
 		}
 		
 		return data;
@@ -1329,9 +1295,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			this.session.setTrial(trialID);
 		} catch (DatabaseException e) {}
-		dbControl.WAIT("getEventList");
 		List events = this.session.getIntervalEvents();
-		dbControl.SIGNAL("getEventList");
 		List sortedEvents = new ArrayList();
 		for (Iterator i = events.iterator() ; i.hasNext() ; ) {
 			IntervalEvent e = (IntervalEvent)i.next();
@@ -1405,13 +1369,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			RMIPerfExplorer server = new PerfExplorerServer(configFile,
 			analysisEngine, port.intValue(), quiet.booleanValue());
 			Naming.rebind("PerfExplorerServer", server);
-			System.out.println("PerfExplorerServer bound.");
+			PerfExplorerOutput.println("PerfExplorerServer bound.");
 			Runtime.getRuntime().addShutdownHook(
 				new java.lang.Thread() {
 					public void run () {
 						try {
 							Naming.unbind("PerfExplorerServer");
-							System.out.println(
+							PerfExplorerOutput.println(
 							"Server has shut down successfully.");
 						} catch (Exception e) {
 							System.err.println(
@@ -1455,7 +1419,158 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 							   e.getMessage());
 			e.printStackTrace();
 		}
-
 	}
+	
+    public static PerfExplorerServer.Facade getInstance() {
+        return _instance;
+    }
+
+    // -------------------------------------------------------------------
+    // Nested types
+    // -------------------------------------------------------------------
+    /**
+     * The facade interface to the application for scripting purpose.
+     * This facade allows a limited and easy access from user scripts
+     * With this facade user do not have to traverse the object containment
+     * hierarchy. Also because the subsystems are not exposed, scripts are
+     * limited in what they can do.
+     */
+    public static interface Facade  {
+        public void doSomething();
+        public void setApplication(String name);
+        public void setExperiment(String name);
+        public void setTrial(String name);
+        public void setMetric(String name);
+        public void setDimensionReduction(TransformationType type, String parameter);
+        public void setAnalysisType(AnalysisType type);
+        public String requestAnalysis();
+    }
+
+    // -------------------------------------------------------------------
+    // Private inner types
+    // -------------------------------------------------------------------
+    private class FacadeImpl implements PerfExplorerServer.Facade {
+        private RMIPerfExplorerModel model = new RMIPerfExplorerModel();
+        private PerfExplorerServer server = null;
+
+        FacadeImpl(PerfExplorerServer server) {
+            this.server = server;
+        }
+
+        public void doSomething() {
+            PerfExplorerOutput.println("Testing Script Facade");
+            return;
+        }
+
+        public void setApplication(String name) {
+            // check the argument
+            if (name == null)
+                throw new IllegalArgumentException("Application name cannot be null.");
+            if (name.equals(""))
+                throw new IllegalArgumentException("Application name cannot be an empty string.");
+
+            boolean found = false;
+            for (ListIterator apps = server.getApplicationList().listIterator();                 apps.hasNext() && !found; ) {
+                Application app = (Application)apps.next();
+                if (app.getName().equals(name)) {
+                    model.setCurrentSelection(app);;
+                    found = true;
+                }
+            }
+            if (!found)
+                throw new NoSuchElementException("Application '" + name + "' not found.");
+        }
+
+        public void setExperiment(String name) {
+            // check the argument
+            if (name == null)
+                throw new IllegalArgumentException("Experiment name cannot be null.");
+            if (name.equals(""))
+                throw new IllegalArgumentException("Experiment name cannot be an empty string.");
+
+            Application app = model.getApplication();
+            if (app == null)
+                throw new NullPointerException("Application selection is null. Please select an Application before setting the Experiment.");
+            boolean found = false;
+            for (ListIterator exps = server.getExperimentList(app.getID()).listIterator();
+                 exps.hasNext() && !found;) {
+                Experiment exp = (Experiment)exps.next();
+                if (exp.getName().equals(name)) {
+                    model.setCurrentSelection(exp);
+                    found = true;
+                }
+            }
+            if (!found)
+                throw new NoSuchElementException("Experiment '" + name + "' not found.");
+        }
+
+        public void setTrial(String name) {
+            // check the argument
+            if (name == null)
+                throw new IllegalArgumentException("Trial name cannot be null.");
+            if (name.equals(""))
+                throw new IllegalArgumentException("Trial name cannot be an empty string.");
+
+            Experiment exp = model.getExperiment();
+            if (exp == null)
+                throw new NullPointerException("Experiment selection is null.  Please select an Experiment before setting the Trial.");
+            boolean found = false;
+            for (ListIterator trials = server.getTrialList(exp.getID()).listIterator();
+                 trials.hasNext() && !found;) {
+                Trial trial = (Trial)trials.next();
+                if (trial.getName().equals(name)) {
+                    model.setCurrentSelection(trial);
+                    found = true;
+                }
+            }
+            if (!found)
+                throw new NoSuchElementException("Trial '" + name + "' not found.");
+        }
+
+        public void setMetric(String name) {
+            // check the argument
+            if (name == null)
+                throw new IllegalArgumentException("Metric name cannot be null.");
+            if (name.equals(""))
+                throw new IllegalArgumentException("Metric name cannot be an empty string.");
+
+            Trial trial = model.getTrial();
+            if (trial == null)
+                throw new NullPointerException("Trial selection is null.  Please select a Trial before setting the Metric.");
+            boolean found = false;
+            Vector metrics = trial.getMetrics();
+            for (int i = 0, size = metrics.size(); i < size && !found ; i++) {
+                Metric metric = (Metric)metrics.elementAt(i);
+                if (metric.getName().equals(name)) {
+                    model.setCurrentSelection(metric);
+                    found = true;
+                }
+            }
+            if (!found)
+                throw new NoSuchElementException("Metric '" + name + "' not found.");
+        }
+
+        public void setDimensionReduction(TransformationType type, String parameter) {
+            if (type == null)
+                throw new IllegalArgumentException("TransformationType type cannot be null.");
+
+            model.setDimensionReduction(type);
+            if (type == TransformationType.OVER_X_PERCENT) {
+                if (parameter == null)
+                    throw new IllegalArgumentException("Object parameter cannot be null.");
+                model.setXPercent(parameter);
+            }
+        }
+
+        public void setAnalysisType(AnalysisType type) {
+            model.setClusterMethod(type);
+        }
+
+        public String requestAnalysis() {
+            return server.requestAnalysis(model, true);
+        }
+
+    }
+
 }
 

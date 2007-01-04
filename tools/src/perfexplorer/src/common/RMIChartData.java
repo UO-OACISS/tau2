@@ -8,30 +8,15 @@ import java.util.ArrayList;
  * This class represents the data to be used to create a scalability or
  * runtime breakdown chart.  
  *
- * <P>CVS $Id: RMIChartData.java,v 1.5 2006/06/14 05:33:11 khuck Exp $</P>
+ * <P>CVS $Id: RMIChartData.java,v 1.6 2007/01/04 21:20:03 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
  *
  */
 public class RMIChartData implements Serializable {
-	/**
-	 * These fields define what type of data this is,
-	 * or what type of data is being requested.
-	 */
-	public static final int FRACTION_OF_TOTAL = 0;
-	public static final int RELATIVE_EFFICIENCY = 1;
-	public static final int TIMESTEPS_PER_SECOND = 2;
-	public static final int TOTAL_FOR_GROUP = 3;
-	public static final int RELATIVE_EFFICIENCY_EVENTS = 4;
-	public static final int RELATIVE_EFFICIENCY_ONE_EVENT = 5;
-	public static final int RELATIVE_EFFICIENCY_PHASES = 6;
-	public static final int FRACTION_OF_TOTAL_PHASES = 7;
-	public static final int IQR_DATA = 8;
-	public static final int CORRELATION_DATA = 9;
-	public static final int DISTRIBUTION_DATA = 10;
 
-	protected int dataType = FRACTION_OF_TOTAL;
+	protected ChartDataType dataType = ChartDataType.FRACTION_OF_TOTAL;
 	int rows = 0;
 	int columns = 0;
 
@@ -43,7 +28,7 @@ public class RMIChartData implements Serializable {
 	 * 
 	 * @param dataType
 	 */
-	public RMIChartData (int dataType) {
+	public RMIChartData (ChartDataType dataType) {
 		this.dataType = dataType;
 		this.newData = new ArrayList();
 		this.rowLabels = new ArrayList();
@@ -73,11 +58,36 @@ public class RMIChartData implements Serializable {
 		values[0] = v1;
 		values[1] = v2;
 		row.add(values);
-		//System.out.println("Added: " + rowIndex + ", " + v1 + ", " + v2);
+		//PerfExplorerOutput.println("Added: " + rowIndex + ", " + v1 + ", " + v2);
 	}
-
+	
+	 
+	/**
+	 * Get the number of rows in the chart data.
+	 *
+	 * @return
+	 */
 	public int getRows() { return rows; }
+
+	/**
+     * Get the number of columns in the chart data.
+     *
+     * @return
+     */
 	public int getColumns() { return columns; }
+
+	/**
+     * Get the row labels for the chart data.
+     *
+     * @return
+    */
 	public List getRowLabels() { return rowLabels; }
+
+	/**
+      * Get the List of values for a particular row (series) in the chart data.
+      * 
+      * @param index
+      * @return
+    */
 	public List getRowData(int index) { return (List)newData.get(index); }
 }

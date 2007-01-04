@@ -6,7 +6,12 @@
  */
 package clustering.weka;
 
-import clustering.*;
+import clustering.PrincipalComponentsAnalysisInterface;
+import clustering.RawDataInterface;
+import clustering.KMeansClusterInterface;
+import clustering.AnalysisFactory;
+import clustering.ClusterException;
+import clustering.ClusterDescription;
 import common.RMICubeData;
 import weka.core.Instances;
 import weka.core.Instance;
@@ -14,10 +19,13 @@ import java.util.ArrayList;
 import weka.attributeSelection.PrincipalComponents;
 
 /**
+ * This class will perform PCA on weka data.
+ * TODO - make this class immutable?
+ * 
  * @author khuck
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.5 2007/01/04 21:20:03 khuck Exp $</P>
+ * @version 0.1
+ * @since   0.1
  */
 public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInterface {
 
@@ -34,7 +42,13 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	private RawDataInterface transformed = null;
 	private AnalysisFactory factory = null;
 	
-	public WekaPrincipalComponents (RMICubeData cubeData,
+	/**
+	 * Package-protected constructor.
+	 * 
+	 * @param cubeData
+	 * @param factory
+	 */
+	WekaPrincipalComponents (RMICubeData cubeData,
 	AnalysisFactory factory) {
 		this.cubeData = cubeData;
 		this.factory = factory;
@@ -91,6 +105,9 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 		this.instances = (Instances) inputData.getData();
 	}
 
+	/* (non-Javadoc)
+     * @see clustering.PrincipalComponentsAnalysisInterface#getCorrelationCoefficients()
+     */
 	public double[][] getCorrelationCoefficients() {
 		if (this.correlationCoefficients == null) {
 			this.numAttributes = this.instances.numAttributes(); 
@@ -122,6 +139,9 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 
 	}
 
+	/* (non-Javadoc)
+     * @see clustering.PrincipalComponentsAnalysisInterface#getClusters()
+     */
 	public RawDataInterface[] getClusters () {
 		if (this.clusterer != null) {
 			int[] clusterSizes = clusterer.getClusterSizes();
@@ -131,7 +151,7 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 			int[] counters = new int[k];
 			
 			for (int i = 0 ; i < k ; i++) {
-				// we have to do this chec, because sometimes Weka creates
+				// we have to do this check, because sometimes Weka creates
 				// empty clusters, and removes them.
 				if (i >= clusterSizes.length)
 					instances[i] = new Instances((Instances)(transformed.getData()), 0);
@@ -160,6 +180,9 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 		return clusters;
 	}
 
+	/* (non-Javadoc)
+     * @see clustering.PrincipalComponentsAnalysisInterface#setClusterer()
+     */
 	public void setClusterer (KMeansClusterInterface clusterer) {
 		this.clusterer = clusterer;
 	}

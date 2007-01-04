@@ -6,11 +6,17 @@
  */
 package clustering;
 
+
 /**
+ * This class is used as an extention of the Exception class, for handling
+ * clustering exceptions.  There is no special code here - just a renaming
+ * of the Exception class.
+
  * @author khuck
+ * <P>CVS $Id: ClusterException.java,v 1.2 2007/01/04 21:20:01 khuck Exp $</P>
+ * @version 0.1
+ * @since   0.1
  *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 public class ClusterException extends Exception {
 

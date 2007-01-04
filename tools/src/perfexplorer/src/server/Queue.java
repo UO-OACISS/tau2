@@ -1,12 +1,12 @@
 package server;
 
-import java.util.LinkedList;
 import common.RMIPerfExplorerModel;
+import java.util.LinkedList;
 
 /**
  * Implementation of a simple queue.
  *
- * <P>CVS $Id: Queue.java,v 1.1 2005/07/05 22:29:54 amorris Exp $</P>
+ * <P>CVS $Id: Queue.java,v 1.2 2007/01/04 21:20:04 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

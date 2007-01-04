@@ -1,6 +1,5 @@
 package client;
 
-import server.AnalysisTaskWrapper;
 import common.EngineType;
 import common.PerfExplorerOutput;
 import edu.uoregon.tau.common.Utility;
@@ -26,7 +25,7 @@ public class PerfExplorerClient extends JFrame {
 	PerfExplorerClient (boolean standalone, String configFile,
 	EngineType analysisEngine, boolean quiet) {
 		super("TAU: PerfExplorer Client");
-		PerfExplorerOutput.initialize(quiet);
+		PerfExplorerOutput.setQuiet(quiet);
 		PerfExplorerConnection.setStandalone(standalone);
 		PerfExplorerConnection.setConfigFile(configFile);
 		PerfExplorerConnection.setAnalysisEngine(analysisEngine);
@@ -86,7 +85,7 @@ public class PerfExplorerClient extends JFrame {
         } else {
             this.setLocation(savedPosition);
         }
-		setIconImage(Toolkit.getDefaultToolkit().getImage(Utility.getResource("tau16x16.gif")));
+//		setIconImage(Toolkit.getDefaultToolkit().getImage(Utility.getResource("tau16x16.gif")));
 		mainFrame = this;
 	}
 

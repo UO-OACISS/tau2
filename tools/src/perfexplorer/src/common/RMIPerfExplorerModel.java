@@ -1,6 +1,10 @@
 package common;
 
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
 import java.io.Serializable;
 import java.util.List;
 
@@ -8,7 +12,7 @@ import java.util.List;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.20 2006/11/07 21:35:56 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.21 2007/01/04 21:20:03 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -45,10 +49,19 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected int analysisID = 0;
 	protected Object[] fullPath = null;
 
+	/**
+	 * Default Constructor.
+	 *
+	 */
 	public RMIPerfExplorerModel () {
 		super();
 	}
 
+	/**
+	 * Constructor which copies all fields.
+	 * 
+	 * @param source
+	 */
 	public RMIPerfExplorerModel (RMIPerfExplorerModel source) {
 		this.multiSelectionType = source.multiSelectionType;
 		this.groupName = source.groupName;
@@ -71,50 +84,108 @@ public class RMIPerfExplorerModel implements Serializable {
 		this.fullPath = source.fullPath;
 	}
 
+	/**
+	 * Returns the current selection.
+	 * 
+	 * @return
+	 */
 	public Object getCurrentSelection () {
 		return currentSelection;
 	}
 
+	/**
+	 * Returns the currently selected application.
+	 * 
+	 * @return
+	 */
 	public Application getApplication() {
 		return application;
 	}
 
+	/**
+	 * Returns the currently selected experiment.
+	 * 
+	 * @return
+	 */
 	public Experiment getExperiment() {
 		return experiment;
 	}
 
+	/**
+	 * Returns the currently selected trial.
+	 * 
+	 * @return
+	 */
 	public Trial getTrial() {
 		return trial;
 	}
 
+	/**
+	 * Returns the currently selected metric.
+	 * 
+	 * @return
+	 */
 	public Metric getMetric() {
 		return metric;
 	}
 
+	/**
+	 * Returns the currently selected event.
+	 * 
+	 * @return
+	 */
 	public IntervalEvent getEvent() {
 		return event;
 	}
 
+	/**
+	 * Returns the currently selected cluster method.
+	 * @return
+	 */
 	public AnalysisType getClusterMethod () {
 		return (clusterMethod == null) ? AnalysisType.K_MEANS : clusterMethod;
 	}
 
+	/**
+	 * Returns the currently selected dimension reduction method.
+	 * @return
+	 */
 	public TransformationType getDimensionReduction () {
 		return (dimensionReduction == null) ? TransformationType.NONE : dimensionReduction;
 	}
 
+	/**
+	 * Returns the currently selected normalization method.
+	 * 
+	 * @return
+	 */
 	public TransformationType getNormalization () {
 		return (normalization == null) ? TransformationType.NONE : normalization;
 	}
 
+    /**
+     * Returns the currently selected number of clusters to find.
+     *
+     * @return
+     */
 	public int getNumberOfClusters () {
 		return numberOfClusters;
 	}
 
+    /**
+     * Returns the value for the "x percent" dimension reduction.
+     *
+     * @return
+     */
 	public double getXPercent () {
 		return xPercent;
 	}
 
+    /**
+     * Sets the current selection.
+     *
+     * @param currentSelection
+     */
 	public void setCurrentSelection (Object currentSelection) {
 		groupName = null;
 		metricName = null;
@@ -139,6 +210,12 @@ public class RMIPerfExplorerModel implements Serializable {
 		this.currentSelection = currentSelection;
 	}
 
+    /**
+     * Sets the current selection based on the selection path in the
+     * client navigation tree.
+     *
+     * @param objectPath
+     */
 	public void setCurrentSelection (Object[] objectPath) {
 		groupName = null;
 		metricName = null;
@@ -169,30 +246,66 @@ public class RMIPerfExplorerModel implements Serializable {
 		}
 	}
 
+    /**
+     * Sets the cluster method to use.
+     *
+     * @param clusterMethod
+     */
 	public void setClusterMethod (String clusterMethod) {
 		this.clusterMethod = AnalysisType.fromString(clusterMethod);
 	}
 
+    /**
+     * Sets the cluster method to use.
+     *
+     * @param clusterMethod
+     */
 	public void setClusterMethod (AnalysisType clusterMethod) {
 		this.clusterMethod = clusterMethod;
 	}
 
+    /**
+     * Sets the dimension reduction method to use.
+     *
+     * @param dimensionReduction
+     */
 	public void setDimensionReduction (TransformationType dimensionReduction) {
 		this.dimensionReduction = dimensionReduction;
 	}
 
+    /**
+     * Sets the normalization method to use.
+     *
+     * @param normalization
+     */
 	public void setNormalization (TransformationType normalization) {
 		this.normalization = normalization;
 	}
 
+    /**
+     * Sets the number of clusters to find.
+     *
+     * @param numberOfClusters
+     */
 	public void setNumberOfClusters (String numberOfClusters) {
 		this.numberOfClusters = Integer.parseInt(numberOfClusters);
 	}
 
+    /**
+     * Sets the minimum threshold for the "x percent" dimension reduction
+     * method.
+     *
+     * @param xPercent
+     */
 	public void setXPercent (String xPercent) {
 		this.xPercent = Double.parseDouble(xPercent);
 	}
 
+    /**
+     * Converts the current selection to a String.
+     *
+     * @return
+     */
 	public String toString() {
 		if (multiSelectionType == SelectionType.APPLICATION) {
 			return "Applications";
@@ -261,6 +374,11 @@ public class RMIPerfExplorerModel implements Serializable {
 			return new String("");
 	}
 
+    /**
+     * Converts the current selection to a shortened String.
+     *
+     * @return
+     */
 	public String toShortString() {
 		if (currentSelection instanceof IntervalEvent) {
 			IntervalEvent event = (IntervalEvent)currentSelection;
@@ -311,14 +429,34 @@ public class RMIPerfExplorerModel implements Serializable {
 
 	}
 
+    /**
+     * Gets the current analysis ID.
+     * When the analysis request is accepted, the database ID of the request
+     * is stored as the analysis ID.
+     *
+     * @return
+     */
 	public int getAnalysisID() {
 		return this.analysisID;
 	}
 
+    /**
+     * Sets the current analysis ID.
+     *
+     * @param analysisID
+     */
 	public void setAnalysisID(int analysisID) {
 		this.analysisID = analysisID;
 	}
 
+    /**
+     * Adds the selection to the multiselection in the
+     * client navigation tree, provided it is the same type as the
+     * current selection, and multiselection is allowed.
+     *
+     * @param objects
+     * @return
+     */
 	public boolean setMultiSelection(List objects) {
 		for (int i = 0 ; i < objects.size() ; i++) {
 			if (objects.get(i) instanceof Application) {
@@ -363,18 +501,37 @@ public class RMIPerfExplorerModel implements Serializable {
 		return true;
 	}
 
+    /**
+     * Returns the current multiselection.
+     *
+     * @return
+     */
 	public List getMultiSelection() {
 		return multiSelections;
 	}
 
+    /**
+     * Returns the currently selected group name.
+     * @return
+     */
 	public String getGroupName () {
 		return groupName;
 	}
 
+    /**
+     * Sets the selected group name.
+     *
+     * @param groupName
+     */
 	public void setGroupName (String groupName) {
 		this.groupName = groupName;
 	}
 
+    /**
+     * Based on the selection, return the available metrics.
+     *
+     * @return
+     */
 	public String getMetricName () {
 		if (metricName != null)
 			return metricName;
@@ -390,6 +547,11 @@ public class RMIPerfExplorerModel implements Serializable {
 		return metricName;
 	}
 
+	/**
+	 * Gets the units for the current metric.
+	 * 
+	 * @return
+	 */
 	public String getMetricNameUnits() {
 		// similar to getMetricName, but add "seconds" if metric == time
 		String name = getMetricName();
@@ -399,27 +561,61 @@ public class RMIPerfExplorerModel implements Serializable {
 		return name;
 	}
 
-
+	/**
+     * Set the selected metric name.
+     *
+     * @param metricName
+     */
 	public void setMetricName (String metricName) {
 		this.metricName = metricName;
 	}
 
+    /**
+     * Get the total number of timeteps for the application
+     * TODO - remove this option.
+     *
+     * @return
+     */
 	public String getTotalTimesteps () {
 		return totalTimesteps;
 	}
 
+    /**
+     * Set the total number of timesteps for the application
+     * TODO - remove this option
+     *
+     * @param totalTimesteps
+     */
 	public void setTotalTimesteps (String totalTimesteps) {
 		this.totalTimesteps = totalTimesteps;
 	}
 
+    /**
+     * Get the currently selected event.
+     *
+     * @return
+     */
 	public String getEventName () {
 		return eventName;
 	}
 
+    /**
+     * Set the currently selected event.
+     * @param eventName
+     */
 	public void setEventName (String eventName) {
 		this.eventName = eventName;
 	}
 	
+    /**
+     * Based on the current selection path, build the SQL inner join clause
+     * to select the current trials.
+     *
+     * @param joinApp
+     * @param joinExp
+     * @param dbType
+     * @return
+     */
 	public String getViewSelectionPath (boolean joinApp, boolean joinExp, String dbType) {
 		StringBuffer buf = new StringBuffer();
 		if (joinExp)
@@ -456,6 +652,13 @@ public class RMIPerfExplorerModel implements Serializable {
 		return buf.toString();
 	}
 
+    /**
+     * Based on the current selection path, build the SQL where clause
+     * to select the current trials.
+     *
+     * @param dbType
+     * @return
+     */
 	public String getViewSelectionString (String dbType) {
 		StringBuffer buf = new StringBuffer();
 		int i = fullPath.length - 1;
@@ -481,16 +684,31 @@ public class RMIPerfExplorerModel implements Serializable {
 		return buf.toString();
 	}
 
+    /**
+     * Based on the current selection, find the lowest level view which
+     * filters these trials.
+     *
+     * @return
+     */
 	public String getViewID () {
 		int i = fullPath.length - 1;
 		RMIView view = (RMIView) fullPath[i];
 		return view.getField("id");
 	}
 	
+    /**
+     * Set the weak/strong scaling option for scalability charts.
+     * @param constantProblem
+     */
 	public void setConstantProblem(boolean constantProblem) {
 		this.constantProblem = new Boolean(constantProblem);
 	}
 
+    /**
+     * Get the weak/strong scaling option for scalability charts.
+     *
+     * @return
+     */
 	public Boolean getConstantProblem() {
 		return this.constantProblem;
 	}

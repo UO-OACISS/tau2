@@ -3,49 +3,78 @@ package common;
 /**
  * Wrapper class for supporting console output.
  *
- * <P>CVS $Id: PerfExplorerOutput.java,v 1.1 2005/08/11 17:58:58 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerOutput.java,v 1.2 2007/01/04 21:20:03 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
  *
  */
 public class PerfExplorerOutput {
-	private boolean quiet = false;
-	private static PerfExplorerOutput instance = null;
+    private static boolean _quiet = false;
 
-	/**
-	 * Constructor. 
-	 * 
-	 */
-	private PerfExplorerOutput (boolean quiet) {
-		this.quiet = quiet;
-	}
+    /**
+     * Private Constructor. 
+     * 
+     */
+    private PerfExplorerOutput () {
+    }
 
-	/**
-	 * Static accessor method.
-	 * 
-	 */
-	public static void initialize(boolean quiet)  {
-		instance = new PerfExplorerOutput(quiet);
-	}
+    /**
+     * Static accessor method.
+     * 
+     */
+    public static void setQuiet(boolean quiet)  {
+        _quiet = quiet;
+    }
 
-	/**
-	 * public println method.
-	 * 
-	 * @param message
-	 */
-	public static void println (String message) {
-		instance.printIt(message);
-	}
+    /**
+     * Method to selectively print out the message, with no newline.
+     * 
+     * @param message
+     */
+    public static void print(String message) {
+        if (!_quiet)
+            System.out.print(message);
+    }
 
-	/**
-	 * private printIt method.
-	 * 
-	 * @param message
-	 */
-	public void printIt (String message) {
-		if (!quiet)
-			System.out.println(message);
-	}
+    /**
+     * Method to selectively print out the message, with a newline.
+     * 
+     * @param message
+     */
+    public static void println(String message) {
+        if (!_quiet)
+            System.out.println(message);
+    }
+
+    /**
+     * Method to selectively print out a newline.
+     * 
+     * @param message
+     */
+    public static void println() {
+        if (!_quiet)
+            System.out.println();
+    }
+    
+    /**
+     * Method to selectively print out an int without a newline.
+     * 
+     * @param message
+     */
+    public static void print(int x) {
+        if (!_quiet)
+            System.out.print(x);
+    }
+
+    /**
+     * Method to selectively print out an int with a newline.
+     * 
+     * @param message
+     */
+    public static void println(int x) {
+        if (!_quiet)
+            System.out.println(x);
+    }
 }
 

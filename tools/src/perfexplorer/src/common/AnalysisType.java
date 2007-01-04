@@ -10,14 +10,14 @@ import java.io.Serializable;
 /**
  * This class is used as a typesafe enumeration.
  *
- * <P>CVS $Id: AnalysisType.java,v 1.1 2006/09/13 23:28:20 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisType.java,v 1.2 2007/01/04 21:20:03 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
  */
 public final class AnalysisType implements Serializable {
 
-    /**
+	/**
      * One attribute, the name - it is transient so it is not serialized
      */
     private final transient String _name;

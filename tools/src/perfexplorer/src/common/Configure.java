@@ -1,19 +1,33 @@
 package common;
 
-import jargs.gnu.CmdLineParser;
-
-import java.io.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
+import jargs.gnu.CmdLineParser;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+/**
+ * This class is used as a main class for configuring PerfExplorer.
+ *
+ * <P>CVS $Id: Configure.java,v 1.7 2007/01/04 21:20:03 khuck Exp $</P>
+ * @author  Kevin Huck
+ * @version 0.1
+ * @since   0.1
+ */
 public class Configure {
 
     
     private static String Greeting = "\nNow testing your database connection.\n";
+    private static String Usage = "Usage: configure [{-h,--help}] [{-g,--configfile} filename] [{-t,--tauroot} path]";
 
     private String tau_root = "";
     private String db_dbname = "perfdmf";
@@ -22,48 +36,67 @@ public class Configure {
 
     private String configFileName;
 
-    private static String Usage = "Usage: configure [{-h,--help}] [{-g,--configfile} filename] [{-t,--tauroot} path]";
-
+    /**
+     * Public constructor.
+     *
+     * @param tauroot
+     * @param arch
+     */
     public Configure(String tauroot, String arch) {
         super();
         this.tau_root = tauroot;
     }
 
+    /**
+     * The main method for performing configuration.
+     *
+     * @param configFileNameIn
+     */
     public void initialize(String configFileNameIn) {
         // Welcome the user to the program
-        System.out.println(Greeting);
+        PerfExplorerOutput.println(Greeting);
 
         try {
             // Check to see if the configuration file exists
             configFileName = configFileNameIn;
             File configFile = new File(configFileName);
             if (configFile.exists()) {
-                //System.out.println("Configuration file found...");
-                // Parse the configuration file
+                PerfExplorerOutput.println("Configuration file found...");
                 parseConfigFile();
             } else {
-                System.out.println("Configuration file NOT found...");
-                System.out.println("a new configuration file will be created.");
+                PerfExplorerOutput.println("Configuration file NOT found...");
+                PerfExplorerOutput.println("a new configuration file will be created.");
                 // If it doesn't exist, explain that the program looks for the 
                 // configuration file in ${PerfDMF_Home}/data/perfdmf.cfg
                 // Since it isn't there, create a new one.
             }
         } catch (IOException e) {
             // todo - get info from the exception
-            System.out.println("I/O Error occurred.");
+            PerfExplorerOutput.println("I/O Error occurred.");
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
         }
     }
     
-    
+    /**
+     * Method for parsing the PerfDMF configuration file.
+     *
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
     public void parseConfigFile() throws IOException, FileNotFoundException {
-        //System.out.println("Parsing config file...");
+        PerfExplorerOutput.println("Parsing config file...");
         parser = new ParseConfig(configFileName);
         db_dbname = parser.getDBName();
         db_password = parser.getDBPasswd();
     }
 
-    
-    /* Test that the database exists, and if it doesn't, create it! */
+    /**
+     * Method for testing that the database tables exist.
+     * If the tables don't exist, create them in the database.
+     *
+     */
     public void createDB() {
         ConnectionManager connector = null;
         DB db = null;
@@ -74,29 +107,36 @@ public class Configure {
                 connector = new ConnectionManager(configFileName);
             }
             connector.connect();
-            System.out.println();
+            PerfExplorerOutput.println();
             db = connector.getDB();
         } catch (Exception e) {
-            System.out.println("\nPlease make sure that your DBMS is configured correctly, and");
-            System.out.println("the database " + db_dbname + " has been created.");
-            System.exit(0);
+            StringBuffer buf = new StringBuffer();
+            buf.append("\nPlease make sure that your DBMS is configured ");
+            buf.append("correctly, and the database ");
+            buf.append(db_dbname + " has been created.");
+            PerfExplorerOutput.println(buf.toString());
+            System.exit(1);
         }
 
         try {
-            String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "analysis_settings");
-            ResultSet resultSet = db.executeQuery(query);
+            StringBuffer query = new StringBuffer();
+            query.append("SELECT * FROM ");
+            query.append(db.getSchemaPrefix() + "analysis_settings");
+            ResultSet resultSet = db.executeQuery(query.toString());
             resultSet.close();
         } catch (SQLException e) {
             // this is our method of determining that no 'application' table exists
 
-            System.out.print("Perfexplorer tables not found.  Would you like to upload the schema? [y/n]: ");
-
+            PerfExplorerOutput.print("Perfexplorer tables not found.");
+            PerfExplorerOutput.print("Would you like to upload the schema? [y/n]: ");
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
             String input = "";
             try {
                 input = reader.readLine();
             } catch (java.io.IOException ioe) {
+                PerfExplorerOutput.println("I/O Error occurred.");
+                System.err.println(e.getMessage());
                 ioe.printStackTrace();
                 System.exit(-1);
             }
@@ -115,35 +155,37 @@ public class Configure {
                 } else if (db.getDBType().compareTo("db2") == 0) {
                     filename = tau_root + "/etc/dbschema.db2";
                 } else {
-                    System.out.println("Unknown database type: " + db.getDBType());
+                    PerfExplorerOutput.println("Unknown database type: " + db.getDBType());
                     System.exit(-1);
                 }
                 
-                System.out.println("Uploading Schema: " + filename);
+                PerfExplorerOutput.println("Uploading Schema: " + filename);
                 if (connector.genParentSchema(filename) == 0) {
-                    System.out.println("Successfully uploaded schema\n");
+                    PerfExplorerOutput.println("Successfully uploaded schema\n");
                 } else {
-                    System.out.println("Error uploading schema\n");
-                    System.exit(-1);
+                    System.err.println("Error uploading schema\n");
+                    System.exit(1);
                 }
             }
         }
 
         try {
             if (db.checkSchema() != 0) {
-                System.out.println("\nIncompatible schema found.  Please contact us at tau-team@cs.uoregon.edu\nfor a conversion script.");
-                System.exit(0);
+                System.err.print("\nIncompatible schema found.  ");
+                System.err.println("Please contact us at tau-team@cs.uoregon.edu");
+                System.err.println("for a conversion script.");
+                System.exit(1);
             }
         } catch (SQLException e) {
-            System.out.println("\nError trying to confirm schema:");
+            System.err.println("\nError trying to confirm schema:");
             e.printStackTrace();
-            System.exit(0);
+            System.exit(1);
         }
 
         connector.dbclose();
 
-        System.out.println("Database connection successful.");
-        System.out.println("Configuration complete.");
+        PerfExplorerOutput.println("Database connection successful.");
+        PerfExplorerOutput.println("Configuration complete.");
     }
 
     

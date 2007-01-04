@@ -4,17 +4,24 @@
  */
 package clustering.r;
 
-import clustering.*;
+import clustering.RawDataInterface;
+
 import java.util.List;
 import java.util.ArrayList;
 
 /**
- * The RawData class.
- * This class is simply a container object which holds a matrix of performance data.
+ * This class is the R implementation of the analysis data class.
+ * This class is package private - it should only be accessed from the
+ * interface methods.  To access these methods, create an AnalysisFactory,
+ * and the factory will be able to create a analysis data object.
+ * This class is simply a container object which holds a matrix of
+ * performance data.
  * The row and column headers are stored in this class, as well.
- * 
- * @author khuck
  *
+ * <P>CVS $Id: RRawData.java,v 1.6 2007/01/04 21:20:02 khuck Exp $</P>
+ * @author khuck
+ * @version 0.1
+ * @since   0.1
  */
 public class RRawData implements RawDataInterface {
 
@@ -31,7 +38,15 @@ public class RRawData implements RawDataInterface {
 	/**
 	 * Default constructor.
 	 */
-	public RRawData(int vectors, int dimensions) {
+	private RRawData() {}
+	
+    /**
+     * Constructor restricted to package private.
+     *
+     * @param vectors
+     * @param dimensions
+     */
+	RRawData(int vectors, int dimensions) {
 		super();
 		this.vectors = vectors;
 		this.dimensions = dimensions;
@@ -41,6 +56,13 @@ public class RRawData implements RawDataInterface {
 		//initialize();
 	}
 
+    /**
+     * constructor restricted to package private.
+     *
+     * @param vectors
+     * @param dimensions
+     * @param eventNames
+     */
 	public RRawData(int vectors, int dimensions, String[] eventNames) {
 		super();
 		this.vectors = vectors;
@@ -51,6 +73,13 @@ public class RRawData implements RawDataInterface {
 		//initialize();
 	}
 
+    /**
+     * Constructor restricted to package private.
+     *
+     * @param vectors
+     * @param dimensions
+     * @param inData
+     */
 	public RRawData(int vectors, int dimensions, double[] inData) {
 		super();
 		this.vectors = vectors;
@@ -66,6 +95,9 @@ public class RRawData implements RawDataInterface {
 		}
 	}
 
+    /**
+     * initialization method.
+     */
 	public void initialize() {
 		for (int x = 0 ; x < vectors ; x++) {
 			for (int y = 0 ; y < dimensions ; y++) {
@@ -166,14 +198,30 @@ public class RRawData implements RawDataInterface {
 		return this.dimensions;
 	}
 
+    /* (non-Javadoc)
+     * @see clustering.RawDataInterface#getName()
+     */
+    public String getName() {
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see clustering.RawDataInterface#getMaximum()
+     */
 	public double getMaximum() {
 		return maximum;
 	}
 
+	/* (non-Javadoc)
+	 * @see clustering.RawDataInterface#getVector(int)
+	 */
 	public double[] getVector(int i) {
 		return data[i];
 	}
 
+	/* (non-Javadoc)
+	 * @see clustering.RawDataInterface#getCorrelation(int, int)
+	 */
 	public double getCorrelation (int x, int y) {
 		double r = 0.0;
 		double xAvg = 0.0;
@@ -223,39 +271,28 @@ public class RRawData implements RawDataInterface {
 		return r;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see clustering.RawDataInterface#addMainValue(int, int, double)
+	 */
     public void addMainValue(int vectorIndex, int eventIndex, double value) {
 		mainData[vectorIndex] = value;
 		this.mainEvent = eventIndex;
 	}
 
+    /*
+     * (non-Javadoc)
+     * @see clustering.RawDataInterface#getMainValue(int)
+     */
 	public double getMainValue(int vectorIndex) {
 		return mainData[vectorIndex];
 	}
 		
+	/*
+	 * (non-Javadoc)
+	 * @see clustering.RawDataInterface#getMainEventName()
+	 */
 	public String getMainEventName() {
 		return new String(eventNames[this.mainEvent] + "(inclusive)");
-	}
-
-	public void normalizeData(boolean normalize) {
-		this.normalize = normalize;
-		if (normalize) {
-			// calcuate the ranges
-			ranges = new double[dimensions][2];		
-
-			for (int i = 0 ; i < dimensions ; i++ ) {
-				ranges[i][0] = data[0][i];
-				ranges[i][1] = data[0][i];
-				for (int j = 0 ; j < vectors ; j++ ) {
-					// check against the min
-					if (ranges[i][0] > data[j][i])
-						ranges[i][0] = data[j][i];
-					// check against the max
-					if (ranges[i][1] < data[j][i])
-						ranges[i][1] = data[j][i];
-				}
-				// subtract the min from the max
-				ranges[i][1] = ranges[i][1] - ranges[i][0];
-			}
-		}
 	}
 }

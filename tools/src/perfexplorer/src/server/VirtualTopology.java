@@ -4,20 +4,20 @@
  */
 package server;
 
-import java.awt.image.*;
-import javax.swing.JPanel;
-import clustering.*;
+import clustering.KMeansClusterInterface;
+import common.RMIPerfExplorerModel;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import java.awt.Color;
-import common.RMIPerfExplorerModel;
+import javax.swing.JPanel;
 
 /**
  * This class takes the Weka or R cluster results, and creates a virtual
  * topology image showing which cluster each thread of execution belongs to.
  *
- * <P>CVS $Id: VirtualTopology.java,v 1.1 2005/07/05 22:29:54 amorris Exp $</P>
+ * <P>CVS $Id: VirtualTopology.java,v 1.2 2007/01/04 21:20:04 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -90,7 +90,8 @@ public class VirtualTopology extends JPanel {
 			ImageIO.write(img, "PNG", outFile);
 		} catch (IOException e) {
 			String error = "ERROR: Couldn't write the virtual topology image!";
-			System.out.println(error);
+			System.err.println(error);
+			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
 		return filename;

@@ -4,17 +4,25 @@
  */
 package clustering.r;
 
-import clustering.*;
+import clustering.KMeansClusterInterface;
+import clustering.RawDataInterface;
+import clustering.DendrogramTree;
+import clustering.ClusterException;
+import clustering.ClusterDescription;
+import common.PerfExplorerOutput;
 import java.util.Hashtable;
 import org.omegahat.R.Java.REvaluator;
 
 /**
- * This class is used as a list of names and values to describe 
- * a cluster created during some type of clustering operation.
- * 
- * <P>CVS $Id: RKMeansCluster.java,v 1.3 2005/09/30 20:35:48 khuck Exp $</P>
- * @author khuck
+ * This class is the R implementation of the k-means clustering operation.
+ * This class is package private - it should only be accessed from the
+ * clustering class.  To access these methods, create an AnalysisFactory,
+ * and the factory will be able to create a k-means cluster object.
  *
+ * <P>CVS $Id: RKMeansCluster.java,v 1.4 2007/01/04 21:20:02 khuck Exp $</P>
+ * @author khuck
+ * @version 0.1
+ * @since   0.1
  */
 public class RKMeansCluster implements KMeansClusterInterface {
 
@@ -56,7 +64,7 @@ public class RKMeansCluster implements KMeansClusterInterface {
 	public void setInputData(RawDataInterface inputData) {
 		this.inputData = inputData;
 		// put the data into R
-		System.out.print("Copying data...");
+		PerfExplorerOutput.print("Copying data...");
 		rEvaluator.voidEval("raw <- matrix(0, nrow=" +
 		inputData.numVectors() + ", ncol=" + inputData.numDimensions() + ")");
 		StringBuffer buf = new StringBuffer();
@@ -70,8 +78,8 @@ public class RKMeansCluster implements KMeansClusterInterface {
 		}
 		buf.append("), nrow=" + inputData.numVectors() + 
 			", ncol=" + inputData.numDimensions() + ", byrow=TRUE)");
-		//System.out.println(buf.toString());
-		System.out.println(" Done!");
+		//PerfExplorerOutput.println(buf.toString());
+		PerfExplorerOutput.println(" Done!");
 	}
 
 	/* (non-Javadoc)
@@ -82,29 +90,29 @@ public class RKMeansCluster implements KMeansClusterInterface {
 
 		rEvaluator.voidEval("traw <- t(raw)");
 		if (haveCenters) {
-			System.out.print("Making " + k + " centers...");
+			PerfExplorerOutput.print("Making " + k + " centers...");
 			int[]centerIndexes = dendrogramTree.findCenters(k);
 			rEvaluator.voidEval("centers <- matrix(0, nrow=" + k + 
 				", ncol=" + inputData.numDimensions() + ")");
-			System.out.print("centers: ");
+			PerfExplorerOutput.print("centers: ");
 			for (int j = 1 ; j <= k ; j++) {
-				System.out.print(centerIndexes[j-1]);
+				PerfExplorerOutput.print(centerIndexes[j-1]);
 				rEvaluator.voidEval("centers[" + j + 
 					",] <- raw[" + centerIndexes[j-1] + ",]");
 				if (j != k)
-					System.out.print(",");
+					PerfExplorerOutput.print(",");
 			}
-			System.out.println(" Done!");
+			PerfExplorerOutput.println(" Done!");
 		}
 
-		System.out.print("Doing k-means clustering...");
+		PerfExplorerOutput.print("Doing k-means clustering...");
 		if (haveCenters)
 			rEvaluator.voidEval("cl <- kmeans(raw, centers, 20)");
 		else
 			rEvaluator.voidEval("cl <- kmeans(raw, " + k + ", 20)");
-		System.out.println(" Done!");
+		PerfExplorerOutput.println(" Done!");
 
-		System.out.print("Getting averages, mins, maxes...");
+		PerfExplorerOutput.print("Getting averages, mins, maxes...");
 		// get the averages for each cluster, and graph them
 		rEvaluator.voidEval("maxes <- matrix(0.0, nrow=" + k + 
 			", ncol=" + inputData.numDimensions() + ")");
@@ -129,7 +137,7 @@ public class RKMeansCluster implements KMeansClusterInterface {
 			}
 		}
 		rEvaluator.voidEval("avgs <- totals / counts");
-		System.out.println(" Done!");
+		PerfExplorerOutput.println(" Done!");
 
 		clusterSizes = (int[])rEvaluator.eval("cl$size");
 		double[] centers = (double[])rEvaluator.eval("cl$centers");
@@ -231,29 +239,16 @@ public class RKMeansCluster implements KMeansClusterInterface {
 		boolean retval = false;
  		// arbitrary choice of 4098 to prevent crashes...
 		if (inputData.numVectors() < 4098) {
-			System.out.print("Getting distances...");
+			PerfExplorerOutput.print("Getting distances...");
 			rEvaluator.voidEval("threads <- dist(raw, method=\"manhattan\")");
-			System.out.println(" Done!");
-			System.out.print("Hierarchical clustering...");
+			PerfExplorerOutput.println(" Done!");
+			PerfExplorerOutput.print("Hierarchical clustering...");
 			rEvaluator.voidEval("hcgtr <- hclust(threads, method=\"average\")");
 			int[] merge = (int[])rEvaluator.eval("t(hcgtr$merge)");
 			double[] height = (double[])rEvaluator.eval("hcgtr$height");
 			dendrogramTree = createDendrogramTree(merge, height);
 			rEvaluator.voidEval("dend <- as.dendrogram(hcgtr)");
-			System.out.println(" Done!");
-/*
-			System.out.print("Making png image...");
-			String description = "dendrogram." + modelData.toString();
-			description = description.replaceAll(":",".");
-			String shortDescription = modelData.toShortString();
-			String fileName = "/tmp/dendrogram." + shortDescription + ".png";
-			String thumbnail = "/tmp/dendrogram.thumb." + shortDescription + ".jpg";
-			rEvaluator.voidEval("png(\"" + fileName + "\",width=800, height=400)");
-			rEvaluator.voidEval("plot (dend, main=\"" + description + "\", edge.root=FALSE,horiz=FALSE,axes=TRUE)");
-			rEvaluator.voidEval("dev.off()");
-			System.out.println(" Done!");
-			saveAnalysisResult(description, fileName, thumbnail, true);
-*/
+			PerfExplorerOutput.println(" Done!");
 			retval = true;
 		}
 		return (retval);

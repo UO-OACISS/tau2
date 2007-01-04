@@ -43,9 +43,9 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
         Object selection = model.getCurrentSelection();
 		RMIChartData data = null;
         if (selection instanceof RMISortableIntervalEvent) {
-			data = server.requestChartData(model, RMIChartData.DISTRIBUTION_DATA);
+			data = server.requestChartData(model, ChartDataType.DISTRIBUTION_DATA);
 		} else {
-			data = server.requestChartData(model, RMIChartData.IQR_DATA);
+			data = server.requestChartData(model, ChartDataType.IQR_DATA);
 		}
 
 		// build the chart

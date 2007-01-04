@@ -1,15 +1,27 @@
 package server;
 
-import com.sun.image.codec.jpeg.*;
-import java.awt.*;
-import java.awt.image.*;
-import java.io.*;
+import common.PerfExplorerOutput;
+
+import com.sun.image.codec.jpeg.JPEGCodec;
+import com.sun.image.codec.jpeg.JPEGEncodeParam;
+import com.sun.image.codec.jpeg.JPEGImageEncoder;
+
+import java.awt.Container;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.MediaTracker;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 
 /**
  * This code generates a thumbnail image from a larger JPG or PNG file.
  * This code was taken from http://www.geocities.com/marcoschmidt.geo/java-save-jpeg-thumbnail.html
  *
- * <P>CVS $Id: Thumbnail.java,v 1.2 2005/11/07 20:20:17 khuck Exp $</P>
+ * <P>CVS $Id: Thumbnail.java,v 1.3 2007/01/04 21:20:04 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -24,7 +36,7 @@ public class Thumbnail {
 	 */
 	public static void createThumbnail(String infile, String outfile, boolean big) {
 	  	try {
-			//System.out.print("Making thumbnail... ");
+			//PerfExplorerOutput.print("Making thumbnail... ");
 		    // load image from INFILE
 		    Image image = Toolkit.getDefaultToolkit().getImage(infile);
 		    MediaTracker mediaTracker = new MediaTracker(new Container());
@@ -62,9 +74,10 @@ public class Thumbnail {
 			encoder.setJPEGEncodeParam(param);
 			encoder.encode(thumbImage);
 			out.close(); 
-			//System.out.println("Done.");
+			//PerfExplorerOutput.println("Done.");
 		} catch (Exception e) {
-			System.out.println("\nError making Thumbnail!");
+			System.err.println("\nError making Thumbnail!");
+			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
 	}

@@ -7,8 +7,14 @@ package clustering;
 import java.util.List;
 
 /**
+ * This interface is used to define the methods to implement a class
+ * which holds clustering data, whether it be input data or
+ * cluster output data, or PCA output data.
+ * 
  * @author khuck
- *
+ * <P>CVS $Id: RawDataInterface.java,v 1.6 2007/01/04 21:20:01 khuck Exp $</P>
+ * @version 0.1
+ * @since 0.1
  */
 public interface RawDataInterface {
 	/**
@@ -61,23 +67,79 @@ public interface RawDataInterface {
 	 */
 	public Object getData();
 
+	/**
+	 * Returns the dimension names in the data.
+	 *
+     * @return
+     */
 	public List getEventNames();
 	
+	/**
+     * Returns the number of vectors in this data set.
+     *
+     * @return
+     */
 	public int numVectors();
 	
+	/**
+     * Returns the number of dimensions in this data set.
+     *
+     * @return
+     */
 	public int numDimensions();
 
+	/**
+     * Returns the relation name from the data set.
+     *
+     * @return
+     */
+     public String getName();
+
+    /**
+     * Gets the maximum value for the entire data set.
+     *
+     * @return
+     */
 	public double getMaximum();
-
+	
+	/**
+     * Returns the vector of data at index "i".
+     *
+     * @param i
+     * @return
+     */
 	public double[] getVector(int i);
-	
+		
+	/**
+     * Returns the correlation coefficient between vectors "x" and "y".
+     *
+     * @param x
+     * @param y
+     * @return
+     */
 	public double getCorrelation(int x, int y);
-
-	public void addMainValue(int threadIndex, int eventIndex, double value);
-
-	public double getMainValue(int threadIndex);
-
-	public String getMainEventName();
 	
-	public void normalizeData(boolean normalize);
+	/**
+     * Adds the value to the dimension "eventIndex" on vector "threadIndex".
+     *
+     * @param threadIndex
+     * @param eventIndex
+     * @param value
+     */
+	public void addMainValue(int threadIndex, int eventIndex, double value);
+	
+	/**
+     * Gets the inclusive value of the main function at vector "threadIndex".
+     *
+     * @param threadIndex
+     * @return
+     */
+	public double getMainValue(int threadIndex);
+	
+	/**
+     * Gets the name of the main function.
+     *
+     * @return
+     */
+	public String getMainEventName();
 }

@@ -1,6 +1,7 @@
 package client;
 
 import common.RMIChartData;
+import common.ChartDataType;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.BasicStroke;
@@ -41,7 +42,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.FRACTION_OF_TOTAL);
+			ChartDataType.FRACTION_OF_TOTAL);
 
         DefaultTableXYDataset dataset = new DefaultTableXYDataset();
 		List rowLabels = rawData.getRowLabels();
@@ -79,7 +80,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
 		RMIChartData rawData = server.requestChartData(
-			PerfExplorerModel.getModel(), RMIChartData.CORRELATION_DATA);
+			PerfExplorerModel.getModel(), ChartDataType.CORRELATION_DATA);
 
         XYDataset dataset = new CorrelationPlotDataset(rawData, false);
         //JFreeChart chart = ChartFactory.createScatterPlot(
@@ -138,7 +139,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY);
+			ChartDataType.RELATIVE_EFFICIENCY);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 		List rowLabels = rawData.getRowLabels();
@@ -181,7 +182,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY_EVENTS);
+			ChartDataType.RELATIVE_EFFICIENCY_EVENTS);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 		List rowLabels = rawData.getRowLabels();
@@ -224,7 +225,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY_ONE_EVENT);
+			ChartDataType.RELATIVE_EFFICIENCY_ONE_EVENT);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 		List rowLabels = rawData.getRowLabels();
@@ -267,7 +268,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY);
+			ChartDataType.RELATIVE_EFFICIENCY);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 
@@ -322,7 +323,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY_EVENTS);
+			ChartDataType.RELATIVE_EFFICIENCY_EVENTS);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 		List rowLabels = rawData.getRowLabels();
@@ -375,7 +376,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY_ONE_EVENT);
+			ChartDataType.RELATIVE_EFFICIENCY_ONE_EVENT);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 		List rowLabels = rawData.getRowLabels();
@@ -429,7 +430,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY);
+			ChartDataType.RELATIVE_EFFICIENCY);
 
 		int timesteps = Integer.parseInt(PerfExplorerModel.getModel().getTotalTimesteps());
         XYSeriesCollection dataset = new XYSeriesCollection();
@@ -466,7 +467,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY);
+			ChartDataType.RELATIVE_EFFICIENCY);
 
 		int decreasing = 0, total = 0;
 		double lastValue = 0.0;
@@ -520,11 +521,11 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData1 = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.TOTAL_FOR_GROUP);
+			ChartDataType.TOTAL_FOR_GROUP);
 
 		RMIChartData rawData2 = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY);
+			ChartDataType.RELATIVE_EFFICIENCY);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 		List rowLabels = rawData1.getRowLabels();
@@ -564,7 +565,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY_PHASES);
+			ChartDataType.RELATIVE_EFFICIENCY_PHASES);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 		List rowLabels = rawData.getRowLabels();
@@ -604,7 +605,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.RELATIVE_EFFICIENCY_PHASES);
+			ChartDataType.RELATIVE_EFFICIENCY_PHASES);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 		List rowLabels = rawData.getRowLabels();
@@ -655,7 +656,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the data
 		RMIChartData rawData = server.requestChartData(
 			PerfExplorerModel.getModel(), 
-			RMIChartData.FRACTION_OF_TOTAL_PHASES);
+			ChartDataType.FRACTION_OF_TOTAL_PHASES);
 
         DefaultTableXYDataset dataset = new DefaultTableXYDataset();
 		List rowLabels = rawData.getRowLabels();

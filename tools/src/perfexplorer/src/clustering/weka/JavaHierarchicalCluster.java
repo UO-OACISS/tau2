@@ -4,7 +4,11 @@
  */
 package clustering.weka;
 
-import clustering.*;
+import clustering.HierarchicalCluster;
+import clustering.DistanceMatrix;
+import clustering.DendrogramTree;
+import clustering.RawDataInterface;
+import common.PerfExplorerOutput;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ArrayList;
@@ -21,10 +25,21 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 	private LinkedHashSet remainingIndices = null;
 	private DendrogramTree[] trees = null;
 
-	public JavaHierarchicalCluster(DistanceMatrix distances) {
+	/**
+	 * Package-private constructor.
+	 * 
+	 * @param distances
+	 */
+	JavaHierarchicalCluster(DistanceMatrix distances) {
 		this.distances = new DistanceMatrix(distances);
 	}
 
+	/**
+	 * Build the dendrogram tree.
+	 * 
+	 * Using the distance matric passed in, perform a hierarchical cluster
+	 * on the data.
+	 */
 	public DendrogramTree buildDendrogramTree() {
 		int dimension = distances.getDimension();
 		
@@ -75,8 +90,8 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 			//ok, we found the two closest.  Now what?
 			// remove the second index from the hash set
 			remainingIndices.remove(new Integer(location[0]));
-			System.out.print(" " + location[0]);
-			if (++newline % 20 == 0) System.out.println(" : " + newline / 20);
+			PerfExplorerOutput.print(" " + location[0]);
+			if (++newline % 20 == 0) PerfExplorerOutput.println(" : " + newline / 20);
 			
 			// create a new tree node, with the left and right leaves
 			newTree = new DendrogramTree(location[1], min);
@@ -85,7 +100,7 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 			
 			// merge the two vectors into one in the distance matrix
 			distances.mergeDistances(location[1], location[0]);
-			//System.out.println(distances.toString());
+			//PerfExplorerOutput.println(distances.toString());
 			// lather, rinse, repeat
 		}
 		return newTree;
@@ -114,11 +129,11 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 		// get the distances
 		DistanceMatrix distances = new DistanceMatrix(vectors);
 		distances.solveManhattanDistances(data);
-		System.out.println("Got Distances...");
+		PerfExplorerOutput.println("Got Distances...");
 		
 		// do the hierarchical clustering
 		JavaHierarchicalCluster hclust = new JavaHierarchicalCluster(distances);
 		DendrogramTree newTree = hclust.buildDendrogramTree();
-		System.out.println("\n\n" + newTree.toString());
+		PerfExplorerOutput.println("\n\n" + newTree.toString());
 	}
 }

@@ -11,7 +11,7 @@ import java.util.Iterator;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: ClusterDescription.java,v 1.1 2005/07/05 22:29:50 amorris Exp $</P>
+ * <P>CVS $Id: ClusterDescription.java,v 1.2 2007/01/04 21:20:01 khuck Exp $</P>
  * @author khuck
  *
  */
@@ -37,10 +37,21 @@ public class ClusterDescription {
 		attributes = new LinkedHashMap(numAttributes, floatFactor, accessOrder);
 	}
 	
+	/**
+	 * Returns an Iterator of the attribute names.
+	 * 
+	 * @return
+	 */
 	public Iterator getAttributeNames() {
 		return attributes.keySet().iterator();
 	}
 	
+	/**
+	 * Returns the value of the object identified by the key.
+	 * 
+	 * @param key
+	 * @return
+	 */
 	public double getValue(String key) {
 		Double temp = (Double) attributes.get(key);
 		return temp.doubleValue();

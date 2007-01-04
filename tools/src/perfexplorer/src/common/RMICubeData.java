@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * data.  This data is usually correlation data.  It can reasonably have up 
  * to 4 dimensions (x,y,z,color).
  *
- * <P>CVS $Id: RMICubeData.java,v 1.2 2005/09/27 19:50:17 khuck Exp $</P>
+ * <P>CVS $Id: RMICubeData.java,v 1.3 2007/01/04 21:20:03 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -86,12 +86,16 @@ public class RMICubeData implements Serializable {
 	 * Get the names for the dimensions.
 	 * 
 	 * @param dimension
-	 * @return
+	 * @return the names
 	 */
 	public String getNames(int dimension) { 
 		return names[dimension]; 
 	}
 
+	/**
+	 * Get the full list of names
+	 * @return the list of names
+	 */
 	public String[] getNames() { 
 		return names; 
 	}

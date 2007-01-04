@@ -4,18 +4,24 @@
  */
 package clustering.weka;
 
-import clustering.*;
+import clustering.RawDataInterface;
+
 import weka.core.Instances;
 import weka.core.Instance;
 import weka.core.FastVector;
+import weka.core.Attribute;
+
 import java.util.List;
 import java.util.ArrayList;
-import weka.core.Attribute;
 import java.util.Enumeration;
 
 /**
- * @author khuck
+ * Implementation of the RawData interface for Weka data.
  *
+ * <P>CVS $Id: WekaRawData.java,v 1.8 2007/01/04 21:20:03 khuck Exp $</P>
+ * @author khuck
+ * @version 0.1
+ * @since   0.1
  */
 public class WekaRawData implements RawDataInterface {
 
@@ -26,7 +32,14 @@ public class WekaRawData implements RawDataInterface {
 	private boolean normalize = false;
 	private double ranges[][] = null;
 	
-	public WekaRawData (String name, List attributes, int vectors, int dimensions) {
+    /**
+     * Package private constructor.
+     * @param name
+     * @param attributes
+     * @param vectors
+     * @param dimensions
+     */
+	WekaRawData (String name, List attributes, int vectors, int dimensions) {
 		this.vectors = vectors;
 		this.dimensions = dimensions;
 		FastVector fastAttributes = new FastVector(attributes.size());
@@ -46,7 +59,12 @@ public class WekaRawData implements RawDataInterface {
 		
 	}
 	
-	public WekaRawData (Instances instances) {
+    /**
+     * Package private constructor - more or less a copy constructor.
+     *
+     * @param instances
+     */
+    WekaRawData (Instances instances) {
 		this.instances = instances;
 		this.vectors = instances.numInstances();
 		if (this.vectors > 0)
@@ -144,10 +162,23 @@ public class WekaRawData implements RawDataInterface {
 		return dimensions;
 	}
 
+    /* (non-Javadoc)
+     * @see clustering.RawDataInterface#getName()
+     */
+    public String getName() {
+        return this.instances.relationName();
+    }
+
+    /* (non-Javadoc)
+     * @see clustering.RawDataInterface#getMaximum()
+     */
 	public double getMaximum() {
 		return maximum;
 	}
 
+    /* (non-Javadoc)
+     * @see clustering.RawDataInterface#getVector()
+     */
 	public double[] getVector(int i) {
 		double[] data = new double[dimensions];
 		for (int j = 0 ; j < dimensions ; j++) {
@@ -156,6 +187,9 @@ public class WekaRawData implements RawDataInterface {
 		return data;
 	}
 
+    /* (non-Javadoc)
+     * @see clustering.RawDataInterface#getCorrelation()
+     */
 	public double getCorrelation (int x, int y) {
 		double r = 0.0;
 		double xAvg = 0.0;
@@ -205,38 +239,24 @@ public class WekaRawData implements RawDataInterface {
 		return r;
 	}
 
+    /* (non-Javadoc)
+     * @see clustering.RawDataInterface#addMainValue()
+     */
 	public void addMainValue(int threadIndex, int eventIndex, double value) {
 	}
 
+    /* (non-Javadoc)
+     * @see clustering.RawDataInterface#getMainValue()
+     */
 	public double getMainValue(int threadIndex) {
 		return 0.0;
 	}
 
+    /* (non-Javadoc)
+     * @see clustering.RawDataInterface#getMainEventName()
+     */
 	public String getMainEventName() {
 		String name = new String("");
 		return name;
-	}
-
-	public void normalizeData(boolean normalize) {
-		this.normalize = normalize;
-		if (normalize) {
-			// calcuate the ranges
-			ranges = new double[dimensions][2];		
-
-			for (int i = 0 ; i < dimensions ; i++ ) {
-				ranges[i][0] = instances.instance(0).value(i);
-				ranges[i][1] = instances.instance(0).value(i);
-				for (int j = 0 ; j < vectors ; j++ ) {
-					// check against the min
-					if (ranges[i][0] > instances.instance(j).value(i))
-						ranges[i][0] = instances.instance(j).value(i);
-					// check against the max
-					if (ranges[i][1] < instances.instance(j).value(i))
-						ranges[i][1] = instances.instance(j).value(i);
-				}
-				// subtract the min from the max
-				ranges[i][1] = ranges[i][1] - ranges[i][0];
-			}
-		}
 	}
 }

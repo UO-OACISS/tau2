@@ -4,17 +4,31 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import common.*;
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfdmf.database.*;
-import java.util.List;
+
+import common.ChartDataType;
+import common.PerfExplorerOutput;
+import common.RMIChartData;
+import common.RMIPerfExplorerModel;
+import common.RMIView;
+
+import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The ChartData class is used to select data from the database which 
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.40 2006/11/07 21:35:56 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.41 2007/01/04 21:20:04 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -35,7 +49,7 @@ public class ChartData extends RMIChartData {
 	 * @param model
 	 * @param dataType
 	 */
-	public ChartData (RMIPerfExplorerModel model, int dataType) {
+	public ChartData (RMIPerfExplorerModel model, ChartDataType dataType) {
 		super (dataType);
 		this.model = model;
 		this.metricName = model.getMetricName();
@@ -51,8 +65,8 @@ public class ChartData extends RMIChartData {
 	 * @param dataType
 	 * @return
 	 */
-	public static ChartData getChartData(RMIPerfExplorerModel model, int dataType) {
-		System.out.println("getChartData(" + model.toString() + ")...");
+	public static ChartData getChartData(RMIPerfExplorerModel model, ChartDataType dataType) {
+		PerfExplorerOutput.println("getChartData(" + model.toString() + ")...");
 		ChartData chartData = new ChartData(model, dataType);
 		chartData.doQuery();
 		return chartData;
@@ -71,7 +85,6 @@ public class ChartData extends RMIChartData {
 	 */
 	private void doQuery () {
 		// get the database lock
-		PerfExplorerServer.getServer().getControl().WAIT("doQuery");
 		PreparedStatement statement = null;
 		try {
 			String groupingName = null;
@@ -80,12 +93,12 @@ public class ChartData extends RMIChartData {
 			double numThreads = 0;
 			String currentExperiment = "";
 			int experimentIndex = -1;
-			if (dataType == CORRELATION_DATA) {
+			if (dataType == ChartDataType.CORRELATION_DATA) {
 				columnValues = new ArrayList();
 				// do a pre-query to get the event with inclusive value
 				// of 100.0.
 				statement = buildPreQueryStatement();
-				//System.out.println(statement.toString());
+				//PerfExplorerOutput.println(statement.toString());
 				ResultSet results = statement.executeQuery();
 				// TODO - this query assumes a scalability study...!
 				while (results.next() != false) {
@@ -110,13 +123,13 @@ public class ChartData extends RMIChartData {
 			// all query results are organized the same, only the selection
 			// parameters are different.
 			statement = buildStatement();
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// TODO - this query assumes a scalability study...!
 			int columnCounter = 0;
 			while (results.next() != false) {
 				groupingName = results.getString(1);
-				if (dataType == IQR_DATA || dataType == DISTRIBUTION_DATA) {
+				if (dataType == ChartDataType.IQR_DATA || dataType == ChartDataType.DISTRIBUTION_DATA) {
 					numThreads = results.getDouble(2);
 					threadName = Double.toString(numThreads);
 					value = results.getDouble(3);
@@ -127,7 +140,7 @@ public class ChartData extends RMIChartData {
 					value = results.getDouble(5);
 				}
 				if ((metricName.toLowerCase().indexOf("time") != -1) 
-					&& (dataType != FRACTION_OF_TOTAL))
+					&& (dataType != ChartDataType.FRACTION_OF_TOTAL))
 					value = value/1000000;
 
 				if (!currentExperiment.equals(groupingName)) {
@@ -139,7 +152,7 @@ public class ChartData extends RMIChartData {
 				// some methods may not have been called in the
 				// base case - MPI methods, for example
 				// add 0 values for those processor counts.
-				if (dataType == CORRELATION_DATA) {
+				if (dataType == ChartDataType.CORRELATION_DATA) {
 					Double mainThreads = (Double)columnValues.get(columnCounter);
 					while (mainThreads.doubleValue() < numThreads) {
 						addColumn(experimentIndex, mainThreads.doubleValue(), 0.0);
@@ -165,7 +178,7 @@ public class ChartData extends RMIChartData {
 					threadName = Double.toString(numThreads);
 					value = results.getDouble(4);
 					if ((metricName.toLowerCase().indexOf("time") != -1) 
-						&& (dataType != FRACTION_OF_TOTAL))
+						&& (dataType != ChartDataType.FRACTION_OF_TOTAL))
 						value = value/1000000;
 	
 					if (!currentExperiment.equals(groupingName)) {
@@ -180,8 +193,8 @@ public class ChartData extends RMIChartData {
 			}
 
 			try {
-				if ((dataType == RELATIVE_EFFICIENCY_EVENTS) || 
-					(dataType == CORRELATION_DATA)) {
+				if ((dataType == ChartDataType.RELATIVE_EFFICIENCY_EVENTS) || 
+					(dataType == ChartDataType.CORRELATION_DATA)) {
 					DB db = PerfExplorerServer.getServer().getDB();
 					if (db.getDBType().compareTo("oracle") == 0) {
 						statement = db.prepareStatement("truncate table working_table");
@@ -201,14 +214,13 @@ public class ChartData extends RMIChartData {
 			}
 		} catch (Exception e) {
 			if (statement != null)
-				System.out.println(statement.toString());
-			System.out.println(buf.toString());
+				PerfExplorerOutput.println(statement.toString());
+			PerfExplorerOutput.println(buf.toString());
 			String error = "ERROR: Couldn't select the analysis settings from the database!";
-			System.out.println(error);
+			System.err.println(error);
+			System.err.println(e.getMessage());
 			e.printStackTrace();
-			PerfExplorerServer.getServer().getControl().SIGNAL("doQuery");		
 		}
-		PerfExplorerServer.getServer().getControl().SIGNAL("doQuery");		
 	}
 
 	/**
@@ -224,7 +236,7 @@ public class ChartData extends RMIChartData {
 		PreparedStatement statement = null;
 		buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
-		if (dataType == FRACTION_OF_TOTAL) {
+		if (dataType == ChartDataType.FRACTION_OF_TOTAL) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
 			if (db.getDBType().compareTo("db2") == 0) {
@@ -259,7 +271,7 @@ public class ChartData extends RMIChartData {
 			buf.append("order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
-		} else if (dataType == RELATIVE_EFFICIENCY) {
+		} else if (dataType == ChartDataType.RELATIVE_EFFICIENCY) {
 			// The user wants to know the relative efficiency or speedup
 			// of one or more experiments, as the number of threads of 
 			// execution increases.
@@ -316,10 +328,10 @@ public class ChartData extends RMIChartData {
 			}
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 			buf.append("order by 1, 2, 3, 4");
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
-		} else if (dataType == TOTAL_FOR_GROUP) {
+		} else if (dataType == ChartDataType.TOTAL_FOR_GROUP) {
 			// The user wants to know the percentage of total runtime that
 			// comes from one group of events, such as communication or 
 			// computation.  This query is done for 
@@ -388,12 +400,12 @@ public class ChartData extends RMIChartData {
 				buf.append("ie.group_name order by 1, 2, 3, 4");
 			}
 
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 			statement.setString(2, groupName);
-		} else if ((dataType == RELATIVE_EFFICIENCY_EVENTS) ||
-			(dataType == CORRELATION_DATA)) {
+		} else if ((dataType == ChartDataType.RELATIVE_EFFICIENCY_EVENTS) ||
+			(dataType == ChartDataType.CORRELATION_DATA)) {
 			// The user wants to know the relative efficiency or speedup
 			// of all the events for one experiment, as the number of threads of 
 			// execution increases.
@@ -410,16 +422,17 @@ public class ChartData extends RMIChartData {
 				buf.append("create temporary table working_table (name text) ");
 			}
 			try {
-				//System.out.println(buf.toString());
+				//PerfExplorerOutput.println(buf.toString());
 				statement = db.prepareStatement(buf.toString());
 				statement.execute();
 				statement.close();
 			} catch (Exception e) {
 				if (statement != null)
-					System.out.println(statement.toString());
-				System.out.println(buf.toString());
+					PerfExplorerOutput.println(statement.toString());
+				PerfExplorerOutput.println(buf.toString());
 				String error = "ERROR: Couldn't select the analysis settings from the database!";
-				System.out.println(error);
+				System.err.println(error);
+				System.err.println(e.getMessage());
 				e.printStackTrace();
 			}
 
@@ -457,18 +470,19 @@ public class ChartData extends RMIChartData {
 			buf.append("or ims.exclusive_percentage = 100.0) ");
 			buf.append("and ims.inclusive_percentage < 100.0) ");
 
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			try {
 				statement = db.prepareStatement(buf.toString());
 				statement.setString(1, metricName);
-				//System.out.println(statement.toString());
+				//PerfExplorerOutput.println(statement.toString());
 				statement.execute();
 				statement.close();
 			} catch (Exception e) {
-				System.out.println(statement.toString());
-				System.out.println(buf.toString());
+				PerfExplorerOutput.println(statement.toString());
+				PerfExplorerOutput.println(buf.toString());
 				String error = "ERROR: Couldn't select the analysis settings from the database!";
-				System.out.println(error);
+				System.err.println(error);
+				System.err.println(e.getMessage());
 				e.printStackTrace();
 			}
 
@@ -481,7 +495,7 @@ public class ChartData extends RMIChartData {
 			}
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 
-			if (dataType == CORRELATION_DATA) {
+			if (dataType == ChartDataType.CORRELATION_DATA) {
 				if (db.getDBType().compareTo("oracle") == 0) {
 					buf.append("ims.excl from interval_mean_summary ims ");
 				} else {
@@ -518,10 +532,10 @@ public class ChartData extends RMIChartData {
 				buf.append(" and m.name = ? ");
 			}
 			buf.append(" order by 1, 2, 3, 4 ");
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
-		} else if (dataType == RELATIVE_EFFICIENCY_ONE_EVENT) {
+		} else if (dataType == ChartDataType.RELATIVE_EFFICIENCY_ONE_EVENT) {
 			// The user wants to know the relative efficiency or speedup
 			// of one event for one or more experiments, as the number of
 			// threads of execution increases.
@@ -574,7 +588,7 @@ public class ChartData extends RMIChartData {
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 			statement.setString(2, eventName);
-		} else if (dataType == RELATIVE_EFFICIENCY_PHASES) {
+		} else if (dataType == ChartDataType.RELATIVE_EFFICIENCY_PHASES) {
 			// The user wants to know the relative efficiency or speedup
 			// of all the phases for one experiment, as the number of threads of 
 			// execution increases.
@@ -622,8 +636,8 @@ public class ChartData extends RMIChartData {
 				statement.setInt (1, model.getExperiment().getID());
 				statement.setString(2, metricName);
 			}
-		} else if ((dataType == FRACTION_OF_TOTAL_PHASES) || 
-			(dataType == CORRELATION_DATA)) {
+		} else if ((dataType == ChartDataType.FRACTION_OF_TOTAL_PHASES) || 
+			(dataType == ChartDataType.CORRELATION_DATA)) {
 			// The user wants to know the runtime breakdown by phases 
 			// of one experiment as the number of threads of execution
 			// increases.
@@ -670,7 +684,7 @@ public class ChartData extends RMIChartData {
 
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
-		} else if (dataType == IQR_DATA) {
+		} else if (dataType == ChartDataType.IQR_DATA) {
 			// The user wants to know the runtime breakdown by phases 
 			// of one experiment as the number of threads of execution
 			// increases.
@@ -707,7 +721,7 @@ public class ChartData extends RMIChartData {
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());
 			statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
-		} else if (dataType == DISTRIBUTION_DATA) {
+		} else if (dataType == ChartDataType.DISTRIBUTION_DATA) {
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select cast (ie.name as varchar(256)), ");
 			} else {
@@ -756,7 +770,7 @@ public class ChartData extends RMIChartData {
 		PreparedStatement statement = null;
 		buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
-		if (dataType == FRACTION_OF_TOTAL) {
+		if (dataType == ChartDataType.FRACTION_OF_TOTAL) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
 			buf.append("select ");
@@ -785,11 +799,11 @@ public class ChartData extends RMIChartData {
 			buf.append("and ie.group_name not like '%TAU_PHASE%')");
 			buf.append("or ims.exclusive_percentage = 100.0) group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3");
 			
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 
-		} else if (dataType == RELATIVE_EFFICIENCY_EVENTS) {
+		} else if (dataType == ChartDataType.RELATIVE_EFFICIENCY_EVENTS) {
 			// The user wants to know the relative efficiency or speedup
 			// of all the events for one experiment, as the number of threads of 
 			// execution increases.
@@ -847,7 +861,7 @@ public class ChartData extends RMIChartData {
 			buf.append("and w.name is null ");
 			buf.append("group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3 ");
 
-			//System.out.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 
@@ -861,7 +875,7 @@ public class ChartData extends RMIChartData {
 		PreparedStatement statement = null;
 		buf = new StringBuffer();
 		Object object = model.getCurrentSelection();
-		if (dataType == CORRELATION_DATA) {
+		if (dataType == ChartDataType.CORRELATION_DATA) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
 			buf.append("select 'TOTAL', ");
@@ -931,7 +945,8 @@ public class ChartData extends RMIChartData {
 			statement.close();
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select the analysis settings from the database!";
-			System.out.println(error);
+			System.err.println(error);
+			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
 		return returnValue;
