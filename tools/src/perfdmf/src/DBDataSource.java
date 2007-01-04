@@ -7,13 +7,11 @@ import java.util.*;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 /**
- * Reads data from the database
+ * Reads a single trial from the database
  *  
- * <P>CVS $Id: DBDataSource.java,v 1.4 2006/12/28 03:05:59 amorris Exp $</P>
+ * <P>CVS $Id: DBDataSource.java,v 1.5 2007/01/04 01:34:35 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.4 $
- * @see     TrialData
- * @see     NCT
+ * @version $Revision: 1.5 $
  */
 public class DBDataSource extends DataSource {
 
@@ -68,7 +66,7 @@ public class DBDataSource extends DataSource {
         }
     }
 
-    private void fastGetIntervalEventData(List intervalEvents, Map ieMap, Map metricMap) throws SQLException {
+    private void fastGetIntervalEventData(Map ieMap, Map metricMap) throws SQLException {
         int numMetrics = getNumberOfMetrics();
         DB db = databaseAPI.getDb();
 
@@ -213,7 +211,7 @@ public class DBDataSource extends DataSource {
         }
 
         //getIntervalEventData(ieMap);
-        fastGetIntervalEventData(intervalEvents, ieMap, metricMap);
+        fastGetIntervalEventData(ieMap, metricMap);
 
         // map Interval Event ID's to Function objects
         Map aeMap = new HashMap();

@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.3 2006/12/28 03:06:00 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.4 2007/01/04 01:34:36 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -99,6 +99,10 @@ public class Thread implements Comparable {
         return snapshots;
     }
 
+    public int getNumSnapshots() {
+        return snapshots.size();
+    }
+
     public void addFunctionProfile(FunctionProfile fp) {
         int id = fp.getFunction().getID();
         // increase the size of the functionProfiles list if necessary
@@ -107,6 +111,7 @@ public class Thread implements Comparable {
         }
 
         functionProfiles.set(id, fp);
+        fp.setThread(this);
     }
 
     public void addUserEventProfile(UserEventProfile uep) {
@@ -249,13 +254,8 @@ public class Thread implements Comparable {
     }
 
     private double getDouble(int metric, int offset) {
-        try {
-            int actualLocation = (metric * METRIC_SIZE) + offset;
-            return maxData[actualLocation];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println("poop");
-            return 0;
-        }
+        int actualLocation = (metric * METRIC_SIZE) + offset;
+        return maxData[actualLocation];
     }
 
     // compute max values and percentages for threads (not mean/total)

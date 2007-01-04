@@ -6,12 +6,22 @@ import java.text.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.2 2006/12/28 03:05:59 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.3 2007/01/04 01:34:36 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see		Function
  */
 public class FunctionProfile implements Comparable {
+
+    // this is a private static class to save memory when callpath data is not needed
+    // we need only one empty pointer instead of four
+    private static class CallPathData {
+        public Set childProfiles;
+        public Set parentProfiles;
+        public Map childProfileCallPathSets;
+        public Map parentProfileCallPathSets;
+    }
+
     private static final int METRIC_SIZE = 4;
     private static final int CALL_SIZE = 2;
 
@@ -26,13 +36,8 @@ public class FunctionProfile implements Comparable {
 
     private int numMetrics;
 
-    // unused profile calls
-    //private List calls;
-
-    private Set childProfiles;
-    private Set parentProfiles;
-    private Map childProfileCallPathSets;
-    private Map parentProfileCallPathSets;
+    private CallPathData callPathData;
+    private Thread thread;
 
     public FunctionProfile(Function function) {
         this(function, 1);
@@ -87,10 +92,10 @@ public class FunctionProfile implements Comparable {
         this.putDouble(snapshot, metric, EXCLUSIVE, value);
     }
 
-    
     public double getExclusive(int snapshot, int metric) {
         return this.getDouble(snapshot, metric, EXCLUSIVE);
     }
+
     public double getExclusive(int metric) {
         //        if (function.isPhase()) {
         //            return this.getDouble(metric, 0);
@@ -191,11 +196,10 @@ public class FunctionProfile implements Comparable {
             newArray[i] = data[i];
         }
         data = newArray;
-        
-        
+
         int newCallsLength = calls.length + CALL_SIZE;
         double[] newCalls = new double[newCallsLength];
-        
+
         for (int i = 0; i < calls.length; i++) {
             newCalls[i] = calls[i];
         }
@@ -209,20 +213,21 @@ public class FunctionProfile implements Comparable {
         // callpath: a => b => c => d
         // child: d
         // this: c
+        CallPathData callPathData = getCallPathData();
 
-        if (childProfiles == null)
-            childProfiles = new TreeSet();
-        childProfiles.add(child);
+        if (callPathData.childProfiles == null)
+            callPathData.childProfiles = new TreeSet();
+        callPathData.childProfiles.add(child);
 
-        if (childProfileCallPathSets == null)
-            childProfileCallPathSets = new TreeMap();
+        if (callPathData.childProfileCallPathSets == null)
+            callPathData.childProfileCallPathSets = new TreeMap();
 
         // we maintain a set of callpaths for each child, retrieve the set for this child
-        Set callPathSet = (Set) childProfileCallPathSets.get(child);
+        Set callPathSet = (Set) callPathData.childProfileCallPathSets.get(child);
 
         if (callPathSet == null) {
             callPathSet = new TreeSet();
-            childProfileCallPathSets.put(child, callPathSet);
+            callPathData.childProfileCallPathSets.put(child, callPathSet);
         }
 
         callPathSet.add(callpath);
@@ -234,46 +239,52 @@ public class FunctionProfile implements Comparable {
         // parent: c
         // this: d
 
-        if (parentProfiles == null)
-            parentProfiles = new TreeSet();
-        parentProfiles.add(parent);
+        CallPathData callPathData = getCallPathData();
 
-        if (parentProfileCallPathSets == null)
-            parentProfileCallPathSets = new TreeMap();
+        if (callPathData.parentProfiles == null)
+            callPathData.parentProfiles = new TreeSet();
+        callPathData.parentProfiles.add(parent);
+
+        if (callPathData.parentProfileCallPathSets == null)
+            callPathData.parentProfileCallPathSets = new TreeMap();
 
         // we maintain a set of callpaths for each child, retrieve the set for this child
-        Set callPathSet = (Set) parentProfileCallPathSets.get(parent);
+        Set callPathSet = (Set) callPathData.parentProfileCallPathSets.get(parent);
 
         if (callPathSet == null) {
             callPathSet = new TreeSet();
-            parentProfileCallPathSets.put(parent, callPathSet);
+            callPathData.parentProfileCallPathSets.put(parent, callPathSet);
         }
 
         callPathSet.add(callpath);
     }
 
     public Iterator getChildProfiles() {
-        if (childProfiles != null)
-            return childProfiles.iterator();
+        CallPathData callPathData = getCallPathData();
+        if (callPathData.childProfiles != null)
+            return callPathData.childProfiles.iterator();
         return new UtilFncs.EmptyIterator();
     }
 
     public Iterator getParentProfiles() {
-        if (parentProfiles != null)
-            return parentProfiles.iterator();
+        CallPathData callPathData = getCallPathData();
+        if (callPathData.parentProfiles != null)
+            return callPathData.parentProfiles.iterator();
         return new UtilFncs.EmptyIterator();
     }
 
     public Iterator getParentProfileCallPathIterator(FunctionProfile parent) {
-        if (parentProfileCallPathSets == null)
+        CallPathData callPathData = getCallPathData();
+        if (callPathData.parentProfileCallPathSets == null)
             return new UtilFncs.EmptyIterator();
-        return ((Set) parentProfileCallPathSets.get(parent)).iterator();
+        return ((Set) callPathData.parentProfileCallPathSets.get(parent)).iterator();
     }
 
     public Iterator getChildProfileCallPathIterator(FunctionProfile child) {
-        if (childProfileCallPathSets == null)
+        CallPathData callPathData = getCallPathData();
+        if (callPathData.childProfileCallPathSets == null)
             return new UtilFncs.EmptyIterator();
-        return ((Set) childProfileCallPathSets.get(child)).iterator();
+        return ((Set) callPathData.childProfileCallPathSets.get(child)).iterator();
     }
 
     /**
@@ -301,5 +312,20 @@ public class FunctionProfile implements Comparable {
 
     public String toString() {
         return "A FunctionProfile for " + function.toString();
+    }
+
+    private CallPathData getCallPathData() {
+        if (callPathData == null) {
+            callPathData = new CallPathData();
+        }
+        return callPathData;
+    }
+
+    public Thread getThread() {
+        return thread;
+    }
+
+    public void setThread(Thread thread) {
+        this.thread = thread;
     }
 }

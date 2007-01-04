@@ -3,9 +3,9 @@ package edu.uoregon.tau.perfdmf;
 /**
  * Snapshot object representing a Snapshot
  *
- * <P>CVS $Id: Snapshot.java,v 1.1 2006/12/28 03:05:59 amorris Exp $</P>
+ * <P>CVS $Id: Snapshot.java,v 1.2 2007/01/04 01:34:36 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class Snapshot {
 
@@ -29,4 +29,8 @@ public class Snapshot {
         this.name = name;
     }
 
+    public int getID() {
+        return id;
+    }
+    
 }

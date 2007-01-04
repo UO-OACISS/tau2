@@ -13,9 +13,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.1 2006/12/28 03:05:59 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.2 2007/01/04 01:34:36 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class SnapshotDataSource extends DataSource {
 
@@ -39,6 +39,9 @@ public class SnapshotDataSource extends DataSource {
             xmlreader.setErrorHandler(handler);
             //xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/profile.xml")));
             xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/snapshot.0.0.0")));
+            xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/snapshot.1.0.0")));
+            xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/snapshot.2.0.0")));
+            xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/snapshot.3.0.0")));
 
             this.generateDerivedData();
             
@@ -65,9 +68,6 @@ public class SnapshotDataSource extends DataSource {
             System.out.println("main exclusive = " + fp.getExclusive(0));
             System.out.println("main inclusive = " + fp.getInclusive(0));
             
-            if (f == null) {
-                System.out.println("poo\n");
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }

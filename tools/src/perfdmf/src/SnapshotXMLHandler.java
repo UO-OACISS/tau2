@@ -9,9 +9,9 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.1 2006/12/28 03:06:00 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.2 2007/01/04 01:34:36 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
@@ -37,11 +37,11 @@ public class SnapshotXMLHandler extends DefaultHandler {
     }
 
     public void startDocument() throws SAXException {
-        System.out.println("startDocument");
+        //System.out.println("startDocument");
     }
 
     public void endDocument() throws SAXException {
-        System.out.println("endDocument");
+        //System.out.println("endDocument");
     }
 
     private void handleMetric(Attributes attributes) {
@@ -52,15 +52,17 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
         currentThread.metricMap.put(new Integer(id), metric);
 
-        System.out.println("metric definition, id = " + id);
+        //System.out.println("metric definition, id = " + id);
         //dataSource.ad
 
     }
     private void handleEvent(Attributes attributes) {
         int id = Integer.parseInt(attributes.getValue("id"));
         String name = attributes.getValue("name");
+        String groups = attributes.getValue("group");
 
         Function function = dataSource.addFunction(name);
+        dataSource.addGroups(groups, function);
         currentThread.eventMap.put(new Integer(id), function);
     }
     private void handleThread(Attributes attributes) {
@@ -87,7 +89,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
         if (currentThread.thread.getSnapshots().size() != 0) {
             //???
             // increase storage
-            System.out.println("increase storage!");
+            System.err.println("todo: add snapshot structures for 'Thread'");
             for (Iterator e6 = currentThread.thread.getFunctionProfiles().iterator(); e6.hasNext();) {
                 FunctionProfile fp = (FunctionProfile) e6.next();
                 if (fp != null) { // fp == null would mean this thread didn't call this function
@@ -101,11 +103,11 @@ public class SnapshotXMLHandler extends DefaultHandler {
     }
     
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-        System.out.println("startElement: uri:" + uri + ", localName:"+localName+", qName:"+qName);
+        //System.out.println("startElement: uri:" + uri + ", localName:"+localName+", qName:"+qName);
 
         if (localName.equals("thread")) {
             handleThread(attributes);
-        } else if (localName.equals("snapshotname")) {
+        } else if (localName.equals("name")) {
             accumulator = new StringBuffer();
         } else if (localName.equals("definitions")) {
             handleDefinitions(attributes);
@@ -133,7 +135,6 @@ public class SnapshotXMLHandler extends DefaultHandler {
         while (tokenizer.hasMoreTokens()) {
             int metricID = Integer.parseInt(tokenizer.nextToken());
             currentMetrics[index++] = metricID;
-            System.out.println("Metric: " + metricID);
         }
     }
     
@@ -175,10 +176,10 @@ public class SnapshotXMLHandler extends DefaultHandler {
         
     }
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        System.out.println("endElement: uri:" + uri + ", localName:"+localName+", qName:"+qName);
+        //System.out.println("endElement: uri:" + uri + ", localName:"+localName+", qName:"+qName);
         if (localName.equals("thread_definition")) {
             currentThread = null;
-        } else if (localName.equals("snapshotname")) {
+        } else if (localName.equals("name")) {
             System.out.println("reading snapshot: " + accumulator);
             currentSnapshot.setName(accumulator.toString());
         } else if (localName.equals("interval_data")) {
