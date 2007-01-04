@@ -475,7 +475,7 @@ public class DBConnector implements DB {
         } else if (this.getDBType().compareTo("derby") == 0) {
             itsColumns[6] = "num_calls";
         } else if (this.getDBType().compareTo("mysql") == 0) {
-            itsColumns[6] = "`call`";
+            itsColumns[6] = "call";
         }
 
         if (checkTable(dbMeta, "interval_total_summary", itsColumns) != 0)
