@@ -86,7 +86,9 @@ void Tau_enable_tracking_memory_headroom(void);
 void Tau_disable_tracking_memory_headroom(void);
 void Tau_mark_group_as_phase(void **ptr);
 void Tau_profile_callstack(void );
-
+void Tau_profile_snapshot(char *name);
+void Tau_profile_snapshot_1l(char *name, int number);
+  
 
 
 #define EXTRACT_GROUP(n, l, gr, gr_name) TauGroup_t gr; char *gr_name = NULL; tau_extract_groupinfo(n, gr, gr_name); 
@@ -1408,11 +1410,59 @@ void TAU_PROFILE_CALLSTACK(void)
   tau_profile_callstack_();
 }
 
+//////////////////////////////////////////////////////////////////////
+// Snapshot related routines
+//////////////////////////////////////////////////////////////////////
+
+static char *getFortranName(char *name, int slen) {
+    char *fname = (char *) malloc((size_t) slen+1);
+    strncpy(fname, name, slen);
+    fname[slen] = '\0';  
+    return fname;
+}
+
+void tau_profile_snapshot_1l_(int *number, char *name, int slen) {
+  char *fname = getFortranName(name, slen);
+  Tau_profile_snapshot_1l(fname, *number);
+  free (fname);
+}
+
+void tau_profile_snapshot_1l(int *number, char *name, int slen) {
+  tau_profile_snapshot_1l_(number, name, slen);
+}
+
+void tau_profile_snapshot_1l__(int *number, char *name, int slen) {
+  tau_profile_snapshot_1l_(number, name, slen);
+}
+
+void TAU_PROFILE_SNAPSHOT_1L(int *number, char *name, int slen) {
+  tau_profile_snapshot_1l_(number, name, slen);
+}
+
+void tau_profile_snapshot_(char *name, int slen) {
+  char *fname = getFortranName(name, slen);
+  Tau_profile_snapshot(fname);
+  free (fname);
+}
+
+void tau_profile_snapshot(char *name, int slen) {
+  tau_profile_snapshot_(name, slen);
+}
+
+void tau_profile_snapshot__(char *name, int slen) {
+  tau_profile_snapshot_(name, slen);
+}
+
+void TAU_PROFILE_SNAPSHOT(char *name, int slen) {
+  tau_profile_snapshot_(name, slen);
+}
+
+
 } /* extern "C" */
 
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.54 $   $Date: 2006/09/07 00:30:48 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.54 2006/09/07 00:30:48 amorris Exp $ 
+ * $Revision: 1.55 $   $Date: 2007/01/04 02:36:29 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.55 2007/01/04 02:36:29 amorris Exp $ 
  ***************************************************************************/

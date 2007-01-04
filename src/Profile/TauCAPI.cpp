@@ -762,9 +762,26 @@ extern "C" pid_t tau_fork() {
 }
 #endif /* TAU_WINDOWS */
 
+
+//////////////////////////////////////////////////////////////////////
+// Snapshot related routines
+//////////////////////////////////////////////////////////////////////
+
+extern "C" void Tau_profile_snapshot_1l(char *name, int number) {
+  char buffer[4096];
+  sprintf (buffer, "%s %d", name, number);
+  Profiler::Snapshot(buffer);
+}
+
+extern "C" void Tau_profile_snapshot(char *name) {
+  Profiler::Snapshot(name);
+}
+
+
+
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.60 $   $Date: 2006/11/11 16:48:15 $
- * VERSION: $Id: TauCAPI.cpp,v 1.60 2006/11/11 16:48:15 amorris Exp $
+ * $Revision: 1.61 $   $Date: 2007/01/04 02:36:29 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.61 2007/01/04 02:36:29 amorris Exp $
  ***************************************************************************/
 

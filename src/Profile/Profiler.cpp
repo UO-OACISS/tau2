@@ -3388,16 +3388,25 @@ static int writeMetaData(FILE *fp) {
     while (ThisTauReadFullLine(line, f)) {
       char buf[4096];
       if (strncmp(line, "cpu MHz", 7) == 0) {
-	fprintf (fp, "\t<cpu_mhz>%s</cpu_mhz>\n", strstr(line,":")+2);
+        fprintf (fp, "\t<cpu_mhz>%s</cpu_mhz>\n", strstr(line,":")+2);
+      }
+      if (strncmp(line, "clock", 5) == 0) {
+        fprintf (fp, "\t<cpu_mhz>%s</cpu_mhz>\n", strstr(line,":")+2);
       }
       if (strncmp(line, "model name", 10) == 0) {
-	fprintf (fp, "\t<cpu_type>%s</cpu_type>\n", strstr(line,":")+2);
+        fprintf (fp, "\t<cpu_type>%s</cpu_type>\n", strstr(line,":")+2);
+      }
+      if (strncmp(line, "family", 6) == 0) {
+        fprintf (fp, "\t<cpu_type>%s</cpu_type>\n", strstr(line,":")+2);
+      }
+      if (strncmp(line, "cpu", 3) == 0) {
+        fprintf (fp, "\t<cpu_type>%s</cpu_type>\n", strstr(line,":")+2);
       }
       if (strncmp(line, "cache size", 10) == 0) {
-	fprintf (fp, "\t<cache_size>%s</cache_size>\n", strstr(line,":")+2);
+        fprintf (fp, "\t<cache_size>%s</cache_size>\n", strstr(line,":")+2);
       }
       if (strncmp(line, "cpu cores", 9) == 0) {
-	fprintf (fp, "\t<cpu_cores>%s</cpu_cores>\n", strstr(line,":")+2);
+        fprintf (fp, "\t<cpu_cores>%s</cpu_cores>\n", strstr(line,":")+2);
       }
     }
   }
@@ -3555,6 +3564,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
      TauGetSnapshotEventCounts()[tid] = numFunc;
 
      fprintf (fp, "</definitions>\n");
+   } else {
+     fprintf (fp, "<profile_xml>\n");
    }
 
 
@@ -3680,11 +3691,13 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
    fprintf (fp, "</profile>\n");
 
-   if (finalize) {
-     fprintf (fp, "\n</profile_xml>\n");
-     //     fclose(fp);
-     printf ("snapshot closed!\n");
-   }
+
+   fprintf (fp, "\n</profile_xml>\n");
+
+//    if (finalize) {
+//      fprintf (fp, "\n</profile_xml>\n");
+//      //     fclose(fp);
+//    }
 
    RtsLayer::UnLockDB();
    
@@ -3702,8 +3715,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.142 $   $Date: 2006/12/27 18:54:02 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.142 2006/12/27 18:54:02 amorris Exp $ 
+ * $Revision: 1.143 $   $Date: 2007/01/04 02:36:29 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.143 2007/01/04 02:36:29 amorris Exp $ 
  ***************************************************************************/
 
 	
