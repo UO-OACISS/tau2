@@ -9,7 +9,6 @@ import java.util.*;
 
 import javax.swing.*;
 
-
 /**
  * Function selector dialog.  Nothing in it is "function" specific except the title.
  * Other than that this could be used as a generic "object" selector.
@@ -18,9 +17,9 @@ import javax.swing.*;
  *   
  * TODO: nothing
  *
- * <P>CVS $Id: FunctionSelectorDialog.java,v 1.2 2006/03/15 22:32:27 amorris Exp $</P>
+ * <P>CVS $Id: FunctionSelectorDialog.java,v 1.3 2007/01/04 01:55:31 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 public class FunctionSelectorDialog extends JDialog {
 
@@ -48,7 +47,7 @@ public class FunctionSelectorDialog extends JDialog {
     }
 
     public boolean choose() {
-        this.show();
+        this.setVisible(true);
 
         if (!selected) {
             return false;
@@ -57,7 +56,7 @@ public class FunctionSelectorDialog extends JDialog {
         if (allowMultiple) {
             list.getSelectedIndices();
             selectedObjects = new ArrayList();
-            for (int i=0; i < list.getSelectedIndices().length; i++) {
+            for (int i = 0; i < list.getSelectedIndices().length; i++) {
                 selectedObjects.add(items.get(list.getSelectedIndices()[i]));
             }
         } else {
@@ -71,8 +70,6 @@ public class FunctionSelectorDialog extends JDialog {
         return true;
     }
 
-    
-    
     public FunctionSelectorDialog(JFrame owner, boolean modal, Iterator functions, Object initialSelection, boolean allowNone,
             boolean allowMultiple) {
 
@@ -157,6 +154,7 @@ public class FunctionSelectorDialog extends JDialog {
     public Object getSelectedObject() {
         return selectedObject;
     }
+
     public List getSelectedObjects() {
         return selectedObjects;
     }

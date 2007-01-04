@@ -15,13 +15,14 @@ import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.SortListener;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.vis.*;
 
 public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListener, Observer, Printable, ParaProfWindow,
-        UnitListener {
+        UnitListener, SortListener {
 
     private final int defaultToScatter = 15000;
 
@@ -472,8 +473,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     private void setupMenus() {
 
         JMenuBar mainMenu = new JMenuBar();
-        JMenu subMenu = null;
-        JMenuItem menuItem = null;
 
         optionsMenu = new JMenu("Options");
         optionsMenu.getPopupMenu().setLightWeightPopupEnabled(false);
@@ -481,6 +480,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         JMenu unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         unitsSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);
         optionsMenu.add(unitsSubMenu);
+        
+        JMenu sort = ParaProfUtils.createMetricSelectionMenu(ppTrial,"Sort by...", true, false, dataSorter, this, false);
+        sort.getPopupMenu().setLightWeightPopupEnabled(false);
+        optionsMenu.add(sort);
 
         // now add all the menus to the main menu
 
@@ -884,11 +887,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     }
 
     public void setUnits(int units) {
-        // TODO Auto-generated method stub
         this.units = units;
         setAxisStrings();
         controlPanel.dataChanged();
         visRenderer.redraw();
+    }
+
+    public void resort() {
+        sortLocalData();
     }
 
 }

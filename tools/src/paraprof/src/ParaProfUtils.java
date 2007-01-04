@@ -6,6 +6,7 @@ import java.awt.print.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.net.URL;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
@@ -20,7 +21,10 @@ import javax.swing.event.MenuListener;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
+import edu.uoregon.tau.paraprof.enums.SortType;
+import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.SortListener;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.script.ParaProfFunctionScript;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
@@ -28,15 +32,16 @@ import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
+
 /**
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.20 2006/12/28 03:14:42 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.21 2007/01/04 01:55:32 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  */
 public class ParaProfUtils {
 
@@ -772,7 +777,7 @@ public class ParaProfUtils {
         });
         return jMenuItem;
     }
-    
+
     public static JMenuItem createSnapShotMenuItem(String text, final ParaProfTrial ppTrial,
             final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
@@ -792,7 +797,7 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UserEventWindow w = new UserEventWindow(ppTrial, thread, owner);
-                w.setVisible(true);;
+                w.setVisible(true);
             }
 
         });
@@ -874,11 +879,27 @@ public class ParaProfUtils {
             threadPopup.add(createUserEventBarChartMenuItem("Show User Event Bar Chart", ppTrial, thread, owner));
             threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
         }
-        
-        //threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
-        
+
+        if (thread.getNumSnapshots() > 1) {
+            threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
+        }
+
         threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
         threadPopup.show(owner, evt.getX(), evt.getY());
+
+    }
+
+    public static void handleSnapshotClick(final ParaProfTrial ppTrial, final Thread thread, final Snapshot snapshot,
+            JComponent owner, MouseEvent evt) {
+        JPopupMenu popup = new JPopupMenu();
+
+        JMenuItem menuItem = new JMenuItem("Hide this snapshot (" + snapshot + ")");
+        popup.add(menuItem);
+
+        menuItem = new JMenuItem("Show all snapshots");
+        popup.add(menuItem);
+
+        popup.show(owner, evt.getX(), evt.getY());
 
     }
 
@@ -954,7 +975,7 @@ public class ParaProfUtils {
 
         };
 
-        JMenu unitsSubMenu = new JMenu("Select Units");
+        JMenu unitsSubMenu = new JMenu("Select Units...");
         ButtonGroup group = new ButtonGroup();
 
         JRadioButtonMenuItem button = new JRadioButtonMenuItem("Microseconds", initialUnits == 0);
@@ -1172,7 +1193,153 @@ public class ParaProfUtils {
     }
 
     public static void setFrameIcon(Frame frame) {
-        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(Utility.getResource("tau16x16.gif")));
+        URL url = Utility.getResource("tau16x16.gif");
+        if (url != null) {
+            frame.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
+        }
+    }
+
+    private static Component createMetricMenu(ParaProfTrial ppTrial, final ValueType valueType, boolean enabled,
+            ButtonGroup group, final boolean sort, final DataSorter dataSorter, final SortListener sortListener) {
+        JRadioButtonMenuItem button = null;
+
+        if (ppTrial.getNumberOfMetrics() == 1) {
+            button = new JRadioButtonMenuItem(valueType.toString(), enabled);
+
+            button.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    if (sort) {
+                        dataSorter.setSortByVisible(false);
+                        dataSorter.setSortType(SortType.VALUE);
+                        dataSorter.setSortValueType(valueType);
+                    } else {
+                        dataSorter.setValueType(valueType);
+                    }
+                    sortListener.resort();
+                }
+            });
+            group.add(button);
+            return button;
+        } else {
+            JMenu subSubMenu = new JMenu(valueType.toString() + "...");
+            subSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);
+            for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
+
+                if (i == dataSorter.getSelectedMetricID() && enabled) {
+                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName(), true);
+                } else {
+                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName());
+                }
+                final int metricID = i;
+
+                button.addActionListener(new ActionListener() {
+
+                    public void actionPerformed(ActionEvent evt) {
+                        if (sort) {
+                            dataSorter.setSortByVisible(false);
+                            dataSorter.setSortType(SortType.VALUE);
+                            dataSorter.setSortMetric(metricID);
+                            dataSorter.setSortValueType(valueType);
+                        } else {
+                            dataSorter.setSelectedMetricID(metricID);
+                            dataSorter.setValueType(valueType);
+                        }
+                        sortListener.resort();
+                    }
+                });
+                group.add(button);
+                subSubMenu.add(button);
+            }
+            return subSubMenu;
+        }
+    }
+
+    public static JMenu createMetricSelectionMenu(ParaProfTrial ppTrial, String name, final boolean sort, boolean nct,
+            final DataSorter dataSorter, final SortListener sortListener, boolean visibleMetric) {
+        JRadioButtonMenuItem button;
+        JMenu subMenu = new JMenu(name);
+        ButtonGroup group = new ButtonGroup();
+
+        if (sort) {
+
+            if (visibleMetric) {
+                button = new JRadioButtonMenuItem("Same as Visible Metric", dataSorter.getSortByVisible());
+                button.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        dataSorter.setSortType(SortType.VALUE);
+                        dataSorter.setSortByVisible(true);
+                        sortListener.resort();
+                    }
+                });
+                group.add(button);
+                subMenu.add(button);
+            }
+
+            if (nct) {
+                button = new JRadioButtonMenuItem("Sort By N,C,T", dataSorter.getSortType() == SortType.NCT);
+                button.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        dataSorter.setSortType(SortType.NCT);
+                        sortListener.resort();
+                    }
+                });
+                group.add(button);
+                subMenu.add(button);
+            } else {
+                button = new JRadioButtonMenuItem("Name", dataSorter.getSortType() == SortType.NAME);
+                button.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        dataSorter.setSortType(SortType.NAME);
+                        sortListener.resort();
+                    }
+                });
+                group.add(button);
+                subMenu.add(button);
+            }
+
+        }
+
+        subMenu.add(createMetricMenu(ppTrial, ValueType.EXCLUSIVE, dataSorter.getValueType() == ValueType.EXCLUSIVE
+                || dataSorter.getValueType() == ValueType.EXCLUSIVE_PERCENT, group, sort, dataSorter, sortListener));
+        subMenu.add(createMetricMenu(ppTrial, ValueType.INCLUSIVE, dataSorter.getValueType() == ValueType.INCLUSIVE
+                || dataSorter.getValueType() == ValueType.INCLUSIVE_PERCENT, group, sort, dataSorter, sortListener));
+        subMenu.add(createMetricMenu(ppTrial, ValueType.EXCLUSIVE_PER_CALL,
+                dataSorter.getValueType() == ValueType.EXCLUSIVE_PER_CALL, group, sort, dataSorter, sortListener));
+        subMenu.add(createMetricMenu(ppTrial, ValueType.INCLUSIVE_PER_CALL,
+                dataSorter.getValueType() == ValueType.INCLUSIVE_PER_CALL, group, sort, dataSorter, sortListener));
+
+        button = new JRadioButtonMenuItem("Number of Calls", dataSorter.getValueType() == ValueType.NUMCALLS);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                if (sort) {
+                    dataSorter.setSortByVisible(false);
+                    dataSorter.setSortType(SortType.VALUE);
+                    dataSorter.setSortValueType(ValueType.NUMCALLS);
+                } else {
+                    dataSorter.setValueType(ValueType.NUMCALLS);
+                }
+                sortListener.resort();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+
+        button = new JRadioButtonMenuItem("Number of Child Calls", dataSorter.getValueType() == ValueType.NUMSUBR);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                if (sort) {
+                    dataSorter.setSortByVisible(false);
+                    dataSorter.setSortType(SortType.VALUE);
+                    dataSorter.setSortValueType(ValueType.NUMSUBR);
+                } else {
+                    dataSorter.setValueType(ValueType.NUMSUBR);
+                }
+                sortListener.resort();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+        return subMenu;
     }
 
 }

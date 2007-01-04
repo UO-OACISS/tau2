@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UserEvent;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.4 2006/11/08 23:17:58 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.5 2007/01/04 01:55:31 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -36,17 +36,8 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
     private JScrollPane sp = null;
     private LedgerWindowPanel panel = null;
     private Vector list = new Vector();
-    
-    public void setupMenus() {
-        JMenuBar mainMenu = new JMenuBar();
 
-        mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
-        //mainMenu.add(ParaProfUtils.createTrialMenu(trial, this));
-        mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
-        mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
-
-        setJMenuBar(mainMenu);
-    }
+ 
 
     public LedgerWindow(ParaProfTrial ppTrial, int windowType, Component parent) {
         this.ppTrial = ppTrial;
@@ -58,7 +49,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
         //setLocation(new java.awt.Point(300, 200));
         setLocation(WindowPlacer.getNewLedgerLocation(this, parent));
-        
+
         //Now set the title.
         switch (windowType) {
         case FUNCTION_LEGEND:
@@ -90,11 +81,9 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
             this.help(false);
         }
 
-       
-
         //Sort the local data.
         sortLocalData();
-        
+
         getContentPane().setLayout(new GridBagLayout());
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -107,7 +96,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
         vScrollBar.setUnitIncrement(35);
 
         setupMenus();
-        
+
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 1;
@@ -117,25 +106,49 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
         ParaProf.incrementNumWindows();
     }
 
+    public void setupMenus() {
+        JMenuBar mainMenu = new JMenuBar();
 
+        mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
+        //mainMenu.add(ParaProfUtils.createTrialMenu(trial, this));
+    
+        if (this.windowType == FUNCTION_LEGEND) {
+            JMenu filter = new JMenu("Filter");
+            JMenuItem advanced = new JMenuItem("Advanced Filtering...");
+            advanced.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    (new FunctionFilterDialog(LedgerWindow.this, ppTrial)).setVisible(true);
+                } });
+            filter.add(advanced);
+            mainMenu.add(filter);
+        }
+        mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
+        mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
+
+        setJMenuBar(mainMenu);
+    }
+    
+    
     public void update(Observable o, Object arg) {
-            String tmpString = (String) arg;
-            if (tmpString.equals("prefEvent")) {
-                panel.repaint();
-            } else if (tmpString.equals("colorEvent")) {
-                panel.repaint();
-            } else if (tmpString.equals("dataEvent")) {
-                sortLocalData();
-                panel.repaint();
-            } else if (tmpString.equals("subWindowCloseEvent")) {
-                closeThisWindow();
-            }
+        String tmpString = (String) arg;
+        if (tmpString.equals("prefEvent")) {
+            panel.repaint();
+        } else if (tmpString.equals("colorEvent")) {
+            panel.repaint();
+        } else if (tmpString.equals("dataEvent")) {
+            sortLocalData();
+            panel.repaint();
+        } else if (tmpString.equals("subWindowCloseEvent")) {
+            closeThisWindow();
+        }
     }
 
     public void help(boolean display) {
         ParaProf.getHelpWindow().clearText();
-        if (display)
-            ParaProf.getHelpWindow().show();
+        if (display) {
+            ParaProf.getHelpWindow().setVisible(true);
+        }
         if (windowType == 0) {
             ParaProf.getHelpWindow().writeText("This is the function ledger window.\n");
             ParaProf.getHelpWindow().writeText("This window shows all the functions tracked in this profile.\n");
@@ -146,8 +159,9 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
             ParaProf.getHelpWindow().writeText("This is the group ledger window.\n");
             ParaProf.getHelpWindow().writeText("This window shows all the groups tracked in this profile.\n");
             ParaProf.getHelpWindow().writeText("Left click any group to highlight it in the system.");
-            ParaProf.getHelpWindow().writeText("Right click on any group, and select from the popup menu"
-                    + " to display more options for masking or displaying functions in a particular group.");
+            ParaProf.getHelpWindow().writeText(
+                    "Right click on any group, and select from the popup menu"
+                            + " to display more options for masking or displaying functions in a particular group.");
         } else {
             ParaProf.getHelpWindow().writeText("This is the user event ledger window.\n");
             ParaProf.getHelpWindow().writeText("This window shows all the user events tracked in this profile.\n");
@@ -187,11 +201,11 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-            gbc.gridx = x;
-            gbc.gridy = y;
-            gbc.gridwidth = w;
-            gbc.gridheight = h;
-            getContentPane().add(c, gbc);
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        getContentPane().add(c, gbc);
     }
 
     public Rectangle getViewRect() {
@@ -216,5 +230,5 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
     public int getWindowType() {
         return windowType;
     }
-   
+
 }

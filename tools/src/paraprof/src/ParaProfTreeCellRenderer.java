@@ -30,6 +30,7 @@ public class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer {
         DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
         Object userObject = node.getUserObject();
 
+        
         if (node.isRoot()) {
             URL url = Utility.getResource("red-ball.gif");
             this.setIcon(new ImageIcon(url));

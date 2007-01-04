@@ -14,6 +14,9 @@
  * only one set of drawing and sorting data at a time. Different windows must
  * create their own instances of this object to avoid conflicts.
  *  
+ *  
+ *  NOTE: This class will soon be obsolete and be removed as it is an unnecessary waste of memory
+ *  
  */
 
 package edu.uoregon.tau.paraprof;
@@ -33,6 +36,7 @@ public class PPFunctionProfile implements Comparable {
     private edu.uoregon.tau.perfdmf.Thread thread;
     private FunctionProfile functionProfile;
 
+    
     public PPFunctionProfile(DataSorter dataSorter, edu.uoregon.tau.perfdmf.Thread thread, FunctionProfile fp) {
         this.dataSorter = dataSorter;
         this.thread = thread;
@@ -97,7 +101,7 @@ public class PPFunctionProfile implements Comparable {
             return functionProfile.getInclusive(dataSorter.getSelectedMetricID());
         } else {
             return functionProfile.getExclusive(dataSorter.getSelectedMetricID());
-       }
+        }
     }
 
     public double getInclusivePercentValue() {
@@ -143,31 +147,37 @@ public class PPFunctionProfile implements Comparable {
         return value;
     }
 
+    
+    private int compareNCT(PPFunctionProfile other) {
+        if (other.getNodeID() != this.getNodeID()) {
+            return checkDescending(this.getNodeID() - other.getNodeID());
+        } else if (other.getContextID() != this.getContextID()) {
+            return checkDescending(this.getContextID() - other.getContextID());
+        } else {
+            return checkDescending(this.getThreadID() - other.getThreadID());
+        }
+    }
+    
     public int compareTo(Object inObject) {
         ValueType valueType = dataSorter.getSortValueType();
 
         PPFunctionProfile other = (PPFunctionProfile) inObject;
 
+        //TODO: I think valueType might need to be sortValueType???
         if (dataSorter.getSortType() == SortType.NAME) {
             return checkDescending(other.getDisplayName().compareTo(this.getDisplayName()));
-        } else if (dataSorter.getSortType() == SortType.NCT) {
-            if (other.getNodeID() != this.getNodeID()) {
-                return checkDescending(this.getNodeID() - other.getNodeID());
-            } else if (other.getContextID() != this.getContextID()) {
-                return checkDescending(this.getContextID() - other.getContextID());
-            } else {
-                return checkDescending(this.getThreadID() - other.getThreadID());
-            }
-        } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
 
+        } else if (dataSorter.getSortType() == SortType.NCT) {
+            return compareNCT(other);
+        
+        } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
             return checkDescending(compareToHelper(valueType.getValue(this.getMeanProfile(), dataSorter.getSortMetric()),
                     valueType.getValue(other.getMeanProfile(), dataSorter.getSortMetric()), this.getMeanProfile(),
                     other.getMeanProfile()));
 
         } else if (dataSorter.getSortType() == SortType.VALUE) {
-            return checkDescending(compareToHelper(
-                    valueType.getValue(this.getFunctionProfile(), dataSorter.getSortMetric()), valueType.getValue(
-                            other.getFunctionProfile(), dataSorter.getSortMetric())));
+            return checkDescending(compareToHelper(valueType.getValue(this.getFunctionProfile(), dataSorter.getSortMetric()),
+                    valueType.getValue(other.getFunctionProfile(), dataSorter.getSortMetric())));
         } else {
             throw new ParaProfException("Unexpected sort type: " + dataSorter.getSortType());
         }
@@ -228,12 +238,7 @@ public class PPFunctionProfile implements Comparable {
         return thread;
     }
 
-    // Static Functions
-
     public static String getStatStringHeading(String metricType) {
-        //        return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad(metricType, 16)
-        //        + UtilFncs.lpad("Total " + metricType, 18) + UtilFncs.lpad("#Calls", 14)
-        //        + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
         return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad("Exclusive", 16) + UtilFncs.lpad("Inclusive", 18)
                 + UtilFncs.lpad("#Calls", 14) + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Inclusive/Call", 21) + "   ";
     }

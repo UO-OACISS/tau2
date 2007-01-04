@@ -32,11 +32,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.13 2006/11/10 22:04:39 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.14 2007/01/04 01:55:33 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class ParaProf implements ActionListener {
 
@@ -55,7 +55,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Fri Nov 10 14:03:53 PST 2006";
+    private final static String VERSION = "Wed Jan  3 17:52:17 PST 2007";
 
     public static int defaultNumberPrecision = 6;
 
@@ -292,7 +292,7 @@ public class ParaProf implements ActionListener {
     public static String getInfoString() {
         long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
 
-        return new String("ParaProf 3\n" + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\n" + "http://www.cs.uoregon.edu/research/tau\n");
+        return new String("ParaProf\n" + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\n" + "http://www.cs.uoregon.edu/research/tau\n");
     }
 
     public static String getVersionString() {
@@ -434,7 +434,7 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = 8;
             } else if (fileTypeString.equals("hpc")) {
                 ParaProf.fileType = 9;
-            } else if (fileTypeString.equals("time")) {
+            } else if (fileTypeString.equals("snap")) {
                 ParaProf.fileType = 10;
             } else {
                 System.err.println("Please enter a valid file type.");

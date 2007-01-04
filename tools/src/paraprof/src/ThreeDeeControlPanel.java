@@ -21,9 +21,9 @@ import edu.uoregon.tau.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.5 2006/09/01 22:21:11 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.6 2007/01/04 01:55:32 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -43,7 +43,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     private int selectedTab;
     private JTabbedPane tabbedPane; // keep a handle to remember the selected tab
-
 
     public class SliderComboBox extends JComboBox {
         public SliderComboBox() {
@@ -131,11 +130,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
             return new Dimension(popupWidth, size.height);
         }
     }
-    
-    
-    
-    public ThreeDeeControlPanel(ThreeDeeWindow window, ThreeDeeSettings settings, ParaProfTrial ppTrial,
-            VisRenderer visRenderer) {
+
+    public ThreeDeeControlPanel(ThreeDeeWindow window, ThreeDeeSettings settings, ParaProfTrial ppTrial, VisRenderer visRenderer) {
         this.settings = settings;
         this.window = window;
         this.ppTrial = ppTrial;
@@ -217,7 +213,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         functionField.setEditable(false);
         functionField.setBorder(BorderFactory.createLoweredBevelBorder());
         functionField.setCaretPosition(0);
-        
+
         String[] items = new String[ppTrial.getNumberOfMetrics()];
         for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
             items[i] = ppTrial.getMetric(i).getName();
@@ -226,15 +222,14 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         Dimension d;
         final SteppedComboBox valueBox = new SteppedComboBox(ValueType.VALUES);
         d = valueBox.getPreferredSize();
-        valueBox.setMinimumSize(new Dimension(50,valueBox.getMinimumSize().height));
+        valueBox.setMinimumSize(new Dimension(50, valueBox.getMinimumSize().height));
         valueBox.setPopupWidth(d.width);
 
         final SteppedComboBox metricBox = new SteppedComboBox(items);
         d = metricBox.getPreferredSize();
-        metricBox.setMinimumSize(new Dimension(50,metricBox.getMinimumSize().height));
+        metricBox.setMinimumSize(new Dimension(50, metricBox.getMinimumSize().height));
         metricBox.setPopupWidth(d.width);
 
-        
         valueBox.setSelectedItem(settings.getScatterValueTypes()[index]);
         metricBox.setSelectedIndex(settings.getScatterMetricIDs()[index]);
 
@@ -359,7 +354,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     }
 
-    
     private JPanel createSelectorPanel(int min, int max, final List names, final int index) {
 
         JPanel panel = new JPanel();
@@ -368,9 +362,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        final JScrollBar scrollBar = new JScrollBar(JScrollBar.HORIZONTAL, settings.getSelections()[index], 1,
-                min, max);
-        scrollBar.setBlockIncrement((max-min) / 10);
+        final JScrollBar scrollBar = new JScrollBar(JScrollBar.HORIZONTAL, settings.getSelections()[index], 1, min, max);
+        scrollBar.setBlockIncrement((max - min) / 10);
 
         final JTextField textField = new JTextField("<none>");
 
@@ -385,7 +378,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         textField.setEditable(false);
         textField.setCaretPosition(0);
 
-        
         scrollBar.addAdjustmentListener(new AdjustmentListener() {
             public void adjustmentValueChanged(AdjustmentEvent e) {
                 int selection = scrollBar.getValue();
@@ -415,7 +407,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         return panel;
     }
 
-    
     private JPanel createFullDataPanel() {
 
         JPanel regularPanel = new JPanel();
@@ -440,7 +431,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     settings.setRegularAim(visRenderer.getAim());
                     settings.setRegularEye(visRenderer.getEye());
 
-                    
                     heightValueField.setText(window.getSelectedHeightValue());
                     colorValueField.setText(window.getSelectedColorValue());
 
@@ -453,23 +443,21 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         };
 
-
-	Dimension d;
+        Dimension d;
 
         heightValueBox = new SteppedComboBox(ValueType.VALUES);
         d = heightValueBox.getPreferredSize();
-        heightValueBox.setMinimumSize(new Dimension(50,heightValueBox.getMinimumSize().height));
+        heightValueBox.setMinimumSize(new Dimension(50, heightValueBox.getMinimumSize().height));
         heightValueBox.setPopupWidth(d.width);
         heightValueBox.setSelectedItem(settings.getHeightValue());
         heightValueBox.addActionListener(metricChanger);
 
         colorValueBox = new SteppedComboBox(ValueType.VALUES);
         d = colorValueBox.getPreferredSize();
-        colorValueBox.setMinimumSize(new Dimension(50,colorValueBox.getMinimumSize().height));
+        colorValueBox.setMinimumSize(new Dimension(50, colorValueBox.getMinimumSize().height));
         colorValueBox.setPopupWidth(d.width);
         colorValueBox.setSelectedItem(settings.getColorValue());
         colorValueBox.addActionListener(metricChanger);
-
 
         String[] items = new String[ppTrial.getNumberOfMetrics()];
         for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
@@ -478,12 +466,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         heightMetricBox = new SteppedComboBox(items);
         d = heightMetricBox.getPreferredSize();
-        heightMetricBox.setMinimumSize(new Dimension(50,heightMetricBox.getMinimumSize().height));
+        heightMetricBox.setMinimumSize(new Dimension(50, heightMetricBox.getMinimumSize().height));
         heightMetricBox.setPopupWidth(d.width);
         heightMetricBox.setSelectedIndex(settings.getHeightMetricID());
         heightMetricBox.addActionListener(metricChanger);
-
-
 
         items = new String[ppTrial.getNumberOfMetrics()];
         for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
@@ -491,7 +477,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         }
         colorMetricBox = new SteppedComboBox(items);
         d = colorMetricBox.getPreferredSize();
-        colorMetricBox.setMinimumSize(new Dimension(50,colorMetricBox.getMinimumSize().height));
+        colorMetricBox.setMinimumSize(new Dimension(50, colorMetricBox.getMinimumSize().height));
         colorMetricBox.setPopupWidth(d.width);
         colorMetricBox.setSelectedIndex(settings.getColorMetricID());
 
@@ -505,11 +491,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane.setMinimumSize(new Dimension(290, 160));
         tabbedPane.setSelectedIndex(selectedTab);
 
-
-        JPanel functionSelectorPanel = createSelectorPanel(-1, window.getFunctionNames().size(),
-                window.getFunctionNames(), 0);
-        JPanel nodeSelectorPanel = createSelectorPanel(0, ppTrial.getDataSource().getNumThreads(),
-                window.getThreadNames(), 1);
+        JPanel functionSelectorPanel = createSelectorPanel(-1, window.getFunctionNames().size(), window.getFunctionNames(), 0);
+        JPanel nodeSelectorPanel = createSelectorPanel(0, ppTrial.getDataSource().getNumThreads(), window.getThreadNames(), 1);
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
@@ -530,7 +513,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         heightValueField.setEditable(false);
         colorValueField.setEditable(false);
-        
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0.0;
@@ -558,7 +540,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         return regularPanel;
     }
 
-   
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
@@ -570,8 +551,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 String arg = evt.getActionCommand();
                 Plot plot = window.getPlot();
 
-                if (settings.getVisType() == VisType.BAR_PLOT
-                        || settings.getVisType() == VisType.TRIANGLE_MESH_PLOT) {
+                if (settings.getVisType() == VisType.BAR_PLOT || settings.getVisType() == VisType.TRIANGLE_MESH_PLOT) {
                     settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
                     settings.setRegularAim(visRenderer.getAim());
                     settings.setRegularEye(visRenderer.getEye());

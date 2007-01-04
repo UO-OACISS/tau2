@@ -14,12 +14,13 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 
 
 /**
- * A BarChartModel for doing A) One function across threads, or 
- * B) One function across all phases (for one thread).
+ * A BarChartModel for doing...
+ *  1) One function across threads, or 
+ *  2) One function across all phases (for one thread).
  * 
- * <P>CVS $Id: FunctionBarChartModel.java,v 1.3 2006/03/30 03:03:54 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartModel.java,v 1.4 2007/01/04 01:55:32 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 
 public class FunctionBarChartModel extends AbstractBarChartModel {
@@ -148,7 +149,7 @@ public class FunctionBarChartModel extends AbstractBarChartModel {
             } else {
                 FunctionBarChartWindow threadDataWindow = new FunctionBarChartWindow(window.getPpTrial(),
                         ppFunctionProfile.getThread(), function.getParentPhase(), owner);
-                threadDataWindow.show();
+                threadDataWindow.setVisible(true);
             }
         }
     }

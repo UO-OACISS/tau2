@@ -15,17 +15,18 @@ import edu.uoregon.tau.paraprof.barchart.*;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.SortListener;
 import edu.uoregon.tau.perfdmf.Function;
 
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.11 2006/12/28 03:14:41 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.12 2007/01/04 01:55:31 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  * @see GlobalBarChartModel
  */
-public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
+public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {
 
     private ParaProfTrial ppTrial;
     private Function phase; // null for non-phase profiles
@@ -146,20 +147,23 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
         optionsMenu.add(new JSeparator());
 
-        nameCheckBox.addActionListener(this);
-        optionsMenu.add(nameCheckBox);
+        //nameCheckBox.addActionListener(this);
+        //optionsMenu.add(nameCheckBox);
 
         normalizeCheckBox.addActionListener(this);
         optionsMenu.add(normalizeCheckBox);
 
-        orderByMeanCheckBox.addActionListener(this);
-        optionsMenu.add(orderByMeanCheckBox);
+//        orderByMeanCheckBox.addActionListener(this);
+//        optionsMenu.add(orderByMeanCheckBox);
 
         orderCheckBox.addActionListener(this);
         optionsMenu.add(orderCheckBox);
 
         stackBarsCheckBox.addActionListener(this);
         optionsMenu.add(stackBarsCheckBox);
+
+        optionsMenu.add(ParaProfUtils.createMetricSelectionMenu(ppTrial,"Select Metric...", false, false, dataSorter, this, true));
+        optionsMenu.add(ParaProfUtils.createMetricSelectionMenu(ppTrial,"Sort by...", true, false, dataSorter, this, true));
 
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
@@ -326,17 +330,21 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     }
 
     private void sortLocalData() {
-        dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
-        dataSorter.setValueType(ValueType.EXCLUSIVE);
+        //dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
+        //dataSorter.setValueType(ValueType.EXCLUSIVE);
 
-        if (nameCheckBox.isSelected()) {
-            dataSorter.setSortType(SortType.NAME);
-        } else {
-            if (orderByMeanCheckBox.isSelected()) {
-                dataSorter.setSortType(SortType.MEAN_VALUE);
-            } else {
-                dataSorter.setSortType(SortType.MEAN_VALUE);
-            }
+//        if (nameCheckBox.isSelected()) {
+//            dataSorter.setSortType(SortType.NAME);
+//        } else {
+//            if (orderByMeanCheckBox.isSelected()) {
+//                dataSorter.setSortType(SortType.MEAN_VALUE);
+//            } else {
+//                dataSorter.setSortType(SortType.MEAN_VALUE);
+//            }
+//        }
+
+        if (dataSorter.getSortType() == SortType.VALUE) {
+            dataSorter.setSortType(SortType.MEAN_VALUE);
         }
         dataSorter.setDescendingOrder(orderCheckBox.isSelected());
         model.reloadData();
@@ -460,6 +468,11 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             panel.getBarChart().setStacked(false);
         }
 
+        sortLocalData();
+        panel.repaint();
+    }
+
+    public void resort() {
         sortLocalData();
         panel.repaint();
     }

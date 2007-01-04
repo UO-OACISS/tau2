@@ -1,25 +1,25 @@
 package edu.uoregon.tau.paraprof.barchart;
 
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JPopupMenu;
 
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.Thread;
 
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.8 2006/12/28 03:14:42 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.9 2007/01/04 01:55:32 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -27,7 +27,10 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     private DataSorter dataSorter;
     private ParaProfTrial ppTrial;
 
-    private List threads = new ArrayList();
+    //private List threads = new ArrayList();
+
+    private FunctionOrdering functionOrder;
+    private List theThreads;
 
     public GlobalBarChartModel(GlobalDataWindow window, DataSorter dataSorter, ParaProfTrial ppTrial) {
         this.window = window;
@@ -36,63 +39,126 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     }
 
     public int getNumRows() {
-        return threads.size();
+        if (theThreads == null) {
+            return 0;
+        } else {
+            //        return threads.size();
+            return theThreads.size();
+        }
     }
 
     public int getSubSize() {
-        if (threads != null && threads.size() >= 1) {
-            return ((PPThread) threads.get(0)).getFunctionList().size();
+        //        if (threads != null && threads.size() >= 1) {
+        //            return ((List) threads.get(0)).size();
+        //        } else {
+        //            return 0;
+        //        }
+        if (functionOrder != null) {
+            return functionOrder.getOrder().length;
         } else {
             return 0;
         }
     }
 
-    public String getRowLabel(int row) {
-        PPThread ppThread = (PPThread) threads.get(row);
+    private static String getName(Thread thread) {
+        if (thread.getNodeID() == -1) {
+            return "mean";
+        } else if (thread.getNodeID() == -2) {
+            return "total";
+        } else if (thread.getNodeID() == -3) {
+            return "std. dev.";
+        } else {
+            return "n,c,t " + (thread.getNodeID()) + "," + (thread.getContextID()) + "," + (thread.getThreadID());
+        }
+    }
 
-        return ppThread.getName();
+    //    public String getRowLabel(int row) {
+    //        List fpList = (List) threads.get(row);
+    //        for (int i=0; i<fpList.size(); i++) {
+    //            if (fpList.get(i) != null) {
+    //                Thread thread = ((FunctionProfile)fpList.get(i)).getThread();
+    //                return getName(thread);
+    //            }
+    //        }
+    //        return "";
+    //    }
+
+    public String getRowLabel(int row) {
+        Thread thread = (Thread) theThreads.get(row);
+        return getName(thread);
     }
 
     public String getValueLabel(int row, int subIndex) {
-        // TODO Auto-generated method stub
         return "";
     }
 
+    //    public double getValue(int row, int subIndex) {
+    //        List fpList = (List) threads.get(row);
+    //        if (subIndex >= fpList.size()) {
+    //            return -1;
+    //        }
+    //        FunctionProfile fp = (FunctionProfile) fpList.get(subIndex);
+    //        if (fp == null) {
+    //            return -1;
+    //        } else {
+    //            return dataSorter.getValueType().getValue(fp, dataSorter.getSelectedMetricID());
+    //        }
+    //    }
+
     public double getValue(int row, int subIndex) {
-        PPThread ppThread = (PPThread) threads.get(row);
-        if (subIndex >= ppThread.getFunctionList().size()) {
-            return -1;
-        }
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) ppThread.getFunctionList().get(subIndex);
-        if (ppFunctionProfile == null) {
+        Thread thread = (Thread) theThreads.get(row);
+        Function function = functionOrder.getOrder()[subIndex];
+        FunctionProfile fp = thread.getFunctionProfile(function);
+        if (fp == null) {
             return -1;
         } else {
-            return ppFunctionProfile.getValue();
+            return dataSorter.getValueType().getValue(fp, dataSorter.getSelectedMetricID());
         }
     }
 
+    //    public Color getValueColor(int row, int subIndex) {
+    //        List fpList = (List) threads.get(row);
+    //        if (subIndex >= fpList.size()) {
+    //            return null;
+    //        }
+    //
+    //        FunctionProfile fp = (FunctionProfile) fpList.get(subIndex);
+    //        if (fp == null) {
+    //            return null;
+    //        } else {
+    //            return fp.getFunction().getColor();
+    //        }
+    //    }
     public Color getValueColor(int row, int subIndex) {
-        PPThread ppThread = (PPThread) threads.get(row);
-        if (subIndex >= ppThread.getFunctionList().size()) {
-            return null;
-        }
-
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) ppThread.getFunctionList().get(subIndex);
-        if (ppFunctionProfile == null) {
-            return null;
+        Thread thread = (Thread) theThreads.get(row);
+        Function function = functionOrder.getOrder()[subIndex];
+        FunctionProfile fp = thread.getFunctionProfile(function);
+        if (fp == null) {
+            return Color.black;
         } else {
-            return ppFunctionProfile.getColor();
+            return fp.getFunction().getColor();
         }
     }
 
+    //    public Color getValueHighlightColor(int row, int subIndex) {
+    //        List fpList = (List) threads.get(row);
+    //        if (subIndex >= fpList.size()) {
+    //            return null;
+    //        }
+    //
+    //        FunctionProfile fp = (FunctionProfile) fpList.get(subIndex);
+    //        Function function = fp.getFunction();
+    //        if (function == (ppTrial.getHighlightedFunction())) {
+    //            return ppTrial.getColorChooser().getHighlightColor();
+    //        } else if (function.isGroupMember(ppTrial.getHighlightedGroup())) {
+    //            return ppTrial.getColorChooser().getGroupHighlightColor();
+    //        }
+    //        return null;
+    //    }
     public Color getValueHighlightColor(int row, int subIndex) {
-        PPThread ppThread = (PPThread) threads.get(row);
-        if (subIndex >= ppThread.getFunctionList().size()) {
-            return null;
-        }
-
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) ppThread.getFunctionList().get(subIndex);
-        Function function = ppFunctionProfile.getFunction();
+        Thread thread = (Thread) theThreads.get(row);
+        Function function = functionOrder.getOrder()[subIndex];
+        FunctionProfile fp = thread.getFunctionProfile(function);
         if (function == (ppTrial.getHighlightedFunction())) {
             return ppTrial.getColorChooser().getHighlightColor();
         } else if (function.isGroupMember(ppTrial.getHighlightedGroup())) {
@@ -102,107 +168,94 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     }
 
     public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
-        PPThread ppThread = (PPThread) threads.get(row);
-        final PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) ppThread.getFunctionList().get(subIndex);
+        Thread thread = (Thread) theThreads.get(row);
+        Function function = functionOrder.getOrder()[subIndex];
+        FunctionProfile fp = thread.getFunctionProfile(function);
+        //       List fpList = (List) threads.get(row);
+        //        final FunctionProfile fp = (FunctionProfile) fpList.get(subIndex);
         if (ParaProfUtils.rightClick(e)) { // Bring up context menu
-            JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(),
-                    ppThread.getThread(), owner);
-
-            popup.add(new JSeparator());
-
-            JMenuItem menuItem = new JMenuItem("Move to Front");
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    try {
-
-                        Function function = ppFunctionProfile.getFunction();
-                        int targetIndex = -1;
-
-                        for (Iterator it = threads.iterator(); it.hasNext();) {
-                            PPThread ppThread = (PPThread) it.next();
-
-                            List flist = ppThread.getFunctionList();
-
-                            for (int fIndex = 0; fIndex < flist.size(); fIndex++) {
-                                PPFunctionProfile fp = (PPFunctionProfile) flist.get(fIndex);
-                                if (fp != null && fp.getFunction() == function) {
-                                    targetIndex = fIndex;
-                                }
-                            }
-                        }
-
-                        if (targetIndex != -1) {
-                            for (Iterator it = threads.iterator(); it.hasNext();) {
-                                PPThread ppThread = (PPThread) it.next();
-
-                                List flist = ppThread.getFunctionList();
-
-                                Object item = flist.remove(targetIndex);
-                                flist.add(0, item);
-                                fireModelChanged();
-                                window.repaint();
-                            }
-                        }
-                    } catch (Exception e) {
-                        ParaProfUtils.handleException(e);
-                    }
-                }
-
-            });
-
-            popup.add(menuItem);
+            JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, fp.getFunction(), fp.getThread(), owner);
 
             popup.show(owner, e.getX(), e.getY());
         } else {
-            ppTrial.setHighlightedFunction(ppFunctionProfile.getFunction());
-            FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, ppFunctionProfile.getFunction(),
-                    owner);
-            functionDataWindow.show();
+            ppTrial.setHighlightedFunction(fp.getFunction());
+            FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, fp.getFunction(), owner);
+            functionDataWindow.setVisible(true);
         }
     }
 
     public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
-        PPThread ppThread = (PPThread) threads.get(row);
+        //        List fpList = (List) threads.get(row);
+        //        Thread thread = ((FunctionProfile)fpList.get(0)).getThread();
+        Thread thread = (Thread) theThreads.get(row);
+
         if (ParaProfUtils.rightClick(e)) { // Bring up context menu
-            ParaProfUtils.handleThreadClick(ppTrial, window.getPhase(), ppThread.getThread(), owner, e);
+            ParaProfUtils.handleThreadClick(ppTrial, window.getPhase(), thread, owner, e);
         } else {
-            FunctionBarChartWindow threadDataWindow = new FunctionBarChartWindow(ppTrial, ppThread.getThread(),
-                    window.getPhase(), owner);
-            threadDataWindow.show();
+            FunctionBarChartWindow threadDataWindow = new FunctionBarChartWindow(ppTrial, thread, window.getPhase(), owner);
+            threadDataWindow.setVisible(true);
         }
 
     }
 
-    public String getValueToolTipText(int row, int subIndex) {
-        PPThread ppThread = (PPThread) threads.get(row);
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) ppThread.getFunctionList().get(subIndex);
+    // handles reversed callpaths
+    private static String getDisplayName(FunctionProfile functionProfile) {
+        if (ParaProf.preferences.getReversedCallPaths()) {
+            return functionProfile.getFunction().getReversedName();
+        } else {
+            return functionProfile.getFunction().getName();
+        }
+    }
 
+    public String getValueToolTipText(int row, int subIndex) {
+        //        List fpList = (List) threads.get(row);
+        //        FunctionProfile fp = (FunctionProfile) fpList.get(subIndex);
+        Thread thread = (Thread) theThreads.get(row);
+        Function function = functionOrder.getOrder()[subIndex];
+        FunctionProfile fp = thread.getFunctionProfile(function);
+
+        String name;
         if (ppTrial.getDataSource().getPhasesPresent()) {
 
             //return "Other Patches";
 
             // we can't use PPFunctionProfile's getFunctionName since the callpath might be reversed
             //return UtilFncs.getRightSide(ppFunctionProfile.getFunctionName());
-            return UtilFncs.getRightSide(ppFunctionProfile.getFunction().getName());
+            name = UtilFncs.getRightSide(fp.getFunction().getName());
         } else {
             //Return the name of the function
-            return ppFunctionProfile.getDisplayName();
+            name = getDisplayName(fp);
         }
+
+        String metricName = ppTrial.getMetricName(dataSorter.getSelectedMetricID());
+
+        int metricID = dataSorter.getSelectedMetricID();
+
+        String exclusive = "<br>Exclusive " + metricName + ": " + fp.getExclusive(metricID);
+        String inclusive = "<br>Inclusive " + metricName + ": " + fp.getInclusive(metricID);
+        String calls = "<br>Calls: " + fp.getNumCalls();
+        String subr = "<br>SubCalls: " + fp.getNumSubr();
+
+        return "<html>" + name + exclusive + inclusive + calls + subr + "</html>";
+
     }
 
     public String getRowLabelToolTipText(int row) {
+        Thread thread = (Thread) theThreads.get(row);
 
-        PPThread ppThread = (PPThread) threads.get(row);
+        //        List fpList = (List) threads.get(row);
+        //        edu.uoregon.tau.perfdmf.Thread thread = ((FunctionProfile)fpList.get(0)).getThread();
 
         if (ParaProf.getHelpWindow().isShowing()) {
             ParaProf.getHelpWindow().clearText();
-            if (ppThread.getNodeID() == -1) {
+            if (thread.getNodeID() == -1) {
                 ParaProf.getHelpWindow().writeText("This line represents the mean statistics (over all threads).\n");
 
-            } else if (ppThread.getNodeID() == -2) {
+            } else if (thread.getNodeID() == -2) {
 
-            } else if (ppThread.getNodeID() == -3) {
-                ParaProf.getHelpWindow().writeText("This line represents the standard deviation of each function (over threads).\n");
+            } else if (thread.getNodeID() == -3) {
+                ParaProf.getHelpWindow().writeText(
+                        "This line represents the standard deviation of each function (over threads).\n");
 
             } else {
                 ParaProf.getHelpWindow().writeText("n,c,t stands for: Node, Context and Thread.\n");
@@ -215,36 +268,37 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     }
 
     public void reloadData() {
-        threads.clear(); // help the GC
-        threads = dataSorter.getAllFunctionProfiles();
-
-        if (threads.size() > 1 && !window.getStackBars()) { // insert dummies
-            List mean = ((PPThread) threads.get(0)).getFunctionList();
-            for (int i = 0; i < threads.size(); i++) {
-                PPThread thread = (PPThread) threads.get(i);
-
-                List thisThread = thread.getFunctionList();
-
-                int meanIndex = 0;
-
-                int index = 0;
-
-                while (meanIndex < mean.size()) {
-                    Function meanComparison = ((PPFunctionProfile) mean.get(meanIndex)).getFunction();
-                    //while (((PPFunctionProfile) thisThread.get(index)).getFunction() != meanComparison) {
-
-                    if (index >= thisThread.size()) {
-                        thisThread.add(index, null);
-                    } else {
-                        if (((PPFunctionProfile) thisThread.get(index)).getFunction() != meanComparison) {
-                            thisThread.add(index, null);
-                        }
-                    }
-                    index++;
-                    meanIndex++;
-                }
-            }
-        }
+        functionOrder = dataSorter.getOrdering();
+        theThreads = dataSorter.getThreads();
+        //        
+        //        threads = dataSorter.getAllFunctionProfilesMinimal();
+        //        
+        //
+        //        if (threads.size() > 1 && !window.getStackBars()) { // insert dummies
+        //            List mean = (List) threads.get(0);
+        //            for (int i = 0; i < threads.size(); i++) {
+        //                List thread = (List) threads.get(i);
+        //
+        //                int meanIndex = 0;
+        //
+        //                int index = 0;
+        //
+        //                while (meanIndex < mean.size()) {
+        //                    Function meanComparison = ((FunctionProfile) mean.get(meanIndex)).getFunction();
+        //                    //while (((PPFunctionProfile) thisThread.get(index)).getFunction() != meanComparison) {
+        //
+        //                    if (index >= thread.size()) {
+        //                        thread.add(index, null);
+        //                    } else {
+        //                        if (((FunctionProfile) thread.get(index)).getFunction() != meanComparison) {
+        //                            thread.add(index, null);
+        //                        }
+        //                    }
+        //                    index++;
+        //                    meanIndex++;
+        //                }
+        //            }
+        //        }
         fireModelChanged();
     }
 
@@ -252,17 +306,19 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         if (ParaProf.getHelpWindow().isShowing()) {
             ParaProf.getHelpWindow().clearText();
             ParaProf.getHelpWindow().writeText("Your mouse is over the misc. function section!\n");
-            ParaProf.getHelpWindow().writeText("These are functions which have a non zero value,"
-                    + " but whose screen representation is less than a pixel.\n");
-            ParaProf.getHelpWindow().writeText("To view these function, right or left click to the left of"
-                    + " this bar to bring up windows which will show more detailed information.");
+            ParaProf.getHelpWindow().writeText(
+                    "These are functions which have a non zero value,"
+                            + " but whose screen representation is less than a pixel.\n");
+            ParaProf.getHelpWindow().writeText(
+                    "To view these function, right or left click to the left of"
+                            + " this bar to bring up windows which will show more detailed information.");
         }
 
         return "Misc function section ... see help window for details";
     }
 
     public List getThreads() {
-        return threads;
+        return theThreads;
     }
 
 }

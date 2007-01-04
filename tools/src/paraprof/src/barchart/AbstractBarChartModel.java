@@ -54,8 +54,11 @@ public abstract class AbstractBarChartModel implements BarChartModel {
     public void fireModelChanged() {
         // Guaranteed to return a non-null array
         Object[] listeners = listenerList.getListenerList();
+
         // Process the listeners last to first, notifying
         // those that are interested in this event
+        
+        // The reason for this somewhat convoluted loop is best seen by looking at the source to EventListenerList
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i] == BarChartModelListener.class) {
                 ((BarChartModelListener) listeners[i + 1]).barChartChanged();

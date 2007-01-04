@@ -19,9 +19,9 @@ import edu.uoregon.tau.paraprof.Searcher;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.7 2006/12/04 22:35:08 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.8 2007/01/04 01:55:32 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, MouseMotionListener, BarChartModelListener {
@@ -373,6 +373,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         if (dataProcessed) {
             return;
         }
+        //long time = System.currentTimeMillis();
 
         dataProcessed = true;
         maxRowValues = new double[model.getNumRows()];
@@ -404,6 +405,8 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
             maxSubSum += value;
         }
 
+        //time = (System.currentTimeMillis()) - time;
+        //System.out.println("Time for processData : " + time);
     }
 
     // returns a "lighter" color
@@ -432,6 +435,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
 
             g2D.fillRect(x, y, length, height - 1);
 
+            
             g2D.setColor(lighter(color));
 
             int innerHeight = height / 4;
@@ -721,9 +725,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
             autoWidth = getParent().getWidth();
         }
 
-        if (barLengthMultiple == 0) {
-            sizeChanged();
-        }
+        
 
         //        System.out.println("\n");
         //        System.out.println("getHeight = " + fontMetrics.getHeight());
@@ -734,6 +736,10 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         //        System.out.println("getLeading = " + fontMetrics.getLeading());
 
         processData();
+        
+        if (barLengthMultiple == 0) {
+            sizeChanged();
+        }
         int fulcrum;
 
         if (leftJustified) {
@@ -829,6 +835,8 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         maxRowLabelStringWidthSet = false;
         dataProcessed = false;
         setSearchLines();
+        // hacky way to trigger recomputation in sizeChanged(), can't do right it now
+        barLengthMultiple = 0;
         this.repaint();
     }
 

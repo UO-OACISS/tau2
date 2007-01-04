@@ -23,9 +23,9 @@ import edu.uoregon.tau.paraprof.interfaces.Searchable;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: Searcher.java,v 1.5 2006/05/09 22:57:52 amorris Exp $</P>
+ * <P>CVS $Id: Searcher.java,v 1.6 2007/01/04 01:55:32 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class Searcher implements Searchable, MouseListener, MouseMotionListener, ClipboardOwner {
 
@@ -257,6 +257,9 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
         String text = (String) searchLines.get(line);
         String originalText = (String) searchLines.get(line);
 
+        if (text.length() < 1) {
+            return;
+        }
         TextLayout textLayout = new TextLayout(text, g2D.getFont(), g2D.getFontRenderContext());
 
         String localSearchString = searchString;

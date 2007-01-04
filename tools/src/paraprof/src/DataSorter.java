@@ -14,15 +14,13 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.4 2006/11/29 20:09:46 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.5 2007/01/04 01:55:31 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
-public class DataSorter {
+public class DataSorter implements Comparator {
 
     private ParaProfTrial ppTrial = null;
-    private double maxExclusiveSum = 0;
-    private double maxExclusives[];
 
     private int selectedMetricID;
     private ValueType valueType;
@@ -33,48 +31,21 @@ public class DataSorter {
     private ValueType sortValueType;
     private int sortMetric;
     private boolean sortByVisible = true;
-    
+
     private Function phase;
-    
+
     private static SortType defaultSortType = SortType.MEAN_VALUE;
     private static ValueType defaultValueType = ValueType.EXCLUSIVE;
     private static boolean defaultSortOrder = true;
-    
+
     public DataSorter(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
         this.selectedMetricID = ppTrial.getDefaultMetricID();
-    
+
         this.sortType = DataSorter.defaultSortType;
         this.valueType = DataSorter.defaultValueType;
         this.sortValueType = DataSorter.defaultValueType;
         this.descendingOrder = DataSorter.defaultSortOrder;
-    }
-
-    
-    public static void setDefaultSortType(SortType sortType) {
-        DataSorter.defaultSortType = sortType;
-    }
-
-    public static void setDefaultValueType(ValueType valueType) {
-        DataSorter.defaultValueType = valueType;
-    }
-    
-    public static void setDefaultSortOrder(boolean order) {
-        DataSorter.defaultSortOrder = order;
-    }
-    
-    
-    
-    public void setPhase(Function phase) {
-        this.phase = phase;
-    }
-
-    public UserEventValueType getUserEventValueType() {
-        return userEventValueType;
-    }
-
-    public void setUserEventValueType(UserEventValueType userEventValueType) {
-        this.userEventValueType = userEventValueType;
     }
 
     public boolean isTimeMetric() {
@@ -96,40 +67,7 @@ public class DataSorter {
         return ppTrial.getMetric(this.getSelectedMetricID()).getDerivedMetric();
     }
 
-    public void setSelectedMetricID(int metric) {
-        this.selectedMetricID = metric;
-    }
-
-    public int getSelectedMetricID() {
-        return selectedMetricID;
-    }
-
-    public void setDescendingOrder(boolean descendingOrder) {
-        this.descendingOrder = descendingOrder;
-    }
-
-    public boolean getDescendingOrder() {
-        return this.descendingOrder;
-    }
-
-
-    public void setSortType(SortType sortType) {
-        this.sortType = sortType;
-    }
-
-    public SortType getSortType() {
-        return this.sortType;
-    }
-
-    public void setValueType(ValueType valueType) {
-        this.valueType = valueType;
-    }
-
-    public ValueType getValueType() {
-        return this.valueType;
-    }
-
-    public List getUserEventProfiles(edu.uoregon.tau.perfdmf.Thread thread) {
+    public List getUserEventProfiles(Thread thread) {
 
         UserEventProfile userEventProfile = null;
         List list = thread.getUserEventProfiles();
@@ -147,7 +85,7 @@ public class DataSorter {
         return newList;
     }
 
-    public List getFunctionProfiles(edu.uoregon.tau.perfdmf.Thread thread) {
+    public List getFunctionProfiles(Thread thread) {
         List newList = null;
 
         List functionList = thread.getFunctionProfiles();
@@ -165,18 +103,40 @@ public class DataSorter {
         Collections.sort(newList);
         return newList;
     }
+    
+    
+    public List getBasicFunctionProfiles(Thread thread) {
+
+        List newList = null;
+
+        List functionList = thread.getFunctionProfiles();
+        newList = new ArrayList();
+
+        for (int i = 0; i < functionList.size(); i++) {
+            FunctionProfile functionProfile = (FunctionProfile) functionList.get(i);
+            if (functionProfile != null) {
+                newList.add(functionProfile);
+            }
+        }
+        Collections.sort(newList, this);
+        return newList;
+    }
 
     public List getAllFunctionProfiles() {
+        long time = System.currentTimeMillis();
+
         List threads = new ArrayList();
-        edu.uoregon.tau.perfdmf.Thread thread;
+        Thread thread;
         PPThread ppThread;
+
+        PPThread order = null;
 
         // if there is only one thread, don't show mean and stddev
         if (ppTrial.getDataSource().getAllThreads().size() > 1) {
             thread = ppTrial.getDataSource().getStdDevData();
             ppThread = new PPThread(thread, this.ppTrial);
-            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
-                FunctionProfile functionProfile = (FunctionProfile) e4.next();
+            for (Iterator it = thread.getFunctionProfiles().iterator(); it.hasNext();) {
+                FunctionProfile functionProfile = (FunctionProfile) it.next();
                 if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
                         && functionProfile.getFunction().isPhaseMember(phase)) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
@@ -188,8 +148,8 @@ public class DataSorter {
 
             thread = ppTrial.getDataSource().getMeanData();
             ppThread = new PPThread(thread, this.ppTrial);
-            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
-                FunctionProfile functionProfile = (FunctionProfile) e4.next();
+            for (Iterator it = thread.getFunctionProfiles().iterator(); it.hasNext();) {
+                FunctionProfile functionProfile = (FunctionProfile) it.next();
                 if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
                         && functionProfile.getFunction().isPhaseMember(phase)) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
@@ -199,79 +159,195 @@ public class DataSorter {
             Collections.sort(ppThread.getFunctionList());
             threads.add(ppThread);
 
-//            thread = ppTrial.getDataSource().getTotalData();
-//            ppThread = new PPThread(thread, this.ppTrial);
-//            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
-//                FunctionProfile functionProfile = (FunctionProfile) e4.next();
-//                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
-//                        && functionProfile.getFunction().isPhaseMember(phase)) {
-//                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-//                    ppThread.addFunction(ppFunctionProfile);
-//                }
-//            }
-//            Collections.sort(ppThread.getFunctionList());
-//            threads.add(ppThread);
+            order = ppThread;
+
+            //            thread = ppTrial.getDataSource().getTotalData();
+            //            ppThread = new PPThread(thread, this.ppTrial);
+            //            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
+            //                FunctionProfile functionProfile = (FunctionProfile) e4.next();
+            //                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
+            //                        && functionProfile.getFunction().isPhaseMember(phase)) {
+            //                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+            //                    ppThread.addFunction(ppFunctionProfile);
+            //                }
+            //            }
+            //            Collections.sort(ppThread.getFunctionList());
+            //            threads.add(ppThread);
 
         }
-
-        // reset this in case we are switching metrics
-        maxExclusiveSum = 0;
-
-        maxExclusives = new double[ppTrial.getDataSource().getNumFunctions()];
 
         for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+            thread = (Thread) it.next();
 
-            //Counts the number of ppFunctionProfiles that are actually added.
-            //It is possible (because of selection criteria - groups for example) to filter
-            //out all functions on a particular thread. The default at present is not to add.
-
-            int counter = 0; //Counts the number of PPFunctionProfile that are actually added.
             ppThread = new PPThread(thread, this.ppTrial);
+            for (Iterator it2 = order.getFunctionListIterator(); it2.hasNext();) {
+                PPFunctionProfile orderfp = (PPFunctionProfile) it2.next();
 
-            double sum = 0.0;
+                FunctionProfile fp = thread.getFunctionProfile(orderfp.getFunction());
 
-            //Do not add thread to the context until we have verified counter is not zero (done after next loop).
-            //Now enter the thread data loops for this thread.
-            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
-                FunctionProfile functionProfile = (FunctionProfile) e4.next();
-                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
-                        && functionProfile.getFunction().isPhaseMember(phase)) {
-                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                    ppThread.addFunction(ppFunctionProfile);
-                    counter++;
-
-                    sum += ppFunctionProfile.getExclusiveValue();
-
-                    maxExclusives[functionProfile.getFunction().getID()] = Math.max(
-                            maxExclusives[functionProfile.getFunction().getID()], ppFunctionProfile.getExclusiveValue());
+                if (fp != null) {
+                    ppThread.addFunction(new PPFunctionProfile(this, thread, fp));
                 }
             }
-
-            if (sum > maxExclusiveSum) {
-                maxExclusiveSum = sum;
+            if (ppThread.getFunctionList().size() > 0) {
+                threads.add(ppThread);
             }
 
-            // sort thread and add to the list
-            if (counter != 0) {
-                Collections.sort(ppThread.getFunctionList());
-                threads.add(ppThread);
+        }
+
+        //        for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+        //            thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+        //
+        //            //Counts the number of ppFunctionProfiles that are actually added.
+        //            //It is possible (because of selection criteria - groups for example) to filter
+        //            //out all functions on a particular thread. The default at present is not to add.
+        //
+        //            int counter = 0; //Counts the number of PPFunctionProfile that are actually added.
+        //            ppThread = new PPThread(thread, this.ppTrial);
+        //
+        //            //Do not add thread to the context until we have verified counter is not zero (done after next loop).
+        //            //Now enter the thread data loops for this thread.
+        //            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
+        //                FunctionProfile functionProfile = (FunctionProfile) e4.next();
+        //                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
+        //                        && functionProfile.getFunction().isPhaseMember(phase)) {
+        //                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+        //                    ppThread.addFunction(ppFunctionProfile);
+        //                    counter++;
+        //                }
+        //            }
+        //
+        //            // sort thread and add to the list
+        //            if (counter != 0) {
+        //                Collections.sort(ppThread.getFunctionList());
+        //                threads.add(ppThread);
+        //            }
+        //        }
+
+        //        if (ppTrial.getDataSource().getAllThreads().size() > 1 && threads.size() == 4) {
+        //            threads.remove(0);
+        //            threads.remove(0);
+        //            threads.remove(0);
+        //        }
+
+        time = (System.currentTimeMillis()) - time;
+        //System.out.println("Time for getAllFunctionProfiles : " + time);
+
+        return threads;
+    }
+
+    private void addThread(List threads, List order, Thread thread) {
+
+        List list = new ArrayList();
+
+        for (int i = 0, n = order.size(); i < n; i++) {
+            FunctionProfile orderfp = (FunctionProfile) order.get(i);
+
+            FunctionProfile fp = thread.getFunctionProfile(orderfp.getFunction());
+
+            if (fp != null) {
+                list.add(fp);
+            }
+        }
+        if (list.size() > 0) {
+            threads.add(list);
+        }
+
+    }
+
+    /**
+     * Constructs a list of ordered lists of FunctionProfiles for all threads
+     *
+     * @return a list of lists of FunctionProfiles
+     */
+    public List getAllFunctionProfilesMinimal() {
+        long time = System.currentTimeMillis();
+
+        // a list of lists of FunctionProfiles
+        List threads = new ArrayList();
+
+        // a list of FunctionProfiles that represents the ordering
+        List order = new ArrayList();
+
+        List meanProfiles = ppTrial.getDataSource().getMeanData().getFunctionProfiles();
+
+        for (int i = 0, n = meanProfiles.size(); i < n; i++) {
+            FunctionProfile functionProfile = (FunctionProfile) meanProfiles.get(i);
+            if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
+                    && functionProfile.getFunction().isPhaseMember(phase)) {
+                order.add(functionProfile);
             }
         }
 
-//        if (ppTrial.getDataSource().getAllThreads().size() > 1 && threads.size() == 4) {
-//            threads.remove(0);
-//            threads.remove(0);
-//            threads.remove(0);
-//        }
+        // sort the list
+        Collections.sort(order, this);
 
+        // add the pseudo-thread std. dev.
+        addThread(threads, order, ppTrial.getDataSource().getStdDevData());
+
+        // add the mean thread, already sorted
+        threads.add(order);
+
+        // add all the other threads
+        for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = (Thread) it.next();
+            addThread(threads, order, thread);
+        }
+
+        time = (System.currentTimeMillis()) - time;
+        //System.out.println("Time for getAllFunctionProfilesMinimal : " + time);
+
+        return threads;
+    }
+    
+    public FunctionOrdering getOrdering() {
+        long time = System.currentTimeMillis();
+
+        List order = new ArrayList();
+
+        List meanProfiles = ppTrial.getDataSource().getMeanData().getFunctionProfiles();
+
+        for (int i = 0, n = meanProfiles.size(); i < n; i++) {
+            FunctionProfile functionProfile = (FunctionProfile) meanProfiles.get(i);
+            if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
+                    && functionProfile.getFunction().isPhaseMember(phase)) {
+                order.add(functionProfile);
+            }
+        }
+
+        Collections.sort(order, this);
+
+        Function functions[] = new Function[order.size()];
+        for (int i =0, n=order.size(); i<n; i++) {
+            functions[i] = ((FunctionProfile) order.get(i)).getFunction();
+        }
+
+        FunctionOrdering fo = new FunctionOrdering(this);
+        fo.setFunctions(functions);
+
+        time = (System.currentTimeMillis()) - time;
+        //System.out.println("Time for getOrdering : " + time);
+
+        return fo;
+    }
+    
+    public List getThreads() {
+        ArrayList threads = new ArrayList();
+        threads.add(ppTrial.getDataSource().getStdDevData());
+        threads.add(ppTrial.getDataSource().getMeanData());
+        
+        // add all the other threads
+        for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = (Thread) it.next();
+            threads.add(thread);
+        }
         return threads;
     }
 
     public List getFunctionData(Function function, boolean includeMean, boolean includeStdDev) {
         List newList = new ArrayList();
 
-        edu.uoregon.tau.perfdmf.Thread thread;
+        Thread thread;
 
         if (ppTrial.getDataSource().getAllThreads().size() > 1) {
             if (includeMean) {
@@ -293,18 +369,18 @@ public class DataSorter {
                     newList.add(ppFunctionProfile);
                 }
 
-//                thread = ppTrial.getDataSource().getTotalData();
-//                functionProfile = thread.getFunctionProfile(function);
-//                if (functionProfile != null) {
-//                    //Create a new thread data object.
-//                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-//                    newList.add(ppFunctionProfile);
-//                }
+                //                thread = ppTrial.getDataSource().getTotalData();
+                //                functionProfile = thread.getFunctionProfile(function);
+                //                if (functionProfile != null) {
+                //                    //Create a new thread data object.
+                //                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                //                    newList.add(ppFunctionProfile);
+                //                }
 
             }
         }
         for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+            thread = (Thread) it.next();
             FunctionProfile functionProfile = thread.getFunctionProfile(function);
             if (functionProfile != null) {
                 //Create a new thread data object.
@@ -321,16 +397,16 @@ public class DataSorter {
 
         String functionName = function.getName();
         if (function.isCallPathFunction()) {
-            functionName = functionName.substring(functionName.indexOf("=>")+2).trim();
+            functionName = functionName.substring(functionName.indexOf("=>") + 2).trim();
         }
-        
+
         for (Iterator it = thread.getFunctionProfileIterator(); it.hasNext();) {
             FunctionProfile functionProfile = (FunctionProfile) it.next();
             if (functionProfile != null) {
 
                 if (functionProfile.isCallPathFunction()) {
                     String name = functionProfile.getName();
-                    name = name.substring(name.indexOf("=>")+2).trim();
+                    name = name.substring(name.indexOf("=>") + 2).trim();
                     if (functionName.compareTo(name) == 0) {
                         PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                         newList.add(ppFunctionProfile);
@@ -363,9 +439,8 @@ public class DataSorter {
             newList.add(ppUserEventProfile);
         }
 
-        
         for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+            thread = (Thread) it.next();
 
             userEventProfile = thread.getUserEventProfile(userEvent);
             if (userEventProfile != null) {
@@ -377,14 +452,93 @@ public class DataSorter {
         return newList;
     }
 
-    // returns the maximum exclusive sum over all threads
-    public double getMaxExclusiveSum() {
-        return maxExclusiveSum;
+    //////////////////////////////////////////////////////////////////////////
+    // Comparison stuff
+    //////////////////////////////////////////////////////////////////////////
+
+    public int compare(Object arg0, Object arg1) {
+        FunctionProfile left = (FunctionProfile) arg0;
+        FunctionProfile right = (FunctionProfile) arg1;
+        if (descendingOrder) {
+            return -performComparison(left, right);
+        }
+        return performComparison(left, right);
     }
 
-    public double[] getMaxExclusives() {
-        return maxExclusives;
+    private int performComparison(FunctionProfile left, FunctionProfile right) {
+        ValueType type = getSortValueType();
+
+        if (sortType == SortType.NAME) {
+            return getDisplayName(right).compareTo(getDisplayName(left));
+
+        } else if (sortType == SortType.NCT) {
+            return compareNCT(left, right);
+
+        } else if (sortType == SortType.MEAN_VALUE) {
+            return compareToHelper(type.getValue(left.getFunction().getMeanProfile(), getSortMetric()), type.getValue(
+                    right.getFunction().getMeanProfile(), getSortMetric()), left.getFunction().getMeanProfile(),
+                    right.getFunction().getMeanProfile());
+
+        } else if (sortType == SortType.VALUE) {
+            return compareToHelper(type.getValue(left, getSortMetric()), type.getValue(right, getSortMetric()));
+        } else {
+            throw new ParaProfException("Unexpected sort type: " + sortType);
+        }
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Static Comparison stuff
+    //////////////////////////////////////////////////////////////////////////
+
+    // handles reversed callpaths
+    public static String getDisplayName(FunctionProfile functionProfile) {
+        if (ParaProf.preferences.getReversedCallPaths()) {
+            return functionProfile.getFunction().getReversedName();
+        } else {
+            return functionProfile.getFunction().getName();
+        }
+    }
+
+    private static int compareNCT(FunctionProfile left, FunctionProfile right) {
+        Thread l = left.getThread();
+        Thread r = right.getThread();
+        if (l.getNodeID() != r.getNodeID()) {
+            return l.getNodeID() - r.getNodeID();
+        } else if (l.getContextID() != r.getContextID()) {
+            return l.getContextID() - r.getContextID();
+        } else {
+            return l.getThreadID() - r.getThreadID();
+        }
+    }
+
+    private static int compareToHelper(double d1, double d2) {
+        double result = d1 - d2;
+        if (result < 0.00) {
+            return -1;
+        } else if (result == 0.00) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    private static int compareToHelper(double d1, double d2, FunctionProfile f1, FunctionProfile f2) {
+        double result = d1 - d2;
+        if (result < 0.00) {
+            return -1;
+        } else if (result == 0.00) {
+            // this is here to make sure that things get sorted the same for mean and other threads
+            // in the case of callpath profiles, multiple functionProfiles may have the same values
+            // we need them in the same order for everyone
+            return f1.getFunction().compareTo(f2.getFunction());
+        } else {
+            return 1;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Getters/Setters
+    //////////////////////////////////////////////////////////////////////////
 
     public Function getPhase() {
         return phase;
@@ -398,7 +552,6 @@ public class DataSorter {
         this.ppTrial = ppTrial;
     }
 
-
     public int getSortMetric() {
         if (getSortByVisible()) {
             return selectedMetricID;
@@ -407,11 +560,9 @@ public class DataSorter {
         }
     }
 
-
     public void setSortMetric(int sortMetric) {
         this.sortMetric = sortMetric;
     }
-
 
     public ValueType getSortValueType() {
         if (getSortByVisible()) {
@@ -421,19 +572,75 @@ public class DataSorter {
         }
     }
 
-
     public void setSortValueType(ValueType sortValueType) {
         this.sortValueType = sortValueType;
     }
-
 
     public boolean getSortByVisible() {
         return sortByVisible;
     }
 
-
     public void setSortByVisible(boolean sortByVisible) {
         this.sortByVisible = sortByVisible;
     }
 
+    public void setSelectedMetricID(int metric) {
+        this.selectedMetricID = metric;
+    }
+
+    public int getSelectedMetricID() {
+        return selectedMetricID;
+    }
+
+    public void setDescendingOrder(boolean descendingOrder) {
+        this.descendingOrder = descendingOrder;
+    }
+
+    public boolean getDescendingOrder() {
+        return this.descendingOrder;
+    }
+
+    public void setSortType(SortType sortType) {
+        this.sortType = sortType;
+    }
+
+    public SortType getSortType() {
+        return this.sortType;
+    }
+
+    public void setValueType(ValueType valueType) {
+        this.valueType = valueType;
+    }
+
+    public ValueType getValueType() {
+        return this.valueType;
+    }
+
+    public void setPhase(Function phase) {
+        this.phase = phase;
+    }
+
+    public UserEventValueType getUserEventValueType() {
+        return userEventValueType;
+    }
+
+    public void setUserEventValueType(UserEventValueType userEventValueType) {
+        this.userEventValueType = userEventValueType;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // static default stuff
+    //////////////////////////////////////////////////////////////////////////
+
+    public static void setDefaultSortType(SortType sortType) {
+        DataSorter.defaultSortType = sortType;
+    }
+
+    public static void setDefaultValueType(ValueType valueType) {
+        DataSorter.defaultValueType = valueType;
+    }
+
+    public static void setDefaultSortOrder(boolean order) {
+        DataSorter.defaultSortOrder = order;
+    }
 }
