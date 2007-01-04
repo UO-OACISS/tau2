@@ -456,7 +456,7 @@ public class DBConnector implements DB {
             ilpColumns[9] = "num_calls";
         }
         else if (this.getDBType().compareTo("mysql") == 0) {
-            ilpColumns[9] = "`call`";
+            ilpColumns[9] = "call";
         }
 
         if (checkTable(dbMeta, "interval_location_profile", ilpColumns) != 0)
