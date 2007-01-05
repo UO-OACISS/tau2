@@ -357,6 +357,7 @@ public class TestHarness {
 	}
 
 	public void testScripting() throws Exception {
+	/*
         Properties _scriptProp = new Properties();
         try {
             _scriptProp.load(new FileInputStream("etc/script.prop"));
@@ -378,7 +379,10 @@ public class TestHarness {
             System.err.println("Failed to execute test script");
             throw e;
         }
+	*/
+		edu.uoregon.tau.common.TauScripter.execfile("etc/test.py");
 	}
+		
 
 /*
 public RMIPerformanceResults getPerformanceResults(RMIPerfExplorerModel model) throws RemoteException;

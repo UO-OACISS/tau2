@@ -21,7 +21,7 @@ import java.util.Vector;
 /**
  * This class exists as a unit test of the PerfExplorerServer class.
  *
- * <P>CVS $Id: TestServer.java,v 1.8 2007/01/04 21:20:04 khuck Exp $</P>
+ * <P>CVS $Id: TestServer.java,v 1.9 2007/01/05 19:24:19 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -35,6 +35,7 @@ public class TestServer {
     }
 
     public void testScripting() throws Exception {
+	/*
         Properties _scriptProp = new Properties();
         try {
             _scriptProp.load(new FileInputStream("script.prop"));
@@ -56,6 +57,8 @@ public class TestServer {
             System.err.println("Failed to execute test script");
             throw e;
         }
+		*/
+		edu.uoregon.tau.common.TauScripter.execfile("etc/test.py");
 
     }
 
