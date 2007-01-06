@@ -192,7 +192,7 @@ public class HPMToolkitDataSource extends DataSource {
 
         functionProfile = thread.getFunctionProfile(function);
         if (functionProfile == null) {
-            functionProfile = new FunctionProfile(function);
+            functionProfile = new FunctionProfile(function, getNumberOfMetrics());
             thread.addFunctionProfile(functionProfile);
         }
 
@@ -315,7 +315,7 @@ public class HPMToolkitDataSource extends DataSource {
             initializeThread();
         } else {
             // thread.incrementStorage();
-            functionProfile.addMetric();
+            //functionProfile.addMetric();
         }
         // System.out.println("Hardwoare counter");
         StringTokenizer st1 = new StringTokenizer(string, ":");
@@ -382,7 +382,7 @@ public class HPMToolkitDataSource extends DataSource {
             initializeThread();
         } else {
             // thread.incrementStorage();
-            functionProfile.addMetric();
+            //functionProfile.addMetric();
         }
         StringTokenizer st1 = new StringTokenizer(string, ":");
         String metricName = st1.nextToken().trim(); // hardware counter name

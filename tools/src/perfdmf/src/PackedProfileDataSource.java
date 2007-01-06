@@ -9,9 +9,9 @@ import java.util.zip.GZIPInputStream;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.4 2006/12/28 03:05:59 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.5 2007/01/06 04:40:58 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -146,13 +146,13 @@ public class PackedProfileDataSource extends DataSource {
             for (int j = 0; j < numFunctionProfiles; j++) {
                 int functionID = p.readInt();
                 FunctionProfile fp = new FunctionProfile(functions[functionID], numMetrics);
+                thread.addFunctionProfile(fp);
                 fp.setNumCalls(p.readDouble());
                 fp.setNumSubr(p.readDouble());
                 for (int k = 0; k < numMetrics; k++) {
                     fp.setExclusive(k, p.readDouble());
                     fp.setInclusive(k, p.readDouble());
                 }
-                thread.addFunctionProfile(fp);
             }
 
             // get user event profiles

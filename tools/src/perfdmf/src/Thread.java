@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.4 2007/01/04 01:34:36 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.5 2007/01/06 04:40:58 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -26,9 +26,13 @@ public class Thread implements Comparable {
     private double maxNumSubr = 0;
     private boolean trimmed = false;
     private boolean relationsBuilt = false;
-    private int numMetrics = 0;
-    private static final int METRIC_SIZE = 6;
-
+    private int numMetrics = 1;
+    private static final int METRIC_SIZE = 7;
+    
+    public static final int MEAN = -1;
+    public static final int TOTAL = -2;
+    public static final int STDDEV = -3;
+    
     private List snapshots = new ArrayList();
 
     //    
@@ -68,7 +72,7 @@ public class Thread implements Comparable {
     }
 
     public int getNumMetrics() {
-        return this.numMetrics;
+        return numMetrics;
     }
 
     public void addMetric() {
@@ -79,7 +83,7 @@ public class Thread implements Comparable {
             newArray[i] = maxData[i];
         }
         maxData = newArray;
-        this.numMetrics++;
+        numMetrics++;
 
         for (Iterator it = getFunctionProfiles().iterator(); it.hasNext();) {
             FunctionProfile fp = (FunctionProfile) it.next();
@@ -89,9 +93,22 @@ public class Thread implements Comparable {
         }
     }
 
+  
+
     public Snapshot addSnapshot(String name) {
         Snapshot snapshot = new Snapshot(name, snapshots.size());
         snapshots.add(snapshot);
+        
+        
+        if (snapshots.size() > 1) {
+            for (Iterator e6 = functionProfiles.iterator(); e6.hasNext();) {
+                FunctionProfile fp = (FunctionProfile) e6.next();
+                if (fp != null) { // fp == null would mean this thread didn't call this function
+                    fp.addSnapshot();
+                }
+            }
+        }
+        
         return snapshot;
     }
 
@@ -100,7 +117,7 @@ public class Thread implements Comparable {
     }
 
     public int getNumSnapshots() {
-        return snapshots.size();
+        return Math.max(1,snapshots.size());
     }
 
     public void addFunctionProfile(FunctionProfile fp) {
@@ -195,6 +212,14 @@ public class Thread implements Comparable {
 
     public double getMaxExclusivePerCall(int metric) {
         return this.getDouble(metric, 5);
+    }
+
+    public void setPercentDivider(int metric, double inDouble) {
+        this.insertDouble(metric, 6, inDouble);
+    }
+
+    public double getPercentDivider(int metric) {
+        return this.getDouble(metric, 6);
     }
 
     private void setMaxNumCalls(double inDouble) {
@@ -309,8 +334,10 @@ public class Thread implements Comparable {
                     if (this.getNodeID() > -1) { // don't do this for mean/total
                         double inclusiveMax = this.getMaxInclusive(metric);
 
+                        setPercentDivider(metric, inclusiveMax / 100.0);
+                        
                         if (inclusiveMax != 0) {
-                            double exclusivePercent = (fp.getExclusive(metric) / inclusiveMax) * 100.00;
+                            double exclusivePercent = (fp.getExclusive(metric) / inclusiveMax) * 100;
                             double inclusivePercent = (fp.getInclusive(metric) / inclusiveMax) * 100;
 
                             fp.setExclusivePercent(metric, exclusivePercent);

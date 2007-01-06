@@ -9,9 +9,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.9 2006/12/28 03:05:59 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.10 2007/01/06 04:40:58 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public abstract class DataSource {
 
@@ -307,7 +307,7 @@ public abstract class DataSource {
             if (meanData != null) {
                 meanData.addMetric();
                 totalData.addMetric();
-                stddevData.addMetric();
+                stddevData.addMetric(); 
             }
         }
 
@@ -687,7 +687,12 @@ public abstract class DataSource {
                 Thread thread = (Thread) it.next();
                 topLevelInclSum[i] += thread.getMaxInclusive(i);
             }
+            totalData.setPercentDivider(i, topLevelInclSum[i] / 100.0);
+            meanData.setPercentDivider(i, topLevelInclSum[i] / 100.0);
+            stddevData.setPercentDivider(i, topLevelInclSum[i] / 100.0);
         }
+        
+
 
         for (Iterator l = this.getFunctions(); l.hasNext();) { // for each function
             Function function = (Function) l.next();
@@ -731,7 +736,7 @@ public abstract class DataSource {
             int numThreads = allThreads.size();
 
             for (int i = 0; i < numThreads; i++) { // for each thread
-                edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) allThreads.get(i);
+                Thread thread = (Thread) allThreads.get(i);
                 FunctionProfile functionProfile = thread.getFunctionProfile(function);
 
                 if (functionProfile != null) { // only if this function was called for this nct
@@ -816,6 +821,7 @@ public abstract class DataSource {
                 if (topLevelInclSum[i] != 0) {
                     totalProfile.setInclusivePercent(i, totalProfile.getInclusive(i) / topLevelInclSum[i] * 100);
                     totalProfile.setExclusivePercent(i, totalProfile.getExclusive(i) / topLevelInclSum[i] * 100);
+
                     meanProfile.setInclusivePercent(i, totalProfile.getInclusivePercent(i));
                     meanProfile.setExclusivePercent(i, totalProfile.getExclusivePercent(i));
                     if (meanProfile.getInclusive(i) != 0) {
