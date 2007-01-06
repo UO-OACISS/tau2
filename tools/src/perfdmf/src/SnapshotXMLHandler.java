@@ -9,9 +9,9 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.2 2007/01/04 01:34:36 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.3 2007/01/06 04:37:06 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
@@ -86,17 +86,6 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private void handleProfile(Attributes attributes) {
         String threadID = attributes.getValue("thread");
         currentThread = (ThreadData) threadMap.get(threadID);
-        if (currentThread.thread.getSnapshots().size() != 0) {
-            //???
-            // increase storage
-            System.err.println("todo: add snapshot structures for 'Thread'");
-            for (Iterator e6 = currentThread.thread.getFunctionProfiles().iterator(); e6.hasNext();) {
-                FunctionProfile fp = (FunctionProfile) e6.next();
-                if (fp != null) { // fp == null would mean this thread didn't call this function
-                    fp.addSnapshot();
-                }
-            }
-        }
         
         currentSnapshot = currentThread.thread.addSnapshot("");
         
@@ -180,7 +169,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
         if (localName.equals("thread_definition")) {
             currentThread = null;
         } else if (localName.equals("name")) {
-            System.out.println("reading snapshot: " + accumulator);
+            //System.out.println("reading snapshot: " + accumulator);
             currentSnapshot.setName(accumulator.toString());
         } else if (localName.equals("interval_data")) {
             handleIntervalDataEnd();
