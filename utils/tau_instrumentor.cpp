@@ -297,6 +297,14 @@ bool retval;
     }
   }
   sort(itemvec.begin(), itemvec.end(), locCmp);
+  itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
+#ifdef DEBUG
+  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
+   iter++)
+  {
+    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"<<endl;
+  }
+#endif /* DEBUG */
   return true; /* everything is ok */
 }
 
@@ -2725,9 +2733,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.127 $   $Date: 2006/12/13 02:38:32 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.127 2006/12/13 02:38:32 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.128 $   $Date: 2007/01/06 00:50:47 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.128 2007/01/06 00:50:47 sameer Exp $
  ***************************************************************************/
 
 
