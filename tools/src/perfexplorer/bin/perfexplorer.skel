@@ -1,6 +1,6 @@
 #!/bin/@TAUSHELL@
 
-# $Id: perfexplorer.skel,v 1.16 2007/01/05 19:24:18 khuck Exp $
+# $Id: perfexplorer.skel,v 1.17 2007/01/08 23:05:09 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -115,6 +115,8 @@ if [ $mode == "standalone" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR
 
 	java -Xmx500m \
+	-Xdock:name="PerfExplorer" \
+	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
@@ -125,6 +127,8 @@ if [ $mode == "test" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR
 
 	java -Xmx500m \
+	-Xdock:name="PerfExplorer" \
+	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
@@ -140,6 +144,8 @@ if [ $mode == "server" ] ; then
 	echo "Starting server..."
 
 	java -Xmx1800m \
+	-Xdock:name="PerfExplorer Server" \
+	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
@@ -157,6 +163,8 @@ if [ $mode == "client" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$JOGL_JAR:$VIS_JAR:$JYTHON_JAR:$JARGS_JAR:$TAUCOMMON_JAR:$BATIK_JAR
 
 	java -Xmx500m \
+	-Xdock:name="PerfExplorer Client" \
+	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
 	-classpath $CLASSPATH \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
 	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \

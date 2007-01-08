@@ -1,7 +1,6 @@
 package client;
 
 import common.*;
-import common.InterpreterDriver.InterpreterException;
 
 import jargs.gnu.CmdLineParser;
 import edu.uoregon.tau.perfdmf.*;
