@@ -1,6 +1,6 @@
 #!/bin/@TAUSHELL@
 
-# $Id: perfexplorer.skel,v 1.18 2007/01/08 23:17:14 khuck Exp $
+# $Id: perfexplorer.skel,v 1.19 2007/01/08 23:27:34 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -96,6 +96,12 @@ if [ "x$JDBC_JAR" != "x" ]; then
     fi
 fi
 
+if [ "$CONFIG_ARCH" = "apple" ]; then
+	EXTRA_OPTIONS="-Xdock:name=\"PerfExplorer\" -Xdock:icon=\"${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif\" -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
+else
+	EXTRA_OPTIONS=""
+fi
+
 PERFDMF_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfdmf.jar
 JARGS_JAR=$TAUROOT/$CONFIG_ARCH/lib/jargs.jar
 JYTHON_JAR=$TAUROOT/$CONFIG_ARCH/lib/jython.jar
@@ -114,11 +120,7 @@ OMEGAHAT_JARS=$OMEGAHAT_HOME:$OMEGAHAT_JARPATH/Environment.jar:$OMEGAHAT_JARPATH
 if [ $mode == "standalone" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR
 
-	java -Xmx500m \
-	-Xdock:name="PerfExplorer" \
-	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
-    -Dapple.laf.useScreenMenuBar=true \
-    -Dcom.apple.mrj.application.growbox.intrudes=true \
+	java -Xmx500m $EXTRA_OPTIONS \
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
@@ -129,10 +131,6 @@ if [ $mode == "test" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR
 
 	java -Xmx500m \
-	-Xdock:name="PerfExplorer" \
-	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
-    -Dapple.laf.useScreenMenuBar=true \
-    -Dcom.apple.mrj.application.growbox.intrudes=true \
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
@@ -147,11 +145,7 @@ if [ $mode == "server" ] ; then
 	rmiregistry $SERVER_RMIREGISTRY_PORT & 
 	echo "Starting server..."
 
-	java -Xmx1800m \
-	-Xdock:name="PerfExplorer Server" \
-	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
-    -Dapple.laf.useScreenMenuBar=true \
-    -Dcom.apple.mrj.application.growbox.intrudes=true \
+	java -Xmx1800m $EXTRA_OPTIONS \
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
@@ -168,11 +162,7 @@ if [ $mode == "client" ] ; then
 
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$JOGL_JAR:$VIS_JAR:$JYTHON_JAR:$JARGS_JAR:$TAUCOMMON_JAR:$BATIK_JAR
 
-	java -Xmx500m \
-	-Xdock:name="PerfExplorer Client" \
-	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
-    -Dapple.laf.useScreenMenuBar=true \
-    -Dcom.apple.mrj.application.growbox.intrudes=true \
+	java -Xmx500m $EXTRA_OPTIONS \
 	-classpath $CLASSPATH \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
 	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \
