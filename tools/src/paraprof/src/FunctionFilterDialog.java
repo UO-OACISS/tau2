@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
-import sun.tools.jar.resources.jar_zh_TW;
 
 public class FunctionFilterDialog extends JDialog {
 
