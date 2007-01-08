@@ -516,7 +516,7 @@ public class UtilFncs {
         case 10:
             //dataSource = new TimeSeriesDataSource(sourceFiles[0]);
             //dataSource = new SnapshotDataSource(sourceFiles[0]);
-            dataSource = new SnapshotDataSource();
+            dataSource = new SnapshotDataSource(sourceFiles);
             break;
 
         

@@ -2,21 +2,19 @@ package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
-
-import edu.uoregon.tau.perfdmf.PackedProfileDataSource.TrackerInputStream;
 
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.3 2007/01/06 04:37:06 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.4 2007/01/08 18:14:30 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class SnapshotDataSource extends DataSource {
 
@@ -92,7 +90,7 @@ public class SnapshotDataSource extends DataSource {
         }
 
     }
-    
+
     /**
      * A stream wrapper that tracks progress
      */
@@ -124,12 +122,17 @@ public class SnapshotDataSource extends DataSource {
             return actual;
         }
     }
-    
+
     private volatile long totalBytes = 0;
     private volatile long bytesRead = 0;
     private volatile TrackerInputStream tracker;
 
-    
+    private File files[];
+
+    public SnapshotDataSource(File files[]) {
+        this.files = files;
+    }
+
     public void cancelLoad() {
         // TODO Auto-generated method stub
 
@@ -142,63 +145,51 @@ public class SnapshotDataSource extends DataSource {
         return 0;
     }
 
-    
     public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException {
         try {
             long time = System.currentTimeMillis();
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
 
-            FileInputStream fis = new FileInputStream("/home/amorris/snaps2");
-            //FileInputStream fis = new FileInputStream("/home/amorris/snapshot.xml");
-            tracker = new TrackerInputStream(fis);
-            
-            File file = new File("/home/amorris/snaps2");
-            totalBytes = file.length();
-            
-            SnapshotXMLHandler handler = new SnapshotXMLHandler(this);
-            //DefaultHandler handler = new DefaultHandler();
+            totalBytes = 0;
+            for (int i = 0; i < files.length; i++) {
+                totalBytes += files[i].length();
+            }
 
-            xmlreader.setContentHandler(handler);
-            xmlreader.setErrorHandler(handler);
-            //xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/profile.xml")));
-//            xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/snapshot.0.0.0")));
-//            xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/snapshot.1.0.0")));
-//            xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/snapshot.2.0.0")));
-//            xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/snapshot.3.0.0")));
-
-            //            xmlreader.parse(new InputSource(new FileInputStream("/home/amorris/stub.xml")));
-            //xmlreader.parse(new InputSource(new RootWrap(new FileInputStream("/home/amorris/snapshot.xml"))));
-
-            xmlreader.parse(new InputSource(new RootWrap(new BufferedInputStream(tracker))));
+            for (int i = 0; i < files.length; i++) {
+                FileInputStream fis = new FileInputStream(files[i]);
+                tracker = new TrackerInputStream(fis);
+                SnapshotXMLHandler handler = new SnapshotXMLHandler(this);
+                xmlreader.setContentHandler(handler);
+                xmlreader.setErrorHandler(handler);
+                xmlreader.parse(new InputSource(new RootWrap(new BufferedInputStream(tracker))));
+            }
 
             time = System.currentTimeMillis() - time;
-            System.out.println("Snapshot reading took " + time + " ms");
-            System.out.println("found " + this.getThread(0,0,0).getNumSnapshots() + " snapshots");
+            //System.out.println("Snapshot reading took " + time + " ms");
+            //System.out.println("found " + this.getThread(0,0,0).getNumSnapshots() + " snapshots");
             this.generateDerivedData();
 
         } catch (SAXException e) {
             e.printStackTrace();
             throw new DataSourceException(e);
-
-        }
-
-    }
-
-    public static void main(String args[]) {
-
-        SnapshotDataSource dataSource = new SnapshotDataSource();
-        try {
-            dataSource.load();
-
-            Function f = dataSource.getFunction("main");
-
-            Thread zero = dataSource.getThread(0, 0, 0);
-            FunctionProfile fp = zero.getFunctionProfile(f);
-            System.out.println("main exclusive = " + fp.getExclusive(0));
-            System.out.println("main inclusive = " + fp.getInclusive(0));
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
+
+    //    public static void main(String args[]) {
+    //
+    //        SnapshotDataSource dataSource = new SnapshotDataSource();
+    //        try {
+    //            dataSource.load();
+    //
+    //            Function f = dataSource.getFunction("main");
+    //
+    //            Thread zero = dataSource.getThread(0, 0, 0);
+    //            FunctionProfile fp = zero.getFunctionProfile(f);
+    //            System.out.println("main exclusive = " + fp.getExclusive(0));
+    //            System.out.println("main inclusive = " + fp.getInclusive(0));
+    //
+    //        } catch (Exception e) {
+    //            e.printStackTrace();
+    //        }
+    //    }
 }
