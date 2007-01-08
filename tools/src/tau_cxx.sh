@@ -34,7 +34,7 @@ do
       options_specified=yes
       shift
       ;;
-    -MM | -M | -MF | -MD | -V | -v | --version )
+    -MM | -M | -MF | -MD | -V | -v | --version | -print-prog-name=ld | -print-search-dirs )
       makedepend_specified=yes	
 # hack to get proper .d generation support for eclipse
       ;;
