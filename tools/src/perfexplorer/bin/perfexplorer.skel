@@ -1,6 +1,6 @@
 #!/bin/@TAUSHELL@
 
-# $Id: perfexplorer.skel,v 1.19 2007/01/08 23:27:34 khuck Exp $
+# $Id: perfexplorer.skel,v 1.20 2007/01/08 23:31:40 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -97,7 +97,7 @@ if [ "x$JDBC_JAR" != "x" ]; then
 fi
 
 if [ "$CONFIG_ARCH" = "apple" ]; then
-	EXTRA_OPTIONS="-Xdock:name=\"PerfExplorer\" -Xdock:icon=\"${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif\" -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
+	EXTRA_OPTIONS="-Xdock:name=PerfExplorer -Xdock:icon=${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
 else
 	EXTRA_OPTIONS=""
 fi
