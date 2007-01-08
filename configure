@@ -4141,6 +4141,7 @@ then
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/derby.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/src/Profile/TAU.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/common/resources/tau16x16.gif ${tauroot}/${architecture}/lib
   echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in ${tauroot}/${architecture}/lib"
 
 # Now we look at the installation of tau_compiler.sh 
@@ -4219,6 +4220,7 @@ else
   cp ${tauroot}/tools/src/contrib/jython.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jogl/jogl.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauprefix}/${architecture}/lib
+  cp ${tauroot}/tools/src/common/resources/tau16x16.gif ${tauroot}/${architecture}/lib
   echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in ${tauprefix}/${architecture}/lib"
 # Now we look at the installation of tau_compiler.sh 
    if [ ! -f /bin/bash ] 
