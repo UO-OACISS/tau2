@@ -1,6 +1,6 @@
 #!/bin/@TAUSHELL@
 
-# $Id: perfexplorer.skel,v 1.17 2007/01/08 23:05:09 khuck Exp $
+# $Id: perfexplorer.skel,v 1.18 2007/01/08 23:17:14 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -117,6 +117,8 @@ if [ $mode == "standalone" ] ; then
 	java -Xmx500m \
 	-Xdock:name="PerfExplorer" \
 	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
+    -Dapple.laf.useScreenMenuBar=true \
+    -Dcom.apple.mrj.application.growbox.intrudes=true \
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
@@ -129,6 +131,8 @@ if [ $mode == "test" ] ; then
 	java -Xmx500m \
 	-Xdock:name="PerfExplorer" \
 	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
+    -Dapple.laf.useScreenMenuBar=true \
+    -Dcom.apple.mrj.application.growbox.intrudes=true \
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
@@ -146,6 +150,8 @@ if [ $mode == "server" ] ; then
 	java -Xmx1800m \
 	-Xdock:name="PerfExplorer Server" \
 	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
+    -Dapple.laf.useScreenMenuBar=true \
+    -Dcom.apple.mrj.application.growbox.intrudes=true \
 	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
 	-classpath $CLASSPATH \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
@@ -165,6 +171,8 @@ if [ $mode == "client" ] ; then
 	java -Xmx500m \
 	-Xdock:name="PerfExplorer Client" \
 	-Xdock:icon="${TAUROOT}/${CONFIG_ARCH}/lib/tau16x16.gif" \
+    -Dapple.laf.useScreenMenuBar=true \
+    -Dcom.apple.mrj.application.growbox.intrudes=true \
 	-classpath $CLASSPATH \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
 	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \
