@@ -1,14 +1,13 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.util.*;
-import java.text.*;
 
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.4 2007/01/06 04:40:58 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.5 2007/01/09 04:07:16 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		Function
  */
 public class FunctionProfile implements Comparable {
@@ -23,18 +22,15 @@ public class FunctionProfile implements Comparable {
     }
 
     private static final int METRIC_SIZE = 2;
-    private static final int CALL_SIZE = 2;
 
-    private static final int INCLUSIVE = 0;
-    private static final int EXCLUSIVE = 1;
-    //private static final int INCLUSIVE_PERCENT = 2;
-    //private static final int EXCLUSIVE_PERCENT = 3;
+    private static final int CALLS = 0;
+    private static final int SUBR = 1;
+    private static final int INCLUSIVE = 2;
+    private static final int EXCLUSIVE = 3;
 
     private Function function;
     private Thread thread;
     private double[] data;
-    private double[] calls;
-
     private CallPathData callPathData;
 
     public FunctionProfile(Function function) {
@@ -47,8 +43,7 @@ public class FunctionProfile implements Comparable {
 
     public FunctionProfile(Function function, int numMetrics, int snapshots) {
         numMetrics = Math.max(numMetrics, 1);
-        data = new double[numMetrics * METRIC_SIZE * snapshots];
-        calls = new double[CALL_SIZE * snapshots];
+        data = new double[((numMetrics + 1) * METRIC_SIZE) * snapshots];
         this.function = function;
     }
 
@@ -61,7 +56,7 @@ public class FunctionProfile implements Comparable {
     }
 
     public void setInclusive(int metric, double value) {
-        this.putDouble(thread.getNumSnapshots() - 1, metric, INCLUSIVE, value);
+        this.putDouble(metric, INCLUSIVE, value);
     }
 
     public void setInclusive(int snapshot, int metric, double value) {
@@ -69,7 +64,7 @@ public class FunctionProfile implements Comparable {
     }
 
     public double getInclusive(int metric) {
-        return this.getDouble(thread.getNumSnapshots() - 1, metric, INCLUSIVE);
+        return this.getDouble(metric, INCLUSIVE);
     }
 
     public double getInclusive(int metric, int snapshot) {
@@ -77,7 +72,7 @@ public class FunctionProfile implements Comparable {
     }
 
     public void setExclusive(int metric, double value) {
-        this.putDouble(thread.getNumSnapshots() - 1, metric, EXCLUSIVE, value);
+        this.putDouble(metric, EXCLUSIVE, value);
     }
 
     public void setExclusive(int snapshot, int metric, double value) {
@@ -94,7 +89,7 @@ public class FunctionProfile implements Comparable {
         //        } else {
         //            return this.getDouble(metric, 1);
         //        }
-        return this.getDouble(thread.getNumSnapshots() - 1, metric, EXCLUSIVE);
+        return this.getDouble(metric, EXCLUSIVE);
     }
 
     public void setInclusivePercent(int metric, double value) {
@@ -131,19 +126,19 @@ public class FunctionProfile implements Comparable {
     }
 
     public void setNumCalls(double value) {
-        calls[0] = value;
+        this.putDouble(0, CALLS, value);
     }
 
     public double getNumCalls() {
-        return calls[0];
+        return getDouble(0, CALLS);
     }
 
     public void setNumSubr(double value) {
-        calls[1] = value;
+        this.putDouble(0, SUBR, value);
     }
 
     public double getNumSubr() {
-        return calls[1];
+        return getDouble(0, SUBR);
     }
 
     public double getInclusivePerCall(int metric) {
@@ -165,13 +160,13 @@ public class FunctionProfile implements Comparable {
         int numSnapshots = thread.getNumSnapshots();
         int newMetricSize = numMetrics + 1;
 
-        double[] newArray = new double[newMetricSize * METRIC_SIZE * numSnapshots];
+        double[] newArray = new double[(newMetricSize + 1) * METRIC_SIZE * numSnapshots];
 
         for (int s = 0; s < numSnapshots; s++) {
 
-            int source = (s * METRIC_SIZE * numMetrics);
-            int dest = (s * METRIC_SIZE * newMetricSize);
-            for (int m = 0; m < METRIC_SIZE * numMetrics; m++) {
+            int source = (s * METRIC_SIZE * (numMetrics + 1));
+            int dest = (s * METRIC_SIZE * (newMetricSize + 1));
+            for (int m = 0; m < METRIC_SIZE * (numMetrics + 1); m++) {
                 newArray[dest + m] = data[source + m];
             }
 
@@ -181,17 +176,17 @@ public class FunctionProfile implements Comparable {
     }
 
     public void addSnapshot() {
-        int newCallsLength = thread.getNumSnapshots() * CALL_SIZE;
-        if (newCallsLength > calls.length) {
-            // could only do this with Java 1.6 :(
-            //calls = Arrays.copyOf(calls, (int)(newCallsLength*1.5));
-            double[] newCalls = new double[(int) (newCallsLength * 1.5)];
-            System.arraycopy(calls, 0, newCalls, 0, calls.length);
-            calls = newCalls;
-        }
+        //        int newCallsLength = thread.getNumSnapshots() * CALL_SIZE;
+        //        if (newCallsLength > calls.length) {
+        //            // could only do this with Java 1.6 :(
+        //            //calls = Arrays.copyOf(calls, (int)(newCallsLength*1.5));
+        //            double[] newCalls = new double[(int) (newCallsLength * 1.5)];
+        //            System.arraycopy(calls, 0, newCalls, 0, calls.length);
+        //            calls = newCalls;
+        //        }
 
         int numMetrics = thread.getNumMetrics();
-        int newLength = thread.getNumSnapshots() * (METRIC_SIZE * numMetrics);
+        int newLength = thread.getNumSnapshots() * ((METRIC_SIZE * numMetrics) + 2);
         if (newLength > data.length) {
             // could only do this with Java 1.6 :(
             //data = Arrays.copyOf(data, (int)(newLength*1.5));
@@ -292,14 +287,27 @@ public class FunctionProfile implements Comparable {
 
     private void putDouble(int snapshot, int metric, int offset, double inDouble) {
         int numMetrics = thread.getNumMetrics();
-        int actualLocation = (snapshot * METRIC_SIZE * numMetrics) + (metric * METRIC_SIZE) + offset;
+        int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
+        data[location] = inDouble;
+    }
 
-        data[actualLocation] = inDouble;
+    private void putDouble(int metric, int offset, double inDouble) {
+        int snapshot = thread.getNumSnapshots() - 1;
+        int numMetrics = thread.getNumMetrics();
+        int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
+        data[location] = inDouble;
     }
 
     private double getDouble(int snapshot, int metric, int offset) {
         int numMetrics = thread.getNumMetrics();
-        int location = (snapshot * METRIC_SIZE * numMetrics) + (metric * METRIC_SIZE) + offset;
+        int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
+        return data[location];
+    }
+
+    private double getDouble(int metric, int offset) {
+        int snapshot = thread.getNumSnapshots() - 1;
+        int numMetrics = thread.getNumMetrics();
+        int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
         return data[location];
     }
 
