@@ -1,12 +1,14 @@
 from server import PerfExplorerServer
 from common import TransformationType
 from common import AnalysisType
+from common import EngineType
 
 print "--------------- JPython test script start ------------"
 
 x = 2 + 5
 print x
 
+PerfExplorerServer.getServer("/home/khuck/.ParaProf/perfdmf.cfg", EngineType.WEKA)
 peserver = PerfExplorerServer.getInstance()
 peserver.doSomething()
 

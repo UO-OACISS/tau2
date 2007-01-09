@@ -7,6 +7,7 @@ import jargs.gnu.CmdLineParser;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.net.URL;
 
 public class PerfExplorerClient extends JFrame {
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
@@ -85,7 +86,9 @@ public class PerfExplorerClient extends JFrame {
         } else {
             this.setLocation(savedPosition);
         }
-		setIconImage(Toolkit.getDefaultToolkit().getImage(Utility.getResource("tau16x16.gif")));
+    	URL url = Utility.getResource("tau16x16.gif");
+    	if (url != null)
+    		setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 		mainFrame = this;
 	}
 
