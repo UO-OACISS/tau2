@@ -157,7 +157,13 @@ double TauGetMaxRSS(void)
 #ifdef TAU_HASMALLINFO
   struct mallinfo minfo = mallinfo();
   /* compute the memory used */
-  double used = (double) (minfo.hblkhd + minfo.usmblks + minfo.uordblks);
+  double used = (double) ((unsigned int) minfo.hblkhd + 0.0 + (unsigned int) minfo.usmblks + (unsigned int) minfo.uordblks);
+#ifdef DEBUG_PROF
+  cout <<"minfo.hblkhd= "<<(unsigned int) minfo.hblkhd<<endl;
+  cout <<"minfo.hblkhd= "<<(unsigned int) minfo.usmblks<<endl;
+  cout <<"minfo.hblkhd= "<<(unsigned int) minfo.uordblks<<endl;
+  cout <<"used memory in bytes = "<<used<<endl;
+#endif /* DEBUG_PROF */
   /* This is in bytes, we need KB */
   return used/1024.0;
 #else 
@@ -374,8 +380,8 @@ void TauTrackMuseEvents(void)
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2006/04/04 19:09:01 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.15 2006/04/04 19:09:01 sameer Exp $ 
+ * $Revision: 1.16 $   $Date: 2007/01/10 18:24:23 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.16 2007/01/10 18:24:23 sameer Exp $ 
  ***************************************************************************/
 
 	
