@@ -2723,6 +2723,12 @@ then
   	    mpilibrary=-lmpich
           fi
         fi
+
+        if [ -r $mpilib/libpmpich++.a -o -r $mpilib/libpmpich++.so ] 
+        then 
+          #echo "pmpich++ found"
+          mpilibrary="-lpmpich++ $mpilibrary"
+        fi
       
         if [ -r $mpilib/libpmpich.a -o -r $mpilib/libpmpich.so ] 
         then 
@@ -2734,6 +2740,15 @@ then
           mpilibargs="$mpilibargs $mpilibrary"
           mpiflibargs="$mpiflibargs $mpilibrary"
         fi
+
+        if [ -r /usr/lib/librt.a -o -r /usr/lib/librt.so ] 
+        then 
+          #echo "librt found"
+          mpilibargs="$mpilibargs -lrt"
+          mpiflibargs="$mpiflibargs -lrt"
+        fi
+
+
       fi
     fi
     # libmpi.* found. But libpmpi* not found. 
