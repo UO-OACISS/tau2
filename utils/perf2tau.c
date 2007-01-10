@@ -19,11 +19,13 @@
 
 int verbose = 0;
 int callpath = 1;  /* show callpaths */
+struct header_struct *header_ptr;
 
 #define dprintf if (verbose) printf
+#define TAU_NO_COUNTER_ID 0
 
 
-enum metrics { TAU_WTIME, TAU_RSS, TAU_FPINS, TAU_VIRTUALTIME, TAU_PAGEFAULTS, TAU_PROCMEM } tau_measurement; 
+enum metrics { TAU_WTIME, TAU_RSS, TAU_COUNTERS, TAU_VIRTUALTIME, TAU_PAGEFAULTS, TAU_PROCMEM } tau_measurement; 
 
 /*
 extern int trace_enabled, mpitrace_enabled, memtrace_enabled, countertrace_enabled, iotrace_enabled;
@@ -53,7 +55,7 @@ int GetNumRoutines(struct all_context_data_struct *all_context_data_ptr)
   return numroutines; /* or rather, the number of entities to be counted */
 }
 
-char * GetMetricName(enum metrics measurement)
+char * GetMetricName(enum metrics measurement, int counterid)
 {
   switch (measurement)
   {
@@ -61,8 +63,8 @@ char * GetMetricName(enum metrics measurement)
        return "GET_TIME_OF_DAY";
     case TAU_RSS:
        return "RSS";
-    case TAU_FPINS:
-       return "PAPI_FP_INS";
+    case TAU_COUNTERS:
+       return header_ptr->counter_label[counterid]; /* pick up the name of the counter*/
     case TAU_VIRTUALTIME:
        return "P_VIRTUAL_TIME";
     case TAU_PAGEFAULTS:
@@ -74,7 +76,7 @@ char * GetMetricName(enum metrics measurement)
   }
 }
 
-double GetPerformanceDataValue(enum metrics measurement, struct data_struct dt)
+double GetPerformanceDataValue(enum metrics measurement, struct data_struct dt, int counterid)
 {
   switch (measurement)
   {
@@ -82,8 +84,8 @@ double GetPerformanceDataValue(enum metrics measurement, struct data_struct dt)
        return dt.wtime * 1e6;
     case TAU_RSS:
        return dt.rss;
-    case TAU_FPINS:
-       return dt.flops;
+    case TAU_COUNTERS:
+       return dt.counter[counterid];
     case TAU_VIRTUALTIME:
        return dt.ptime;
     case TAU_PAGEFAULTS:
@@ -123,15 +125,15 @@ int IsCallpath(char *path)
     return 1; /* found */
 }
 
-int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, struct all_context_data_struct *all_context_data_ptr )
+int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, struct all_context_data_struct *all_context_data_ptr , int counterid)
 {
   char *metric;
   char newdirname[1024];
   char filename[1024];
   FILE *fp;
   struct context_struct *context_ptr; /* are there callpaths that should be counted? */
- 
-  metric = GetMetricName(measurement);
+
+  metric = GetMetricName(measurement, counterid);
 
   /* Create a new directory name */
   dprintf("METRIC: %s\n", metric);
@@ -156,8 +158,8 @@ int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, 
 	all_context_data_ptr->name,
         all_context_data_ptr->calls,
         all_context_data_ptr->child_calls,
-	GetPerformanceDataValue(measurement, all_context_data_ptr->exclusive_data),
-	GetPerformanceDataValue(measurement, all_context_data_ptr->inclusive_data),
+	GetPerformanceDataValue(measurement, all_context_data_ptr->exclusive_data, counterid),
+	GetPerformanceDataValue(measurement, all_context_data_ptr->inclusive_data, counterid),
 	"TAU_DEFAULT");
 
      if (callpath)
@@ -166,13 +168,15 @@ int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, 
        while(context_ptr)        
        { /* iterate over all contexts or callpaths for this routine */
          if(IsCallpath(context_ptr->path)) {
+
            WriteRoutineDataInFile(fp, 
-             context_ptr->path, /* NOTE: PATH not NAME */
+             context_ptr->path, 
              context_ptr->calls,
              context_ptr->child_calls,
-	     GetPerformanceDataValue(measurement, context_ptr->exclusive_data),
-	     GetPerformanceDataValue(measurement, context_ptr->inclusive_data),
+	     GetPerformanceDataValue(measurement, context_ptr->exclusive_data, counterid),
+	     GetPerformanceDataValue(measurement, context_ptr->inclusive_data, counterid),
 	     "TAU_CALLPATH");
+
          }            
          context_ptr = context_ptr->next_context; /* until it is null */
        }
@@ -181,7 +185,7 @@ int WriteMetricInTauFormat(enum metrics measurement, int rank, int numroutines, 
      all_context_data_ptr = all_context_data_ptr->next_routine;
   }
   fprintf(fp, "0 aggregates\n");
-  /* fclose(fp); */
+  fclose(fp);
   return 0;  
 
 }
@@ -207,7 +211,6 @@ int main(int argc, char **argv)
   struct all_context_cycle_struct *all_context_cycle_ptr;
   struct all_context_rank_struct *all_context_rank_ptr;
   struct all_context_data_struct *all_context_data_ptr;
-  struct header_struct *header_ptr;
   char filename[1024];
   FILE *fp;
 
@@ -292,26 +295,25 @@ int main(int argc, char **argv)
       numroutines = GetNumRoutines(all_context_data_ptr);
       dprintf("Rank = %d, number of routines = %d\n",
 	rank, numroutines);
-      while (all_context_data_ptr)
-      { /* iterate over each routine */
         if (header_ptr->profile_time_enabled)
-          WriteMetricInTauFormat(TAU_WTIME, rank, numroutines, all_context_data_ptr);
+          WriteMetricInTauFormat(TAU_WTIME, rank, numroutines, all_context_data_ptr, TAU_NO_COUNTER_ID);
         if (header_ptr->profile_memory_enabled)
         { /* NOTE: memtrace flag turns on rss and pagefault tracking */
-          WriteMetricInTauFormat(TAU_RSS, rank, numroutines, all_context_data_ptr);
-          WriteMetricInTauFormat(TAU_PAGEFAULTS, rank, numroutines, all_context_data_ptr);
+          WriteMetricInTauFormat(TAU_RSS, rank, numroutines, all_context_data_ptr, TAU_NO_COUNTER_ID);
+          WriteMetricInTauFormat(TAU_PAGEFAULTS, rank, numroutines, all_context_data_ptr, TAU_NO_COUNTER_ID);
           /* WriteMetricInTauFormat(TAU_PROCMEM, rank, numroutines, all_context_data_ptr);
           */
         }
 
         if (header_ptr->profile_counters_enabled)
         { /* countertrace flag turns on tracking flops and processor time */
-          WriteMetricInTauFormat(TAU_FPINS, rank, numroutines, all_context_data_ptr);
-          WriteMetricInTauFormat(TAU_VIRTUALTIME, rank, numroutines, all_context_data_ptr);
+          for(i = 0; i < header_ptr->numcounters; i++)
+          { 
+            WriteMetricInTauFormat(TAU_COUNTERS, rank, numroutines, all_context_data_ptr, i);
+          }
+          WriteMetricInTauFormat(TAU_VIRTUALTIME, rank, numroutines, all_context_data_ptr, TAU_NO_COUNTER_ID);
         }
 
-        all_context_data_ptr = all_context_data_ptr->next_routine;
-      }
 
       all_context_rank_ptr = all_context_rank_ptr->next_rank;
       rank++;
