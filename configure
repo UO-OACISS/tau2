@@ -2729,6 +2729,12 @@ then
           #echo "pmpich++ found"
           mpilibrary="-lpmpich++ $mpilibrary"
         fi
+
+        if [ -r $mpilib/libmpichcxx.a -o -r $mpilib/libmpichcxx.so ] 
+        then 
+          #echo "mpichcxx found"
+          mpilibrary="-lmpichcxx $mpilibrary"
+        fi
       
         if [ -r $mpilib/libpmpich.a -o -r $mpilib/libpmpich.so ] 
         then 
