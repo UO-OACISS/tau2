@@ -2446,8 +2446,14 @@ EOF
     then
       echo "SGI MPI detected. Disabling MPI2 wrappers for SGI MPI"
     else
-      fixmakeargs="$fixmakeargs MPI2"
-      mpi2=yes
+      if [ -r $mpilib/libfmpi.so -a -r $mpilib/libmpio.so  -a -r $mpilib/libtvscampi.so ] 
+      then 
+        # Wait. Scali does not use MPI2 PMPI interface properly. 
+        echo "Scali MPI detected. Disabling MPI2 wrappers for Scali MPI"
+      else 
+        fixmakeargs="$fixmakeargs MPI2"
+        mpi2=yes
+      fi
     fi
 
   fi
