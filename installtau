@@ -22,6 +22,7 @@ tagopt=
 pdtcxxopt=
 pdtcxxarg=
 vtf=no
+otf=no
 vtfopt=
 slogopt=
 useropt=no
@@ -210,6 +211,13 @@ do
     shift
     ;;
 
+  -otf=*)
+    otf=yes
+    otfdir=`echo $arg | sed -e 's/-otf=//'`
+    otfopt=-otf=$otfdir
+    shift
+    ;;
+
   -help)
     echo "TAU Configuration Utility "
     echo "***********************************************************************"
@@ -225,6 +233,7 @@ do
     echo "-pdt_c++=<C++ Compiler>  "
     echo "-papi=<papidir>  "
     echo "-vtf=<vtfdir>  "
+    echo "-otf=<otfdir>  "
     echo "-slog2=<dir> (for external slog2 dir)"
     echo "-slog2 (for using slog2 bundled with TAU)"
     echo "-dyninst=<dyninstdir>  "
@@ -359,14 +368,14 @@ echo " " > wishver
     make clean; make install
 
 # Add TRACE
-    if [ $epilog = yes ]
+    if [ $epilog = yes -a $papi = yes ]
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $slogopt $epilogopt"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt  $slogopt $epilogopt<wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir<wishver
       make clean; make install
     fi
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $slogopt"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt  $slogopt <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt $otfopt  $slogopt <wishver
     make clean; make install
   
     if [ $papi = yes ]
@@ -376,8 +385,12 @@ echo " " > wishver
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
 # Add -TRACE -papi multiplecounters to it
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt $otfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
+      make clean; make install
+# Add -PROFILECALLPATH -papi multiplecounters to it
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE <wishver
       make clean; make install
     fi
 
