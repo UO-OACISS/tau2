@@ -2445,15 +2445,17 @@ EOF
     if [ -r $mpilib/libmpi.so -a -r $mpilib/libmpi++.so -a -r $mpilib/libsma.so -a -r $mpilib/libxmpi.so ] 
     then
       echo "SGI MPI detected. Disabling MPI2 wrappers for SGI MPI"
-    else
-      if [ -r $mpilib/libfmpi.so -a -r $mpilib/libmpio.so  -a -r $mpilib/libtvscampi.so ] 
-      then 
-        # Wait. Scali does not use MPI2 PMPI interface properly. 
-        echo "Scali MPI detected. Disabling MPI2 wrappers for Scali MPI"
-      else 
-        fixmakeargs="$fixmakeargs MPI2"
-        mpi2=yes
-      fi
+    elif [ -r $mpilib/libfmpi.so -a -r $mpilib/libmpio.so  -a -r $mpilib/libtvscampi.so ] 
+    then 
+      # Wait. Scali does not use MPI2 PMPI interface properly. 
+      echo "Scali MPI detected. Disabling MPI2 wrappers for Scali MPI"
+    elif [ -r $mpilib/liblam.a -o -r $mpilib/liblam.la ] 
+    then 
+      # Wait. LAM MPI's MPI2 PMPI interface is broken. 
+      echo "LAM MPI detected. Disabling MPI2 wrappers for LAM MPI"
+    else 
+      fixmakeargs="$fixmakeargs MPI2"
+      mpi2=yes
     fi
 
   fi
@@ -2779,6 +2781,11 @@ then
     if [ -r $mpilib/liblam.a ]
     then
       echo "This looks like a LAM MPI installation. Adding -llam to link command line"
+
+      if [ -r $mpilib/liblammpi++.a ] ; then
+	  mpilibargs="$mpilibargs -llammpi++ -lmpi"
+	  mpiflibargs="$mpiflibargs -llammpi++ -lmpi"
+      fi
       mpilibargs="$mpilibargs -llam"
       mpiflibargs="$mpiflibargs -llam"
       if [ -f /usr/lib/libutil.a ] 
