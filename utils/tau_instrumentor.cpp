@@ -175,6 +175,24 @@ string getInstrumentedName(const pdbItem *item, bool fat) {
 
 
 /* -------------------------------------------------------------------------- */
+/* -- Sometimes a routine is created by a macro expansion and we shouldn't    */
+/* -- instrument it. identicalBeginEnd returns true if body begin/end line    */
+/* -- and columns match perfectly, false otherwise.                           */
+/* -------------------------------------------------------------------------- */
+bool identicalBeginEnd(const pdbCRoutine *rit)
+{
+  if (rit && (rit->bodyBegin().line() == rit->bodyEnd().line()) && 
+	  (rit->bodyBegin().col() == rit->bodyBegin().col())) 
+  {
+    return true;
+  }
+  else 
+  {
+    return false;
+  }
+}
+  
+/* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
 bool getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
@@ -193,7 +211,7 @@ bool retval;
   {
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() && 
 	 (((*rit)->bodyBegin().line() != 0) && (*rit)->kind() != pdbItem::RO_EXT) && 
-	 (instrumentEntity((*rit)->fullName())) ) 
+	 (instrumentEntity((*rit)->fullName())) && !identicalBeginEnd(*rit) ) 
     {
 	/* See if the current routine calls exit() */
 	pdbRoutine::callvec c = (*rit)->callees(); 
@@ -517,6 +535,19 @@ bool isReturnTypeReference(itemRef * i)
     return false;
 }
   
+/* -------------------------------------------------------------------------- */
+/* -- When int main(int, char **) is used, the argname is -. We can't use it  */
+/* -- with TAU_INIT(&argname,...); So, we check to see that no arg has a -    */
+/* -------------------------------------------------------------------------- */
+bool okToPrintTauInit(pdbType::argvec& av)
+{
+  for(pdbType::argvec::const_iterator argsit = av.begin();
+	argsit != av.end(); argsit++)
+  {
+    if (strcmp((*argsit).name().c_str(), "-") == 0) return false;
+  }
+  return true;  /* its ok. No argument is -. */
+}
 
 /* -------------------------------------------------------------------------- */
 /* -- Prints TAU_PROFILE_INIT ----------------------------------------------- */
@@ -528,14 +559,16 @@ void print_tau_profile_init(ostream& ostr, pdbCRoutine *main_routine)
      pdbType::argvec av = main_routine->signature()->arguments();
      if (av.size() == 2) {
        int arg_count = 0;
-       ostr<<"  TAU_INIT(";
-       for(pdbType::argvec::const_iterator argsit = av.begin();
-         argsit != av.end(); argsit++, arg_count++)
-       {
-         ostr<<"&"<<(*argsit).name();
-         if (arg_count == 0) ostr<<", ";
+       if (okToPrintTauInit(av)) {
+         ostr<<"  TAU_INIT(";
+         for(pdbType::argvec::const_iterator argsit = av.begin();
+           argsit != av.end(); argsit++, arg_count++)
+         {
+           ostr<<"&"<<(*argsit).name();
+           if (arg_count == 0) ostr<<", ";
+         }
+         ostr<<"); "<<endl;
        }
-       ostr<<"); "<<endl;
      }
    }
 }
@@ -2734,8 +2767,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.128 $   $Date: 2007/01/06 00:50:47 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.128 2007/01/06 00:50:47 sameer Exp $
+ * $Revision: 1.129 $   $Date: 2007/01/12 23:06:19 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.129 2007/01/12 23:06:19 sameer Exp $
  ***************************************************************************/
 
 
