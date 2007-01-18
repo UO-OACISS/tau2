@@ -12,9 +12,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.4 2007/01/08 18:14:30 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.5 2007/01/18 02:56:08 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class SnapshotDataSource extends DataSource {
 
@@ -95,13 +95,13 @@ public class SnapshotDataSource extends DataSource {
      * A stream wrapper that tracks progress
      */
     class TrackerInputStream extends FilterInputStream {
-        private int count;
+        private long count;
 
         public TrackerInputStream(InputStream in) {
             super(in);
         }
 
-        public int byteCount() {
+        public long byteCount() {
             return count;
         }
 

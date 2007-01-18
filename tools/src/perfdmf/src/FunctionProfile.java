@@ -5,12 +5,12 @@ import java.util.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.5 2007/01/09 04:07:16 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.6 2007/01/18 02:56:08 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		Function
  */
-public class FunctionProfile implements Comparable {
+public class FunctionProfile {
 
     // this is a private static class to save memory when callpath data is not needed
     // we need only one empty pointer instead of four
@@ -105,8 +105,6 @@ public class FunctionProfile implements Comparable {
             return getInclusive(metric) / function.getMeanInclusive(metric) * 100.0;
         }
         throw new RuntimeException("Bad Thread ID = " + thread);
-
-        //return this.getDouble(thread.getNumSnapshots() - 1, metric, INCLUSIVE_PERCENT);
     }
 
     public void setExclusivePercent(int metric, double value) {
@@ -122,7 +120,6 @@ public class FunctionProfile implements Comparable {
             return getExclusive(metric) / function.getMeanExclusive(metric) * 100.0;
         }
         throw new RuntimeException("Bad Thread ID = " + thread);
-        //return this.getDouble(thread.getNumSnapshots() - 1, metric, EXCLUSIVE_PERCENT);
     }
 
     public void setNumCalls(double value) {
@@ -311,12 +308,8 @@ public class FunctionProfile implements Comparable {
         return data[location];
     }
 
-    public int compareTo(Object inObject) {
-        return this.function.compareTo(((FunctionProfile) inObject).function);
-    }
-
     public String toString() {
-        return "A FunctionProfile for " + function.toString();
+        return thread + " : " + function;
     }
 
     private CallPathData getCallPathData() {

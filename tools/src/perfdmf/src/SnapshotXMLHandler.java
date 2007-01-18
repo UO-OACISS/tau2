@@ -9,9 +9,9 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.3 2007/01/06 04:37:06 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.4 2007/01/18 02:56:08 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
@@ -25,6 +25,11 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private int currentMetrics[];
     
     StringBuffer accumulator = new StringBuffer();
+    
+    
+    private int currentId;
+    private String currentName;
+    private String currentGroup;
     
     private static class ThreadData {
         public Thread thread;
@@ -56,11 +61,9 @@ public class SnapshotXMLHandler extends DefaultHandler {
         //dataSource.ad
 
     }
-    private void handleEvent(Attributes attributes) {
-        int id = Integer.parseInt(attributes.getValue("id"));
-        String name = attributes.getValue("name");
-        String groups = attributes.getValue("group");
-
+    private void handleEvent(String name, String groups) {
+        int id = currentId;
+        
         Function function = dataSource.addFunction(name);
         dataSource.addGroups(groups, function);
         currentThread.eventMap.put(new Integer(id), function);
@@ -98,12 +101,14 @@ public class SnapshotXMLHandler extends DefaultHandler {
             handleThread(attributes);
         } else if (localName.equals("name")) {
             accumulator = new StringBuffer();
+        } else if (localName.equals("group")) {
+            accumulator = new StringBuffer();
         } else if (localName.equals("definitions")) {
             handleDefinitions(attributes);
         } else if (localName.equals("metric")) {
             handleMetric(attributes);
         } else if (localName.equals("event")) {
-            handleEvent(attributes);
+            currentId = Integer.parseInt(attributes.getValue("id"));
         } else if (localName.equals("profile")) {
             handleProfile(attributes);
         } else if (localName.equals("interval_data")) {
@@ -169,8 +174,13 @@ public class SnapshotXMLHandler extends DefaultHandler {
         if (localName.equals("thread_definition")) {
             currentThread = null;
         } else if (localName.equals("name")) {
-            //System.out.println("reading snapshot: " + accumulator);
-            currentSnapshot.setName(accumulator.toString());
+            currentName = accumulator.toString();
+        } else if (localName.equals("group")) {
+            currentGroup = accumulator.toString();
+        } else if (localName.equals("profile")) {
+            currentSnapshot.setName(currentName);
+        } else if (localName.equals("event")) {
+            handleEvent(currentName, currentGroup);
         } else if (localName.equals("interval_data")) {
             handleIntervalDataEnd();
         }
