@@ -95,8 +95,8 @@ struct trcdescr
   int     overflows;       /* -- clock overflows in that trace             -- */
   int     contlen;         /* -- length of continuation event buffer       -- */
   long    numrec;          /* -- number of event records already processed -- */
-  unsigned long lasttime;  /* -- timestamp of previous event record        -- */
-  unsigned long offset;    /* -- offset of timestamp                       -- */
+  x_uint64 lasttime;  /* -- timestamp of previous event record        -- */
+  x_uint64 offset;    /* -- offset of timestamp                       -- */
 
 /*   PCXX_EV  *buffer;    /\* -- input buffer                              -- *\/ */
 /*   PCXX_EV  *erec;      /\* -- current event record                      -- *\/ */
@@ -769,7 +769,7 @@ int main(int argc, char *argv[])
   int adjust, min_over, reassembly;
   int numedfprocessed;
   int startedfindex, edfcount;
-  unsigned long min_time, first_time;
+  x_uint64 min_time, first_time;
   long numrec;
   char *trcfile;
   void *erec;
@@ -778,7 +778,7 @@ int main(int argc, char *argv[])
   int last_pthread, num_pthreads;
 # endif
 # if defined(__ksr__) || defined(__CM5__)
-  unsigned long last_time;
+  x_uint64 last_time;
 # endif
 
   PCXX_EV nativeEvent;
