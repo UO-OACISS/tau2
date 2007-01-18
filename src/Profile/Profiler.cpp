@@ -260,14 +260,6 @@ void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current)
 #endif /* TAU_MPITRACE */
 //////////////////////////////////////////////////////////////////////
 
-#include <sys/types.h>
-#include <linux/unistd.h>
-
-_syscall0(pid_t,gettid)
-
-  pid_t gettid(void);
-
-
 void Profiler::Start(int tid)
 { 
 //   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s\n", getpid(), gettid(), tid, ThisFunction->GetName());
@@ -3782,8 +3774,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.144 $   $Date: 2007/01/18 02:54:36 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.144 2007/01/18 02:54:36 amorris Exp $ 
+ * $Revision: 1.145 $   $Date: 2007/01/18 21:44:11 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.145 2007/01/18 21:44:11 amorris Exp $ 
  ***************************************************************************/
 
 	
