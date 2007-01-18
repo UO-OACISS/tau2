@@ -260,8 +260,17 @@ void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current)
 #endif /* TAU_MPITRACE */
 //////////////////////////////////////////////////////////////////////
 
+#include <sys/types.h>
+#include <linux/unistd.h>
+
+_syscall0(pid_t,gettid)
+
+  pid_t gettid(void);
+
+
 void Profiler::Start(int tid)
 { 
+//   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s\n", getpid(), gettid(), tid, ThisFunction->GetName());
       ParentProfiler = CurrentProfiler[tid]; // Timers
 #ifdef TAU_DEPTH_LIMIT
       int userspecifieddepth = TauGetDepthLimit();
@@ -444,7 +453,6 @@ void Profiler::Start(int tid)
 Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup, 
 	bool StartStop, int tid)
 {
-
 #if defined(TAUKTAU) 
 	ThisKtauProfiler = KtauProfiler::GetKtauProfiler(tid);
 #endif /* defined(TAUKTAU) */
@@ -539,6 +547,7 @@ Profiler& Profiler::operator= (const Profiler& X)
 
 void Profiler::Stop(int tid, bool useLastTimeStamp)
 {
+//   fprintf (stderr, "[%d:%d-%d] Profiler::Stop for %s\n", getpid(), gettid(), tid, ThisFunction->GetName());
       x_uint64 TimeStamp = 0L; 
       if (CurrentProfiler[tid] == NULL) return;
 
@@ -932,7 +941,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 //////////////////////////////////////////////////////////////////////
 
 Profiler::~Profiler() {
-
      if (!StartStopUsed_) {
 	Stop();
       } // If ctor dtor interface is used then call Stop. 
@@ -3472,6 +3480,67 @@ static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler) {
 
 
 
+static void writeStringXML(FILE *f, const char *s) {
+  if (!s) return;
+  
+  bool useCdata = false;
+  
+  if (strchr(s, '<') || strchr(s, '&')) {
+    useCdata = true;
+  }
+  
+  if (strstr(s, "]]>")) {
+    useCdata = false;
+  }
+  
+  if (useCdata) {
+    fprintf (f,"<![CDATA[%s]]>",s);
+    return;
+  }
+
+  // could grow up to 5 times in length
+  char *str = (char *) malloc (6*strlen(s));
+  char *d = str;
+  while (*s) {
+    if ((*s == '<') || (*s == '>') || (*s == '&')) {
+      // escape these characters
+      if (*s == '<') {
+	strcpy (d,"&lt;");
+	d+=4;
+      }
+      
+      if (*s == '>') {
+	strcpy (d,"&gt;");
+	d+=4;
+      }
+      
+      if (*s == '&') {
+	strcpy (d,"&amp;");
+	d+=5;
+      }
+    } else {
+      *d = *s;
+      d++; 
+    }
+    
+    s++;
+  }
+  *d = 0;
+  
+  fprintf (f,"%s",str);
+  free (str);
+}
+
+static void writeEventXML(FILE *f, int id, FunctionInfo *fi) {
+  fprintf (f, "<event id=\"%d\"><name>", id);
+  writeStringXML(f, fi->GetName());
+  fprintf (f, "</name><group>");
+  writeStringXML(f, fi->GetAllGroups());
+  fprintf (f, "</group></event>\n");
+  return;
+}
+
+
 int Profiler::Snapshot(char *name, bool finalize, int tid) {
    FILE *fp = TauGetSnapshotFiles()[tid];
    if (finalize && !fp) { 
@@ -3556,8 +3625,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
      // write out events seen (so far)
      for (int i=0; i < numFunc; i++) {
        FunctionInfo *fi = TheFunctionDB()[i];
-       fprintf (fp, "<event id=\"%d\" name=\"%s\" group=\"%s\"/>\n",
-		i, fi->GetName(),  fi->GetAllGroups());
+       writeEventXML(fp, i, fi);
      }
 
      // remember the number of events we've written to the snapshot file
@@ -3575,8 +3643,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
      fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
      for (int i=TauGetSnapshotEventCounts()[tid]; i < numFunc; i++) {
        FunctionInfo *fi = TheFunctionDB()[i];
-       fprintf (fp, "<event id=\"%d\" name=\"%s\" group=\"%s\"/>\n",
-		i, fi->GetName(),  fi->GetAllGroups());
+       writeEventXML(fp, i, fi);
      }
      fprintf (fp, "</definitions>\n");
      TauGetSnapshotEventCounts()[tid] = numFunc;
@@ -3715,8 +3782,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.143 $   $Date: 2007/01/04 02:36:29 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.143 2007/01/04 02:36:29 amorris Exp $ 
+ * $Revision: 1.144 $   $Date: 2007/01/18 02:54:36 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.144 2007/01/18 02:54:36 amorris Exp $ 
  ***************************************************************************/
 
 	
