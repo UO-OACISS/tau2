@@ -33,9 +33,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collections;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
-import java.util.Vector;
 
 
 
@@ -46,13 +43,13 @@ import java.util.Vector;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.38 2007/01/04 21:20:04 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.39 2007/01/18 02:04:07 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
 public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfExplorer {
-	private static PerfExplorerServer.Facade _instance = null;
+	private static ScriptFacade _instance = null;
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>] [{-p,--port}=<port_number>]\n  where analysis_engine = R or Weka";
 	private DatabaseAPI session = null;
 	private Queue requestQueue = null;
@@ -101,7 +98,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private PerfExplorerServer(String configFile, EngineType analysisEngine,
 	int port, boolean quiet) throws RemoteException {
 		super(port);
-		_instance = new PerfExplorerServer.FacadeImpl(this);
+		_instance = new ScriptFacadeImpl(this);
 		PerfExplorerOutput.setQuiet(quiet);
 		theServer = this;
 		this.requestQueue = new Queue();
@@ -1421,155 +1418,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		}
 	}
 	
-    public static PerfExplorerServer.Facade getInstance() {
+    public static ScriptFacade getInstance() {
         return _instance;
-    }
-
-    // -------------------------------------------------------------------
-    // Nested types
-    // -------------------------------------------------------------------
-    /**
-     * The facade interface to the application for scripting purpose.
-     * This facade allows a limited and easy access from user scripts
-     * With this facade user do not have to traverse the object containment
-     * hierarchy. Also because the subsystems are not exposed, scripts are
-     * limited in what they can do.
-     */
-    public static interface Facade  {
-        public void doSomething();
-        public void setApplication(String name);
-        public void setExperiment(String name);
-        public void setTrial(String name);
-        public void setMetric(String name);
-        public void setDimensionReduction(TransformationType type, String parameter);
-        public void setAnalysisType(AnalysisType type);
-        public String requestAnalysis();
-    }
-
-    // -------------------------------------------------------------------
-    // Private inner types
-    // -------------------------------------------------------------------
-    private class FacadeImpl implements PerfExplorerServer.Facade {
-        private RMIPerfExplorerModel model = new RMIPerfExplorerModel();
-        private PerfExplorerServer server = null;
-
-        FacadeImpl(PerfExplorerServer server) {
-            this.server = server;
-        }
-
-        public void doSomething() {
-            PerfExplorerOutput.println("Testing Script Facade");
-            return;
-        }
-
-        public void setApplication(String name) {
-            // check the argument
-            if (name == null)
-                throw new IllegalArgumentException("Application name cannot be null.");
-            if (name.equals(""))
-                throw new IllegalArgumentException("Application name cannot be an empty string.");
-
-            boolean found = false;
-            for (ListIterator apps = server.getApplicationList().listIterator();                 apps.hasNext() && !found; ) {
-                Application app = (Application)apps.next();
-                if (app.getName().equals(name)) {
-                    model.setCurrentSelection(app);;
-                    found = true;
-                }
-            }
-            if (!found)
-                throw new NoSuchElementException("Application '" + name + "' not found.");
-        }
-
-        public void setExperiment(String name) {
-            // check the argument
-            if (name == null)
-                throw new IllegalArgumentException("Experiment name cannot be null.");
-            if (name.equals(""))
-                throw new IllegalArgumentException("Experiment name cannot be an empty string.");
-
-            Application app = model.getApplication();
-            if (app == null)
-                throw new NullPointerException("Application selection is null. Please select an Application before setting the Experiment.");
-            boolean found = false;
-            for (ListIterator exps = server.getExperimentList(app.getID()).listIterator();
-                 exps.hasNext() && !found;) {
-                Experiment exp = (Experiment)exps.next();
-                if (exp.getName().equals(name)) {
-                    model.setCurrentSelection(exp);
-                    found = true;
-                }
-            }
-            if (!found)
-                throw new NoSuchElementException("Experiment '" + name + "' not found.");
-        }
-
-        public void setTrial(String name) {
-            // check the argument
-            if (name == null)
-                throw new IllegalArgumentException("Trial name cannot be null.");
-            if (name.equals(""))
-                throw new IllegalArgumentException("Trial name cannot be an empty string.");
-
-            Experiment exp = model.getExperiment();
-            if (exp == null)
-                throw new NullPointerException("Experiment selection is null.  Please select an Experiment before setting the Trial.");
-            boolean found = false;
-            for (ListIterator trials = server.getTrialList(exp.getID()).listIterator();
-                 trials.hasNext() && !found;) {
-                Trial trial = (Trial)trials.next();
-                if (trial.getName().equals(name)) {
-                    model.setCurrentSelection(trial);
-                    found = true;
-                }
-            }
-            if (!found)
-                throw new NoSuchElementException("Trial '" + name + "' not found.");
-        }
-
-        public void setMetric(String name) {
-            // check the argument
-            if (name == null)
-                throw new IllegalArgumentException("Metric name cannot be null.");
-            if (name.equals(""))
-                throw new IllegalArgumentException("Metric name cannot be an empty string.");
-
-            Trial trial = model.getTrial();
-            if (trial == null)
-                throw new NullPointerException("Trial selection is null.  Please select a Trial before setting the Metric.");
-            boolean found = false;
-            Vector metrics = trial.getMetrics();
-            for (int i = 0, size = metrics.size(); i < size && !found ; i++) {
-                Metric metric = (Metric)metrics.elementAt(i);
-                if (metric.getName().equals(name)) {
-                    model.setCurrentSelection(metric);
-                    found = true;
-                }
-            }
-            if (!found)
-                throw new NoSuchElementException("Metric '" + name + "' not found.");
-        }
-
-        public void setDimensionReduction(TransformationType type, String parameter) {
-            if (type == null)
-                throw new IllegalArgumentException("TransformationType type cannot be null.");
-
-            model.setDimensionReduction(type);
-            if (type == TransformationType.OVER_X_PERCENT) {
-                if (parameter == null)
-                    throw new IllegalArgumentException("Object parameter cannot be null.");
-                model.setXPercent(parameter);
-            }
-        }
-
-        public void setAnalysisType(AnalysisType type) {
-            model.setClusterMethod(type);
-        }
-
-        public String requestAnalysis() {
-            return server.requestAnalysis(model, true);
-        }
-
     }
 
 }

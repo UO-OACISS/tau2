@@ -18,6 +18,7 @@ peserver.setTrial("8K.old")
 peserver.setMetric("Time")
 peserver.setDimensionReduction(TransformationType.OVER_X_PERCENT, "2")
 peserver.setAnalysisType(AnalysisType.K_MEANS)
-peserver.requestAnalysis()
+# peserver.requestAnalysis()
+peserver.DoANOVA()
 
 print "---------------- JPython test script end -------------"
