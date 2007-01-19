@@ -1,4 +1,4 @@
-from server import PerfExplorerServer
+from client import ScriptFacade
 from common import TransformationType
 from common import AnalysisType
 
@@ -7,7 +7,7 @@ print "--------------- JPython test script start ------------"
 x = 2 + 5
 print x
 
-peserver = PerfExplorerServer.getInstance()
+peserver = ScriptFacade()
 peserver.doSomething()
 
 # let's do something interesting...
@@ -19,6 +19,6 @@ peserver.setMetric("Time")
 peserver.setDimensionReduction(TransformationType.OVER_X_PERCENT, "2")
 peserver.setAnalysisType(AnalysisType.K_MEANS)
 # peserver.requestAnalysis()
-peserver.DoANOVA()
+peserver.showDataSummary()
 
 print "---------------- JPython test script end -------------"

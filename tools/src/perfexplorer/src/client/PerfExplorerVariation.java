@@ -9,6 +9,8 @@ package client;
 
 import java.awt.Point;
 import java.awt.Dimension;
+import java.awt.Toolkit;
+
 import javax.swing.JFrame;
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
@@ -57,20 +59,24 @@ public class PerfExplorerVariation {
         //Window Stuff.
         int windowWidth = 800;
         int windowHeight = 400;
+        int xPosition = 0;
+        int yPosition = 0;
         
         //Grab paraProfManager position and size.
-        Point parentPosition = PerfExplorerClient.getMainFrame().getLocationOnScreen();
-        Dimension parentSize = PerfExplorerClient.getMainFrame().getSize();
-        int parentWidth = parentSize.width;
-        int parentHeight = parentSize.height;
-        
-        //Set the window to come up in the center of the screen.
-        int xPosition = (parentWidth - windowWidth) / 2;
-        int yPosition = (parentHeight - windowHeight) / 2;
-
-        xPosition = (int) parentPosition.getX() + xPosition;
-        yPosition = (int) parentPosition.getY() + yPosition;
-
+        JFrame main = PerfExplorerClient.getMainFrame();
+        if (main != null) {
+	        Point parentPosition = PerfExplorerClient.getMainFrame().getLocationOnScreen();
+	        Dimension parentSize = PerfExplorerClient.getMainFrame().getSize();
+	        int parentWidth = parentSize.width;
+	        int parentHeight = parentSize.height;
+	        
+	        //Set the window to come up in the center of the screen.
+	        xPosition = (parentWidth - windowWidth) / 2;
+	        yPosition = (parentHeight - windowHeight) / 2;
+	
+	        xPosition = (int) parentPosition.getX() + xPosition;
+	        yPosition = (int) parentPosition.getY() + yPosition;
+        }
         frame.setLocation(xPosition, yPosition);
         frame.setSize(new java.awt.Dimension(windowWidth, windowHeight));
         scrollPane.setPreferredSize(new java.awt.Dimension(windowWidth, windowHeight));

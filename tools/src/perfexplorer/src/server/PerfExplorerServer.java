@@ -34,8 +34,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Collections;
 
-
-
 /**
  * The main PerfExplorer Server class.  This class is defined as a singleton,
  * with multiple threads.  The main thread processes interactive requests, 
@@ -43,13 +41,12 @@ import java.util.Collections;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.39 2007/01/18 02:04:07 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.40 2007/01/19 01:16:56 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
 public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfExplorer {
-	private static ScriptFacade _instance = null;
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>] [{-p,--port}=<port_number>]\n  where analysis_engine = R or Weka";
 	private DatabaseAPI session = null;
 	private Queue requestQueue = null;
@@ -98,7 +95,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private PerfExplorerServer(String configFile, EngineType analysisEngine,
 	int port, boolean quiet) throws RemoteException {
 		super(port);
-		_instance = new ScriptFacadeImpl(this);
 		PerfExplorerOutput.setQuiet(quiet);
 		theServer = this;
 		this.requestQueue = new Queue();
@@ -1080,10 +1076,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				data.addValues(values);
 			}
 			data.addValueName("name");
-			data.addValueName("avg exclusive");
-			data.addValueName("avg exclusive %");
-			data.addValueName("avg calls");
-			data.addValueName("avg exclusive per call");
+			data.addValueName("excl");
+			data.addValueName("excl %");
+			data.addValueName("calls");
+			data.addValueName("excl/call");
 			data.addValueName("max");
 			data.addValueName("min");
 			data.addValueName("stddev");
@@ -1417,10 +1413,5 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			e.printStackTrace();
 		}
 	}
-	
-    public static ScriptFacade getInstance() {
-        return _instance;
-    }
-
 }
 

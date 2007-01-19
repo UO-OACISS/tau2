@@ -96,6 +96,7 @@ public class PerfExplorerActionListener implements ActionListener {
 				} else if (arg.equals(DO_CORRELATION_ANALYSIS)) {
 					if (validCorrelationSelection())
 						createDoCorrelationWindow();
+			// data display items
 				} else if (arg.equals(DO_CORRELATION_CUBE)) {
 					if (valid3DSelection())
 						PerfExplorerCube.doCorrelationCube();

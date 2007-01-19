@@ -1,47 +1,71 @@
-package server;
+package client;
 
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
+
 import common.AnalysisType;
 import common.PerfExplorerOutput;
 import common.RMIPerfExplorerModel;
+import common.RMIVarianceData;
 import common.TransformationType;
+import common.AnalysisType;
+import common.TransformationType;
+import common.EngineType;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
- * The implementation of the PerfExplorerServer Facade.
- * This class is declared as package private.
+ * The facade interface to the application for scripting purpose. This facade
+ * allows a limited and easy access from user scripts With this facade user do
+ * not have to traverse the object containment hierarchy. Also because the
+ * subsystems are not exposed, scripts are limited in what they can do.
  */
-class ScriptFacadeImpl implements ScriptFacade {
-    /**
-	 * 
-	 */
-	private RMIPerfExplorerModel model = new RMIPerfExplorerModel();
-    private final PerfExplorerServer server;
+public class ScriptFacade {
+	private final PerfExplorerConnection connection;
+	private final PerfExplorerModel model;
 
-    ScriptFacadeImpl(PerfExplorerServer server) {
-		this.server = server;
+    public ScriptFacade() {
+		connection = PerfExplorerConnection.getConnection();
+		model = PerfExplorerModel.getModel();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see server.PerfExplorerServer.Facade#doSomething()
-     */
+	public ScriptFacade(String configFile, EngineType analysisEngine) {
+		PerfExplorerOutput.setQuiet(false);
+		PerfExplorerConnection.setStandalone(true);
+		PerfExplorerConnection.setConfigFile(configFile);
+		PerfExplorerConnection.setAnalysisEngine(analysisEngine);
+		connection = PerfExplorerConnection.getConnection();
+		model = PerfExplorerModel.getModel();
+	}
+
+	/**
+	 * Test method for the facade class.
+	 * 
+	 */
     public void doSomething() {
         PerfExplorerOutput.println("Testing Script Facade");
         return;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see server.PerfExplorerServer.Facade#setApplication(java.lang.String)
+    /**
+     * Exit the application.
+     * 
      */
+    public void exit() {
+    	System.exit(0);
+    }
+    
+	/**
+	 * Set the focus on the application specified.
+	 * 
+	 * @param name
+	 */
     public void setApplication(String name) {
         // check the argument
         if (name == null)
@@ -50,7 +74,7 @@ class ScriptFacadeImpl implements ScriptFacade {
             throw new IllegalArgumentException("Application name cannot be an empty string.");
 
         boolean found = false;
-        for (ListIterator apps = server.getApplicationList().listIterator();                 apps.hasNext() && !found; ) {
+        for (ListIterator apps = connection.getApplicationList(); apps.hasNext() && !found; ) {
             Application app = (Application)apps.next();
             if (app.getName().equals(name)) {
                 model.setCurrentSelection(app);;
@@ -61,10 +85,11 @@ class ScriptFacadeImpl implements ScriptFacade {
             throw new NoSuchElementException("Application '" + name + "' not found.");
     }
 
-    /*
-     * (non-Javadoc)
-     * @see server.PerfExplorerServer.Facade#setExperiment(java.lang.String)
-     */
+	/**
+	 * Set the focus on the experiment specified.
+	 * 
+	 * @param name
+	 */
     public void setExperiment(String name) {
         // check the argument
         if (name == null)
@@ -76,7 +101,7 @@ class ScriptFacadeImpl implements ScriptFacade {
         if (app == null)
             throw new NullPointerException("Application selection is null. Please select an Application before setting the Experiment.");
         boolean found = false;
-        for (ListIterator exps = server.getExperimentList(app.getID()).listIterator();
+        for (ListIterator exps = connection.getExperimentList(app.getID());
              exps.hasNext() && !found;) {
             Experiment exp = (Experiment)exps.next();
             if (exp.getName().equals(name)) {
@@ -88,10 +113,11 @@ class ScriptFacadeImpl implements ScriptFacade {
             throw new NoSuchElementException("Experiment '" + name + "' not found.");
     }
 
-    /*
-     * (non-Javadoc)
-     * @see server.PerfExplorerServer.Facade#setTrial(java.lang.String)
-     */
+	/**
+	 * Set the focus on the trial specified.
+	 * 
+	 * @param name
+	 */
     public void setTrial(String name) {
         // check the argument
         if (name == null)
@@ -103,7 +129,7 @@ class ScriptFacadeImpl implements ScriptFacade {
         if (exp == null)
             throw new NullPointerException("Experiment selection is null.  Please select an Experiment before setting the Trial.");
         boolean found = false;
-        for (ListIterator trials = server.getTrialList(exp.getID()).listIterator();
+        for (ListIterator trials = connection.getTrialList(exp.getID());
              trials.hasNext() && !found;) {
             Trial trial = (Trial)trials.next();
             if (trial.getName().equals(name)) {
@@ -115,10 +141,11 @@ class ScriptFacadeImpl implements ScriptFacade {
             throw new NoSuchElementException("Trial '" + name + "' not found.");
     }
 
-    /*
-     * (non-Javadoc)
-     * @see server.PerfExplorerServer.Facade#setMetric(java.lang.String)
-     */
+	/**
+	 * Set the focus on the metric specified.
+	 * 
+	 * @param name
+	 */
     public void setMetric(String name) {
         // check the argument
         if (name == null)
@@ -142,10 +169,12 @@ class ScriptFacadeImpl implements ScriptFacade {
             throw new NoSuchElementException("Metric '" + name + "' not found.");
     }
 
-    /*
-     * (non-Javadoc)
-     * @see server.PerfExplorerServer.Facade#setDimensionReduction(common.TransformationType, java.lang.String)
-     */
+	/**
+	 * Choose the dimension reduction method.
+	 * 
+	 * @param type
+	 * @param parameter
+	 */
     public void setDimensionReduction(TransformationType type, String parameter) {
         if (type == null)
             throw new IllegalArgumentException("TransformationType type cannot be null.");
@@ -158,46 +187,107 @@ class ScriptFacadeImpl implements ScriptFacade {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see server.PerfExplorerServer.Facade#setAnalysisType(common.AnalysisType)
-     */
+	/**
+	 * Set the analysis method.
+	 * 
+	 * @param type
+	 */
     public void setAnalysisType(AnalysisType type) {
         model.setClusterMethod(type);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see server.PerfExplorerServer.Facade#requestAnalysis()
-     */
+	/**
+	 * Request the analysis configured.
+	 * 
+	 * @return
+	 */
     public String requestAnalysis() {
-        return server.requestAnalysis(model, true);
+        return connection.requestAnalysis(model, true);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see server.ScriptFacade#DoANOVA()
-     */
-    public void DoANOVA() {
+	/**
+	 * Request the ANOVA results.
+	 * 
+	 */
+    public void doANOVA() {
     	PerfExplorerOutput.println("Doing ANOVA");
     	return;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see server.ScriptFacade#Do3DCorrelationCube()
-     */
-	public void Do3DCorrelationCube() {
+	/**
+	 * Request a 3D view of correlation data
+	 *
+	 */
+	public void do3DCorrelationCube() {
 		// TODO Auto-generated method stub
 		
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see server.ScriptFacade#SetMaximumNumberOfClusters(int)
+	/**
+	 * Set the maximum number of clusters for cluster analysis
+	 * 
+	 * @param max
 	 */
-	public void SetMaximumNumberOfClusters(int max) {
+	public void setMaximumNumberOfClusters(int max) {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	/**
+	 * Create boxcharts, and display them
+	 *
+	 */
+	public void createBoxChart() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/**
+	 * Create the data histograms
+	 *
+	 */
+	public void createHistograms() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/**
+	 * Create the normal probability chart
+	 *
+	 */
+	public void createNormalProbabilityChart() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * Show the summary of the profile data
+	 *
+	 */
+	public void showDataSummary() {
+		// get the data
+		RMIVarianceData data = connection.requestVariationAnalysis(model);
+		PerfExplorerOutput.print(UtilFncs.pad(data.getValueName(0), 25).toUpperCase() + " " );
+		for (int i = 1 ; i < data.getValueCount() ; i++) {
+			PerfExplorerOutput.print(UtilFncs.lpad(data.getValueName(i), 11).toUpperCase() + " " );
+		}
+		PerfExplorerOutput.print("\n");
+		Object[][] matrix = data.getDataMatrix();
+		int maxSize = 25;
+		for (int i = 0 ; i < data.getEventCount() ; i++) {
+			for (int j = 0 ; j < data.getValueCount() ; j++) {
+				if (matrix[i][j] instanceof String) {
+					String s = (String)matrix[i][j];
+	      			s = (s.length() > maxSize ? s.substring(0, maxSize) : s);
+					PerfExplorerOutput.print(UtilFncs.pad(s, maxSize) + " " );
+				}
+				else if (matrix[i][j] instanceof Double) {
+					Double d = (Double)matrix[i][j];
+					PerfExplorerOutput.print(UtilFncs.lpad(UtilFncs.formatDouble(d.doubleValue(), 10, true), 11) + " ");
+				}
+			}
+			PerfExplorerOutput.print("\n");
+		}
+	}
+
 }

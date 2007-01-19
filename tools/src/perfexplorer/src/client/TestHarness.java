@@ -148,7 +148,7 @@ public class TestHarness {
 			e.printStackTrace();
 		}
 
-		finally {
+/*		finally {
 			System.out.println("Shutting down server...");
 			connection.stopServer();
 			try {
@@ -159,7 +159,7 @@ public class TestHarness {
 			}
 			System.out.println("Exiting...");
 			System.exit(0);
-		}
+		}*/
 	}
 
 	private Application setApplication(String name) {

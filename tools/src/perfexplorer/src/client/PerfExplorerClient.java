@@ -153,20 +153,14 @@ public class PerfExplorerClient extends JFrame {
 				System.err.println(USAGE);
 				System.exit(-1);
 			}
-			if (engine == null) {
+			try {
+				analysisEngine = EngineType.getType(engine);
+			} catch (Exception e) {
 				System.err.println("Please enter a valid engine type.");
-				System.err.println(USAGE);
-				System.exit(-1);
-			} else if (engine.equalsIgnoreCase("R")) {
-				analysisEngine = EngineType.RPROJECT;
-			} else if (engine.equalsIgnoreCase("weka")) {
-				analysisEngine = EngineType.WEKA;
-			} else {
 				System.err.println(USAGE);
 				System.exit(-1);
 			}
 		}
-
 
 /*
 		try {
