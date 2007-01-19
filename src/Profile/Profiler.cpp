@@ -82,6 +82,10 @@ using namespace std;
 #endif /* TAU_EPILOG */
 #endif // TRACING_ON 
 
+#ifdef RENCI_STFF
+#include "Profile/RenciSTFF.h"
+#endif // RENCI_STFF
+
 //#define PROFILE_CALLS // Generate Excl Incl data for each call 
 
 //////////////////////////////////////////////////////////////////////
@@ -704,6 +708,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #ifdef TAU_CALLPATH
 	    CallPathStop(TotalTime, tid);
 #endif // TAU_CALLPATH
+
+#ifdef RENCI_STFF
+#ifdef TAU_CALLPATH
+        RenciSTFF::recordValues(CallPathFunction, TimeStamp, TotalTime, tid);
+#endif //TAU_CALLPATH
+        RenciSTFF::recordValues(ThisFunction, TimeStamp, TotalTime, tid);
+#endif //RENCI_STFF
+
 #ifdef TAU_PROFILEPARAM
 	    ProfileParamStop(TotalTime, tid);
             if (ParentProfiler && ParentProfiler->ProfileParamFunction)
@@ -985,6 +997,9 @@ void Profiler::ProfileExit(const char *message, int tid)
     }
   }
 
+#ifdef RENCI_STFF  
+  RenciSTFF::cleanup();
+#endif // RENCI_STFF  
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -3774,8 +3789,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.145 $   $Date: 2007/01/18 21:44:11 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.145 2007/01/18 21:44:11 amorris Exp $ 
+ * $Revision: 1.146 $   $Date: 2007/01/19 19:21:52 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.146 2007/01/19 19:21:52 amorris Exp $ 
  ***************************************************************************/
 
 	

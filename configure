@@ -245,6 +245,10 @@ ktauinc=
 ktausym=
 catamount=no
 gpshmem=no
+stff=no
+stffdir=
+sddf=no
+sddfdir=
 
 # debug:
 # echo $arguments
@@ -724,6 +728,26 @@ do
     shift
     ;;
 
+  -stff=*)
+    stffdir=`echo $arg | sed -e 's/-stff=//' -e 's/ /#/g'`
+    if [ ! -d $stffdir ] ; then
+        echo "Error: couldn't find RENCI STFF library in $stffdir"
+        exit 1
+    fi
+    stff=yes
+    shift
+    ;;
+
+  -sddf=*)
+    sddfdir=`echo $arg | sed -e 's/-sddf=//' -e 's/ /#/g'`
+    if [ ! -d $sddfdir ] ; then
+        echo "Error: couldn't find sddf library in $sddfdir"
+        exit 1
+    fi
+    sddf=yes
+    shift
+    ;;
+
   -pythoninc=*)
     pythoninc=`echo $arg | sed -e 's/-pythoninc=//' -e 's/ /#/g'`
     if [ ! -d $pythoninc ]
@@ -1026,6 +1050,8 @@ do
     echo "                                w/ non-monotonically increasing values." 
     echo "-muse_multiple ........................ Specify the use of MAGNET/MUSE." 
     echo "                                    w/ monotonically increasing values." 
+    echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
+    echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
@@ -1473,6 +1499,15 @@ fi
 if [ $profilecallstack = yes ]
   then
       fixmakeargs="$fixmakeargs CALLSTACK"
+fi
+
+if [ $stff = yes ]
+  then
+      fixmakeargs="$fixmakeargs RENCI_STFF stffdir=${stffdir} sddfdir=${sddfdir}"
+      tauoptions="${tauoptions}-stff"
+      if [ $sddf = no -o "x$sddfdir" = "x" ]; then
+          echo "Error: Must specify -sddf=/path/to/sddflib along with -stff=/path/to/stfflib!"
+      fi
 fi
 
 if [ $trace = yes ]

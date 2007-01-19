@@ -201,6 +201,16 @@ fi
 	#echo "Using PYTHON LIB DIR =" $pythonlib
 	;;
 
+     stffdir=*)
+	stffdir=`echo $1 | sed -e 's/^stffdir=//'`
+	echo "s,^STFF_DIR=.*$,STFF_DIR=$stffdir,g" >> $sedout
+	;;
+
+     sddfdir=*)
+	sddfdir=`echo $1 | sed -e 's/^sddfdir=//'`
+	echo "s,^SDDF_DIR=.*$,SDDF_DIR=$sddfdir,g" >> $sedout
+	;;
+
      tulipdir=*)
         tulipdir=`echo $1 | sed -e 's/^tulipdir=//'`
 	echo "s,^TULIPDIR=.*$,TULIPDIR=$tulipdir,g" >> $sedout
@@ -815,6 +825,10 @@ fi
 	echo "NOTE: *** Symmetry Dynix development environment found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+    RENCI_STFF)
+       echo "NOTE: Using RENCI STFF library. ***"
+       echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+       ;;
      TCLTK)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;

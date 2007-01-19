@@ -51,6 +51,10 @@
 #include <Profile/KtauFuncInfo.h>
 #endif /* TAUKTAU && TAUKTAU_MERGE */
 
+#ifdef RENCI_STFF
+#include "Profile/RenciSTFF.h"
+#endif //RENCI_STFF
+
 class TauUserEvent; 
 
 class FunctionInfo
@@ -126,8 +130,24 @@ public:
 	TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
 #endif // TAU_PROFILEHEADROOM
 
-
-
+#ifdef RENCI_STFF
+#ifndef TAU_MULTIPLE_COUNTERS
+    // signatures for inclusive time for each thread
+    TAU_STORAGE(ApplicationSignature*, Signatures);
+    ApplicationSignature* GetSignature(int tid) {
+        return Signatures[tid];
+}
+    void SetSignature(ApplicationSignature *sig, int tid) {
+        Signatures[tid] = sig;
+}
+#else // TAU_MULTIPLE_COUNTERS
+    // signatures for inclusive time for each counter in each thread
+    TAU_MULTSTORAGE(ApplicationSignature*, Signatures);
+    ApplicationSignature** GetSignature(int tid) {
+        return Signatures[tid];
+}
+#endif // TAU_MULTIPLE_COUNTERS
+#endif //RENCI_STFF
 
 #ifdef PROFILE_CALLSTACK 
   	double InclTime_cs;
@@ -327,6 +347,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.41 $   $Date: 2006/10/09 18:53:49 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.41 2006/10/09 18:53:49 amorris Exp $ 
+ * $Revision: 1.42 $   $Date: 2007/01/19 19:21:52 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.42 2007/01/19 19:21:52 amorris Exp $ 
  ***************************************************************************/

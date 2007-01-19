@@ -68,7 +68,8 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/OpenMPLayer.h  $(INCDIR)/TauJAPI.h	      \
 		$(INCDIR)/SprocLayer.h   $(INCDIR)/PyGroups.h         \
 		$(INCDIR)/PyExceptions.h $(INCDIR)/PyDatabase.h       \
-		$(INCDIR)/PyBindings.h   $(INCDIR)/PyTimer.h     
+		$(INCDIR)/PyBindings.h   $(INCDIR)/PyTimer.h          \
+		$(INCDIR)/RenciSTFF.h
 
 LDFLAGS	      = $(PCXX_OPT) 
 
@@ -80,7 +81,7 @@ OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		$(PARAM_O) $(EVENTS_O) $(THR_O) \
 		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(CALLPATH_O) $(PYTHON_O) $(MUSE_O) \
-		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O)
+		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O) $(RENCI_STFF_O)
 
 PRINT	      = pr
 
