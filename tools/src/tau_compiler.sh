@@ -967,7 +967,8 @@ if [ $gotoNextStep == $TRUE ]; then
 	
 		if [ $opari == $TRUE ]; then
 	  	  evalWithDebugMessage "/bin/rm -f opari.rc" "Removing opari.rc"
-	  	  cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} opari.tab.c"
+	          cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} opari.tab.c"
+
 		  evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	  	  objectFilesForLinking="$objectFilesForLinking opari.tab.o"
 		fi
