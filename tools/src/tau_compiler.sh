@@ -179,8 +179,6 @@ echoIfDebug "\nRegular command passed is --  $regularCmd ";
 echoIfDebug "The compiler being read is $CMD \n"
 
 
-
-
 ####################################################################
 # Initialize optOpariOpts 
 ####################################################################
@@ -974,7 +972,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	  	  objectFilesForLinking="$objectFilesForLinking opari.tab.o"
 		fi
 
-		newCmd="$CMD  $argsRemaining $listOfObjectFiles $objectFilesForLinking $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
+		newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
 		evalWithDebugMessage "$newCmd" "Linking (Together) object files"
 
 		if [ ! -e $passedOutputFile ] ; then
