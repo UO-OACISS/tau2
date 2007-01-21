@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.6 2007/01/18 02:56:08 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.7 2007/01/21 23:16:13 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  * @see		Function
  */
 public class FunctionProfile {
@@ -202,17 +202,17 @@ public class FunctionProfile {
         CallPathData callPathData = getCallPathData();
 
         if (callPathData.childProfiles == null)
-            callPathData.childProfiles = new TreeSet();
+            callPathData.childProfiles = new HashSet();
         callPathData.childProfiles.add(child);
 
         if (callPathData.childProfileCallPathSets == null)
-            callPathData.childProfileCallPathSets = new TreeMap();
+            callPathData.childProfileCallPathSets = new HashMap();
 
         // we maintain a set of callpaths for each child, retrieve the set for this child
         Set callPathSet = (Set) callPathData.childProfileCallPathSets.get(child);
 
         if (callPathSet == null) {
-            callPathSet = new TreeSet();
+            callPathSet = new HashSet();
             callPathData.childProfileCallPathSets.put(child, callPathSet);
         }
 
@@ -228,17 +228,17 @@ public class FunctionProfile {
         CallPathData callPathData = getCallPathData();
 
         if (callPathData.parentProfiles == null)
-            callPathData.parentProfiles = new TreeSet();
+            callPathData.parentProfiles = new HashSet();
         callPathData.parentProfiles.add(parent);
 
         if (callPathData.parentProfileCallPathSets == null)
-            callPathData.parentProfileCallPathSets = new TreeMap();
+            callPathData.parentProfileCallPathSets = new HashMap();
 
         // we maintain a set of callpaths for each child, retrieve the set for this child
         Set callPathSet = (Set) callPathData.parentProfileCallPathSets.get(parent);
 
         if (callPathSet == null) {
-            callPathSet = new TreeSet();
+            callPathSet = new HashSet();
             callPathData.parentProfileCallPathSets.put(parent, callPathSet);
         }
 
