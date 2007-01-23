@@ -33,6 +33,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collections;
+import clustering.AnalysisFactory;
+import clustering.ClusterException;
 
 /**
  * The main PerfExplorer Server class.  This class is defined as a singleton,
@@ -41,7 +43,7 @@ import java.util.Collections;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.40 2007/01/19 01:16:56 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.41 2007/01/23 18:46:29 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -53,6 +55,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private java.lang.Thread timerThread = null;
 	private TimerThread timer = null;
 	private static PerfExplorerServer theServer = null;
+	private AnalysisFactory factory = null;
 
 	/**
 	 * Static method to get the server instance reference.
@@ -117,11 +120,25 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
             System.err.println(buf.toString());
 			System.exit(1);
 		}
-		timer = new TimerThread(this, workerSession, analysisEngine);
+        try {
+            factory = clustering.AnalysisFactory.buildFactory(analysisEngine);
+        } catch (ClusterException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+		timer = new TimerThread(this, workerSession);
 		timerThread = new java.lang.Thread(timer);
 		this.timerThread.start();
 	}
 
+	/**
+	 * Return the constructed analysisfactory.
+	 * @return
+	 */
+	public AnalysisFactory getAnalysisFactory() {
+		return factory;
+	}
+	
 	/**
 	 * Test method.
 	 * 

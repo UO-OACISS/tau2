@@ -66,7 +66,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.3 2007/01/04 21:20:04 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.4 2007/01/23 18:46:29 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -99,18 +99,11 @@ public class AnalysisTask extends TimerTask {
     * @param server
     * @param engine
     */
-    public AnalysisTask (PerfExplorerServer server, DatabaseAPI session,
-        EngineType engine) {
+    public AnalysisTask (PerfExplorerServer server, DatabaseAPI session) {
         super();
         this.server = server;
         this.session = session;
-        
-        try {
-            factory = clustering.AnalysisFactory.buildFactory(engine);
-        } catch (ClusterException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
-        }
+        this.factory = server.getAnalysisFactory();
     }
 
     /**
@@ -196,38 +189,6 @@ public class AnalysisTask extends TimerTask {
 			//PerfExplorerOutput.println(statement.toString());
        		statement.executeUpdate();
        		statement.close();
-       		// get the new ID
-/*			String tmpStr = new String();
-			if (db.getDBType().compareTo("mysql") == 0) {
-		   	tmpStr = "select LAST_INSERT_ID();";
-			} else if (db.getDBType().compareTo("db2") == 0) {
-		   	tmpStr = "select IDENTITY_VAL_LOCAL() FROM analysis_result";
-			} else if (db.getDBType().compareTo("oracle") == 0) {
-		   	tmpStr = "SELECT ar_id_seq.currval FROM DUAL";
-			} else { // postgresql 
-		   	tmpStr = "select currval('analysis_result_id_seq');";
-			}
-			int analysisResultID = Integer.parseInt(db.getDataItem(tmpStr));
-			
-			buf = new StringBuffer();
-			buf.append("insert into analysis_result_data ");
-			buf.append(" (interval_event, metric, value, data_type, analysis_result, cluster_index)");
-			buf.append(" values (?, ?, ?, ?, ?, ?)");
-			statement = db.prepareStatement(buf.toString());
-			Instances instances = (Instances) centroids.getData();
-			for (int i = 0 ; i < instances.numInstances() ; i++) {
-				Instance instance = instances.instance(i);
-				for (int j = 0 ; j < numEvents ; j++) {
-					statement.setString(1, (String) eventIDs.elementAt(j));
-					statement.setInt(2, ((Metric)(modelData.getCurrentSelection())).getID());
-					statement.setDouble(3, instance.value(j));
-					statement.setInt(4, 0);
-					statement.setInt(5, analysisResultID);
-					statement.setInt(6, i);
-		       		statement.executeUpdate();
-				}
-			}
-*/       		statement.close();
        		db.commit();
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't insert the analysis results into the database!";
@@ -573,8 +534,8 @@ public class AnalysisTask extends TimerTask {
 						RawDataInterface deviations = clusterer.getClusterStandardDeviations();
 						int[] clusterSizes = clusterer.getClusterSizes();
 						// do histograms
-						File thumbnail = generateThumbnail(clusterSizes, eventIDs);
-						File chart = generateImage(clusterSizes, eventIDs);
+						File thumbnail = ImageUtils.generateThumbnail(modelData, clusterSizes, eventIDs);
+						File chart = ImageUtils.generateImage(modelData, clusterSizes, eventIDs);
 						// TODO - fix this to save the cluster sizes, too!
 						chartType = ChartType.HISTOGRAM;
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
@@ -591,12 +552,11 @@ public class AnalysisTask extends TimerTask {
 						RawDataInterface[] clusters = pca.getClusters();
 						// do a scatterplot
 						rCorrelation = 0.0;
-						chartType = ChartType.PCA_SCATTERPLOT;
 						//for (int m = 0 ; m < i ; m++)
 							//clusters[m].normalizeData(true);
 						//PerfExplorerOutput.println("PCA Dimensions: " + components.numDimensions());
-						thumbnail = generateThumbnail(clusters);
-						chart = generateImage(components, clusters);
+						thumbnail = ImageUtils.generateThumbnail(ChartType.PCA_SCATTERPLOT, modelData, clusters);
+						chart = ImageUtils.generateImage(ChartType.PCA_SCATTERPLOT, modelData, components, clusters);
 						saveAnalysisResult(components, components, thumbnail, chart);
 						}
 						
@@ -608,18 +568,18 @@ public class AnalysisTask extends TimerTask {
 						
 						// do mins
 						chartType = ChartType.CLUSTER_MINIMUMS;
-						thumbnail = generateThumbnail(clusterer.getClusterMinimums(), deviations, eventIDs);
-						chart = generateImage(clusterer.getClusterMinimums(), deviations, eventIDs);
+						thumbnail = ImageUtils.generateThumbnail(modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
+						chart = ImageUtils.generateImage(chartType, modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
 						saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
 						// do averages
 						chartType = ChartType.CLUSTER_AVERAGES;
-						thumbnail = generateThumbnail(centroids, deviations, eventIDs);
-						chart = generateImage(centroids, deviations, eventIDs);
+						thumbnail = ImageUtils.generateThumbnail(modelData, centroids, deviations, eventIDs);
+						chart = ImageUtils.generateImage(chartType, modelData, centroids, deviations, eventIDs);
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
 						// do maxes
 						chartType = ChartType.CLUSTER_MAXIMUMS;
-						thumbnail = generateThumbnail(clusterer.getClusterMaximums(), deviations, eventIDs);
-						chart = generateImage(clusterer.getClusterMaximums(), deviations, eventIDs);
+						thumbnail = ImageUtils.generateThumbnail(modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
+						chart = ImageUtils.generateImage(chartType, modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
 						saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart);
 					}
 				} else {
@@ -640,8 +600,8 @@ public class AnalysisTask extends TimerTask {
 					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
 						for (int j = 0 ; j < reducedData.numDimensions() ; j++) {
 							rCorrelation = reducedData.getCorrelation(i,j);
-							File thumbnail = generateThumbnail(reducedData, i, j);
-							File chart = generateImage(reducedData, i, j);
+							File thumbnail = ImageUtils.generateThumbnail(chartType, modelData, reducedData, i, j, correlateToMain);
+							File chart = ImageUtils.generateImage(chartType, modelData, reducedData, i, j, correlateToMain, rCorrelation);
 							saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
 						}
 						//PerfExplorerOutput.println("Finished: " + (i+1) + " of " + reducedData.numDimensions());
@@ -661,305 +621,5 @@ public class AnalysisTask extends TimerTask {
 			//PerfExplorerOutput.println("nothing to do... ");
 			
 	}
-	
-	/**
-	 * 
-	 * @param centroids
-	 * @param deviations
-	 * @param rowLabels
-	 * @return
-	 */
-	public File generateThumbnail(RawDataInterface centroids, RawDataInterface deviations, List rowLabels) {
-		// create a JFreeChart of this analysis data.  Create a stacked bar chart
-		// with standard deviation bars?
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-		for (int x = 0 ; x < centroids.numVectors() ; x++) {
-			for (int y = 0 ; y < centroids.numDimensions() ; y++) {
-				dataset.addValue(centroids.getValue(x,y), (String)rowLabels.get(y), new String(Integer.toString(x)));
-			}
-		}
-        JFreeChart chart = ChartFactory.createStackedBarChart(
-        		null, null, null,     // range axis label
-            dataset,                         // data
-            PlotOrientation.HORIZONTAL,        // the plot orientation
-            false,                            // legend
-            true,                            // tooltips
-            false                            // urls
-        );
-        File outfile = new File("/tmp/thumbnail." + modelData.toShortString() + ".png");
-        try {
-        		ChartUtilities.saveChartAsPNG(outfile, chart, 100, 100);
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-			e.printStackTrace();
-		}
-        return outfile;
-	}
-
-	/**
-	 * @param clusterSizes
-	 * @param rowLabels
-	 * @return
-	 */
-	public File generateThumbnail(int[] clusterSizes, List rowLabels) {
-		// create a JFreeChart of this analysis data.  Create a stacked bar chart
-		// with standard deviation bars?
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-		for (int x = 0 ; x < clusterSizes.length ; x++) {
-			dataset.addValue(clusterSizes[x], "Threads in cluster", new String(Integer.toString(x)));
-		}
-        JFreeChart chart = ChartFactory.createStackedBarChart(
-        		null, null, null,     // range axis label
-            dataset,                         // data
-            PlotOrientation.HORIZONTAL,        // the plot orientation
-            false,                            // legend
-            true,                            // tooltips
-            false                            // urls
-        );
-        File outfile = new File("/tmp/thumbnail." + modelData.toShortString() + ".png");
-        try {
-        		ChartUtilities.saveChartAsPNG(outfile, chart, 100, 100);
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-			e.printStackTrace();
-		}
-        return outfile;
-	}
-
-	/**
-	 * @param pcaData
-	 * @param rawData
-	 * @param clusterer
-	 * @return
-	 */
-	public File generateThumbnail(RawDataInterface[] clusters) {
-		File outfile = null;
-		if (chartType == ChartType.PCA_SCATTERPLOT) {
-	        XYDataset data = new PCAPlotDataset(clusters);
-	        JFreeChart chart = ChartFactory.createScatterPlot(
-	            null, null, null, data, PlotOrientation.VERTICAL, false, false, false);
-	        outfile = new File("/tmp/thumbnail." + modelData.toShortString() + ".png");
-	        try {
-        			ChartUtilities.saveChartAsPNG(outfile, chart, 100, 100);
-	        } catch (IOException e) {
-            	System.err.println(e.getMessage());
-				e.printStackTrace();
-			}
-		}
-        return outfile;
-	}
-
-	/**
-	 * @param pcaData
-	 * @param rawData
-	 * @param clusterer
-	 * @return
-	 */
-	public File generateImage(RawDataInterface pcaData, RawDataInterface[] clusters) {
-		File outfile = null;
-		if (chartType == ChartType.PCA_SCATTERPLOT) {
-		/*
-			int max = pcaData.numDimensions();
-			int x = max - 1;
-			int y = max - 2;
-			if (max < 2) {
-				x = 0;
-				y = 0;
-			}
-			*/
-	        XYDataset data = new PCAPlotDataset(clusters);
-	        JFreeChart chart = ChartFactory.createScatterPlot(
-	            "Correlation Results",
-	            (String)(pcaData.getEventNames().get(0)),
-	            (String)(pcaData.getEventNames().get(1)),
-	            data,
-	            PlotOrientation.VERTICAL,
-	            true,
-	            false,
-	            false
-	        );
-	        outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
-	        try {
-	        		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
-	        } catch (IOException e) {
-            	System.err.println(e.getMessage());
-				e.printStackTrace();
-			}
-		}
-        return outfile;
-	}
-
-    /**
-     * @param pcaData
-     * @param i
-     * @param j
-     * @return
-     */
-    public File generateThumbnail(RawDataInterface pcaData, int i, int j) {
-        File outfile = null;
-        if (chartType == ChartType.CORRELATION_SCATTERPLOT) {
-            DataNormalizer normalizer = factory.createDataNormalizer(pcaData);
-            RawDataInterface normalData = normalizer.getNormalizedData();
-            XYDataset data = new ScatterPlotDataset(normalData,
-            modelData.toString(), i, j, correlateToMain);
-            JFreeChart chart = ChartFactory.createScatterPlot(
-            null, null, null, data, PlotOrientation.VERTICAL, false, false, false);
-            outfile = new File("/tmp/thumbnail." + modelData.toShortString() + ".png");
-            try {
-                ChartUtilities.saveChartAsPNG(outfile, chart, 100, 100);
-            } catch (IOException e) {
-            	System.err.println(e.getMessage());
-				e.printStackTrace();
-			}
-        }
-        return outfile;
-    }
-
-    /**
-    * @param pcaData
-    * @param i
-    * @param j
-    * @return
-    */
-    public File generateImage(RawDataInterface pcaData, int i, int j) {
-        File outfile = null;
-        if (chartType == ChartType.CORRELATION_SCATTERPLOT) {
-            DataNormalizer normalizer = factory.createDataNormalizer(pcaData);
-            RawDataInterface normalData = normalizer.getNormalizedData();
-            XYDataset data = new ScatterPlotDataset(normalData,
-            modelData.toString(), i, j, correlateToMain);
-            // Create the chart the hard way, to include a linear regression
-            NumberAxis xAxis = new NumberAxis((String)(normalData.getEventNames().get(i)));
-            xAxis.setAutoRangeIncludesZero(false);
-            NumberAxis yAxis = null;
-            if (correlateToMain)
-                    yAxis = new NumberAxis(normalData.getMainEventName());
-            else
-                    yAxis = new NumberAxis((String)(normalData.getEventNames().get(j)));
-            yAxis.setAutoRangeIncludesZero(false);
-            StandardXYItemRenderer dotRenderer = new StandardXYItemRenderer(StandardXYItemRenderer.SHAPES);
-            dotRenderer.setShapesFilled(true);
-            if (correlateToMain)
-                    dotRenderer.setSeriesPaint(0,Color.green);
-            XYPlot plot = new XYPlot(data, xAxis, yAxis, dotRenderer);
-
-            // linear regression
-            double[] coefficients = Regression.getOLSRegression(data, 0);
-            Function2D curve = new LineFunction2D(coefficients[0], coefficients[1]);
-            Range range = DatasetUtilities.findDomainExtent(data);
-            XYDataset regressionData = DatasetUtilities.sampleFunction2D(
-                    curve, range.getLowerBound(), range.getUpperBound(), 
-                    100, "Fitted Linear Regression Line");
-            plot.setDataset(1, regressionData);
-            XYItemRenderer lineRenderer = new DefaultXYItemRenderer();
-            lineRenderer.setSeriesPaint(0,Color.blue);
-            plot.setRenderer(1, lineRenderer);
-
-            // power regression
-            double[] powerCoefficients = Regression.getPowerRegression(data, 0);
-            Function2D powerCurve = new PowerFunction2D(powerCoefficients[0], powerCoefficients[1]);
-            XYDataset powerRegressionData = DatasetUtilities.sampleFunction2D(
-                powerCurve, range.getLowerBound(), range.getUpperBound(), 
-                100, "Fitted Power Regression Line");
-            plot.setDataset(2, powerRegressionData);
-            XYItemRenderer powerLineRenderer = new DefaultXYItemRenderer();
-            powerLineRenderer.setSeriesPaint(0,Color.black);
-            plot.setRenderer(2, powerLineRenderer);
-
-            plot.getDomainAxis().setRange(range);
-            plot.getRangeAxis().setRange(range);
-
-            JFreeChart chart = new JFreeChart("Correlation Results: r = " + 
-                rCorrelation, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
-    
-    
-            outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
-            try {
-                ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
-            } catch (IOException e) {
-            	System.err.println(e.getMessage());
-				e.printStackTrace();
-			}
-        }
-    return outfile;
-    }
-
-	/**
-	 * @param clusterSizes
-	 * @param rowLabels
-	 * @return
-	 */
-	public File generateImage(int[] clusterSizes, List rowLabels) {
-		// create a JFreeChart of this analysis data.  Create a stacked bar chart
-		// with standard deviation bars?
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-		for (int x = 0 ; x < clusterSizes.length ; x++) {
-			dataset.addValue(clusterSizes[x], "Threads in cluster", new String(Integer.toString(x)));
-		}
-        JFreeChart chart = ChartFactory.createStackedBarChart(
-            modelData.toString(),  // chart title
-            "Cluster Number",          // domain axis label
-            "Threads in cluster",     // range axis label
-            dataset,                         // data
-            PlotOrientation.HORIZONTAL,        // the plot orientation
-            true,                            // legend
-            true,                            // tooltips
-            false                            // urls
-        );
-        File outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
-        try {
-        		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-			e.printStackTrace();
-		}
-        return outfile;
-	}
-
-	/**
-	 * @param centroids
-	 * @param deviations
-	 * @param rowLabels
-	 * @return
-	 */
-	public File generateImage(RawDataInterface centroids, RawDataInterface deviations, List rowLabels) {
-		// create a JFreeChart of this analysis data.  Create a stacked bar chart
-		// with standard deviation bars?
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-		for (int x = 0 ; x < centroids.numVectors() ; x++) {
-			for (int y = 0 ; y < centroids.numDimensions() ; y++) {
-				dataset.addValue(centroids.getValue(x,y), (String) rowLabels.get(y), new String(Integer.toString(x)));
-			}
-		}
-		String chartTitle = modelData.toString();
-		if (chartType == ChartType.CLUSTER_AVERAGES) {
-            chartTitle = chartTitle + " Average Values";
-		}
-		if (chartType == ChartType.CLUSTER_MAXIMUMS) {
-            chartTitle = chartTitle + " Maximum Values";
-		}
-		if (chartType == ChartType.CLUSTER_MINIMUMS) {
-            chartTitle = chartTitle + " Minimum Values";
-		}
-        JFreeChart chart = ChartFactory.createStackedBarChart(
-            chartTitle,  // chart title
-            "Cluster Number",          // domain axis label
-            "Total Runtime",     // range axis label
-            dataset,                         // data
-            PlotOrientation.HORIZONTAL,        // the plot orientation
-            true,                            // legend
-            true,                            // tooltips
-            false                            // urls
-        );
-        File outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
-        try {
-        		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-			e.printStackTrace();
-		}
-        return outfile;
-	}
-    
 }
 
