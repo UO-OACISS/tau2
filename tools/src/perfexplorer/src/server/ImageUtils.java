@@ -32,14 +32,15 @@ import clustering.RawDataInterface;
 public class ImageUtils {
 	
 	/**
-	 * This method is used to generate the stacked bar graphs for showing the breakdown of min, avg, and max behavior of each cluster.
+	 * This method is used to generate the thumbnails for the 
+	 * stacked bar graphs for showing the breakdown of min, avg, and max behavior of each cluster.
 	 * 
 	 * @param centroids
 	 * @param deviations
 	 * @param rowLabels
 	 * @return
 	 */
-	public static File generateThumbnail(RMIPerfExplorerModel modelData, RawDataInterface centroids, RawDataInterface deviations, List rowLabels) {
+	public static File generateBreakdownThumbnail(RMIPerfExplorerModel modelData, RawDataInterface centroids, RawDataInterface deviations, List rowLabels) {
 		// create a JFreeChart of this analysis data.  Create a stacked bar chart
 		// with standard deviation bars?
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
@@ -66,12 +67,62 @@ public class ImageUtils {
         return outfile;
 	}
 
+ 	/**
+ 	 * This method is used to generate the 
+	 * stacked bar graphs for showing the breakdown of min, avg, and max behavior of each cluster.
+	 * 
+	 * @param centroids
+ 	 * @param deviations
+ 	 * @param rowLabels
+ 	 * @return
+ 	 */
+ 	public static File generateBreakdownImage(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface centroids, RawDataInterface deviations, List rowLabels) {
+ 		// create a JFreeChart of this analysis data.  Create a stacked bar chart
+ 		// with standard deviation bars?
+         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+ 		for (int x = 0 ; x < centroids.numVectors() ; x++) {
+ 			for (int y = 0 ; y < centroids.numDimensions() ; y++) {
+ 				dataset.addValue(centroids.getValue(x,y), (String) rowLabels.get(y), new String(Integer.toString(x)));
+ 			}
+ 		}
+ 		String chartTitle = modelData.toString();
+ 		if (chartType == ChartType.CLUSTER_AVERAGES) {
+             chartTitle = chartTitle + " Average Values";
+ 		}
+ 		if (chartType == ChartType.CLUSTER_MAXIMUMS) {
+             chartTitle = chartTitle + " Maximum Values";
+ 		}
+ 		if (chartType == ChartType.CLUSTER_MINIMUMS) {
+             chartTitle = chartTitle + " Minimum Values";
+ 		}
+         JFreeChart chart = ChartFactory.createStackedBarChart(
+             chartTitle,  // chart title
+             "Cluster Number",          // domain axis label
+             "Total Runtime",     // range axis label
+             dataset,                         // data
+             PlotOrientation.HORIZONTAL,        // the plot orientation
+             true,                            // legend
+             true,                            // tooltips
+             false                            // urls
+         );
+         File outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
+         try {
+         		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
+         } catch (IOException e) {
+             System.err.println(e.getMessage());
+ 			e.printStackTrace();
+ 		}
+         return outfile;
+ 	}
+
 	/**
+	 * This method is used to generate the thumbnail of the bargraph histogram showing the cluster sizes.
+	 * 
 	 * @param clusterSizes
 	 * @param rowLabels
 	 * @return
 	 */
-	public static File generateThumbnail(RMIPerfExplorerModel modelData, int[] clusterSizes, List rowLabels) {
+	public static File generateClusterSizeThumbnail(RMIPerfExplorerModel modelData, int[] clusterSizes, List rowLabels) {
 		// create a JFreeChart of this analysis data.  Create a stacked bar chart
 		// with standard deviation bars?
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
@@ -96,13 +147,49 @@ public class ImageUtils {
         return outfile;
 	}
 
+ 	/**
+ 	 * This method is used to generate the bargraph histogram showing the cluster sizes.
+	 * 
+	 * @param clusterSizes
+ 	 * @param rowLabels
+ 	 * @return
+ 	 */
+ 	public static File generateClusterSizeImage(RMIPerfExplorerModel modelData, int[] clusterSizes, List rowLabels) {
+ 		// create a JFreeChart of this analysis data.  Create a stacked bar chart
+ 		// with standard deviation bars?
+         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+ 		for (int x = 0 ; x < clusterSizes.length ; x++) {
+ 			dataset.addValue(clusterSizes[x], "Threads in cluster", new String(Integer.toString(x)));
+ 		}
+         JFreeChart chart = ChartFactory.createStackedBarChart(
+             modelData.toString(),  // chart title
+             "Cluster Number",          // domain axis label
+             "Threads in cluster",     // range axis label
+             dataset,                         // data
+             PlotOrientation.HORIZONTAL,        // the plot orientation
+             true,                            // legend
+             true,                            // tooltips
+             false                            // urls
+         );
+         File outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
+         try {
+         		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
+         } catch (IOException e) {
+             System.err.println(e.getMessage());
+ 			e.printStackTrace();
+ 		}
+         return outfile;
+ 	}
+
 	/**
+	 * This method is used to generate the thumbnail of the scatterplot of two of the data events in the clustering result.
+	 * 
 	 * @param pcaData
 	 * @param rawData
 	 * @param clusterer
 	 * @return
 	 */
-	public static File generateThumbnail(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface[] clusters) {
+	public static File generateClusterScatterplotThumbnail(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface[] clusters) {
 		File outfile = null;
 		if (chartType == ChartType.PCA_SCATTERPLOT) {
 	        XYDataset data = new PCAPlotDataset(clusters);
@@ -120,12 +207,14 @@ public class ImageUtils {
 	}
 
 	/**
+	 * This method is used to generate the scatterplot of two of the data events in the clustering result.
+
 	 * @param pcaData
 	 * @param rawData
 	 * @param clusterer
 	 * @return
 	 */
-	public static File generateImage(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface pcaData, RawDataInterface[] clusters) {
+	public static File generateClusterScatterplotImage(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface pcaData, RawDataInterface[] clusters) {
 		File outfile = null;
 		if (chartType == ChartType.PCA_SCATTERPLOT) {
 		/*
@@ -160,12 +249,14 @@ public class ImageUtils {
 	}
 
     /**
+     * This method is used to do the correlation scatterplot thumbnail in the correlation analysis.
+     * 
      * @param pcaData
      * @param i
      * @param j
      * @return
      */
-    public static File generateThumbnail(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface pcaData, int i, int j, boolean correlateToMain) {
+    public static File generateCorrelationScatterplotThumbnail(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface pcaData, int i, int j, boolean correlateToMain) {
         File outfile = null;
         if (chartType == ChartType.CORRELATION_SCATTERPLOT) {
             DataNormalizer normalizer = PerfExplorerServer.getServer().getAnalysisFactory().createDataNormalizer(pcaData);
@@ -186,12 +277,14 @@ public class ImageUtils {
     }
 
     /**
+     * This method is used to do the correlation scatterplot in the correlation analysis.
+     *
      * @param pcaData
      * @param i
      * @param j
      * @return
      */
-     public static File generateImage(ChartType chartType, RMIPerfExplorerModel modelData, 
+     public static File generateCorrelationScatterplotImage(ChartType chartType, RMIPerfExplorerModel modelData, 
     		 RawDataInterface pcaData, int i, int j, boolean correlateToMain, double rCorrelation) {
          File outfile = null;
          if (chartType == ChartType.CORRELATION_SCATTERPLOT) {
@@ -255,81 +348,4 @@ public class ImageUtils {
      return outfile;
      }
 
- 	/**
- 	 * @param clusterSizes
- 	 * @param rowLabels
- 	 * @return
- 	 */
- 	public static File generateImage(RMIPerfExplorerModel modelData, int[] clusterSizes, List rowLabels) {
- 		// create a JFreeChart of this analysis data.  Create a stacked bar chart
- 		// with standard deviation bars?
-         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
- 		for (int x = 0 ; x < clusterSizes.length ; x++) {
- 			dataset.addValue(clusterSizes[x], "Threads in cluster", new String(Integer.toString(x)));
- 		}
-         JFreeChart chart = ChartFactory.createStackedBarChart(
-             modelData.toString(),  // chart title
-             "Cluster Number",          // domain axis label
-             "Threads in cluster",     // range axis label
-             dataset,                         // data
-             PlotOrientation.HORIZONTAL,        // the plot orientation
-             true,                            // legend
-             true,                            // tooltips
-             false                            // urls
-         );
-         File outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
-         try {
-         		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
-         } catch (IOException e) {
-             System.err.println(e.getMessage());
- 			e.printStackTrace();
- 		}
-         return outfile;
- 	}
-
- 	/**
- 	 * @param centroids
- 	 * @param deviations
- 	 * @param rowLabels
- 	 * @return
- 	 */
- 	public static File generateImage(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface centroids, RawDataInterface deviations, List rowLabels) {
- 		// create a JFreeChart of this analysis data.  Create a stacked bar chart
- 		// with standard deviation bars?
-         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
- 		for (int x = 0 ; x < centroids.numVectors() ; x++) {
- 			for (int y = 0 ; y < centroids.numDimensions() ; y++) {
- 				dataset.addValue(centroids.getValue(x,y), (String) rowLabels.get(y), new String(Integer.toString(x)));
- 			}
- 		}
- 		String chartTitle = modelData.toString();
- 		if (chartType == ChartType.CLUSTER_AVERAGES) {
-             chartTitle = chartTitle + " Average Values";
- 		}
- 		if (chartType == ChartType.CLUSTER_MAXIMUMS) {
-             chartTitle = chartTitle + " Maximum Values";
- 		}
- 		if (chartType == ChartType.CLUSTER_MINIMUMS) {
-             chartTitle = chartTitle + " Minimum Values";
- 		}
-         JFreeChart chart = ChartFactory.createStackedBarChart(
-             chartTitle,  // chart title
-             "Cluster Number",          // domain axis label
-             "Total Runtime",     // range axis label
-             dataset,                         // data
-             PlotOrientation.HORIZONTAL,        // the plot orientation
-             true,                            // legend
-             true,                            // tooltips
-             false                            // urls
-         );
-         File outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
-         try {
-         		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
-         } catch (IOException e) {
-             System.err.println(e.getMessage());
- 			e.printStackTrace();
- 		}
-         return outfile;
- 	}
-     
 }

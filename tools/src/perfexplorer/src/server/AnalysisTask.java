@@ -66,7 +66,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.4 2007/01/23 18:46:29 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.5 2007/01/23 18:57:41 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -534,8 +534,8 @@ public class AnalysisTask extends TimerTask {
 						RawDataInterface deviations = clusterer.getClusterStandardDeviations();
 						int[] clusterSizes = clusterer.getClusterSizes();
 						// do histograms
-						File thumbnail = ImageUtils.generateThumbnail(modelData, clusterSizes, eventIDs);
-						File chart = ImageUtils.generateImage(modelData, clusterSizes, eventIDs);
+						File thumbnail = ImageUtils.generateClusterSizeThumbnail(modelData, clusterSizes, eventIDs);
+						File chart = ImageUtils.generateClusterSizeImage(modelData, clusterSizes, eventIDs);
 						// TODO - fix this to save the cluster sizes, too!
 						chartType = ChartType.HISTOGRAM;
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
@@ -555,8 +555,8 @@ public class AnalysisTask extends TimerTask {
 						//for (int m = 0 ; m < i ; m++)
 							//clusters[m].normalizeData(true);
 						//PerfExplorerOutput.println("PCA Dimensions: " + components.numDimensions());
-						thumbnail = ImageUtils.generateThumbnail(ChartType.PCA_SCATTERPLOT, modelData, clusters);
-						chart = ImageUtils.generateImage(ChartType.PCA_SCATTERPLOT, modelData, components, clusters);
+						thumbnail = ImageUtils.generateClusterScatterplotThumbnail(ChartType.PCA_SCATTERPLOT, modelData, clusters);
+						chart = ImageUtils.generateClusterScatterplotImage(ChartType.PCA_SCATTERPLOT, modelData, components, clusters);
 						saveAnalysisResult(components, components, thumbnail, chart);
 						}
 						
@@ -568,18 +568,18 @@ public class AnalysisTask extends TimerTask {
 						
 						// do mins
 						chartType = ChartType.CLUSTER_MINIMUMS;
-						thumbnail = ImageUtils.generateThumbnail(modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
-						chart = ImageUtils.generateImage(chartType, modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
+						thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
+						chart = ImageUtils.generateBreakdownImage(chartType, modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
 						saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
 						// do averages
 						chartType = ChartType.CLUSTER_AVERAGES;
-						thumbnail = ImageUtils.generateThumbnail(modelData, centroids, deviations, eventIDs);
-						chart = ImageUtils.generateImage(chartType, modelData, centroids, deviations, eventIDs);
+						thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, centroids, deviations, eventIDs);
+						chart = ImageUtils.generateBreakdownImage(chartType, modelData, centroids, deviations, eventIDs);
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
 						// do maxes
 						chartType = ChartType.CLUSTER_MAXIMUMS;
-						thumbnail = ImageUtils.generateThumbnail(modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
-						chart = ImageUtils.generateImage(chartType, modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
+						thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
+						chart = ImageUtils.generateBreakdownImage(chartType, modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
 						saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart);
 					}
 				} else {
@@ -600,8 +600,8 @@ public class AnalysisTask extends TimerTask {
 					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
 						for (int j = 0 ; j < reducedData.numDimensions() ; j++) {
 							rCorrelation = reducedData.getCorrelation(i,j);
-							File thumbnail = ImageUtils.generateThumbnail(chartType, modelData, reducedData, i, j, correlateToMain);
-							File chart = ImageUtils.generateImage(chartType, modelData, reducedData, i, j, correlateToMain, rCorrelation);
+							File thumbnail = ImageUtils.generateCorrelationScatterplotThumbnail(chartType, modelData, reducedData, i, j, correlateToMain);
+							File chart = ImageUtils.generateCorrelationScatterplotImage(chartType, modelData, reducedData, i, j, correlateToMain, rCorrelation);
 							saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
 						}
 						//PerfExplorerOutput.println("Finished: " + (i+1) + " of " + reducedData.numDimensions());
