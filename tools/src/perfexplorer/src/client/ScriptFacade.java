@@ -271,7 +271,7 @@ public class ScriptFacade {
 		for (int i = 1 ; i < data.getValueCount() ; i++) {
 			PerfExplorerOutput.print(UtilFncs.lpad(data.getValueName(i), 11).toUpperCase() + " " );
 		}
-		PerfExplorerOutput.print("\n");
+		PerfExplorerOutput.println("\n--------------------------------------------------------------------------------------------------------------------------------");
 		Object[][] matrix = data.getDataMatrix();
 		int maxSize = 25;
 		for (int i = 0 ; i < data.getEventCount() ; i++) {
@@ -279,7 +279,7 @@ public class ScriptFacade {
 				if (matrix[i][j] instanceof String) {
 					String s = (String)matrix[i][j];
 	      			s = (s.length() > maxSize ? s.substring(0, maxSize) : s);
-					PerfExplorerOutput.print(UtilFncs.pad(s, maxSize) + " " );
+					PerfExplorerOutput.print(UtilFncs.pad(s, maxSize).toUpperCase() + " " );
 				}
 				else if (matrix[i][j] instanceof Double) {
 					Double d = (Double)matrix[i][j];
