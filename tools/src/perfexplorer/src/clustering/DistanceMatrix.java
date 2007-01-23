@@ -4,13 +4,14 @@
  */
 package clustering;
 
+
  /**
   * This class is used to build a square distance matrix.  The distance matrix
   * is used to hold the distances between elements in a vector.  The matrix
   * is a diagonal matrix, and only the lower-left quadrants below the
   * diagonal are used.
   *
-  * <P>CVS $Id: DistanceMatrix.java,v 1.2 2007/01/04 21:20:01 khuck Exp $</P>
+  * <P>CVS $Id: DistanceMatrix.java,v 1.3 2007/01/23 22:57:01 khuck Exp $</P>
   * @author khuck
   * @version 0.1
   * @since   0.1

@@ -8,10 +8,10 @@
 package clustering.r;
 
 import clustering.PrincipalComponentsAnalysisInterface;
-import clustering.RawDataInterface;
 import clustering.KMeansClusterInterface;
 import clustering.ClusterException;
 import clustering.ClusterDescription;
+import clustering.RawDataInterface;
 import common.RMICubeData;
 
 /**
@@ -20,7 +20,7 @@ import common.RMICubeData;
  * clustering class.  To access these methods, create an AnalysisFactory,
  * and the factory will be able to create a k-means cluster object.
  *
- * <P>CVS $Id: RPrincipalComponents.java,v 1.3 2007/01/04 21:20:02 khuck Exp $</P>
+ * <P>CVS $Id: RPrincipalComponents.java,v 1.4 2007/01/23 22:57:01 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

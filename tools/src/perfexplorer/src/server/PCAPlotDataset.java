@@ -1,7 +1,8 @@
 package server;
 
-import common.PerfExplorerOutput;
 import clustering.RawDataInterface;
+import common.PerfExplorerOutput;
+
 import org.jfree.data.xy.AbstractXYDataset;
 
 /**
@@ -10,7 +11,7 @@ import org.jfree.data.xy.AbstractXYDataset;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper around the RawDataInterface class.
  * 
- * <P>CVS $Id: PCAPlotDataset.java,v 1.5 2007/01/04 21:20:04 khuck Exp $</P>
+ * <P>CVS $Id: PCAPlotDataset.java,v 1.6 2007/01/23 22:57:02 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

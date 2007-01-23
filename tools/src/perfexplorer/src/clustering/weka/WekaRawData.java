@@ -4,7 +4,6 @@
  */
 package clustering.weka;
 
-import clustering.RawDataInterface;
 
 import weka.core.Instances;
 import weka.core.Instance;
@@ -15,15 +14,19 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
+import clustering.RawDataInterface;
+
+import java.io.Serializable;
+
 /**
  * Implementation of the RawData interface for Weka data.
  *
- * <P>CVS $Id: WekaRawData.java,v 1.8 2007/01/04 21:20:03 khuck Exp $</P>
+ * <P>CVS $Id: WekaRawData.java,v 1.9 2007/01/23 22:57:02 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
  */
-public class WekaRawData implements RawDataInterface {
+public class WekaRawData implements RawDataInterface, Serializable {
 
 	private Instances instances = null;
 	private int vectors = 0;

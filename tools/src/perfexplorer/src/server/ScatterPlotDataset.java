@@ -1,8 +1,10 @@
 package server;
 
-import clustering.RawDataInterface;
 import org.jfree.data.xy.AbstractXYDataset;
 import org.jfree.data.xy.XYDataset;
+
+import clustering.RawDataInterface;
+
 
 /**
  * Dataset to store scatterplot data.
@@ -10,7 +12,7 @@ import org.jfree.data.xy.XYDataset;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: ScatterPlotDataset.java,v 1.4 2007/01/04 21:20:04 khuck Exp $</P>
+ * <P>CVS $Id: ScatterPlotDataset.java,v 1.5 2007/01/23 22:57:03 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

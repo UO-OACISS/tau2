@@ -2,7 +2,7 @@ package client;
 
 import java.rmi.*;
 import common.*;
-import server.*;
+import server.PerfExplorerServer;
 import java.util.*;
 import javax.swing.*;
 
@@ -294,5 +294,4 @@ public class PerfExplorerConnection {
 	}
 	return tmpIterator;
     }
-
 }

@@ -7,6 +7,7 @@ package clustering;
 
 import common.EngineType;
 import common.RMICubeData;
+
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ import java.util.List;
   * method to construct the desired factory.  All other methods are implemented
   * by the specific factory classes.
   *
-  * <P>CVS $Id: AnalysisFactory.java,v 1.4 2007/01/04 21:20:01 khuck Exp $</P>
+  * <P>CVS $Id: AnalysisFactory.java,v 1.5 2007/01/23 22:57:01 khuck Exp $</P>
   * @author  Kevin Huck
   * @version 0.1
   * @since   0.1

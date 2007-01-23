@@ -4,11 +4,12 @@
  */
 package clustering;
 
+
  /**
   * This interface is used to define the methods to implement a hierarchical 
   * clustering class.
   *
-  * <P>CVS $Id: KMeansClusterInterface.java,v 1.3 2007/01/04 21:20:01 khuck Exp $</P>
+  * <P>CVS $Id: KMeansClusterInterface.java,v 1.4 2007/01/23 22:57:01 khuck Exp $</P>
   * @author khuck
   * @version 0.1
   * @since   0.1

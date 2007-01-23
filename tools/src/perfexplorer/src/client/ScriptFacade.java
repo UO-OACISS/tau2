@@ -4,6 +4,8 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
+import clustering.RawDataInterface;
+
 
 import common.AnalysisType;
 import common.PerfExplorerOutput;
@@ -267,20 +269,36 @@ public class ScriptFacade {
 	public void showDataSummary() {
 		// get the data
 		RMIVarianceData data = connection.requestVariationAnalysis(model);
+		// print the first column heading, the event name
 		PerfExplorerOutput.print(UtilFncs.pad(data.getValueName(0), 25).toUpperCase() + " " );
+		// for each of the other column headings, output them padded to 11 characters
 		for (int i = 1 ; i < data.getValueCount() ; i++) {
 			PerfExplorerOutput.print(UtilFncs.lpad(data.getValueName(i), 11).toUpperCase() + " " );
 		}
 		PerfExplorerOutput.println("\n--------------------------------------------------------------------------------------------------------------------------------");
+
+		// get the data matrix
 		Object[][] matrix = data.getDataMatrix();
+		// set the maximum length of the event name
 		int maxSize = 25;
+		// for each event...
 		for (int i = 0 ; i < data.getEventCount() ; i++) {
+			// first, we need to check for any dimension reduction.
+			if (model.getDimensionReduction() == TransformationType.OVER_X_PERCENT) {
+				// if this event is not more than X percent of the total, don't output it.
+				Double d = (Double)matrix[i][2];
+				if (d.doubleValue() < model.getXPercent())
+					continue;
+			}
+			// for each data point...
 			for (int j = 0 ; j < data.getValueCount() ; j++) {
+				// if this is the event name, then output it, padded to no more than maxSize length
 				if (matrix[i][j] instanceof String) {
 					String s = (String)matrix[i][j];
 	      			s = (s.length() > maxSize ? s.substring(0, maxSize) : s);
 					PerfExplorerOutput.print(UtilFncs.pad(s, maxSize).toUpperCase() + " " );
 				}
+				// else, this is a value
 				else if (matrix[i][j] instanceof Double) {
 					Double d = (Double)matrix[i][j];
 					PerfExplorerOutput.print(UtilFncs.lpad(UtilFncs.formatDouble(d.doubleValue(), 10, true), 11) + " ");
@@ -288,6 +306,6 @@ public class ScriptFacade {
 			}
 			PerfExplorerOutput.print("\n");
 		}
+		PerfExplorerOutput.print("\n");
 	}
-
 }

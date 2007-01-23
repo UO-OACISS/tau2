@@ -5,9 +5,9 @@
 package clustering.weka;
 
 import clustering.KMeansClusterInterface;
-import clustering.RawDataInterface;
 import clustering.ClusterException;
 import clustering.ClusterDescription;
+import clustering.RawDataInterface;
 import common.PerfExplorerOutput;
 import weka.core.Instances;
 import weka.attributeSelection.PrincipalComponents;
@@ -16,7 +16,7 @@ import weka.attributeSelection.PrincipalComponents;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaKMeansCluster.java,v 1.5 2007/01/04 21:20:03 khuck Exp $</P>
+ * <P>CVS $Id: WekaKMeansCluster.java,v 1.6 2007/01/23 22:57:02 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since 0.1

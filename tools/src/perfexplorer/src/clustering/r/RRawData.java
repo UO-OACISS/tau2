@@ -4,10 +4,13 @@
  */
 package clustering.r;
 
-import clustering.RawDataInterface;
 
 import java.util.List;
 import java.util.ArrayList;
+
+import clustering.RawDataInterface;
+
+import java.io.Serializable;
 
 /**
  * This class is the R implementation of the analysis data class.
@@ -18,12 +21,12 @@ import java.util.ArrayList;
  * performance data.
  * The row and column headers are stored in this class, as well.
  *
- * <P>CVS $Id: RRawData.java,v 1.6 2007/01/04 21:20:02 khuck Exp $</P>
+ * <P>CVS $Id: RRawData.java,v 1.7 2007/01/23 22:57:01 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
  */
-public class RRawData implements RawDataInterface {
+public class RRawData implements RawDataInterface, Serializable {
 
 	private int vectors = 0;
 	private int dimensions = 0;

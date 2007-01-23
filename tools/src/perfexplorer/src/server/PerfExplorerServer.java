@@ -43,7 +43,7 @@ import clustering.ClusterException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.41 2007/01/23 18:46:29 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.42 2007/01/23 22:57:02 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1314,7 +1314,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		Collections.sort(sortedEvents);
 		return sortedEvents;
 	}
-
+	
 	/**
 	 * The main method to create the PerfExplorerServer.
 	 * 

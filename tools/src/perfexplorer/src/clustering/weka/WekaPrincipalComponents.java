@@ -7,11 +7,11 @@
 package clustering.weka;
 
 import clustering.PrincipalComponentsAnalysisInterface;
-import clustering.RawDataInterface;
 import clustering.KMeansClusterInterface;
 import clustering.AnalysisFactory;
 import clustering.ClusterException;
 import clustering.ClusterDescription;
+import clustering.RawDataInterface;
 import common.RMICubeData;
 import weka.core.Instances;
 import weka.core.Instance;
@@ -23,7 +23,7 @@ import weka.attributeSelection.PrincipalComponents;
  * TODO - make this class immutable?
  * 
  * @author khuck
- * <P>CVS $Id: WekaPrincipalComponents.java,v 1.5 2007/01/04 21:20:03 khuck Exp $</P>
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.6 2007/01/23 22:57:02 khuck Exp $</P>
  * @version 0.1
  * @since   0.1
  */

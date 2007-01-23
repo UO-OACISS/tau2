@@ -2,8 +2,10 @@ package client;
 
 import org.jfree.data.xy.AbstractXYDataset;
 import org.jfree.data.xy.XYDataset;
-import common.RMIChartData;
+
 import clustering.RawDataInterface;
+import common.RMIChartData;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,7 +18,7 @@ import java.text.FieldPosition;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: ProbabilityPlotDataset.java,v 1.1 2006/06/12 21:38:35 khuck Exp $</P>
+ * <P>CVS $Id: ProbabilityPlotDataset.java,v 1.2 2007/01/23 22:57:00 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
