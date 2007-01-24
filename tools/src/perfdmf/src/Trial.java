@@ -6,10 +6,19 @@ import java.sql.*;
 import java.util.Vector;
 import java.util.Enumeration;
 import java.lang.String;
+import java.util.Arrays;
+import java.util.List;
+import java.util.HashSet;
 import java.io.Serializable;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.util.ListIterator;
 
 /**
  * Holds all the data for a trial in the database. This object is returned by
@@ -22,7 +31,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.5 2006/06/27 03:02:16 scottb Exp $
+ * CVS $Id: Trial.java,v 1.6 2007/01/24 02:46:54 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -38,7 +47,8 @@ import java.io.IOException;
 public class Trial implements Serializable {
     private static String fieldNames[];
     private static int fieldTypes[];
-
+    private static final String XML_METADTA = new String("XML_METADATA");
+    
     private int trialID;
     private int experimentID;
     private int applicationID;
@@ -47,6 +57,8 @@ public class Trial implements Serializable {
     private String fields[];
 
     protected DataSource dataSource = null;
+    private File metadataFile = null;
+    private FileInputStream inStream = null;
 
 
     public Trial() {
@@ -441,8 +453,9 @@ public class Trial implements Serializable {
             buf.append(" order by t.id ");
 
             Vector trials = new Vector();
-
-            //System.out.println(buf);
+            System.out.println(buf.toString());
+           
+            System.out.println(buf);
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
                 Trial trial = new Trial();
@@ -454,7 +467,7 @@ public class Trial implements Serializable {
                 trial.setName(resultSet.getString(pos++));
 
                 for (int i = 0; i < Trial.fieldNames.length; i++) {
-                    trial.setField(i, resultSet.getString(pos++));
+                  	trial.setField(i, resultSet.getString(pos++));
                 }
 
                 trials.addElement(trial);
@@ -484,9 +497,11 @@ public class Trial implements Serializable {
 
         try {
 
+        	// FIRST!  Check if the trial table has a metadata column
+            checkForMetadataColumn(db);
+        	
             // get the fields since this is an insert
             if (!itExists) {
-
                 Trial.getMetaData(db);
                 this.fields = new String[Trial.fieldNames.length];
             }
@@ -502,7 +517,7 @@ public class Trial implements Serializable {
             }
 
             StringBuffer buf = new StringBuffer();
-
+            
             if (itExists) {
                 buf.append("UPDATE " + db.getSchemaPrefix() + "trial SET name = ?, experiment = ?");
                 for (int i = 0; i < this.getNumFields(); i++) {
@@ -524,6 +539,7 @@ public class Trial implements Serializable {
                 buf.append(")");
             }
 
+            System.out.println(buf.toString());
             PreparedStatement statement = db.prepareStatement(buf.toString());
 
             int pos = 1;
@@ -532,15 +548,27 @@ public class Trial implements Serializable {
             statement.setInt(pos++, experimentID);
             for (int i = 0; i < this.getNumFields(); i++) {
                 if (DBConnector.isWritableType(this.getFieldType(i)))
-                    statement.setString(pos++, this.getField(i));
+                    if (this.getFieldName(i).equalsIgnoreCase(Trial.XML_METADTA))
+                    	statement.setAsciiStream(pos++, inStream, (int)this.metadataFile.length());
+                    else
+                    	statement.setString(pos++, this.getField(i));
             }
-
             if (itExists) {
                 statement.setInt(pos, trialID);
             }
 
             statement.executeUpdate();
             statement.close();
+            if (this.metadataFile != null) {
+            	try {
+            		inStream.close();
+            	} catch (IOException e) {
+            		System.err.println("Unable to close file:");
+            		System.err.println(e.getMessage());
+            		e.printStackTrace();
+            	}
+            }
+            
             if (itExists) {
                 newTrialID = trialID;
             } else {
@@ -760,6 +788,60 @@ public class Trial implements Serializable {
     {
     	fieldNames = null;
     	fieldTypes = null;
+    }
+    
+    /**
+     * If the user passes in a metadata file, parse it into the trial.
+     * 
+     * @param metadataFileName
+     * @throws IOException
+     */
+    public void setMetadataFile(String metadataFileName) throws IOException {
+    	this.metadataFile = new File(metadataFileName);
+    	if (!this.metadataFile.exists())
+    		throw new FileNotFoundException("The file " + metadataFileName + " does not exist.");
+    	if (!this.metadataFile.canRead())
+    		throw new IOException("The file " + metadataFileName + " does not have read permission.");
+    	if (!this.metadataFile.isFile())
+    		throw new FileNotFoundException(metadataFileName + " is not a valid file.");
+    	inStream = new FileInputStream(this.metadataFile);
+    	return;
+    }
+
+    public void checkForMetadataColumn (DB db) {
+    	if (this.metadataFile != null) {
+	        String[] columns = Trial.getFieldNames(db);
+	        boolean found = false;
+	        // loop through the column names, and see if we have this column already
+	        for (int i = 0 ; i < columns.length ; i++) {
+	        	if (columns[i].equalsIgnoreCase(XML_METADTA)) {
+	        		found = true;
+	        		break;
+	        	}
+	        }
+	        if (!found) {
+	        	StringBuffer sql = new StringBuffer();
+	        	// create the column in the database
+				sql.append("ALTER TABLE " + db.getSchemaPrefix() + "trial ADD COLUMN ");
+				sql.append(XML_METADTA);
+				if ((db.getDBType().equalsIgnoreCase("oracle")) || (db.getDBType().equalsIgnoreCase("derby"))) {
+					sql.append(" CLOB");
+				} else if (db.getDBType().equalsIgnoreCase("db2")) {
+					sql.append(" CLOB");
+				} else if (db.getDBType().equalsIgnoreCase("mysql")) {
+					sql.append(" TEXT");
+				} else if (db.getDBType().equalsIgnoreCase("postgresql")) {
+					sql.append(" TEXT");
+	            }
+				
+				try {
+					db.execute(sql.toString());
+				} catch (SQLException e) {
+					System.err.println("Unable to add " + XML_METADTA + " column to trial table.");
+					e.printStackTrace();
+				}
+	        }
+    	}
     }
 
 }

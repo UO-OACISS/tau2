@@ -13,6 +13,7 @@ public class LoadTrial {
     private File writeXml;
     private String trialTime;
     private String sourceFiles[];
+	private String metadataFile;
     private Application app;
     private Experiment exp;
     private boolean fixNames = false;
@@ -38,7 +39,8 @@ public class LoadTrial {
                 + "                                   profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                   gprof, psrun, hpm, packed, cube, hpc\n"
                 + "  -t, --trialid <number>         Specify trial ID\n"
-                + "  -i, --fixnames                 Use the fixnames option for gprof\n\n" + "Notes:\n"
+                + "  -i, --fixnames                 Use the fixnames option for gprof\n\n" 
+                + "  -m, --metadata <filename>      XML metadata for the trial\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -126,6 +128,14 @@ public class LoadTrial {
         } catch (Exception e) {
             System.err.println("Error Loading Trial:");
             e.printStackTrace();
+        }
+        
+        try {
+        	trial.setMetadataFile(metadataFile);
+        } catch (Exception e) {
+            System.err.println("Error Loading metadata:");
+            e.printStackTrace();
+            System.exit(1);
         }
 
         if (trialID == 0) {
@@ -232,6 +242,7 @@ public class LoadTrial {
         CmdLineParser.Option trialOpt = parser.addStringOption('t', "trialid");
         CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
         CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
+        CmdLineParser.Option metadataOpt = parser.addStringOption('m', "metadata");
 
         try {
             parser.parse(args);
@@ -251,6 +262,7 @@ public class LoadTrial {
         String trialID = (String) parser.getOptionValue(trialOpt);
         String fileTypeString = (String) parser.getOptionValue(typeOpt);
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
+        String metadataFile = (String) parser.getOptionValue(metadataOpt);
 
         if (help != null && help.booleanValue()) {
             LoadTrial.outputHelp();
@@ -265,7 +277,6 @@ public class LoadTrial {
             System.err.println("Error: Missing trial name\n");
             LoadTrial.usage();
             System.exit(-1);
-
 //        } else if (sourceFiles == null) {
 //            System.err.println("Please enter a valid source file.");
 //            LoadTrial.usage();
@@ -340,6 +351,7 @@ public class LoadTrial {
         trans.trialName = trialName;
         //trans.problemFile = problemFile;
         trans.fixNames = fixNames.booleanValue();
+		trans.metadataFile = metadataFile;
         trans.loadTrial(fileType);
         // the trial will be saved when the load is finished (update is called)
     }
