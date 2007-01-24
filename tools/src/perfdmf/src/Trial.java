@@ -31,7 +31,7 @@ import java.util.ListIterator;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.6 2007/01/24 02:46:54 khuck Exp $
+ * CVS $Id: Trial.java,v 1.7 2007/01/24 02:55:13 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -453,9 +453,8 @@ public class Trial implements Serializable {
             buf.append(" order by t.id ");
 
             Vector trials = new Vector();
-            System.out.println(buf.toString());
            
-            System.out.println(buf);
+            //System.out.println(buf);
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
                 Trial trial = new Trial();
@@ -539,7 +538,7 @@ public class Trial implements Serializable {
                 buf.append(")");
             }
 
-            System.out.println(buf.toString());
+            //System.out.println(buf.toString());
             PreparedStatement statement = db.prepareStatement(buf.toString());
 
             int pos = 1;
@@ -548,7 +547,8 @@ public class Trial implements Serializable {
             statement.setInt(pos++, experimentID);
             for (int i = 0; i < this.getNumFields(); i++) {
                 if (DBConnector.isWritableType(this.getFieldType(i)))
-                    if (this.getFieldName(i).equalsIgnoreCase(Trial.XML_METADTA))
+                    if ((this.getFieldName(i).equalsIgnoreCase(Trial.XML_METADTA)) &&
+                        (this.metadataFile != null))
                     	statement.setAsciiStream(pos++, inStream, (int)this.metadataFile.length());
                     else
                     	statement.setString(pos++, this.getField(i));
