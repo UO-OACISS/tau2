@@ -3372,25 +3372,81 @@ static int ThisTauReadFullLine(char *line, FILE *fp) {
   return i; 
 }
 
+static void writeStringXML(FILE *f, const char *s) {
+  if (!s) return;
+  
+  bool useCdata = false;
+  
+  if (strchr(s, '<') || strchr(s, '&')) {
+    useCdata = true;
+  }
+  
+  if (strstr(s, "]]>")) {
+    useCdata = false;
+  }
+  
+  if (useCdata) {
+    fprintf (f,"<![CDATA[%s]]>",s);
+    return;
+  }
+
+  // could grow up to 5 times in length
+  char *str = (char *) malloc (6*strlen(s));
+  char *d = str;
+  while (*s) {
+    if ((*s == '<') || (*s == '>') || (*s == '&')) {
+      // escape these characters
+      if (*s == '<') {
+	strcpy (d,"&lt;");
+	d+=4;
+      }
+      
+      if (*s == '>') {
+	strcpy (d,"&gt;");
+	d+=4;
+      }
+      
+      if (*s == '&') {
+	strcpy (d,"&amp;");
+	d+=5;
+      }
+    } else {
+      *d = *s;
+      d++; 
+    }
+    
+    s++;
+  }
+  *d = 0;
+  
+  fprintf (f,"%s",str);
+  free (str);
+}
+
+static void writeTagXML(FILE *f, const char *tag, const char *s) {
+  fprintf (f, "<%s>", tag);
+  writeStringXML(f, s);
+  fprintf (f, "</%s>\n",tag);
+}
 
 static int writeMetaData(FILE *fp) {
   // try to grab meta-data
 
   char hostname[4096];
   gethostname(hostname,4096);
-  fprintf (fp, "\t<hostname>%s</hostname>\n",hostname);
+  writeTagXML(fp, "hostname", hostname);
 
   struct utsname archinfo;
 
   uname (&archinfo);
-  fprintf (fp, "\t<sys_name>%s</sys_name>\n", archinfo.sysname);
-  fprintf (fp, "\t<sys_release>%s</sys_release>\n", archinfo.release);
-  fprintf (fp, "\t<sys_version>%s</sys_version>\n", archinfo.version);
-  fprintf (fp, "\t<sys_machine>%s</sys_machine>\n", archinfo.machine);
-  fprintf (fp, "\t<sys_nodename>%s</sys_nodename>\n", archinfo.nodename);
+  writeTagXML(fp, "sys_name", archinfo.sysname);
+  writeTagXML(fp, "sys_version", archinfo.version);
+  writeTagXML(fp, "sys_release", archinfo.release);
+  writeTagXML(fp, "sys_machine", archinfo.machine);
+  writeTagXML(fp, "sys_nodename", archinfo.nodename);
 
 
-  fprintf (fp, "\t<pid>%d</pid>\n", getpid());
+  fprintf (fp, "<pid>%d</pid>\n", getpid());
 
 #ifdef __linux__
   // doesn't work on ia64 for some reason
@@ -3403,25 +3459,25 @@ static int writeMetaData(FILE *fp) {
     while (ThisTauReadFullLine(line, f)) {
       char buf[4096];
       if (strncmp(line, "cpu MHz", 7) == 0) {
-        fprintf (fp, "\t<cpu_mhz>%s</cpu_mhz>\n", strstr(line,":")+2);
+	writeTagXML(fp, "cpu_mhz", strstr(line,":")+2);
       }
       if (strncmp(line, "clock", 5) == 0) {
-        fprintf (fp, "\t<cpu_mhz>%s</cpu_mhz>\n", strstr(line,":")+2);
+	writeTagXML(fp, "cpu_mhz", strstr(line,":")+2);
       }
       if (strncmp(line, "model name", 10) == 0) {
-        fprintf (fp, "\t<cpu_type>%s</cpu_type>\n", strstr(line,":")+2);
+	writeTagXML(fp, "cpu_type", strstr(line,":")+2);
       }
       if (strncmp(line, "family", 6) == 0) {
-        fprintf (fp, "\t<cpu_type>%s</cpu_type>\n", strstr(line,":")+2);
+	writeTagXML(fp, "cpu_type", strstr(line,":")+2);
       }
       if (strncmp(line, "cpu", 3) == 0) {
-        fprintf (fp, "\t<cpu_type>%s</cpu_type>\n", strstr(line,":")+2);
+	writeTagXML(fp, "cpu_type", strstr(line,":")+2);
       }
       if (strncmp(line, "cache size", 10) == 0) {
-        fprintf (fp, "\t<cache_size>%s</cache_size>\n", strstr(line,":")+2);
+	writeTagXML(fp, "cache_size", strstr(line,":")+2);
       }
       if (strncmp(line, "cpu cores", 9) == 0) {
-        fprintf (fp, "\t<cpu_cores>%s</cpu_cores>\n", strstr(line,":")+2);
+	writeTagXML(fp, "cpu_cores", strstr(line,":")+2);
       }
     }
   }
@@ -3487,56 +3543,6 @@ static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler) {
 
 
 
-static void writeStringXML(FILE *f, const char *s) {
-  if (!s) return;
-  
-  bool useCdata = false;
-  
-  if (strchr(s, '<') || strchr(s, '&')) {
-    useCdata = true;
-  }
-  
-  if (strstr(s, "]]>")) {
-    useCdata = false;
-  }
-  
-  if (useCdata) {
-    fprintf (f,"<![CDATA[%s]]>",s);
-    return;
-  }
-
-  // could grow up to 5 times in length
-  char *str = (char *) malloc (6*strlen(s));
-  char *d = str;
-  while (*s) {
-    if ((*s == '<') || (*s == '>') || (*s == '&')) {
-      // escape these characters
-      if (*s == '<') {
-	strcpy (d,"&lt;");
-	d+=4;
-      }
-      
-      if (*s == '>') {
-	strcpy (d,"&gt;");
-	d+=4;
-      }
-      
-      if (*s == '&') {
-	strcpy (d,"&amp;");
-	d+=5;
-      }
-    } else {
-      *d = *s;
-      d++; 
-    }
-    
-    s++;
-  }
-  *d = 0;
-  
-  fprintf (f,"%s",str);
-  free (str);
-}
 
 static void writeEventXML(FILE *f, int id, FunctionInfo *fi) {
   fprintf (f, "<event id=\"%d\"><name>", id);
@@ -3618,12 +3624,18 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
      fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
 
 #ifndef TAU_MULTIPLE_COUNTERS
-     fprintf (fp, "<metric id=\"0\" name=\"%s\" units=\"unknown\"/>\n",  TauGetCounterString());
+     fprintf (fp, "<metric id=\"0\">\n");
+     writeTagXML(fp, "name", TauGetCounterString());
+     writeTagXML(fp, "units", "unknown");
+     fprintf (fp, "</metric>\n");
 #else
       for(int i=0;i<MAX_TAU_COUNTERS;i++){
 	if(MultipleCounterLayer::getCounterUsed(i)){
-	  char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
-	  fprintf (fp, "<metric id=\"%d\" name=\"%s\" units=\"unknown\"/>\n", i, tmpChar);
+	  char *tmpChar = MultipleCounterLayer::getCounterNameAt(i);
+	  fprintf (fp, "<metric id=\"%d\">", i);
+	  writeTagXML(fp, "name", tmpChar);
+	  writeTagXML(fp, "units", "unknown");
+	  fprintf (fp, "</metric>\n");
 	}
      }
 #endif
@@ -3659,7 +3671,9 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
    // now write the actual profile data for this snapshot
    fprintf (fp, "\n<profile thread=\"%s\">\n", threadid);
-   fprintf (fp, "<name>%s</name>\n",name);
+   fprintf (fp, "<name>");
+   writeStringXML(fp, name);
+   fprintf (fp, "</name>");
    writeSnapshotTime(fp);
 
 #ifndef TAU_MULTIPLE_COUNTERS
@@ -3789,8 +3803,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.146 $   $Date: 2007/01/19 19:21:52 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.146 2007/01/19 19:21:52 amorris Exp $ 
+ * $Revision: 1.147 $   $Date: 2007/01/27 02:30:14 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.147 2007/01/27 02:30:14 amorris Exp $ 
  ***************************************************************************/
 
 	
