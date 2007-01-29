@@ -145,6 +145,17 @@ public class PerfExplorerTableModel extends AbstractTableModel{
 					default:
 						if (trial.getFieldName(r-2) != null)
 							return trial.getFieldName(r-2);
+						else if (experiment.getFieldName(r-2).equalsIgnoreCase("XML_METADATA")) {
+							try {
+				            	SAXTreeViewer viewer = new SAXTreeViewer();
+				            	viewer.init("Users/khuck/bogus.xml");
+				            	viewer.setVisible(true);
+								return experiment.getFieldName(r-2);
+							} catch (Exception e) {
+								System.err.println(e.getMessage());
+								e.printStackTrace();
+							}
+						}
 						else
 							return "";
 				}
