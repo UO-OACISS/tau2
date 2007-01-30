@@ -57,6 +57,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
+import org.xml.sax.ext.LexicalHandler;
 
 // This is an XML book - no need for explicit Swing imports
 import java.awt.*;
@@ -97,12 +98,8 @@ public class SAXTreeViewer extends JFrame {
         DefaultMutableTreeNode base = 
             new DefaultMutableTreeNode("XML String");
         
-        // Build the tree model
-        defaultTreeModel = new DefaultTreeModel(base);
-        jTree = new JTree(defaultTreeModel);
-
         // Construct the tree hierarchy
-        buildTree(defaultTreeModel, base, xml);
+        buildTree(xml);
 
         // Display the results
         getContentPane().add(new JScrollPane(jTree), 
@@ -110,16 +107,12 @@ public class SAXTreeViewer extends JFrame {
     }
 
     public JTree getTree(String xml) throws IOException, SAXException {
-        DefaultMutableTreeNode base = 
-            new DefaultMutableTreeNode("XML Metadata");
+        DefaultMutableTreeNode base = null; 
+            // new DefaultMutableTreeNode("XML Metadata");
         
-        // Build the tree model
-        defaultTreeModel = new DefaultTreeModel(base);
-        jTree = new JTree(defaultTreeModel);
-
         // Construct the tree hierarchy
-        buildTree(defaultTreeModel, base, xml);
-        
+        jTree = buildTree(xml);
+     
         expandAll(jTree, true);
 
         return jTree;
@@ -161,27 +154,35 @@ public class SAXTreeViewer extends JFrame {
      * @throws <code>IOException</code> - when reading the XML URI fails.
      * @throws <code>SAXException</code> - when errors in parsing occur.
      */
-    public void buildTree(DefaultTreeModel treeModel, 
-                          DefaultMutableTreeNode base, String xml) 
+    public JTree buildTree(String xml) 
         throws IOException, SAXException {
 
         // Create instances needed for parsing
         XMLReader reader = 
             XMLReaderFactory.createXMLReader(vendorParserClass);
-        ContentHandler jTreeContentHandler = 
-            new JTreeContentHandler(treeModel, base);
+        JTreeContentHandler jTreeContentHandler = new JTreeContentHandler();
         ErrorHandler jTreeErrorHandler = new JTreeErrorHandler();
+        JTreeLexicalHandler lexicalHandler = new JTreeLexicalHandler(jTreeContentHandler);
 
         // Register content handler
         reader.setContentHandler(jTreeContentHandler);
 
         // Register error handler
         reader.setErrorHandler(jTreeErrorHandler);
+        
+        // register handler for comments
+        reader.setProperty("http://xml.org/sax/properties/lexical-handler",lexicalHandler);
 
         // Parse
         StringReader stringReader = new StringReader(xml);
         InputSource inputSource = new InputSource(stringReader);
         reader.parse(inputSource);
+
+        // Build the tree model
+        defaultTreeModel = new DefaultTreeModel(jTreeContentHandler.getRoot());
+        JTree jTree = new JTree(defaultTreeModel);
+
+        return jTree;
     }
 
     /**
@@ -218,11 +219,10 @@ class JTreeContentHandler implements ContentHandler {
     /** Store URI to prefix mappings */
     private Map namespaceMappings;
 
-    /** Tree Model to add nodes to */
-    private DefaultTreeModel treeModel;
-
     /** Current node to add sub-nodes to */
-    private DefaultMutableTreeNode current;
+    private DefaultMutableTreeNode current = null;
+    
+    private DefaultMutableTreeNode root = null;
 
     /**
      * <p> Set up for working with the JTree. </p>
@@ -230,13 +230,13 @@ class JTreeContentHandler implements ContentHandler {
      * @param treeModel tree to add nodes to.
      * @param base node to start adding sub-nodes to.
      */
-    public JTreeContentHandler(DefaultTreeModel treeModel, 
-                               DefaultMutableTreeNode base) {
-        this.treeModel = treeModel;
-        this.current = base;
+    public JTreeContentHandler() {
         this.namespaceMappings = new HashMap();
     }
 
+    public DefaultMutableTreeNode getRoot() {
+    	return this.root;
+    }
     /**
      * <p>
      *  Provide reference to <code>Locator</code> which provides
@@ -364,38 +364,34 @@ class JTreeContentHandler implements ContentHandler {
                              String qName, Attributes atts)
         throws SAXException {
 
-        DefaultMutableTreeNode element = 
-            new DefaultMutableTreeNode("Element: " + localName);
-        current.add(element);
-        current = element;
-
+    	String prefix = "";
         // Determine namespace
         if (namespaceURI.length() > 0) {
-            String prefix = 
-                (String)namespaceMappings.get(namespaceURI);
-            if (prefix.equals("")) {
-                prefix = "[None]";
-            }
-            DefaultMutableTreeNode namespace =
-                new DefaultMutableTreeNode("Namespace: prefix = '" +
-                    prefix + "', URI = '" + namespaceURI + "'");
-            current.add(namespace);
+            prefix = (String)namespaceMappings.get(namespaceURI);
         }
+
+        DefaultMutableTreeNode element = 
+            new DefaultMutableTreeNode("<" + prefix + ":" + localName + ">");
+        if (current != null)
+        	current.add(element);
+        else {
+        	// add the namespace and style attributes
+            DefaultMutableTreeNode attribute =
+                new DefaultMutableTreeNode("@xmlns:" + prefix + " = " + namespaceURI);
+            element.add(attribute);
+        	this.root = element;
+        }
+        current = element;
 
         // Process attributes
         for (int i=0; i<atts.getLength(); i++) {
             DefaultMutableTreeNode attribute =
-                new DefaultMutableTreeNode("Attribute (name = '" +
-                                           atts.getLocalName(i) + 
-                                           "', value = '" +
-                                           atts.getValue(i) + "')");
+              new DefaultMutableTreeNode("@ATTRIBUTE: " +
+              atts.getLocalName(i) + " = " + atts.getValue(i));
             String attURI = atts.getURI(i);
             if (attURI.length() > 0) {
                 String attPrefix = 
                     (String)namespaceMappings.get(namespaceURI);
-                if (attPrefix.equals("")) {
-                    attPrefix = "[None]";
-                }
                 DefaultMutableTreeNode attNamespace =
                     new DefaultMutableTreeNode("Namespace: prefix = '" +
                         attPrefix + "', URI = '" + attURI + "'");
@@ -441,9 +437,56 @@ class JTreeContentHandler implements ContentHandler {
         throws SAXException {
 
         String s = new String(ch, start, length);
-        DefaultMutableTreeNode data =
-            new DefaultMutableTreeNode("Character Data: '" + s + "'");
-        current.add(data);
+        if (s.trim().length() > 0) {
+	        DefaultMutableTreeNode data =
+	            new DefaultMutableTreeNode("CHARACTER DATA: '" + s + "'");
+	        current.add(data);
+        }
+    }
+
+    /**
+     * <p>
+     *   This reports character data (within an element).
+     * </p>
+     *
+     * @param ch <code>char[]</code> character array with character data
+     * @param start <code>int</code> index in array where data starts.
+     * @param length <code>int</code> index in array where data ends.
+     * @throws <code>SAXException</code> when things go wrong
+     */
+    public void comment(char[] ch, int start, int length)
+        throws SAXException {
+
+        String s = new String(ch, start, length);
+        if (s.trim().length() > 0) {
+	        DefaultMutableTreeNode data =
+	            new DefaultMutableTreeNode("#COMMENT: '" + trim(s) + "'");
+	        current.add(data);
+        }
+    }
+
+    /* remove leading whitespace */
+    private static String ltrim(String source) {
+        return source.replaceAll("^\\s+", "");
+    }
+
+    /* remove trailing whitespace */
+    private static String rtrim(String source) {
+        return source.replaceAll("\\s+$", "");
+    }
+
+    /* replace multiple whitespaces between words with single blank */
+    private static String itrim(String source) {
+        return source.replaceAll("\\b\\s{2,}\\b", " ");
+    }
+
+    /* remove all superfluous whitespaces in source string */
+    private static String trim(String source) {
+        return itrim(ltrim(rtrim(source)));
+    }
+
+    private static String lrtrim(String source){
+        return ltrim(rtrim(source));
     }
 
     /**
@@ -557,6 +600,49 @@ class JTreeErrorHandler implements ErrorHandler {
                               exception.getMessage());        
         throw new SAXException("Fatal Error encountered");
     }
+}
+
+class JTreeLexicalHandler implements LexicalHandler {
+
+	private JTreeContentHandler treeContentHandler = null;
+	public JTreeLexicalHandler(JTreeContentHandler treeContentHandler) {
+		this.treeContentHandler = treeContentHandler;
+	}
+
+	public void comment(char[] ch, int start, int length) throws SAXException {
+		treeContentHandler.comment(ch, start, length);
+	}
+
+	public void endCDATA() throws SAXException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void endDTD() throws SAXException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void endEntity(String name) throws SAXException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void startCDATA() throws SAXException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void startDTD(String name, String publicId, String systemId) throws SAXException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void startEntity(String name) throws SAXException {
+		// TODO Auto-generated method stub
+		
+	}
+	
 }
 // Demo file: book.xml
 /*
