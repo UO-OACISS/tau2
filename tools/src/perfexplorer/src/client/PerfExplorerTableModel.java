@@ -2,8 +2,12 @@ package client;
 import edu.uoregon.tau.perfdmf.*;
 
 import javax.swing.table.*;
+import javax.swing.*;
+
 import common.RMIView;
 import common.RMISortableIntervalEvent;
+
+import java.awt.Dimension;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.FieldPosition;
@@ -19,6 +23,8 @@ public class PerfExplorerTableModel extends AbstractTableModel{
 	private RMIView view = null;
 	private int type = -1;
 	private String[] columnNames = { "Field", "Value" };
+	private int currentTrial = 0;
+	private int dividerLocation = 200;
 
 	public PerfExplorerTableModel(Object object){
 		super();
@@ -27,6 +33,13 @@ public class PerfExplorerTableModel extends AbstractTableModel{
 	}
   
   	public void updateObject(Object object) {
+  		// get the divider location of the split pane, so we can restore it later for trials with XML data
+  		JSplitPane tab = (JSplitPane)PerfExplorerJTabbedPane.getPane().getTab(0);
+    	if (tab.getBottomComponent() != null)
+    		dividerLocation = tab.getDividerLocation();
+    	// if this is likely not a trial, so get rid of the bottom component of the split pane
+    	tab.setBottomComponent(null);
+    	currentTrial = 0;
 		if(object instanceof Application){
 			this.application = (Application)object;
 			type = 0;
@@ -145,17 +158,6 @@ public class PerfExplorerTableModel extends AbstractTableModel{
 					default:
 						if (trial.getFieldName(r-2) != null)
 							return trial.getFieldName(r-2);
-						else if (experiment.getFieldName(r-2).equalsIgnoreCase("XML_METADATA")) {
-							try {
-				            	SAXTreeViewer viewer = new SAXTreeViewer();
-				            	viewer.init("Users/khuck/bogus.xml");
-				            	viewer.setVisible(true);
-								return experiment.getFieldName(r-2);
-							} catch (Exception e) {
-								System.err.println(e.getMessage());
-								e.printStackTrace();
-							}
-						}
 						else
 							return "";
 				}
@@ -167,7 +169,29 @@ public class PerfExplorerTableModel extends AbstractTableModel{
 						return new Integer(trial.getID());
 					default:
 						if (trial.getField(r-2) != null)
-							return trial.getField(r-2);
+							if (trial.getFieldName(r-2).equalsIgnoreCase("XML_METADATA") &&
+									trial.getID() != currentTrial) {
+								try {
+									// This is a trial with XML data, so in the bottom half of the split
+									// pane, put the XML data in a tree viewer.
+					            	SAXTreeViewer viewer = new SAXTreeViewer();
+					            	JSplitPane tab = (JSplitPane)PerfExplorerJTabbedPane.getPane().getTab(0);
+					        		JScrollPane treeView = new JScrollPane(viewer.getTree(trial.getField(r-2)));
+					        		JScrollBar jScrollBar = treeView.getVerticalScrollBar();
+					        		jScrollBar.setUnitIncrement(35);
+					            	tab.setBottomComponent(treeView);
+					            	// restore the divider location from the last time we displayed
+					            	// XML data to the user
+					        		tab.setDividerLocation(dividerLocation);
+					            	currentTrial = trial.getID();
+									return trial.getFieldName(r-2);
+								} catch (Exception e) {
+									System.err.println(e.getMessage());
+									e.printStackTrace();
+								}
+							}
+							else
+								return trial.getField(r-2);
 						else
 							return "";
 				}

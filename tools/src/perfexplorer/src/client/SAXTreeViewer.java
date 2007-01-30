@@ -43,8 +43,10 @@
 package client;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Enumeration;
 import java.util.Map;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -91,23 +93,65 @@ public class SAXTreeViewer extends JFrame {
      *
      * @param filename <code>String</code> path to XML document.
      */
-    public void init(String xmlURI) throws IOException, SAXException {
+    public void init(String xml) throws IOException, SAXException {
         DefaultMutableTreeNode base = 
-            new DefaultMutableTreeNode("XML Document: " + 
-                xmlURI);
+            new DefaultMutableTreeNode("XML String");
         
         // Build the tree model
         defaultTreeModel = new DefaultTreeModel(base);
         jTree = new JTree(defaultTreeModel);
 
         // Construct the tree hierarchy
-        buildTree(defaultTreeModel, base, xmlURI);
+        buildTree(defaultTreeModel, base, xml);
 
         // Display the results
         getContentPane().add(new JScrollPane(jTree), 
             BorderLayout.CENTER);
     }
 
+    public JTree getTree(String xml) throws IOException, SAXException {
+        DefaultMutableTreeNode base = 
+            new DefaultMutableTreeNode("XML Metadata");
+        
+        // Build the tree model
+        defaultTreeModel = new DefaultTreeModel(base);
+        jTree = new JTree(defaultTreeModel);
+
+        // Construct the tree hierarchy
+        buildTree(defaultTreeModel, base, xml);
+        
+        expandAll(jTree, true);
+
+        return jTree;
+    }
+
+    // If expand is true, expands all nodes in the tree.
+    // Otherwise, collapses all nodes in the tree.
+    private void expandAll(JTree tree, boolean expand) {
+        TreeNode root = (TreeNode)tree.getModel().getRoot();
+    
+        // Traverse tree from root
+        expandAll(tree, new TreePath(root), expand);
+    }
+    private void expandAll(JTree tree, TreePath parent, boolean expand) {
+        // Traverse children
+        TreeNode node = (TreeNode)parent.getLastPathComponent();
+        if (node.getChildCount() >= 0) {
+            for (Enumeration e=node.children(); e.hasMoreElements(); ) {
+                TreeNode n = (TreeNode)e.nextElement();
+                TreePath path = parent.pathByAddingChild(n);
+                expandAll(tree, path, expand);
+            }
+        }
+    
+        // Expansion or collapse must be done bottom-up
+        if (expand) {
+            tree.expandPath(parent);
+        } else {
+            tree.collapsePath(parent);
+        }
+    }
+    
     /**
      * <p>This handles building the Swing UI tree.</p>
      *
@@ -118,7 +162,7 @@ public class SAXTreeViewer extends JFrame {
      * @throws <code>SAXException</code> - when errors in parsing occur.
      */
     public void buildTree(DefaultTreeModel treeModel, 
-                          DefaultMutableTreeNode base, String xmlURI) 
+                          DefaultMutableTreeNode base, String xml) 
         throws IOException, SAXException {
 
         // Create instances needed for parsing
@@ -135,8 +179,8 @@ public class SAXTreeViewer extends JFrame {
         reader.setErrorHandler(jTreeErrorHandler);
 
         // Parse
-        InputSource inputSource = 
-            new InputSource(xmlURI);
+        StringReader stringReader = new StringReader(xml);
+        InputSource inputSource = new InputSource(stringReader);
         reader.parse(inputSource);
     }
 

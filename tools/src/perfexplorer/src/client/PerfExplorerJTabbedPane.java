@@ -1,6 +1,7 @@
 package client;
 
 import javax.swing.*;
+
 import java.awt.*;
 //import java.awt.event.*;
 
@@ -10,6 +11,9 @@ import java.awt.*;
 public class PerfExplorerJTabbedPane extends JTabbedPane {
 
 	private static PerfExplorerJTabbedPane thePane = null;
+	private JComponent panel1 = null;
+	private JComponent panel2 = null;
+	private JComponent panel3 = null;
 
 	public static PerfExplorerJTabbedPane getPane () {
 		if (thePane == null) {
@@ -18,21 +22,49 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 		}
 		return thePane;
 	}
-
+	
+	public JComponent getTab(int index) {
+		JComponent comp = null;
+		switch(index) {
+		case (0): {
+			comp = this.panel1;
+			break;
+		}
+		case (1): {
+			comp = this.panel2;
+			break;
+		}
+		case (2): {
+			comp = this.panel3;
+			break;
+		}
+		}
+		return comp;
+	}
+	
 	private PerfExplorerJTabbedPane () {
 		super();
 		ImageIcon icon = null;
 		icon = createImageIcon("red-ball.gif");
 
-		JComponent panel1 = AnalysisManagementPane.getPane();
+		// Create a split pane for the tree view and tabbed pane
+		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		JScrollPane treeView = new JScrollPane(AnalysisManagementPane.getPane());
+		JScrollBar jScrollBar = treeView.getVerticalScrollBar();
+		jScrollBar.setUnitIncrement(35);
+
+		splitPane.setTopComponent(treeView);
+		splitPane.setBottomComponent(null);
+		splitPane.setDividerLocation(200);
+		this.panel1 = splitPane;
 		panel1.setPreferredSize(new Dimension(500, 500));
 		this.addTab("Analysis Management", icon, panel1, "Request Cluster Analysis");
 
-		JComponent panel2 = PerformanceExplorerPane.getPane();
+		this.panel2 = PerformanceExplorerPane.getPane();
 		panel2.setPreferredSize(new Dimension(500, 500));
 		this.addTab("Cluster Results", icon, panel2, "View Cluster Results");
 
-		JComponent panel3 = PerfExplorerCorrelationPane.getPane();
+		this.panel3 = PerfExplorerCorrelationPane.getPane();
 		panel3.setPreferredSize(new Dimension(500, 500));
 		this.addTab("Correlation Results", icon, panel3, "View Correlation Results");
 	}

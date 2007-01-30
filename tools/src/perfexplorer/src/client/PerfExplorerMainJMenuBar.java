@@ -1,6 +1,7 @@
 package client;
 
 import javax.swing.*;
+
 import java.awt.event.*;
 
 public class PerfExplorerMainJMenuBar extends JMenuBar {
@@ -36,6 +37,18 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		quitServerItem.addActionListener(listener);
 		fileMenu.add(quitServerItem);
 
+		try {
+			UIManager.LookAndFeelInfo[] info = UIManager.getInstalledLookAndFeels();
+			JMenuItem item[] = new JMenuItem[info.length];
+			for (int i = 0 ; i < info.length ; i++) {
+				//System.out.println(info[i].getClassName() + ": " + info[i].getName());
+				//Add a menu item.
+				item[i] = new JMenuItem(PerfExplorerActionListener.LOOK_AND_FEEL + info[i].getName());
+				item[i].addActionListener(listener);
+				fileMenu.add(item[i]);
+			}
+		} catch (Exception e) { }
+		
 		this.add(fileMenu);
 	}
 

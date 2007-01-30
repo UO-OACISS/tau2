@@ -1,7 +1,6 @@
 package client;
 
 import javax.swing.*;
-
 import java.awt.event.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -14,11 +13,13 @@ import common.RMIView;
 import common.RMISortableIntervalEvent;
 import common.RMIPerfExplorerModel;
 import common.TransformationType;
+import common.PerfExplorerOutput;
 
 public class PerfExplorerActionListener implements ActionListener {
 
 	public final static String QUIT = "Quit PerfExplorer";
 	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
+	public final static String LOOK_AND_FEEL = "Set Look and Feel: ";
 	public final static String ABOUT = "About PerfExplorer";
 	public final static String SEARCH = "Search for help on...";
 	// clustering menu items
@@ -76,6 +77,17 @@ public class PerfExplorerActionListener implements ActionListener {
 					//PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 					//server.stopServer();
 					System.exit(0);
+				} else if (arg.startsWith(LOOK_AND_FEEL)) {
+					UIManager.LookAndFeelInfo[] info = UIManager.getInstalledLookAndFeels();
+					for (int i = 0 ; i < info.length ; i++) {
+						if (arg.endsWith(info[i].getName())) {
+							try {
+								UIManager.setLookAndFeel(info[i].getClassName());
+							} catch (UnsupportedLookAndFeelException e) {
+								PerfExplorerOutput.println(e.getMessage());
+							}
+						}
+					}
 			// help menu items
 				} else if (arg.equals(ABOUT)) {
 					createAboutWindow();
