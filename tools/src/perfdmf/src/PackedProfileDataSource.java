@@ -1,6 +1,7 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.zip.GZIPInputStream;
 
@@ -9,9 +10,9 @@ import java.util.zip.GZIPInputStream;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.5 2007/01/06 04:40:58 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.6 2007/01/31 19:25:31 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -59,8 +60,15 @@ public class PackedProfileDataSource extends DataSource {
     public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException {
         long time = System.currentTimeMillis();
 
-        // set up the streams
-        FileInputStream istream = new FileInputStream(file);
+        InputStream istream;
+        if (file.toString().toLowerCase().startsWith(("http:/"))) {
+            // When it gets converted from a String to a File http:// turns into http:/
+            URL url = new URL("http://" + file.toString().substring(6));
+            istream = url.openStream();
+        } else {
+            istream = new FileInputStream(file);
+        }
+        
         tracker = new TrackerInputStream(istream);
         GZIPInputStream gzip = new GZIPInputStream(tracker);
         BufferedInputStream bis = new BufferedInputStream(gzip);
