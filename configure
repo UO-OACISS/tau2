@@ -3561,6 +3561,24 @@ case $machine in
 	;;
     esac
 
+if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 ]
+then
+        if [ $cxx_compiler = CC ]
+          then
+            fixmakeargs="$fixmakeargs SUNCC"
+            if [ $openmp = yes ]
+            then
+              fixmakeargs="$fixmakeargs SUNCC_OPENMP"
+            fi
+            if [ $fortran_compiler = no ]
+            then
+              fixmakeargs="$fixmakeargs SUN_FORTRAN"
+              fortran_compiler=yes
+            fi
+        fi
+fi
+
+
 if [ $tauarch = none ]
 then
   architecture=

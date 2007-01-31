@@ -1108,8 +1108,16 @@ ALPHATIMERS)
         echo "NOTE: Solaris2 CC doesn't support RTTI yet, using -DNO_RTTI"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     SUNCC)
+        echo "NOTE: Using SUN's CC compiler"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      SOL2CC_OPENMP)
         echo "NOTE: Using Solaris CC's -xopenmp option"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     SUNCC_OPENMP)
+        echo "NOTE: Using SUN CC's -xopenmp=parallel option under Linux"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      SOL2PAPI)
