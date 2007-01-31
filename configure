@@ -4957,6 +4957,7 @@ fi
 if [ $tauprefix != unknown ]
 then
   cp -r examples ${tauprefix}
+  cp .all_configs .last_config ${tauprefix}
 fi
 
 
