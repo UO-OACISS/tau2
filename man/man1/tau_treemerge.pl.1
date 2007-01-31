@@ -1,0 +1,38 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_TREEMERGE.PL" "1" "01/31/2007" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau_treemerge.pl \- combine multiple node and or thread TAU tracefiles into a merged tracefile
+.SH "SYNOPSIS"
+.HP 17
+\fBtau_treemerge.pl\fR [\fB\-n\fR\ \fIbreak_amount\fR]
+.SH "DESCRIPTION"
+.PP
+tau_treemerge.pl is generated when TAU is configured with the \-TRACE option.
+.PP
+This tool assembles a set of tau trace and event files from multiple multiple nodes or threads across a program's execution into a single unified trace file. Many TAU trace file tools operate on merged trace files.
+.PP
+tau_treemerge.pl will generate the specified merged trace file and an event definition file, tau.edf by default.
+.SH "OPTIONS"
+.PP
+\fB\-n\fR
+break_amount set the maximum number of trace files to merge in each invocation of tau_merge. If we need to merge 2000 trace files and if the maximum number of open files specified by unix is 250, tau_treemerge.pl will incrementally merge the trace files so as not to exceed the number of open file descriptors.
+.SH "SEE ALSO"
+.PP
+tau_merge
+.PP
+tau_convert
+.PP
+tau2profile
+.PP
+tau2vtf
+.PP
+tau2elg
+.PP
+tau2slog2
