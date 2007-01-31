@@ -360,7 +360,7 @@ FWRAPPER	       = TauFMpi.o
 #SOL2#PCL_EXTRA_LIBS = -lcpc #ENDIF#
 #PCL#LEXTRA	       	       = -L$(PCLDIR)/lib -lpcl $(PCL_EXTRA_LIBS)      #ENDIF#
 #PAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
-#IA64PAPI#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
+#IA64PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
 #PAPIPFM#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi -lpfm #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
 #IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -L/usr/pmapi/lib -lpmapi#ENDIF#
@@ -536,9 +536,9 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #KAI#TAU_IBM_PYTHON_SHFLAG = --backend -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp --backend -Wl,-einitpytau#ENDIF#
 #ACC#TAU_HPUX_PYTHON_SHFLAG = -lstd_v2 -lCsup_v2 -lm -lcl -lc #ENDIF#
 
-#USE_IBMXLC#TAU_IBM_LD_FLAGS = -binitfini:poe_remote_main -brtl #ENDIF#
-#GNU#TAU_IBM_LD_FLAGS = -Wl,-binitfini:poe_remote_main -Wl,-brtl #ENDIF#
-#KAI#TAU_IBM_LD_FLAGS = --backend -binitfini:poe_remote_main --backend -brtl #ENDIF#
+#USE_IBMXLC#TAU_IBM_LD_FLAGS = -binitfini:poe_remote_main #ENDIF#
+#GNU#TAU_IBM_LD_FLAGS = -Wl,-binitfini:poe_remote_main #ENDIF#
+#KAI#TAU_IBM_LD_FLAGS = --backend -binitfini:poe_remote_main #ENDIF#
 
 
 #PYTHON#TAU_IBM_SHFLAGS = $(TAU_IBM_PYTHON_SHFLAG) #ENDIF#
