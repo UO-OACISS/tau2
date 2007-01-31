@@ -15,11 +15,11 @@ import edu.uoregon.tau.common.ImageExport;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.9 2007/01/04 01:55:31 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.10 2007/01/31 19:38:08 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -290,7 +290,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                     } else if (arg.equals("Show All Groups Except This One")) {
                         ppTrial.showAllExcept(lde.getGroup());
                     } else if (arg.equals("Show All Groups")) {
-                        ppTrial.setFunctionMask(null);
+                        ppTrial.showAllExcept(null);
                         ppTrial.updateRegisteredObjects("dataEvent");
                     }
                 }
