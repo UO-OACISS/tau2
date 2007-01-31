@@ -102,7 +102,7 @@ all:
 ifeq (\$(TAU_F90),)
 	echo "Error, no fortran compiler specified in TAU configure (use -fortran=<>)"
 else
-	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_F90) $THEARGS
+	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_F90) $TAUARGS
 endif
 
 EOF
