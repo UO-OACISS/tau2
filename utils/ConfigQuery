@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/csh -f
 
 #############################################################################
 # This script looks at the files in ./utils and simply
