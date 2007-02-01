@@ -218,7 +218,7 @@ public class TreeTableExample {
     public static void main(String[] args) {
 
         JFrame frame = new JFrame("TreeTable");
-        JTreeTable treeTable = new JTreeTable(new FileSystemModel(),true);
+        JTreeTable treeTable = new JTreeTable(new FileSystemModel(),true, true);
 
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent we) {

@@ -51,7 +51,7 @@ public class JTreeTable extends JTable implements MouseListener {
     private int sortedColumnIndex = 0;
     private boolean sortedColumnAscending;
 
-    public JTreeTable(final AbstractTreeTableModel treeTableModel, boolean showHandles) {
+    public JTreeTable(final AbstractTreeTableModel treeTableModel, boolean showHandles, boolean showSortingArrows) {
         super();
 
         // Create the tree. It will be used as a renderer and editor. 
@@ -59,7 +59,8 @@ public class JTreeTable extends JTable implements MouseListener {
         tree.setShowsRootHandles(showHandles);
         tree.setRootVisible(false);
 
-        this.getTableHeader().setDefaultRenderer(new SortHeaderRenderer());
+        if (showSortingArrows)
+        	this.getTableHeader().setDefaultRenderer(new SortHeaderRenderer());
         this.getTableHeader().addMouseListener(this);
 
         // Install a tableModel representing the visible rows in the tree. 
@@ -89,6 +90,10 @@ public class JTreeTable extends JTable implements MouseListener {
 
         setRowHeight(18);
 
+    }
+    
+    public void expandAll(boolean expand) {
+    	expandAll(tree, expand);
     }
 
     public void forceRedraw() {

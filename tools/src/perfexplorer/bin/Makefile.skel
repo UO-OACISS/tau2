@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.24 2007/01/05 19:24:18 khuck Exp $
+# $Id: Makefile.skel,v 1.25 2007/02/01 04:31:42 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -218,25 +218,25 @@ install: perfexplorer.jar
 	scp PerfExplorer-0.1.tar utonium.cs.uoregon.edu:/Library/WebServer/Documents/perfexplorer/PerfExplorer-0.1.tar
 
 webstart: perfexplorer.jar
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer perfexplorer.jar khuck
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore perfexplorer.jar tau
 	cp perfexplorer.jar ${WEBSTART_DIR}
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${PERFDMF_JAR} khuck
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${PERFDMF_JAR} tau
 	cp ${PERFDMF_JAR} ${WEBSTART_DIR}
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JARGS_JAR} khuck
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JARGS_JAR} tau
 	cp ${JARGS_JAR} ${WEBSTART_DIR}
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JYTHON_JAR} khuck
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JYTHON_JAR} tau
 	cp ${JYTHON_JAR} ${WEBSTART_DIR}
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JOGL_JAR} khuck
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JOGL_JAR} tau
 	cp ${JOGL_JAR} ${WEBSTART_DIR}
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${VIS_JAR} khuck
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${VIS_JAR} tau
 	cp ${VIS_JAR} ${WEBSTART_DIR}
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JFREECHART_JAR} khuck
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JFREECHART_JAR} tau
 	cp ${JFREECHART_JAR} ${WEBSTART_DIR}
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${JCOMMON_JAR} khuck
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JCOMMON_JAR} tau
 	cp ${JCOMMON_JAR} ${WEBSTART_DIR}
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${TAUCOMMON_JAR} khuck
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${TAUCOMMON_JAR} tau
 	cp ${TAUCOMMON_JAR} ${WEBSTART_DIR}
-	jarsigner -keystore /Users/khuck/myKeystore -storepass perfexplorer ${BATIK_JAR} khuck
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${BATIK_JAR} tau
 	cp ${BATIK_JAR} ${WEBSTART_DIR}
 	cp etc/java.policy ${WEBSTART_DIR}
 	chmod 755 ${WEBSTART_DIR}/*.jar

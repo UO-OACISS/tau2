@@ -176,7 +176,7 @@ public class PerfExplorerTableModel extends AbstractTableModel{
 									// pane, put the XML data in a tree viewer.
 					            	SAXTreeViewer viewer = new SAXTreeViewer();
 					            	JSplitPane tab = (JSplitPane)PerfExplorerJTabbedPane.getPane().getTab(0);
-					        		JScrollPane treeView = new JScrollPane(viewer.getTree(trial.getField(r-2)));
+					        		JScrollPane treeView = new JScrollPane(viewer.getTreeTable(trial.getField(r-2)));
 					        		JScrollBar jScrollBar = treeView.getVerticalScrollBar();
 					        		jScrollBar.setUnitIncrement(35);
 					            	tab.setBottomComponent(treeView);

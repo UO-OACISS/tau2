@@ -59,6 +59,10 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.ext.LexicalHandler;
 
+import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
+import edu.uoregon.tau.common.treetable.JTreeTable;
+import edu.uoregon.tau.common.treetable.TreeTableModel;
+
 // This is an XML book - no need for explicit Swing imports
 import java.awt.*;
 import javax.swing.*;
@@ -75,10 +79,10 @@ public class SAXTreeViewer extends JFrame {
         "org.apache.xerces.parsers.SAXParser";
 
     /** The base tree to render */
-    private JTree jTree;
+    private JTreeTable jTreeTable;
 
     /** Tree model to use */
-    DefaultTreeModel defaultTreeModel;
+    AbstractTreeTableModel xmlModel;
 
     /**
      * <p> This initializes the needed Swing settings. </p>
@@ -102,49 +106,22 @@ public class SAXTreeViewer extends JFrame {
         buildTree(xml);
 
         // Display the results
-        getContentPane().add(new JScrollPane(jTree), 
+        getContentPane().add(new JScrollPane(jTreeTable), 
             BorderLayout.CENTER);
     }
 
-    public JTree getTree(String xml) throws IOException, SAXException {
+    public JTreeTable getTreeTable(String xml) throws IOException, SAXException {
         DefaultMutableTreeNode base = null; 
             // new DefaultMutableTreeNode("XML Metadata");
         
         // Construct the tree hierarchy
-        jTree = buildTree(xml);
+        jTreeTable = buildTree(xml);
      
-        expandAll(jTree, true);
+        jTreeTable.expandAll(true);
 
-        return jTree;
+        return jTreeTable;
     }
 
-    // If expand is true, expands all nodes in the tree.
-    // Otherwise, collapses all nodes in the tree.
-    private void expandAll(JTree tree, boolean expand) {
-        TreeNode root = (TreeNode)tree.getModel().getRoot();
-    
-        // Traverse tree from root
-        expandAll(tree, new TreePath(root), expand);
-    }
-    private void expandAll(JTree tree, TreePath parent, boolean expand) {
-        // Traverse children
-        TreeNode node = (TreeNode)parent.getLastPathComponent();
-        if (node.getChildCount() >= 0) {
-            for (Enumeration e=node.children(); e.hasMoreElements(); ) {
-                TreeNode n = (TreeNode)e.nextElement();
-                TreePath path = parent.pathByAddingChild(n);
-                expandAll(tree, path, expand);
-            }
-        }
-    
-        // Expansion or collapse must be done bottom-up
-        if (expand) {
-            tree.expandPath(parent);
-        } else {
-            tree.collapsePath(parent);
-        }
-    }
-    
     /**
      * <p>This handles building the Swing UI tree.</p>
      *
@@ -154,21 +131,21 @@ public class SAXTreeViewer extends JFrame {
      * @throws <code>IOException</code> - when reading the XML URI fails.
      * @throws <code>SAXException</code> - when errors in parsing occur.
      */
-    public JTree buildTree(String xml) 
+    public JTreeTable buildTree(String xml) 
         throws IOException, SAXException {
 
         // Create instances needed for parsing
         XMLReader reader = 
             XMLReaderFactory.createXMLReader(vendorParserClass);
-        JTreeContentHandler jTreeContentHandler = new JTreeContentHandler();
-        ErrorHandler jTreeErrorHandler = new JTreeErrorHandler();
-        JTreeLexicalHandler lexicalHandler = new JTreeLexicalHandler(jTreeContentHandler);
+        JTreeContentHandler jTreeTableContentHandler = new JTreeContentHandler();
+        ErrorHandler jTreeTableErrorHandler = new JTreeErrorHandler();
+        JTreeLexicalHandler lexicalHandler = new JTreeLexicalHandler(jTreeTableContentHandler);
 
         // Register content handler
-        reader.setContentHandler(jTreeContentHandler);
+        reader.setContentHandler(jTreeTableContentHandler);
 
         // Register error handler
-        reader.setErrorHandler(jTreeErrorHandler);
+        reader.setErrorHandler(jTreeTableErrorHandler);
         
         // register handler for comments
         reader.setProperty("http://xml.org/sax/properties/lexical-handler",lexicalHandler);
@@ -179,10 +156,11 @@ public class SAXTreeViewer extends JFrame {
         reader.parse(inputSource);
 
         // Build the tree model
-        defaultTreeModel = new DefaultTreeModel(jTreeContentHandler.getRoot());
-        JTree jTree = new JTree(defaultTreeModel);
-
-        return jTree;
+        xmlModel = new XMLModel(jTreeTableContentHandler.getRoot());
+        JTreeTable jTreeTable = new JTreeTable(xmlModel, true, false);
+        jTreeTable.getTree().setCellRenderer(new TreePortionCellRenderer());
+        
+        return jTreeTable;
     }
 
     /**
@@ -209,7 +187,7 @@ public class SAXTreeViewer extends JFrame {
  * <b><code>JTreeContentHandler</code></b> implements the SAX
  *   <code>ContentHandler</code> interface and defines callback
  *   behavior for the SAX callbacks associated with an XML
- *   document's content, bulding up JTree nodes.
+ *   document's content, bulding up JTreeTable nodes.
  */
 class JTreeContentHandler implements ContentHandler {
 
@@ -220,9 +198,9 @@ class JTreeContentHandler implements ContentHandler {
     private Map namespaceMappings;
 
     /** Current node to add sub-nodes to */
-    private DefaultMutableTreeNode current = null;
+    private XMLNode current = null;
     
-    private DefaultMutableTreeNode root = null;
+    private XMLNode root = null;
 
     /**
      * <p> Set up for working with the JTree. </p>
@@ -232,9 +210,11 @@ class JTreeContentHandler implements ContentHandler {
      */
     public JTreeContentHandler() {
         this.namespaceMappings = new HashMap();
+        this.current = new XMLNode("XML Document");
+        this.root = this.current;
     }
 
-    public DefaultMutableTreeNode getRoot() {
+    public XMLNode getRoot() {
     	return this.root;
     }
     /**
@@ -370,35 +350,15 @@ class JTreeContentHandler implements ContentHandler {
             prefix = (String)namespaceMappings.get(namespaceURI);
         }
 
-        DefaultMutableTreeNode element = 
-            new DefaultMutableTreeNode("<" + prefix + ":" + localName + ">");
-        if (current != null)
-        	current.add(element);
-        else {
+        XMLElementNode element = 
+            new XMLElementNode(namespaceURI, localName, qName, atts, prefix);
+        if ((current == root) && (prefix.length() > 0)) {
         	// add the namespace and style attributes
-            DefaultMutableTreeNode attribute =
-                new DefaultMutableTreeNode("@xmlns:" + prefix + " = " + namespaceURI);
+            XMLAttributeNode attribute = new XMLAttributeNode("xmlns:" + prefix, namespaceURI);
             element.add(attribute);
-        	this.root = element;
         }
+       	current.add(element);
         current = element;
-
-        // Process attributes
-        for (int i=0; i<atts.getLength(); i++) {
-            DefaultMutableTreeNode attribute =
-              new DefaultMutableTreeNode("@ATTRIBUTE: " +
-              atts.getLocalName(i) + " = " + atts.getValue(i));
-            String attURI = atts.getURI(i);
-            if (attURI.length() > 0) {
-                String attPrefix = 
-                    (String)namespaceMappings.get(namespaceURI);
-                DefaultMutableTreeNode attNamespace =
-                    new DefaultMutableTreeNode("Namespace: prefix = '" +
-                        attPrefix + "', URI = '" + attURI + "'");
-                attribute.add(attNamespace);            
-            }
-            current.add(attribute);
-        }
     }
 
     /**
@@ -420,7 +380,7 @@ class JTreeContentHandler implements ContentHandler {
         throws SAXException {
 
         // Walk back up the tree
-        current = (DefaultMutableTreeNode)current.getParent();
+        current = (XMLNode)current.getParent();
     }
 
     /**
@@ -438,9 +398,7 @@ class JTreeContentHandler implements ContentHandler {
 
         String s = new String(ch, start, length);
         if (s.trim().length() > 0) {
-	        DefaultMutableTreeNode data =
-	            new DefaultMutableTreeNode("CHARACTER DATA: '" + s + "'");
-	        current.add(data);
+	        current.setValue(s);
         }
     }
 
@@ -459,8 +417,8 @@ class JTreeContentHandler implements ContentHandler {
 
         String s = new String(ch, start, length);
         if (s.trim().length() > 0) {
-	        DefaultMutableTreeNode data =
-	            new DefaultMutableTreeNode("#COMMENT: '" + trim(s) + "'");
+	        XMLCommentNode data =
+	            new XMLCommentNode(trim(s));
 	        current.add(data);
         }
     }
@@ -518,9 +476,9 @@ class JTreeContentHandler implements ContentHandler {
      * @throws <code>SAXException</code> when things go wrong
      */
     public void skippedEntity(String name) throws SAXException {
-        DefaultMutableTreeNode skipped =
-            new DefaultMutableTreeNode("Skipped Entity: '" + name + "'");
-        current.add(skipped);
+//        DefaultMutableTreeNode skipped =
+//            new DefaultMutableTreeNode("Skipped Entity: '" + name + "'");
+//        current.add(skipped);
     }
 }
 
@@ -613,45 +571,10 @@ class JTreeLexicalHandler implements LexicalHandler {
 		treeContentHandler.comment(ch, start, length);
 	}
 
-	public void endCDATA() throws SAXException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void endDTD() throws SAXException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void endEntity(String name) throws SAXException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void startCDATA() throws SAXException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void startDTD(String name, String publicId, String systemId) throws SAXException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void startEntity(String name) throws SAXException {
-		// TODO Auto-generated method stub
-		
-	}
-	
+	public void endCDATA() throws SAXException {}
+	public void endDTD() throws SAXException {}
+	public void endEntity(String name) throws SAXException {}
+	public void startCDATA() throws SAXException {}
+	public void startDTD(String name, String publicId, String systemId) throws SAXException {}
+	public void startEntity(String name) throws SAXException {}
 }
-// Demo file: book.xml
-/*
-<?xml version="1.0"?>
-
-<games>
-  <game genre="rpg">XML Invaders</game>
-  <game genre="rpg">A Node in the XPath</game>
-  <game genre="rpg">XPath Racers</game>
-</games>
-
-*/
