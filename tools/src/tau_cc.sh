@@ -47,6 +47,10 @@ for arg in "$@" ; do
       invoke_without_tau=yes
       NON_TAUARGS="$NON_TAUARGS $modarg"
       ;;
+    -MF* | -MT* | -MQ* | -MP | -MG)
+      # these arguments should only go to the non-tau invocation
+      NON_TAUARGS="$NON_TAUARGS $modarg"
+      ;;
     -M | -MM | -V | -v | --version | -print-prog-name=ld | -print-search-dirs)
       # if any of these are specified, we invoke the regular compiler only
       invoke_without_tau=yes
