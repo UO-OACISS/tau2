@@ -400,6 +400,10 @@ for arg in "$@"
 				echoIfDebug "\tVerbose Option is being passed"
 				isVerbose=$TRUE
 				;;
+			-optQuiet)
+				echoIfDebug "\tQuiet Option is being passed"
+				isVerbose=$FALSE
+				;;
 
 
 			-optNoMpi*)
