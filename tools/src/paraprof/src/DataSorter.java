@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.5 2007/01/04 01:55:31 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.6 2007/02/01 23:00:16 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class DataSorter implements Comparator {
 
@@ -103,8 +103,7 @@ public class DataSorter implements Comparator {
         Collections.sort(newList);
         return newList;
     }
-    
-    
+
     public List getBasicFunctionProfiles(Thread thread) {
 
         List newList = null;
@@ -285,6 +284,9 @@ public class DataSorter implements Comparator {
         // add the pseudo-thread std. dev.
         addThread(threads, order, ppTrial.getDataSource().getStdDevData());
 
+        // add the pseudo-thread total
+        //addThread(threads, order, ppTrial.getDataSource().getTotalData());
+
         // add the mean thread, already sorted
         threads.add(order);
 
@@ -299,7 +301,7 @@ public class DataSorter implements Comparator {
 
         return threads;
     }
-    
+
     public FunctionOrdering getOrdering() {
         long time = System.currentTimeMillis();
 
@@ -318,7 +320,7 @@ public class DataSorter implements Comparator {
         Collections.sort(order, this);
 
         Function functions[] = new Function[order.size()];
-        for (int i =0, n=order.size(); i<n; i++) {
+        for (int i = 0, n = order.size(); i < n; i++) {
             functions[i] = ((FunctionProfile) order.get(i)).getFunction();
         }
 
@@ -330,12 +332,15 @@ public class DataSorter implements Comparator {
 
         return fo;
     }
-    
+
     public List getThreads() {
         ArrayList threads = new ArrayList();
-        threads.add(ppTrial.getDataSource().getStdDevData());
-        threads.add(ppTrial.getDataSource().getMeanData());
-        
+        if (ppTrial.getDataSource().getAllThreads().size() > 1) {
+            threads.add(ppTrial.getDataSource().getStdDevData());
+            //threads.add(ppTrial.getDataSource().getTotalData());
+            threads.add(ppTrial.getDataSource().getMeanData());
+        }
+
         // add all the other threads
         for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             Thread thread = (Thread) it.next();
