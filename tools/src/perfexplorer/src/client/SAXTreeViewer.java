@@ -435,7 +435,7 @@ class JTreeContentHandler implements ContentHandler {
 
     /* replace multiple whitespaces between words with single blank */
     private static String itrim(String source) {
-        return source.replaceAll("\\b\\s{2,}\\b", " ");
+        return source.replaceAll("\\s{2,}", " ");
     }
 
     /* remove all superfluous whitespaces in source string */

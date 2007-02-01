@@ -86,7 +86,7 @@ public class PerfExplorerClient extends JFrame {
         } else {
             this.setLocation(savedPosition);
         }
-    	URL url = Utility.getResource("tau16x16.gif");
+    	URL url = Utility.getResource("tau32x32.gif");
     	if (url != null)
     		setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 		mainFrame = this;
