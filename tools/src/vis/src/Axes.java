@@ -31,9 +31,9 @@ import com.sun.opengl.util.GLUT;
 /**
  * Draws axes with labels.
  *
- * <P>CVS $Id: Axes.java,v 1.5 2006/11/16 17:50:36 amorris Exp $</P>
- * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * <P>CVS $Id: Axes.java,v 1.6 2007/02/01 03:43:10 amorris Exp $</P>
+ * @author  Alan Morris
+ * @version $Revision: 1.6 $
  */
 public class Axes implements Shape {
 

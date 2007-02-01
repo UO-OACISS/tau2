@@ -37,9 +37,9 @@ import com.sun.opengl.util.GLUT;
 /**
  * Draws a 3d bar plot.
  *
- * <P>CVS $Id: BarPlot.java,v 1.4 2006/11/16 17:50:36 amorris Exp $</P>
+ * <P>CVS $Id: BarPlot.java,v 1.5 2007/02/01 03:43:10 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class BarPlot implements Plot {
 
@@ -119,7 +119,11 @@ public class BarPlot implements Plot {
 
     public void setValues(float xSize, float ySize, float zSize, float heightValues[][], float colorValues[][]) {
         this.nrows = heightValues.length;
-        this.ncols = heightValues[0].length;
+        if (heightValues.length > 0) {
+            this.ncols = heightValues[0].length;
+        } else {
+            this.ncols = 0;
+        }
         this.heightValues = heightValues;
         this.colorValues = colorValues;
         this.xSize = xSize;

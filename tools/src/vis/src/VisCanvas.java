@@ -17,22 +17,21 @@ import javax.media.opengl.GLException;
  * This class is merely a wrapper over GLCanvas which allows users of the Vis
  * package to build against vis alone (not jogl). 
  *
- * <P>CVS $Id: VisCanvas.java,v 1.10 2006/12/01 21:55:40 amorris Exp $</P>
+ * <P>CVS $Id: VisCanvas.java,v 1.11 2007/02/01 03:43:10 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class VisCanvas {
 
     private GLCanvas glCanvas;
 
-    
     /**
      * Creates a <tt>VisCanvas</tt> with the given <tt>VisRenderer</tt>.
      * 
      * @param visRenderer <tt>VisRenderer</tt> to use.
      */
     public VisCanvas(VisRenderer visRenderer) {
-     
+
         GLCapabilities caps = new GLCapabilities();
 
         //FSAA (Full Screen Anti-Aliasing)
@@ -41,23 +40,31 @@ public class VisCanvas {
 
         //caps.setHardwareAccelerated(true);
 
-        // ask for stereo, if available
-	try {
-	    caps.setStereo(true);
-	    glCanvas = new GLCanvas(caps);
-	} catch (GLException gle) {
-	    caps.setStereo(false);
-	    glCanvas = new GLCanvas(caps);
-	}
         
+        boolean tryStereo = true;
+        // Fisher Price machines segfault if you try to use stereo 
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.startsWith("mac os x")) {
+            tryStereo = false;
+        }
+
+        // ask for stereo, if available
+        try {
+            caps.setStereo(tryStereo);
+            glCanvas = new GLCanvas(caps);
+        } catch (GLException gle) {
+            caps.setStereo(false);
+            glCanvas = new GLCanvas(caps);
+        }
+
         glCanvas.setSize(200, 200);
         glCanvas.addGLEventListener(visRenderer);
-        
+
         // for testing
         //canvas.addGLEventListener(new Gears.GearRenderer());
 
     }
-    
+
     /**
      * Adds a key listener to the underlying glCanvas.
      * @param keyListener the key listener to add.
@@ -65,8 +72,7 @@ public class VisCanvas {
     public void addKeyListener(KeyListener keyListener) {
         glCanvas.addKeyListener(keyListener);
     }
-    
-    
+
     /**
      * Returns the actual GLCanvas as a Canvas.
      * @return the actual GLCanvas as a Canvas.
@@ -82,7 +88,7 @@ public class VisCanvas {
     public int getHeight() {
         return glCanvas.getHeight();
     }
-    
+
     /**
      * Returns the width of the <tt>Canvas</tt>.
      * @return the width of the <tt>Canvas</tt>.
@@ -90,8 +96,5 @@ public class VisCanvas {
     public int getWidth() {
         return glCanvas.getWidth();
     }
-    
-    
-    
-    
+
 }
