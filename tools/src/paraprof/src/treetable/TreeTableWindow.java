@@ -1,8 +1,7 @@
 package edu.uoregon.tau.paraprof.treetable;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
@@ -15,8 +14,12 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.tree.TreePath;
 
 import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
+import edu.uoregon.tau.common.treetable.JTreeTable;
+import edu.uoregon.tau.common.treetable.JTreeTable.TreeTableCellRenderer;
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
@@ -30,9 +33,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.9 2006/12/28 03:14:42 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.10 2007/02/01 22:11:50 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -342,7 +345,40 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     private void createTreeTable(AbstractTreeTableModel model) {
         //        treeTable = new JTreeTable(model, showAsTreeMenuItem.isSelected());
-        treeTable = new JTreeTable(model, true, this);
+        
+        
+
+        treeTable = new JTreeTable(model, true, true);
+
+        final JTree tree = treeTable.getTree();
+        
+        // Add a mouse listener for this tree.
+        MouseListener ml = new MouseAdapter() {
+            public void mousePressed(MouseEvent evt) {
+                try {
+                    int selRow = tree.getRowForLocation(evt.getX(), evt.getY());
+                    TreePath path = tree.getPathForLocation(evt.getX(), evt.getY());
+                    if (path != null) {
+                        TreeTableNode node = (TreeTableNode) path.getLastPathComponent();
+                        if (ParaProfUtils.rightClick(evt)) {
+                            JPopupMenu popup;
+                            if (node.getFunctionProfile() != null) {
+                                popup = ParaProfUtils.createFunctionClickPopUp(node.getModel().getPPTrial(),
+                                        node.getFunctionProfile().getFunction(), getThread(), treeTable);
+                                popup.show(treeTable, evt.getX(), evt.getY());
+                            } else {
+                                //popup = new JPopupMenu();
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+        };
+      
+        treeTable.addMouseListener(ml);  
+        
 
         treeTable.getTree().addTreeExpansionListener(this);
         treeTable.getTree().setCellRenderer(new TreePortionCellRenderer());

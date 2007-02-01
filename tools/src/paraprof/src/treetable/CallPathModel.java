@@ -2,6 +2,8 @@ package edu.uoregon.tau.paraprof.treetable;
 
 import java.util.*;
 
+import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
+import edu.uoregon.tau.common.treetable.TreeTableModel;
 import edu.uoregon.tau.paraprof.DataSorter;
 import edu.uoregon.tau.paraprof.PPFunctionProfile;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
@@ -13,9 +15,9 @@ import edu.uoregon.tau.perfdmf.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.3 2006/12/28 03:14:42 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.4 2007/02/01 22:11:49 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
