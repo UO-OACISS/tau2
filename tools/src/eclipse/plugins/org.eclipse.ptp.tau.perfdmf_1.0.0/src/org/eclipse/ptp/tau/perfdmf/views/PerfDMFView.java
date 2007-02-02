@@ -245,7 +245,7 @@ public class PerfDMFView extends ViewPart {
             }
 
         } catch (Throwable t) {
-            t.printStackTrace();
+           // t.printStackTrace();
         }
     }
 
@@ -347,7 +347,7 @@ public class PerfDMFView extends ViewPart {
 
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
     }
