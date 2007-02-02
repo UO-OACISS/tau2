@@ -86,6 +86,9 @@ using namespace std;
 #include "Profile/RenciSTFF.h"
 #endif // RENCI_STFF
 
+
+static int writeMetaData(FILE *fp, bool newline);
+
 //#define PROFILE_CALLS // Generate Excl Incl data for each call 
 
 //////////////////////////////////////////////////////////////////////
@@ -1351,9 +1354,14 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 #ifdef PROFILE_STATS
 	strcat(header,"SumExclSqr ");
 #endif //PROFILE_STATS
-	strcat(header,"ProfileCalls\n");
+	strcat(header,"ProfileCalls");
+
 	int sz = strlen(header);
 	int ret = fprintf(fp, "%s",header);	
+	fprintf(fp, " # ");	
+	writeMetaData(fp, false);
+	fprintf(fp, "\n");	
+
 	ret = fflush(fp);
 	/*
 	if (ret != sz) {
@@ -1618,15 +1626,22 @@ int Profiler::StoreData(int tid)
 #ifdef PROFILE_STATS
 	strcat(header,"SumExclSqr ");
 #endif //PROFILE_STATS
-	strcat(header,"ProfileCalls\n");
+	strcat(header,"ProfileCalls");
 	int sz = strlen(header);
 	int ret = fprintf(fp, "%s",header);	
+	fprintf(fp, " # ");	
+	writeMetaData(fp, false);
+	fprintf(fp, "\n");	
 	ret = fflush(fp);
 
 #if defined(TAUKTAU_MERGE)
-	strcat(ktau_header,"ProfileCalls\n");
+	strcat(ktau_header,"ProfileCalls");
 	int ktau_sz = strlen(ktau_header);
 	int ktau_ret = fprintf(ktau_fp, "%s",ktau_header);	
+	fprintf(ktau_fp, " # ");	
+	writeMetaData(ktau_fp, false);
+	fprintf(ktau_fp, "\n");	
+
 	ktau_ret = fflush(ktau_fp);
 	bool top = 1;
 #endif /* TAUKTAU_MERGE */
@@ -1891,9 +1906,13 @@ int Profiler::DumpData(bool increment, int tid, char *prefix)
 #ifdef PROFILE_STATS
 	strcat(header,"SumExclSqr ");
 #endif //PROFILE_STATS
-	strcat(header,"ProfileCalls\n");
+	strcat(header,"ProfileCalls");
 	int sz = strlen(header);
 	int ret = fprintf(fp, "%s",header);	
+	fprintf(fp, " # ");	
+	writeMetaData(fp, false);
+	fprintf(fp, "\n");	
+
 	ret = fflush(fp);
 	/*
 	if (ret != sz) {
@@ -2408,9 +2427,12 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
   
       strcat(header,"# Name Calls Subrs Excl Incl ");
 
-      strcat(header,"ProfileCalls\n");
+      strcat(header,"ProfileCalls");
       int sz = strlen(header);
       int ret = fprintf(fp, "%s",header);
+      fprintf(fp, " # ");	
+      writeMetaData(fp, false);
+      fprintf(fp, "\n");	
       ret = fflush(fp);
 
       for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++){
@@ -2671,9 +2693,12 @@ int Profiler::StoreData(int tid){
   
       strcat(header,"# Name Calls Subrs Excl Incl ");
 
-      strcat(header,"ProfileCalls\n");
+      strcat(header,"ProfileCalls");
       int sz = strlen(header);
       int ret = fprintf(fp, "%s",header);
+      fprintf(fp, " # ");	
+      writeMetaData(fp, false);
+      fprintf(fp, "\n");	
       ret = fflush(fp);
 
       
@@ -2840,9 +2865,12 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
   
       strcat(header,"# Name Calls Subrs Excl Incl ");
 
-      strcat(header,"ProfileCalls\n");
+      strcat(header,"ProfileCalls");
       int sz = strlen(header);
       int ret = fprintf(fp, "%s",header);
+      fprintf(fp, " # ");	
+      writeMetaData(fp, false);
+      fprintf(fp, "\n");	
       ret = fflush(fp);
 
       for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++){
@@ -3372,7 +3400,7 @@ static int ThisTauReadFullLine(char *line, FILE *fp) {
   return i; 
 }
 
-static void writeStringXML(FILE *f, const char *s) {
+static void writeXMLString(FILE *f, const char *s) {
   if (!s) return;
   
   bool useCdata = false;
@@ -3381,7 +3409,7 @@ static void writeStringXML(FILE *f, const char *s) {
     useCdata = true;
   }
   
-  if (strstr(s, "]]>")) {
+  if (strstr(s, "]]>") || strchr(s, '\n')) {
     useCdata = false;
   }
   
@@ -3394,7 +3422,7 @@ static void writeStringXML(FILE *f, const char *s) {
   char *str = (char *) malloc (6*strlen(s));
   char *d = str;
   while (*s) {
-    if ((*s == '<') || (*s == '>') || (*s == '&')) {
+    if ((*s == '<') || (*s == '>') || (*s == '&') || (*s == '\n')) {
       // escape these characters
       if (*s == '<') {
 	strcpy (d,"&lt;");
@@ -3404,6 +3432,11 @@ static void writeStringXML(FILE *f, const char *s) {
       if (*s == '>') {
 	strcpy (d,"&gt;");
 	d+=4;
+      }
+
+      if (*s == '\n') {
+	strcpy (d,"&#xa;");
+	d+=5;
       }
       
       if (*s == '&') {
@@ -3423,71 +3456,16 @@ static void writeStringXML(FILE *f, const char *s) {
   free (str);
 }
 
-static void writeTagXML(FILE *f, const char *tag, const char *s) {
+static void writeTagXML(FILE *f, const char *tag, const char *s, bool newline) {
   fprintf (f, "<%s>", tag);
-  writeStringXML(f, s);
-  fprintf (f, "</%s>\n",tag);
-}
-
-static int writeMetaData(FILE *fp) {
-  // try to grab meta-data
-
-  char hostname[4096];
-  gethostname(hostname,4096);
-  writeTagXML(fp, "hostname", hostname);
-
-  struct utsname archinfo;
-
-  uname (&archinfo);
-  writeTagXML(fp, "sys_name", archinfo.sysname);
-  writeTagXML(fp, "sys_version", archinfo.version);
-  writeTagXML(fp, "sys_release", archinfo.release);
-  writeTagXML(fp, "sys_machine", archinfo.machine);
-  writeTagXML(fp, "sys_nodename", archinfo.nodename);
-
-
-  fprintf (fp, "<pid>%d</pid>\n", getpid());
-
-#ifdef __linux__
-  // doesn't work on ia64 for some reason
-  //fprintf (fp, "\t<linux_tid>%d</linux_tid>\n", gettid());
-
-  // try to grab CPU info
-  FILE *f = fopen("/proc/cpuinfo", "r");
-  if (f) {
-    char line[4096];
-    while (ThisTauReadFullLine(line, f)) {
-      char buf[4096];
-      if (strncmp(line, "cpu MHz", 7) == 0) {
-	writeTagXML(fp, "cpu_mhz", strstr(line,":")+2);
-      }
-      if (strncmp(line, "clock", 5) == 0) {
-	writeTagXML(fp, "cpu_mhz", strstr(line,":")+2);
-      }
-      if (strncmp(line, "model name", 10) == 0) {
-	writeTagXML(fp, "cpu_type", strstr(line,":")+2);
-      }
-      if (strncmp(line, "family", 6) == 0) {
-	writeTagXML(fp, "cpu_type", strstr(line,":")+2);
-      }
-      if (strncmp(line, "cpu", 3) == 0) {
-	writeTagXML(fp, "cpu_type", strstr(line,":")+2);
-      }
-      if (strncmp(line, "cache size", 10) == 0) {
-	writeTagXML(fp, "cache_size", strstr(line,":")+2);
-      }
-      if (strncmp(line, "cpu cores", 9) == 0) {
-	writeTagXML(fp, "cpu_cores", strstr(line,":")+2);
-      }
-    }
+  writeXMLString(f, s);
+  fprintf (f, "</%s>",tag);
+  if (newline) {
+    fprintf (f, "\n");
   }
-#endif
-  return 0;
 }
 
-
-static int writeSnapshotTime(FILE *fp) {
-
+static int writeXMLTime(FILE *fp, bool newline) {
 
    time_t theTime = time(NULL);
 //    char *stringTime = ctime(&theTime);
@@ -3504,12 +3482,16 @@ static int writeSnapshotTime(FILE *fp) {
 //    sprintf(newStringTime,"%s-%s-%s-%s-%s",day,month,dayInt,time,year);
 //    fprintf (fp, "<date>%s</date>\n", newStringTime);
 
+   char *endl = "";
+   if (newline) {
+     endl = "\n";
+   }
 
    char buf[4096];
    struct tm *thisTime = gmtime(&theTime);
    strftime (buf,4096,"%Y-%m-%dT%H:%M:%SZ", thisTime);
 //    fprintf (fp, "<utcTime>%s</utcTime>\n", buf);
-   fprintf (fp, "<utc_date>%s</utc_date>\n", buf);
+   fprintf (fp, "<utc_date>%s</utc_date>%s", buf, endl);
 
    thisTime = localtime(&theTime);
    strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
@@ -3523,10 +3505,98 @@ static int writeSnapshotTime(FILE *fp) {
      tzone[4] = tzone[3];
      tzone[3] = ':';
    }
-   fprintf (fp, "<local_time>%s%s</local_time>\n", buf,tzone);
+   fprintf (fp, "<local_time>%s%s</local_time>%s", buf, tzone, endl);
 
    return 0;
 }
+
+
+static int writeMetaData(FILE *fp, bool newline) {
+  char *endl = "";
+  if (newline) {
+    endl = "\n";
+  }
+
+  fprintf (fp, "<metadata>%s", endl);
+
+  writeXMLTime(fp, newline);
+
+  // try to grab meta-data
+  char hostname[4096];
+  gethostname(hostname,4096);
+  writeTagXML(fp, "hostname", hostname, newline);
+
+  struct utsname archinfo;
+
+  uname (&archinfo);
+  writeTagXML(fp, "sys_name", archinfo.sysname, newline);
+  writeTagXML(fp, "sys_version", archinfo.version, newline);
+  writeTagXML(fp, "sys_release", archinfo.release, newline);
+  writeTagXML(fp, "sys_machine", archinfo.machine, newline);
+  writeTagXML(fp, "sys_nodename", archinfo.nodename, newline);
+
+
+  writeTagXML(fp, "something_stupid", "hello\nbob\n", newline);
+
+  fprintf (fp, "<pid>%d</pid>%s", getpid(), endl);
+
+#ifdef __linux__
+  // doesn't work on ia64 for some reason
+  //fprintf (fp, "\t<linux_tid>%d</linux_tid>\n", gettid());
+
+  // try to grab CPU info
+  FILE *f = fopen("/proc/cpuinfo", "r");
+  if (f) {
+    char line[4096];
+    while (ThisTauReadFullLine(line, f)) {
+      char buf[4096];
+      char *value = strstr(line,":")+2;
+
+      // replace runs of spaces with a single space
+      for (int i=0; i<strlen(value); i++) {
+	if (value[i] == ' ') {
+	  int idx = i+1;
+	  while (value[idx] == ' ' && idx < strlen(value)) {
+	    idx++;
+	  }
+	  int skip = idx - i - 1;
+	  for (int j=i+1; j<=strlen(value)-skip; j++) {
+	    value[j] = value[j+skip];
+	  }
+	}
+      }
+
+      if (strncmp(line, "cpu MHz", 7) == 0) {
+	writeTagXML(fp, "cpu_mhz", value, newline);
+      }
+      if (strncmp(line, "clock", 5) == 0) {
+	writeTagXML(fp, "cpu_mhz", value, newline);
+      }
+      if (strncmp(line, "model name", 10) == 0) {
+	writeTagXML(fp, "cpu_type", value, newline);
+      }
+      if (strncmp(line, "family", 6) == 0) {
+	writeTagXML(fp, "cpu_type", value, newline);
+      }
+      if (strncmp(line, "cpu", 3) == 0) {
+	writeTagXML(fp, "cpu_type", value, newline);
+      }
+      if (strncmp(line, "cache size", 10) == 0) {
+	writeTagXML(fp, "cache_size", value, newline);
+      }
+      if (strncmp(line, "cpu cores", 9) == 0) {
+	writeTagXML(fp, "cpu_cores", value, newline);
+      }
+    }
+  }
+#endif
+
+  fprintf (fp, "</metadata>%s", endl);
+
+  return 0;
+}
+
+
 
 
 static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler) {
@@ -3546,9 +3616,9 @@ static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler) {
 
 static void writeEventXML(FILE *f, int id, FunctionInfo *fi) {
   fprintf (f, "<event id=\"%d\"><name>", id);
-  writeStringXML(f, fi->GetName());
+  writeXMLString(f, fi->GetName());
   fprintf (f, "</name><group>");
-  writeStringXML(f, fi->GetAllGroups());
+  writeXMLString(f, fi->GetAllGroups());
   fprintf (f, "</group></event>\n");
   return;
 }
@@ -3618,23 +3688,23 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
      fprintf (fp, "\n<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", threadid,
 	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
-     writeMetaData(fp);
+     writeMetaData(fp, true);
      fprintf (fp, "</thread>\n");
 
      fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
 
 #ifndef TAU_MULTIPLE_COUNTERS
      fprintf (fp, "<metric id=\"0\">\n");
-     writeTagXML(fp, "name", TauGetCounterString());
-     writeTagXML(fp, "units", "unknown");
+     writeTagXML(fp, "name", TauGetCounterString(), true);
+     writeTagXML(fp, "units", "unknown", true);
      fprintf (fp, "</metric>\n");
 #else
       for(int i=0;i<MAX_TAU_COUNTERS;i++){
 	if(MultipleCounterLayer::getCounterUsed(i)){
 	  char *tmpChar = MultipleCounterLayer::getCounterNameAt(i);
 	  fprintf (fp, "<metric id=\"%d\">", i);
-	  writeTagXML(fp, "name", tmpChar);
-	  writeTagXML(fp, "units", "unknown");
+	  writeTagXML(fp, "name", tmpChar, true);
+	  writeTagXML(fp, "units", "unknown", true);
 	  fprintf (fp, "</metric>\n");
 	}
      }
@@ -3672,9 +3742,9 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
    // now write the actual profile data for this snapshot
    fprintf (fp, "\n<profile thread=\"%s\">\n", threadid);
    fprintf (fp, "<name>");
-   writeStringXML(fp, name);
-   fprintf (fp, "</name>");
-   writeSnapshotTime(fp);
+   writeXMLString(fp, name);
+   fprintf (fp, "</name>\n");
+   writeXMLTime(fp, true);
 
 #ifndef TAU_MULTIPLE_COUNTERS
    fprintf (fp, "<interval_data metrics=\"0\">\n");
@@ -3803,8 +3873,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.147 $   $Date: 2007/01/27 02:30:14 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.147 2007/01/27 02:30:14 amorris Exp $ 
+ * $Revision: 1.148 $   $Date: 2007/02/02 22:43:46 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.148 2007/02/02 22:43:46 amorris Exp $ 
  ***************************************************************************/
 
 	
