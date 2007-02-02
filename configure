@@ -218,6 +218,7 @@ use_pstl=no
 use_hpnx=no
 tauarch=unknown
 pdtcompdir=unknown
+pdtarchdir=unknown
 tauprefix=unknown
 execprefix=unknown
 taugcclibdir=unknown
@@ -268,7 +269,7 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = mips64el-gentoo-linux-gnu-gcc ]
       then
         c_compiler=$myarg
       else
@@ -286,10 +287,11 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = mips64el-gentoo-linux-gnu-g++ ] 
       then
         cxx_compiler=$myarg
       else
+	echo "myarg = $myarg"
         testxlc=`echo $myarg | sed -e 's/xl//'`
 	if [ "y$testxlc" = "y$myarg" ]
         then
@@ -305,7 +307,7 @@ do
   -pdt_c++=*)
     pdt_cxx_full_path=`echo $arg | sed 's@-pdt_c++=@@g'`
     myarg=`echo $arg |  echo $arg | sed 's@-pdt_c++=@@g' | sed 's@.*/@@g'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = orCC ]
+    if [  $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = mips64el-gentoo-linux-gnu-g++ ]
       then
         pdt_cxx_compiler=$myarg
       else
@@ -990,6 +992,8 @@ do
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "         options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
     echo "                                                     icpc|pathCC|orCC]."
+    echo "-pdtcompdir=<compilerdir> . specify a different PDT compiler directory."
+    echo "-pdtarchdir=<archdir> . specify a different PDT architecture directory."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "           open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]"
@@ -1085,6 +1089,11 @@ do
 
   -pdtcompdir=*)
     pdtcompdir=`echo $arg | sed -e 's/-pdtcompdir=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -pdtarchdir=*)
+    pdtarchdir=`echo $arg | sed -e 's/-pdtarchdir=//' -e 's/ /_/g'`
     shift
     ;;
 
@@ -2974,18 +2983,10 @@ fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt 
 ######################################################################
 # discover the paths for standard system include directories
 
-if [ $cxx_compiler = pgCC -o $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = icpc -o $cxx_compiler = pathCC -o $cxx_compiler = c++ ] 
-then
 cat << EOF > get_stdinc.C
 #include <stddef.h>
 #include <iostream>
 EOF
-else
-cat << EOF > get_stdinc.C
-#include <stddef.h>
-#include <iostream.h>
-EOF
-fi
 
 cat << EOF > find_stdinc.awk
 BEGIN {cinc=""; cppinc="";}
@@ -3196,7 +3197,7 @@ then
 fi
 
 ######################################################################
-if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ ]   
+if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++ ]
   then
     fixmakeargs="$fixmakeargs GNU"
     if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = ibm64linux ]
@@ -3764,6 +3765,11 @@ then
   if [ $pdtcompdir != unknown ]
   then
     fixmakeargs="$fixmakeargs PDTARCH pdtcompdir=$pdtcompdir"
+  fi
+
+  if [ $pdtarchdir != unknown ]
+  then
+    fixmakeargs="$fixmakeargs PDTARCHITECTURE pdtarchdir=$pdtarchdir"
   fi
 
   if [ $pdt_cxx_compiler != default ]

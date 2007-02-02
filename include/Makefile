@@ -364,8 +364,8 @@ FWRAPPER	       = TauFMpi.o
 #SOL2#PCL_EXTRA_LIBS = -lcpc #ENDIF#
 #PCL#LEXTRA	       	       = -L$(PCLDIR)/lib -lpcl $(PCL_EXTRA_LIBS)      #ENDIF#
 #PAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
-#PAPIPFM#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi -lpfm #ENDIF#
-#IA64PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
+#IA64PAPI#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
+#PAPIPFM#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpfm -lpapi -lpfm #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
 #IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -L/usr/pmapi/lib -lpmapi#ENDIF#
 #PPC64PAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
@@ -377,13 +377,17 @@ FWRAPPER	       = TauFMpi.o
 #ALPHAPAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a /usr/lib/dcpi/dadd.a -lclu -lrt #ENDIF#
 
 
-#PAPI#TAU_PAPI_RPATH	= -rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
+
+# By default make TAU_PAPI_RPATH null. Support it on a compiler by compiler basis.
+##PAPI##TAU_PAPI_RPATH	= -rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
+#PAPI##TAU_PAPI_RPATH	=  #ENDIF#
 #PPC64PAPI#TAU_PAPI_RPATH = #ENDIF#
 #BGLPAPI#TAU_PAPI_RPATH = #ENDIF#
 #USE_INTELCXX#TAU_PAPI_RPATH	=  #ENDIF#
 #CRAYX1CC#TAU_PAPI_RPATH = #ENDIF#
 #PGI#TAU_PAPI_RPATH	= -R $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
 #GNU#TAU_PAPI_RPATH	= -Wl,-rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
+#USE_PATHCC#TAU_PAPI_RPATH	= #ENDIF#
 
 # if the user has specified -cc=gcc -c++=g++ -fortran=intel, we shouldn't use -rpath
 # because they are likely going to link with ifort
@@ -602,8 +606,14 @@ TAU_AR                 = ar             #ENDIF#
 
 ##############################################
 # PDT OPTIONS
-PDTARCHDIR=$(TAU_ARCH)
-#PDTARCH#PDTARCHDIR=$(TAU_ARCH)/$(PDTCOMPDIR)#ENDIF#
+# You can specify -pdtcompdir=intel -pdtarchdir=x86_64
+# If nothing is specified, PDTARCHDIR uses TAU_ARCH
+PDTARCHDIRORIG=$(TAU_ARCH)
+PDTARCHITECTURE=x86_64
+PDTARCHDIRFINAL=$(PDTARCHDIRORIG)
+#PDTARCHITECTURE#PDTARCHDIRFINAL=$(PDTARCHITECTURE)#ENDIF#
+PDTARCHDIR=$(PDTARCHDIRFINAL)
+#PDTARCH#PDTARCHDIR=$(PDTARCHDIRFINAL)/$(PDTCOMPDIR)#ENDIF#
 
 
 ##############################################
