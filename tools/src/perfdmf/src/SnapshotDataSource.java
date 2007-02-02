@@ -12,9 +12,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.5 2007/01/18 02:56:08 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.6 2007/02/02 23:00:10 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class SnapshotDataSource extends DataSource {
 
@@ -140,7 +140,7 @@ public class SnapshotDataSource extends DataSource {
 
     public int getProgress() {
         if (totalBytes != 0) {
-            return (int) ((float) tracker.byteCount() / (float) totalBytes * 100);
+            return (int) ((float) (bytesRead + tracker.byteCount()) / (float) totalBytes * 100);
         }
         return 0;
     }
@@ -162,6 +162,7 @@ public class SnapshotDataSource extends DataSource {
                 xmlreader.setContentHandler(handler);
                 xmlreader.setErrorHandler(handler);
                 xmlreader.parse(new InputSource(new RootWrap(new BufferedInputStream(tracker))));
+                bytesRead += files[i].length();
             }
 
             time = System.currentTimeMillis() - time;
