@@ -3535,9 +3535,6 @@ static int writeMetaData(FILE *fp, bool newline) {
   writeTagXML(fp, "sys_machine", archinfo.machine, newline);
   writeTagXML(fp, "sys_nodename", archinfo.nodename, newline);
 
-
-  writeTagXML(fp, "something_stupid", "hello\nbob\n", newline);
-
   fprintf (fp, "<pid>%d</pid>%s", getpid(), endl);
 
 #ifdef __linux__
@@ -3873,8 +3870,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.148 $   $Date: 2007/02/02 22:43:46 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.148 2007/02/02 22:43:46 amorris Exp $ 
+ * $Revision: 1.149 $   $Date: 2007/02/02 22:44:52 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.149 2007/02/02 22:44:52 amorris Exp $ 
  ***************************************************************************/
 
 	
