@@ -183,4 +183,5 @@ CREATE INDEX interval_loc_interval_event_metric_index on interval_location_profi
 CREATE INDEX interval_total_interval_event_metric_index on interval_total_summary (interval_event, metric);
 CREATE INDEX interval_mean_interval_event_metric_index on interval_mean_summary (interval_event, metric);
 CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (interval_event, metric, node, context, thread);
+CREATE INDEX interval_loc_metric_index on interval_location_profile (metric);
 
