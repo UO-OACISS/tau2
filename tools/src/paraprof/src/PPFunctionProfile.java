@@ -33,11 +33,11 @@ import edu.uoregon.tau.perfdmf.Thread;
 public class PPFunctionProfile implements Comparable {
 
     private DataSorter dataSorter;
-    private edu.uoregon.tau.perfdmf.Thread thread;
+    private Thread thread;
     private FunctionProfile functionProfile;
 
     
-    public PPFunctionProfile(DataSorter dataSorter, edu.uoregon.tau.perfdmf.Thread thread, FunctionProfile fp) {
+    public PPFunctionProfile(DataSorter dataSorter, Thread thread, FunctionProfile fp) {
         this.dataSorter = dataSorter;
         this.thread = thread;
         this.functionProfile = fp;

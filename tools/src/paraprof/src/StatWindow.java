@@ -23,6 +23,8 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.*;
 import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.Thread;
+
 
 public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner, ScrollBarController,
         KeyListener, ParaProfWindow, UnitListener {
@@ -55,9 +57,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     private SearchPanel searchPanel;
 
-    private edu.uoregon.tau.perfdmf.Thread thread;
+    private Thread thread;
 
-    public StatWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread, boolean userEventWindow, Function phase, Component invoker) {
+    public StatWindow(ParaProfTrial ppTrial, Thread thread, boolean userEventWindow, Function phase, Component invoker) {
         this.ppTrial = ppTrial;
         this.phase = phase;
         ppTrial.addObserver(this);

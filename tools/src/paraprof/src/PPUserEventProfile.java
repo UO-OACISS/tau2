@@ -21,6 +21,8 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import edu.uoregon.tau.paraprof.enums.*;
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Thread;
+
 
 public class PPUserEventProfile implements Comparable {
 
@@ -34,9 +36,9 @@ public class PPUserEventProfile implements Comparable {
     //Boolean indicating whether or not this object is highlighted.
     private boolean highlighted = false;
 
-    private edu.uoregon.tau.perfdmf.Thread thread;
+    private Thread thread;
 
-    public PPUserEventProfile(DataSorter dataSorter, edu.uoregon.tau.perfdmf.Thread thread,
+    public PPUserEventProfile(DataSorter dataSorter, Thread thread,
             UserEventProfile userEventProfile) {
         this.thread = thread;
 
@@ -279,7 +281,7 @@ public class PPUserEventProfile implements Comparable {
 
     
 
-    public edu.uoregon.tau.perfdmf.Thread getThread() {
+    public Thread getThread() {
         return thread;
     }
 

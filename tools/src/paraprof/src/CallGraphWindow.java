@@ -23,6 +23,7 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.CallPathUtilFuncs;
 import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
+import edu.uoregon.tau.perfdmf.Thread;
 
 /**
  * CallGraphWindow.java
@@ -32,9 +33,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.5 2006/11/08 23:17:57 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.6 2007/02/03 01:40:11 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener,
         ChangeListener, Observer, ImageExport, Printable, ParaProfWindow {
@@ -263,7 +264,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     }
 
-    public CallGraphWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread, Component invoker) {
+    public CallGraphWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
         this.ppTrial = ppTrial;
         ppTrial.addObserver(this);
         this.colorMetricID = ppTrial.getDefaultMetricID();

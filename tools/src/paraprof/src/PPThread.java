@@ -9,18 +9,18 @@
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
-
+import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.*;
 
 public class PPThread {
 
     private ParaProfTrial ppTrial;
-    private edu.uoregon.tau.perfdmf.Thread thread = null;
+    private Thread thread = null;
     private List functions = new ArrayList();
     private List userevents = new ArrayList();
 
 
-    public PPThread(edu.uoregon.tau.perfdmf.Thread thread, ParaProfTrial ppTrial) {
+    public PPThread(Thread thread, ParaProfTrial ppTrial) {
         if (thread == null) {
             throw new ParaProfException("PPThread constructor called with null thread");
         }
@@ -28,7 +28,7 @@ public class PPThread {
         this.thread = thread;
     }
 
-    public edu.uoregon.tau.perfdmf.Thread getThread() {
+    public Thread getThread() {
         return thread;
     }
 

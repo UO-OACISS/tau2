@@ -76,9 +76,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setSortType(SortType.NAME);
 
-        this.setTitle("TAU: ParaProf: 3D Visualizer: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        this.setTitle("TAU: ParaProf: 3D Visualizer: "
+                + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         ParaProfUtils.setFrameIcon(this);
-
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -203,7 +203,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+            Thread thread = (Thread) it.next();
 
             for (int f = 0; f < scatterFunctions.length; f++) {
                 if (scatterFunctions[f] != null) {
@@ -281,7 +281,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             threads = new ArrayList();
 
             for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-                edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+                Thread thread = (Thread) it.next();
                 threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID());
                 threads.add(thread);
             }
@@ -308,7 +308,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             }
             int threadIndex = 0;
             for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-                edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+                Thread thread = (Thread) it.next();
                 FunctionProfile functionProfile = thread.getFunctionProfile(function);
 
                 if (functionProfile != null) {
@@ -480,8 +480,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         JMenu unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         unitsSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);
         optionsMenu.add(unitsSubMenu);
-        
-        JMenu sort = ParaProfUtils.createMetricSelectionMenu(ppTrial,"Sort by...", true, false, dataSorter, this, false);
+
+        JMenu sort = ParaProfUtils.createMetricSelectionMenu(ppTrial, "Sort by...", true, false, dataSorter, this, false);
         sort.getPopupMenu().setLightWeightPopupEnabled(false);
         optionsMenu.add(sort);
 
@@ -589,9 +589,11 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             ParaProf.getHelpWindow().show();
         ParaProf.getHelpWindow().writeText("This is the 3D Window");
         ParaProf.getHelpWindow().writeText("");
-        ParaProf.getHelpWindow().writeText("This window displays profile data in three dimensions through the Triangle Mesh Plot, the Bar Plot, and the ScatterPlot");
+        ParaProf.getHelpWindow().writeText(
+                "This window displays profile data in three dimensions through the Triangle Mesh Plot, the Bar Plot, and the ScatterPlot");
         ParaProf.getHelpWindow().writeText("");
-        ParaProf.getHelpWindow().writeText("Change between the plots by selecting the desired type from the radio buttons in the upper right.");
+        ParaProf.getHelpWindow().writeText(
+                "Change between the plots by selecting the desired type from the radio buttons in the upper right.");
         ParaProf.getHelpWindow().writeText("");
         ParaProf.getHelpWindow().writeText("Experiment with the controls at the right.");
         ParaProf.getHelpWindow().writeText("");
@@ -778,11 +780,11 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                 if (scatterFunctions[f] != null) {
                     // e.g. "MPI_Recv()\n(Exclusive, Time)"
                     if (scatterValueTypes[f] == ValueType.NUMCALLS || scatterValueTypes[f] == ValueType.NUMSUBR) {
-                        axisNames.add(ParaProfUtils.getDisplayName(scatterFunctions[f]) + "\n("
-                                + scatterValueTypes[f].toString() + ")");
+                        axisNames.add(ParaProfUtils.getDisplayName(scatterFunctions[f]) + "\n(" + scatterValueTypes[f].toString()
+                                + ")");
                     } else {
-                        axisNames.add(ParaProfUtils.getDisplayName(scatterFunctions[f]) + "\n("
-                                + scatterValueTypes[f].toString() + ", " + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
+                        axisNames.add(ParaProfUtils.getDisplayName(scatterFunctions[f]) + "\n(" + scatterValueTypes[f].toString()
+                                + ", " + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
                     }
                 } else {
                     axisNames.add("none");

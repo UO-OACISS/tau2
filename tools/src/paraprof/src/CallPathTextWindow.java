@@ -12,14 +12,15 @@ import javax.swing.event.MenuListener;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.*;
+import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.28 2006/11/08 23:17:57 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.29 2007/02/03 01:40:11 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.28 $
+ * @version	$Revision: 1.29 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -49,9 +50,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private int order = 0;
     private int units = ParaProf.preferences.getUnits();
 
-    private edu.uoregon.tau.perfdmf.Thread thread;
+    private Thread thread;
 
-    public CallPathTextWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread, Component invoker) {
+    public CallPathTextWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
         this.ppTrial = ppTrial;
         ppTrial.addObserver(this);
         this.dataSorter = new DataSorter(ppTrial);
@@ -65,7 +66,8 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         //Now set the title.
         //if (windowType == 0) {
         if (thread.getNodeID() == -1) {
-            this.setTitle("TAU: ParaProf: Mean Call Path Data - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Mean Call Path Data - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -3) {
             this.setTitle("TAU: ParaProf: Standard Deviation Call Path Data - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
@@ -331,7 +333,8 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         ParaProf.getHelpWindow().writeText("all the realtionships that exist in the data.");
         ParaProf.getHelpWindow().writeText("");
         ParaProf.getHelpWindow().writeText("2- If this window has been invoked from the popup menu to the left of a thread bar");
-        ParaProf.getHelpWindow().writeText("in the main ParaProf window, the information dispayed will be specific to this thread,");
+        ParaProf.getHelpWindow().writeText(
+                "in the main ParaProf window, the information dispayed will be specific to this thread,");
         ParaProf.getHelpWindow().writeText("and will thus contain both parent/child relations and the data relating to those");
         ParaProf.getHelpWindow().writeText("relationships.");
     }

@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.6 2007/02/01 23:00:16 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.7 2007/02/03 01:40:11 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  */
 public class DataSorter implements Comparator {
 
@@ -85,7 +85,7 @@ public class DataSorter implements Comparator {
         return newList;
     }
 
-    public List getFunctionProfiles(Thread thread) {
+    private List createFunctionProfileList(Thread thread, boolean callpath) {
         List newList = null;
 
         List functionList = thread.getFunctionProfiles();
@@ -94,14 +94,30 @@ public class DataSorter implements Comparator {
         for (int i = 0; i < functionList.size(); i++) {
             FunctionProfile functionProfile = (FunctionProfile) functionList.get(i);
             if (functionProfile != null) {
-                if (ppTrial.displayFunction(functionProfile.getFunction()) && functionProfile.getFunction().isPhaseMember(phase)) {
-                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                    newList.add(ppFunctionProfile);
+                if (callpath) {
+                    if (functionProfile.getFunction().isPhaseMember(phase)) {
+                        PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                        newList.add(ppFunctionProfile);
+                    }
+                } else {
+                    if (ppTrial.displayFunction(functionProfile.getFunction())
+                            && functionProfile.getFunction().isPhaseMember(phase)) {
+                        PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                        newList.add(ppFunctionProfile);
+                    }
                 }
             }
         }
         Collections.sort(newList);
         return newList;
+    }
+
+    public List getCallPathFunctionProfiles(Thread thread) {
+        return createFunctionProfileList(thread, true);
+    }
+
+    public List getFunctionProfiles(Thread thread) {
+        return createFunctionProfileList(thread, false);
     }
 
     public List getBasicFunctionProfiles(Thread thread) {

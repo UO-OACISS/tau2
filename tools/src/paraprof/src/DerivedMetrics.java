@@ -14,6 +14,8 @@ import javax.swing.*;
 import edu.uoregon.tau.perfdmf.*;
 
 import java.util.*;
+import edu.uoregon.tau.perfdmf.Thread;
+
 
 public class DerivedMetrics {
 
@@ -95,7 +97,7 @@ public class DerivedMetrics {
             //######
 
             for (Iterator it = trialOpA.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-                edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+                Thread thread = (Thread) it.next();
                 thread.addMetric();
                 l = thread.getFunctionProfileIterator();
                 while (l.hasNext()) {

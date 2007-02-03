@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.4 2007/02/01 22:11:49 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.5 2007/02/03 01:40:12 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -55,9 +55,10 @@ public class CallPathModel extends AbstractTreeTableModel {
 
         roots = new ArrayList();
         DataSorter dataSorter = new DataSorter(ppTrial);
+        
 
         // don't ask the thread for its functions directly, since we want group masking to work
-        List functionProfileList = dataSorter.getFunctionProfiles(thread);
+        List functionProfileList = dataSorter.getCallPathFunctionProfiles(thread);
 
         Map rootNames = new HashMap();
         

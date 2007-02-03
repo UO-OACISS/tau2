@@ -12,13 +12,14 @@ import javax.swing.*;
 
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Thread;
 
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.40 2006/03/30 03:03:52 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.41 2007/02/03 01:40:11 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.40 $
+ * @version	$Revision: 1.41 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -34,7 +35,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
     private int yPanelSize = 0;
     private boolean calculatePanelSize = true;
 
-    private edu.uoregon.tau.perfdmf.Thread thread;
+    private Thread thread;
 
     private ParaProfTrial ppTrial = null;
     private CallPathTextWindow window = null;
@@ -64,7 +65,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
     private String normalHeader = "      Exclusive        Inclusive      Calls/Tot.Calls     Name[id]";
     private String normalDashString = "      --------------------------------------------------------------------------------";
 
-    public CallPathTextWindowPanel(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread, CallPathTextWindow cPTWindow) {
+    public CallPathTextWindowPanel(ParaProfTrial ppTrial, Thread thread, CallPathTextWindow cPTWindow) {
 
         this.thread = thread;
         this.ppTrial = ppTrial;

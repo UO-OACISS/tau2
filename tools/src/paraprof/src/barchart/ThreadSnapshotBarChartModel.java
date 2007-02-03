@@ -21,7 +21,7 @@ public class ThreadSnapshotBarChartModel extends AbstractBarChartModel {
 
     private List snapshots;
     
-    private edu.uoregon.tau.perfdmf.Thread thread;
+    private Thread thread;
     private ObjectFilter filter;
     
     private List list;
@@ -85,7 +85,7 @@ public class ThreadSnapshotBarChartModel extends AbstractBarChartModel {
 
         int snapshotID = snapshot.getID();
         
-        int differential = 1;
+        int differential = 0;
         
         if (differential == 1 && snapshotID != 0) {
             return fp.getExclusive(snapshotID, ppTrial.getDefaultMetricID()) - fp.getExclusive(snapshotID-1, ppTrial.getDefaultMetricID());

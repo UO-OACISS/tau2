@@ -32,16 +32,17 @@ import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.Thread;
 
 /**
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.21 2007/01/04 01:55:32 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.22 2007/02/03 01:40:11 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.21 $
+ * @version $Revision: 1.22 $
  */
 public class ParaProfUtils {
 
@@ -469,7 +470,7 @@ public class ParaProfUtils {
                 FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true, list.iterator(), null, false, false);
                 fSelector.setTitle("Select a Thread");
                 if (fSelector.choose()) {
-                    edu.uoregon.tau.perfdmf.Thread selectedThread = (edu.uoregon.tau.perfdmf.Thread) fSelector.getSelectedObject();
+                    Thread selectedThread = (Thread) fSelector.getSelectedObject();
 
                     if (arg.equals("Bar Chart")) {
                         FunctionBarChartWindow w = new FunctionBarChartWindow(ppTrial, selectedThread, null, owner);
@@ -697,7 +698,7 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createStatisticsMenuItem(String text, final ParaProfTrial ppTrial, final Function phase,
-            final edu.uoregon.tau.perfdmf.Thread thread, final boolean userEvent, final Component owner) {
+            final Thread thread, final boolean userEvent, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -710,7 +711,7 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createStatisticsTableMenuItem(String text, final ParaProfTrial ppTrial, final Function phase,
-            final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
+            final Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -723,7 +724,7 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createCallGraphMenuItem(String text, final ParaProfTrial ppTrial,
-            final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
+            final Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -736,7 +737,7 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createCallPathThreadRelationMenuItem(String text, final ParaProfTrial ppTrial,
-            final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
+            final Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -749,7 +750,7 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createThreadDataMenuItem(String text, final ParaProfTrial ppTrial, final Function phase,
-            final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
+            final Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -762,7 +763,7 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createComparisonMenuItem(String text, final ParaProfTrial ppTrial,
-            final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
+            final Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -779,11 +780,12 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createSnapShotMenuItem(String text, final ParaProfTrial ppTrial,
-            final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
+            final Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                SnapshotThreadWindow w = new SnapshotThreadWindow(ppTrial, thread, owner);
+                //SnapshotThreadWindow w = new SnapshotThreadWindow(ppTrial, thread, owner);
+                Frame w = new SnapshotBreakdownWindow(ppTrial, thread, owner);
                 w.setVisible(true);
             }
 
@@ -792,7 +794,7 @@ public class ParaProfUtils {
     }
 
     public static JMenuItem createUserEventBarChartMenuItem(String text, final ParaProfTrial ppTrial,
-            final edu.uoregon.tau.perfdmf.Thread thread, final Component owner) {
+            final Thread thread, final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -854,7 +856,7 @@ public class ParaProfUtils {
     }
 
     public static void handleThreadClick(final ParaProfTrial ppTrial, final Function phase,
-            final edu.uoregon.tau.perfdmf.Thread thread, JComponent owner, MouseEvent evt) {
+            final Thread thread, JComponent owner, MouseEvent evt) {
 
         String ident;
 
@@ -880,9 +882,10 @@ public class ParaProfUtils {
             threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
         }
 
-        if (thread.getNumSnapshots() > 1) {
-            threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
-        }
+        // snapshots are disabled for this release
+//        if (thread.getNumSnapshots() > 1) {
+//            threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
+//        }
 
         threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
         threadPopup.show(owner, evt.getX(), evt.getY());
