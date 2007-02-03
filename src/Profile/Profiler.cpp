@@ -3575,7 +3575,7 @@ static int writeMetaData(FILE *fp, bool newline) {
       if (strncmp(line, "family", 6) == 0) {
 	writeTagXML(fp, "cpu_type", value, newline);
       }
-      if (strncmp(line, "cpu", 3) == 0) {
+      if (strncmp(line, "cpu  ", 5) == 0) {
 	writeTagXML(fp, "cpu_type", value, newline);
       }
       if (strncmp(line, "cache size", 10) == 0) {
@@ -3870,8 +3870,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.149 $   $Date: 2007/02/02 22:44:52 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.149 2007/02/02 22:44:52 amorris Exp $ 
+ * $Revision: 1.150 $   $Date: 2007/02/03 00:46:28 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.150 2007/02/03 00:46:28 amorris Exp $ 
  ***************************************************************************/
 
 	
