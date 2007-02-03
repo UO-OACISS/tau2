@@ -9,9 +9,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.10 2007/01/06 04:40:58 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.11 2007/02/03 01:38:51 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public abstract class DataSource {
 
@@ -255,7 +255,7 @@ public abstract class DataSource {
                     Context context = (Context) it2.next();
                     maxNCT[1] = Math.max(maxNCT[1], context.getContextID());
                     for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                        edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it3.next();
+                        Thread thread = (Thread) it3.next();
                         maxNCT[2] = Math.max(maxNCT[2], thread.getThreadID());
                     }
                 }
@@ -463,7 +463,7 @@ public abstract class DataSource {
                     bonusName = bonusName.substring(bonusName.indexOf("=>") + 2);
 
                     for (int i = 0; i < numThreads; i++) {
-                        edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) allThreads.get(i);
+                        Thread thread = (Thread) allThreads.get(i);
 
                         FunctionProfile functionProfile = thread.getFunctionProfile(function);
                         if (functionProfile != null) {
@@ -578,7 +578,7 @@ public abstract class DataSource {
             int numThreads = allThreads.size();
 
             for (int i = 0; i < numThreads; i++) { // for each thread
-                edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) allThreads.get(i);
+                Thread thread = (Thread) allThreads.get(i);
                 UserEventProfile uep = thread.getUserEventProfile(ue);
                 if (uep != null) {
                     numProfiles++;
@@ -953,7 +953,7 @@ public abstract class DataSource {
             for (Iterator it2 = node.getContexts(); it2.hasNext();) {
                 Context context = (Context) it2.next();
                 for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it3.next();
+                    Thread thread = (Thread) it3.next();
                     list.add(thread);
                 }
             }
@@ -982,7 +982,7 @@ public abstract class DataSource {
             for (Iterator it2 = node.getContexts(); it2.hasNext();) {
                 Context context = (Context) it2.next();
                 for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it3.next();
+                    Thread thread = (Thread) it3.next();
                     allThreads.add(thread);
                 }
             }

@@ -1,16 +1,20 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.util.Date;
+
 /**
  * Snapshot object representing a Snapshot
  *
- * <P>CVS $Id: Snapshot.java,v 1.2 2007/01/04 01:34:36 amorris Exp $</P>
+ * <P>CVS $Id: Snapshot.java,v 1.3 2007/02/03 01:38:51 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class Snapshot {
 
     private String name;
     private int id;
+    
+    private Date timestamp;
 
     public Snapshot(String name, int id) {
         this.name = name;
@@ -31,6 +35,14 @@ public class Snapshot {
 
     public int getID() {
         return id;
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
     }
     
 }

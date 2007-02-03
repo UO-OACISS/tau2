@@ -1,19 +1,25 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.ParseException;
+
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.5 2007/02/02 23:01:14 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.6 2007/02/03 01:38:51 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
+
+    static final SimpleDateFormat dateTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     private SnapshotDataSource dataSource;
 
@@ -21,6 +27,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     private ThreadData currentThread;
     private Snapshot currentSnapshot;
+    private Date currentDate;
 
     private int currentMetrics[];
 
@@ -69,9 +76,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
         ThreadData data = new ThreadData();
         data.thread = dataSource.addThread(nodeID, contextID, threadID);
-
         threadMap.put(threadName, data);
-
     }
 
     private void handleDefinitions(Attributes attributes) {
@@ -82,9 +87,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private void handleProfile(Attributes attributes) {
         String threadID = attributes.getValue("thread");
         currentThread = (ThreadData) threadMap.get(threadID);
-
         currentSnapshot = currentThread.thread.addSnapshot("");
-
     }
 
     private void handleIntervalData(Attributes attributes) {
@@ -145,6 +148,8 @@ public class SnapshotXMLHandler extends DefaultHandler {
             accumulator = new StringBuffer();
         } else if (localName.equals("group")) {
             accumulator = new StringBuffer();
+        } else if (localName.equals("utc_date")) {
+            accumulator = new StringBuffer();
         } else if (localName.equals("definitions")) {
             handleDefinitions(attributes);
         } else if (localName.equals("metric")) {
@@ -166,10 +171,16 @@ public class SnapshotXMLHandler extends DefaultHandler {
             currentThread = null;
         } else if (localName.equals("name")) {
             currentName = accumulator.toString();
+        } else if (localName.equals("utc_date")) {
+            try {
+                currentDate = dateTime.parse(accumulator.toString());
+            } catch (java.text.ParseException e) {
+            }
         } else if (localName.equals("group")) {
             currentGroup = accumulator.toString();
         } else if (localName.equals("profile")) {
             currentSnapshot.setName(currentName);
+            currentSnapshot.setTimestamp(currentDate);
         } else if (localName.equals("metric")) {
             handleMetric(currentName);
         } else if (localName.equals("event")) {
