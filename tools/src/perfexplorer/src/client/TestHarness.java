@@ -377,7 +377,7 @@ public class TestHarness {
             throw e;
         }
 	*/
-		edu.uoregon.tau.common.TauScripter.execfile("etc/test.py");
+		edu.uoregon.tau.common.TauScripter.execfile("etc/generalcharttest.py");
 	}
 		
 

@@ -9,7 +9,7 @@ import java.util.List;
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.5 2007/01/23 22:57:02 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.6 2007/02/05 22:59:04 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -89,6 +89,17 @@ public interface RMIPerfExplorer extends Remote {
      * @throws RemoteException
      */
     public RMIChartData requestChartData(RMIPerfExplorerModel model,
+        ChartDataType dataType) throws RemoteException;
+
+    /**
+     * Requests data for generating comparison charts for the specified model.
+     *
+     * @param model
+     * @param dataType
+     * @return
+     * @throws RemoteException
+     */
+    public RMIGeneralChartData requestGeneralChartData(RMIPerfExplorerModel model,
         ChartDataType dataType) throws RemoteException;
 
     /**
@@ -221,6 +232,17 @@ public interface RMIPerfExplorer extends Remote {
      * @throws RemoteException
      */
 	public List getEventList(int trialID, int metricIndex) throws RemoteException; 
+
+    /**
+     * Returns the full list of trials in the database for the specified
+     * where clause.
+     *
+     * @param criteria
+     * @return
+     * @throws RemoteException
+     */
+    public List getTrialList(String criteria) throws RemoteException;
+
 	
 }
 

@@ -43,7 +43,7 @@ import clustering.ClusterException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.42 2007/01/23 22:57:02 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.43 2007/02/05 22:59:04 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -601,6 +601,19 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public RMIChartData requestChartData(RMIPerfExplorerModel modelData, ChartDataType dataType) {
 		//PerfExplorerOutput.println("requestChartData(" + modelData.toString() + ")...");
 		ChartData chartData = ChartData.getChartData(modelData, dataType);
+		return chartData;
+	}
+
+	/**
+	 * Make an interactive request for Chart data.
+	 * 
+	 * @param modelData
+	 * @param dataType
+	 * @return RMIChartData
+	 */
+	public RMIGeneralChartData requestGeneralChartData(RMIPerfExplorerModel modelData, ChartDataType dataType) {
+		//PerfExplorerOutput.println("requestChartData(" + modelData.toString() + ")...");
+		GeneralChartData chartData = GeneralChartData.getChartData(modelData, dataType);
 		return chartData;
 	}
 
@@ -1315,6 +1328,18 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return sortedEvents;
 	}
 	
+	/**
+	 * Requests a TrialList object from the PerfDMF database,
+	 * based on the application id which is passed in.
+	 * 
+	 * @param criteria a formatted string specifying the 
+	 *		  criteria for selecting the trial
+	 * @return List of PerfDMF Trial objects.
+	 */
+	public List getTrialList(String criteria) {
+		return QueryManager.getTrialList(criteria);
+	}
+
 	/**
 	 * The main method to create the PerfExplorerServer.
 	 * 

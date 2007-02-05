@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * This class is used as a typesafe enumeration.
  *
- * <P>CVS $Id: ChartDataType.java,v 1.2 2007/01/04 21:20:03 khuck Exp $</P>
+ * <P>CVS $Id: ChartDataType.java,v 1.3 2007/02/05 22:59:04 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -47,6 +47,8 @@ public final class ChartDataType implements Serializable {
         new ChartDataType("Correlation Data");
     public static final ChartDataType DISTRIBUTION_DATA = 
         new ChartDataType("Distribution Data");
+    public static final ChartDataType PARAMETRIC_STUDY_DATA = 
+        new ChartDataType("General Parametric Data");
     
     /**
      * The constructor is private, so this class cannot be instantiated.
@@ -72,7 +74,7 @@ public final class ChartDataType implements Serializable {
          TOTAL_FOR_GROUP, RELATIVE_EFFICIENCY_EVENTS, 
          RELATIVE_EFFICIENCY_ONE_EVENT, RELATIVE_EFFICIENCY_PHASES,
          FRACTION_OF_TOTAL_PHASES, IQR_DATA, CORRELATION_DATA,
-         DISTRIBUTION_DATA};
+         DISTRIBUTION_DATA, PARAMETRIC_STUDY_DATA };
     
     /**
      * This method is necessary, because we are serializing the object.

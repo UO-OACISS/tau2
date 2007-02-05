@@ -1,6 +1,7 @@
 package client;
 
 import common.RMIChartData;
+import common.RMIGeneralChartData;
 import common.ChartDataType;
 import java.awt.*;
 import java.awt.event.*;
@@ -17,14 +18,17 @@ import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.Range;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.StandardLegend;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import java.text.DecimalFormat;
 import edu.uoregon.tau.common.ImageExport;
@@ -174,6 +178,74 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         );
 		customizeChart(chart, rawData.getRows(), false);
 		return new PerfExplorerChart(chart, "Relative Efficiency");
+	}
+
+	/**
+	 * This method will produce a general line chart, with 
+	 * one or more series of data, with anything you want on
+	 * the x-axis, and some measurement on the y-axis.
+	 *
+	 */
+	public static PerfExplorerChart doGeneralChart () {
+		// get the server
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		// get the data
+		RMIGeneralChartData rawData = server.requestGeneralChartData(
+			PerfExplorerModel.getModel(), 
+			ChartDataType.PARAMETRIC_STUDY_DATA);
+
+        /*XYSeriesCollection dataset = new XYSeriesCollection();
+		List rowLabels = rawData.getRowLabels();
+		for (int y = 0 ; y < rawData.getRows() ; y++) {
+			List row = rawData.getRowData(y);
+        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+				String[] baseline = (String[])(row.get(0));
+				for (int x = 0 ; x < row.size() ; x++) {
+					String[] values = (String[])(row.get(x));
+        			s.add(values[0], values[1]);
+				}
+        	dataset.addSeries(s);
+		}*/
+
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+		for (int i = 0 ; i < rawData.getRows() ; i++) {
+			common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+        	dataset.addValue(row.value / 1000000, row.series, row.category);
+		}
+
+        JFreeChart chart = ChartFactory.createLineChart(
+            "General Chart",  // chart title
+            "X-axis (replace with user choice)",  // domain axis label
+            "Y-axis (replace with user choice)",  // range axis label
+            dataset,                         // data
+            PlotOrientation.VERTICAL,        // the plot orientation
+            true,                            // legend
+            true,                            // tooltips
+            false                            // urls
+        );
+		// customize the chart!
+        StandardLegend legend = (StandardLegend) chart.getLegend();
+        legend.setDisplaySeriesShapes(true);
+        
+        // get a reference to the plot for further customisation...
+        CategoryPlot plot = (CategoryPlot)chart.getPlot();
+     
+        //StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
+		LineAndShapeRenderer renderer = (LineAndShapeRenderer)plot.getRenderer();
+        renderer.setDefaultShapesFilled(true);
+        renderer.setDrawShapes(true);
+        renderer.setItemLabelsVisible(true);
+
+		for (int i = 0 ; i < rawData.getRows() ; i++) {
+			renderer.setSeriesStroke(i, new BasicStroke(2.0f));
+		}
+
+        // change the auto tick unit selection to integer units only...
+        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+		rangeAxis.setAutoRangeIncludesZero(true);
+
+		return new PerfExplorerChart(chart, "General Chart");
 	}
 
 	public static PerfExplorerChart doEfficiencyEventsChart () {

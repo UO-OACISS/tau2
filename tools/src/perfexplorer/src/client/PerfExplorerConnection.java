@@ -175,6 +175,16 @@ public class PerfExplorerConnection {
 	return data;
     }
 
+    public RMIGeneralChartData requestGeneralChartData(PerfExplorerModel model, ChartDataType dataType) {
+	RMIGeneralChartData data = null;
+	try {
+	    data = server.requestGeneralChartData(model, dataType);
+	} catch (RemoteException e) {
+	    handleError(e, "requestGeneralChartData(" + model.toString() + ")");
+	}
+	return data;
+    }
+
     public List getPotentialGroups(PerfExplorerModel model) {
 	List groups = null;
 	try {
@@ -290,8 +300,18 @@ public class PerfExplorerConnection {
 	try {
 	    tmpIterator = server.getEventList(trialID, metricIndex).listIterator();
 	} catch (RemoteException e) {
-	    handleError(e, "getTrialList(" + trialID + ")");
+	    handleError(e, "getEventList(" + trialID + ")");
 	}
 	return tmpIterator;
     }
+
+	public List getTrialList(String criteria) {
+		List list = null;
+		try {
+			list = server.getTrialList(criteria);
+		} catch (RemoteException e) {
+	    	handleError(e, "getTrialList(" + criteria + ")");
+		}
+		return list;
+	}
 }

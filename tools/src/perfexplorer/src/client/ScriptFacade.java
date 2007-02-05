@@ -3,6 +3,7 @@ package client;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Vector;
+import java.util.List;
 
 import clustering.RawDataInterface;
 
@@ -307,5 +308,13 @@ public class ScriptFacade {
 			PerfExplorerOutput.print("\n");
 		}
 		PerfExplorerOutput.print("\n");
+	}
+
+	public Object[] getTrialList(String criteria) {
+        return connection.getTrialList(criteria).toArray();
+	}
+
+	public void doGeneralChart() {
+		PerfExplorerChart.doGeneralChart();
 	}
 }
