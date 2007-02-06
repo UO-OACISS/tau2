@@ -1,5 +1,6 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.io.*;
 import java.math.BigDecimal;
@@ -9,11 +10,13 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.11 2007/02/03 01:38:51 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.12 2007/02/06 03:35:11 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public abstract class DataSource {
+    
+    public static final SimpleDateFormat dateTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     public static int TAUPROFILE = 0;
     public static int PPROF = 1;

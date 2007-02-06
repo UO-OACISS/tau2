@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.5 2007/01/06 04:40:58 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.6 2007/02/06 03:35:12 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -34,6 +34,8 @@ public class Thread implements Comparable {
     public static final int STDDEV = -3;
     
     private List snapshots = new ArrayList();
+    
+    private Map metaData = new TreeMap();
 
     //    
     //    public Thread(int nodeID, int contextID, int threadID) {
@@ -357,4 +359,7 @@ public class Thread implements Comparable {
         }
     }
 
+    public Map getMetaData() {
+        return metaData;
+    }
 }

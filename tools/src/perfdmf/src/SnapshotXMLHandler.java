@@ -1,25 +1,21 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import com.sun.org.apache.xerces.internal.impl.xpath.regex.ParseException;
-
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.6 2007/02/03 01:38:51 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.7 2007/02/06 03:35:11 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
-    static final SimpleDateFormat dateTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+   
 
     private SnapshotDataSource dataSource;
 
@@ -173,7 +169,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
             currentName = accumulator.toString();
         } else if (localName.equals("utc_date")) {
             try {
-                currentDate = dateTime.parse(accumulator.toString());
+                currentDate = DataSource.dateTime.parse(accumulator.toString());
             } catch (java.text.ParseException e) {
             }
         } else if (localName.equals("group")) {

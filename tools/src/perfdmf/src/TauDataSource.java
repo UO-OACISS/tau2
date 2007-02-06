@@ -194,6 +194,14 @@ public class TauDataSource extends DataSource {
                             throw new DataSourceException("Unexpected end of file: " + files[i].getName()
                                     + "\nLooking for '# Name Calls ...' line");
                         }
+                        
+                        if (inputString.indexOf("<metadata>") != -1) {
+                            int start = inputString.indexOf("<metadata>");
+                            int end = inputString.indexOf("</metadata>")+11;
+                            String metadata = inputString.substring(start,end);
+                            MetaDataParser.parse(thread.getMetaData(), metadata);
+                        }
+                        
                         if (i == 0) {
                             //Determine if profile stats or profile calls data is present.
                             if (inputString.indexOf("SumExclSqr") != -1)

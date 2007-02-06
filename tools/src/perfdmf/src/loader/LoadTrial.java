@@ -13,7 +13,7 @@ public class LoadTrial {
     private File writeXml;
     private String trialTime;
     private String sourceFiles[];
-	private String metadataFile;
+    private String metadataFile;
     private Application app;
     private Experiment exp;
     private boolean fixNames = false;
@@ -39,7 +39,7 @@ public class LoadTrial {
                 + "                                   profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                   gprof, psrun, hpm, packed, cube, hpc\n"
                 + "  -t, --trialid <number>         Specify trial ID\n"
-                + "  -i, --fixnames                 Use the fixnames option for gprof\n\n" 
+                + "  -i, --fixnames                 Use the fixnames option for gprof\n\n"
                 + "  -m, --metadata <filename>      XML metadata for the trial\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
@@ -129,9 +129,13 @@ public class LoadTrial {
             System.err.println("Error Loading Trial:");
             e.printStackTrace();
         }
-        
+
+        trial.aggregateMetaData();
+
         try {
-        	trial.setMetadataFile(metadataFile);
+            if (metadataFile != null) {
+                trial.setMetadataFile(metadataFile);
+            }
         } catch (Exception e) {
             System.err.println("Error Loading metadata:");
             e.printStackTrace();
@@ -220,8 +224,7 @@ public class LoadTrial {
         // close the problem file
         try {
             reader.close();
-        } catch (Exception e) {
-        }
+        } catch (Exception e) {}
 
         // return the string
         return problemString.toString();
@@ -277,10 +280,10 @@ public class LoadTrial {
             System.err.println("Error: Missing trial name\n");
             LoadTrial.usage();
             System.exit(-1);
-//        } else if (sourceFiles == null) {
-//            System.err.println("Please enter a valid source file.");
-//            LoadTrial.usage();
-//            System.exit(-1);
+            //        } else if (sourceFiles == null) {
+            //            System.err.println("Please enter a valid source file.");
+            //            LoadTrial.usage();
+            //            System.exit(-1);
         } else if (experimentID == null) {
             System.err.println("Error: Missing experiment id\n");
             LoadTrial.usage();
@@ -351,7 +354,7 @@ public class LoadTrial {
         trans.trialName = trialName;
         //trans.problemFile = problemFile;
         trans.fixNames = fixNames.booleanValue();
-		trans.metadataFile = metadataFile;
+        trans.metadataFile = metadataFile;
         trans.loadTrial(fileType);
         // the trial will be saved when the load is finished (update is called)
     }
