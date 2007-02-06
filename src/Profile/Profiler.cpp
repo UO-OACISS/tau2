@@ -32,6 +32,8 @@
 
 //#define DEBUG_PROF // For Debugging Messages from Profiler.cpp
 #include "Profile/Profiler.h"
+#include "tauarch.h"
+#include "tau_config.h"
 
 #ifdef TAU_WINDOWS
   typedef __int64 x_int64;
@@ -3465,6 +3467,27 @@ static void writeTagXML(FILE *f, const char *tag, const char *s, bool newline) {
   }
 }
 
+
+static void writeXMLAttribute(FILE *f, const char *name, const char *value, bool newline) {
+  char *endl = "";
+  if (newline) {
+    endl = "\n";
+  }
+
+  fprintf (f, "<attribute>%s<name>", endl);
+  writeXMLString(f, name);
+  fprintf (f, "</name>%s<value>", endl);
+  writeXMLString(f, value);
+  fprintf (f, "</value>%s</attribute>%s", endl, endl);
+}
+
+
+static void writeXMLAttribute(FILE *f, const char *name, const int value, bool newline) {
+  char str[4096];
+  snprintf (str, 4095, "%d", value);
+  writeXMLAttribute(f, name, str, newline);
+}
+
 static int writeXMLTime(FILE *fp, bool newline) {
 
    time_t theTime = time(NULL);
@@ -3491,7 +3514,8 @@ static int writeXMLTime(FILE *fp, bool newline) {
    struct tm *thisTime = gmtime(&theTime);
    strftime (buf,4096,"%Y-%m-%dT%H:%M:%SZ", thisTime);
 //    fprintf (fp, "<utcTime>%s</utcTime>\n", buf);
-   fprintf (fp, "<utc_date>%s</utc_date>%s", buf, endl);
+//   fprintf (fp, "<utc_date>%s</utc_date>%s", buf, endl);
+   fprintf (fp, "<attribute><name>UTC time</name><value>%s</value></attribute>%s", buf, endl);
 
    thisTime = localtime(&theTime);
    strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
@@ -3505,11 +3529,34 @@ static int writeXMLTime(FILE *fp, bool newline) {
      tzone[4] = tzone[3];
      tzone[3] = ':';
    }
-   fprintf (fp, "<local_time>%s%s</local_time>%s", buf, tzone, endl);
+//    fprintf (fp, "<local_time>%s%s</local_time>%s", buf, tzone, endl);
+   fprintf (fp, "<attribute><name>Local Time</name><value>%s%s</value></attribute>%s", buf, tzone, endl);
 
    return 0;
 }
 
+
+static char *removeRuns(char *str) {
+  // replaces runs of spaces with a single space
+
+  // also removes leading whitespace
+  while (*str && *str == ' ') str++;
+
+  int len = strlen(str);
+  for (int i=0; i<len; i++) {
+    if (str[i] == ' ') {
+      int idx = i+1;
+      while (idx < len && str[idx] == ' ') {
+	idx++;
+      }
+      int skip = idx - i - 1;
+      for (int j=i+1; j<=len-skip; j++) {
+	str[j] = str[j+skip];
+      }
+    }
+  }
+  return str;
+}
 
 static int writeMetaData(FILE *fp, bool newline) {
   char *endl = "";
@@ -3524,18 +3571,22 @@ static int writeMetaData(FILE *fp, bool newline) {
   // try to grab meta-data
   char hostname[4096];
   gethostname(hostname,4096);
-  writeTagXML(fp, "hostname", hostname, newline);
+  writeXMLAttribute(fp, "Hostname", hostname, newline);
 
   struct utsname archinfo;
 
   uname (&archinfo);
-  writeTagXML(fp, "sys_name", archinfo.sysname, newline);
-  writeTagXML(fp, "sys_version", archinfo.version, newline);
-  writeTagXML(fp, "sys_release", archinfo.release, newline);
-  writeTagXML(fp, "sys_machine", archinfo.machine, newline);
-  writeTagXML(fp, "sys_nodename", archinfo.nodename, newline);
+  writeXMLAttribute(fp, "OS Name", archinfo.sysname, newline);
+  writeXMLAttribute(fp, "OS Version", archinfo.version, newline);
+  writeXMLAttribute(fp, "OS Release", archinfo.release, newline);
+  writeXMLAttribute(fp, "OS Machine", archinfo.machine, newline);
+  writeXMLAttribute(fp, "Node Name", archinfo.nodename, newline);
 
-  fprintf (fp, "<pid>%d</pid>%s", getpid(), endl);
+  writeXMLAttribute(fp, "TAU Architecture", TAU_ARCH, newline);
+  writeXMLAttribute(fp, "TAU Config", TAU_CONFIG, newline);
+
+  writeXMLAttribute(fp, "pid", getpid(), newline);
+
 
 #ifdef __linux__
   // doesn't work on ia64 for some reason
@@ -3548,44 +3599,49 @@ static int writeMetaData(FILE *fp, bool newline) {
     while (ThisTauReadFullLine(line, f)) {
       char buf[4096];
       char *value = strstr(line,":")+2;
-
-      // replace runs of spaces with a single space
-      for (int i=0; i<strlen(value); i++) {
-	if (value[i] == ' ') {
-	  int idx = i+1;
-	  while (value[idx] == ' ' && idx < strlen(value)) {
-	    idx++;
-	  }
-	  int skip = idx - i - 1;
-	  for (int j=i+1; j<=strlen(value)-skip; j++) {
-	    value[j] = value[j+skip];
-	  }
-	}
-      }
+      value = removeRuns(value);
 
       if (strncmp(line, "cpu MHz", 7) == 0) {
-	writeTagXML(fp, "cpu_mhz", value, newline);
+	writeXMLAttribute(fp, "CPU MHz", value, newline);
       }
       if (strncmp(line, "clock", 5) == 0) {
-	writeTagXML(fp, "cpu_mhz", value, newline);
+	writeXMLAttribute(fp, "CPU MHz", value, newline);
       }
       if (strncmp(line, "model name", 10) == 0) {
-	writeTagXML(fp, "cpu_type", value, newline);
+	writeXMLAttribute(fp, "CPU Type", value, newline);
       }
       if (strncmp(line, "family", 6) == 0) {
-	writeTagXML(fp, "cpu_type", value, newline);
+	writeXMLAttribute(fp, "CPU Type", value, newline);
       }
       if (strncmp(line, "cpu  ", 5) == 0) {
-	writeTagXML(fp, "cpu_type", value, newline);
+	writeXMLAttribute(fp, "CPU Type", value, newline);
       }
       if (strncmp(line, "cache size", 10) == 0) {
-	writeTagXML(fp, "cache_size", value, newline);
+	writeXMLAttribute(fp, "Cache Size", value, newline);
       }
       if (strncmp(line, "cpu cores", 9) == 0) {
-	writeTagXML(fp, "cpu_cores", value, newline);
+	writeXMLAttribute(fp, "CPU Cores", value, newline);
       }
     }
   }
+  fclose(f);
+
+  f = fopen("/proc/meminfo", "r");
+  if (f) {
+    char line[4096];
+    while (ThisTauReadFullLine(line, f)) {
+      char buf[4096];
+      char *value = strstr(line,":")+2;
+      value = removeRuns(value);
+
+      if (strncmp(line, "MemTotal", 8) == 0) {
+	writeXMLAttribute(fp, "Memory Size", value, newline);
+      }
+    }
+  }
+  fclose(f);
+
+
 #endif
 
   fprintf (fp, "</metadata>%s", endl);
@@ -3870,8 +3926,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.150 $   $Date: 2007/02/03 00:46:28 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.150 2007/02/03 00:46:28 amorris Exp $ 
+ * $Revision: 1.151 $   $Date: 2007/02/06 02:08:56 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.151 2007/02/06 02:08:56 amorris Exp $ 
  ***************************************************************************/
 
 	
