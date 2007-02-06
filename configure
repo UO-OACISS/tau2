@@ -120,6 +120,8 @@ done
 echo "$modargs" >> .all_configs
 echo "$modargs" > .last_config
 
+echo "#define TAU_CONFIG \"$modargs\"" > include/tau_config.h
+
 START_DIR=`pwd`
 
 # Record all the arguments
