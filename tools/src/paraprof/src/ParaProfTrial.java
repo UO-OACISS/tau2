@@ -462,6 +462,9 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     public void finishLoad() {
 
+        // aggregate the metadata
+        trial.aggregateMetaData();
+        
         // The dataSource has accumulated metrics.
         // Inside ParaProf, these need to be ParaProfMetrics.
 

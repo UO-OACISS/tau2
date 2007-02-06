@@ -4,8 +4,8 @@
 #Makefile creates the ParaProf jar file.
 ##########################
 
-CONFIG_ARCH=default
-TAUROOT=
+CONFIG_ARCH=x86_64
+TAUROOT=/home/amorris/tau2
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java \
              ParaProfTreeCellRenderer.java \
@@ -26,7 +26,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
 	     ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java \
 	     ColorDefaultsWindow.java ColorMap.java ColorMapWindow.java PreferencesWindow.java \
 	     Searcher.java SearchPanel.java FunctionSelectorDialog.java WindowPlacer.java \
-	     DataSorterWrapper.java FunctionFilterDialog.java
+	     DataSorterWrapper.java FunctionFilterDialog.java SnapshotBreakdownWindow.java
 
 VIS_SOURCES = ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java  
 OTHER_SRC = $(wildcard src/enums/*.java) $(wildcard src/interfaces/*.java) $(wildcard src/treetable/*.java) $(wildcard src/barchart/*.java) $(wildcard src/util/*.java) $(wildcard src/script/*.java) $(wildcard src/sourceview/*.java)
