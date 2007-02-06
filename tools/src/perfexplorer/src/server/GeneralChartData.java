@@ -13,6 +13,8 @@ import common.RMIView;
 
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 
@@ -28,7 +30,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.1 2007/02/05 22:59:04 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.2 2007/02/06 06:47:33 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -102,9 +104,75 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("on experiment.application = application.id ");
 			buf.append("where ");
 			// add the where clause
-			buf.append("experiment = 138 ");
-			buf.append("or experiment = 121 ");
-			buf.append("or experiment = 125) ");
+			List selections = model.getMultiSelection();
+			if (selections == null) {
+				// just one selection
+				Object obj = model.getCurrentSelection();
+				if (obj instanceof Application) {
+					buf.append("application.id = " + model.getApplication().getID());
+				} else if (obj instanceof Experiment) {
+					buf.append("experiment.id = " + model.getExperiment().getID());
+				} else if (obj instanceof Trial) {
+					buf.append("trial.id = " + model.getTrial().getID());
+				}
+			} else {
+				// get the applications
+				boolean foundapp = false;
+				for (int i = 0 ; i < selections.size() ; i++) {
+					if (selections.get(i) instanceof Application) {
+						Application a = (Application)selections.get(i);
+						if (!foundapp) {
+							buf.append("application.id in (");
+							foundapp = true;
+						} else {
+							buf.append(",");
+						}
+						buf.append(a.getID());
+					}
+				}
+				if (foundapp) {
+					buf.append(") ");
+				}
+				boolean foundexp = false;
+				for (int i = 0 ; i < selections.size() ; i++) {
+					if (selections.get(i) instanceof Experiment) {
+						Experiment e = (Experiment)selections.get(i);
+						if (!foundexp) {
+							if (foundapp) {
+								buf.append(" and ");
+							}
+							buf.append("experiment.id in (");
+							foundexp = true;
+						} else {
+							buf.append(",");
+						}
+						buf.append(e.getID());
+					}
+				}
+				if (foundexp) {
+					buf.append(") ");
+				}
+				boolean foundtrial = false;
+				for (int i = 0 ; i < selections.size() ; i++) {
+					if (selections.get(i) instanceof Trial) {
+						Trial t = (Trial)selections.get(i);
+						if (!foundtrial) {
+							if (foundapp || foundexp) {
+								buf.append(" and ");
+							}
+							buf.append("trial.id in (");
+							foundtrial = true;
+						} else {
+							buf.append(",");
+						}
+						buf.append(t.getID());
+					}
+				}
+				if (foundtrial) {
+					buf.append(") ");
+				}
+			}
+			buf.append(") ");
 			statement = db.prepareStatement(buf.toString());
 			System.out.println(statement.toString());
 			statement.execute();
@@ -122,8 +190,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 				buf.append("where metric.name = ?) ");
 			}
 			statement = db.prepareStatement(buf.toString());
-			//statement.setString(1, metricName);
-			statement.setString(1, "WALL_CLOCK_TIME");
+			statement.setString(1, metricName);
 			System.out.println(statement.toString());
 			statement.execute();
 			statement.close();

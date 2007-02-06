@@ -7,12 +7,13 @@ import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import java.io.Serializable;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.21 2007/01/04 21:20:03 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.22 2007/02/06 06:47:32 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -498,6 +499,22 @@ public class RMIPerfExplorerModel implements Serializable {
 		totalTimesteps = null;
 		constantProblem = null;
 		multiSelections = objects;
+		return true;
+	}
+
+	public boolean addSelection(Object obj) {
+		groupName = null;
+		metricName = null;
+		eventName = null;
+		totalTimesteps = null;
+		constantProblem = null;
+		if (multiSelections == null) {
+			multiSelections = new ArrayList();
+		}
+		if (currentSelection != null) {
+			multiSelections.add(currentSelection);
+		}
+		multiSelections.add(obj);
 		return true;
 	}
 

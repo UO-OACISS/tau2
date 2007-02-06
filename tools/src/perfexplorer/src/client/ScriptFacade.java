@@ -317,4 +317,37 @@ public class ScriptFacade {
 	public void doGeneralChart() {
 		PerfExplorerChart.doGeneralChart();
 	}
+
+	/**
+	 * Set the focus on the experiment specified.
+	 * 
+	 * @param name
+	 */
+    public void addExperiment(String name) {
+        // check the argument
+        if (name == null)
+            throw new IllegalArgumentException("Experiment name cannot be null.");
+        if (name.equals(""))
+            throw new IllegalArgumentException("Experiment name cannot be an empty string.");
+
+        Application app = model.getApplication();
+        if (app == null)
+            throw new NullPointerException("Application selection is null. Please select an Application before setting the Experiment.");
+        boolean found = false;
+        for (ListIterator exps = connection.getExperimentList(app.getID());
+             exps.hasNext() && !found;) {
+            Experiment exp = (Experiment)exps.next();
+            if (exp.getName().equals(name)) {
+                model.addSelection(exp);
+                found = true;
+            }
+        }
+        if (!found)
+            throw new NoSuchElementException("Experiment '" + name + "' not found.");
+    }
+
+    public void setMetricName(String metricName) {
+    	model.setMetricName(metricName);
+    }
+    
 }
