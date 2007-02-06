@@ -3531,6 +3531,9 @@ static int writeXMLTime(FILE *fp, bool newline) {
 //    fprintf (fp, "<local_time>%s%s</local_time>%s", buf, tzone, endl);
    fprintf (fp, "<attribute><name>Local Time</name><value>%s%s</value></attribute>%s", buf, tzone, endl);
 
+
+
+
    return 0;
 }
 
@@ -3802,7 +3805,19 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
    fprintf (fp, "<name>");
    writeXMLString(fp, name);
    fprintf (fp, "</name>\n");
-   writeXMLTime(fp, true);
+
+
+   //writeXMLTime(fp, true);
+
+   struct timeval tp;
+   x_uint64 timestamp;
+   gettimeofday (&tp, 0);
+   timestamp = (x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec;
+
+
+   fprintf (fp, "<timestamp>%lld</timestamp>\n", timestamp);
+
+
 
 #ifndef TAU_MULTIPLE_COUNTERS
    fprintf (fp, "<interval_data metrics=\"0\">\n");
@@ -3931,8 +3946,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.153 $   $Date: 2007/02/06 20:08:14 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.153 2007/02/06 20:08:14 amorris Exp $ 
+ * $Revision: 1.154 $   $Date: 2007/02/06 23:42:00 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.154 2007/02/06 23:42:00 amorris Exp $ 
  ***************************************************************************/
 
 	
