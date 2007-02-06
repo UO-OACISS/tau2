@@ -3515,7 +3515,7 @@ static int writeXMLTime(FILE *fp, bool newline) {
    strftime (buf,4096,"%Y-%m-%dT%H:%M:%SZ", thisTime);
 //    fprintf (fp, "<utcTime>%s</utcTime>\n", buf);
 //   fprintf (fp, "<utc_date>%s</utc_date>%s", buf, endl);
-   fprintf (fp, "<attribute><name>UTC time</name><value>%s</value></attribute>%s", buf, endl);
+   fprintf (fp, "<attribute><name>UTC Time</name><value>%s</value></attribute>%s", buf, endl);
 
    thisTime = localtime(&theTime);
    strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
@@ -3926,8 +3926,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.151 $   $Date: 2007/02/06 02:08:56 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.151 2007/02/06 02:08:56 amorris Exp $ 
+ * $Revision: 1.152 $   $Date: 2007/02/06 03:37:00 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.152 2007/02/06 03:37:00 amorris Exp $ 
  ***************************************************************************/
 
 	
