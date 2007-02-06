@@ -85,7 +85,7 @@ public class ThreadSnapshotBarChartModel extends AbstractBarChartModel {
 
         int snapshotID = snapshot.getID();
         
-        int differential = 0;
+        int differential = 1;
         
         if (differential == 1 && snapshotID != 0) {
             return fp.getExclusive(snapshotID, ppTrial.getDefaultMetricID()) - fp.getExclusive(snapshotID-1, ppTrial.getDefaultMetricID());

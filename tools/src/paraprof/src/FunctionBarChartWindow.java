@@ -24,9 +24,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.14 2007/02/03 01:40:11 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.15 2007/02/06 02:12:15 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -68,7 +68,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     private boolean defaultPercentValue;
 
     private FunctionBarChartWindow() {
-        // disable default constructor
+    // disable default constructor
     }
 
     // Initializes Chart as a single function across threads
@@ -94,7 +94,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         this.phase = phase;
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setPhase(phase);
-
         barLengthSlider.setValue(250);
         model = new ThreadBarChartModel(this, dataSorter, ppThread);
         panel = new BarChartPanel(model, null);
@@ -210,7 +209,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         gbc.weighty = 100;
         addCompItem(panel, gbc, 0, 0, 1, 1);
         ParaProf.incrementNumWindows();
-
     }
 
     public void changeToPhaseDisplay(Thread thread) {
@@ -387,11 +385,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         }
     }
 
-    public void menuDeselected(MenuEvent evt) {
-    }
+    public void menuDeselected(MenuEvent evt) {}
 
-    public void menuCanceled(MenuEvent evt) {
-    }
+    public void menuCanceled(MenuEvent evt) {}
 
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
@@ -716,11 +712,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         }
     }
 
-    public void keyReleased(KeyEvent e) {
-    }
+    public void keyReleased(KeyEvent e) {}
 
-    public void keyTyped(KeyEvent e) {
-    }
+    public void keyTyped(KeyEvent e) {}
 
     public Function getPhase() {
         return phase;
