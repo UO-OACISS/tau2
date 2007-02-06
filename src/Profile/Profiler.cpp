@@ -58,9 +58,8 @@ using namespace std;
 #include <fcntl.h>
 #include <time.h>
 #include <stdlib.h>
-#if (!defined(TAU_WINDOWS))
-#include <unistd.h>
 
+#if (!defined(TAU_WINDOWS))
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utsname.h> // for host identification (uname)
@@ -3484,7 +3483,7 @@ static void writeXMLAttribute(FILE *f, const char *name, const char *value, bool
 
 static void writeXMLAttribute(FILE *f, const char *name, const int value, bool newline) {
   char str[4096];
-  snprintf (str, 4095, "%d", value);
+  sprintf (str, "%d", value);
   writeXMLAttribute(f, name, str, newline);
 }
 
@@ -3568,6 +3567,8 @@ static int writeMetaData(FILE *fp, bool newline) {
 
   writeXMLTime(fp, newline);
 
+#ifndef TAU_WINDOWS
+
   // try to grab meta-data
   char hostname[4096];
   gethostname(hostname,4096);
@@ -3586,7 +3587,7 @@ static int writeMetaData(FILE *fp, bool newline) {
   writeXMLAttribute(fp, "TAU Config", TAU_CONFIG, newline);
 
   writeXMLAttribute(fp, "pid", getpid(), newline);
-
+#endif
 
 #ifdef __linux__
   // doesn't work on ia64 for some reason
@@ -3709,7 +3710,11 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 #endif	
 
    char threadid[4096];
-   sprintf (threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, getpid());
+#ifdef TAU_WINDOWS
+   sprintf(threadid, "%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid);
+#else
+   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, getpid());
+#endif
 
    RtsLayer::LockDB();
    numFunc = TheFunctionDB().size();
@@ -3926,8 +3931,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.152 $   $Date: 2007/02/06 03:37:00 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.152 2007/02/06 03:37:00 amorris Exp $ 
+ * $Revision: 1.153 $   $Date: 2007/02/06 20:08:14 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.153 2007/02/06 20:08:14 amorris Exp $ 
  ***************************************************************************/
 
 	
