@@ -63,6 +63,7 @@ using namespace std;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utsname.h> // for host identification (uname)
+#include <unistd.h>
 
 #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
 #include <sys/time.h>
@@ -3946,8 +3947,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.154 $   $Date: 2007/02/06 23:42:00 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.154 2007/02/06 23:42:00 amorris Exp $ 
+ * $Revision: 1.155 $   $Date: 2007/02/06 23:58:43 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.155 2007/02/06 23:58:43 amorris Exp $ 
  ***************************************************************************/
 
 	
