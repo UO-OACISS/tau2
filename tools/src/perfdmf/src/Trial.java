@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.8 2007/02/06 03:35:12 amorris Exp $
+ * CVS $Id: Trial.java,v 1.9 2007/02/06 20:45:12 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -482,17 +482,19 @@ public class Trial implements Serializable {
         int newTrialID = 0;
 
         try {
+            boolean haveDate = false;
             java.sql.Timestamp timestamp = null;
             String dateString = (String) getMetaData().get("UTC Time");
             if (dateString != null) {
                 try {
                     Date date = DataSource.dateTime.parse(dateString);
                     timestamp = new java.sql.Timestamp(date.getTime());
+                    haveDate = true;
                 } catch (java.text.ParseException e) {
                     e.printStackTrace();
                 }
             }
-
+            
             // FIRST!  Check if the trial table has a metadata column
             checkForMetadataColumn(db);
 
@@ -512,6 +514,15 @@ public class Trial implements Serializable {
 
             StringBuffer buf = new StringBuffer();
 
+            boolean dateColumnFound = false;
+            for (int i = 0; i < this.getNumFields(); i++) {
+                if (getFieldName(i).equals("date")) {
+                    if (getFieldType(i) == java.sql.Types.TIMESTAMP) {
+                        dateColumnFound = true;
+                    }
+                }
+            }
+            
             if (itExists) {
                 buf.append("UPDATE " + db.getSchemaPrefix() + "trial SET name = ?, experiment = ?");
                 for (int i = 0; i < this.getNumFields(); i++) {
@@ -520,7 +531,7 @@ public class Trial implements Serializable {
                     }
                 }
 
-                if (timestamp != null) {
+                if (haveDate && dateColumnFound) {
                     buf.append(", date = ?");
                 }
 
@@ -531,7 +542,8 @@ public class Trial implements Serializable {
                     if (DBConnector.isWritableType(this.getFieldType(i)))
                         buf.append(", " + this.getFieldName(i));
                 }
-                if (timestamp != null) {
+                
+                if (haveDate && dateColumnFound) {
                     buf.append(", date");
                 }
                 buf.append(") VALUES (?, ?");
@@ -539,7 +551,7 @@ public class Trial implements Serializable {
                     if (DBConnector.isWritableType(this.getFieldType(i)))
                         buf.append(", ?");
                 }
-                if (timestamp != null) {
+                if (haveDate && dateColumnFound) {
                     buf.append(", ?");
                 }
                 buf.append(")");
@@ -562,7 +574,7 @@ public class Trial implements Serializable {
                 }
             }
 
-            if (timestamp != null) {
+            if (haveDate && dateColumnFound) {
                 statement.setTimestamp(pos++, timestamp);
             }
 
