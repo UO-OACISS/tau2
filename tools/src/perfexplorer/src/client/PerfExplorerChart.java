@@ -190,33 +190,28 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
+		PerfExplorerModel model = PerfExplorerModel.getModel();
 		RMIGeneralChartData rawData = server.requestGeneralChartData(
-			PerfExplorerModel.getModel(), 
-			ChartDataType.PARAMETRIC_STUDY_DATA);
-
-        /*XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData.getRowLabels();
-		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
-				String[] baseline = (String[])(row.get(0));
-				for (int x = 0 ; x < row.size() ; x++) {
-					String[] values = (String[])(row.get(x));
-        			s.add(values[0], values[1]);
-				}
-        	dataset.addSeries(s);
-		}*/
+			model, ChartDataType.PARAMETRIC_STUDY_DATA);
 
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-		for (int i = 0 ; i < rawData.getRows() ; i++) {
-			common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        	dataset.addValue(row.value / 1000000, row.series, row.category);
+		if (rawData.getCategoryType() == Integer.class) {
+			System.out.println("INTEGERS!");
+			for (int i = 0 ; i < rawData.getRows() ; i++) {
+				common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+        		dataset.addValue(row.value / 1000000, row.series, row.categoryInteger);
+			}
+		} else {
+			for (int i = 0 ; i < rawData.getRows() ; i++) {
+				common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+        		dataset.addValue(row.value / 1000000, row.series, row.categoryString);
+			}
 		}
 
         JFreeChart chart = ChartFactory.createLineChart(
-            "General Chart",  // chart title
-            "X-axis (replace with user choice)",  // domain axis label
-            "Y-axis (replace with user choice)",  // range axis label
+            model.getChartTitle(),  // chart title
+            model.getChartXAxisLabel(),  // domain axis label
+            model.getChartYAxisLabel(),  // range axis label
             dataset,                         // data
             PlotOrientation.VERTICAL,        // the plot orientation
             true,                            // legend
@@ -244,6 +239,15 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 		rangeAxis.setAutoRangeIncludesZero(true);
+
+		if (model.getChartLogAxis()) {
+        	LogarithmicAxis axis = new LogarithmicAxis(
+				PerfExplorerModel.getModel().getChartYAxisLabel());
+        	axis.setAutoRangeIncludesZero(true);
+        	axis.setAllowNegativesFlag(true);
+        	axis.setLog10TickLabelsFlag(true);
+        	plot.setRangeAxis(0, axis);
+ 		}
 
 		return new PerfExplorerChart(chart, "General Chart");
 	}

@@ -30,7 +30,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.2 2007/02/06 06:47:33 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.3 2007/02/07 00:30:41 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -116,7 +116,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 					buf.append("trial.id = " + model.getTrial().getID());
 				}
 			} else {
-				// get the applications
+
+				// get the selected applications
 				boolean foundapp = false;
 				for (int i = 0 ; i < selections.size() ; i++) {
 					if (selections.get(i) instanceof Application) {
@@ -133,6 +134,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 				if (foundapp) {
 					buf.append(") ");
 				}
+
+				// get the selected experiments
 				boolean foundexp = false;
 				for (int i = 0 ; i < selections.size() ; i++) {
 					if (selections.get(i) instanceof Experiment) {
@@ -152,6 +155,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 				if (foundexp) {
 					buf.append(") ");
 				}
+
+				// get the selected trials
 				boolean foundtrial = false;
 				for (int i = 0 ; i < selections.size() ; i++) {
 					if (selections.get(i) instanceof Trial) {
@@ -184,13 +189,29 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("inner join temp_trial ");
 			buf.append("on metric.trial = temp_trial.id ");
 			// add the where clause
-			if (db.getDBType().compareTo("db2") == 0) {
-				buf.append("where metric.name like ?) ");
-			} else {
-				buf.append("where metric.name = ?) ");
+			List metricNames = model.getMetricNames();
+			if (metricNames != null) {
+				if (db.getDBType().compareTo("db2") == 0) {
+					buf.append("where metric.name like ? ");
+				} else {
+					buf.append("where metric.name = ? ");
+				}
+				for (int i = 1 ; i < metricNames.size() ; i++) {
+					if (db.getDBType().compareTo("db2") == 0) {
+						buf.append("or metric.name like ? ");
+					} else {
+						buf.append("or metric.name = ? ");
+					}
+				}
 			}
+			buf.append(") ");
 			statement = db.prepareStatement(buf.toString());
-			statement.setString(1, metricName);
+			if (metricNames != null) {
+				for (int i = 1 ; i <= metricNames.size() ; i++) {
+					String tmp = (String)metricNames.get(i-1);
+					statement.setString(i, tmp);
+				}
+			}
 			System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
@@ -204,11 +225,111 @@ public class GeneralChartData extends RMIGeneralChartData {
    			buf.append("on interval_mean_summary.interval_event = interval_event.id ");
 			buf.append("inner join temp_metric ");
 			buf.append("on interval_mean_summary.metric = temp_metric.id ");
-			buf.append("where interval_mean_summary.inclusive_percentage = 100 ");
-			buf.append("and (group_name is null ");
-        	buf.append("or (group_name not like '%TAU_CALLPATH%' ");
-            buf.append("and group_name not like '%TAU_PHASE%'))) ");
+
+			// add the where clause
+			boolean didWhere = false;
+
+			// if we only want the main event, handle that
+			if (model.getMainEventOnly()) {
+				buf.append("where interval_mean_summary.inclusive_percentage = 100 ");
+				didWhere = true;
+			} 
+
+			// if we don't want to include callpath or phase data, handle that
+			if (model.getEventNoCallpath()) {
+				if (didWhere) {
+					buf.append("and ");
+				} else {
+					buf.append("where ");
+					didWhere = true;
+				}
+				buf.append("(interval_event.group_name is null ");
+        		buf.append("or (interval_event.group_name not like '%TAU_CALLPATH%' ");
+            	buf.append("and interval_event.group_name not like '%TAU_PHASE%')) ");
+			}
+
+			// if we only want to see events with > X percent of total runtime
+			if (model.getDimensionReduction() == TransformationType.OVER_X_PERCENT) {
+				if (didWhere) {
+					buf.append("and ");
+				} else {
+					buf.append("where ");
+					didWhere = true;
+				}
+				buf.append("interval_mean_summary.exclusive_percentage > ");
+				buf.append(model.getXPercent());
+			}
+
+			// if we want to see the event with 100% exclusive
+			if (model.getEventExclusive100()) {
+				if (didWhere) {
+					buf.append("and ");
+				} else {
+					buf.append("where ");
+					didWhere = true;
+				}
+				buf.append("interval_mean_summary.exclusive_percentage = 100 ");
+			}
+
+			// if we want to see events in particular groups
+			List groupNames = model.getGroupNames();
+			if (groupNames != null) {
+				for (int i = 0 ; i < groupNames.size() ; i++) {
+					if (didWhere) {
+						buf.append("and ");
+					} else {
+						buf.append("where ");
+						didWhere = true;
+					}
+					if (db.getDBType().compareTo("db2") == 0) {
+						buf.append("interval_event.group_name like ? ");
+					} else {
+						buf.append("interval_event.group_name = ? ");
+					}
+				}
+			}
+
+			// if we want to see particular events
+			List eventNames = model.getEventNames();
+			if (eventNames != null) {
+				for (int i = 0 ; i < eventNames.size() ; i++) {
+					if (didWhere) {
+						buf.append("and ");
+					} else {
+						buf.append("where ");
+						didWhere = true;
+					}
+					if (db.getDBType().compareTo("db2") == 0) {
+						buf.append("interval_event.name like ? ");
+					} else {
+						buf.append("interval_event.name = ? ");
+					}
+				}
+			}
+			buf.append(")");
+
+			// build the statement
 			statement = db.prepareStatement(buf.toString());
+
+			// if we put parameters in the statement, fill them.
+			// group names first...
+			int currentParameter = 1;
+			if (groupNames != null) {
+				for (int i = 0 ; i < groupNames.size() ; i++) {
+					String tmp = (String)groupNames.get(i);
+					statement.setString(currentParameter, tmp);
+					currentParameter++;
+				}
+			}
+			// then event names...
+			if (eventNames != null) {
+				for (int i = 0 ; i < eventNames.size() ; i++) {
+					String tmp = (String)eventNames.get(i);
+					statement.setString(currentParameter, tmp);
+					currentParameter++;
+				}
+			}
+
 			System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
@@ -216,19 +337,21 @@ public class GeneralChartData extends RMIGeneralChartData {
 			// The user wants parametric study data, with the data
 			// organized with two axes, the x and the y.
 			// unlike scalability: 
-			// NO ASSUMPTION ABOUT WHICH COLUMN IS THE Y AXIS!
-			String seriesName = new String("experiment.name");
-			String xAxisName = new String("node_count * contexts_per_node * threads_per_context");
-			String yAxisName = new String("interval_mean_summary.inclusive");
+			// NO ASSUMPTION ABOUT WHICH COLUMN IS THE SERIES NAME,
+			// Y AXIS OR X AXIS!
+			String seriesName = model.getChartSeriesName();
+			String xAxisName = model.getChartXAxisName();
+			String yAxisName = model.getChartYAxisName();
 			buf = new StringBuffer();
 			buf.append("select ");
 			// first item - the series name
-			buf.append(seriesName + ", ");
+			buf.append(fixClause(seriesName, db) + " as series_name, ");
 			// second item - the x axis
-			buf.append(xAxisName + ", ");
+			buf.append(fixClause(xAxisName, db) + " as xaxis_value, ");
 			// second item - the y axis
-			buf.append(yAxisName);
-			buf.append(" from interval_mean_summary ");
+			buf.append(fixClause(yAxisName, db) + " as yaxis_value ");
+			// add the tables
+			buf.append("from interval_mean_summary ");
 			buf.append("inner join temp_metric ");
 			buf.append("on interval_mean_summary.metric = temp_metric.id ");
 			buf.append("inner join temp_event ");
@@ -239,6 +362,11 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("on temp_trial.experiment = experiment.id ");
 			buf.append("inner join application ");
 			buf.append("on experiment.application = application.id ");
+			// no where clause (thanks to the temporary tables)
+			// group by clause, in case there are operations on the columns
+			buf.append("group by " + fixClause(seriesName, db));
+			buf.append(", " + fixClause(xAxisName, db) + " " );
+			// add the order by clause
 			buf.append("order by 1, 2 ");
 			statement = db.prepareStatement(buf.toString());
 			System.out.println(statement.toString());
@@ -246,12 +374,43 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 			int columnCounter = 0;
 			while (results.next() != false) {
-				System.out.println(results.getString(1) + ": " + results.getString(2) + ", " + results.getDouble(3));
+				// System.out.print(results.getString(1) + ": " );
+				// System.out.print(results.getString(2) + ", " );
+				// System.out.println(results.getDouble(3));
 				addRow(results.getString(1), results.getString(2), results.getDouble(3));
 			} 
 			results.close();
 			statement.close();
 
+			statement = db.prepareStatement("truncate table temp_event");
+			System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
+
+			statement = db.prepareStatement("drop table temp_event");
+			System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
+
+			statement = db.prepareStatement("truncate table temp_metric");
+			System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
+
+			statement = db.prepareStatement("drop table temp_metric");
+			System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
+
+			statement = db.prepareStatement("truncate table temp_trial");
+			System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
+
+			statement = db.prepareStatement("drop table temp_trial");
+			System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
 		} catch (Exception e) {
 			if (statement != null)
 				PerfExplorerOutput.println(statement.toString());
@@ -276,5 +435,20 @@ public class GeneralChartData extends RMIGeneralChartData {
 		buf.append(" as ");
 		return buf;
 	}
+
+	private String fixClause (String inString, DB db) {
+		// change the table names
+		String outString = inString.replaceAll("trial.", "temp_trial.").replaceAll("metric.", "temp_metric.").replaceAll("interval_event.", "temp_event.");
+		// fix the oracle specific stuff
+		if (db.getDBType().equalsIgnoreCase("oracle")) {
+			outString = outString.replaceAll("exclusive", "exec");
+		}
+		if (db.getDBType().equalsIgnoreCase("derby")) {
+			outString = outString.replaceAll("call", "num_calls");
+		}
+		// and so forth
+		return outString;
+	}
+
 }
 

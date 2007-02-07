@@ -350,4 +350,45 @@ public class ScriptFacade {
     	model.setMetricName(metricName);
     }
     
+	public void setChartSeriesName(String seriesName) {
+		model.setChartSeriesName(seriesName);
+	}
+
+	public void setChartXAxisName(String xAxisColumnName, String xAxisLabel) {
+		model.setChartXAxisName(xAxisColumnName, xAxisLabel);
+	}
+
+	public void setChartYAxisName(String yAxisColumnName, String yAxisLabel) {
+		model.setChartYAxisName(yAxisColumnName, yAxisLabel);
+	}
+
+	public void setChartTitle(String title) {
+		model.setChartTitle(title);
+	}
+
+	public void setChartMainEventOnly(int value) {
+		if (value == 0)
+			model.setMainEventOnly(false);
+		else
+			model.setMainEventOnly(true);
+	}
+
+	public void setChartEventNoCallPath(int value) {
+		if (value == 0)
+			model.setEventNoCallpath(false);
+		else
+			model.setEventNoCallpath(true);
+	}
+	public void setChartEventExclusive100(int value) {
+		if (value == 0)
+			model.setEventExclusive100(false);
+		else
+			model.setEventExclusive100(true);
+	}
+	public void setChartLogAxis(int value) {
+		if (value == 0)
+			model.setChartLogAxis(false);
+		else
+			model.setChartLogAxis(true);
+	}
 }

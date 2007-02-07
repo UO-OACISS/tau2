@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.22 2007/02/06 06:47:32 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.23 2007/02/07 00:30:41 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -27,11 +27,21 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected SelectionType multiSelectionType = SelectionType.NO_MULTI;
 
 	// constants for chart parameters
-	protected String groupName = null;
-	protected String metricName = null;
-	protected String eventName = null;
+	protected List groupNames = null;
+	protected List metricNames = null;
+	protected List eventNames = null;
 	protected String totalTimesteps = null;
 	protected Boolean constantProblem = null;
+	protected boolean eventNoCallpath = true;
+	protected boolean mainEventOnly = true;
+	protected boolean eventExclusive100 = false;
+	protected String chartSeriesName = null;
+	protected String chartXAxisName = null;
+	protected String chartYAxisName = null;
+	protected String chartXAxisLabel = null;
+	protected String chartYAxisLabel = null;
+	protected String chartTitle = null;
+	protected boolean chartLogAxis = false;
 
 	// more cluster settings
 	protected AnalysisType clusterMethod = null;
@@ -65,9 +75,9 @@ public class RMIPerfExplorerModel implements Serializable {
 	 */
 	public RMIPerfExplorerModel (RMIPerfExplorerModel source) {
 		this.multiSelectionType = source.multiSelectionType;
-		this.groupName = source.groupName;
-		this.metricName = source.metricName;
-		this.eventName = source.eventName;
+		this.groupNames = source.groupNames;
+		this.metricNames = source.metricNames;
+		this.eventNames = source.eventNames;
 		this.totalTimesteps = source.totalTimesteps;
 		this.clusterMethod = source.clusterMethod;
 		this.dimensionReduction = source.dimensionReduction;
@@ -188,9 +198,9 @@ public class RMIPerfExplorerModel implements Serializable {
      * @param currentSelection
      */
 	public void setCurrentSelection (Object currentSelection) {
-		groupName = null;
-		metricName = null;
-		eventName = null;
+		groupNames = null;
+		metricNames = null;
+		eventNames = null;
 		totalTimesteps = null;
 		multiSelections = null;
 		constantProblem = null;
@@ -218,9 +228,9 @@ public class RMIPerfExplorerModel implements Serializable {
      * @param objectPath
      */
 	public void setCurrentSelection (Object[] objectPath) {
-		groupName = null;
-		metricName = null;
-		eventName = null;
+		groupNames = null;
+		metricNames = null;
+		eventNames = null;
 		totalTimesteps = null;
 		multiSelections = null;
 		constantProblem = null;
@@ -493,9 +503,9 @@ public class RMIPerfExplorerModel implements Serializable {
 			}
 		}
 
-		groupName = null;
-		metricName = null;
-		eventName = null;
+		groupNames = null;
+		metricNames = null;
+		eventNames = null;
 		totalTimesteps = null;
 		constantProblem = null;
 		multiSelections = objects;
@@ -503,15 +513,13 @@ public class RMIPerfExplorerModel implements Serializable {
 	}
 
 	public boolean addSelection(Object obj) {
-		groupName = null;
-		metricName = null;
-		eventName = null;
+		groupNames = null;
+		metricNames = null;
+		eventNames = null;
 		totalTimesteps = null;
 		constantProblem = null;
 		if (multiSelections == null) {
 			multiSelections = new ArrayList();
-		}
-		if (currentSelection != null) {
 			multiSelections.add(currentSelection);
 		}
 		multiSelections.add(obj);
@@ -532,7 +540,29 @@ public class RMIPerfExplorerModel implements Serializable {
      * @return
      */
 	public String getGroupName () {
-		return groupName;
+		String tmp = null;
+		if (groupNames != null) {
+			tmp = (String)groupNames.get(0);
+		}
+		return tmp;
+	}
+
+    /**
+     * Return the selected groups.
+     *
+     * @return
+     */
+	public List getGroupNames () {
+		return groupNames;
+	}
+
+    /**
+     * Return the selected groups.
+     *
+     * @return
+     */
+	public List getEventNames () {
+		return eventNames;
 	}
 
     /**
@@ -541,7 +571,8 @@ public class RMIPerfExplorerModel implements Serializable {
      * @param groupName
      */
 	public void setGroupName (String groupName) {
-		this.groupName = groupName;
+		this.groupNames = new ArrayList();
+		this.groupNames.add(groupName);
 	}
 
     /**
@@ -550,8 +581,8 @@ public class RMIPerfExplorerModel implements Serializable {
      * @return
      */
 	public String getMetricName () {
-		if (metricName != null)
-			return metricName;
+		if (metricNames != null)
+			return (String)metricNames.get(0);
 		if (currentSelection instanceof Metric) {
 			Metric met = (Metric)currentSelection;
 			return met.getName();
@@ -561,7 +592,17 @@ public class RMIPerfExplorerModel implements Serializable {
 				return metric.getName();
 		}
 		// otherwise, just return the null String
-		return metricName;
+		String tmp = null;
+		return tmp;
+	}
+
+    /**
+     * Return the selected metrics.
+     *
+     * @return
+     */
+	public List getMetricNames () {
+		return metricNames;
 	}
 
 	/**
@@ -584,7 +625,44 @@ public class RMIPerfExplorerModel implements Serializable {
      * @param metricName
      */
 	public void setMetricName (String metricName) {
-		this.metricName = metricName;
+		this.metricNames = new ArrayList();
+		this.metricNames.add(metricName);
+	}
+
+	/**
+     * Add the selected metric name.
+     *
+     * @param metricName
+     */
+	public void addMetricName (String metricName) {
+		if (this.metricNames == null) {
+			this.metricNames = new ArrayList();
+		}
+		this.metricNames.add(metricName);
+	}
+
+	/**
+     * Add the selected group name.
+     *
+     * @param groupName
+     */
+	public void addGroupName (String groupName) {
+		if (this.groupNames == null) {
+			this.groupNames = new ArrayList();
+		}
+		this.groupNames.add(groupName);
+	}
+
+	/**
+     * Add the selected event name.
+     *
+     * @param eventName
+     */
+	public void addEventName (String eventName) {
+		if (this.eventNames == null) {
+			this.eventNames = new ArrayList();
+		}
+		this.eventNames.add(eventName);
 	}
 
     /**
@@ -613,15 +691,20 @@ public class RMIPerfExplorerModel implements Serializable {
      * @return
      */
 	public String getEventName () {
-		return eventName;
+		String tmp = null;
+		if (eventNames != null) {
+			tmp = (String)eventNames.get(0);
+		}
+		return tmp;
 	}
 
     /**
      * Set the currently selected event.
-     * @param eventName
+     * @param eventNames
      */
 	public void setEventName (String eventName) {
-		this.eventName = eventName;
+		this.eventNames = new ArrayList();
+		this.eventNames.add(eventName);
 	}
 	
     /**
@@ -722,6 +805,30 @@ public class RMIPerfExplorerModel implements Serializable {
 	}
 
     /**
+     * Set the filter for event selection for charts
+     * @param mainEventOnly
+     */
+	public void setMainEventOnly(boolean mainEventOnly) {
+		this.mainEventOnly = mainEventOnly;
+	}
+
+    /**
+     * Set the filter for callpath and phase events 
+     * @param eventNoCallpath
+     */
+	public void setEventNoCallpath(boolean eventNoCallpath) {
+		this.eventNoCallpath = eventNoCallpath;
+	}
+
+    /**
+     * Set the filter for showing just the event with 100% exclusive
+     * @param eventExclusive100
+     */
+	public void setEventExclusive100(boolean eventExclusive100) {
+		this.eventExclusive100 = eventExclusive100;
+	}
+
+    /**
      * Get the weak/strong scaling option for scalability charts.
      *
      * @return
@@ -729,4 +836,142 @@ public class RMIPerfExplorerModel implements Serializable {
 	public Boolean getConstantProblem() {
 		return this.constantProblem;
 	}
+
+    /**
+     * Get the filter for event selection for charts
+     *
+     * @return
+     */
+	public boolean getMainEventOnly() {
+		return this.mainEventOnly;
+	}
+
+    /**
+     * Get the filter for callpath and phase events
+     *
+     * @return
+     */
+	public boolean getEventNoCallpath() {
+		return this.eventNoCallpath;
+	}
+
+    /**
+     * Get the filter for showing just the event with 100% exclusive
+     *
+     * @return
+     */
+	public boolean getEventExclusive100() {
+		return this.eventExclusive100;
+	}
+
+    /**
+     * Get the series name column name
+     *
+     * @return
+     */
+	public String getChartSeriesName() {
+		return this.chartSeriesName;
+	}
+
+    /**
+     * Set the series name column name
+     *
+     * @param seriesName
+     */
+	public void setChartSeriesName(String seriesName) {
+		this.chartSeriesName = seriesName;
+	}
+
+    /**
+     * Get the x axis column name
+     *
+     * @return
+     */
+	public String getChartXAxisName() {
+		return this.chartXAxisName;
+	}
+
+    /**
+     * Get the x axis label
+     *
+     * @return
+     */
+	public String getChartXAxisLabel() {
+		return this.chartXAxisLabel;
+	}
+
+    /**
+     * Set the x axis column name
+     *
+     * @param seriesName
+     */
+	public void setChartXAxisName(String chartXAxisName, String chartXAxisLabel) {
+		this.chartXAxisName = chartXAxisName;
+		this.chartXAxisLabel = chartXAxisLabel;
+	}
+
+    /**
+     * Get the y axis column name
+     *
+     * @return
+     */
+	public String getChartYAxisName() {
+		return this.chartYAxisName;
+	}
+
+    /**
+     * Get the y axis label
+     *
+     * @return
+     */
+	public String getChartYAxisLabel() {
+		return this.chartYAxisLabel;
+	}
+
+    /**
+     * Set the y axis column name
+     *
+     * @param seriesName
+     */
+	public void setChartYAxisName(String chartYAxisName, String chartYAxisLabel) {
+		this.chartYAxisName = chartYAxisName;
+		this.chartYAxisLabel = chartYAxisLabel;
+	}
+
+    /**
+     * Get the chart title
+     *
+     * @return
+     */
+	public String getChartTitle() {
+		return this.chartTitle;
+	}
+
+    /**
+     * Set the chart title
+     *
+     * @param seriesName
+     */
+	public void setChartTitle(String title) {
+		this.chartTitle = title;
+	}
+
+    /**
+     * Get the log axis
+     *
+     * @return
+     */
+	public boolean getChartLogAxis() {
+		return this.chartLogAxis;
+	}
+
+    /**
+     * Set the log axis
+     *
+     * @param seriesName
+     */
+	public void setChartLogAxis(boolean logAxis) {
+		this.chartLogAxis = logAxis;
+	}
+
 }
