@@ -30,7 +30,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.3 2007/02/07 00:30:41 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.4 2007/02/07 00:47:10 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -258,6 +258,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 				}
 				buf.append("interval_mean_summary.exclusive_percentage > ");
 				buf.append(model.getXPercent());
+				buf.append(" ");
 			}
 
 			// if we want to see the event with 100% exclusive
@@ -274,9 +275,15 @@ public class GeneralChartData extends RMIGeneralChartData {
 			// if we want to see events in particular groups
 			List groupNames = model.getGroupNames();
 			if (groupNames != null) {
+				boolean gotOne = false;
 				for (int i = 0 ; i < groupNames.size() ; i++) {
 					if (didWhere) {
-						buf.append("and ");
+						if (gotOne) {
+							buf.append("or ");
+						} else {
+							buf.append("and ");
+							gotOne = true;
+						}
 					} else {
 						buf.append("where ");
 						didWhere = true;
@@ -292,9 +299,15 @@ public class GeneralChartData extends RMIGeneralChartData {
 			// if we want to see particular events
 			List eventNames = model.getEventNames();
 			if (eventNames != null) {
+				boolean gotOne = false;
 				for (int i = 0 ; i < eventNames.size() ; i++) {
 					if (didWhere) {
-						buf.append("and ");
+						if (gotOne) {
+							buf.append("or ");
+						} else {
+							buf.append("and ");
+							gotOne = true;
+						}
 					} else {
 						buf.append("where ");
 						didWhere = true;

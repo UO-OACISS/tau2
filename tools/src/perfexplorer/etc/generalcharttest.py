@@ -98,6 +98,29 @@ pe.setChartEventNoCallPath(1)
 pe.setChartEventExclusive100(0)
 pe.doGeneralChart()
 
+pe.setApplication("gyro.B1-std")
+pe.addExperiment("B1-std-nl2.cheetah.noaffnosng")
+pe.setMetricName("WALL_CLOCK_TIME")
+pe.setChartTitle("GYRO Scalability by phase")
+pe.setEventName("Iteration 0")
+pe.addEventName("Iteration 1")
+pe.addEventName("Iteration 2")
+pe.addEventName("Iteration 3")
+pe.addEventName("Iteration 4")
+pe.addEventName("Iteration 5")
+pe.addEventName("Iteration 6")
+pe.addEventName("Iteration 7")
+pe.addEventName("Iteration 8")
+pe.addEventName("Iteration 9")
+pe.setChartSeriesName("interval_event.name")
+pe.setChartXAxisName("trial.node_count * trial.contexts_per_node * trial.threads_per_context", "Threads of Execution")
+pe.setChartYAxisName("avg(interval_mean_summary.inclusive)", "Inclusive Time (seconds)")
+pe.setChartMainEventOnly(0);
+pe.setChartLogAxis(1);
+pe.setChartEventNoCallPath(0)
+pe.setChartEventExclusive100(0)
+pe.doGeneralChart()
+
 # pe.exit()
 
 print "---------------- JPython test script end -------------"

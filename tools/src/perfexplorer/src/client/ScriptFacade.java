@@ -346,7 +346,15 @@ public class ScriptFacade {
             throw new NoSuchElementException("Experiment '" + name + "' not found.");
     }
 
-    public void setMetricName(String metricName) {
+    public void setEventName(String eventName) {
+    	model.setEventName(eventName);
+    }
+
+    public void addEventName(String eventName) {
+    	model.addEventName(eventName);
+    }
+
+     public void setMetricName(String metricName) {
     	model.setMetricName(metricName);
     }
     
