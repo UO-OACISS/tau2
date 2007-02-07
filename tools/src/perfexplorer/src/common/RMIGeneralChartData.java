@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * This class represents the data to be used to create a scalability or
  * runtime breakdown chart.  
  *
- * <P>CVS $Id: RMIGeneralChartData.java,v 1.2 2007/02/07 00:30:41 khuck Exp $</P>
+ * <P>CVS $Id: RMIGeneralChartData.java,v 1.3 2007/02/07 06:37:17 khuck Exp $</P>
  * @author khuck
  * @version 0.2
  * @since   0.2
@@ -20,6 +20,8 @@ public class RMIGeneralChartData implements Serializable {
 
 	protected List data = null;
 	protected Class categoryType = Integer.class;
+	protected int xMinimum = -1;
+	protected int xMaximum = -1;
 
 	/**
 	 * Constructor.
@@ -41,6 +43,13 @@ public class RMIGeneralChartData implements Serializable {
 		data.add(row);
 		if (row.categoryType == String.class) {
 			this.categoryType = String.class;
+		} else {
+			if (this.xMaximum == -1 || row.categoryInteger.intValue() > this.xMaximum) {
+				this.xMaximum = row.categoryInteger.intValue();
+			}
+			if (this.xMinimum == -1 || row.categoryInteger.intValue() < this.xMinimum) {
+				this.xMinimum = row.categoryInteger.intValue();
+			}
 		}
 	}
 
@@ -59,6 +68,14 @@ public class RMIGeneralChartData implements Serializable {
     */
 	public CategoryDataRow getRowData(int index) { 
 		return (CategoryDataRow)data.get(index); 
+	}
+
+	public int getMinimum() {
+		return xMinimum;
+	}
+
+	public int getMaximum() {
+		return xMaximum;
 	}
 
 	/**

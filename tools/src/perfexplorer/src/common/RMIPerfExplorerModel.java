@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.23 2007/02/07 00:30:41 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.24 2007/02/07 06:37:17 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -42,6 +42,8 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected String chartYAxisLabel = null;
 	protected String chartTitle = null;
 	protected boolean chartLogAxis = false;
+	protected boolean chartScalability = false;
+	protected boolean chartEfficiency = false;
 
 	// more cluster settings
 	protected AnalysisType clusterMethod = null;
@@ -966,12 +968,48 @@ public class RMIPerfExplorerModel implements Serializable {
 	}
 
     /**
+     * Get the log axis
+     *
+     * @return
+     */
+	public boolean getChartScalability() {
+		return this.chartScalability;
+	}
+
+    /**
+     * Get the log axis
+     *
+     * @return
+     */
+	public boolean getChartEfficiency() {
+		return this.chartEfficiency;
+	}
+
+    /**
      * Set the log axis
      *
      * @param seriesName
      */
 	public void setChartLogAxis(boolean logAxis) {
 		this.chartLogAxis = logAxis;
+	}
+
+    /**
+     * Set the log axis
+     *
+     * @param seriesName
+     */
+	public void setChartScalability(boolean scalability) {
+		this.chartScalability = scalability;
+	}
+
+    /**
+     * Set the log axis
+     *
+     * @param seriesName
+     */
+	public void setChartEfficiency(boolean efficiency) {
+		this.chartEfficiency = efficiency;
 	}
 
 }

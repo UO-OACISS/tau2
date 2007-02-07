@@ -119,6 +119,8 @@ pe.setChartMainEventOnly(0);
 pe.setChartLogAxis(1);
 pe.setChartEventNoCallPath(0)
 pe.setChartEventExclusive100(0)
+pe.setChartScalability(1)
+pe.setConstantProblem(1)
 pe.doGeneralChart()
 
 # pe.exit()

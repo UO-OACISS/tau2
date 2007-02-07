@@ -387,16 +387,39 @@ public class ScriptFacade {
 		else
 			model.setEventNoCallpath(true);
 	}
+
 	public void setChartEventExclusive100(int value) {
 		if (value == 0)
 			model.setEventExclusive100(false);
 		else
 			model.setEventExclusive100(true);
 	}
+
 	public void setChartLogAxis(int value) {
 		if (value == 0)
 			model.setChartLogAxis(false);
 		else
 			model.setChartLogAxis(true);
+	}
+
+	public void setChartScalability(int value) {
+		if (value == 0)
+			model.setChartScalability(false);
+		else
+			model.setChartScalability(true);
+	}
+
+	public void setChartEfficiency(int value) {
+		if (value == 0)
+			model.setChartEfficiency(false);
+		else
+			model.setChartEfficiency(true);
+	}
+
+	public void setConstantProblem(int value) {
+		if (value == 0)
+			model.setConstantProblem(false);
+		else
+			model.setConstantProblem(true);
 	}
 }

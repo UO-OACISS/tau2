@@ -196,10 +196,29 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		if (rawData.getCategoryType() == Integer.class) {
-			System.out.println("INTEGERS!");
-			for (int i = 0 ; i < rawData.getRows() ; i++) {
-				common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        		dataset.addValue(row.value / 1000000, row.series, row.categoryInteger);
+			if (model.getChartScalability()) {
+				double ideal, ratio, efficiency = 0;
+				common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
+				for (int i = 0 ; i < rawData.getRows() ; i++) {
+					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+					if (!row.series.equals(baseline.series)) {
+						System.out.println(row.series);
+						baseline = row;
+					}
+					ratio = baseline.categoryInteger.intValue()/row.categoryInteger.intValue();
+					if (PerfExplorerModel.getModel().getConstantProblem().booleanValue()) {
+						ideal = baseline.value * ratio;
+					} else {
+						ideal = baseline.value;
+					}
+					efficiency = ideal/row.value;
+        			dataset.addValue(efficiency / ratio, row.series, row.categoryInteger);
+				}
+			} else {
+				for (int i = 0 ; i < rawData.getRows() ; i++) {
+					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+        			dataset.addValue(row.value / 1000000, row.series, row.categoryInteger);
+				}
 			}
 		} else {
 			for (int i = 0 ; i < rawData.getRows() ; i++) {

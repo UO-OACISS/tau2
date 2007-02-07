@@ -37,6 +37,7 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		quitServerItem.addActionListener(listener);
 		fileMenu.add(quitServerItem);
 
+/*
 		try {
 			UIManager.LookAndFeelInfo[] info = UIManager.getInstalledLookAndFeels();
 			JMenuItem item[] = new JMenuItem[info.length];
@@ -48,7 +49,8 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 				fileMenu.add(item[i]);
 			}
 		} catch (Exception e) { }
-		
+*/
+
 		this.add(fileMenu);
 	}
 

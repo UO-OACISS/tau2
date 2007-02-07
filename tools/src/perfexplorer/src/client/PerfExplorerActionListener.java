@@ -2,6 +2,9 @@ package client;
 
 import javax.swing.*;
 import java.awt.event.*;
+import java.awt.Frame;
+import java.awt.Component;
+import java.awt.Container;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.ListIterator;
@@ -82,7 +85,16 @@ public class PerfExplorerActionListener implements ActionListener {
 					for (int i = 0 ; i < info.length ; i++) {
 						if (arg.endsWith(info[i].getName())) {
 							try {
+								PerfExplorerClient frame = PerfExplorerClient.getMainFrame();
 								UIManager.setLookAndFeel(info[i].getClassName());
+								Frame[] frames = frame.getFrames();
+								for (int x = 0 ; x < frames.length ; x++) {
+									Component[] comps = frame.getComponents();
+									for (int y = 0 ; y < comps.length ; y++) {
+										updateAll((Container)comps[y]);
+									}
+									frames[x].repaint();
+								}
 							} catch (UnsupportedLookAndFeelException e) {
 								PerfExplorerOutput.println(e.getMessage());
 							}
@@ -204,6 +216,24 @@ public class PerfExplorerActionListener implements ActionListener {
 			System.err.println("actionPerformed Exception: " + e.getMessage());
 			e.printStackTrace();
 		} 
+	}
+
+	private void updateAll (Container container) {
+		Component[] comps = container.getComponents();
+		for (int y = 0 ; y < comps.length ; y++) {
+			if (comps[y] instanceof Container) {
+				updateAll((Container)comps[y]);
+			}
+			if (comps[y] instanceof JComponent) {
+				JComponent comp = (JComponent)comps[y];
+				comp.updateUI();
+			}
+			if (comps[y] instanceof JTree) {
+				JTree tree = (JTree)comps[y];
+				tree.updateUI();
+			}
+		}
+		container.repaint();
 	}
 
     public static String getVersionString() {
