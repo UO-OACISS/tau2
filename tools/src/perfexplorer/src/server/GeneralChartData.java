@@ -30,7 +30,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.4 2007/02/07 00:47:10 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.5 2007/02/08 23:28:50 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -179,7 +179,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			}
 			buf.append(") ");
 			statement = db.prepareStatement(buf.toString());
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
@@ -212,7 +212,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 					statement.setString(i, tmp);
 				}
 			}
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
@@ -343,7 +343,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 				}
 			}
 
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
@@ -382,7 +382,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			// add the order by clause
 			buf.append("order by 1, 2 ");
 			statement = db.prepareStatement(buf.toString());
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 
 			int columnCounter = 0;
@@ -396,32 +396,32 @@ public class GeneralChartData extends RMIGeneralChartData {
 			statement.close();
 
 			statement = db.prepareStatement("truncate table temp_event");
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
 			statement = db.prepareStatement("drop table temp_event");
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
 			statement = db.prepareStatement("truncate table temp_metric");
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
 			statement = db.prepareStatement("drop table temp_metric");
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
 			statement = db.prepareStatement("truncate table temp_trial");
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
 			statement = db.prepareStatement("drop table temp_trial");
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 		} catch (Exception e) {

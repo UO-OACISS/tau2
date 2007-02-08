@@ -395,11 +395,11 @@ public class ScriptFacade {
 			model.setEventExclusive100(true);
 	}
 
-	public void setChartLogAxis(int value) {
+	public void setChartLogYAxis(int value) {
 		if (value == 0)
-			model.setChartLogAxis(false);
+			model.setChartLogYAxis(false);
 		else
-			model.setChartLogAxis(true);
+			model.setChartLogYAxis(true);
 	}
 
 	public void setChartScalability(int value) {
@@ -416,7 +416,7 @@ public class ScriptFacade {
 			model.setChartEfficiency(true);
 	}
 
-	public void setConstantProblem(int value) {
+	public void setChartConstantProblem(int value) {
 		if (value == 0)
 			model.setConstantProblem(false);
 		else

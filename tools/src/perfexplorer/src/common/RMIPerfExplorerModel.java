@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.24 2007/02/07 06:37:17 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.25 2007/02/08 23:28:50 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -41,7 +41,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected String chartXAxisLabel = null;
 	protected String chartYAxisLabel = null;
 	protected String chartTitle = null;
-	protected boolean chartLogAxis = false;
+	protected boolean chartLogYAxis = false;
 	protected boolean chartScalability = false;
 	protected boolean chartEfficiency = false;
 
@@ -963,8 +963,8 @@ public class RMIPerfExplorerModel implements Serializable {
      *
      * @return
      */
-	public boolean getChartLogAxis() {
-		return this.chartLogAxis;
+	public boolean getChartLogYAxis() {
+		return this.chartLogYAxis;
 	}
 
     /**
@@ -990,8 +990,8 @@ public class RMIPerfExplorerModel implements Serializable {
      *
      * @param seriesName
      */
-	public void setChartLogAxis(boolean logAxis) {
-		this.chartLogAxis = logAxis;
+	public void setChartLogYAxis(boolean logAxis) {
+		this.chartLogYAxis = logAxis;
 	}
 
     /**

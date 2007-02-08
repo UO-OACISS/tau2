@@ -210,11 +210,29 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
 					if (!row.series.equals(baseline.series)) {
-						System.out.println(row.series);
+						//System.out.println(row.series);
 						baseline = row;
 					}
-        			dataset.addValue(baseline.value / row.value, row.series, row.categoryInteger);
+					if (model.getConstantProblem().booleanValue()) {
+						//System.out.println("value: " + row.value);
+						
+						double ratio = baseline.categoryInteger.doubleValue() / row.categoryInteger.doubleValue();
+						//System.out.println("ratio: " + ratio);
+						double efficiency = baseline.value/row.value;
+						//System.out.println("efficiency: " + efficiency);
+        				dataset.addValue(efficiency / ratio, row.series, row.categoryInteger);
+					} else {
+        				dataset.addValue(baseline.value / row.value, row.series, row.categoryInteger);
+					}
 				}
+
+				// create an "ideal" line.
+				List keys = dataset.getColumnKeys();
+				for (int i = 0 ; i < keys.size() ; i++) {
+					Integer key = (Integer)keys.get(i);
+        			dataset.addValue(key.doubleValue()/rawData.getMinimum(), "Ideal", key);
+				}
+
 			} else {
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
@@ -266,7 +284,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 		rangeAxis.setAutoRangeIncludesZero(true);
 
-		if (model.getChartLogAxis()) {
+		if (model.getChartLogYAxis()) {
         	LogarithmicAxis axis = new LogarithmicAxis(
 				PerfExplorerModel.getModel().getChartYAxisLabel());
         	axis.setAutoRangeIncludesZero(true);
