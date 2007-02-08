@@ -194,33 +194,36 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		RMIGeneralChartData rawData = server.requestGeneralChartData(
 			model, ChartDataType.PARAMETRIC_STUDY_DATA);
 
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        PECategoryDataset dataset = new PECategoryDataset();
 		if (rawData.getCategoryType() == Integer.class) {
 			if (model.getChartScalability()) {
-				double ideal, ratio, efficiency = 0;
+
+				// create an "ideal" line.
+        		dataset.addValue(1.0, "Ideal", new Integer(rawData.getMinimum()));
+        		dataset.addValue(rawData.getMaximum()/rawData.getMinimum(), "Ideal", 
+					new Integer(rawData.getMaximum()));
+
+				// get the baseline values
 				common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
+
+				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
 					if (!row.series.equals(baseline.series)) {
 						System.out.println(row.series);
 						baseline = row;
 					}
-					ratio = baseline.categoryInteger.intValue()/row.categoryInteger.intValue();
-					if (PerfExplorerModel.getModel().getConstantProblem().booleanValue()) {
-						ideal = baseline.value * ratio;
-					} else {
-						ideal = baseline.value;
-					}
-					efficiency = ideal/row.value;
-        			dataset.addValue(efficiency / ratio, row.series, row.categoryInteger);
+        			dataset.addValue(baseline.value / row.value, row.series, row.categoryInteger);
 				}
 			} else {
+				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
         			dataset.addValue(row.value / 1000000, row.series, row.categoryInteger);
 				}
 			}
 		} else {
+			// iterate through the values
 			for (int i = 0 ; i < rawData.getRows() ; i++) {
 				common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
         		dataset.addValue(row.value / 1000000, row.series, row.categoryString);
@@ -248,7 +251,11 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		LineAndShapeRenderer renderer = (LineAndShapeRenderer)plot.getRenderer();
         renderer.setDefaultShapesFilled(true);
         renderer.setDrawShapes(true);
+        renderer.setDrawLines(true);
         renderer.setItemLabelsVisible(true);
+		if (model.getChartScalability()) {
+			//renderer.setDrawShapes(false);
+		}
 
 		for (int i = 0 ; i < rawData.getRows() ; i++) {
 			renderer.setSeriesStroke(i, new BasicStroke(2.0f));
