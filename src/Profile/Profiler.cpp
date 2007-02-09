@@ -76,12 +76,16 @@ using namespace std;
 #endif //TAU_WINDOWS
 
 #ifdef TRACING_ON
+#ifdef TAU_VAMPIRTRACE
+#include "Profile/TauVampirTrace.h"
+#else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
 #else /* TAU_EPILOG */
 #define PCXX_EVENT_SRC
 #include "Profile/pcxx_events.h"
 #endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
 
 #ifdef RENCI_STFF
@@ -355,6 +359,13 @@ void Profiler::Start(int tid)
 	
 	}
 #else /* TAU_MPITRACE */
+#ifdef TAU_VAMPIRTRACE 
+        TimeStamp = vt_pform_wtime();
+
+	DEBUGPROFMSG("Calling vt_enter: ["<<ThisFunction->GetFunctionId()<<"] "
+	     << ThisFunction->GetName()<<" Time" <<TimeStamp<<endl;);
+        vt_enter((uint64_t *) &TimeStamp, ThisFunction->GetFunctionId());
+#else /* TAU_VAMPITRACE */
 #ifdef TAU_EPILOG
 	DEBUGPROFMSG("Calling elg_enter: ["<<ThisFunction->GetFunctionId()<<"] "
 	     << ThisFunction->GetName()<<endl;);
@@ -367,6 +378,7 @@ void Profiler::Start(int tid)
 	MultipleCounterLayer::triggerCounterEvents(TimeStamp, StartTime, tid);
 #endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
 #endif /* TAU_MPITRACE */
 #endif /* TRACING_ON */
 
@@ -665,7 +677,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif//TAU_MULTIPLE_COUNTERS
 
 #ifdef TRACING_ON
-
+#ifdef TAU_VAMPIRTRACE
+        TimeStamp = vt_pform_wtime();
+        DEBUGPROFMSG("Calling vt_exit(): "<< ThisFunction->GetName()<<
+		"With Timestamp = "<<TimeStamp<<endl;);
+        vt_exit((uint64_t *)&TimeStamp);
+#else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
         DEBUGPROFMSG("Calling elg_exit(): "<< ThisFunction->GetName()<<endl;);
 	elg_exit();
@@ -684,6 +701,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 	}
 #endif /* TAU_MPITRACE */
 #endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
 #endif //TRACING_ON
 
 /* What should we do while exiting when profiling is off, tracing is on and 
@@ -1296,6 +1314,11 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	DEBUGPROFMSG("Profiler::DumpData( tid = "<<tid <<" ) "<<endl;);
 
 #ifdef TRACING_ON
+#ifdef TAU_VAMPIRTRACE
+	DEBUGPROFMSG("Calling vt_close()"<<endl;);
+ 	if (RtsLayer::myThread() == 0)
+	  vt_close();
+#else /* VAMPIRTRACE */
 #ifdef TAU_EPILOG 
 	DEBUGPROFMSG("Calling elg_close()"<<endl;);
  	if (RtsLayer::myThread() == 0)
@@ -1304,6 +1327,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	TraceEvClose(tid);
 	RtsLayer::DumpEDF(tid);
 #endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
 
 #ifdef PROFILING_ON 
@@ -1549,6 +1573,11 @@ int Profiler::StoreData(int tid)
 	TauDetectMemoryLeaks();
 
 #ifdef TRACING_ON
+#ifdef TAU_VAMPIRTRACE
+	DEBUGPROFMSG("Calling vt_close()"<<endl;);
+ 	if (RtsLayer::myThread() == 0)
+	  vt_close();
+#else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG 
 	DEBUGPROFMSG("Calling elg_close()"<<endl;);
  	if (RtsLayer::myThread() == 0)
@@ -1558,6 +1587,7 @@ int Profiler::StoreData(int tid)
 	RtsLayer::DumpEDF(tid);
 	RtsLayer::MergeAndConvertTracesIfNecessary();
 #endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
 
 #ifdef PROFILING_ON 
@@ -1849,6 +1879,11 @@ int Profiler::DumpData(bool increment, int tid, char *prefix)
 	DEBUGPROFMSG("Profiler::DumpData( tid = "<<tid <<" ) "<<endl;);
 
 #ifdef TRACING_ON
+#ifdef TAU_VAMPIRTRACE
+	DEBUGPROFMSG("Calling vt_close()"<<endl;);
+ 	if (RtsLayer::myThread() == 0)
+	  vt_close();
+#else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG 
 	DEBUGPROFMSG("Calling elg_close()"<<endl;);
  	if (RtsLayer::myThread() == 0)
@@ -1856,6 +1891,7 @@ int Profiler::DumpData(bool increment, int tid, char *prefix)
 #else /* TAU_EPILOG */
 	TraceEvFlush(tid);
 #endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
 
 #ifdef PROFILING_ON 
@@ -3039,7 +3075,9 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
   }
 #elif TRACING_ON
 #ifndef TAU_EPILOG
+#ifndef TAU_VAMPIRTRACE
   TraceEvFlush(tid);
+#endif /* TAU_VAMPIRTRACE */
 #endif /* TAU_EPILOG */
 #endif //PROFILING_ON
   return 1;
@@ -3946,9 +3984,9 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.155 $   $Date: 2007/02/06 23:58:43 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.155 2007/02/06 23:58:43 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.156 $   $Date: 2007/02/09 21:00:07 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.156 2007/02/09 21:00:07 sameer Exp $ 
  ***************************************************************************/
 
 	

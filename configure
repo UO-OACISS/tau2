@@ -234,6 +234,7 @@ slog2=no
 internalslog2=no
 opari=no
 epilog=no
+vampirtrace=no
 opari_region=no
 opari_construct=no
 dyninst=no
@@ -558,6 +559,18 @@ do
 
   -opari_construct)
       opari_construct=yes
+    shift
+    ;;
+
+  -vampirtrace=*)
+      vampirtrace=yes
+      trace=yes
+      vampirtracedir=`echo $arg | sed -e 's/-vampirtrace=//'`
+      if [ ! -d $vampirtracedir ]
+      then
+        echo "Error: Cannot access VAMPIRTRACE directory $vampirtracedir"
+        exit 1
+      fi
     shift
     ;;
 
@@ -1039,6 +1052,7 @@ do
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
+    echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
@@ -2665,6 +2679,21 @@ then
     fi
   fi 
 
+  if [ $vampirtrace = yes -a $mpi = yes ]
+  then
+    if [ -f $vampirtracedir/lib/libvt.mpi.a ] 
+    then
+      vampirtracelibdir=lib
+    else
+      vampirtracelibdir=vtlib
+    fi
+    wrapperlib="-L$vampirtracedir/$vampirtracelibdir -lvt.mpi -lotf -lz"
+    if [ $openmp = yes ] 
+    then
+      wrapperlib="-L$vampirtracedir/$vampirtracelibdir -lvt.ompi -lotf -lz"
+    fi
+  fi 
+  
   if [ $perf = yes ] 
   then
     wrapperlib="-L$\(PERFLIBDIR) \$(PERFLIBRARY)"
@@ -2692,6 +2721,11 @@ then
       then
         mpiflibargs="$wrapperlib -lfmpi"
       fi 
+      if [ $vampirtrace = yes -a -f $vampirtracedir/lib/libvt.fmpi.a -o -f $vampirtracedir/vtlib/libvt.fmpi.a ] 
+      then
+        mpiflibargs="$wrapperlib -lvt.fmpi"
+      fi 
+ 
 
       if [ -f $mpilib/libfmpich.a -o -f $mpilib/libfmpich.so ]
       then
@@ -3862,6 +3896,27 @@ if [ $opari = yes ]
         fixmakeargs="$fixmakeargs oparitool=$oparidir/bin/opari"
       else
         echo "ERROR: Opari executable not found in $oparidir directory!"
+      fi
+    fi
+fi
+
+
+if [ $vampirtrace = yes ]
+  then
+    fixmakeargs="$fixmakeargs VAMPIRTRACE vampirtracedir=$vampirtracedir"
+    tauoptions="${tauoptions}-vampirtrace"
+    if [ $mpi = yes ] 
+    then 
+      if [ $openmp = yes ] 
+      then
+        fixmakeargs="$fixmakeargs VAMPIRTRACEOMPI" 
+      else
+        fixmakeargs="$fixmakeargs VAMPIRTRACEMPI" 
+      fi 
+    else
+      if [ $openmp = yes ]
+      then
+        fixmakeargs="$fixmakeargs VAMPIRTRACEOMP" 
       fi
     fi
 fi

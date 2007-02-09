@@ -60,12 +60,16 @@ using namespace std;
 #endif //TAU_WINDOWS
 
 #ifdef TRACING_ON
+#ifdef TAU_VAMPIRTRACE 
+#include <Profile/TauVampirTrace.h>
+#else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
 #else /* TAU_EPILOG */
 #define PCXX_EVENT_SRC
 #include "Profile/pcxx_events.h"
 #endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
 
 
@@ -119,6 +123,18 @@ int& TheUsingDyninst()
   static int UsingDyninst=0;
   return UsingDyninst;
 }
+
+#ifdef TAU_VAMPIRTRACE
+//////////////////////////////////////////////////////////////////////
+// Initialize VampirTrace Tracing package
+//////////////////////////////////////////////////////////////////////
+int TauInitVampirTrace(void)
+{
+  DEBUGPROFMSG("Calling vt_open"<<endl;);
+  vt_open();
+  return 1;
+}
+#endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_EPILOG 
 //////////////////////////////////////////////////////////////////////
@@ -200,6 +216,13 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	// Important in the presence of concurrent threads.
 	TheFunctionDB().push_back(this);
 #ifdef TRACING_ON
+#ifdef TAU_VAMPIRTRACE
+        static int tau_vt_init=TauInitVampirTrace();
+        string tau_vt_name(Name+" "+Type);
+	FunctionId = vt_def_region(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
+		VT_NO_LNO, GroupName.c_str(), VT_FUNCTION);
+	DEBUGPROFMSG("vt_def_region: "<<tau_vt_name<<": returns "<<FunctionId<<endl;);
+#else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
         static int tau_elg_init=TauInitEpilog();
 	string tau_elg_name(Name+" "+Type);
@@ -218,6 +241,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	FunctionId = RtsLayer::GenerateUniqueId();
 	SetFlushEvents(tid);
 #endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
 #endif //TRACING_ON
 	RtsLayer::UnLockDB();
 		
@@ -473,7 +497,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
   }
 }
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.46 $   $Date: 2007/01/19 19:21:52 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.46 2007/01/19 19:21:52 amorris Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
+ * $Revision: 1.47 $   $Date: 2007/02/09 21:00:07 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.47 2007/02/09 21:00:07 sameer Exp $ 
  ***************************************************************************/

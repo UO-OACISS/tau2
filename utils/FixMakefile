@@ -129,6 +129,11 @@ fi
 	echo "s,^TAU_OPARI_TOOL=.*$,TAU_OPARI_TOOL=$oparitool,g" >> $sedout
 	;;
 
+     vampirtracedir=*)
+        vampirtracedir=`echo $1 | sed -e 's/^vampirtracedir=//'`
+	echo "s,^VAMPIRTRACEDIR=.*$,VAMPIRTRACEDIR=$vampirtracedir,g" >> $sedout
+	;;
+
      epilogdir=*)
         epilogdir=`echo $1 | sed -e 's/^epilogdir=//'`
 	echo "s,^EPILOGDIR=.*$,EPILOGDIR=$epilogdir,g" >> $sedout
@@ -942,6 +947,22 @@ fi
 	;;
      OPARI_CONSTRUCT)
 	echo "NOTE: Using Opari tool with OpenMP construct information ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     VAMPIRTRACE)
+	echo "NOTE: Using VAMPIRTRACE Tracing Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     VAMPIRTRACEMPI)
+	echo "NOTE: Using VAMPIRTRACE's MPI Wrapper Library ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     VAMPIRTRACEOMPI)
+	echo "NOTE: Using VAMPIRTRACE's OpenMP MPI Wrapper Library ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     VAMPIRTRACEOMP)
+	echo "NOTE: Using VAMPIRTRACE's OpenMP Trace Library ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      EPILOG)
