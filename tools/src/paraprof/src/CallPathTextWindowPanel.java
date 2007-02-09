@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.41 2007/02/03 01:40:11 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.42 2007/02/09 02:02:12 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.41 $
+ * @version	$Revision: 1.42 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -55,9 +55,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
     private int yHeightNeeded = 0;
     private int xWidthNeeded = 0;
 
-
     private int rowHeight = 10;
-    
+
     private int lastHeaderEndPosition = 0;
 
     private Searcher searcher;
@@ -256,8 +255,6 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
     }
 
-   
-
     private void setSearchLines() {
         if (searcher.getSearchLines() == null) {
             Vector searchLines = new Vector();
@@ -299,19 +296,18 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
         }
     }
 
-   
     public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         int yCoord = 0;
 
         //In this window, a Monospaced font has to be used. This will
         // probably not be the same font as the rest of ParaProf.
-        
+
         monoFont = new Font("Monospaced", ppTrial.getPreferencesWindow().getFontStyle(), ParaProf.preferencesWindow.getFontSize());
         fontMetrics = g2D.getFontMetrics(monoFont);
         int maxFontAscent = fontMetrics.getMaxAscent();
         int maxFontDescent = fontMetrics.getMaxDescent();
-        
+
         g2D.setFont(monoFont);
 
         rowHeight = fontMetrics.getHeight();
@@ -393,14 +389,12 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
         yCoord = clips[2];
 
         g2D.setColor(Color.black);
-        
-        
+
         if (drawHeader) {
             JScrollPane sp = window.getScrollPane();
             sp.getColumnHeader().paintAll(g2D);
             g2D.translate(0, sp.getColumnHeader().getHeight());
         }
-        
 
         yCoord = yCoord + rowHeight;
         //######
@@ -431,8 +425,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
                 g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos, yCoord);
 
-            } else if (callPathDrawObject.isSpacer()) {
-            } else {
+            } else if (callPathDrawObject.isSpacer()) {} else {
 
                 String stats = "    " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
                         + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
@@ -527,17 +520,13 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
         }
     }
 
-    public void mousePressed(MouseEvent evt) {
-    }
+    public void mousePressed(MouseEvent evt) {}
 
-    public void mouseReleased(MouseEvent evt) {
-    }
+    public void mouseReleased(MouseEvent evt) {}
 
-    public void mouseEntered(MouseEvent evt) {
-    }
+    public void mouseEntered(MouseEvent evt) {}
 
-    public void mouseExited(MouseEvent evt) {
-    }
+    public void mouseExited(MouseEvent evt) {}
 
     public Dimension getImageSize(boolean fullScreen, boolean header) {
         Dimension d = null;
@@ -551,7 +540,9 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
     }
 
     public void resetAllDrawObjects() {
-        drawObjectsComplete.clear();
+        if (drawObjectsComplete != null) {
+            drawObjectsComplete.clear();
+        }
         drawObjectsComplete = null;
         drawObjects.clear();
         drawObjects = null;
