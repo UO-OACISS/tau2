@@ -1876,6 +1876,11 @@ const char * stripModuleFromName(const string functionname)
 {
   char *s = NULL;
   char *nm  = const_cast<char*>(functionname.c_str());
+
+  /* go back -- Jeff doesn't like the stripped name anymore */
+  return nm;
+
+  /* Here is the code to strip the code */
   /* traverse the string till you get rid of the :: using strstr */
   while (s = strstr(nm, "::"))
   {
@@ -2767,8 +2772,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.129 $   $Date: 2007/01/12 23:06:19 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.129 2007/01/12 23:06:19 sameer Exp $
+ * $Revision: 1.130 $   $Date: 2007/02/09 00:09:53 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.130 2007/02/09 00:09:53 sameer Exp $
  ***************************************************************************/
 
 
