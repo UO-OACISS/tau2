@@ -535,7 +535,7 @@ do
 
   -perflibrary=*)
       perf=yes
-      perflibrary=`echo $arg | sed -e 's/-perflibrary=//' -e 's/#/ /g'`
+      perflibrary=`echo $arg | sed -e 's/-perflibrary=//' -e 's/ /#/g'`
     shift
     ;;
 
