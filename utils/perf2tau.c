@@ -270,10 +270,10 @@ int main(int argc, char **argv)
   header_ptr = perflib_ptr->header_ptr;
 
 
-  tree_cycle_ptr = (struct perf_forest_struct *)Perf_Build_Forest(PERF_ALL_CYCLES, PERF_ALL_RANKS);
+  tree_cycle_ptr = (struct perf_forest_struct *)Perf_Build_Forest(perflib_ptr, PERF_ALL_CYCLES, PERF_ALL_RANKS);
 
   /* Gets the entire tree. Now examine aggregate data within this rank */
-  all_context_cycle_ptr = (struct all_context_cycle_struct *)Perf_Build_All_Context_Data(tree_cycle_ptr);
+  all_context_cycle_ptr = (struct all_context_cycle_struct *)Perf_Build_All_Context_Data(perflib_ptr, tree_cycle_ptr);
 
   while (all_context_cycle_ptr)
   { /* cycle */
