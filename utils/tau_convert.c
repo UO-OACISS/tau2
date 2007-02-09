@@ -55,6 +55,7 @@
 # define SEND_EVENT -7
 # define RECV_EVENT -8
 
+
 /* The following three decl apply to -vampir (multi-node, multi-threaded) */
 # define TAU_MAX_NODES 32*1024 /* max nodes, within nodes are threads */
 static int offset[TAU_MAX_NODES] = {  0 }; /* offset to calculate cpuid */
@@ -111,7 +112,7 @@ struct trcrecv
 
 };
 
-PCXX_EV *tmpbuffer; /* for threaded program */
+void *tmpbuffer; /* for threaded program */
 
 
 static enum format_t { alog, SDDF, pv, dump, paraver } outFormat = pv;
@@ -154,8 +155,6 @@ static EVDESCR **evtable;
 static int evno;
 static int numEvent;
 static int numUsedEvent;
-
-
 
 
 
@@ -892,32 +891,19 @@ static char *Today (void)
 /* -------------------------------------------------------------------------- */
 # define INMAX    BUFSIZ /* records */
 
-static void *get_next_rec (struct trcdescr *tdes)
-{
+static void *get_next_rec (struct trcdescr *tdes) {
   long no;
 
-  if ( (tdes->last == NULL) || (tdes->next > tdes->last) )
-  {
+  if ( (tdes->last == NULL) || (tdes->next > tdes->last) ) {
     /* -- input buffer empty: read new records from file -------------------- */
-/*     if ( (no = read (tdes->fd, tdes->buffer, INMAX * sizeof(PCXX_EV))) */
-/*          != (INMAX * sizeof(PCXX_EV)) ) */
     if ( (no = read (tdes->fd, tdes->buffer, INMAX * tdes->eventSize))
-         != (INMAX * tdes->eventSize) )
-    {
-      if ( no == 0 )
-      {
-        /* -- no more event record: ----------------------------------------- */
-	/* when this is called by GetMatchingRecv it shouldn't close the file. */
-        /*
-        close (tdes->fd);
-        tdes->fd = -1;
-	*/
-        return ((PCXX_EV *) NULL);
-      }
-      else if ( (no % tdes->eventSize) != 0 )
-      {
+         != (INMAX * tdes->eventSize) ) {
+      if ( no == 0 ) {
+	/* no more records */
+        return NULL;
+      } else if ( (no % tdes->eventSize) != 0 ) {
         /* -- read error: --------------------------------------------------- */
-	printf("%ld and %ld\n",no,tdes->eventSize);
+	printf("Read error: %ld and %ld\n",no,tdes->eventSize);
         fprintf (stderr, "%s: read error\n", tdes->name);
         exit (1);
       }
@@ -928,18 +914,15 @@ static void *get_next_rec (struct trcdescr *tdes)
     tdes->last = (char*)tdes->buffer + no - tdes->eventSize;
   }
 
-  /* return (tdes->erec = tdes->next++); */
   tdes->erec = tdes->next;
   tdes->next = (void*)(((char*)tdes->next) + tdes->eventSize);
   return tdes->erec;
-
 }
 
-static void *get_prev_rec (struct trcrecv *tdes)
-{
+static void *get_prev_rec (struct trcrecv *tdes) {
  /* Before calling this the first time set first properly. */
-long no;
-off_t last_position;
+  long no;
+  off_t last_position;
 
   last_position = lseek(tdes->fd, 0, SEEK_CUR);
 
@@ -947,8 +930,8 @@ off_t last_position;
 /* i.e., before calling this the first time set tdes->last = tdes->buffer */
   /* if prev < first, go fetch more records */
 /* to debug: print each record */
-  if (( last_position == 0) || (tdes->prev < tdes->first))
-  {
+
+  if (( last_position == 0) || (tdes->prev < tdes->first)) {
     /* move the pointer 2*INMAX*sizeof(PCXX_EV) earlier */
     last_position -= 2*INMAX*tdes->eventSize;
 #ifdef DEBUG
@@ -958,35 +941,25 @@ off_t last_position;
     lseek(tdes->fd, last_position, SEEK_SET);
     /* -- input buffer empty: read new records from file -------------------- */
     if ( (no = read (tdes->fd, tdes->buffer, INMAX * tdes->eventSize))
-         != (INMAX * tdes->eventSize) )
-    {
-      if ( no == 0 )
-      {
+         != (INMAX * tdes->eventSize) ) {
+      if ( no == 0 ) {
         /* -- no more event record: ----------------------------------------- */
-	/* when this is called by GetMatchingRecv it shouldn't close the file. */
-	/*
-        close (tdes->fd);
-        tdes->fd = -1;
-	*/
-        return ((PCXX_EV *) NULL);
-      }
-      else if ( no % tdes->eventSize != 0 )
-      {
+        return NULL;
+      } else if ( no % tdes->eventSize != 0 ) {
         /* -- read error: --------------------------------------------------- */
         fprintf (stderr, "read error in get_prev_rec\n");
         exit (1);
       }
     }
-
+    
     /* -- we got some event records ----------------------------------------- */
     tdes->prev =  (char*)tdes->buffer + no - tdes->eventSize;
     tdes->first = tdes->buffer ;
   }
-
-    /* return (tdes->erec = tdes->prev--); */
-    tdes->erec = tdes->prev;
-    tdes->prev = (void*)(((char*)tdes->prev) - tdes->eventSize);
-    return tdes->erec;
+  
+  tdes->erec = tdes->prev;
+  tdes->prev = (void*)(((char*)tdes->prev) - tdes->eventSize);
+  return tdes->erec;
 }
 
 int GetNodeId(struct trcdescr *trc, void *rec)
@@ -1107,6 +1080,9 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
   rcvdes.fd 	   = trcdes.fd;
   rcvdes.first 	   = trcdes.buffer;
   rcvdes.prev	   = (char*)trcdes.erec - trcdes.eventSize;
+  rcvdes.eventSize = trcdes.eventSize;
+
+
   /* initialize the first and prev pointers */
 #ifdef DEBUG
   printf("GetMatchingSend: RECV, tag=%d, len=%d, myid=%d, otherid=%d\n",
@@ -1128,6 +1104,12 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
   /* We've made a copy of intrc in the trcdes descriptor. So, even if this
      changes the state of intrc remains the same. We need to do an lseek
      with the original position, of course. */
+
+
+  struct trcrecv *ted = &rcvdes;
+
+
+
   while (( curr_rec = get_prev_rec(&rcvdes)) != NULL)
   {
     /* Get the event type for this record */
@@ -1247,6 +1229,18 @@ x_int64 GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
 
 
 
+int wtf (void *ptr) {
+  if ((int)ptr > 0) {
+    return -1;
+  } else {
+    return 1;
+  }
+}
+
+
+
+
+
 
 /* -------------------------------------------------------------------------- */
 /* -- PCXX_CONVERT MAIN PROGRAM --------------------------------------------- */
@@ -1273,6 +1267,14 @@ int main (int argc, char *argv[])
   char *inFile, *edfFile, *outFile, *ptr,*pcfFile;
   EVDESCR *ev;
   struct trcrecv rcvdes;
+
+  myid = 0;
+  otherid = 0;
+  msglen = 0;
+  msgtag = 0;
+  comm = 0;
+  other_tid = 0;
+  other_nodeid = 0;
 
   /* ------------------------------------------------------------------------ */
   /* -- scan command line arguments                                        -- */
@@ -1410,14 +1412,14 @@ int main (int argc, char *argv[])
   {
     determineFormat(&intrc);
     intrc.name      = inFile;
-    intrc.buffer    = (PCXX_EV *) malloc (INMAX * intrc.eventSize);
-    intrc.erec      = (PCXX_EV *) NULL;
-    intrc.next      = (PCXX_EV *) NULL;
-    intrc.last      = (PCXX_EV *) NULL;
+    intrc.buffer    = malloc (INMAX * intrc.eventSize);
+    intrc.erec      = NULL;
+    intrc.next      = NULL;
+    intrc.last      = NULL;
     intrc.overflows = 0;
 
     if((threads) || (outFormat == paraver))
-      tmpbuffer = (PCXX_EV *) malloc (INMAX * intrc.eventSize);
+      tmpbuffer = malloc (INMAX * intrc.eventSize);
 
     /* -- read first event record ------------------------------------------- */
     if ( (erec = get_next_rec (&intrc)) == NULL )
@@ -1806,8 +1808,8 @@ int main (int argc, char *argv[])
 
       if(! outFile){
 	outfp = stdout;
-	pcfFile = (char*)malloc(6 * sizeof(char));
-	pcfFile = (strcat(pcfFile,"config.pcf"));
+	pcfFile = (char*)malloc(30 * sizeof(char));
+	strcpy(pcfFile,"config.pcf");
       }
       else{
 	if(strlen(outFile) < 5){
@@ -1816,7 +1818,7 @@ int main (int argc, char *argv[])
 	}
 
 
-	pcfFile = (char*)malloc((strlen(outFile)) * sizeof (char));
+	pcfFile = (char*)malloc((strlen(outFile)+1) * sizeof (char));
 	pcfFile = (strcpy(pcfFile,outFile));
 	pcfFile[strlen(outFile) - 3] = '\0';
 	pcfFile = (strcat(pcfFile,"pcf"));
@@ -2055,7 +2057,24 @@ int main (int argc, char *argv[])
 		RecvNodeID:RecvPTaskID:RecvTaskID:RecvThreadID:
 		:LogicalRecvTime:PhysicalRecvTime:MessageLength:MessageTag
 	      */
-	      fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%lld:%lld\n",myid,myid,event_GetTid(&intrc,erec,0)+1,event_GetTi(&intrc,erec,0)-intrc.firsttime,event_GetTi(&intrc,erec,0) - intrc.firsttime,otherid,otherid,other_tid+1,phRecv,phRecv,msglen,msgtag);
+
+/* 	      fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%lld:%lld\n",myid,myid,event_GetTid(&intrc,erec,0)+1,event_GetTi(&intrc,erec,0)-intrc.firsttime,event_GetTi(&intrc,erec,0) - intrc.firsttime,otherid,otherid,other_tid+1,phRecv,phRecv,msglen,msgtag); */
+
+
+	      fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%d:%d\n",
+		      myid,
+		      myid,
+		      event_GetTid(&intrc,erec,0),
+		      (x_uint64)(event_GetTi(&intrc,erec,0) - intrc.firsttime),
+		      (x_uint64)(event_GetTi(&intrc,erec,0) - intrc.firsttime),
+		      otherid,
+		      otherid,
+		      other_tid+1,
+		      phRecv,
+		      phRecv,
+		      msglen,
+		      msgtag);
+
 	   
 	    }
 	  else if ( (ev->tag == RECV_EVENT ) && pvComm )
