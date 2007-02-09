@@ -4,15 +4,16 @@ import java.io.*;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.zip.GZIPInputStream;
+import java.security.Security;
 
 /**
  * Reads the ParaProf Packed Format (.ppk)
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.7 2007/02/01 03:59:53 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.8 2007/02/09 19:13:07 scottb Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -61,11 +62,19 @@ public class PackedProfileDataSource extends DataSource {
         long time = System.currentTimeMillis();
 
         InputStream istream;
-        if (file.toString().toLowerCase().startsWith(("http:"))) {
+        if (file.toString().toLowerCase().startsWith("http:/")) {
             // When it gets converted from a String to a File http:// turns into http:/
-            URL url = new URL("http://" + file.toString().substring(6).replace('\\','/'));
+            URL url = new URL("http://" + file.toString().substring(6));
             istream = url.openStream();
-        } else {
+        } else if (file.toString().toLowerCase().startsWith("https:/")) {
+            // When it gets converted from a String to a File https:// turns into https:/
+            System.out.println("found url");
+            System.setProperty("java.protocol.handler.pkgs",
+              "com.sun.net.ssl.internal.www.protocol");
+            Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
+            URL url = new URL("https://" + file.toString().substring(7));
+            istream = url.openStream();
+        }  else {
             istream = new FileInputStream(file);
         }
         
