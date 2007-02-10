@@ -120,7 +120,9 @@ done
 echo "$modargs" >> .all_configs
 echo "$modargs" > .last_config
 
-echo "#define TAU_CONFIG \"$modargs\"" > include/tau_config.h
+# write tau_config.h that's used as meta-data containing the TAU configuration
+modmodargs=`echo "x$modargs" | sed -e 's/^x//' -e 's#\\\#\\\\\\\\#g'`
+echo "#define TAU_CONFIG \"$modmodargs\"" > include/tau_config.h
 
 START_DIR=`pwd`
 
