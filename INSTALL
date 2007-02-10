@@ -24,6 +24,9 @@
  *    For help, reporting bugs, and making suggestions, please     *
  *        send e-mail to tau-bugs@cs.uoregon.edu                   *
  *******************************************************************/
+/* NOTE: PLEASE REFER TO tools/src/contrib/LICENSE* files for open *
+ * source licenses of other packages that TAU uses internally.     *
+ *******************************************************************/
 
 
 General Installation Procedure: 

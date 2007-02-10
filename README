@@ -7,6 +7,9 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **	
 *****************************************************************************
+/* NOTE: PLEASE REFER TO tools/src/contrib/LICENSE* files for open *
+ * source licenses of other packages that TAU uses internally.     *
+ *******************************************************************/
 
 ***************************************************************************
 Instructions on installing TAU can be found in the INSTALL file.   
