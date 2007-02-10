@@ -1,5 +1,6 @@
 #ifndef __TAU_VAMPIRTRACE_H__
 #define __TAU_VAMPIRTRACE_H__
+#include <Profile/vt_inttypes.h>
 
 #ifndef VT_NO_ID
 #define VT_NO_ID                  0xFFFFFFFF
