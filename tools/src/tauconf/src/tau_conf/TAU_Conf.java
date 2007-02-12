@@ -149,8 +149,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         slog2eQjButton = new javax.swing.JButton();
         otfQjButton = new javax.swing.JButton();
         otfCheckBox = new javax.swing.JCheckBox();
-        jButton1 = new javax.swing.JButton();
+        otfButton = new javax.swing.JButton();
         otfTextField = new javax.swing.JTextField();
+        vtraceQjButton = new javax.swing.JButton();
+        vtraceCheckBox = new javax.swing.JCheckBox();
+        vtraceButton = new javax.swing.JButton();
+        vtraceTextField = new javax.swing.JTextField();
         jPanel5 = new javax.swing.JPanel();
         profphaseCheckBox = new javax.swing.JCheckBox();
         depthlimitCheckBox = new javax.swing.JCheckBox();
@@ -718,8 +722,8 @@ public class TAU_Conf extends javax.swing.JFrame {
             installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(installationPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .add(installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(papijPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(papijPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(compilerjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(pdtjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
@@ -1475,10 +1479,48 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
-        jButton1.setText("Browse");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        otfButton.setText("Browse");
+        otfButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                otfButtonActionPerformed(evt);
+            }
+        });
+
+        otfTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                otfTextFieldActionPerformed(evt);
+            }
+        });
+
+        vtraceQjButton.setText("?");
+        vtraceQjButton.setToolTipText("More Info");
+        vtraceQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        vtraceQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                vtraceQjButtonActionPerformed(evt);
+            }
+        });
+
+        vtraceCheckBox.setText("VampirTrace [-vampirtrace=]:");
+        vtraceCheckBox.setToolTipText("Specify location of OTF Trace Generation Package");
+        vtraceCheckBox.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        vtraceCheckBox.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        vtraceCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                vtraceCheckBoxStateChanged(evt);
+            }
+        });
+
+        vtraceButton.setText("Browse");
+        vtraceButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                vtraceButtonActionPerformed(evt);
+            }
+        });
+
+        vtraceTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                vtraceTextFieldActionPerformed(evt);
             }
         });
 
@@ -1514,7 +1556,8 @@ public class TAU_Conf extends javax.swing.JFrame {
                                             .add(epilogButton)
                                             .add(slog2Button)
                                             .add(vtfButton)
-                                            .add(jButton1)))))
+                                            .add(otfButton)
+                                            .add(vtraceButton)))))
                             .add(tracePanelLayout.createSequentialGroup()
                                 .add(vtfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1522,18 +1565,23 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(tracePanelLayout.createSequentialGroup()
                                 .add(otfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(otfCheckBox)))
+                                .add(otfCheckBox))
+                            .add(tracePanelLayout.createSequentialGroup()
+                                .add(vtraceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(vtraceCheckBox)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(vtfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
-                            .add(slog2TextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
-                            .add(epilogTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
-                            .add(otfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE))))
+                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, vtfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, slog2TextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, epilogTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, otfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
+                            .add(vtraceTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 331, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap())
         );
         tracePanelLayout.setVerticalGroup(
             tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, tracePanelLayout.createSequentialGroup()
+            .add(tracePanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(traceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1564,9 +1612,15 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(otfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(otfCheckBox)
-                    .add(jButton1)
+                    .add(otfButton)
                     .add(otfTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(vtraceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(vtraceCheckBox)
+                    .add(vtraceButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 25, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(vtraceTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -1745,11 +1799,11 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(perfincButton))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(perfincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 405, Short.MAX_VALUE)
-                            .add(altperfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 405, Short.MAX_VALUE)
+                            .add(perfincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE)
+                            .add(altperfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE)
                             .add(org.jdesktop.layout.GroupLayout.TRAILING, perfjPanelLayout.createSequentialGroup()
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(perflibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 405, Short.MAX_VALUE))))
+                                .add(perflibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE))))
                     .add(perfjPanelLayout.createSequentialGroup()
                         .add(altperfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1783,13 +1837,13 @@ public class TAU_Conf extends javax.swing.JFrame {
         outputPanel.setLayout(outputPanelLayout);
         outputPanelLayout.setHorizontalGroup(
             outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(outputPanelLayout.createSequentialGroup()
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, outputPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .add(outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(tracePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(profilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 736, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 736, Short.MAX_VALUE)
-                    .add(perfjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .add(outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, perfjPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE))
                 .addContainerGap())
         );
         outputPanelLayout.setVerticalGroup(
@@ -2197,7 +2251,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(sprocPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(tulipthreadsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(167, Short.MAX_VALUE))
+                .addContainerGap(198, Short.MAX_VALUE))
         );
         tabPane.addTab("Threads", threadPanel);
 
@@ -2559,7 +2613,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(musePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(timePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(171, Short.MAX_VALUE))
+                .addContainerGap(202, Short.MAX_VALUE))
         );
         tabPane.addTab("Data Tools", generalPanel);
 
@@ -2983,7 +3037,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(jdkPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(dirarcPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(193, Short.MAX_VALUE))
+                .addContainerGap(224, Short.MAX_VALUE))
         );
         tabPane.addTab("Misc", jPanel1);
 
@@ -3088,7 +3142,7 @@ public class TAU_Conf extends javax.swing.JFrame {
             .add(jPanel2Layout.createSequentialGroup()
                 .add(10, 10, 10)
                 .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(346, Short.MAX_VALUE))
+                .addContainerGap(377, Short.MAX_VALUE))
         );
         tabPane.addTab("Configurations", jPanel2);
 
@@ -3181,33 +3235,116 @@ public class TAU_Conf extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+            .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, tabPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 760, Short.MAX_VALUE)
-                    .add(layout.createSequentialGroup()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, tabPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 760, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, commandPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                         .add(resetButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(exitButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(commandPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .add(exitButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .add(5, 5, 5))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .add(tabPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 600, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tabPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 631, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(commandPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(exitButton)
                     .add(resetButton))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
         java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        setBounds((screenSize.width-787)/2, (screenSize.height-862)/2, 787, 862);
+        setBounds((screenSize.width-787)/2, (screenSize.height-893)/2, 787, 893);
     }// </editor-fold>//GEN-END:initComponents
+
+    private void vtraceTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vtraceTextFieldActionPerformed
+	if(this.vtraceCheckBox.isSelected()){
+	    
+	    String id=" -vampirtrace=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+vtraceTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+        }
+    }//GEN-LAST:event_vtraceTextFieldActionPerformed
+
+    private void otfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_otfTextFieldActionPerformed
+	if(this.otfCheckBox.isSelected()){
+	    
+	    String id=" -otf=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+otfTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+        }
+    }//GEN-LAST:event_otfTextFieldActionPerformed
+
+    private void vtraceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vtraceButtonActionPerformed
+	int returnVal = jFileChooser1.showOpenDialog(null);
+	
+	if (returnVal == JFileChooser.APPROVE_OPTION) {
+	    File file = jFileChooser1.getSelectedFile();
+	    String filename = file.getAbsolutePath();
+	    vtraceTextField.setText(filename);
+	}
+    }//GEN-LAST:event_vtraceButtonActionPerformed
+
+    private void vtraceCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_vtraceCheckBoxStateChanged
+	String entry =" -vampirtrace=";
+	if(vtraceCheckBox.isSelected()){
+	    if(configureline.indexOf(entry)==-1){
+		configureline+=entry;
+		configureline+=vtraceTextField.getText()+" ";
+	    }
+	}
+	
+	else{
+	    int start = configureline.indexOf(entry);
+	    if(start>-1){
+		int end = configureline.indexOf(" ",  start+1);
+		if(end==-1){
+		    configureline = configureline.substring(0, start);
+		} else{
+		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
+		}
+		
+	    }
+	}
+	
+	commandTextArea.setText(configureline); updateITCommand();
+    }//GEN-LAST:event_vtraceCheckBoxStateChanged
+
+    private void vtraceQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vtraceQjButtonActionPerformed
+JOptionPane.showMessageDialog(null,
+"Specifies the location of the VampirTrace package.  This allows TAU to output \n"+
+".otf trace files directly.  These can be read in vampir without additional \n"+ 
+"merging or conversion.",
+	"-vampirtrace=<directory>",JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_vtraceQjButtonActionPerformed
 
     private void altperfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_altperfTextFieldActionPerformed
 	if(this.altperfCheckBox.isSelected()){
@@ -3397,7 +3534,7 @@ JOptionPane.showMessageDialog(null,
 	"-perfinc=<dir>",JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_perfincQjButtonActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void otfButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_otfButtonActionPerformed
 	int returnVal = jFileChooser1.showOpenDialog(null);
 	
 	if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -3405,7 +3542,7 @@ JOptionPane.showMessageDialog(null,
 	    String filename = file.getAbsolutePath();
 	    otfTextField.setText(filename);
 	}
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_otfButtonActionPerformed
 
     private void otfCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_otfCheckBoxStateChanged
 	if(otfCheckBox.isSelected()){
@@ -6419,6 +6556,7 @@ if(pclCheckBox.isSelected()){
         
         cbholder.add(vtfCheckBox);
         cbholder.add(otfCheckBox);
+        cbholder.add(vtraceCheckBox);
         
         cbholder.add(traceCheckBox);
         cbholder.add(tulipCheckBox);
@@ -6505,6 +6643,7 @@ if(pclCheckBox.isSelected()){
         
         commap.put(" -vtf=",vtfCheckBox);
         commap.put(" -otf=",otfCheckBox);
+        commap.put(" -vampirtrace=",vtraceCheckBox);
         
         commap.put(" -TRACE",traceCheckBox);
         commap.put(" -tulipthread=",tulipCheckBox);
@@ -6536,6 +6675,7 @@ if(pclCheckBox.isSelected()){
         fieldmap.put(" -slog2=",slog2TextField);
         fieldmap.put(" -vtf=",vtfTextField);
         fieldmap.put(" -otf=",otfTextField);
+        fieldmap.put(" -vampirtrace",vtraceTextField);
         fieldmap.put(" -opari=",opariTextField);
         fieldmap.put(" -charm=",charmTextField);
         fieldmap.put(" -tulipthread=",tulipTextField);
@@ -6743,7 +6883,6 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JCheckBox installdirCheckBox;
     private javax.swing.JTextField installdirField;
     private javax.swing.JScrollPane instjScrollPane;
-    private javax.swing.JButton jButton1;
     private javax.swing.JFileChooser jFileChooser1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -6802,6 +6941,7 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JCheckBox opariregionCheckBox;
     private javax.swing.JButton opariregionQjButton;
     private javax.swing.JButton openmpQjButton;
+    private javax.swing.JButton otfButton;
     private javax.swing.JCheckBox otfCheckBox;
     private javax.swing.JButton otfQjButton;
     private javax.swing.JTextField otfTextField;
@@ -6909,6 +7049,10 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JCheckBox vtfCheckBox;
     private javax.swing.JButton vtfQjButton;
     private javax.swing.JTextField vtfTextField;
+    private javax.swing.JButton vtraceButton;
+    private javax.swing.JCheckBox vtraceCheckBox;
+    private javax.swing.JButton vtraceQjButton;
+    private javax.swing.JTextField vtraceTextField;
     // End of variables declaration//GEN-END:variables
     
 }
