@@ -93,7 +93,7 @@ using namespace std;
 #endif // RENCI_STFF
 
 
-static int writeMetaData(FILE *fp, bool newline);
+static int writeProfileMetaData(FILE *fp);
 
 //#define PROFILE_CALLS // Generate Excl Incl data for each call 
 
@@ -1385,7 +1385,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	int sz = strlen(header);
 	int ret = fprintf(fp, "%s",header);	
 	fprintf(fp, " # ");	
-	writeMetaData(fp, false);
+	writeProfileMetaData(fp);
 	fprintf(fp, "\n");	
 
 	ret = fflush(fp);
@@ -1662,7 +1662,7 @@ int Profiler::StoreData(int tid)
 	int sz = strlen(header);
 	int ret = fprintf(fp, "%s",header);	
 	fprintf(fp, " # ");	
-	writeMetaData(fp, false);
+	writeProfileMetaData(fp);
 	fprintf(fp, "\n");	
 	ret = fflush(fp);
 
@@ -1671,7 +1671,7 @@ int Profiler::StoreData(int tid)
 	int ktau_sz = strlen(ktau_header);
 	int ktau_ret = fprintf(ktau_fp, "%s",ktau_header);	
 	fprintf(ktau_fp, " # ");	
-	writeMetaData(ktau_fp, false);
+	writeProfileMetaData(ktau_fp);
 	fprintf(ktau_fp, "\n");	
 
 	ktau_ret = fflush(ktau_fp);
@@ -1948,7 +1948,7 @@ int Profiler::DumpData(bool increment, int tid, char *prefix)
 	int sz = strlen(header);
 	int ret = fprintf(fp, "%s",header);	
 	fprintf(fp, " # ");	
-	writeMetaData(fp, false);
+	writeProfileMetaData(fp);
 	fprintf(fp, "\n");	
 
 	ret = fflush(fp);
@@ -2469,7 +2469,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
       int sz = strlen(header);
       int ret = fprintf(fp, "%s",header);
       fprintf(fp, " # ");	
-      writeMetaData(fp, false);
+      writeProfileMetaData(fp);
       fprintf(fp, "\n");	
       ret = fflush(fp);
 
@@ -2735,7 +2735,7 @@ int Profiler::StoreData(int tid){
       int sz = strlen(header);
       int ret = fprintf(fp, "%s",header);
       fprintf(fp, " # ");	
-      writeMetaData(fp, false);
+      writeProfileMetaData(fp);
       fprintf(fp, "\n");	
       ret = fflush(fp);
 
@@ -2907,7 +2907,7 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
       int sz = strlen(header);
       int ret = fprintf(fp, "%s",header);
       fprintf(fp, " # ");	
-      writeMetaData(fp, false);
+      writeProfileMetaData(fp);
       fprintf(fp, "\n");	
       ret = fflush(fp);
 
@@ -3599,6 +3599,8 @@ static char *removeRuns(char *str) {
   return str;
 }
 
+
+
 static int writeMetaData(FILE *fp, bool newline) {
   char *endl = "";
   if (newline) {
@@ -3644,6 +3646,9 @@ static int writeMetaData(FILE *fp, bool newline) {
       char *value = strstr(line,":")+2;
       value = removeRuns(value);
 
+      if (strncmp(line, "vendor_id", 9) == 0) {
+	writeXMLAttribute(fp, "CPU Vendor", value, newline);
+      }
       if (strncmp(line, "cpu MHz", 7) == 0) {
 	writeXMLAttribute(fp, "CPU MHz", value, newline);
       }
@@ -3692,6 +3697,12 @@ static int writeMetaData(FILE *fp, bool newline) {
   return 0;
 }
 
+static int writeProfileMetaData(FILE *fp) {
+#ifdef TAU_DISABLE_METADATA
+  return 0;
+#endif
+  return writeMetaData(fp, false);
+}
 
 
 
@@ -3984,9 +3995,9 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.156 $   $Date: 2007/02/09 21:00:07 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.156 2007/02/09 21:00:07 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.157 $   $Date: 2007/02/12 18:59:24 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.157 2007/02/12 18:59:24 amorris Exp $ 
  ***************************************************************************/
 
 	
