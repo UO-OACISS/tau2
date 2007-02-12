@@ -33,7 +33,10 @@
 //#define DEBUG_PROF // For Debugging Messages from Profiler.cpp
 #include "Profile/Profiler.h"
 #include "tauarch.h"
+
+#ifndef TAU_DISABLE_METADATA
 #include "tau_config.h"
+#endif
 
 #ifdef TAU_WINDOWS
   typedef __int64 x_int64;
@@ -62,7 +65,9 @@ using namespace std;
 #if (!defined(TAU_WINDOWS))
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef TAU_DISABLE_METADATA
 #include <sys/utsname.h> // for host identification (uname)
+#endif
 #include <unistd.h>
 
 #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
@@ -3996,8 +4001,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.157 $   $Date: 2007/02/12 18:59:24 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.157 2007/02/12 18:59:24 amorris Exp $ 
+ * $Revision: 1.158 $   $Date: 2007/02/12 19:22:44 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.158 2007/02/12 19:22:44 amorris Exp $ 
  ***************************************************************************/
 
 	
