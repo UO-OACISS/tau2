@@ -4,9 +4,9 @@
  * It allows the user to change the meta data associated with a trial.
  *  
  * 
- * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.10 2007/02/06 03:36:32 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.11 2007/02/13 00:46:24 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		ParaProfManagerWindow
  */
 
@@ -61,7 +61,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
         case 1:
             return experiment.getNumFields() + 3; // +2 for name, id, and applicationID
         case 2:
-            return ppTrial.getTrial().getNumFields() + 4 + ppTrial.getTrial().getMetaData().size();
+            return ppTrial.getTrial().getNumFields() + 4;
         case 3:
             return 5;
         default:
@@ -137,11 +137,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                     case (3):
                         return "Trial ID";
                     default:
-                        if (r-4 >= ppTrial.getTrial().getNumFields()) {
-                            return ppTrial.getTrial().getMetaData().keySet().toArray()[r-4-ppTrial.getTrial().getNumFields()];
-                        } else {
-                            return ppTrial.getTrial().getFieldName(r - 4);
-                        }
+                        return ppTrial.getTrial().getFieldName(r - 4);
                     }
                 } else {
                     switch (r) {
@@ -154,11 +150,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                     case (3):
                         return new Integer(ppTrial.getTrial().getID());
                     default:
-                        if (r-4 >= ppTrial.getTrial().getNumFields()) {
-                            return ppTrial.getTrial().getMetaData().values().toArray()[r-4-ppTrial.getTrial().getNumFields()];
-                        } else {
-                            return ppTrial.getTrial().getField(r - 4);
-                        }
+                        return ppTrial.getTrial().getField(r - 4);
                     }
                 }
             case 3: // metric metadata
