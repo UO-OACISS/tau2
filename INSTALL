@@ -67,13 +67,15 @@ TAU Configuration Utility
 Usage: configure [OPTIONS]
   where [OPTIONS] are:
 -c++=<compiler>  ............................ specify the C++ compiler.
-         options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
-                                                     icpc|pathCC|orCC].
+          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
+                                      icpc|scgcc|scpathCC|pathCC|orCC].
 -cc=<compiler> ................................ specify the C compiler.
-                options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc].
+          options [cc|gcc|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc].
 -pdt_c++=<compiler>  ............ specify a different PDT C++ compiler.
          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
-                                                     icpc|pathCC|orCC].
+                                               icpc|scgcc|pathCC|orCC].
+-pdtcompdir=<compilerdir> . specify a different PDT compiler directory.
+-pdtarchdir=<archdir> . specify a different PDT architecture directory.
 -fortran=<compiler> ..................... specify the Fortran compiler.
    options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
            open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]
@@ -117,6 +119,9 @@ Usage: configure [OPTIONS]
             e.g., -shmemlibrary=-lsmac                                 
 -nocomm  ........ Disable tracking communication events in MPI library.
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
+-epiloglib=<dir> ...... Specify arch lib dir for EPILOG (e.g., lib/be).
+-epilogbin=<dir> ...... Specify arch bin dir for EPILOG (e.g., bin/fe).
+-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package.
 -pythoninc=<dir> ........ Specify location of Python include directory.
 -pythonlib=<dir> ............ Specify location of Python lib directory.
 -tag=<unique name> ........ Specify a tag to identify the installation.
@@ -134,6 +139,8 @@ Usage: configure [OPTIONS]
                                 w/ non-monotonically increasing values.
 -muse_multiple ........................ Specify the use of MAGNET/MUSE.
                                     w/ monotonically increasing values.
+-stff=<dir> .... Location of RENCI Scalable Time-series filter library.
+-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF.
 -TRACE ..................................... Generate TAU event traces.
 -MPITRACE ... Generate event traces for MPI events and their ancestors.
 -PROFILE ............ Generate profiles (summary statistics) (default).
@@ -402,7 +409,26 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    binary EPILOG traces (instead of binary TAU traces). EPILOG traces can then
    be used with other tools such as EXPERT. EPILOG comes with its own 
    implementation of the MPI wrapper library and the POMP library used with 
-   Opari. Using option overrides TAU's libraries for MPI, and OpenMP.
+   Opari. Using option overrides TAU's libraries for MPI, and OpenMP. This 
+   option assumes a lib/ bin/ directory structure. It is compatible with 
+   Scalasca [http://www.scalasca.org]. To specify a different directory for
+   lib or bin, please use -epiloglib=<dir> -epilogbin=<dir> options. 
+
+-epiloglib=<dir>
+   Specify a different directory for libs. e.g.,
+   -epilog=/usr/local/packages/scalasca-0.5 -epiloglib=lib32/fe
+
+-epilogbin=<dir>
+   Specify a different directory for bin. e.g.,
+   -epilog=/usr/local/packages/scalasca-0.5 -epilogbin=bin64
+
+-vampirtrace=<dir>
+
+   Specifies the directory where the VampirTrace tracing package [TUD] is 
+   installed. See [http://www.tu-dresden.de/zih/vampirtrace]. This option 
+   should be used in conjunction with the -TRACE option to generate
+   binary OTF [TUD] traces (instead of binary TAU traces). Also see 
+   OTF [http://www.paratools.com/otf.php].
 
 -MPITRACE
    
