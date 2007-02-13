@@ -11,9 +11,9 @@ import java.security.Security;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.8 2007/02/09 19:13:07 scottb Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.9 2007/02/13 18:44:37 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -65,14 +65,6 @@ public class PackedProfileDataSource extends DataSource {
         if (file.toString().toLowerCase().startsWith("http:/")) {
             // When it gets converted from a String to a File http:// turns into http:/
             URL url = new URL("http://" + file.toString().substring(6));
-            istream = url.openStream();
-        } else if (file.toString().toLowerCase().startsWith("https:/")) {
-            // When it gets converted from a String to a File https:// turns into https:/
-            System.out.println("found url");
-            System.setProperty("java.protocol.handler.pkgs",
-              "com.sun.net.ssl.internal.www.protocol");
-            Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
-            URL url = new URL("https://" + file.toString().substring(7));
             istream = url.openStream();
         }  else {
             istream = new FileInputStream(file);
