@@ -341,6 +341,7 @@ public class TauDataSource extends DataSource {
 
         //Generate derived data.
         this.generateDerivedData();
+        this.aggregateMetaData();
 
         //time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + time);

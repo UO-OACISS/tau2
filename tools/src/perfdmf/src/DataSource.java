@@ -10,12 +10,12 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.12 2007/02/06 03:35:11 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.13 2007/02/13 00:08:11 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 public abstract class DataSource {
-    
+
     public static final SimpleDateFormat dateTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     public static int TAUPROFILE = 0;
@@ -65,12 +65,12 @@ public abstract class DataSource {
 
     protected volatile boolean reloading;
 
-    
+    protected Map metaData;
+
     public DataSource() {
-        // nothing
+    // nothing
     }
-    
-    
+
     // by default no files
     public List getFiles() {
         return new ArrayList();
@@ -232,7 +232,7 @@ public abstract class DataSource {
         }
         this.setGroupNamesPresent(true);
     }
-    
+
     public int getNumGroups() {
         return groups.size();
     }
@@ -310,7 +310,7 @@ public abstract class DataSource {
             if (meanData != null) {
                 meanData.addMetric();
                 totalData.addMetric();
-                stddevData.addMetric(); 
+                stddevData.addMetric();
             }
         }
 
@@ -341,7 +341,6 @@ public abstract class DataSource {
         return metric;
     }
 
-   
     /**
      * Get a the List of Metrics
      * 
@@ -694,8 +693,6 @@ public abstract class DataSource {
             meanData.setPercentDivider(i, topLevelInclSum[i] / 100.0);
             stddevData.setPercentDivider(i, topLevelInclSum[i] / 100.0);
         }
-        
-
 
         for (Iterator l = this.getFunctions(); l.hasNext();) { // for each function
             Function function = (Function) l.next();
@@ -1102,6 +1099,63 @@ public abstract class DataSource {
 
     public boolean getReverseDataAvailable() {
         return reverseDataAvailable;
+    }
+
+    public Map getMetaData() {
+        return metaData;
+    }
+
+    public void setMetaData(Map metaData) {
+        this.metaData = metaData;
+    }
+
+    public void aggregateMetaData() {
+
+        metaData = new TreeMap();
+        
+        Thread node0 = (Thread) getAllThreads().get(0);
+
+        // must have at least one thread
+        if (node0 != null) {
+
+            for (Iterator it = node0.getMetaData().keySet().iterator(); it.hasNext();) {
+                String name = (String) it.next();
+                String value = (String) node0.getMetaData().get(name);
+                metaData.put(name, value);
+            }
+
+            for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
+                Thread thread = (Thread) it.next();
+                for (Iterator it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
+                    String name = (String) it2.next();
+                    String value = (String) thread.getMetaData().get(name);
+
+                    String trialValue = (String) metaData.get(name);
+                    if (trialValue == null || !value.equals(trialValue)) {
+                        metaData.remove(name);
+                    }
+                }
+            }
+
+            for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
+                Thread thread = (Thread) it.next();
+
+                for (Iterator it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                    String name = (String) it2.next();
+                    thread.getMetaData().remove(name);
+                }
+            }
+
+            // now add node0's different values
+
+//            for (Iterator it = node0.getMetaData().keySet().iterator(); it.hasNext();) {
+//                String name = (String) it.next();
+//                String value = (String) node0.getMetaData().get(name);
+//                if (metaData.get(name) == null) {
+//                    metaData.put(name + " (node 0)", value);
+//                }
+//            }
+        }
     }
 
 }

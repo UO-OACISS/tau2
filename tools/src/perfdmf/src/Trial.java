@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.9 2007/02/06 20:45:12 amorris Exp $
+ * CVS $Id: Trial.java,v 1.10 2007/02/13 00:08:11 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -35,7 +35,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
 public class Trial implements Serializable {
     private static String fieldNames[];
     private static int fieldTypes[];
-    private static final String XML_METADTA = new String("XML_METADATA");
+    private static final String XML_METADATA = new String("XML_METADATA");
 
     private int trialID;
     private int experimentID;
@@ -482,6 +482,7 @@ public class Trial implements Serializable {
         int newTrialID = 0;
 
         try {
+            // determine if we have a data meta-data item
             boolean haveDate = false;
             java.sql.Timestamp timestamp = null;
             String dateString = (String) getMetaData().get("UTC Time");
@@ -494,7 +495,7 @@ public class Trial implements Serializable {
                     e.printStackTrace();
                 }
             }
-            
+
             // FIRST!  Check if the trial table has a metadata column
             checkForMetadataColumn(db);
 
@@ -512,8 +513,7 @@ public class Trial implements Serializable {
                 this.setField("threads_per_context", Integer.toString(1 + this.getDataSource().getMaxNCTNumbers()[2]));
             }
 
-            StringBuffer buf = new StringBuffer();
-
+            // Check if the date column exists and is a timestamp
             boolean dateColumnFound = false;
             for (int i = 0; i < this.getNumFields(); i++) {
                 if (getFieldName(i).equals("date")) {
@@ -522,7 +522,8 @@ public class Trial implements Serializable {
                     }
                 }
             }
-            
+
+            StringBuffer buf = new StringBuffer();
             if (itExists) {
                 buf.append("UPDATE " + db.getSchemaPrefix() + "trial SET name = ?, experiment = ?");
                 for (int i = 0; i < this.getNumFields(); i++) {
@@ -542,7 +543,7 @@ public class Trial implements Serializable {
                     if (DBConnector.isWritableType(this.getFieldType(i)))
                         buf.append(", " + this.getFieldName(i));
                 }
-                
+
                 if (haveDate && dateColumnFound) {
                     buf.append(", date");
                 }
@@ -566,7 +567,7 @@ public class Trial implements Serializable {
             statement.setInt(pos++, experimentID);
             for (int i = 0; i < this.getNumFields(); i++) {
                 if (DBConnector.isWritableType(this.getFieldType(i))) {
-                    if ((this.getFieldName(i).equalsIgnoreCase(Trial.XML_METADTA)) && (this.metadataFile != null)) {
+                    if ((this.getFieldName(i).equalsIgnoreCase(Trial.XML_METADATA)) && (this.metadataFile != null)) {
                         statement.setAsciiStream(pos++, inStream, (int) this.metadataFile.length());
                     } else {
                         statement.setString(pos++, this.getField(i));
@@ -836,7 +837,7 @@ public class Trial implements Serializable {
             boolean found = false;
             // loop through the column names, and see if we have this column already
             for (int i = 0; i < columns.length; i++) {
-                if (columns[i].equalsIgnoreCase(XML_METADTA)) {
+                if (columns[i].equalsIgnoreCase(XML_METADATA)) {
                     found = true;
                     break;
                 }
@@ -845,7 +846,7 @@ public class Trial implements Serializable {
                 StringBuffer sql = new StringBuffer();
                 // create the column in the database
                 sql.append("ALTER TABLE " + db.getSchemaPrefix() + "trial ADD COLUMN ");
-                sql.append(XML_METADTA);
+                sql.append(XML_METADATA);
                 if ((db.getDBType().equalsIgnoreCase("oracle")) || (db.getDBType().equalsIgnoreCase("derby"))) {
                     sql.append(" CLOB");
                 } else if (db.getDBType().equalsIgnoreCase("db2")) {
@@ -859,24 +860,14 @@ public class Trial implements Serializable {
                 try {
                     db.execute(sql.toString());
                 } catch (SQLException e) {
-                    System.err.println("Unable to add " + XML_METADTA + " column to trial table.");
+                    System.err.println("Unable to add " + XML_METADATA + " column to trial table.");
                     e.printStackTrace();
                 }
             }
         }
     }
 
-    public void aggregateMetaData() {
-        for (Iterator it = getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
-            for (Iterator it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
-                String name = (String) it2.next();
-                String value = (String) thread.getMetaData().get(name);
-                metaData.put(name, value);
-            }
-        }
-    }
-
+    
     public Map getMetaData() {
         return metaData;
     }
