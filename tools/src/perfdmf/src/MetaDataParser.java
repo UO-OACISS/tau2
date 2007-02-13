@@ -22,11 +22,11 @@ public class MetaDataParser {
         }
 
         public void startDocument() throws SAXException {
-            System.out.println("startDocument");
+//            System.out.println("startDocument");
         }
 
         public void endDocument() throws SAXException {
-            System.out.println("endDocument");
+//            System.out.println("endDocument");
         }
 
         public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
@@ -39,7 +39,6 @@ public class MetaDataParser {
             } else if (localName.equals("value")) {
                 String currentValue = accumulator.toString().trim();
                 metadataMap.put(currentName, currentValue);
-                System.out.println(currentName + " = " + currentValue);
             }
         }
 
@@ -49,7 +48,7 @@ public class MetaDataParser {
     }
 
     public static void parse(Map metadataMap, String string) {
-        System.out.println("parse: " + string);
+//        System.out.println("parse: " + string);
         try {
 
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
