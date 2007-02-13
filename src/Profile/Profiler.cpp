@@ -41,6 +41,7 @@
 #ifdef TAU_WINDOWS
   typedef __int64 x_int64;
   typedef unsigned __int64 x_uint64;
+  double TauWindowsUsecD(void);
 #else
   typedef long long x_int64;
   typedef unsigned long long x_uint64;
@@ -4009,8 +4010,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.160 $   $Date: 2007/02/13 21:42:56 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.160 2007/02/13 21:42:56 amorris Exp $ 
+ * $Revision: 1.161 $   $Date: 2007/02/13 21:57:49 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.161 2007/02/13 21:57:49 amorris Exp $ 
  ***************************************************************************/
 
 	
