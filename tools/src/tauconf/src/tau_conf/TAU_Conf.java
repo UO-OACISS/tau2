@@ -155,6 +155,18 @@ public class TAU_Conf extends javax.swing.JFrame {
         vtraceCheckBox = new javax.swing.JCheckBox();
         vtraceButton = new javax.swing.JButton();
         vtraceTextField = new javax.swing.JTextField();
+        epilogbinQjButton = new javax.swing.JButton();
+        epilogincQjButton = new javax.swing.JButton();
+        epiloglibQjButton = new javax.swing.JButton();
+        epilogbinCheckBox = new javax.swing.JCheckBox();
+        epilogincCheckBox = new javax.swing.JCheckBox();
+        epiloglibCheckBox = new javax.swing.JCheckBox();
+        epilogbinButton = new javax.swing.JButton();
+        epilogincButton = new javax.swing.JButton();
+        epiloglibButton = new javax.swing.JButton();
+        epilogbinTextField = new javax.swing.JTextField();
+        epilogincTextField = new javax.swing.JTextField();
+        epiloglibTextField = new javax.swing.JTextField();
         jPanel5 = new javax.swing.JPanel();
         profphaseCheckBox = new javax.swing.JCheckBox();
         depthlimitCheckBox = new javax.swing.JCheckBox();
@@ -737,7 +749,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(pdtjPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(papijPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(315, 315, 315))
+                .add(329, 329, 329))
         );
         tabPane.addTab("Compilers", installationPanel);
 
@@ -931,14 +943,14 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(mpijPanelLayout.createSequentialGroup()
                                 .add(mpiincButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(mpiincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE))
+                                .add(mpiincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE))
                             .add(mpijPanelLayout.createSequentialGroup()
                                 .add(mpilibButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(mpilibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE)
-                                    .add(altmpiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE)
-                                    .add(tagTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE)))))
+                                    .add(mpilibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE)
+                                    .add(altmpiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE)
+                                    .add(tagTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE)))))
                     .add(mpijPanelLayout.createSequentialGroup()
                         .add(altmpiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1119,7 +1131,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(shmemincButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(shmemincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE))
+                        .add(shmemincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE))
                     .add(shmemjPanelLayout.createSequentialGroup()
                         .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(shmemjPanelLayout.createSequentialGroup()
@@ -1134,8 +1146,8 @@ public class TAU_Conf extends javax.swing.JFrame {
                                 .add(altshmemCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 262, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(altshmemTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE)
-                            .add(shmemlibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 369, Short.MAX_VALUE))))
+                            .add(altshmemTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE)
+                            .add(shmemlibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         shmemjPanelLayout.setVerticalGroup(
@@ -1304,7 +1316,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .add(memorypQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(profmemoryCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 244, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .add(381, 381, 381))
+                .addContainerGap(478, Short.MAX_VALUE))
         );
         profilePanelLayout.setVerticalGroup(
             profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1524,6 +1536,99 @@ public class TAU_Conf extends javax.swing.JFrame {
             }
         });
 
+        epilogbinQjButton.setText("?");
+        epilogbinQjButton.setToolTipText("More Info");
+        epilogbinQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        epilogbinQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                epilogbinQjButtonActionPerformed(evt);
+            }
+        });
+
+        epilogincQjButton.setText("?");
+        epilogincQjButton.setToolTipText("More Info");
+        epilogincQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        epilogincQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                epilogincQjButtonActionPerformed(evt);
+            }
+        });
+
+        epiloglibQjButton.setText("?");
+        epiloglibQjButton.setToolTipText("More Info");
+        epiloglibQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
+        epiloglibQjButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                epiloglibQjButtonActionPerformed(evt);
+            }
+        });
+
+        epilogbinCheckBox.setText("Epilog Bin [-epilogbin=]:");
+        epilogbinCheckBox.setToolTipText("Specify location of EPILOG Tracing package");
+        epilogbinCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                epilogbinCheckBoxStateChanged(evt);
+            }
+        });
+
+        epilogincCheckBox.setText("Epilog Include [-epiloginc=]:");
+        epilogincCheckBox.setToolTipText("Specify location of EPILOG Tracing package");
+        epilogincCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                epilogincCheckBoxStateChanged(evt);
+            }
+        });
+
+        epiloglibCheckBox.setText("Epilog Lib [-epiloglib=]:");
+        epiloglibCheckBox.setToolTipText("Specify location of EPILOG Tracing package");
+        epiloglibCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                epiloglibCheckBoxStateChanged(evt);
+            }
+        });
+
+        epilogbinButton.setText("Browse");
+        epilogbinButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                epilogbinButtonActionPerformed(evt);
+            }
+        });
+
+        epilogincButton.setText("Browse");
+        epilogincButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                epilogincButtonActionPerformed(evt);
+            }
+        });
+
+        epiloglibButton.setText("Browse");
+        epiloglibButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                epiloglibButtonActionPerformed(evt);
+            }
+        });
+
+        epilogbinTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        epilogbinTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                epilogbinTextFieldActionPerformed(evt);
+            }
+        });
+
+        epilogincTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        epilogincTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                epilogincTextFieldActionPerformed(evt);
+            }
+        });
+
+        epiloglibTextField.setPreferredSize(new java.awt.Dimension(200, 19));
+        epiloglibTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                epiloglibTextFieldActionPerformed(evt);
+            }
+        });
+
         org.jdesktop.layout.GroupLayout tracePanelLayout = new org.jdesktop.layout.GroupLayout(tracePanel);
         tracePanel.setLayout(tracePanelLayout);
         tracePanelLayout.setHorizontalGroup(
@@ -1532,15 +1637,48 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addContainerGap()
                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(tracePanelLayout.createSequentialGroup()
-                        .add(traceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(traceCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 119, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(tracePanelLayout.createSequentialGroup()
                         .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(tracePanelLayout.createSequentialGroup()
-                                .add(epilogQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .add(traceQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(epilogCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 136, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .add(traceCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 119, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(tracePanelLayout.createSequentialGroup()
+                                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                                .add(epiloglibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(epiloglibCheckBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                                .add(epilogincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(epilogincCheckBox)))
+                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 110, Short.MAX_VALUE)
+                                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                                            .add(epilogincButton)
+                                            .add(epiloglibButton)))
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                        .add(epilogQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                        .add(epilogCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 136, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                        .add(epilogbinQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                        .add(epilogbinCheckBox)
+                                        .add(84, 84, 84)
+                                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                            .add(epilogbinButton)
+                                            .add(epilogButton))))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(epilogincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 347, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(org.jdesktop.layout.GroupLayout.TRAILING, epilogbinTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 347, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(epilogTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 347, Short.MAX_VALUE)
+                                    .add(epiloglibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 347, Short.MAX_VALUE))))
+                        .addContainerGap())
+                    .add(tracePanelLayout.createSequentialGroup()
+                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(tracePanelLayout.createSequentialGroup()
                                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(slog2QjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1553,7 +1691,6 @@ public class TAU_Conf extends javax.swing.JFrame {
                                         .add(slog2exCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 241, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                         .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                            .add(epilogButton)
                                             .add(slog2Button)
                                             .add(vtfButton)
                                             .add(otfButton)
@@ -1571,13 +1708,12 @@ public class TAU_Conf extends javax.swing.JFrame {
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(vtraceCheckBox)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, vtfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, slog2TextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, epilogTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, otfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE)
-                            .add(vtraceTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 331, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap())
+                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(vtfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE)
+                            .add(otfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE)
+                            .add(vtraceTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE)
+                            .add(slog2TextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE))
+                        .add(16, 16, 16))))
         );
         tracePanelLayout.setVerticalGroup(
             tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1592,6 +1728,26 @@ public class TAU_Conf extends javax.swing.JFrame {
                     .add(epilogButton)
                     .add(epilogCheckBox)
                     .add(epilogTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(epilogbinQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(epilogbinCheckBox)
+                    .add(epilogbinTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(epilogbinButton))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(epilogincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(epilogincCheckBox)
+                    .add(epilogincButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 25, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(epilogincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(epiloglibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(epiloglibCheckBox))
+                    .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                        .add(epiloglibTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(epiloglibButton)))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(slog2QjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1799,16 +1955,18 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(perfincButton))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(perfincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE)
-                            .add(altperfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE)
+                            .add(altperfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
                             .add(org.jdesktop.layout.GroupLayout.TRAILING, perfjPanelLayout.createSequentialGroup()
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(perflibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE))))
+                                .add(perflibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE))
+                            .add(perfjPanelLayout.createSequentialGroup()
+                                .add(perfincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))))
                     .add(perfjPanelLayout.createSequentialGroup()
                         .add(altperfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(altperfCheckBox)))
-                .add(44, 44, 44))
+                .addContainerGap())
         );
         perfjPanelLayout.setVerticalGroup(
             perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1817,8 +1975,8 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(perfincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(perfincCheckBox)
-                    .add(perfincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(perfincButton))
+                    .add(perfincButton)
+                    .add(perfincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(perflibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1837,13 +1995,13 @@ public class TAU_Conf extends javax.swing.JFrame {
         outputPanel.setLayout(outputPanelLayout);
         outputPanelLayout.setHorizontalGroup(
             outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, outputPanelLayout.createSequentialGroup()
+            .add(outputPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .add(outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, profilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, perfjPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE))
+                .add(outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(tracePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(profilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 796, Short.MAX_VALUE)
+                    .add(perfjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         outputPanelLayout.setVerticalGroup(
@@ -1857,7 +2015,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(perfjPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(13, Short.MAX_VALUE))
         );
         tabPane.addTab("Tracing/Profiling", outputPanel);
 
@@ -1967,7 +2125,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(opariButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(opariTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 421, Short.MAX_VALUE))
+                                .add(opariTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 486, Short.MAX_VALUE))
                             .add(opariregionCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 166, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                     .add(ompPanelLayout.createSequentialGroup()
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2044,7 +2202,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(charmButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(charmTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 433, Short.MAX_VALUE)
+                .add(charmTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 498, Short.MAX_VALUE)
                 .addContainerGap())
         );
         charmPanelLayout.setVerticalGroup(
@@ -2124,7 +2282,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(tulipButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(tulipTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE))
+                        .add(tulipTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 451, Short.MAX_VALUE))
                     .add(tulipthreadsPanelLayout.createSequentialGroup()
                         .add(21, 21, 21)
                         .add(smartCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 168, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
@@ -2231,10 +2389,10 @@ public class TAU_Conf extends javax.swing.JFrame {
             .add(threadPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(threadPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(pthreadsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
+                    .add(pthreadsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 796, Short.MAX_VALUE)
                     .add(ompPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(charmPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(sprocPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
+                    .add(sprocPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 796, Short.MAX_VALUE)
                     .add(tulipthreadsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -2251,7 +2409,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(sprocPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(tulipthreadsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(198, Short.MAX_VALUE))
+                .addContainerGap(295, Short.MAX_VALUE))
         );
         tabPane.addTab("Threads", threadPanel);
 
@@ -2301,7 +2459,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(dyninstButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(dyninstTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE)
+                .add(dyninstTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 504, Short.MAX_VALUE)
                 .addContainerGap())
         );
         dyninstPanelLayout.setVerticalGroup(
@@ -2360,7 +2518,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(pclButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(pclTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 494, Short.MAX_VALUE)
+                .add(pclTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 559, Short.MAX_VALUE)
                 .addContainerGap())
         );
         pclPanelLayout.setVerticalGroup(
@@ -2598,8 +2756,8 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(generalPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(pclPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(dyninstPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(musePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
-                    .add(timePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE))
+                    .add(musePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 796, Short.MAX_VALUE)
+                    .add(timePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 796, Short.MAX_VALUE))
                 .addContainerGap())
         );
         generalPanelLayout.setVerticalGroup(
@@ -2613,7 +2771,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(musePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(timePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(202, Short.MAX_VALUE))
+                .addContainerGap(299, Short.MAX_VALUE))
         );
         tabPane.addTab("Data Tools", generalPanel);
 
@@ -2699,8 +2857,8 @@ public class TAU_Conf extends javax.swing.JFrame {
                     .add(pythonlibButton))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(pythonincField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 374, Short.MAX_VALUE)
-                    .add(pythonlibField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 374, Short.MAX_VALUE))
+                    .add(pythonincField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE)
+                    .add(pythonlibField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE))
                 .addContainerGap())
         );
         pythonPanelLayout.setVerticalGroup(
@@ -2792,7 +2950,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jdkButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(jdkField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 389, Short.MAX_VALUE))
+                        .add(jdkField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE))
                     .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 405, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
@@ -2956,7 +3114,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(dirarcPanelLayout.createSequentialGroup()
                                 .add(archQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(archLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE))
+                                .add(archLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE))
                             .add(dirarcPanelLayout.createSequentialGroup()
                                 .add(custarchQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2969,11 +3127,11 @@ public class TAU_Conf extends javax.swing.JFrame {
                                     .add(archdirButton))
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(installdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 280, Short.MAX_VALUE)
-                                    .add(archdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 280, Short.MAX_VALUE))
+                                    .add(installdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 312, Short.MAX_VALUE)
+                                    .add(archdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 312, Short.MAX_VALUE))
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
                             .add(archCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(useroptField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 366, Short.MAX_VALUE)))
+                            .add(useroptField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)))
                     .add(dirarcPanelLayout.createSequentialGroup()
                         .add(noexQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -3037,7 +3195,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(jdkPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(dirarcPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(224, Short.MAX_VALUE))
+                .addContainerGap(321, Short.MAX_VALUE))
         );
         tabPane.addTab("Misc", jPanel1);
 
@@ -3101,7 +3259,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                     .add(jPanel3Layout.createSequentialGroup()
                         .add(saveconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(custconfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 457, Short.MAX_VALUE)))
+                        .add(custconfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 522, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -3142,7 +3300,7 @@ public class TAU_Conf extends javax.swing.JFrame {
             .add(jPanel2Layout.createSequentialGroup()
                 .add(10, 10, 10)
                 .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(377, Short.MAX_VALUE))
+                .addContainerGap(474, Short.MAX_VALUE))
         );
         tabPane.addTab("Configurations", jPanel2);
 
@@ -3190,8 +3348,8 @@ public class TAU_Conf extends javax.swing.JFrame {
             .add(commandPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(commandPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(instjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 732, Short.MAX_VALUE)
-                    .add(confjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 732, Short.MAX_VALUE)
+                    .add(instjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 797, Short.MAX_VALUE)
+                    .add(confjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 797, Short.MAX_VALUE)
                     .add(commandPanelLayout.createSequentialGroup()
                         .add(confButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -3238,30 +3396,213 @@ public class TAU_Conf extends javax.swing.JFrame {
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, tabPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 760, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, commandPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, tabPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 825, Short.MAX_VALUE)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                         .add(resetButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(exitButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .add(5, 5, 5))
+                        .add(exitButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(commandPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .add(tabPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 631, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(commandPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(tabPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 728, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(commandPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(exitButton)
                     .add(resetButton))
                 .addContainerGap())
         );
         java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        setBounds((screenSize.width-787)/2, (screenSize.height-893)/2, 787, 893);
+        setBounds((screenSize.width-810)/2, (screenSize.height-991)/2, 810, 991);
     }// </editor-fold>//GEN-END:initComponents
+
+    private void epiloglibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epiloglibTextFieldActionPerformed
+	if(this.epiloglibCheckBox.isSelected()){
+	    
+	    String id=" -epiloglib=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+epiloglibTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+        }
+    }//GEN-LAST:event_epiloglibTextFieldActionPerformed
+
+    private void epilogincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogincTextFieldActionPerformed
+	if(this.epilogincCheckBox.isSelected()){
+	    
+	    String id=" -epiloginc=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+epilogincTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+        }
+    }//GEN-LAST:event_epilogincTextFieldActionPerformed
+
+    private void epilogbinTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogbinTextFieldActionPerformed
+	if(this.epilogbinCheckBox.isSelected()){
+	    
+	    String id=" -epilogbin=";
+	    //this.defccTextField
+	    int start = configureline.indexOf(id);
+	    if(start<0){
+		return;
+	    }
+	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+	    String end = configureline.substring(stop);
+	    configureline = begin+epilogbinTextField.getText()+end;
+		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
+		    
+		    //configureline.substring(stop);
+	    commandTextArea.setText(configureline); updateITCommand();
+        }
+    }//GEN-LAST:event_epilogbinTextFieldActionPerformed
+
+    private void epiloglibButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epiloglibButtonActionPerformed
+	int returnVal = jFileChooser1.showOpenDialog(null);
+	
+	if (returnVal == JFileChooser.APPROVE_OPTION) {
+	    File file = jFileChooser1.getSelectedFile();
+	    String filename = file.getAbsolutePath();
+	    epiloglibTextField.setText(filename);
+	}
+    }//GEN-LAST:event_epiloglibButtonActionPerformed
+
+    private void epilogincButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogincButtonActionPerformed
+	int returnVal = jFileChooser1.showOpenDialog(null);
+	
+	if (returnVal == JFileChooser.APPROVE_OPTION) {
+	    File file = jFileChooser1.getSelectedFile();
+	    String filename = file.getAbsolutePath();
+	    epilogincTextField.setText(filename);
+	}
+    }//GEN-LAST:event_epilogincButtonActionPerformed
+
+    private void epilogbinButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogbinButtonActionPerformed
+	int returnVal = jFileChooser1.showOpenDialog(null);
+	
+	if (returnVal == JFileChooser.APPROVE_OPTION) {
+	    File file = jFileChooser1.getSelectedFile();
+	    String filename = file.getAbsolutePath();
+	    epilogbinTextField.setText(filename);
+	}
+    }//GEN-LAST:event_epilogbinButtonActionPerformed
+
+    private void epiloglibCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_epiloglibCheckBoxStateChanged
+	String entry =" -epiloglib=";
+	if(epiloglibCheckBox.isSelected()){
+	    if(configureline.indexOf(entry)==-1){
+		configureline+=entry;
+		configureline+=epiloglibTextField.getText()+" ";
+	    }
+	}
+	
+	else{
+	    int start = configureline.indexOf(entry);
+	    if(start>-1){
+		int end = configureline.indexOf(" ",  start+1);
+		if(end==-1){
+		    configureline = configureline.substring(0, start);
+		} else{
+		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
+		}
+		
+	    }
+	}
+	
+	commandTextArea.setText(configureline); updateITCommand();
+    }//GEN-LAST:event_epiloglibCheckBoxStateChanged
+
+    private void epiloglibQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epiloglibQjButtonActionPerformed
+JOptionPane.showMessageDialog(null,
+"Specifies the absolute location of the epilog lib directory.",
+	"-epiloglib=<directory>",JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_epiloglibQjButtonActionPerformed
+
+    private void epilogincCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_epilogincCheckBoxStateChanged
+	String entry =" -epiloginc=";
+	if(epilogincCheckBox.isSelected()){
+	    if(configureline.indexOf(entry)==-1){
+		configureline+=entry;
+		configureline+=epilogincTextField.getText()+" ";
+	    }
+	}
+	
+	else{
+	    int start = configureline.indexOf(entry);
+	    if(start>-1){
+		int end = configureline.indexOf(" ",  start+1);
+		if(end==-1){
+		    configureline = configureline.substring(0, start);
+		} else{
+		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
+		}
+		
+	    }
+	}
+	
+	commandTextArea.setText(configureline); updateITCommand();
+    }//GEN-LAST:event_epilogincCheckBoxStateChanged
+
+    private void epilogbinCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_epilogbinCheckBoxStateChanged
+	String entry =" -epilogbin=";
+	if(epilogbinCheckBox.isSelected()){
+	    if(configureline.indexOf(entry)==-1){
+		configureline+=entry;
+		configureline+=epilogbinTextField.getText()+" ";
+	    }
+	}
+	
+	else{
+	    int start = configureline.indexOf(entry);
+	    if(start>-1){
+		int end = configureline.indexOf(" ",  start+1);
+		if(end==-1){
+		    configureline = configureline.substring(0, start);
+		} else{
+		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
+		}
+		
+	    }
+	}
+	
+	commandTextArea.setText(configureline); updateITCommand();
+    }//GEN-LAST:event_epilogbinCheckBoxStateChanged
+
+    private void epilogincQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogincQjButtonActionPerformed
+JOptionPane.showMessageDialog(null,
+"Specifies the absolute location of the epilog include directory.",
+	"-epiloginc=<directory>",JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_epilogincQjButtonActionPerformed
+
+    private void epilogbinQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogbinQjButtonActionPerformed
+JOptionPane.showMessageDialog(null,
+"Specifies the absolute location of the epilog bin directory.",
+	"-epilogbin=<directory>",JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_epilogbinQjButtonActionPerformed
 
     private void vtraceTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vtraceTextFieldActionPerformed
 	if(this.vtraceCheckBox.isSelected()){
@@ -6575,6 +6916,10 @@ if(pclCheckBox.isSelected()){
         cbholder.add(perfincCheckBox);
         cbholder.add(altperfCheckBox);
         
+        cbholder.add(epilogbinCheckBox);
+        cbholder.add(epilogincCheckBox);
+        cbholder.add(epiloglibCheckBox);
+        
         //Set up the mapping between commands and checkboxes
         commap.put(" -perflibrary",altperfCheckBox);
         commap.put(" -perflib",perflibCheckBox);
@@ -6657,6 +7002,10 @@ if(pclCheckBox.isSelected()){
         commap.put(" -opari_region",opariregionCheckBox);
         commap.put(" -papi=",papiCheckBox);
         commap.put(" -PAPIVIRTUAL",papivirtCheckBox);
+        commap.put(" -epilogbin",epilogbinCheckBox);
+        commap.put(" -epiloginc",epilogincCheckBox);
+        commap.put(" -epiloglib",epiloglibCheckBox);
+        
         //map the command names to the field objects where required
         fieldmap.put(" -c++=",defcppTextField);
 	fieldmap.put(" -cc=",defccTextField);
@@ -6687,6 +7036,9 @@ if(pclCheckBox.isSelected()){
         fieldmap.put(" -prefix=",installdirField);
         fieldmap.put(" -exec-prefix=",archdirField);
         fieldmap.put(" -useropt=",useroptField);
+        fieldmap.put(" -epilogbin=",epilogbinTextField);
+        fieldmap.put(" -epiloginc=",epilogincTextField);
+        fieldmap.put(" -epiloglib=",epiloglibTextField);
         
     }
     
@@ -6870,6 +7222,18 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JCheckBox epilogCheckBox;
     private javax.swing.JButton epilogQjButton;
     private javax.swing.JTextField epilogTextField;
+    private javax.swing.JButton epilogbinButton;
+    private javax.swing.JCheckBox epilogbinCheckBox;
+    private javax.swing.JButton epilogbinQjButton;
+    private javax.swing.JTextField epilogbinTextField;
+    private javax.swing.JButton epilogincButton;
+    private javax.swing.JCheckBox epilogincCheckBox;
+    private javax.swing.JButton epilogincQjButton;
+    private javax.swing.JTextField epilogincTextField;
+    private javax.swing.JButton epiloglibButton;
+    private javax.swing.JCheckBox epiloglibCheckBox;
+    private javax.swing.JButton epiloglibQjButton;
+    private javax.swing.JTextField epiloglibTextField;
     private javax.swing.JButton exitButton;
     private javax.swing.JButton fortQjButton;
     private javax.swing.JComboBox fortranCombo;
