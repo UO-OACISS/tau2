@@ -130,6 +130,9 @@ public class LoadTrial {
             e.printStackTrace();
         }
 
+        // set the meta data from the datasource
+        trial.setMetaData(dataSource.getMetaData());
+        
         try {
             if (metadataFile != null) {
                 trial.setMetadataFile(metadataFile);
