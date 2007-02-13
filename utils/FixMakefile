@@ -139,6 +139,22 @@ fi
 	echo "s,^EPILOGDIR=.*$,EPILOGDIR=$epilogdir,g" >> $sedout
 	;;
 
+     epilogbindir=*)
+        epilogbindir=`echo $1 | sed -e 's/^epilogbindir=//'`
+	echo "s,^EPILOGBINDIR=.*$,EPILOGBINDIR=$epilogbindir,g" >> $sedout
+	;;
+
+     epiloglibdir=*)
+        epiloglibdir=`echo $1 | sed -e 's/^epiloglibdir=//'`
+	echo "s,^EPILOGLIBDIR=.*$,EPILOGLIBDIR=$epiloglibdir,g" >> $sedout
+	;;
+
+     epilogextralinkcmd=*)
+        epilogextralinkcmd=`echo $1 | sed -e 's/^epilogextralinkcmd=//'`
+	echo "s,^EPILOGEXTRALINKCMD=.*$,EPILOGEXTRALINKCMD=$epilogextralinkcmd,g" >> $sedout
+	;;
+
+
      perfincdir=*)
         perfincdir=`echo $1 | sed -e 's/^perfincdir=//'`
 	echo "s,^PERFINCDIR=.*$,PERFINCDIR=$perfincdir,g" >> $sedout

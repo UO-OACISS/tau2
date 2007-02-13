@@ -236,6 +236,11 @@ slog2=no
 internalslog2=no
 opari=no
 epilog=no
+epilogextralinkcmd=
+epiloglib=no
+epilogbin=no
+epiloglibdir=no
+epilogbindir=bin
 vampirtrace=no
 opari_region=no
 opari_construct=no
@@ -585,6 +590,19 @@ do
         echo "Error: Cannot access EPILOG directory $epilogdir"
         exit 1
       fi
+    shift
+    ;;
+  -epiloglib=*)
+      epiloglib=yes
+      trace=yes
+      epiloglibdir=`echo $arg | sed -e 's/-epiloglib=//'`
+    shift
+    ;;
+
+  -epilogbin=*)
+      epilogbin=yes
+      trace=yes
+      epilogbindir=`echo $arg | sed -e 's/-epilogbin=//'`
     shift
     ;;
 
@@ -2663,18 +2681,45 @@ then
   fi
 fi
 
+if [ $epilog = yes ]
+then
+  if [ -f $epilogdir/lib/libelg.base.a ] 
+  then
+    epiloglibdir=lib
+  elif [ -f $epilogdir/src/libelg.base.a ]
+  then 
+    epiloglibdir=src
+  elif [ -f $epilogdir/lib/be/libelg.base.a ]
+  then 
+    epiloglibdir=lib/be
+  elif [ -f $epilogdir/lib/fe/libelg.base.a ]
+  then 
+    epiloglibdir=lib/fe
+  elif [ -f $epilogdir/lib64/libelg.base.a ]
+  then 
+    epiloglibdir=lib64
+  elif [ -f $epilogdir/lib32/libelg.base.a ]
+  then 
+    epiloglibdir=lib32
+  else 
+    echo "ERROR: PLEASE SPECIFY A VALID -epiloglib=<dir> option e.g., lib/be"
+  fi
+fi
+    
 if [ $mpi = yes ]
 then
   wrapperlib="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_CONFIG)"
   if [ $epilog = yes -a $mpi = yes ]
   then
-    if [ -f $epilogdir/lib/libelg.mpi.a ] 
-    then
-      epiloglibdir=lib
-    else
-      epiloglibdir=src
-    fi
+
     wrapperlib="-L$epilogdir/$epiloglibdir -lelg.mpi"
+
+    if [ -f $epilogdir/$epilogbindir/kconfig ]
+    then
+      echo "NOTE: Using kconfig to determine libs used in Scalasca/Epilog"
+      wrapperlib=`$epilogdir/$epilogbindir/kconfig --libs`
+    fi
+
     if [ $openmp = yes ] 
     then
       wrapperlib="-L$epilogdir/$epiloglibdir -lelg.ompi"
@@ -3925,7 +3970,11 @@ fi
 
 if [ $epilog = yes ]
   then
-    fixmakeargs="$fixmakeargs EPILOG epilogdir=$epilogdir"
+    if [ -f $epilogdir/$epiloglibdir/libsz.a ]
+    then
+      epilogextralinkcmd="-lsz"
+    fi
+    fixmakeargs="$fixmakeargs EPILOG epilogdir=$epilogdir epiloglibdir=$epiloglibdir epilogbindir=$epilogbindir epilogextralinkcmd=$epilogextralinkcmd"
     tauoptions="${tauoptions}-epilog"
     if [ $mpi = yes ] 
     then 
