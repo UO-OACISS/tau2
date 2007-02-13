@@ -32,11 +32,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.16 2007/02/06 03:36:33 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.17 2007/02/13 00:55:15 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  */
 public class ParaProf implements ActionListener {
 
@@ -55,7 +55,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Mon Feb  5 19:35:41 PST 2007";
+    private final static String VERSION = "Mon Feb 12 16:53:21 PST 2007";
 
     public static int defaultNumberPrecision = 6;
 
