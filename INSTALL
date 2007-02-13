@@ -629,9 +629,16 @@ then install TAU.
 
    If your MPICH resides in /usr/local/mpich-1.2.7 and it depends upon /opt/gm, you 
    may consider configuring TAU with:
-   % configure -pdt=<dir> -c++=icpc -cc=icc -fortran=intel -mpiinc=/usr/local/mpich-1.2.7/include
-     -mpilib=/usr/local/mpich-1.2.7/lib -mpilibrary='-lmpich -L/opt/gm/lib -lgm -lpthread -ldl'
+   % configure -pdt=<dir> -c++=icpc -cc=icc -fortran=intel 
+       -mpiinc=/usr/local/mpich-1.2.7/include -mpilib=/usr/local/mpich-1.2.7/lib
+       -mpilibrary='-lmpich -L/opt/gm/lib -lgm -lpthread -ldl' 
    % make clean install
+
+   For Infiniband, for instance, you may want to use -mpilibrary as below:
+   % configure -pdt=<dir> -c++=pathCC -cc=pathcc -fortran=pathscale  
+       -mpiinc=/usr/common/usg/mvapich/pathscale/mvapich-0.9.5-mlx1.0.3/include 
+       -mpilib=/usr/common/usg/mvapich/pathscale/mvapich-0.9.5-mlx1.0.3/lib 
+       -mpilibrary='-lmpich -L/usr/local/ibgd/driver/infinihost/lib64 -lvapi'
 
    To identify the dependencies of mpich, see mpif90 -v <file.f90> and identify the 
    libraries utilized to link in the application. 
