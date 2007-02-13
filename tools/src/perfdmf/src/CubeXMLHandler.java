@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.3 2006/11/09 01:54:05 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.4 2007/02/13 20:11:18 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -122,7 +122,13 @@ public class CubeXMLHandler extends DefaultHandler {
 
         // after development is done here this should be changed to if/else if's at least
 
-        if (localName.equalsIgnoreCase("metric")) {
+        if (localName.equalsIgnoreCase("cube")) {
+            String version = (String)getInsensitiveValue(attributes, "version");
+            if (!version.equals("2.0")) {
+                throw new DataSourceException("PerfDMF only reads version 2.0 cube files (Found version " + version + ")");
+            }
+            
+        } else if (localName.equalsIgnoreCase("metric")) {
             metricIDStack.push(metricID);
             metricID = getInsensitiveValue(attributes,"id");
         } else if (localName.equalsIgnoreCase("region")) {

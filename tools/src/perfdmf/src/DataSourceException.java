@@ -2,7 +2,7 @@
 package edu.uoregon.tau.perfdmf;
 
 
-public class DataSourceException extends Exception {
+public class DataSourceException extends RuntimeException {
 
     private Exception exception; 
     private String message;
