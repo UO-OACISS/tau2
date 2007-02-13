@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.10 2007/02/13 00:08:11 amorris Exp $
+ * CVS $Id: Trial.java,v 1.11 2007/02/13 21:56:02 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -486,6 +486,9 @@ public class Trial implements Serializable {
             boolean haveDate = false;
             java.sql.Timestamp timestamp = null;
             String dateString = (String) getMetaData().get("UTC Time");
+            if (dateString == null) {
+                dateString = (String) ((Thread)getDataSource().getAllThreads().get(0)).getMetaData().get("UTC Time");
+            }
             if (dateString != null) {
                 try {
                     Date date = DataSource.dateTime.parse(dateString);
