@@ -3867,10 +3867,15 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
    //writeXMLTime(fp, true);
 
-   struct timeval tp;
    x_uint64 timestamp;
+
+#ifdef TAU_WINDOWS
+   timestamp = TauWindowsUsecD();
+#else
+   struct timeval tp;
    gettimeofday (&tp, 0);
    timestamp = (x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec;
+#endif
 
 
    fprintf (fp, "<timestamp>%lld</timestamp>\n", timestamp);
@@ -4004,8 +4009,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.159 $   $Date: 2007/02/12 22:21:49 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.159 2007/02/12 22:21:49 amorris Exp $ 
+ * $Revision: 1.160 $   $Date: 2007/02/13 21:42:56 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.160 2007/02/13 21:42:56 amorris Exp $ 
  ***************************************************************************/
 
 	
