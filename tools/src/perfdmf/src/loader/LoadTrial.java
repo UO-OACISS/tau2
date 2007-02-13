@@ -130,8 +130,6 @@ public class LoadTrial {
             e.printStackTrace();
         }
 
-        trial.aggregateMetaData();
-
         try {
             if (metadataFile != null) {
                 trial.setMetadataFile(metadataFile);
