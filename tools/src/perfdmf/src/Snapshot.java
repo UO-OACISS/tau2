@@ -5,16 +5,16 @@ import java.util.Date;
 /**
  * Snapshot object representing a Snapshot
  *
- * <P>CVS $Id: Snapshot.java,v 1.3 2007/02/03 01:38:51 amorris Exp $</P>
+ * <P>CVS $Id: Snapshot.java,v 1.4 2007/02/13 00:48:22 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class Snapshot {
 
     private String name;
     private int id;
     
-    private Date timestamp;
+    private long timestamp;
 
     public Snapshot(String name, int id) {
         this.name = name;
@@ -37,11 +37,11 @@ public class Snapshot {
         return id;
     }
 
-    public Date getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
     

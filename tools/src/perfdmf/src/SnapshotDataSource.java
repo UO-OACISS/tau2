@@ -9,12 +9,13 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.6 2007/02/02 23:00:10 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.7 2007/02/13 00:48:22 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class SnapshotDataSource extends DataSource {
 
@@ -150,6 +151,7 @@ public class SnapshotDataSource extends DataSource {
             long time = System.currentTimeMillis();
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
 
+          
             totalBytes = 0;
             for (int i = 0; i < files.length; i++) {
                 totalBytes += files[i].length();

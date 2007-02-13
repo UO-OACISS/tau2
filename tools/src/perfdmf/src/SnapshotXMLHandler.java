@@ -9,9 +9,9 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.7 2007/02/06 03:35:11 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.8 2007/02/13 00:48:22 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
@@ -32,7 +32,8 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private int currentId;
     private String currentName;
     private String currentGroup;
-
+    private long currentTimestamp;
+    
     private static class ThreadData {
         public Thread thread;
         public Map metricMap = new HashMap();
@@ -146,6 +147,8 @@ public class SnapshotXMLHandler extends DefaultHandler {
             accumulator = new StringBuffer();
         } else if (localName.equals("utc_date")) {
             accumulator = new StringBuffer();
+        } else if (localName.equals("timestamp")) {
+            accumulator = new StringBuffer();
         } else if (localName.equals("definitions")) {
             handleDefinitions(attributes);
         } else if (localName.equals("metric")) {
@@ -172,11 +175,13 @@ public class SnapshotXMLHandler extends DefaultHandler {
                 currentDate = DataSource.dateTime.parse(accumulator.toString());
             } catch (java.text.ParseException e) {
             }
+        } else if (localName.equals("timestamp")) {
+            currentTimestamp = Long.parseLong(accumulator.toString()); 
         } else if (localName.equals("group")) {
             currentGroup = accumulator.toString();
         } else if (localName.equals("profile")) {
             currentSnapshot.setName(currentName);
-            currentSnapshot.setTimestamp(currentDate);
+            currentSnapshot.setTimestamp(currentTimestamp);
         } else if (localName.equals("metric")) {
             handleMetric(currentName);
         } else if (localName.equals("event")) {
