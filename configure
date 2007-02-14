@@ -239,8 +239,11 @@ epilog=no
 epilogextralinkcmd=
 epiloglib=no
 epilogbin=no
+epiloginc=no
+epilogdir=no
 epiloglibdir=no
 epilogbindir=bin
+epilogincdir=
 vampirtrace=no
 opari_region=no
 opari_construct=no
@@ -592,7 +595,9 @@ do
       fi
     shift
     ;;
+
   -epiloglib=*)
+      epilog=yes
       epiloglib=yes
       trace=yes
       epiloglibdir=`echo $arg | sed -e 's/-epiloglib=//'`
@@ -600,9 +605,18 @@ do
     ;;
 
   -epilogbin=*)
+      epilog=yes
       epilogbin=yes
       trace=yes
       epilogbindir=`echo $arg | sed -e 's/-epilogbin=//'`
+    shift
+    ;;
+
+  -epiloginc=*)
+      epilog=yes
+      epiloginc=yes
+      trace=yes
+      epilogincdir=`echo $arg | sed -e 's/-epiloginc=//'`
     shift
     ;;
 
@@ -1072,8 +1086,9 @@ do
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
-    echo "-epiloglib=<dir> ...... Specify arch lib dir for EPILOG (e.g., lib/be)."
-    echo "-epilogbin=<dir> ...... Specify arch bin dir for EPILOG (e.g., bin/fe)."
+    echo "-epiloglib=<dir> ........... Specify full path to EPILOG lib directory."
+    echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
+    echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
@@ -2683,28 +2698,48 @@ then
   fi
 fi
 
-if [ $epilog = yes ]
+if [ $epilog = yes -a $epiloginc = no -a $epilogdir != no ]
+then
+  if [ -f $epilogdir/include/elg_rw.h ]
+  then
+    epilogincdir=$epilogdir/include
+  else
+    epilogincdir=$epilogdir/src
+  fi
+fi
+
+if [ $epilog = yes -a $epilogbin = no -a $epilogdir != no ]
+then
+  if [ -f $epilogdir/bin/opari ]
+  then
+    epilogbindir=$epilogdir/bin
+  else
+    epilogbindir=$epilogdir/src
+  fi
+fi
+
+if [ $epilog = yes -a $epiloglib = no -a $epilogdir != no ]
 then
   if [ -f $epilogdir/lib/libelg.base.a ] 
   then
-    epiloglibdir=lib
+    epiloglibdir=$epilogdir/lib
   elif [ -f $epilogdir/src/libelg.base.a ]
   then 
-    epiloglibdir=src
+    epiloglibdir=$epilogdir/src
   elif [ -f $epilogdir/lib/be/libelg.base.a ]
   then 
-    epiloglibdir=lib/be
+    epiloglibdir=$epilogdir/lib/be
   elif [ -f $epilogdir/lib/fe/libelg.base.a ]
   then 
-    epiloglibdir=lib/fe
+    epiloglibdir=$epilogdir/lib/fe
   elif [ -f $epilogdir/lib64/libelg.base.a ]
   then 
-    epiloglibdir=lib64
+    epiloglibdir=$epilogdir/lib64
   elif [ -f $epilogdir/lib32/libelg.base.a ]
   then 
-    epiloglibdir=lib32
+    epiloglibdir=$epilogdir/lib32
   else 
-    echo "ERROR: PLEASE SPECIFY A VALID -epiloglib=<dir> option e.g., lib/be"
+    echo "ERROR: PLEASE SPECIFY A VALID -epiloglib=<dir> option."
   fi
 fi
     
@@ -2714,17 +2749,17 @@ then
   if [ $epilog = yes -a $mpi = yes ]
   then
 
-    wrapperlib="-L$epilogdir/$epiloglibdir -lelg.mpi"
+    wrapperlib="-L$epiloglibdir -lelg.mpi"
 
-    if [ -f $epilogdir/$epilogbindir/kconfig ]
+    if [ -f $epilogbindir/kconfig -a $epiloglib = no ]
     then
       echo "NOTE: Using kconfig to determine libs used in Scalasca/Epilog"
-      wrapperlib=`$epilogdir/$epilogbindir/kconfig --libs`
+      wrapperlib=`$epilogbindir/kconfig --libs`
     fi
 
     if [ $openmp = yes ] 
     then
-      wrapperlib="-L$epilogdir/$epiloglibdir -lelg.ompi"
+      wrapperlib="-L$epiloglibdir -lelg.ompi"
     fi
   fi 
 
@@ -2766,7 +2801,7 @@ then
       #echo "Fortran fmpi.* found"
       mpiflibargs="-L$mpilib -lfmpi $wrapperlib"
     else
-      if [ $epilog = yes -a -f $epilogdir/lib/libfmpi.a -o -f $epilogdir/src/libfmpi.a ] 
+      if [ $epilog = yes -a -f $epiloglibdir/libfmpi.a ]
       then
         mpiflibargs="$wrapperlib -lfmpi"
       fi 
@@ -3188,7 +3223,7 @@ int foo(ElgOut *out, elg_ui4 eventc)
   return ElgOut_write_NUM_EVENTS(out, eventc);
 }
 EOF
- if $cxx_compiler $orig_useropt -I$epilogdir/src -I$epilogdir/include -c elgtest.C 1> /dev/null 2>&1
+ if $cxx_compiler $orig_useropt -I$epilogincdir -c elgtest.C 1> /dev/null 2>&1
   then
     fixmakeargs="$fixmakeargs TAU2EPILOG"
   fi
@@ -3972,11 +4007,11 @@ fi
 
 if [ $epilog = yes ]
   then
-    if [ -f $epilogdir/$epiloglibdir/libsz.a ]
+    if [ -f $epiloglibdir/libsz.a ]
     then
       epilogextralinkcmd="-lsz"
     fi
-    fixmakeargs="$fixmakeargs EPILOG epilogdir=$epilogdir epiloglibdir=$epiloglibdir epilogbindir=$epilogbindir epilogextralinkcmd=$epilogextralinkcmd"
+    fixmakeargs="$fixmakeargs EPILOG epilogdir=$epilogdir epiloglibdir=$epiloglibdir epilogbindir=$epilogbindir epilogextralinkcmd=$epilogextralinkcmd epilogincdir=$epilogincdir"
     tauoptions="${tauoptions}-epilog"
     if [ $mpi = yes ] 
     then 

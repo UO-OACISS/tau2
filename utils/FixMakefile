@@ -154,6 +154,10 @@ fi
 	echo "s,^EPILOGEXTRALINKCMD=.*$,EPILOGEXTRALINKCMD=$epilogextralinkcmd,g" >> $sedout
 	;;
 
+     epilogincdir=*)
+        epilogincdir=`echo $1 | sed -e 's/^epilogincdir=//'`
+	echo "s,^EPILOGINCDIR=.*$,EPILOGINCDIR=$epilogincdir,g" >> $sedout
+	;;
 
      perfincdir=*)
         perfincdir=`echo $1 | sed -e 's/^perfincdir=//'`

@@ -121,10 +121,9 @@ do
     shift
     ;;
 
-  -epilog=*)
+  -epilog*)
     epilog=yes
-    epilogdir=`echo $arg | sed -e 's/-epilog=//'`
-    epilogopt=-epilog=$epilogdir
+    epilogopt="$epilogopt $arg"
     shift
     ;;
 
@@ -248,6 +247,9 @@ do
     echo "-nocomm"
     echo "-opari=<oparidir>  "
     echo "-epilog=<epilogdir>  "
+    echo "-epiloginc=<absolute path to epilog include dir> (<epilog>/include default) "
+    echo "-epilogbin=<absolute path to epilog bin dir> (<epilog>/bin default)  "
+    echo "-epiloglib=<absolute path to epilog lib dir> (<epilog>/lib default)  "
     echo "-prefix=<dir>  "
     echo "-exec-prefix=<dir>  "
     shift
@@ -356,6 +358,11 @@ echo " " > wishver
     echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -PROFILECALLPATH"
     ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -PROFILECALLPATH <wishver
     make clean; make install
+
+# Add callpath profiling with compensate
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -PROFILECALLPATH -COMPENSATE"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -PROFILECALLPATH -COMPENSATE <wishver
+    make clean; make install
   
 # Add depth limit
     echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -DEPTHLIMIT"
@@ -392,6 +399,12 @@ echo " " > wishver
       echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE"
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE <wishver
       make clean; make install
+
+# Add -COMPENSATE -PROFILECALLPATH -papi multiplecounters to it
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE -COMPENSATE"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE -COMPENSATE <wishver
+      make clean; make install
+
     fi
 
     if [ $opari = yes ]
