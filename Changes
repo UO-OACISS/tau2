@@ -304,6 +304,8 @@ Version 2.4 changes (from 2.3):
 8. Added support for Scalasca 0.5, and KOJAK 2.2 [FZJ, UTK]. 
 9. Enhancements to Eclipse PTP plugin to support PAPI counter selection. [UTK]
 10. Supports PDT v3.10 with EDG v3.8 C++/C parsers [LLNL].
+11. Added support for application signatures [RENCI]. 
+12. Added support for SiCortex Linux platform [SiCortex]. 
 
 Version 2.3 changes (from 2.2):
 1. Added pthread support.

@@ -119,8 +119,9 @@ Usage: configure [OPTIONS]
             e.g., -shmemlibrary=-lsmac                                 
 -nocomm  ........ Disable tracking communication events in MPI library.
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
--epiloglib=<dir> ...... Specify arch lib dir for EPILOG (e.g., lib/be).
--epilogbin=<dir> ...... Specify arch bin dir for EPILOG (e.g., bin/fe).
+-epiloglib=<dir> ........... Specify full path to EPILOG lib directory.
+-epilogbin=<dir> ........... Specify full path to EPILOG bin directory.
+-epiloginc=<dir> ....... Specify full path to EPILOG include directory.
 -vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package.
 -pythoninc=<dir> ........ Specify location of Python include directory.
 -pythonlib=<dir> ............ Specify location of Python lib directory.
@@ -415,12 +416,28 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    lib or bin, please use -epiloglib=<dir> -epilogbin=<dir> options. 
 
 -epiloglib=<dir>
-   Specify a different directory for libs. e.g.,
-   -epilog=/usr/local/packages/scalasca-0.5 -epiloglib=lib32/fe
+   Specify the full path to the Epilog library directory. This option is useful
+   when it is difficult to infer the name of the epilog library directory from
+   -epilog=<dir>. By default, TAU uses <epilogdir>/lib for the location, but you
+   may override this by specifying the full path. e.g.,
+   -epilog=/usr/local/packages/scalasca-0.5 
+   -epiloglib=/usr/local/packages/scalasca-0.5/lib64/be
 
 -epilogbin=<dir>
-   Specify a different directory for bin. e.g.,
-   -epilog=/usr/local/packages/scalasca-0.5 -epilogbin=bin64
+   Specify the full path to the Epilog bin directory. This option is useful
+   when it is difficult to infer the name of the epilog bin directory from
+   -epilog=<dir>. By default, TAU uses <epilogdir>/bin for the location, but you
+   may override this by specifying the full path. e.g.,
+   -epilog=/usr/local/packages/scalasca-0.5 
+   -epiloglib=/usr/local/packages/scalasca-0.5/bin/fe
+
+-epiloginc=<dir>
+   Specify the full path to the Epilog include directory. This option is useful
+   when it is difficult to infer the name of the epilog bin directory from
+   -epilog=<dir>. By default, TAU uses <epilogdir>/include for the location, 
+   but you may override this by specifying the full path. e.g.,
+   -epilog=/usr/local/packages/scalasca-0.5 
+   -epiloginc=/usr/local/packages/scalasca-0.5/include/fe
 
 -vampirtrace=<dir>
 
