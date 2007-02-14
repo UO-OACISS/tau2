@@ -19,6 +19,14 @@ Version 2.16 changes (from 2.15):
 7. Updated KTAU support in TAU for registering fork for kernel profiling [ANL]. 
 8. Added tau_validate tool for checking if the TAU library is built correctly [UTK].
 9. Added support for loading multiple ppk files in paraprof on the commandline [ORNL]. 
+10. Enhancements in ParaProf and PerfExplorer for using metadata. [PERI]
+11. Added support for capturing date and other cpu information in profiles. [LLNL]
+12. Added support for Vampirtrace [LLNL]. 
+13. Added support for Scalasca 0.5, and KOJAK 2.2 [FZJ, UTK]. 
+14. Enhancements to Eclipse PTP plugin to support PAPI counter selection. [UTK]
+15. Supports PDT v3.10 with EDG v3.8 C++/C parsers [LLNL].
+16. Added support for application signatures [RENCI].
+17. Added support for SiCortex Linux platform [SiCortex].
 
 
 
@@ -298,14 +306,6 @@ Version 2.4 changes (from 2.3):
 2. Added support for Fortran and F90 API.
 3. Added threadsafe user defined events.
 4. Added threadsafe trace library.
-5. Enhancements in ParaProf and PerfExplorer for using metadata. [PERI]
-6. Added support for capturing date and other cpu information in profiles. [LLNL]
-7. Added support for Vampirtrace [LLNL]. 
-8. Added support for Scalasca 0.5, and KOJAK 2.2 [FZJ, UTK]. 
-9. Enhancements to Eclipse PTP plugin to support PAPI counter selection. [UTK]
-10. Supports PDT v3.10 with EDG v3.8 C++/C parsers [LLNL].
-11. Added support for application signatures [RENCI]. 
-12. Added support for SiCortex Linux platform [SiCortex]. 
 
 Version 2.3 changes (from 2.2):
 1. Added pthread support.
