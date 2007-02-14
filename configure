@@ -2751,11 +2751,11 @@ then
 
     wrapperlib="-L$epiloglibdir -lelg.mpi"
 
-    if [ -f $epilogbindir/kconfig -a $epiloglib = no ]
-    then
-      echo "NOTE: Using kconfig to determine libs used in Scalasca/Epilog"
-      wrapperlib=`$epilogbindir/kconfig --libs`
-    fi
+#    if [ -f $epilogbindir/kconfig -a $epiloglib = no ]
+#    then
+#      echo "NOTE: Using kconfig to determine libs used in Scalasca/Epilog"
+#      wrapperlib=`$epilogbindir/kconfig --libs`
+#    fi
 
     if [ $openmp = yes ] 
     then
