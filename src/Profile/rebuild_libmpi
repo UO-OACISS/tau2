@@ -54,20 +54,18 @@ for o in $OBJ ; do
     news=`echo $o | sed -e 's/\.o/.sh/'`
     if [ $o = "mpicore_r.o" ] ; then
 	# $TAU_LINKER_OPTS here for epilog (among others)
-	rtl_enable -X $BITS -l -R -s $o -L. -lc_r -lpthreads  -lpmapi $TAU_LINKER_OPTS
+	rtl_enable -X $BITS -l -R -s $o -L. -lc_r -lpthreads -lpmapi $TAU_LINKER_OPTS
 	sed -e 's#mpicore_r.o -b#tau/* mpicore_r.o -b#' $news > tmp.$nnews
-#  sed -e 's/mpicore_r.o -b/libipm.o mpicore_r.o -b/' $news > tmp.$nnews
+	mv tmp.$nnews $news
+    elif [ $o = "mpicore64_r.o" ] ; then
+	rtl_enable -X $BITS -l -R -s $o -L. -lc_r -lpthreads -lpmapi $TAU_LINKER_OPTS
+	sed -e 's#mpicore64_r.o -b#tau/* mpicore64_r.o -b#' $news > tmp.$nnews 
 	mv tmp.$nnews $news
     else
 	# can't use $TAU_LINKER_OPTS here or it will fail with epilog
 	rtl_enable -X $BITS -l -R -s $o -L. -lc_r -lpthreads -lpmapi
     fi
 
-    if [ $o = "mpicore64_r.o" ] ; then
-#  sed -e 's/mpicore64_r.o -b/libipm_64.o mpicore64_r.o -b/' $news > tmp.$nnews 
-	sed -e 's#mpicore64_r.o -b#tau/* mpicore64_r.o -b#' $news > tmp.$nnews 
-	mv tmp.$nnews $news
-    fi
     sed -e 's/-bnortllib -bnosymbolic -bnoautoexp/-bM:SRE -H512 -T512 -bnoentry -bnoobjreorder/' $news | sed -e 's/$LD/xlC/' > tmp.$nnews
     mv tmp.$nnews $news
 
