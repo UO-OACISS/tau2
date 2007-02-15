@@ -263,11 +263,35 @@ $(INSTALLDEST)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		cd $(TAUPYTHON_BINDINGSDIR) && cp ../tau.py . && cp ../$(TAUPYTHON) $(TAUPYTHON)
 
 
-libmpi_r.a: $(TAU_SHLIB) $(MPI_WRAPPER)
-	echo Creating libmpi_r.a
+
+# break apart libelg.mpi.a to build into libmpi_r.a for tau_poe (AIX)
+epilog_breakup: 
+	@echo Breaking up libelg.mpi.a
+	$(RM) $(BITS)
+	mkdir -p $(BITS)/tau
+	cd $(BITS)/tau ; ar -X $(BITS) xv $(EPILOGLIBDIR)/libelg.mpi.a
+
+# place TAU objects into libmpi_r.a for tau_poe (AIX)
+tau_breakup: $(TAU_SHLIB) $(MPI_WRAPPER)
 	$(RM) $(BITS)
 	mkdir -p $(BITS)/tau
 	cp $(TAU_TARGET) libTauMpi$(TAU_CONFIG)$(LSX) $(BITS)/tau
+
+# break apart vampirtrace to build into libmpi_r.a for tau_poe (AIX)
+vampirtrace_breakup:
+	@echo Breaking up VampirTrace
+	$(RM) $(BITS)
+	mkdir -p $(BITS)/tau
+	cd $(BITS)/tau ; for i in $(VAMPIRTRACEDIR)/lib/*.a ; do ar -X $(BITS) xv $$i ; done
+
+
+MPI_BREAKUP_PREREQ = tau_breakup
+#EPILOG#MPI_BREAKUP_PREREQ = epilog_breakup #ENDIF#
+#VAMPIRTRACE#MPI_BREAKUP_PREREQ = vampirtrace_breakup #ENDIF#
+
+
+libmpi_r.a: $(MPI_BREAKUP_PREREQ)
+	echo Creating libmpi_r.a
 	./rebuild_libmpi $(BITS) $(TAU_LINKER_OPTS)
 	cp $(BITS)/libmpi_r.a .
 	$(RM) $(BITS)
