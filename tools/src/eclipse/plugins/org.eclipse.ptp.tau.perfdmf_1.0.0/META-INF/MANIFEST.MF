@@ -24,6 +24,7 @@ Bundle-ClassPath: .,
  paraprof.jar,
  perfdmf.jar,
  tau-common.jar,
- vis.jar
+ vis.jar,
+ xerces.jar
 Export-Package: org.eclipse.ptp.tau.perfdmf,
  org.eclipse.ptp.tau.perfdmf.views

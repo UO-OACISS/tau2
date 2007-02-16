@@ -37,6 +37,7 @@ cp ../contrib/jfreechart-0.9.21.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
 cp ../contrib/jgraph.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
 cp ../contrib/jogl/jogl.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
 cp ../contrib/jython.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
+cp ../contrib/xerces.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
 
 cp ../paraprof/bin/paraprof.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
 cp ../perfdmf/bin/perfdmf.jar $PLUG_DIR/org.eclipse.ptp.tau.perfdmf_1.0.0/
