@@ -123,6 +123,19 @@ public class LoadTrial {
         trial = new Trial();
         trial.setDataSource(dataSource);
 
+		// set the metadata file name before loading the data, because
+		// aggregateData() is called at the end of the dataSource.load()
+		// and this file has to be set before then.
+        try {
+            if (metadataFile != null) {
+                dataSource.setMetadataFile(metadataFile);
+            }
+        } catch (Exception e) {
+            System.err.println("Error Loading metadata:");
+            e.printStackTrace();
+            System.exit(1);
+        }
+
         try {
             dataSource.load();
         } catch (Exception e) {
@@ -133,16 +146,6 @@ public class LoadTrial {
         // set the meta data from the datasource
         trial.setMetaData(dataSource.getMetaData());
         
-        try {
-            if (metadataFile != null) {
-                trial.setMetadataFile(metadataFile);
-            }
-        } catch (Exception e) {
-            System.err.println("Error Loading metadata:");
-            e.printStackTrace();
-            System.exit(1);
-        }
-
         if (trialID == 0) {
             saveTrial();
         } else {

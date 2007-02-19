@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.11 2007/02/13 21:56:02 amorris Exp $
+ * CVS $Id: Trial.java,v 1.12 2007/02/19 05:23:54 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -46,9 +46,8 @@ public class Trial implements Serializable {
 
     protected DataSource dataSource = null;
     private File metadataFile = null;
-    private FileInputStream inStream = null;
 
-    private Map metaData = new TreeMap();
+	private Map metaData = null;
 
     public Trial() {
         if (Trial.fieldNames == null) {
@@ -516,6 +515,14 @@ public class Trial implements Serializable {
                 this.setField("threads_per_context", Integer.toString(1 + this.getDataSource().getMaxNCTNumbers()[2]));
             }
 
+//          // set the other metadata, if it exists
+//			// UNCOMMENT THIS WHEN WE KNOW FOR SURE WHAT THE TAU
+//			// METADATA WILL LOOK LIKE 
+//			String tmp = getDataSource().getMetadataString();
+//			if (tmp != null && tmp.length() > 0) {
+//				setField(XML_METADATA, tmp);
+//			}
+
             // Check if the date column exists and is a timestamp
             boolean dateColumnFound = false;
             for (int i = 0; i < this.getNumFields(); i++) {
@@ -570,11 +577,7 @@ public class Trial implements Serializable {
             statement.setInt(pos++, experimentID);
             for (int i = 0; i < this.getNumFields(); i++) {
                 if (DBConnector.isWritableType(this.getFieldType(i))) {
-                    if ((this.getFieldName(i).equalsIgnoreCase(Trial.XML_METADATA)) && (this.metadataFile != null)) {
-                        statement.setAsciiStream(pos++, inStream, (int) this.metadataFile.length());
-                    } else {
-                        statement.setString(pos++, this.getField(i));
-                    }
+                    statement.setString(pos++, this.getField(i));
                 }
             }
 
@@ -588,15 +591,6 @@ public class Trial implements Serializable {
 
             statement.executeUpdate();
             statement.close();
-            if (this.metadataFile != null) {
-                try {
-                    inStream.close();
-                } catch (IOException e) {
-                    System.err.println("Unable to close file:");
-                    System.err.println(e.getMessage());
-                    e.printStackTrace();
-                }
-            }
 
             if (itExists) {
                 newTrialID = trialID;
@@ -814,24 +808,6 @@ public class Trial implements Serializable {
     public void removeMetaData() {
         fieldNames = null;
         fieldTypes = null;
-    }
-
-    /**
-     * If the user passes in a metadata file, parse it into the trial.
-     * 
-     * @param metadataFileName
-     * @throws IOException
-     */
-    public void setMetadataFile(String metadataFileName) throws IOException {
-        this.metadataFile = new File(metadataFileName);
-        if (!this.metadataFile.exists())
-            throw new FileNotFoundException("The file " + metadataFileName + " does not exist.");
-        if (!this.metadataFile.canRead())
-            throw new IOException("The file " + metadataFileName + " does not have read permission.");
-        if (!this.metadataFile.isFile())
-            throw new FileNotFoundException(metadataFileName + " is not a valid file.");
-        inStream = new FileInputStream(this.metadataFile);
-        return;
     }
 
     public void checkForMetadataColumn(DB db) {
