@@ -12,9 +12,9 @@ import org.jfree.chart.ChartColor;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreePortionCellRenderer.java,v 1.1 2007/02/01 04:31:42 khuck Exp $</P>
+ * <P>CVS $Id: TreePortionCellRenderer.java,v 1.2 2007/02/20 01:27:48 khuck Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class TreePortionCellRenderer extends DefaultTreeCellRenderer {
 
@@ -23,7 +23,9 @@ public class TreePortionCellRenderer extends DefaultTreeCellRenderer {
         super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 
         // set the text color?
-        if (value instanceof XMLElementNode) {
+        if (value instanceof XMLTAUAttributeElementNode) {
+            this.setForeground(ChartColor.VERY_DARK_GREEN);
+        } else if (value instanceof XMLElementNode) {
             this.setForeground(ChartColor.DARK_BLUE);
         } else if (value instanceof XMLCommentNode) {
             this.setForeground(ChartColor.VERY_DARK_RED);

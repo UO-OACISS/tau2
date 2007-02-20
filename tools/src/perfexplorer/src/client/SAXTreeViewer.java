@@ -202,6 +202,8 @@ class JTreeContentHandler implements ContentHandler {
     
     private XMLNode root = null;
 
+	boolean doNamespace = false;
+
     /**
      * <p> Set up for working with the JTree. </p>
      *
@@ -296,6 +298,7 @@ class JTreeContentHandler implements ContentHandler {
     public void startPrefixMapping(String prefix, String uri) {
         // No visual events occur here.
         namespaceMappings.put(uri, prefix);
+		doNamespace = true;
     }
 
     /**
@@ -350,12 +353,24 @@ class JTreeContentHandler implements ContentHandler {
             prefix = (String)namespaceMappings.get(namespaceURI);
         }
 
-        XMLElementNode element = 
-            new XMLElementNode(namespaceURI, localName, qName, atts, prefix);
-        if ((current == root) && (prefix.length() > 0)) {
+        XMLElementNode element = null;
+		if (localName.equals("ProfileAttributes") && prefix.equals("tau")) {
+			element = new XMLProfileNode(namespaceURI, 
+				localName, qName, atts, prefix);
+		} else if (localName.equals("attribute") && prefix.equals("tau")) {
+			element = new XMLTAUAttributeElementNode(namespaceURI, 
+				localName, qName, atts, prefix);
+		} else {
+        	element = new XMLElementNode(namespaceURI, 
+				localName, qName, atts, prefix);
+		}
+
+        if (doNamespace && (prefix.length() > 0)) {
         	// add the namespace and style attributes
-            XMLAttributeNode attribute = new XMLAttributeNode("xmlns:" + prefix, namespaceURI);
+            XMLAttributeNode attribute = 
+				new XMLAttributeNode("xmlns:" + prefix, namespaceURI);
             element.add(attribute);
+			doNamespace = false;
         }
        	current.add(element);
         current = element;
