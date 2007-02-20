@@ -3738,8 +3738,6 @@ static void writeEventXML(FILE *f, int id, FunctionInfo *fi) {
 
 
 int Profiler::Snapshot(char *name, bool finalize, int tid) {
-  // disable snapshots for this release
-  return 0;
 
    FILE *fp = TauGetSnapshotFiles()[tid];
    if (finalize && !fp) { 
@@ -4010,8 +4008,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.161 $   $Date: 2007/02/13 21:57:49 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.161 2007/02/13 21:57:49 amorris Exp $ 
+ * $Revision: 1.162 $   $Date: 2007/02/20 17:08:36 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.162 2007/02/20 17:08:36 amorris Exp $ 
  ***************************************************************************/
 
 	
