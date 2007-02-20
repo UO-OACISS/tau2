@@ -17,9 +17,9 @@ import org.w3c.dom.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.14 2007/02/19 05:23:54 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.15 2007/02/20 01:16:18 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  */
 public abstract class DataSource {
 
@@ -507,6 +507,9 @@ public abstract class DataSource {
      */
     public void generateDerivedData() {
         //long time = System.currentTimeMillis();
+
+        // reset the list of all threads so that it will be recreated
+        allThreads = null;
 
         if (CallPathUtilFuncs.checkCallPathsPresent(getFunctions())) {
             setCallPathDataPresent(true);
