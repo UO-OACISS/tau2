@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.12 2007/02/19 05:23:54 khuck Exp $
+ * CVS $Id: Trial.java,v 1.13 2007/02/22 16:26:56 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -35,7 +35,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
 public class Trial implements Serializable {
     private static String fieldNames[];
     private static int fieldTypes[];
-    private static final String XML_METADATA = new String("XML_METADATA");
+    public static final String XML_METADATA = new String("XML_METADATA");
 
     private int trialID;
     private int experimentID;
@@ -515,13 +515,13 @@ public class Trial implements Serializable {
                 this.setField("threads_per_context", Integer.toString(1 + this.getDataSource().getMaxNCTNumbers()[2]));
             }
 
-//          // set the other metadata, if it exists
-//			// UNCOMMENT THIS WHEN WE KNOW FOR SURE WHAT THE TAU
-//			// METADATA WILL LOOK LIKE 
-//			String tmp = getDataSource().getMetadataString();
-//			if (tmp != null && tmp.length() > 0) {
-//				setField(XML_METADATA, tmp);
-//			}
+            // set the other metadata, if it exists
+			// UNCOMMENT THIS WHEN WE KNOW FOR SURE WHAT THE TAU
+			// METADATA WILL LOOK LIKE 
+			String tmp = getDataSource().getMetadataString();
+			if (tmp != null && tmp.length() > 0) {
+				setField(XML_METADATA, tmp);
+			}
 
             // Check if the date column exists and is a timestamp
             boolean dateColumnFound = false;
