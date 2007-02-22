@@ -1844,7 +1844,14 @@ case $cxx_compiler in
         fi
       fi
       ibmxlc=yes
-      extradircxx=`which $cxx_compiler | sed s/$cxx_compiler/../`
+
+      compilerLocation=`which $cxx_compiler`
+      if [ "x$compilerLocation" = "x/usr/bin/$cxx_compiler" ] ; then
+	  if [ -h $compilerLocation ] ; then
+	      compilerLocation=`readlink $compilerLocation`
+	  fi
+      fi
+      extradircxx=`echo $compilerLocation | sed s/$cxx_compiler/../`
       extradir=`which xlf90 | sed s/xlf90/../`
       if [ $fortran_compiler = no ] 
       then
