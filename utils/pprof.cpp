@@ -171,6 +171,28 @@ map<const char*, function_data, ltstr> funcDB;
 /* GLOBAL database of user event names */
 map<const char*, user_event_data, ltstr> userEventDB;
 
+static char *removeRuns(char *str) {
+  // replaces runs of spaces with a single space
+  
+  // also removes leading whitespace
+  while (*str && *str == ' ') str++;
+  
+  int len = strlen(str);
+  for (int i=0; i<len; i++) {
+    if (str[i] == ' ') {
+      int idx = i+1;
+      while (idx < len && str[idx] == ' ') {
+	idx++;
+      }
+      int skip = idx - i - 1;
+      for (int j=i+1; j<=len-skip; j++) {
+	str[j] = str[j+skip];
+      }
+    }
+  }
+  return str;
+}
+
 
 bool IsDynamicProfiling(char *filename) {
   //This function determines if dynamic profiling is used by opening the
@@ -272,11 +294,25 @@ int ExtractName(char* func, char *line, int maxquotes)
     if (!optShowLocation && strstr(func, "Loop:") == NULL) {
       // strip out location information (e.g. "[{simple.f90} {19,15}]")
       // unless it's a loop, where we always show it
-  
-      if (strstr(func,"[{") != NULL && strstr(func,"}]") != NULL) {
-	*(strstr(func,"[{")) = 0;
+
+      char *start = strstr(func,"[{");
+      char *end = strstr(func,"}]");
+
+      while (start != NULL && end != NULL) {
+	end+=2;
+	int length = strlen(end);
+	for (int i=0; i<length+1; i++) {
+	  start[i] = end[i];
+	}
+
+	start = strstr(func,"[{");
+	end = strstr(func,"}]");
+
       }
     }
+
+    // replace runs of whitespace with a single space
+    removeRuns(func);
 
 
     return j;
@@ -2737,6 +2773,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: amorris $
- * $Revision: 1.49 $   $Date: 2006/10/27 23:27:59 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.49 2006/10/27 23:27:59 amorris Exp $                                
+ * $Revision: 1.50 $   $Date: 2007/02/22 19:57:11 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.50 2007/02/22 19:57:11 amorris Exp $                                
  ***************************************************************************/
