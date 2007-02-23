@@ -1187,7 +1187,11 @@ ALPHATIMERS)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      BGLPAPI)
-	echo "NOTE: Using PAPI with BGL options ***"
+	echo "NOTE: Using PAPI with BGL (libpapi.a) options ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BGLPAPI_RTS)
+	echo "NOTE: Using PAPI with BGL (libpapi.rts.a) options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      ALPHAPAPI)
