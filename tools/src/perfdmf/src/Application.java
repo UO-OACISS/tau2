@@ -20,7 +20,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.7 2006/10/30 18:10:26 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.8 2007/02/23 01:08:24 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -185,6 +185,18 @@ public class Application implements Serializable {
 
     public String getField(int idx) {
         return fields[idx];
+    }
+
+    public String getField(String name) {
+        if (Application.fieldNames == null)
+            return null;
+        for (int i = 0; i < Application.fieldNames.length; i++) {
+            if (name.toUpperCase().equals(Application.fieldNames[i].toUpperCase())) {
+                if (i < fields.length)
+                    return fields[i];
+            }
+        }
+        return null;
     }
 
     public void setField(int idx, String field) {
