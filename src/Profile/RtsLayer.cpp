@@ -426,46 +426,32 @@ double getUserTimeInSec(void)
 #ifdef TAU_LINUX_TIMERS
 
 ///////////////////////////////////////////////////////////////////////////
-int TauReadFullLine(char ** line, FILE *fp)
-{
+int TauReadFullLine(char *line, FILE *fp) {
   int ch, i;
   i = 0; 
-  while ( (ch = fgetc(fp)) && ch != EOF && ch != (int) '\n')
-  {
-    line[0][i++] = (unsigned char) ch;
+  while ( (ch = fgetc(fp)) && ch != EOF && ch != (int) '\n') {
+    line[i++] = (unsigned char) ch;
   }
-  line[0][i] = '\0'; 
+  line[i] = '\0'; 
   return i; 
 }
 
 ///////////////////////////////////////////////////////////////////////////
-double TauGetMHzRatings(void)
-{
-  float ret;
-  char *line;
+double TauGetMHzRatings(void) {
+  float ret = 0;
+  char line[2048];
+  FILE *fp = fopen("/proc/cpuinfo", "r");
 
-  FILE *fp;
-  ret = 0;
-  line = new char[1024]; 
-  fp = fopen("/proc/cpuinfo", "r");
-
-  if (fp)
-  {
-    while(TauReadFullLine(&line, fp))
-    {
-      if (strncmp(line, "cpu MHz", 7) == 0)
-      {
+  if (fp) {
+    while (TauReadFullLine(line, fp)) {
+      if (strncmp(line, "cpu MHz", 7) == 0) {
         sscanf(line,"cpu MHz         : %f", &ret);
-        delete line; 
         return (double) ret; 
       }
     }
-  }
-  else
-  {
+  } else {
     perror("/proc/cpuinfo file not found:");
   }
-  delete line; 
   return (double) ret;
 }
   
@@ -1406,7 +1392,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.81 $   $Date: 2007/02/13 02:20:45 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.81 2007/02/13 02:20:45 sameer Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.82 $   $Date: 2007/02/26 19:04:24 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.82 2007/02/26 19:04:24 amorris Exp $ 
  ***************************************************************************/
