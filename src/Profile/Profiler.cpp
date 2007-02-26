@@ -3465,7 +3465,7 @@ static void writeXMLString(FILE *f, const char *s) {
   }
 
   // could grow up to 5 times in length
-  char *str = (char *) malloc (6*strlen(s));
+  char *str = (char *) malloc (6*strlen(s)+10);
   char *d = str;
   while (*s) {
     if ((*s == '<') || (*s == '>') || (*s == '&') || (*s == '\n')) {
@@ -4008,8 +4008,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.162 $   $Date: 2007/02/20 17:08:36 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.162 2007/02/20 17:08:36 amorris Exp $ 
+ * $Revision: 1.163 $   $Date: 2007/02/26 19:05:14 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.163 2007/02/26 19:05:14 amorris Exp $ 
  ***************************************************************************/
 
 	
