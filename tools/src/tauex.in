@@ -1,0 +1,101 @@
+#!/bin/sh
+
+TAUROOT=@TAUROOTDIR@
+TAUARCH=@ARCH@
+
+if [ $# = 0 ] ; then
+    echo "Usage $0 program"
+fi
+
+processT="false"
+processE="false"
+TauOptions=""
+Counters="GET_TIME_OF_DAY"
+NumCounters=1
+process="true"
+for arg in "$@" ; do
+  # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+  modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+
+  if [ "$processT" = "true" ] ; then
+      options=`echo $arg | sed -e 's/,/ /g'`
+      for i in $options ; do
+	  TauOptions="$TauOptions $i"
+      done
+      processT="false"
+      shift
+  elif [ "$processE" = "true" ] ; then
+      options=`echo $arg | sed -e 's/,/ /g'`
+      for i in $options ; do
+	  Counters="$Counters $i"
+	  NumCounters=$(( $NumCounters + 1 ))
+      done
+      processE="false"
+      shift
+  else
+      case $arg in 
+	  -e)
+	      processE=true
+	      shift
+	      ;;
+	  -T)
+	      processT=true
+	      shift
+	      ;;
+	  --)
+	      process=false
+	      shift
+	      ;;
+      esac
+  fi
+done
+
+
+if [ $NumCounters -gt 1 ] ; then
+    TauOptions="$TauOptions multiplecounters papi"
+fi
+
+bindings=`ls $TAUROOT/$TAUARCH/lib | grep bindings`
+
+for opt in $TauOptions; do 
+    newbindings=""
+    for b in $bindings ; do
+	add=`echo $b | grep -i $opt`
+	newbindings="$newbindings $add"
+    done
+    bindings=$newbindings
+
+done
+
+
+theBinding=""
+for b in $bindings ; do
+    theBinding=$b
+done
+
+if [ "x$theBinding" = "x" ] ; then
+    echo "Error: Couldn't find a matching TAU binding"
+    exit
+fi
+
+# unset any counters that may be active
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 ; do
+    unset COUNTER$i
+done
+
+counter=1
+for c in $Counters ; do 
+    #echo export COUNTER$counter=$c
+    export COUNTER$counter=$c
+    counter=$(( $counter + 1 ))
+done
+
+#echo "Matching bindings: $bindings"
+#echo "Using $theBinding"
+export LD_LIBRARY_PATH=$TAUROOT/$TAUARCH/lib/$theBinding:$LD_LIBRARY_PATH
+
+# execute the program
+"$@"
+
+
+
