@@ -36,6 +36,7 @@ using namespace std;
 extern bool wildcardCompare(char *wild, char *string, char kleenestar);
 extern bool instrumentEntity(const string& function_name);
 extern bool fuzzyMatch(const string& a, const string& b);
+extern bool memory_flag;
 
 /* Globals */
 ///////////////////////////////////////////////////////////////////////////
@@ -779,6 +780,62 @@ void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start,
 }
 
 /* Process Block to examine the routine */
+int processMemBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& itemvec,
+		int level, const pdbStmt *parentDO)
+{
+  pdbLoc start, stop; /* the location of start and stop timer statements */
+  
+#ifdef DEBUG
+  printf("Inside processMemBlock()\n");
+#endif /* DEBUG */
+  if (!s) return 1;
+  if (!ro) return 1; /* if null, do not instrument */
+
+  if (!instrumentEntity(ro->fullName())) return 1;  /* we shouldn't instrument it? */
+  
+  pdbStmt::stmt_t k = s->kind();
+
+#ifdef DEBUG
+    if (parentDO)
+    printf("Examining statement parentDo line=%d\n", parentDO->stmtEnd().line());
+#endif /* DEBUG */
+    /* NOTE: We currently do not support goto in C/C++ to close the timer.
+     * This needs to be added at some point -- similar to Fortran */
+    switch(k) {
+      case pdbStmt::ST_FALLOCATE:
+#ifdef DEBUG
+	printf("FALLOCATE statement line = %d\n", s->stmtBegin().line());
+#endif /* DEBUG */
+        itemvec.push_back( new itemRef((pdbItem *)NULL, ALLOCATE_STMT, s->stmtBegin().line(), s->stmtBegin().col(), s->stmtBegin().file()->name(), AFTER));
+
+	break;
+      case pdbStmt::ST_FDEALLOCATE:
+#ifdef DEBUG
+	printf("FDEALLOCAATE statement line = %d\n", s->stmtBegin().line());
+#endif /* DEBUG */
+        itemvec.push_back( new itemRef((pdbItem *)NULL, DEALLOCATE_STMT, s->stmtBegin().line(), s->stmtBegin().col(), s->stmtBegin().file()->name(), BEFORE));
+	break;
+      default:
+        if (s->downStmt())
+          processMemBlock(s->downStmt(), ro, itemvec, level, parentDO);
+        if (s->extraStmt())
+          processMemBlock(s->extraStmt(), ro, itemvec, level, parentDO);
+	/* We only process down and extra statements for the default statements
+	   that are not loops. When a loop is encountered, its down is not
+	   processed. That way we retain outer loop level instrumentation */
+#ifdef DEBUG
+        printf("Other statement\n"); 
+#endif /* DEBUG */
+	break;
+    }
+  /* and then process the next statement */
+  if (s->nextStmt())
+    return processMemBlock(s->nextStmt(), ro, itemvec, level, parentDO);
+  else
+    return 1;
+
+}
+/* Process Block to examine the routine */
 int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& itemvec,
 		int level, const pdbStmt *parentDO)
 {
@@ -978,7 +1035,9 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       }
       if ((*it)->getKind() == TAU_MEMORY)
       { /* we need to instrument all memory statements in this routine */
+#ifdef DEBUG
 	printf("process memory allocate/de-allocate statements in C routine\n");
+#endif /* DEBUG */
       }
     }
   }
@@ -988,6 +1047,9 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 /* Process list of F routines */
 bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec, pdbFile *file) 
 {
+#ifdef DEBUG
+  printf("INSIDE processFRoutinesInstrumentation\n");
+#endif /* DEBUG */
 
   PDB::froutinevec::const_iterator rit;
   PDB::froutinevec froutines = p.getFRoutineVec();
@@ -1074,9 +1136,12 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       { /* we need to instrument all io statements in this routine */
 	printf("process I/O statements in Fortran routine\n");
       }
-      if ((*it)->getKind() == TAU_MEMORY)
+      if ((*it)->getKind() == TAU_MEMORY || memory_flag)
       { /* we need to instrument all memory statements in this routine */
-	printf("process memory allocate/de-allocate statements in Fortran routine\n");
+#ifdef DEBUG
+	printf("processing memory allocate/de-allocate statements in Fortran routine...\n");
+#endif /* DEBUG */
+	processMemBlock((*rit)->body(), (*rit), itemvec, 1, NULL); /* level = 1 */
       }
     } /* end of match */
   } /* iterate over all routines */
@@ -1095,6 +1160,20 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
   PDB::croutinevec croutines;
   PDB::froutinevec froutines; 
 
+#ifdef DEBUG
+  printf("INSIDE addFileInstrumentationRequests empty Instrumentation List? %d \n", isInstrumentListEmpty());
+#endif /* DEBUG */
+
+  if (isInstrumentListEmpty() && memory_flag && p.language() == PDB::LA_FORTRAN) 
+  { /* instrumentation list is empty, but the user specified a -memory flag 
+       for a fortran file. This is equivalent to instrumenting all memory 
+       references */
+#ifdef DEBUG
+    printf("Instrumenting memory references for Fortran when selective instrumentation file was not specified. Using memory file=\"*\" routine = \"#\"\n");
+#endif /* DEBUG */
+    instrumentList.push_back(new tauInstrument(string("*"), string("#"), TAU_MEMORY));
+
+  }
   for (it = instrumentList.begin(); it != instrumentList.end(); it++) 
   {
     if ((*it)->getFileSpecified())
@@ -1208,6 +1287,6 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.36 $   $Date: 2006/11/09 23:25:55 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.36 2006/11/09 23:25:55 sameer Exp $
+ * $Revision: 1.37 $   $Date: 2007/02/27 23:06:01 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.37 2007/02/27 23:06:01 sameer Exp $
  ***************************************************************************/

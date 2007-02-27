@@ -9,7 +9,7 @@ using std::string;
 enum instrumentKind_t { TAU_LOOPS, TAU_LINE, TAU_ROUTINE_ENTRY, TAU_ROUTINE_EXIT, TAU_NOT_SPECIFIED, TAU_IO, TAU_MEMORY};
 
 /* For C instrumentation */
-enum itemKind_t { ROUTINE, BODY_BEGIN, FIRST_EXECSTMT, BODY_END, RETURN, EXIT, INSTRUMENTATION_POINT, START_TIMER, STOP_TIMER, START_DO_TIMER, GOTO_STOP_TIMER, START_LOOP_TIMER, STOP_LOOP_TIMER};
+enum itemKind_t { ROUTINE, BODY_BEGIN, FIRST_EXECSTMT, BODY_END, RETURN, EXIT, INSTRUMENTATION_POINT, START_TIMER, STOP_TIMER, START_DO_TIMER, GOTO_STOP_TIMER, START_LOOP_TIMER, STOP_LOOP_TIMER, ALLOCATE_STMT, DEALLOCATE_STMT};
 enum itemAttr_t { BEFORE, AFTER, NOT_APPLICABLE};
 enum tau_language_t { tau_c, tau_cplusplus, tau_fortran };
 
@@ -34,6 +34,6 @@ extern bool fuzzyMatch(const string& a, const string& b);
 
 /***************************************************************************
  * $RCSfile: tau_datatypes.h,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 2006/10/02 10:57:40 $
- * VERSION_ID: $Id: tau_datatypes.h,v 1.7 2006/10/02 10:57:40 sameer Exp $
+ * $Revision: 1.8 $   $Date: 2007/02/27 23:06:01 $
+ * VERSION_ID: $Id: tau_datatypes.h,v 1.8 2007/02/27 23:06:01 sameer Exp $
  ***************************************************************************/

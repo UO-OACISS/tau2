@@ -37,6 +37,13 @@ bool instrumentPure = true;
 bool instrumentPure = false;
 #endif
 
+/* The IBM xlf compiler does not support sizeof(A) to find the size of an object */
+#ifdef TAU_USE_SIZE_INSTEAD_OF_SIZEOF
+string tau_size_tok("size");
+#else /* TAU_USE_SIZE_INSTEAD_OF_SIZEOF */
+string tau_size_tok("sizeof");
+#endif /* TAU_USE_SIZE_INSTEAD_OF_SIZEOF */
+
 /* For selective instrumentation */
 extern int processInstrumentationRequests(char *fname);
 extern bool instrumentEntity(const string& function_name);
@@ -403,7 +410,7 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 
 
   /* check if the given file has line/routine level instrumentation requests */
-  if (!isInstrumentListEmpty()) 
+  if (!isInstrumentListEmpty() || memory_flag) 
   { /* there are finite instrumentation requests, add requests for this file */
     addFileInstrumentationRequests(pdb, file, itemvec);
   }
@@ -1653,6 +1660,8 @@ int CPDB_GetSubstringCol(const char *haystack, const char *needle)
     col_found = res - local_haystack; 
 #ifdef DEBUG 
     printf("Found col_found %d value= %c\n", col_found, local_haystack[col_found]);
+    printf("local_haystack[col_found - 1] = %c, isalnum(): %d\n",
+	local_haystack[col_found - 1], isalnum(local_haystack[col_found - 1] ));
 #endif /* DEBUG */
     if (col_found == 0) break; /* no need to continue, didn't find anything! */
     if ((col_found) &&isalnum(local_haystack[col_found - 1])) {
@@ -1662,18 +1671,27 @@ int CPDB_GetSubstringCol(const char *haystack, const char *needle)
     }
     else {
       check_before = true; /* its ok, proceed */
+#ifdef DEBUG
+      printf("check_before = true, local_haystack[col_found+needle_length] = %c, isalnum(): %d, ispunct(): %d\n", local_haystack[col_found+needle_length],
+	isalnum(local_haystack[col_found+needle_length]), 
+	ispunct(local_haystack[col_found+needle_length]));
+#endif /* DEBUG */
     }
     /* what about after return? */
 
+    int punctuation = ispunct(local_haystack[col_found+needle_length]);
     if ((col_found) && (isalnum(local_haystack[col_found+needle_length]) ||
-	ispunct(local_haystack[col_found+needle_length]))) {
+	ispunct(local_haystack[col_found+needle_length]))){
       /* hey, there is text after the return -- end subroutine return_foo */
-      local_haystack[col_found + needle_length - 1 ] = '^'; 
-      /* set it to /* retur^_foo */
+      /* but, if it is a ( then it is ok as in allocate(foo(2,3)) */
+      if (local_haystack[col_found+needle_length] != '(') {
+        local_haystack[col_found + needle_length - 1 ] = '^'; 
+      /* set it to  retur^_foo */
 #ifdef DEBUG
       printf("local_haystack = %s\n", local_haystack);
 #endif /* DEBUG */
-      continue; /* searching */
+        continue; /* searching */
+      }
     }
     /* is it safe to examine after the column? */
     int hay_length = strlen(local_haystack);  /* we modified local_haystack, tolower,
@@ -1890,6 +1908,66 @@ const char * stripModuleFromName(const string functionname)
 }
 
 /* -------------------------------------------------------------------------- */
+/* -- Write call TAU_ALLOC(...) statement ----------------------------------- */
+/* -------------------------------------------------------------------------- */
+void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
+{
+ /* consider the string: allocate(A(100), stat=ierr) */
+#ifdef DEBUG
+  cout <<"Allocate Stmt: line ="<<(*it)->line<<endl;
+  cout <<"inbuf ="<<*inbuf<<endl;
+#endif /* DEBUG */
+  char *tok = strtok(inbuf, "(");
+/* get the first part allocate(  in tok */
+  while (tok != NULL)
+  {
+    tok = strtok(NULL, "(");
+    /* next get A */
+    if (tok && !strstr(tok, "=")) /* it doesn't contain a = */
+    {
+#ifdef DEBUG
+      cout <<"use token = "<<tok<<endl; /* A */
+#endif /* DEBUG */
+      ostr<<"\t call TAU_ALLOC("<<tok<<", "<<(*it)->line<< ", "<<tau_size_tok<<"("<<tok<<"), '"<< (*it)->snippet<< ", var="<<tok<<"')"<<endl;
+
+    }
+    if (tok)
+      tok = strtok(NULL, ",");
+#ifdef DEBUG 
+    cout <<"discard tok = "<<tok<<endl;
+#endif /* DEBUG */
+  }
+//  ostr<<"\t call TAU_ALLOC(A, "<<(*it)->line<< ", sizeof(A), '"<< (*it)->snippet<< ", var=A')"<<endl;
+
+}
+/* -------------------------------------------------------------------------- */
+/* -- Write call TAU_DEALLOC(...) statement --------------------------------- */
+/* -------------------------------------------------------------------------- */
+void printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
+{
+#ifdef DEBUG 
+  cout <<"Deallocate Stmt: line ="<<(*it)->line<<endl;
+  printf("Deallocate Stmt: line = %d... \n",(*it)->line);
+  cout <<"inbuf ="<<*inbuf<<endl;
+#endif /* DEBUG */
+  char *tok = strtok(strdup(inbuf), "()");
+  while (tok != NULL)
+  {
+    tok = strtok(NULL, ",)");
+    if (tok && !strstr(tok, "=")) /* it doesn't contain a = */
+    {
+#ifdef DEBUG
+      cout <<"use token = "<<tok<<endl;
+#endif /* DEBUG */
+      ostr<<"\t call TAU_DEALLOC("<<tok<<", "<<(*it)->line<< ", '"<< (*it)->snippet<< ", var="<<tok<<"')"<<endl;
+
+    }
+  }
+
+//  ostr<<"\t call TAU_DEALLOC(A, "<<(*it)->line<< ", '"<< (*it)->snippet<< ", var=A')"<<endl;
+
+}
+/* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
 bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name) 
@@ -1902,7 +1980,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
   int space, i, j, k, c;
-  int docol, ifcol, thencol, gotocol;
+  int docol, ifcol, thencol, gotocol, alloccol, dealloccol;
   if (!ostr) {
     cerr << "Error: Cannot open '" << outfile << "'" << endl;
     return false;
@@ -2284,7 +2362,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		    addMoreInvocations(rid, (*it)->snippet); /* assign the list of strings to the list */
 		  }
 		  else
-		    WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, (*it)->snippet);
+		    WRITE_SNIPPET((*it)->attribute, (*it)->col, 0, (*it)->snippet);
+		  /* if there is another instrumentation point on the same line, it will take care of the write_upto part */
 		}
 		else {
 		  WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, (*it)->snippet);
@@ -2371,7 +2450,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
             case STOP_TIMER:
 #ifdef DEBUG
                 cout <<"STOP_TIMER point Fortran -> line = "<< (*it)->line
-		     <<" timer = "<<(*it)->snippet<<endl;
+		     <<" timer = "<<(*it)->snippet<<" col "<<(*it)->col
+		     <<" write_upto = "<<write_upto<<endl;
 #endif /* DEBUG */
 
 		codesnippet = string("       call TAU_PROFILE_STOP(")+(*it)->snippet+")";
@@ -2381,6 +2461,71 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		if (!current_timer.empty()) current_timer.pop_front();
                 break;
 
+	    case ALLOCATE_STMT:
+                alloccol = CPDB_GetSubstringCol(inbuf,"allocate");
+		if (addThenEndifClauses(inbuf, previousline, alloccol - 1))
+		{
+		/* only write till the alloc column. This assumes statement 
+		begins on col 1? even if it is "20 if (x.gt.2) allocate(A)" */
+		  if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
+		  for(i=(*it)->col-1; i< alloccol - 1; i++) {
+#ifdef DEBUG
+                    cout << "Writing (1.4): "<<inbuf[i]<<endl;
+#endif /* DEBUG */
+                    ostr <<inbuf[i];
+                  }
+		  ostr<<"\t then \n\t";
+		  for(i=alloccol-1; i< strlen(inbuf); i++) {
+#ifdef DEBUG
+                    cout << "Writing (1.5): "<<inbuf[i]<<endl;
+#endif /* DEBUG */
+                    ostr <<inbuf[i];
+                  }
+		  ostr<<endl;
+		  printTauAllocStmt(istr, ostr, &inbuf[alloccol], it);
+                  ostr<<"\t endif"<<endl;
+                }
+		else
+		{ /* there is no if clause */
+		  ostr<<inbuf<<endl;
+		  printTauAllocStmt(istr, ostr, inbuf, it); 
+		}	
+                instrumented = true;
+		break;
+	    case DEALLOCATE_STMT:
+                dealloccol = CPDB_GetSubstringCol(inbuf,"deallocate");
+                if (addThenEndifClauses(inbuf, previousline, dealloccol - 1))
+                {
+                /* only write till the alloc column. This assumes statement
+                begins on col 1? even if it is "20 if (x.gt.2) allocate(A)" */
+		  if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
+                  for(i=(*it)->col-1; i< dealloccol - 1; i++) {
+#ifdef DEBUG
+                    printf("Writing (1.7):: %c\n",inbuf[i]);
+#endif /* DEBUG */
+                    ostr <<inbuf[i];
+                  }
+                  ostr<<"\t then \n\t";
+		  /* first write TAU_DEALLOC, then the deallocate stmt */
+                  printTauDeallocStmt(istr, ostr, &inbuf[dealloccol], it);
+		  ostr<<"\t";
+		  /* now the deallocate stmt */
+                  for(i=dealloccol-1; i< strlen(inbuf); i++) {
+#ifdef DEBUG
+                    printf("Writing (1.8):: %c\n",inbuf[i]);
+#endif /* DEBUG */
+                    ostr <<inbuf[i];
+                  }
+                  ostr<<endl;
+                  ostr<<"\t endif"<<endl;
+                }
+                else
+                { /* there is no if clause, write TAU_DEALLOC, then stmt */
+                  printTauDeallocStmt(istr, ostr, inbuf, it);
+		  ostr<<inbuf<<endl;
+                }
+                instrumented = true;
+		break;
 	    default:
 		cout <<"Unknown option in instrumentFFile:"<<(*it)->kind<<endl;
 		instrumented = true;
@@ -2772,8 +2917,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.130 $   $Date: 2007/02/09 00:09:53 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.130 2007/02/09 00:09:53 sameer Exp $
+ * $Revision: 1.131 $   $Date: 2007/02/27 23:06:01 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.131 2007/02/27 23:06:01 sameer Exp $
  ***************************************************************************/
 
 

@@ -72,7 +72,7 @@ int tau_pthread_create (pthread_t *threadp,
 
 #ifdef TAU_MULTIPLE_COUNTERS
 #define MAX_TAU_COUNTERS 25
-#endif//TAU_MULTIPLE_COUNTERS
+#endif /* TAU_MULTIPLE_COUNTERS */
 
 #if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC))
 
@@ -141,6 +141,7 @@ class KtauProfiler;
 #endif /* defined(TAUKTAU) */
 
 
+/*
 //////////////////////////////////////////////////////////////////////
 //
 // class Profiler
@@ -153,6 +154,7 @@ class KtauProfiler;
 // turns on the timer, and the destructor turns it off.
 //
 //////////////////////////////////////////////////////////////////////
+*/
 class Profiler
 {
 public:
@@ -162,25 +164,25 @@ public:
 	void Start(int tid = RtsLayer::myThread());
 	Profiler(const Profiler& X);
 	Profiler& operator= (const Profiler& X);
-	// Clean up data from this invocation.
+	/* Clean up data from this invocation. */
 	void Stop(int tid = RtsLayer::myThread(), bool useLastTimeStamp = false);
 	~Profiler();
 #ifdef TAU_CALLPATH
         void CallPathStart(int tid);
 #ifdef TAU_MULTIPLE_COUNTERS
         void CallPathStop(double* totaltime, int tid);
-#else  // TAU_MULTIPLE_COUNTERS 
+#else  /* TAU_MULTIPLE_COUNTERS  */
         void CallPathStop(double totaltime, int tid);
-#endif // TAU_MULTIPLE_COUNTERS 
-#endif // TAU_CALLPATH 
+#endif /* TAU_MULTIPLE_COUNTERS  */
+#endif /* TAU_CALLPATH  */
 
 #ifdef TAU_PROFILEPARAM
 #ifdef TAU_MULTIPLE_COUNTERS
         void ProfileParamStop(double* totaltime, int tid);
-#else  // TAU_MULTIPLE_COUNTERS 
+#else  /* TAU_MULTIPLE_COUNTERS  */
         void ProfileParamStop(double totaltime, int tid);
-#endif // TAU_MULTIPLE_COUNTERS 
-#endif // TAU_PROFILEPARAM 
+#endif /* TAU_MULTIPLE_COUNTERS */
+#endif /* TAU_PROFILEPARAM */
 
   	static void ProfileExit(const char *message=0, 
 	  int tid = RtsLayer::myThread());
@@ -196,7 +198,7 @@ public:
 	static void dumpFunctionNames();
 #ifndef TAU_MULTIPLE_COUNTERS
 	static void theCounterList(const char ***inPtr, int *numOfCounters);
-#endif //TAU_MULTIPLE_COUNTERS
+#endif /* TAU_MULTIPLE_COUNTERS */
 
 	static void getFunctionValues(const char **inFuncs,
 				      int numOfFuncs,
@@ -222,27 +224,27 @@ public:
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
 	int ExcludeTimeThisCall(double t);
-	double ExclTimeThisCall; // for this invocation of the function
+	double ExclTimeThisCall; /* for this invocation of the function */
 #endif /* PROFILE_CALLS || PROFILE_STATS */
 
 	static Profiler * CurrentProfiler[TAU_MAX_THREADS];
 #ifndef TAU_MULTIPLE_COUNTERS
 	double StartTime;
-#else //TAU_MULTIPLE_COUNTERS
+#else /* TAU_MULTIPLE_COUNTERS */
 	double StartTime[MAX_TAU_COUNTERS];
 	double CurrentTime[MAX_TAU_COUNTERS];
 	double TotalTime[MAX_TAU_COUNTERS];
-#endif//TAU_MULTIPLE_COUNTERS
+#endif /* TAU_MULTIPLE_COUNTERS */
 	FunctionInfo * ThisFunction;
 #ifdef TAU_CALLPATH
 	FunctionInfo * CallPathFunction;
 	bool 	       AddInclCallPathFlag; 
-#endif // TAU_CALLPATH
+#endif /* TAU_CALLPATH */
 #ifdef TAU_PROFILEPARAM
 	FunctionInfo * ProfileParamFunction; 
 	bool 	       AddInclProfileParamFlag; 
 	static void AddProfileParamData(long key, string& keyname);
-#endif // TAU_PROFILEPARAM
+#endif /* TAU_PROFILEPARAM */
 #ifdef TAU_COMPENSATE
 	/* Compensate for instrumentation overhead based on total number of 
 	child calls executed under the given timer */
@@ -303,14 +305,14 @@ private:
 
 #endif /* PROFILING_ON || TRACING_ON */
 #include <Profile/TauMapping.h>
-// included after class Profiler is defined.
+/* included after class Profiler is defined. */
 #else /* __cplusplus && ! TAU_USE_C_API */
 #include <Profile/TauCAPI.h> /* For C program */
 #endif /* __cplusplus && ! TAU_USE_C_API */
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.73 $   $Date: 2006/12/27 02:50:21 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.73 2006/12/27 02:50:21 amorris Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.74 $   $Date: 2007/02/27 23:06:00 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.74 2007/02/27 23:06:00 sameer Exp $ 
  ***************************************************************************/

@@ -32,6 +32,8 @@
 #include <ctype.h>
 #include <string.h>
 #include "Profile/ProfileGroups.h"
+#include "Profile/TauMemory.h"
+
 
 
 
@@ -88,6 +90,8 @@ void Tau_mark_group_as_phase(void **ptr);
 void Tau_profile_callstack(void );
 void Tau_profile_snapshot(char *name);
 void Tau_profile_snapshot_1l(char *name, int number);
+
+
   
 
 
@@ -1457,12 +1461,53 @@ void TAU_PROFILE_SNAPSHOT(char *name, int slen) {
   tau_profile_snapshot_(name, slen);
 }
 
+void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen) 
+{
+  char *fname = getFortranName(name, slen);
+  Tau_track_memory_allocation(fname, *line, *size, ptr);
+}
+
+void tau_alloc(void ** ptr, int* line, int *size, char *name, int slen) 
+{
+  tau_alloc_(ptr, line, size, name, slen);
+}
+
+void tau_alloc__(void ** ptr, int* line, int *size, char *name, int slen) 
+{
+  tau_alloc_(ptr, line, size, name, slen);
+}
+
+void TAU_ALLOC(void ** ptr, int* line, int *size, char *name, int slen) 
+{
+  tau_alloc_(ptr, line, size, name, slen);
+}
+
+void tau_dealloc_(void ** ptr, int* line, char *name, int slen) 
+{
+  char *fname = getFortranName(name, slen);
+  Tau_track_memory_deallocation(fname, *line, ptr);
+}
+
+void tau_dealloc(void ** ptr, int* line, char *name, int slen) 
+{
+  tau_dealloc_(ptr, line, name, slen);
+}
+
+void tau_dealloc__(void ** ptr, int* line, char *name, int slen) 
+{
+  tau_dealloc_(ptr, line, name, slen);
+}
+
+void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen) 
+{
+  tau_dealloc_(ptr, line, name, slen);
+}
 
 } /* extern "C" */
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.55 $   $Date: 2007/01/04 02:36:29 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.55 2007/01/04 02:36:29 amorris Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.56 $   $Date: 2007/02/27 23:06:00 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.56 2007/02/27 23:06:00 sameer Exp $ 
  ***************************************************************************/
