@@ -41,6 +41,8 @@ declare -i temp=0
 declare -i preprocess=$FALSE
 declare -i revertOnError=$TRUE
 
+declare -i optShared=$FALSE
+
 preprocessorOpts="-P  -traditional-cpp"
 
 
@@ -466,6 +468,17 @@ for arg in "$@"
 			-optAppF90*)
 				optAppF90="${arg#"-optAppF90="}"
 				echoIfDebug "\tFallback Fortran Compiler: $optAppF90"
+				;;
+
+			-optSharedLinking*)
+				optSharedLinking="${arg#"-optSharedLinking="} $optSharedLinking"
+				echoIfDebug "\tLinking Options are: $optLinking"
+				;;
+
+			-optShared)
+				optShared=$TRUE
+				optLinking=$optSharedLinking
+				echoIfDebug "\tUsing shared library"
 				;;
 
 			esac #end case for parsing script Options
