@@ -433,6 +433,9 @@ int TauReadFullLine(char *line, FILE *fp) {
     line[i++] = (unsigned char) ch;
   }
   line[i] = '\0'; 
+  if (ch == EOF) {
+    return -1;
+  }
   return i; 
 }
 
@@ -443,10 +446,14 @@ double TauGetMHzRatings(void) {
   FILE *fp = fopen("/proc/cpuinfo", "r");
 
   if (fp) {
-    while (TauReadFullLine(line, fp)) {
+    while (TauReadFullLine(line, fp) != -1) {
       if (strncmp(line, "cpu MHz", 7) == 0) {
         sscanf(line,"cpu MHz         : %f", &ret);
         return (double) ret; 
+      }
+      if (strncmp(line, "timebase", 8) == 0) {
+        sscanf(line,"timebase        : %f", &ret);
+        return (double) ret / 1.0e6; 
       }
     }
   } else {
@@ -1393,6 +1400,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.82 $   $Date: 2007/02/26 19:04:24 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.82 2007/02/26 19:04:24 amorris Exp $ 
+ * $Revision: 1.83 $   $Date: 2007/02/27 00:04:13 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.83 2007/02/27 00:04:13 amorris Exp $ 
  ***************************************************************************/
