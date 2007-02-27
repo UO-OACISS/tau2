@@ -180,7 +180,6 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 #USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
 #PYTHON#TAUPYTHON = pytau$(TAU_SHLIBX) #ENDIF#
 #PYTHON#TAUPYTHON_INSTALL = $(INSTALLDEST)/pytau$(TAU_SHLIBX) #ENDIF#
-#PYTHON#TAUPYTHON_BINDINGSDIR = $(INSTALLDEST)/bindings$(TAU_CONFIG)#ENDIF#
 ##############################################
 TAU_DSO         = $(TAU_SHLIB)
 TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
@@ -189,9 +188,10 @@ TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
 BITS = 32
 #IBM64#BITS = 64#ENDIF#
 
-#IBMMPI#TAUPOE_BINDINGSDIR = $(INSTALLDEST)/bindings$(TAU_CONFIG)#ENDIF#
 #IBMMPI#POELIB = libmpi_r.a #ENDIF#
 #IBMMPI#POELIB_INSTALL = $(INSTALLDEST)/libmpi_r.a #ENDIF#
+
+TAU_BINDINGSDIR = $(INSTALLDEST)/bindings$(TAU_CONFIG)
 
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB)
@@ -236,6 +236,10 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		@if [ -d $(TAU_BINDINGSDIR) ] ; then true; \
+		    else mkdir $(TAU_BINDINGSDIR); fi
+		cd $(TAU_BINDINGSDIR) ; rm -f libTAU$(TAU_SHLIBX)
+		cd $(TAU_BINDINGSDIR) ; ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 
 $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX): libTauMpi$(TAU_CONFIG)$(LSX)
 		$(MAKE) -f Makefile.wrapper install 
@@ -256,11 +260,11 @@ $(INSTALLDEST)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		$(RM) $(INSTALLDEST)/$(TAUPYTHON)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(TAUPYTHON)
 		$(TAU_INSTALL) tau.py $(INSTALLDEST)
-		@echo Installing $(TAUPYTHON) and tau.py in $(TAUPYTHON_BINDINGSDIR)
-		@if [ -d $(TAUPYTHON_BINDINGSDIR) ] ; then true; \
-		    else mkdir $(TAUPYTHON_BINDINGSDIR); fi
-		$(RM) $(TAUPYTHON_BINDINGSDIR)/tau.py $(TAUPYTHON_BINDINGSDIR)/$(TAUPYTHON)
-		cd $(TAUPYTHON_BINDINGSDIR) && cp ../tau.py . && cp ../$(TAUPYTHON) $(TAUPYTHON)
+		@echo Installing $(TAUPYTHON) and tau.py in $(TAU_BINDINGSDIR)
+		@if [ -d $(TAU_BINDINGSDIR) ] ; then true; \
+		    else mkdir $(TAU_BINDINGSDIR); fi
+		$(RM) $(TAU_BINDINGSDIR)/tau.py $(TAU_BINDINGSDIR)/$(TAUPYTHON)
+		cd $(TAU_BINDINGSDIR) && cp ../tau.py . && cp ../$(TAUPYTHON) $(TAUPYTHON)
 
 
 
@@ -297,17 +301,17 @@ libmpi_r.a: $(MPI_BREAKUP_PREREQ)
 	$(RM) $(BITS)
 
 $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
-	echo Installing libmpi_r.a in $(TAUPOE_BINDINGSDIR)
+	echo Installing libmpi_r.a in $(TAU_BINDINGSDIR)
 	if [ -d $(INSTALLDEST) ] ; then true; \
 	   else mkdir $(INSTALLDEST) ;fi
-	if [ -d $(TAUPOE_BINDINGSDIR) ] ; then true; \
-	    else mkdir $(TAUPOE_BINDINGSDIR); fi
-	$(RM) $(TAUPOE_BINDINGSDIR)/libmpi_r.a
-	$(RM) -f $(TAUPOE_BINDINGSDIR)/libmpi_r.a
+	if [ -d $(TAU_BINDINGSDIR) ] ; then true; \
+	    else mkdir $(TAU_BINDINGSDIR); fi
+	$(RM) $(TAU_BINDINGSDIR)/libmpi_r.a
+	$(RM) -f $(TAU_BINDINGSDIR)/libmpi_r.a
 	$(RM) -f $(INSTALLDEST)/libmpi_r.a
-	cp libmpi_r.a $(TAUPOE_BINDINGSDIR)
+	cp libmpi_r.a $(TAU_BINDINGSDIR)
 	$(RM) -f $(INSTALLDEST)/bindings-default
-	ln -s $(TAUPOE_BINDINGSDIR) $(INSTALLDEST)/bindings-default
+	ln -s $(TAU_BINDINGSDIR) $(INSTALLDEST)/bindings-default
 
 install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL)
 
