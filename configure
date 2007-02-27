@@ -4550,8 +4550,13 @@ then
   echo "TAU: installed tau2slog2 in ${targetdir}/${architecture}/bin"
 fi
 
+echo "TAU: installed tauex in ${targetdir}/${architecture}/bin"
+cat ${tauroot}/tools/src/tauex.in | 
+sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/tauex
+chmod a+rx ${targetdir}/${architecture}/bin/tauex
 
-echo "TAU: installing TAU's PerfDMF database utilities in ${targetdir}/${architecture}/bin" 
+echo "TAU: installed TAU's PerfDMF database utilities in ${targetdir}/${architecture}/bin" 
 
 cat ${tauroot}/tools/src/perfdmf/bin/configure.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
