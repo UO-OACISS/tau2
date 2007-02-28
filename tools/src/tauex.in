@@ -7,20 +7,32 @@ if [ $# = 0 ] ; then
     echo "Usage $0 program"
 fi
 
+
+ProfileSpecified="false"
+TraceSpecified="false"
 processT="false"
 processE="false"
 TauOptions=""
+TauOptionsExclude=""
 Counters="GET_TIME_OF_DAY"
 NumCounters=1
 process="true"
+verbose=false
+
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
   modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
 
   if [ "$processT" = "true" ] ; then
-      options=`echo $arg | sed -e 's/,/ /g'`
+      options=`echo $arg | sed -e 's/,/ /g' | tr [A-Z] [a-z]`
       for i in $options ; do
-	  TauOptions="$TauOptions $i"
+	  if [ "$i" = "profile" ] ; then
+	      ProfileSpecified="true"
+	  elif [ "$i" = "trace" ] ; then
+	      TraceSpecified="true"
+	  else
+	      TauOptions="$TauOptions $i"
+	  fi
       done
       processT="false"
       shift
@@ -34,6 +46,10 @@ for arg in "$@" ; do
       shift
   else
       case $arg in 
+	  -v)
+	      verbose=true
+	      shift
+	      ;;
 	  -e)
 	      processE=true
 	      shift
@@ -51,6 +67,20 @@ for arg in "$@" ; do
 done
 
 
+if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
+    ProfileSpecified="true"
+fi
+
+
+if [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "false" ] ; then
+    TauOptionsExclude="trace"
+elif [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "true" ] ; then
+    TauOptions="$TauOptions profile trace"
+elif [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "true" ] ; then
+    TauOptionsExclude="profile"
+    TauOptions="$TauOptions trace"
+fi
+
 if [ $NumCounters -gt 1 ] ; then
     TauOptions="$TauOptions multiplecounters papi"
 fi
@@ -64,7 +94,15 @@ for opt in $TauOptions; do
 	newbindings="$newbindings $add"
     done
     bindings=$newbindings
+done
 
+for opt in $TauOptionsExclude; do 
+    newbindings=""
+    for b in $bindings ; do
+	add=`echo $b | grep -v -i $opt`
+	newbindings="$newbindings $add"
+    done
+    bindings=$newbindings
 done
 
 
@@ -90,8 +128,10 @@ for c in $Counters ; do
     counter=$(( $counter + 1 ))
 done
 
-#echo "Matching bindings: $bindings"
-#echo "Using $theBinding"
+if [ $verbose = "true" ] ; then
+    echo "Matching bindings: $bindings"
+    echo "Using $theBinding"
+fi
 export LD_LIBRARY_PATH=$TAUROOT/$TAUARCH/lib/$theBinding:$LD_LIBRARY_PATH
 
 # execute the program
