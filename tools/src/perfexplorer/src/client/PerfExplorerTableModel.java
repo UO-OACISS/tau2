@@ -169,8 +169,7 @@ public class PerfExplorerTableModel extends AbstractTableModel{
 						return new Integer(trial.getID());
 					default:
 						if (trial.getField(r-2) != null)
-							if (trial.getFieldName(r-2).equalsIgnoreCase("XML_METADATA") &&
-									trial.getID() != currentTrial) {
+							if (trial.getFieldName(r-2).equalsIgnoreCase("XML_METADATA") && trial.getID() != currentTrial) {
 								try {
 									// This is a trial with XML data, so in the bottom half of the split
 									// pane, put the XML data in a tree viewer.

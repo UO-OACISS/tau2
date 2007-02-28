@@ -30,7 +30,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.5 2007/02/08 23:28:50 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.6 2007/02/28 03:39:11 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -97,6 +97,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 			// create and populate the temporary trial table
 			buf = buildCreateTableStatement("temp_trial", db);
+			buf.append(" as ");
    			buf.append("(select trial.* from trial ");
 	        buf.append("inner join experiment ");
 			buf.append("on trial.experiment = experiment.id ");
@@ -183,7 +184,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 			statement.execute();
 			statement.close();
 
-			// create and populate the temporary metric table
+/*
+			// create and populate the temporary XML_METADATA table
 			buf = buildCreateTableStatement("temp_metric", db);
     		buf.append("(select metric.* from metric ");
 			buf.append("inner join temp_trial ");
@@ -215,9 +217,79 @@ public class GeneralChartData extends RMIGeneralChartData {
 			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
+*/
+
+			// create and populate the temporary metric table
+			buf = buildCreateTableStatement("temp_metric", db);
+			buf.append(" as ");
+    		buf.append("(select metric.* from metric ");
+			buf.append("inner join temp_trial ");
+			buf.append("on metric.trial = temp_trial.id ");
+			// add the where clause
+			List metricNames = model.getMetricNames();
+			if (metricNames != null) {
+				if (db.getDBType().compareTo("db2") == 0) {
+					buf.append("where metric.name like ? ");
+				} else {
+					buf.append("where metric.name = ? ");
+				}
+				for (int i = 1 ; i < metricNames.size() ; i++) {
+					if (db.getDBType().compareTo("db2") == 0) {
+						buf.append("or metric.name like ? ");
+					} else {
+						buf.append("or metric.name = ? ");
+					}
+				}
+			}
+			buf.append(") ");
+			statement = db.prepareStatement(buf.toString());
+			if (metricNames != null) {
+				for (int i = 1 ; i <= metricNames.size() ; i++) {
+					String tmp = (String)metricNames.get(i-1);
+					statement.setString(i, tmp);
+				}
+			}
+			//System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
+
+			// if we only want the main event, handle that
+			// we need a sub query.  Bah.
+			if (model.getMainEventOnly()) {
+				buf = new StringBuffer();
+				buf.append("select ie.name from interval_event ie ");
+   				buf.append("inner join interval_mean_summary ims ");
+				buf.append("on ie.id = ims.interval_event, ");
+				buf.append("(select temp_trial.id as trialid, ");
+				buf.append("temp_metric.id as metricid, ");
+				buf.append("max(interval_mean_summary.inclusive) as maxinclusive ");
+				buf.append("from interval_event inner join temp_trial ");
+				buf.append("on interval_event.trial = temp_trial.id ");
+				buf.append("inner join interval_mean_summary on ");
+				buf.append("interval_mean_summary.interval_event = interval_event.id ");
+				buf.append("inner join temp_metric ");
+				buf.append("on interval_mean_summary.metric = temp_metric.id ");
+				buf.append("group by 1, 2) mr ");
+				buf.append("where ie.trial = trialid ");
+   				buf.append("and ims.metric = metricid ");
+   				buf.append("and ims.inclusive = maxinclusive");
+				statement = db.prepareStatement(buf.toString());
+				//System.out.println(statement.toString());
+				ResultSet results = statement.executeQuery();
+
+				int columnCounter = 0;
+				while (results.next() != false) {
+					// by adding these, we ensure only the main event
+					// will be selected in the next temporary table creation!
+					model.addEventName(results.getString(1));
+				} 
+				results.close();
+				statement.close();
+			} 
 
 			// create and populate the temporary event table
 			buf = buildCreateTableStatement("temp_event", db);
+			buf.append(" as ");
 			buf.append("(select interval_event.* from interval_event ");
 			buf.append("inner join temp_trial ");
 			buf.append("on interval_event.trial = temp_trial.id ");
@@ -228,12 +300,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 			// add the where clause
 			boolean didWhere = false;
-
-			// if we only want the main event, handle that
-			if (model.getMainEventOnly()) {
-				buf.append("where interval_mean_summary.inclusive_percentage = 100 ");
-				didWhere = true;
-			} 
 
 			// if we don't want to include callpath or phase data, handle that
 			if (model.getEventNoCallpath()) {
@@ -445,7 +511,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 		}
 		buf.append("temporary table ");
 		buf.append(tableName);
-		buf.append(" as ");
 		return buf;
 	}
 
