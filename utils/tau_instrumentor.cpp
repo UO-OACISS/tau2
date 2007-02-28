@@ -1917,42 +1917,56 @@ void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<item
   cout <<"Allocate Stmt: line ="<<(*it)->line<<endl;
   cout <<"inbuf ="<<inbuf<<endl;
 #endif /* DEBUG */
-  char *tok = strtok(inbuf, "(");
-#ifdef DEBUG
-      printf("before while token = |%s|\n",tok);
-#endif /* DEBUG */
-/* get the first part allocate(  in tok */
-  while (tok != NULL)
+  char varname[1024];
+  char *line = inbuf;
+  int i, openparens, len;
+  char *ptr = line;
+  bool done = false; 
+/* NEW CODE! */
+  while (*line && *line != '(') line++;
+  line++; /* skip first ( */
+  while (!done)
   {
-    tok = strtok(NULL, "(");
+    len = strlen(line);
+    for (i = 0; i < len && *line != ',' && *line != ')' && *line != '('; i++, line++)
+    { /* check for the variable name. parsing shouldn't reach a  , ) or ( */
+      varname[i] = *line; 
 #ifdef DEBUG
-      printf("first token = |%s|\n",tok);
+      printf("varname[%d] = %c\n", i, varname[i]);
 #endif /* DEBUG */
-    /* next get A */
-    if (tok && !strstr(tok, "=") && !strstr(tok,",") && !strstr(tok,")")) /* it doesn't contain a = */
-    {
+    }
+    varname[i] = '\0';
+  
+    if (!strstr(varname, "=")) {
+    /* we don't want stat=ierr argument */
+      ostr<<"\t call TAU_ALLOC("<<varname<<", "<<(*it)->line<< ", "
+          <<tau_size_tok<<"("<<varname<<"), '"<< (*it)->snippet<< ", var="
+          <<varname<<"')"<<endl;
 #ifdef DEBUG
-      printf("use token = |%s|\n",tok);
+      printf("Putting in file: varname=%s, line = %s\n", varname, line);
 #endif /* DEBUG */
-      ostr<<"\t call TAU_ALLOC("<<tok<<", "<<(*it)->line<< ", "<<tau_size_tok<<"("<<tok<<"), '"<< (*it)->snippet<< ", var="<<tok<<"')"<<endl;
-
     }
-    if (tok)
+    else break; /* end of processing */
+    while (*line && *line != '(') line++; /* go to the first ( */
+    /* next count the number of ( opened before we reach a ) */
+    len = strlen(line);
+    for (i = 0, openparens = 0; i < len, *line; i++, line++)
     {
-      tok = strtok(NULL, ")");
-#ifdef DEBUG 
-      printf("discard token = |%s|\n",tok);
+      if (*line == '(') openparens ++;
+      if (*line == ')') openparens --;
+      if (openparens == 0) break;
+#ifdef DEBUG
+      printf("line = %c\n", *line);
 #endif /* DEBUG */
-      if (tok) 
-      {
-        tok = strtok(NULL, ",");
-#ifdef DEBUG 
-        printf("second discard token = |%s|\n",tok);
-#endif /* DEBUG */
-      }
     }
+    while (*line && *line != ',') line++; /* go to the first ( */
+    if (*line) line++; /* skip , */
+    else done = true;
+#ifdef DEBUG
+    printf("Got: line = %s, varname=%s, done=%d\n", line, varname, done);
+#endif /* DEBUG */
   }
-//  ostr<<"\t call TAU_ALLOC(A, "<<(*it)->line<< ", sizeof(A), '"<< (*it)->snippet<< ", var=A')"<<endl;
+  return;
 
 }
 /* -------------------------------------------------------------------------- */
@@ -2932,8 +2946,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.132 $   $Date: 2007/02/28 01:46:47 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.132 2007/02/28 01:46:47 sameer Exp $
+ * $Revision: 1.133 $   $Date: 2007/02/28 03:30:58 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.133 2007/02/28 03:30:58 sameer Exp $
  ***************************************************************************/
 
 
