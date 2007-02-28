@@ -1915,27 +1915,42 @@ void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<item
  /* consider the string: allocate(A(100), stat=ierr) */
 #ifdef DEBUG
   cout <<"Allocate Stmt: line ="<<(*it)->line<<endl;
-  cout <<"inbuf ="<<*inbuf<<endl;
+  cout <<"inbuf ="<<inbuf<<endl;
 #endif /* DEBUG */
   char *tok = strtok(inbuf, "(");
+#ifdef DEBUG
+      printf("before while token = |%s|\n",tok);
+#endif /* DEBUG */
 /* get the first part allocate(  in tok */
   while (tok != NULL)
   {
     tok = strtok(NULL, "(");
+#ifdef DEBUG
+      printf("first token = |%s|\n",tok);
+#endif /* DEBUG */
     /* next get A */
-    if (tok && !strstr(tok, "=")) /* it doesn't contain a = */
+    if (tok && !strstr(tok, "=") && !strstr(tok,",") && !strstr(tok,")")) /* it doesn't contain a = */
     {
 #ifdef DEBUG
-      cout <<"use token = "<<tok<<endl; /* A */
+      printf("use token = |%s|\n",tok);
 #endif /* DEBUG */
       ostr<<"\t call TAU_ALLOC("<<tok<<", "<<(*it)->line<< ", "<<tau_size_tok<<"("<<tok<<"), '"<< (*it)->snippet<< ", var="<<tok<<"')"<<endl;
 
     }
     if (tok)
-      tok = strtok(NULL, ",");
+    {
+      tok = strtok(NULL, ")");
 #ifdef DEBUG 
-    cout <<"discard tok = "<<tok<<endl;
+      printf("discard token = |%s|\n",tok);
 #endif /* DEBUG */
+      if (tok) 
+      {
+        tok = strtok(NULL, ",");
+#ifdef DEBUG 
+        printf("second discard token = |%s|\n",tok);
+#endif /* DEBUG */
+      }
+    }
   }
 //  ostr<<"\t call TAU_ALLOC(A, "<<(*it)->line<< ", sizeof(A), '"<< (*it)->snippet<< ", var=A')"<<endl;
 
@@ -2917,8 +2932,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.131 $   $Date: 2007/02/27 23:06:01 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.131 2007/02/27 23:06:01 sameer Exp $
+ * $Revision: 1.132 $   $Date: 2007/02/28 01:46:47 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.132 2007/02/28 01:46:47 sameer Exp $
  ***************************************************************************/
 
 
