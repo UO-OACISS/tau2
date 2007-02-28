@@ -28,7 +28,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.41 2007/01/04 21:20:04 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.42 2007/02/28 03:36:44 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -66,7 +66,7 @@ public class ChartData extends RMIChartData {
 	 * @return
 	 */
 	public static ChartData getChartData(RMIPerfExplorerModel model, ChartDataType dataType) {
-		PerfExplorerOutput.println("getChartData(" + model.toString() + ")...");
+		//PerfExplorerOutput.println("getChartData(" + model.toString() + ")...");
 		ChartData chartData = new ChartData(model, dataType);
 		chartData.doQuery();
 		return chartData;
@@ -316,10 +316,11 @@ public class ChartData extends RMIChartData {
 				buf.append(")");
 			}
 
+			// this sucks - can't use 100.0, because of rounding errors. Bah.
 			if (db.getDBType().compareTo("db2") == 0) {
-				buf.append(" and m.name like ? and ims.inclusive_percentage = 100.0 ");
+				buf.append(" and m.name like ? and ims.inclusive_percentage >= 99.99999 ");
 			} else {
-				buf.append(" and m.name = ? and ims.inclusive_percentage = 100.0 ");
+				buf.append(" and m.name = ? and ims.inclusive_percentage >= 99.99999 ");
 			}
 			buf.append(" group by ");
 			if (!(object instanceof RMIView)) {
