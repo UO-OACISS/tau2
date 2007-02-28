@@ -4558,7 +4558,7 @@ chmod a+rx ${targetdir}/${architecture}/bin/tauex
 
 echo "TAU: installed tauinc.sh in ${targetdir}/${architecture}/bin"
 cp ${tauroot}/tools/src/tauinc.sh ${targetdir}/${architecture}/bin
-chmod a+rx  ${targetdir}/${architecture}/bin
+chmod a+rx  ${targetdir}/${architecture}/bin/tauinc.sh
 
 echo "TAU: installed TAU's PerfDMF database utilities in ${targetdir}/${architecture}/bin" 
 
