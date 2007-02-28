@@ -802,6 +802,8 @@ int processMemBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& i
     /* NOTE: We currently do not support goto in C/C++ to close the timer.
      * This needs to be added at some point -- similar to Fortran */
     switch(k) {
+      case pdbStmt::ST_FGOTO:
+	break;
       case pdbStmt::ST_FALLOCATE:
 #ifdef DEBUG
 	printf("FALLOCATE statement line = %d\n", s->stmtBegin().line());
@@ -1287,6 +1289,6 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.37 $   $Date: 2007/02/27 23:06:01 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.37 2007/02/27 23:06:01 sameer Exp $
+ * $Revision: 1.38 $   $Date: 2007/02/28 04:28:34 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.38 2007/02/28 04:28:34 sameer Exp $
  ***************************************************************************/
