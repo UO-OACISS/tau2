@@ -933,15 +933,18 @@ char use_return_nonvoid[256] = "return";
 
 
 
-void writeFortranTimer(ostream &ostr, string timername) {
-  string fullstring = string("      call TAU_PROFILE_TIMER(profiler, '") + timername + string("')");
+/* -------------------------------------------------------------------------- */
+/* -- writeLongFortranStatement breaks up the suffix in one or more lines --- */
+/* -------------------------------------------------------------------------- */
+void writeLongFortranStatement(ostream &ostr, string& prefix, string suffix) {
+  string fullstring = prefix + suffix + string("')");
 
   if (fullstring.length() <= 72) {
     ostr << fullstring << endl;
     return;
   }
 
-  string s1 = string("      call TAU_PROFILE_TIMER(profiler, '");
+  string s1 = prefix;
   string s2 = "";
   int length = s1.length();
   for (int i=length; i < 72; i++) {
@@ -951,16 +954,25 @@ void writeFortranTimer(ostream &ostr, string timername) {
   string full = s1 + s2 + "&\n";
 
   // continue to break lines in the correct spot
-  while (timername.length() > 64) {
-    string first = timername.substr(0,64);
-    timername.erase(0,64);
+  while (suffix.length() > 64) {
+    string first = suffix.substr(0,64);
+    suffix.erase(0,64);
     full = full + "     &"+first+"&\n";
   }
   
-  full = full + "     &"+timername+"')";
+  full = full + "     &"+suffix+"')";
 
   ostr << full << endl;
 
+}
+
+/* -------------------------------------------------------------------------- */
+/* -- writeFortranTimer writes the long timer name in two or more statements  */
+/* -- if necessary. It invokes writeLongFortranStatement -------------------  */
+/* -------------------------------------------------------------------------- */
+void writeFortranTimer(ostream &ostr, string timername) {
+  string prefix = string("      call TAU_PROFILE_TIMER(profiler, '");
+  writeLongFortranStatement(ostr, prefix, timername);
 }
 
 
@@ -1917,11 +1929,12 @@ void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<item
   cout <<"Allocate Stmt: line ="<<(*it)->line<<endl;
   cout <<"inbuf ="<<inbuf<<endl;
 #endif /* DEBUG */
-  char varname[1024];
+  char varname[1024], allocstmt[64*1024], suffixstmt[64*1024];
   char *line = inbuf;
   int i, openparens, len;
   char *ptr = line;
   bool done = false; 
+  string prefix, suffix;
 /* NEW CODE! */
   while (*line && *line != '(') line++;
   line++; /* skip first ( */
@@ -1939,9 +1952,18 @@ void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<item
   
     if (!strstr(varname, "=")) {
     /* we don't want stat=ierr argument */
+    /* We need to break up this into a continuation line if it exceeds 72 chars */
+/*
       ostr<<"\t call TAU_ALLOC("<<varname<<", "<<(*it)->line<< ", "
           <<tau_size_tok<<"("<<varname<<"), '"<< (*it)->snippet<< ", var="
           <<varname<<"')"<<endl;
+*/
+     sprintf(allocstmt, "       call TAU_ALLOC(%s, %d, %s(%s), '",
+	varname, (*it)->line, tau_size_tok.c_str(), varname);
+     sprintf(suffixstmt, "%s, variable=%s", (*it)->snippet.c_str(), varname);
+     string prefix=string(allocstmt);
+     string suffix=string(suffixstmt);
+     writeLongFortranStatement(ostr, prefix, suffix);
 #ifdef DEBUG
       printf("Putting in file: varname=%s, line = %s\n", varname, line);
 #endif /* DEBUG */
@@ -1974,6 +1996,7 @@ void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<item
 /* -------------------------------------------------------------------------- */
 void printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
 {
+  char deallocstmt[64*1024], suffixstmt[64*1024];
 #ifdef DEBUG 
   cout <<"Deallocate Stmt: line ="<<(*it)->line<<endl;
   printf("Deallocate Stmt: line = %d... \n",(*it)->line);
@@ -1988,8 +2011,16 @@ void printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<it
 #ifdef DEBUG
       cout <<"use token = "<<tok<<endl;
 #endif /* DEBUG */
+/*
       ostr<<"\t call TAU_DEALLOC("<<tok<<", "<<(*it)->line<< ", '"<< (*it)->snippet<< ", var="<<tok<<"')"<<endl;
 
+*/
+     sprintf(deallocstmt, "       call TAU_DEALLOC(%s, %d, '",
+        tok, (*it)->line);
+     sprintf(suffixstmt, "%s, variable=%s", (*it)->snippet, tok);
+     string prefix=string(deallocstmt);
+     string suffix=string(suffixstmt);
+     writeLongFortranStatement(ostr, prefix, suffix);
     }
   }
 
@@ -2534,7 +2565,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
                     ostr <<inbuf[i];
                   }
-                  ostr<<"\t then \n\t";
+                  ostr<<"\t then \n";
 		  /* first write TAU_DEALLOC, then the deallocate stmt */
                   printTauDeallocStmt(istr, ostr, &inbuf[dealloccol], it);
 		  ostr<<"\t";
@@ -2946,8 +2977,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.133 $   $Date: 2007/02/28 03:30:58 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.133 2007/02/28 03:30:58 sameer Exp $
+ * $Revision: 1.134 $   $Date: 2007/02/28 05:20:38 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.134 2007/02/28 05:20:38 sameer Exp $
  ***************************************************************************/
 
 
