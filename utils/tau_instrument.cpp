@@ -784,6 +784,8 @@ int processMemBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& i
 		int level, const pdbStmt *parentDO)
 {
   pdbLoc start, stop; /* the location of start and stop timer statements */
+#ifndef PDT_NOFSTMTS
+/* statements are there */
   
 #ifdef DEBUG
   printf("Inside processMemBlock()\n");
@@ -835,6 +837,10 @@ int processMemBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& i
     return processMemBlock(s->nextStmt(), ro, itemvec, level, parentDO);
   else
     return 1;
+
+#else /* PDT_FNOSTMTS */
+   return 0;
+#endif /* PDT_NOFSTMTS */
 
 }
 /* Process Block to examine the routine */
@@ -1289,6 +1295,6 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.38 $   $Date: 2007/02/28 04:28:34 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.38 2007/02/28 04:28:34 sameer Exp $
+ * $Revision: 1.39 $   $Date: 2007/02/28 19:02:18 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.39 2007/02/28 19:02:18 sameer Exp $
  ***************************************************************************/
