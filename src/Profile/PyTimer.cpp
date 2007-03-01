@@ -12,6 +12,12 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyTimer.cpp,v $
+// Revision 1.5  2007/03/01 02:45:39  amorris
+// The map for reusing timers was not taking the 'type' into account, so when
+// different routines with the same name occurred, they were both assigned to the
+// same timer with the file/line information of whichever occurred first.  We now
+// hash on the combined name+type.
+//
 // Revision 1.4  2003/03/20 18:41:05  sameer
 // Added TAU_HPUX guards for <limit> header.
 //
@@ -74,8 +80,8 @@ PyObject * pytau_profileTimer(PyObject *self, PyObject *args, PyObject *kwargs)
     printf("Got Name = %s, Type = %s, Group = %s, tauid = %d\n", name, type, group, tauid);
 #endif /* DEBUG */
 
-    char * functionName = new char[strlen(name)+1]; // create a new storage - STL req.
-    strcpy(functionName,name);
+    char * functionName = new char[strlen(name) + strlen(type) +5]; // create a new storage - STL req.
+    sprintf (functionName,"%s %s",name,type);
     if (( it = funcDB.find((const char *)functionName)) != funcDB.end()) {
 #ifdef DEBUG
         printf("Found the name %s\n", functionName); 
@@ -86,7 +92,7 @@ PyObject * pytau_profileTimer(PyObject *self, PyObject *args, PyObject *kwargs)
      }//if
      else{
        TauGroup_t groupid = RtsLayer::getProfileGroup(group);
-       FunctionInfo *f = new FunctionInfo(name, type, groupid, group, true); 
+       FunctionInfo *f = new FunctionInfo(functionName, "", groupid, group, true); 
        tauid = TheFunctionDB().size() - 1;
        // These two need to be an atomic operation if threads are involved. LockDB happens
        // inside FunctionInfoInit()
@@ -170,7 +176,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyTimer.cpp,v 1.4 2003/03/20 18:41:05 sameer Exp $
+// $Id: PyTimer.cpp,v 1.5 2007/03/01 02:45:39 amorris Exp $
 
 // End of file
   
