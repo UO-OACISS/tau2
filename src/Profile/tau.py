@@ -300,11 +300,21 @@ class Profile:
         fcode = frame.f_code
         fn = (fcode.co_filename, fcode.co_firstlineno, fcode.co_name)
         self.cur = (t, 0, 0, fn, frame, self.cur)
-        tautype = '[' + self.cur[-3][0] + ', line=' + str(self.cur[-3][1]) + ']'
-        if  self.cur[-3][2] is "profiler" :
+
+        if self.cur[-3][2] is "profiler" :
             pass
         else:
-            tautimer = pytau.profileTimer(self.cur[-3][2], tautype)
+            classname = ""
+            if frame.f_locals:
+                obj = frame.f_locals.get("self", None)
+                if not obj is None:
+                    classname = obj.__class__.__name__ + "::"
+                else:
+                    classname = ""
+
+            tauname = classname + self.cur[-3][2]
+            tautype = '[{' + self.cur[-3][0] + '} {' + str(self.cur[-3][1]) + '}]'
+            tautimer = pytau.profileTimer(tauname, tautype)
             pytau.start(tautimer)
 
         timings = self.timings
@@ -399,9 +409,10 @@ class Profile:
             return repr((self.co_filename, self.co_line, self.co_name))
 
     class fake_frame:
-        def __init__(self, code, prior):
+        def __init__(self, code, prior, local):
             self.f_code = code
             self.f_back = prior
+            self.f_locals = local
 
     def simulate_call(self, name):
         code = self.fake_code('profile', 0, name)
@@ -409,7 +420,7 @@ class Profile:
             pframe = self.cur[-2]
         else:
             pframe = None
-        frame = self.fake_frame(code, pframe)
+        frame = self.fake_frame(code, pframe, None)
         self.dispatch['call'](self, frame, 0)
 
     # collect stats from pending stack, including getting final
