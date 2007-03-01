@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyBindings.cpp,v $
+// Revision 1.2  2007/03/01 22:17:28  amorris
+// Added phase API for python
+//
 // Revision 1.1  2003/02/28 23:26:50  sameer
 // Added Python Bindings to TAU [Julian Cummings, Brian Miller].
 //
@@ -70,6 +73,7 @@ struct PyMethodDef pytau_methods[] = {
     {pytau_enableInstrumentation__name__, pytau_enableInstrumentation, METH_VARARGS, pytau_enableInstrumentation__doc__},
     {pytau_disableInstrumentation__name__, pytau_disableInstrumentation, METH_VARARGS, pytau_disableInstrumentation__doc__},
 // timers
+    {pytau_phase__name__, pytau_phase, METH_VARARGS | METH_KEYWORDS, pytau_phase__doc__}, 
     {pytau_profileTimer__name__, pytau_profileTimer, METH_VARARGS | METH_KEYWORDS, pytau_profileTimer__doc__}, 
     {pytau_start__name__, pytau_start, METH_VARARGS, pytau_start__doc__}, 
     {pytau_stop__name__, pytau_stop, METH_VARARGS, pytau_stop__doc__}, 
@@ -79,6 +83,6 @@ struct PyMethodDef pytau_methods[] = {
 };
 
 // version
-// $Id: PyBindings.cpp,v 1.1 2003/02/28 23:26:50 sameer Exp $
+// $Id: PyBindings.cpp,v 1.2 2007/03/01 22:17:28 amorris Exp $
 
 // End of file

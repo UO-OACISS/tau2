@@ -12,6 +12,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyTimer.cpp,v $
+// Revision 1.6  2007/03/01 22:17:28  amorris
+// Added phase API for python
+//
 // Revision 1.5  2007/03/01 02:45:39  amorris
 // The map for reusing timers was not taking the 'type' into account, so when
 // different routines with the same name occurred, they were both assigned to the
@@ -55,56 +58,84 @@ struct ltstr{
 };
 
 
+// tells whether a FunctionInfo object is a phase or not
+static map<int, bool> phaseMap;
+
+static PyObject *createTimer(PyObject *self, PyObject *args, PyObject *kwargs, bool phase) {
+  // Extract name, type and group strings and return the id of the routine
+  int tauid = 0; 
+  char *name = "None";
+  char *type = "";
+  char *group = "TAU_PYTHON"; 
+  static char *argnames[] = { "name", "type", "group", NULL}; 
+  /* GLOBAL database of function names */
+  static map<const char*, int, ltstr> funcDB;
+  map<const char *, int, ltstr>::iterator it;
+  
+  // Get Python arguments 
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|sss", argnames, 
+				   &name, &type, &group)) {
+    return NULL;
+  }
+#ifdef DEBUG
+  printf("Got Name = %s, Type = %s, Group = %s, tauid = %d\n", name, type, group, tauid);
+#endif /* DEBUG */
+  
+  char * functionName = new char[strlen(name) + strlen(type) +5]; // create a new storage - STL req.
+  sprintf (functionName,"%s %s",name,type);
+  if (( it = funcDB.find((const char *)functionName)) != funcDB.end()) {
+#ifdef DEBUG
+    printf("Found the name %s\n", functionName); 
+#endif /* DEBUG */
+    
+    tauid = (*it).second;
+    delete functionName; // don't need this if its already there.
+  } else {
+
+    if (phase) {
+      // Add TAU_PHASE to the group
+      group = Tau_phase_enable(group);
+    }
+    TauGroup_t groupid = RtsLayer::getProfileGroup(group);
+    FunctionInfo *f = new FunctionInfo(functionName, "", groupid, group, true); 
+    tauid = TheFunctionDB().size() - 1;
+    // These two need to be an atomic operation if threads are involved. LockDB happens
+    // inside FunctionInfoInit()
+    
+    // Store the id in our map
+    funcDB[(const char *)functionName] = tauid; 
+    // Do not delete functionName, STL requirement!
+
+    if (phase) {
+      phaseMap[tauid] = true;
+    } else {
+      phaseMap[tauid] = false;
+    }
+  }
+
+  return Py_BuildValue("i", tauid);
+}
+
 
 char pytau_profileTimer__name__[] = "profileTimer";
 char pytau_profileTimer__doc__[] = "access or create a TAU timer";
 extern "C"
 PyObject * pytau_profileTimer(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    // Extract name, type and group strings and return the id of the routine
-    int tauid = 0; 
-    char *name = "None";
-    char *type = "";
-    char *group = "TAU_PYTHON"; 
-    static char *argnames[] = { "name", "type", "group", NULL}; 
-    /* GLOBAL database of function names */
-    static map<const char*, int, ltstr> funcDB;
-    map<const char *, int, ltstr>::iterator it;
-
-    // Get Python arguments 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|sss", argnames, 
-			    &name, &type, &group)) {
-	    return NULL;
-    }
-#ifdef DEBUG
-    printf("Got Name = %s, Type = %s, Group = %s, tauid = %d\n", name, type, group, tauid);
-#endif /* DEBUG */
-
-    char * functionName = new char[strlen(name) + strlen(type) +5]; // create a new storage - STL req.
-    sprintf (functionName,"%s %s",name,type);
-    if (( it = funcDB.find((const char *)functionName)) != funcDB.end()) {
-#ifdef DEBUG
-        printf("Found the name %s\n", functionName); 
-#endif /* DEBUG */
-
-	tauid = (*it).second;
-        delete functionName; // don't need this if its already there.
-     }//if
-     else{
-       TauGroup_t groupid = RtsLayer::getProfileGroup(group);
-       FunctionInfo *f = new FunctionInfo(functionName, "", groupid, group, true); 
-       tauid = TheFunctionDB().size() - 1;
-       // These two need to be an atomic operation if threads are involved. LockDB happens
-       // inside FunctionInfoInit()
-       
-       // Store the id in our map
-       funcDB[(const char *)functionName] = tauid; 
-       // Do not delete functionName, STL requirement!
-     }
-
-    // return
-    return Py_BuildValue("i", tauid);
+  // create non-phase timer
+  return createTimer(self, args, kwargs, false);
 }
+
+char pytau_phase__name__[] = "phase";
+char pytau_phase__doc__[] = "access or create a TAU phase";
+extern "C"
+PyObject * pytau_phase(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+  // create phase timer
+  return createTimer(self, args, kwargs, true);
+}
+
+
 
 char pytau_start__name__[] = "start";
 char pytau_start__doc__[] = "start a TAU timer";
@@ -118,6 +149,7 @@ PyObject * pytau_start(PyObject *self, PyObject *args)
     }
     
     FunctionInfo *f = TheFunctionDB()[id];
+
 #ifdef DEBUG
     printf("Received timer Named %s, id = %d\n", f->GetName(), id);
 #endif /* DEBUG */
@@ -129,6 +161,14 @@ PyObject * pytau_start(PyObject *self, PyObject *args)
       printf("ERROR: Out of Memory in pytau_start! new returns NULL!\n");
       return NULL;
     }
+
+#ifdef TAU_PROFILEPHASE
+    bool isPhase = phaseMap[id];
+    if (isPhase) {
+      p->SetPhase(1);
+    }
+#endif
+
     p->Start(tid);
     Py_INCREF(Py_None);
     return Py_None;
@@ -176,7 +216,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyTimer.cpp,v 1.5 2007/03/01 02:45:39 amorris Exp $
+// $Id: PyTimer.cpp,v 1.6 2007/03/01 22:17:28 amorris Exp $
 
 // End of file
   
