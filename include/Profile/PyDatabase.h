@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.h,v $
+// Revision 1.2  2007/03/02 02:35:37  amorris
+// Added snapshot API for python
+//
 // Revision 1.1  2003/02/28 23:29:08  sameer
 // Added Python Bindings  headers to TAU.
 //
@@ -31,6 +34,10 @@
 #if !defined(pytau_database_h)
 #define pytau_database_h
 
+extern char pytau_snapshot__name__[];
+extern char pytau_snapshot__doc__[];
+extern "C"
+PyObject * pytau_snapshot(PyObject *, PyObject *);
 
 extern char pytau_dbDump__name__[];
 extern char pytau_dbDump__doc__[];
@@ -80,6 +87,6 @@ PyObject * pytau_dumpFuncValsIncr(PyObject *, PyObject *);
 #endif // pytau_database_h
 
 // version
-// $Id: PyDatabase.h,v 1.1 2003/02/28 23:29:08 sameer Exp $
+// $Id: PyDatabase.h,v 1.2 2007/03/02 02:35:37 amorris Exp $
 
 // End of file
