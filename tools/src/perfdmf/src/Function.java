@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.14 2006/11/08 23:17:16 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.15 2007/03/02 04:11:13 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  * @see		FunctionProfile
  */
 /**
@@ -116,16 +116,16 @@ public class Function implements Serializable, Comparable {
                 name = name.substring(name.lastIndexOf("["));
                 int fileIndex = name.indexOf("file:");
                 int lineIndex = name.indexOf("line:");
-                
-                String filename = name.substring(fileIndex+5, lineIndex).trim();
+                String filename = name.substring(fileIndex + 5, lineIndex).trim();
+
                 sourceLink.setFilename(filename);
                 int lineNumber;
-                if (name.indexOf("]",lineIndex) != -1) {
+                if (name.indexOf("]", lineIndex) != -1) {
                     // new mpiP
-                    lineNumber = Integer.parseInt(name.substring(lineIndex+5,name.indexOf("]")));
+                    lineNumber = Integer.parseInt(name.substring(lineIndex + 5, name.indexOf("]")));
                 } else {
                     // old mpiP
-                    lineNumber = Integer.parseInt(name.substring(lineIndex+5).trim());
+                    lineNumber = Integer.parseInt(name.substring(lineIndex + 5).trim());
                 }
                 sourceLink.setStartLine(lineNumber);
                 sourceLink.setEndLine(lineNumber);
@@ -135,7 +135,7 @@ public class Function implements Serializable, Comparable {
             // for TAU, look at the leaf location information
             String name = this.name;
             if (isCallPathFunction()) {
-                name = name.substring(name.lastIndexOf("=>")+2);
+                name = name.substring(name.lastIndexOf("=>") + 2);
             }
 
             int filenameStart = name.indexOf("[{");
@@ -156,7 +156,10 @@ public class Function implements Serializable, Comparable {
             int comma2 = name.indexOf(",", comma1 + 1);
             int closebracket2 = name.indexOf("}", closebracket1 + 1);
 
-            sourceLink.setFilename(name.substring(filenameStart + 2, filenameEnd));
+            String filename = name.substring(filenameStart + 2, filenameEnd);
+            filename = filename.substring(filename.lastIndexOf("/") + 1);
+
+            sourceLink.setFilename(filename);
 
             if (openbracket1 == -1) {
                 return sourceLink;
@@ -164,8 +167,15 @@ public class Function implements Serializable, Comparable {
 
             if (dash == -1) {
                 // fortran (e.g. "foo [{foo.cpp} {1,1}]")
-                if (closebracket1 == -1 || comma1 == -1) {
-                    return sourceLink;
+                if (comma1 == -1) {
+                    if (closebracket1 != -1) {
+                        int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, closebracket1));
+                        sourceLink.setStartLine(linenumber);
+                        sourceLink.setEndLine(linenumber);
+                        return sourceLink;
+                    } else {
+                        return sourceLink;
+                    }
                 }
                 int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, comma1));
                 sourceLink.setStartLine(linenumber);
