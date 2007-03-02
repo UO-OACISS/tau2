@@ -44,18 +44,12 @@ from optparse import OptionParser
 
 __all__ = ["run", "runctx", "help", "Profile"]
 
-# Sample timer for use with
-#i_count = 0
-#def integer_timer():
-#       global i_count
-#       i_count = i_count + 1
-#       return i_count
-#itimes = integer_timer # replace with C coded timer returning integers
 
 #**************************************************************************
 # The following are the static member functions for the profiler class
 # Note that an instance of Profile() is *not* needed to call them.
 #**************************************************************************
+
 
 def run(statement, filename=None, sort=-1):
     """Run statement under profiler optionally saving results in filename
@@ -73,11 +67,8 @@ def run(statement, filename=None, sort=-1):
         prof = prof.run(statement)
     except SystemExit:
         pass
-    if filename is not None:
-        prof.dump_stats(filename)
-    else:
-#        return prof.print_stats(sort)
-        prof.dump_stats('tau.dat')
+#    prof.simulate_cmd_complete()
+    pytau.stop()
 
 def runctx(statement, globals, locals, filename=None):
     """Run statement under profiler, supplying your own globals and locals,
@@ -90,11 +81,9 @@ def runctx(statement, globals, locals, filename=None):
         prof = prof.runctx(statement, globals, locals)
     except SystemExit:
         pass
+    prof.simulate_cmd_complete()
 
-    if filename is not None:
-        prof.dump_stats(filename)
-    else:
-        return prof.print_stats()
+
 
 # print help
 def help():
@@ -108,16 +97,6 @@ def help():
         print 'Sorry, can\'t find the help file "profile.doc"',
         print 'along the Python search path.'
 
-
-if os.name == "mac":
-    import MacOS
-    def _get_time_mac(timer=MacOS.GetTicks):
-        return timer() / 60.0
-
-if hasattr(os, "times"):
-    def _get_time_times(timer=os.times):
-        t = timer()
-        return t[0] + t[1]
 
 
 class Profile:
@@ -159,117 +138,15 @@ class Profile:
           it was called by us.
     """
 
-    bias = 0  # calibration constant
-
-    def __init__(self, timer=None, bias=None):
-        self.timings = {}
-        self.cur = None
-        self.cmd = ""
+    def __init__(self, timer=None):
         self.c_func_name = ""
-
-        if bias is None:
-            bias = self.bias
-        self.bias = bias     # Materialize in local dict for lookup speed.
-
-        if timer is None:
-            if os.name == 'mac':
-                self.timer = MacOS.GetTicks
-                self.dispatcher = self.trace_dispatch_mac
-                self.get_time = _get_time_mac
-            elif hasattr(time, 'clock'):
-                self.timer = self.get_time = time.clock
-                self.dispatcher = self.trace_dispatch_i
-            elif hasattr(os, 'times'):
-                self.timer = os.times
-                self.dispatcher = self.trace_dispatch
-                self.get_time = _get_time_times
-            else:
-                self.timer = self.get_time = time.time
-                self.dispatcher = self.trace_dispatch_i
-        else:
-            self.timer = timer
-            t = self.timer() # test out timer function
-            try:
-                length = len(t)
-            except TypeError:
-                self.get_time = timer
-                self.dispatcher = self.trace_dispatch_i
-            else:
-                if length == 2:
-                    self.dispatcher = self.trace_dispatch
-                else:
-                    self.dispatcher = self.trace_dispatch_l
-                # This get_time() implementation needs to be defined
-                # here to capture the passed-in timer in the parameter
-                # list (for performance).  Note that we can't assume
-                # the timer() result contains two values in all
-                # cases.
-                def get_time_timer(timer=timer, sum=sum):
-                    return sum(timer())
-                self.get_time = get_time_timer
-        self.t = self.get_time()
-        self.simulate_call('profiler')
-
-    # Heavily optimized dispatch routine for os.times() timer
+        self.dispatcher = self.trace_dispatch
 
     def trace_dispatch(self, frame, event, arg):
-        timer = self.timer
-        t = timer()
-        t = t[0] + t[1] - self.t - self.bias
-
         if event == "c_call":
             self.c_func_name = arg.__name__
+        self.dispatch[event](self, frame)
 
-        if self.dispatch[event](self, frame,t):
-            t = timer()
-            self.t = t[0] + t[1]
-        else:
-            r = timer()
-            self.t = r[0] + r[1] - t # put back unrecorded delta
-
-    # Dispatch routine for best timer program (return = scalar, fastest if
-    # an integer but float works too -- and time.clock() relies on that).
-
-    def trace_dispatch_i(self, frame, event, arg):
-        timer = self.timer
-        t = timer() - self.t - self.bias
-
-        if event == "c_call":
-            self.c_func_name = arg.__name__
-
-        if self.dispatch[event](self, frame, t):
-            self.t = timer()
-        else:
-            self.t = timer() - t  # put back unrecorded delta
-
-    # Dispatch routine for macintosh (timer returns time in ticks of
-    # 1/60th second)
-
-    def trace_dispatch_mac(self, frame, event, arg):
-        timer = self.timer
-        t = timer()/60.0 - self.t - self.bias
-
-        if event == "c_call":
-            self.c_func_name = arg.__name__
-
-        if self.dispatch[event](self, frame, t):
-            self.t = timer()/60.0
-        else:
-            self.t = timer()/60.0 - t  # put back unrecorded delta
-
-    # SLOW generic dispatch routine for timer returning lists of numbers
-
-    def trace_dispatch_l(self, frame, event, arg):
-        get_time = self.get_time
-        t = get_time() - self.t - self.bias
-
-        if event == "c_call":
-            self.c_func_name = arg.__name__
-
-        if self.dispatch[event](self, frame, t):
-            self.t = get_time()
-        else:
-            self.t = get_time() - t # put back unrecorded delta
 
     # In the event handlers, the first 3 elements of self.cur are unpacked
     # into vrbls w/ 3-letter names.  The last two characters are meant to be
@@ -278,167 +155,54 @@ class Profile:
     #     _it  self.cur[1] "internal time" time spent directly in the function
     #     _et  self.cur[2] "external time" time spent in subfunctions
 
-    def trace_dispatch_exception(self, frame, t):
-        rpt, rit, ret, rfn, rframe, rcur = self.cur
-        if (rframe is not frame) and rcur:
-            return self.trace_dispatch_return(rframe, t)
-        self.cur = rpt, rit+t, ret, rfn, rframe, rcur
+    def trace_dispatch_exception(self, frame):
         return 1
 
 
-    def trace_dispatch_call(self, frame, t):
-        if self.cur and frame.f_back is not self.cur[-2]:
-            rpt, rit, ret, rfn, rframe, rcur = self.cur
-            if not isinstance(rframe, Profile.fake_frame):
-                assert rframe.f_back is frame.f_back, ("Bad call", rfn,
-                                                       rframe, rframe.f_back,
-                                                       frame, frame.f_back)
-                self.trace_dispatch_return(rframe, 0)
-                assert (self.cur is None or \
-                        frame.f_back is self.cur[-2]), ("Bad call",
-                                                        self.cur[-3])
+    def trace_dispatch_call(self, frame):
         fcode = frame.f_code
-        fn = (fcode.co_filename, fcode.co_firstlineno, fcode.co_name)
-        self.cur = (t, 0, 0, fn, frame, self.cur)
 
-        if self.cur[-3][2] is "profiler" :
+        classname = ""
+        if frame.f_locals:
+            obj = frame.f_locals.get("self", None)
+            if not obj is None:
+                classname = obj.__class__.__name__ + "::"
+            else:
+                classname = ""
+
+        methodname = fcode.co_name
+        # methods with "?" are usually the files themselves (no method)
+        # we now name them based on the file
+        if methodname == "?":
+            methodname = fcode.co_filename
+            methodname = methodname[methodname.rfind("/")+1:]
+        tauname = classname + methodname
+        tautype = '[{' + fcode.co_filename + '} {' + str(fcode.co_firstlineno) + '}]'
+
+        # exclude the "? <string>" timer
+        if not fcode.co_filename == "<string>":
+            tautimer = pytau.profileTimer(tauname, tautype)
+            pytau.start(tautimer)
+
+    def trace_dispatch_return(self, frame):
+        # exclude the "? <string>" timer
+        if not frame.f_code.co_filename == "<string>":
+            pytau.stop()
+
+
+    def trace_dispatch_c_call (self, frame):
+        if self.c_func_name == "start" or self.c_func_name == "stop" or self.c_func_name == "profileTimer" or self.c_func_name == "setprofile":
             pass
         else:
-            classname = ""
-            if frame.f_locals:
-                obj = frame.f_locals.get("self", None)
-                if not obj is None:
-                    classname = obj.__class__.__name__ + "::"
-                else:
-                    classname = ""
-
-            methodname = self.cur[-3][2]
-            # methods with "?" are usually the files themselves (no method)
-            # we now name them based on the file
-            if methodname == "?":
-                methodname = self.cur[-3][0]
-                methodname = methodname[methodname.rfind("/")+1:]
-            tauname = classname + methodname
-            tautype = '[{' + self.cur[-3][0] + '} {' + str(self.cur[-3][1]) + '}]'
-
-            # exclude this "? <string>" guy
-            if not self.cur[-3][0] == "<string>":
-                tautimer = pytau.profileTimer(tauname, tautype)
-                pytau.start(tautimer)
-
-        timings = self.timings
-        if fn in timings:
-            cc, ns, tt, ct, callers = timings[fn]
-            timings[fn] = cc, ns + 1, tt, ct, callers
-        else:
-            timings[fn] = 0, 0, 0, 0, {}
-        return 1
-
-    def trace_dispatch_c_call (self, frame, t):
-        exclude=0
-        if self.c_func_name == "start" or self.c_func_name == "stop" or self.c_func_name == "profileTimer":
-            exclude=1
-        
-        fn = ("", 0, self.c_func_name)
-
-        if exclude != 1:
             tautimer = pytau.profileTimer(self.c_func_name, "")
             pytau.start(tautimer)
-            
-        self.cur = (t, 0, 0, fn, frame, self.cur)
-        timings = self.timings
-        if timings.has_key(fn):
-            cc, ns, tt, ct, callers = timings[fn]
-            timings[fn] = cc, ns+1, tt, ct, callers
-        else:
-            timings[fn] = 0, 0, 0, 0, {}
-        return 1
 
-    def trace_dispatch_return(self, frame, t):
-        # exclude this "? <string>" guy
-        if not self.cur[-3][0] == "<string>":
-            pytau.stop()
-        if frame is not self.cur[-2]:
-            assert frame is self.cur[-2].f_back, ("Bad return", self.cur[-3])
-            self.trace_dispatch_return(self.cur[-2], 0)
 
-        # Prefix "r" means part of the Returning or exiting frame.
-        # Prefix "p" means part of the Previous or Parent or older frame.
-
-        rpt, rit, ret, rfn, frame, rcur = self.cur
-        rit = rit + t
-        frame_total = rit + ret
-
-        ppt, pit, pet, pfn, pframe, pcur = rcur
-        self.cur = ppt, pit + rpt, pet + frame_total, pfn, pframe, pcur
-
-        timings = self.timings
-        cc, ns, tt, ct, callers = timings[rfn]
-        if not ns:
-            # This is the only occurrence of the function on the stack.
-            # Else this is a (directly or indirectly) recursive call, and
-            # its cumulative time will get updated when the topmost call to
-            # it returns.
-            ct = ct + frame_total
-            cc = cc + 1
-
-        if pfn in callers:
-            callers[pfn] = callers[pfn] + 1  # hack: gather more
-            # stats such as the amount of time added to ct courtesy
-            # of this specific call, and the contribution to cc
-            # courtesy of this call.
-        else:
-            callers[pfn] = 1
-
-        timings[rfn] = cc, ns - 1, tt + rit, ct, callers
-
-        return 1
-
-    def trace_dispatch_c_return(self, frame, t):
-        exclude=0
+    def trace_dispatch_c_return(self, frame):
         if self.c_func_name == "start" or self.c_func_name == "stop" or self.c_func_name == "profileTimer":
-            exclude=1
-        
-        fn = ("", 0, self.c_func_name)
-
-        if exclude != 1:
-            pytau.stop()
-
-        if frame is not self.cur[-2]:
-            assert frame is self.cur[-2].f_back, ("Bad return", self.cur[-3])
-            self.trace_dispatch_return(self.cur[-2], 0)
-
-        # Prefix "r" means part of the Returning or exiting frame.
-        # Prefix "p" means part of the Previous or Parent or older frame.
-
-        rpt, rit, ret, rfn, frame, rcur = self.cur
-        rit = rit + t
-        frame_total = rit + ret
-
-        ppt, pit, pet, pfn, pframe, pcur = rcur
-        self.cur = ppt, pit + rpt, pet + frame_total, pfn, pframe, pcur
-
-        timings = self.timings
-        cc, ns, tt, ct, callers = timings[rfn]
-        if not ns:
-            # This is the only occurrence of the function on the stack.
-            # Else this is a (directly or indirectly) recursive call, and
-            # its cumulative time will get updated when the topmost call to
-            # it returns.
-            ct = ct + frame_total
-            cc = cc + 1
-
-        if pfn in callers:
-            callers[pfn] = callers[pfn] + 1  # hack: gather more
-            # stats such as the amount of time added to ct courtesy
-            # of this specific call, and the contribution to cc
-            # courtesy of this call.
+            pass
         else:
-            callers[pfn] = 1
-
-        timings[rfn] = cc, ns - 1, tt + rit, ct, callers
-
-        return 1
+            pytau.stop()
 
 
     dispatch = {
@@ -458,8 +222,6 @@ class Profile:
     # very nice :-).
 
     def set_cmd(self, cmd):
-        if self.cur[-1]: return   # already set
-        self.cmd = cmd
         self.simulate_call(cmd)
 
     class fake_code:
@@ -480,50 +242,9 @@ class Profile:
 
     def simulate_call(self, name):
         code = self.fake_code('profile', 0, name)
-        if self.cur:
-            pframe = self.cur[-2]
-        else:
-            pframe = None
-        frame = self.fake_frame(code, pframe, None)
-        self.dispatch['call'](self, frame, 0)
+        frame = self.fake_frame(code, None, None)
+        self.dispatch['call'](self, frame)
 
-    # collect stats from pending stack, including getting final
-    # timings for self.cmd frame.
-
-    def simulate_cmd_complete(self):
-        get_time = self.get_time
-        t = get_time() - self.t
-        while self.cur[-1]:
-            # We *can* cause assertion errors here if
-            # dispatch_trace_return checks for a frame match!
-            self.dispatch['return'](self, self.cur[-2], t)
-            t = 0
-        self.t = get_time() - t
-
-
-    def print_stats(self, sort=-1):
-        import pstats
-        pstats.Stats(self).strip_dirs().sort_stats(sort). \
-                  print_stats()
-
-    def dump_stats(self, file):
-        f = open(file, 'wb')
-        self.create_stats()
-        marshal.dump(self.stats, f)
-        f.close()
-
-    def create_stats(self):
-        self.simulate_cmd_complete()
-        self.snapshot_stats()
-
-    def snapshot_stats(self):
-        self.stats = {}
-        for func, (cc, ns, tt, ct, callers) in self.timings.iteritems():
-            callers = callers.copy()
-            nc = 0
-            for callcnt in callers.itervalues():
-                nc += callcnt
-            self.stats[func] = cc, nc, tt, ct, callers
 
 
     # The following two methods can be called by clients to use
@@ -552,123 +273,6 @@ class Profile:
         finally:
             sys.setprofile(None)
 
-
-    #******************************************************************
-    # The following calculates the overhead for using a profiler.  The
-    # problem is that it takes a fair amount of time for the profiler
-    # to stop the stopwatch (from the time it receives an event).
-    # Similarly, there is a delay from the time that the profiler
-    # re-starts the stopwatch before the user's code really gets to
-    # continue.  The following code tries to measure the difference on
-    # a per-event basis.
-    #
-    # Note that this difference is only significant if there are a lot of
-    # events, and relatively little user code per event.  For example,
-    # code with small functions will typically benefit from having the
-    # profiler calibrated for the current platform.  This *could* be
-    # done on the fly during init() time, but it is not worth the
-    # effort.  Also note that if too large a value specified, then
-    # execution time on some functions will actually appear as a
-    # negative number.  It is *normal* for some functions (with very
-    # low call counts) to have such negative stats, even if the
-    # calibration figure is "correct."
-    #
-    # One alternative to profile-time calibration adjustments (i.e.,
-    # adding in the magic little delta during each event) is to track
-    # more carefully the number of events (and cumulatively, the number
-    # of events during sub functions) that are seen.  If this were
-    # done, then the arithmetic could be done after the fact (i.e., at
-    # display time).  Currently, we track only call/return events.
-    # These values can be deduced by examining the callees and callers
-    # vectors for each functions.  Hence we *can* almost correct the
-    # internal time figure at print time (note that we currently don't
-    # track exception event processing counts).  Unfortunately, there
-    # is currently no similar information for cumulative sub-function
-    # time.  It would not be hard to "get all this info" at profiler
-    # time.  Specifically, we would have to extend the tuples to keep
-    # counts of this in each frame, and then extend the defs of timing
-    # tuples to include the significant two figures. I'm a bit fearful
-    # that this additional feature will slow the heavily optimized
-    # event/time ratio (i.e., the profiler would run slower, fur a very
-    # low "value added" feature.)
-    #**************************************************************
-
-    def calibrate(self, m, verbose=0):
-        if self.__class__ is not Profile:
-            raise TypeError("Subclasses must override .calibrate().")
-
-        saved_bias = self.bias
-        self.bias = 0
-        try:
-            return self._calibrate_inner(m, verbose)
-        finally:
-            self.bias = saved_bias
-
-    def _calibrate_inner(self, m, verbose):
-        get_time = self.get_time
-
-        # Set up a test case to be run with and without profiling.  Include
-        # lots of calls, because we're trying to quantify stopwatch overhead.
-        # Do not raise any exceptions, though, because we want to know
-        # exactly how many profile events are generated (one call event, +
-        # one return event, per Python-level call).
-
-        def f1(n):
-            for i in range(n):
-                x = 1
-
-        def f(m, f1=f1):
-            for i in range(m):
-                f1(100)
-
-        f(m)    # warm up the cache
-
-        # elapsed_noprofile <- time f(m) takes without profiling.
-        t0 = get_time()
-        f(m)
-        t1 = get_time()
-        elapsed_noprofile = t1 - t0
-        if verbose:
-            print "elapsed time without profiling =", elapsed_noprofile
-
-        # elapsed_profile <- time f(m) takes with profiling.  The difference
-        # is profiling overhead, only some of which the profiler subtracts
-        # out on its own.
-        p = Profile()
-        t0 = get_time()
-        p.runctx('f(m)', globals(), locals())
-        t1 = get_time()
-        elapsed_profile = t1 - t0
-        if verbose:
-            print "elapsed time with profiling =", elapsed_profile
-
-        # reported_time <- "CPU seconds" the profiler charged to f and f1.
-        total_calls = 0.0
-        reported_time = 0.0
-        for (filename, line, funcname), (cc, ns, tt, ct, callers) in \
-                p.timings.items():
-            if funcname in ("f", "f1"):
-                total_calls += cc
-                reported_time += tt
-
-        if verbose:
-            print "'CPU seconds' profiler reported =", reported_time
-            print "total # calls =", total_calls
-        if total_calls != m + 1:
-            raise ValueError("internal error: total calls = %d" % total_calls)
-
-        # reported_time - elapsed_noprofile = overhead the profiler wasn't
-        # able to measure.  Divide by twice the number of calls (since there
-        # are two profiler events per call in this test) to get the hidden
-        # overhead per event.
-        mean = (reported_time - elapsed_noprofile) / 2.0 / total_calls
-        if verbose:
-            print "mean stopwatch overhead per profile event =", mean
-        return mean
-
-#****************************************************************************
-def Stats(*args):
-    print 'Report generating functions are in the "pstats" module\a'
 
 
 # When invoked as main program, invoke the profiler on a script
