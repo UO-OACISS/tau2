@@ -12,6 +12,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyTimer.cpp,v $
+// Revision 1.7  2007/03/02 02:36:24  amorris
+// Made explicit the phase calls, true and false.
+//
 // Revision 1.6  2007/03/01 22:17:28  amorris
 // Added phase API for python
 //
@@ -135,8 +138,6 @@ PyObject * pytau_phase(PyObject *self, PyObject *args, PyObject *kwargs)
   return createTimer(self, args, kwargs, true);
 }
 
-
-
 char pytau_start__name__[] = "start";
 char pytau_start__doc__[] = "start a TAU timer";
 extern "C"
@@ -165,7 +166,9 @@ PyObject * pytau_start(PyObject *self, PyObject *args)
 #ifdef TAU_PROFILEPHASE
     bool isPhase = phaseMap[id];
     if (isPhase) {
-      p->SetPhase(1);
+      p->SetPhase(true);
+    } else {
+      p->SetPhase(false);
     }
 #endif
 
@@ -216,7 +219,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyTimer.cpp,v 1.6 2007/03/01 22:17:28 amorris Exp $
+// $Id: PyTimer.cpp,v 1.7 2007/03/02 02:36:24 amorris Exp $
 
 // End of file
   
