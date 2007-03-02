@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.42 2007/02/09 02:02:12 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.43 2007/03/02 20:08:14 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.42 $
+ * @version	$Revision: 1.43 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -273,7 +273,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                             + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
                             + "      " + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCalls(), 7, false);
 
-                    line = UtilFncs.pad(line, 58) + callPathDrawObject.getName() + "[" + function.getID() + "]";
+                    line = UtilFncs.pad(line, 58) + callPathDrawObject.getName();// + "[" + function.getID() + "]";
 
                 } else if (callPathDrawObject.isSpacer()) {
                     line = " ";
@@ -287,7 +287,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                             + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCallsFromCallPathObjects(), 7, false) + "/"
                             + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCalls(), 7, false);
 
-                    line = UtilFncs.pad(line, 58) + callPathDrawObject.getName() + "[" + function.getID() + "]";
+                    line = UtilFncs.pad(line, 58) + callPathDrawObject.getName();// + "[" + function.getID() + "]";
 
                 }
                 searchLines.add(line);
@@ -342,6 +342,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
         if (this.calculatePanelSize) {
 
             int maxNameLength = 0;
+            yHeightNeeded = 0;
             for (Enumeration e = drawObjects.elements(); e.hasMoreElements();) {
                 callPathDrawObject = (CallPathDrawObject) e.nextElement();
                 yHeightNeeded = yHeightNeeded + rowHeight;
@@ -423,7 +424,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                     g2D.setColor(Color.red);
                 }
 
-                g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos, yCoord);
+                g2D.drawString(callPathDrawObject.getName(), namePos, yCoord); // + "[" + function.getID() + "]", namePos, yCoord);
 
             } else if (callPathDrawObject.isSpacer()) {} else {
 
@@ -439,7 +440,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                     g2D.setColor(Color.red);
                 }
 
-                String functionString = callPathDrawObject.getName() + "[" + function.getID() + "]";
+                String functionString = callPathDrawObject.getName();// + "[" + function.getID() + "]";
 
                 stats = UtilFncs.pad(stats, 58) + functionString;
 
