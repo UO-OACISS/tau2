@@ -73,11 +73,7 @@ public class PPFunctionProfile implements Comparable {
 
     // handles reversed callpaths
     public String getDisplayName() {
-        if (ParaProf.preferences.getReversedCallPaths()) {
-            return functionProfile.getFunction().getReversedName();
-        } else {
-            return functionProfile.getFunction().getName();
-        }
+        return ParaProfUtils.getDisplayName(functionProfile.getFunction());
     }
 
     public Color getColor() {
