@@ -312,10 +312,19 @@ class Profile:
                 else:
                     classname = ""
 
-            tauname = classname + self.cur[-3][2]
+            methodname = self.cur[-3][2]
+            # methods with "?" are usually the files themselves (no method)
+            # we now name them based on the file
+            if methodname == "?":
+                methodname = self.cur[-3][0]
+                methodname = methodname[methodname.rfind("/")+1:]
+            tauname = classname + methodname
             tautype = '[{' + self.cur[-3][0] + '} {' + str(self.cur[-3][1]) + '}]'
-            tautimer = pytau.profileTimer(tauname, tautype)
-            pytau.start(tautimer)
+
+            # exclude this "? <string>" guy
+            if not self.cur[-3][0] == "<string>":
+                tautimer = pytau.profileTimer(tauname, tautype)
+                pytau.start(tautimer)
 
         timings = self.timings
         if fn in timings:
@@ -326,9 +335,16 @@ class Profile:
         return 1
 
     def trace_dispatch_c_call (self, frame, t):
+        exclude=0
+        if self.c_func_name == "start" or self.c_func_name == "stop" or self.c_func_name == "profileTimer":
+            exclude=1
+        
         fn = ("", 0, self.c_func_name)
-        tautimer = pytau.profileTimer(self.c_func_name, "")
-        pytau.start(tautimer)
+
+        if exclude != 1:
+            tautimer = pytau.profileTimer(self.c_func_name, "")
+            pytau.start(tautimer)
+            
         self.cur = (t, 0, 0, fn, frame, self.cur)
         timings = self.timings
         if timings.has_key(fn):
@@ -339,7 +355,55 @@ class Profile:
         return 1
 
     def trace_dispatch_return(self, frame, t):
-        pytau.stop()
+        # exclude this "? <string>" guy
+        if not self.cur[-3][0] == "<string>":
+            pytau.stop()
+        if frame is not self.cur[-2]:
+            assert frame is self.cur[-2].f_back, ("Bad return", self.cur[-3])
+            self.trace_dispatch_return(self.cur[-2], 0)
+
+        # Prefix "r" means part of the Returning or exiting frame.
+        # Prefix "p" means part of the Previous or Parent or older frame.
+
+        rpt, rit, ret, rfn, frame, rcur = self.cur
+        rit = rit + t
+        frame_total = rit + ret
+
+        ppt, pit, pet, pfn, pframe, pcur = rcur
+        self.cur = ppt, pit + rpt, pet + frame_total, pfn, pframe, pcur
+
+        timings = self.timings
+        cc, ns, tt, ct, callers = timings[rfn]
+        if not ns:
+            # This is the only occurrence of the function on the stack.
+            # Else this is a (directly or indirectly) recursive call, and
+            # its cumulative time will get updated when the topmost call to
+            # it returns.
+            ct = ct + frame_total
+            cc = cc + 1
+
+        if pfn in callers:
+            callers[pfn] = callers[pfn] + 1  # hack: gather more
+            # stats such as the amount of time added to ct courtesy
+            # of this specific call, and the contribution to cc
+            # courtesy of this call.
+        else:
+            callers[pfn] = 1
+
+        timings[rfn] = cc, ns - 1, tt + rit, ct, callers
+
+        return 1
+
+    def trace_dispatch_c_return(self, frame, t):
+        exclude=0
+        if self.c_func_name == "start" or self.c_func_name == "stop" or self.c_func_name == "profileTimer":
+            exclude=1
+        
+        fn = ("", 0, self.c_func_name)
+
+        if exclude != 1:
+            pytau.stop()
+
         if frame is not self.cur[-2]:
             assert frame is self.cur[-2].f_back, ("Bad return", self.cur[-3])
             self.trace_dispatch_return(self.cur[-2], 0)
@@ -383,7 +447,7 @@ class Profile:
         "return": trace_dispatch_return,
         "c_call": trace_dispatch_c_call,
         "c_exception": trace_dispatch_return,  # the C function returned
-        "c_return": trace_dispatch_return,
+        "c_return": trace_dispatch_c_return,
         }
 
 
