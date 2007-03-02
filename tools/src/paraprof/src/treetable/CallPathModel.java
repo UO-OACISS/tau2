@@ -9,15 +9,14 @@ import edu.uoregon.tau.paraprof.PPFunctionProfile;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
 import edu.uoregon.tau.perfdmf.*;
 
-
 /**
  * Data model for treetable using callpaths
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.5 2007/02/03 01:40:12 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.6 2007/03/02 20:10:54 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -32,14 +31,15 @@ public class CallPathModel extends AbstractTreeTableModel {
     private boolean sortAscending;
 
     private boolean reversedCallPaths = true;
-    
+
     private TreeTableWindow window;
 
-    public CallPathModel(TreeTableWindow window, ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread, boolean reversedCallPaths) {
+    public CallPathModel(TreeTableWindow window, ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread,
+            boolean reversedCallPaths) {
         super(null);
         this.window = window;
         root = new TreeTableNode(null, this, "root");
-        
+
         dataSource = ppTrial.getDataSource();
         this.thread = thread;
         this.ppTrial = ppTrial;
@@ -48,26 +48,23 @@ public class CallPathModel extends AbstractTreeTableModel {
         setupData();
 
     }
-    
-    
 
     private void setupData() {
 
         roots = new ArrayList();
         DataSorter dataSorter = new DataSorter(ppTrial);
-        
 
         // don't ask the thread for its functions directly, since we want group masking to work
         List functionProfileList = dataSorter.getCallPathFunctionProfiles(thread);
 
         Map rootNames = new HashMap();
-        
+
         Group derived = ppTrial.getGroup("TAU_CALLPATH_DERIVED");
 
         if (window.getTreeMode()) {
             for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
                 // Find all the rootNames (as strings)
-                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next(); 
+                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
 
                 if (fp != null && fp.isCallPathFunction()) {
@@ -80,7 +77,7 @@ public class CallPathModel extends AbstractTreeTableModel {
                         }
                         rootName = UtilFncs.getLeftSide(fp.getName());
                     }
-                    
+
                     if (rootNames.get(rootNames) == null) {
                         rootNames.put(rootName, "1");
                     }
@@ -105,7 +102,7 @@ public class CallPathModel extends AbstractTreeTableModel {
 
         } else {
             for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
-                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next(); 
+                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
 
                 if (fp != null && ppTrial.displayFunction(fp.getFunction())) {
@@ -242,13 +239,9 @@ public class CallPathModel extends AbstractTreeTableModel {
         this.reversedCallPaths = reversedCallPaths;
     }
 
-
-
     public int getColorMetric() {
         return colorMetric;
     }
-
-
 
     public void setColorMetric(int colorMetric) {
         this.colorMetric = colorMetric;

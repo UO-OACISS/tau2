@@ -10,6 +10,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 import edu.uoregon.tau.paraprof.ColorBar;
 import edu.uoregon.tau.paraprof.ParaProf;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
@@ -18,9 +19,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.2 2006/03/30 03:03:55 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.3 2007/03/02 20:10:54 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
@@ -42,17 +43,19 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
 
         String pathDelimeter = "=>";
         if (functionProfile != null) {
+            displayName = ParaProfUtils.getDisplayName(functionProfile.getFunction());
             if (model.getReversedCallPaths()) {
-                displayName = functionProfile.getFunction().getReversedName();
                 pathDelimeter = "<=";
             } else {
-                displayName = functionProfile.getName();
                 pathDelimeter = "=>";
             }
         } else {
             displayName = alternateName;
         }
 
+        
+        
+        
         if (model.getWindow().getTreeMode()) {
             int loc = displayName.lastIndexOf(pathDelimeter);
             if (loc != -1) {
