@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.29 2007/02/03 01:40:11 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.30 2007/03/02 20:09:10 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.29 $
+ * @version	$Revision: 1.30 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -89,9 +89,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             this.help(false);
         }
 
-        //####################################
-        //Create and add the components.
-        //####################################
         //Setting up the layout system for the main window.
         Container contentPane = getContentPane();
         GridBagLayout gbl = new GridBagLayout();
@@ -125,7 +122,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         JMenuBar mainMenu = new JMenuBar();
         mainMenu.addKeyListener(this);
         JMenu subMenu = null;
-        JMenuItem menuItem = null;
 
         //Options menu.
         optionsMenu = new JMenu("Options");
@@ -294,11 +290,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         }
     }
 
-    public void menuDeselected(MenuEvent evt) {
-    }
+    public void menuDeselected(MenuEvent evt) {}
 
-    public void menuCanceled(MenuEvent evt) {
-    }
+    public void menuCanceled(MenuEvent evt) {}
 
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
@@ -404,9 +398,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         closeThisWindow();
     }
 
-    //######
-    //Panel header.
-    //######
     //This process is separated into two functionProfiles to provide the option
     //of obtaining the current header string being used for the panel
     //without resetting the actual header. Printing and image generation
@@ -432,10 +423,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 + dataSorter.getValueType() + "\n" + "Units: "
                 + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
     }
-
-    //######
-    //End - Panel header.
-    //######
 
     public void closeThisWindow() {
         setVisible(false);
@@ -480,11 +467,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         }
     }
 
-    public void keyReleased(KeyEvent e) {
-    }
+    public void keyReleased(KeyEvent e) {}
 
-    public void keyTyped(KeyEvent e) {
-    }
+    public void keyTyped(KeyEvent e) {}
 
     public void setUnits(int units) {
         this.units = units;
