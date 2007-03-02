@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.cpp,v $
+// Revision 1.6  2007/03/02 02:36:51  amorris
+// Added snapshot API for python.
+//
 // Revision 1.5  2006/02/03 03:03:08  amorris
 // Fixed error with PyArg_ParseTuple:
 //
@@ -61,6 +64,26 @@
 
 #include "Profile/Profiler.h"
 
+
+char pytau_snapshot__name__[] = "snapshot";
+char pytau_snapshot__doc__[] = "take a snapshot of the current profile";
+PyObject * pytau_snapshot(PyObject *self, PyObject *args) { 
+
+  char *name = NULL;
+  int number = -1;
+
+    if (PyArg_ParseTuple(args, "s|i", &name, &number)) {
+      if (number == -1) {
+	TAU_PROFILE_SNAPSHOT(name);
+      } else {
+	TAU_PROFILE_SNAPSHOT_1L(name,number);
+      }
+    }
+
+    // return
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 
 char pytau_dbDump__name__[] = "dbDump";
 char pytau_dbDump__doc__[] = "dump the Tau Profiler statistics";
@@ -307,7 +330,7 @@ PyObject * pytau_dumpFuncValsIncr(PyObject *, PyObject * args)
 
 
 // version
-// $Id: PyDatabase.cpp,v 1.5 2006/02/03 03:03:08 amorris Exp $
+// $Id: PyDatabase.cpp,v 1.6 2007/03/02 02:36:51 amorris Exp $
 
 // End of file
   

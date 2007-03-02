@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyBindings.cpp,v $
+// Revision 1.3  2007/03/02 02:36:51  amorris
+// Added snapshot API for python.
+//
 // Revision 1.2  2007/03/01 22:17:28  amorris
 // Added phase API for python
 //
@@ -51,6 +54,7 @@ struct PyMethodDef pytau_methods[] = {
 
 // database
 
+    {pytau_snapshot__name__, pytau_snapshot, METH_VARARGS, pytau_snapshot__doc__},
     {pytau_dbDump__name__, pytau_dbDump, METH_VARARGS, pytau_dbDump__doc__},
     {pytau_dbDumpIncr__name__, pytau_dbDumpIncr, METH_VARARGS, pytau_dbDumpIncr__doc__},
     {pytau_dbPurge__name__, pytau_dbPurge, METH_VARARGS, pytau_dbPurge__doc__},
@@ -83,6 +87,6 @@ struct PyMethodDef pytau_methods[] = {
 };
 
 // version
-// $Id: PyBindings.cpp,v 1.2 2007/03/01 22:17:28 amorris Exp $
+// $Id: PyBindings.cpp,v 1.3 2007/03/02 02:36:51 amorris Exp $
 
 // End of file
