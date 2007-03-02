@@ -46,6 +46,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     private JCheckBox generateIntermediateCallPathDataBox = new JCheckBox(
             "<html>Generate data for reverse calltree<br>(requires lots of memory)</html>");
 
+    private JCheckBox showSourceLocationsBox = new JCheckBox("<html>Show Source Locations</html>");
+    
     public PreferencesWindow(Preferences preferences) {
         this.preferences = preferences;
 
@@ -71,6 +73,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             reverseCallPathsBox.setSelected(preferences.getReversedCallPaths());
             meanIncludeNullBox.setSelected(!preferences.getComputeMeanWithoutNulls());
             generateIntermediateCallPathDataBox.setSelected(preferences.getGenerateIntermediateCallPathData());
+            showSourceLocationsBox.setSelected(preferences.getShowSourceLocation());
         }
 
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -95,7 +98,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
 
         int windowWidth = 550;
-        int windowHeight = 450;
+        int windowHeight = 550;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
         //There is really no need to resize this window.
@@ -188,6 +191,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProfUtils.addCompItem(settingsPanel, reverseCallPathsBox, gbc, 0, 3, 2, 1);
         ParaProfUtils.addCompItem(settingsPanel, meanIncludeNullBox, gbc, 0, 4, 2, 1);
         ParaProfUtils.addCompItem(settingsPanel, generateIntermediateCallPathDataBox, gbc, 0, 5, 2, 1);
+        ParaProfUtils.addCompItem(settingsPanel, showSourceLocationsBox, gbc, 0, 6, 2, 1);
 
         gbc.fill = GridBagConstraints.BOTH;
 
@@ -332,6 +336,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setReversedCallPaths(reverseCallPathsBox.isSelected());
         ParaProf.preferences.setComputeMeanWithoutNulls(!meanIncludeNullBox.isSelected());
         ParaProf.preferences.setGenerateIntermediateCallPathData(generateIntermediateCallPathDataBox.isSelected());
+        ParaProf.preferences.setShowSourceLocation(showSourceLocationsBox.isSelected());
     }
 
     public String getFontName() {
@@ -473,6 +478,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     reverseCallPathsBox.setSelected(false);
                     meanIncludeNullBox.setSelected(true);
                     generateIntermediateCallPathDataBox.setSelected(false);
+                    showSourceLocationsBox.setSelected(true);
                     setControls();
                 }
 

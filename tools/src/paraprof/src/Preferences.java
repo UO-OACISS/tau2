@@ -38,6 +38,7 @@ public class Preferences implements Serializable {
     private boolean generateIntermediateCallPathData = false;
     
     private ArrayList sourceLocations;
+    private boolean showSourceLocation = true;
     
     static final long serialVersionUID = 183442743456314793L;
 
@@ -214,5 +215,13 @@ public class Preferences implements Serializable {
 	public void setSourceLocations(ArrayList sourceLocations) {
 		this.sourceLocations = sourceLocations;
 	}
+
+    public boolean getShowSourceLocation() {
+        return showSourceLocation;
+    }
+
+    public void setShowSourceLocation(boolean showSourceLocation) {
+        this.showSourceLocation = showSourceLocation;
+    }
 
 }

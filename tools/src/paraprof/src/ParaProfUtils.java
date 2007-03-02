@@ -38,11 +38,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.22 2007/02/03 01:40:11 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.23 2007/03/02 20:10:05 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  */
 public class ParaProfUtils {
 
@@ -51,7 +51,7 @@ public class ParaProfUtils {
 
     // Suppress default constructor for noninstantiability
     private ParaProfUtils() {
-        // This constructor will never be invoked
+    // This constructor will never be invoked
     }
 
     public static FunctionBarChartWindow createFunctionBarChartWindow(ParaProfTrial ppTrial, Function function, Component parent) {
@@ -310,12 +310,12 @@ public class ParaProfUtils {
         menu.addMenuListener(new MenuListener() {
 
             public void menuCanceled(MenuEvent e) {
-                // TODO Auto-generated method stub
+            // TODO Auto-generated method stub
 
             }
 
             public void menuDeselected(MenuEvent e) {
-                // TODO Auto-generated method stub
+            // TODO Auto-generated method stub
 
             }
 
@@ -540,11 +540,9 @@ public class ParaProfUtils {
                 }
             }
 
-            public void menuCanceled(MenuEvent e) {
-            }
+            public void menuCanceled(MenuEvent e) {}
 
-            public void menuDeselected(MenuEvent e) {
-            }
+            public void menuDeselected(MenuEvent e) {}
         };
 
         windowsMenu.addMenuListener(menuListener);
@@ -723,8 +721,8 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
-    public static JMenuItem createCallGraphMenuItem(String text, final ParaProfTrial ppTrial,
-            final Thread thread, final Component owner) {
+    public static JMenuItem createCallGraphMenuItem(String text, final ParaProfTrial ppTrial, final Thread thread,
+            final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -736,8 +734,8 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
-    public static JMenuItem createCallPathThreadRelationMenuItem(String text, final ParaProfTrial ppTrial,
-            final Thread thread, final Component owner) {
+    public static JMenuItem createCallPathThreadRelationMenuItem(String text, final ParaProfTrial ppTrial, final Thread thread,
+            final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -762,8 +760,8 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
-    public static JMenuItem createComparisonMenuItem(String text, final ParaProfTrial ppTrial,
-            final Thread thread, final Component owner) {
+    public static JMenuItem createComparisonMenuItem(String text, final ParaProfTrial ppTrial, final Thread thread,
+            final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -779,8 +777,8 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
-    public static JMenuItem createSnapShotMenuItem(String text, final ParaProfTrial ppTrial,
-            final Thread thread, final Component owner) {
+    public static JMenuItem createSnapShotMenuItem(String text, final ParaProfTrial ppTrial, final Thread thread,
+            final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -793,8 +791,8 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
-    public static JMenuItem createUserEventBarChartMenuItem(String text, final ParaProfTrial ppTrial,
-            final Thread thread, final Component owner) {
+    public static JMenuItem createUserEventBarChartMenuItem(String text, final ParaProfTrial ppTrial, final Thread thread,
+            final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -855,8 +853,8 @@ public class ParaProfUtils {
 
     }
 
-    public static void handleThreadClick(final ParaProfTrial ppTrial, final Function phase,
-            final Thread thread, JComponent owner, MouseEvent evt) {
+    public static void handleThreadClick(final ParaProfTrial ppTrial, final Function phase, final Thread thread,
+            JComponent owner, MouseEvent evt) {
 
         String ident;
 
@@ -883,9 +881,9 @@ public class ParaProfUtils {
         }
 
         // snapshots are disabled for this release
-//        if (thread.getNumSnapshots() > 1) {
-//            threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
-//        }
+        if (thread.getNumSnapshots() > 1) {
+            threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
+        }
 
         threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
         threadPopup.show(owner, evt.getX(), evt.getY());
@@ -1120,12 +1118,24 @@ public class ParaProfUtils {
         return false;
     }
 
+    // remove the source code location, if preferences are set for it
+    private static String removeSource(String str) {
+        if (!ParaProf.preferences.getShowSourceLocation()) {
+            while (str.indexOf("[{") != -1) {
+                int a = str.indexOf("[{");
+                int b = str.indexOf("}]");
+                str = str.substring(0, a) + str.substring(b + 2);
+            }
+        }
+        return str;
+    }
+
     // handles reversed callpaths
     public static String getDisplayName(Function function) {
         if (ParaProf.preferences.getReversedCallPaths()) {
-            return function.getReversedName();
+            return removeSource(function.getReversedName());
         } else {
-            return function.getName();
+            return removeSource(function.getName());
         }
     }
 
