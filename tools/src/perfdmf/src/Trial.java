@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.13 2007/02/22 16:26:56 khuck Exp $
+ * CVS $Id: Trial.java,v 1.14 2007/03/03 13:50:04 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -811,39 +811,37 @@ public class Trial implements Serializable {
     }
 
     public void checkForMetadataColumn(DB db) {
-        if (this.metadataFile != null) {
-            String[] columns = Trial.getFieldNames(db);
-            boolean found = false;
-            // loop through the column names, and see if we have this column already
-            for (int i = 0; i < columns.length; i++) {
-                if (columns[i].equalsIgnoreCase(XML_METADATA)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                StringBuffer sql = new StringBuffer();
-                // create the column in the database
-                sql.append("ALTER TABLE " + db.getSchemaPrefix() + "trial ADD COLUMN ");
-                sql.append(XML_METADATA);
-                if ((db.getDBType().equalsIgnoreCase("oracle")) || (db.getDBType().equalsIgnoreCase("derby"))) {
-                    sql.append(" CLOB");
-                } else if (db.getDBType().equalsIgnoreCase("db2")) {
-                    sql.append(" CLOB");
-                } else if (db.getDBType().equalsIgnoreCase("mysql")) {
-                    sql.append(" TEXT");
-                } else if (db.getDBType().equalsIgnoreCase("postgresql")) {
-                    sql.append(" TEXT");
-                }
-
-                try {
-                    db.execute(sql.toString());
-                } catch (SQLException e) {
-                    System.err.println("Unable to add " + XML_METADATA + " column to trial table.");
-                    e.printStackTrace();
-                }
+        String[] columns = Trial.getFieldNames(db);
+        boolean found = false;
+        // loop through the column names, and see if we have this column already
+        for (int i = 0; i < columns.length; i++) {
+            if (columns[i].equalsIgnoreCase(XML_METADATA)) {
+                found = true;
+                break;
             }
         }
+        if (!found) {
+            StringBuffer sql = new StringBuffer();
+            // create the column in the database
+            sql.append("ALTER TABLE " + db.getSchemaPrefix() + "trial ADD COLUMN ");
+            sql.append(XML_METADATA);
+            if ((db.getDBType().equalsIgnoreCase("oracle")) || (db.getDBType().equalsIgnoreCase("derby"))) {
+                sql.append(" CLOB");
+            } else if (db.getDBType().equalsIgnoreCase("db2")) {
+                sql.append(" CLOB");
+            } else if (db.getDBType().equalsIgnoreCase("mysql")) {
+                sql.append(" TEXT");
+            } else if (db.getDBType().equalsIgnoreCase("postgresql")) {
+                sql.append(" TEXT");
+            }
+
+            try {
+                db.execute(sql.toString());
+            } catch (SQLException e) {
+                System.err.println("Unable to add " + XML_METADATA + " column to trial table.");
+                e.printStackTrace();
+			}
+		}
     }
 
     
