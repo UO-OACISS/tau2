@@ -33,9 +33,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.10 2007/02/01 22:11:50 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.11 2007/03/03 00:18:13 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -68,7 +68,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         if (!ppTrial.getDataSource().getReverseDataAvailable()) {
             reverseTreeMenuItem.setEnabled(false);
         }
-     
+
         // create the column chooser.  Note: the column chooser holds the data on which columns are shown
         columnChooser = new ColumnChooser(this, ppTrial);
 
@@ -77,15 +77,18 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 
         if (thread.getNodeID() == -1) {
-            this.setTitle("TAU: ParaProf: Mean Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Mean Statistics - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -2) {
-            this.setTitle("TAU: ParaProf: Total Statistics - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Total Statistics - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -3) {
             this.setTitle("TAU: ParaProf: Std. Dev. Statistics - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {
-            this.setTitle("TAU: ParaProf: Thread Statistics: " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
-                    + thread.getThreadID() + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Thread Statistics: " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID()
+                    + "," + thread.getThreadID() + " - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         }
         ParaProfUtils.setFrameIcon(this);
 
@@ -205,8 +208,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
             gbc.anchor = GridBagConstraints.NORTH;
             gbc.weighty = 0.0;
-           
-            
+
             if (ppTrial.getNumberOfMetrics() > 1) {
                 final JComboBox metricBox = new JComboBox(ppTrial.getMetrics().toArray());
                 metricBox.setSelectedIndex(ppTrial.getDefaultMetricID());
@@ -215,13 +217,13 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
                     public void actionPerformed(ActionEvent e) {
                         model.setColorMetric(metricBox.getSelectedIndex());
                         repaint();
-                    } });
+                    }
+                });
                 gbc.weightx = 0.0;
                 gbc.fill = GridBagConstraints.NONE;
                 addCompItem(metricBox, gbc, 0, 0, 1, 1);
             }
-            
-            
+
             gbc.weightx = 1.0;
             gbc.fill = GridBagConstraints.HORIZONTAL;
             addCompItem(new ColorBar(), gbc, 1, 0, 1, 1);
@@ -345,13 +347,11 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     private void createTreeTable(AbstractTreeTableModel model) {
         //        treeTable = new JTreeTable(model, showAsTreeMenuItem.isSelected());
-        
-        
 
         treeTable = new JTreeTable(model, true, true);
 
         final JTree tree = treeTable.getTree();
-        
+
         // Add a mouse listener for this tree.
         MouseListener ml = new MouseAdapter() {
             public void mousePressed(MouseEvent evt) {
@@ -376,12 +376,19 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
                 }
             }
         };
-      
-        treeTable.addMouseListener(ml);  
-        
+
+        treeTable.addMouseListener(ml);
 
         treeTable.getTree().addTreeExpansionListener(this);
-        treeTable.getTree().setCellRenderer(new TreePortionCellRenderer());
+        TreePortionCellRenderer renderer = new TreePortionCellRenderer();
+        treeTable.getTree().setCellRenderer(renderer);
+
+        Font font = ParaProf.preferencesWindow.getFont();
+        treeTable.setFont(font);
+        renderer.setFont(font);
+
+        FontMetrics fontMetrics = getFontMetrics(font);
+        treeTable.setRowHeight(fontMetrics.getMaxAscent() + fontMetrics.getMaxDescent() + 3);
 
         treeTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         treeTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
@@ -429,7 +436,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         ParaProf.getHelpWindow().writeText("This is the Statistics Table.\n");
         ParaProf.getHelpWindow().writeText("This window shows you function data across a given thread (or mean/std.dev.)\n");
         ParaProf.getHelpWindow().writeText("If callpath data is present, it will be shown as a tree on the left.");
-        ParaProf.getHelpWindow().writeText("In this mode, the metric values will show Inclusive when the node is collapsed, and exclusive when the node is expanded.\n");
+        ParaProf.getHelpWindow().writeText(
+                "In this mode, the metric values will show Inclusive when the node is collapsed, and exclusive when the node is expanded.\n");
     }
 
     public void closeThisWindow() {
@@ -490,7 +498,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
             // first draw the column headers
             scrollPane.getColumnHeader().paintAll(g2D);
             // translate past the column headers
-            g2D.translate(0,scrollPane.getColumnHeader().getHeight());
+            g2D.translate(0, scrollPane.getColumnHeader().getHeight());
             // draw the entire treetable
             treeTable.paintAll(g2D);
         } else {
