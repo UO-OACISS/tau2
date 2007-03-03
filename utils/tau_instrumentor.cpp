@@ -295,8 +295,8 @@ bool retval;
 	  cout <<"Before adding false to the member function, we must verify that it is not static"<<endl;
 #endif /* DEBUG */
 	  const pdbCRoutine *tr = (*te)->funcProtoInst();
-	  if (((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_MEMFUNC))
-	      && ((tr) && (tr->isStatic())))
+	  if (!tr || (((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_MEMFUNC))
+	      && ((tr) && (tr->isStatic()))))
 
 	  { /* check to see if there's a prototype instantiation entry */
 	    /* it is indeed a static member function of a class template */
@@ -2977,8 +2977,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.134 $   $Date: 2007/02/28 05:20:38 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.134 2007/02/28 05:20:38 sameer Exp $
+ * $Revision: 1.135 $   $Date: 2007/03/03 03:30:20 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.135 2007/03/03 03:30:20 sameer Exp $
  ***************************************************************************/
 
 
