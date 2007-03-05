@@ -67,7 +67,6 @@ def run(statement, filename=None, sort=-1):
         prof = prof.run(statement)
     except SystemExit:
         pass
-#    prof.simulate_cmd_complete()
     pytau.stop()
 
 def runctx(statement, globals, locals, filename=None):
@@ -81,7 +80,7 @@ def runctx(statement, globals, locals, filename=None):
         prof = prof.runctx(statement, globals, locals)
     except SystemExit:
         pass
-    prof.simulate_cmd_complete()
+    pytau.stop()
 
 
 
@@ -100,43 +99,6 @@ def help():
 
 
 class Profile:
-    """Profiler class.
-
-    self.cur is always a tuple.  Each such tuple corresponds to a stack
-    frame that is currently active (self.cur[-2]).  The following are the
-    definitions of its members.  We use this external "parallel stack" to
-    avoid contaminating the program that we are profiling. (old profiler
-    used to write into the frames local dictionary!!) Derived classes
-    can change the definition of some entries, as long as they leave
-    [-2:] intact (frame and previous tuple).  In case an internal error is
-    detected, the -3 element is used as the function name.
-
-    [ 0] = Time that needs to be charged to the parent frame's function.
-           It is used so that a function call will not have to access the
-           timing data for the parent frame.
-    [ 1] = Total time spent in this frame's function, excluding time in
-           subfunctions (this latter is tallied in cur[2]).
-    [ 2] = Total time spent in subfunctions, excluding time executing the
-           frame's function (this latter is tallied in cur[1]).
-    [-3] = Name of the function that corresponds to this frame.
-    [-2] = Actual frame that we correspond to (used to sync exception handling).
-    [-1] = Our parent 6-tuple (corresponds to frame.f_back).
-
-    Timing data for each function is stored as a 5-tuple in the dictionary
-    self.timings[].  The index is always the name stored in self.cur[-3].
-    The following are the definitions of the members:
-
-    [0] = The number of times this function was called, not counting direct
-          or indirect recursion,
-    [1] = Number of times this function appears on the stack, minus one
-    [2] = Total time spent internal to this function
-    [3] = Cumulative time that this function was present on the stack.  In
-          non-recursive functions, this is the total execution time from start
-          to finish of each invocation of a function, including time spent in
-          all subfunctions.
-    [4] = A dictionary indicating for each function name, the number of times
-          it was called by us.
-    """
 
     def __init__(self, timer=None):
         self.c_func_name = ""
@@ -147,17 +109,8 @@ class Profile:
             self.c_func_name = arg.__name__
         self.dispatch[event](self, frame)
 
-
-    # In the event handlers, the first 3 elements of self.cur are unpacked
-    # into vrbls w/ 3-letter names.  The last two characters are meant to be
-    # mnemonic:
-    #     _pt  self.cur[0] "parent time"   time to be charged to parent frame
-    #     _it  self.cur[1] "internal time" time spent directly in the function
-    #     _et  self.cur[2] "external time" time spent in subfunctions
-
     def trace_dispatch_exception(self, frame):
         return 1
-
 
     def trace_dispatch_call(self, frame):
         fcode = frame.f_code
@@ -215,15 +168,6 @@ class Profile:
         }
 
 
-    # The next few functions play with self.cmd. By carefully preloading
-    # our parallel stack, we can force the profiled result to include
-    # an arbitrary string as the name of the calling function.
-    # We use self.cmd as that string, and the resulting stats look
-    # very nice :-).
-
-    def set_cmd(self, cmd):
-        self.simulate_call(cmd)
-
     class fake_code:
         def __init__(self, filename, line, name):
             self.co_filename = filename
@@ -256,7 +200,7 @@ class Profile:
         return self.runctx(cmd, dict, dict)
 
     def runctx(self, cmd, globals, locals):
-        self.set_cmd(cmd)
+        self.simulate_call(cmd)
         sys.setprofile(self.dispatcher)
         try:
             exec cmd in globals, locals
@@ -266,7 +210,7 @@ class Profile:
 
     # This method is more useful to profile a single function call.
     def runcall(self, func, *args, **kw):
-        self.set_cmd(repr(func))
+        self.simulate_call(repr(func))
         sys.setprofile(self.dispatcher)
         try:
             return func(*args, **kw)
@@ -277,7 +221,7 @@ class Profile:
 
 # When invoked as main program, invoke the profiler on a script
 if __name__ == '__main__':
-    usage = "profile.py [-o output_file_path] [-s sort] scriptfile [arg] ..."
+    usage = "tau.py scriptfile [arg] ..."
     if not sys.argv[1:]:
         print "Usage: ", usage
         sys.exit(2)
