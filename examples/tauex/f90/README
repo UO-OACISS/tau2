@@ -1,0 +1,35 @@
+
+tauex README
+------------
+
+Configure several TAU libraries:
+
+export BASE="-pdt=/usr/local/packages/pdtoolkit-3.9 -cc=icc -c++=icpc -fortran=intel -mpiinc=/usr/local/packages/mpich2-1.0.4p1/gnu-3.4.6/include -mpilib=/usr/local/packages/mpich2-1.0.4p1/gnu-3.4.6/lib -MULTIPLECOUNTERS -papi=/usr/local/packages/papi" 
+
+./configure $BASE -PROFILE 
+make clean install -j
+./configure $BASE -TRACE
+make clean install -j
+./configure $BASE -PROFILE -TRACE
+make clean install -j
+./configure $BASE -PROFILECALLPATH
+make clean install -j
+
+
+
+Example 1:
+1) go to examples/tauex/f90
+2) make
+3) run with tauex:
+
+mpirun -np 4 tauex -T MPI -- ./ring
+mpirun -np 4 tauex -T MPI,CALLPATH -- ./ring
+mpirun -np 4 tauex -T MPI,TRACE -- ./ring
+mpirun -np 4 tauex -e PAPI_FP_OPS -e PAPI_L1_DCM -T MPI -- ./ring 
+mpirun -np 4 tauex -e PAPI_FP_OPS -e PAPI_L1_DCM -T MPI,TRACE -- ./ring 
+
+
+
+
+
+
