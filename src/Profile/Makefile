@@ -192,6 +192,7 @@ BITS = 32
 #IBMMPI#POELIB_INSTALL = $(INSTALLDEST)/libmpi_r.a #ENDIF#
 
 TAU_BINDINGSDIR = $(INSTALLDEST)/bindings$(TAU_CONFIG)
+TAU_SHAREDDIR = $(INSTALLDEST)/shared$(TAU_CONFIG)
 
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB)
@@ -236,10 +237,10 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
-		@if [ -d $(TAU_BINDINGSDIR) ] ; then true; \
-		    else mkdir $(TAU_BINDINGSDIR); fi
-		cd $(TAU_BINDINGSDIR) ; rm -f libTAU$(TAU_SHLIBX)
-		cd $(TAU_BINDINGSDIR) ; ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
+		    else mkdir $(TAU_SHAREDDIR); fi
+		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 
 $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX): libTauMpi$(TAU_CONFIG)$(LSX)
 		$(MAKE) -f Makefile.wrapper install 
