@@ -85,7 +85,7 @@ if [ $NumCounters -gt 1 ] ; then
     TauOptions="$TauOptions multiplecounters papi"
 fi
 
-bindings=`ls $TAUROOT/$TAUARCH/lib | grep bindings`
+bindings=`ls $TAUROOT/$TAUARCH/lib | grep shared`
 
 for opt in $TauOptions; do 
     newbindings=""
