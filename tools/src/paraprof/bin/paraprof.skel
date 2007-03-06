@@ -80,6 +80,21 @@ if [ "x${JDBC_JAR}" != "x" ]; then
     fi
 fi
 
+GCJ=`java -showversion 2>&1 | grep -i gcj`
+if [ "x$GCJ" = "x" ] ; then
+    # ok
+    GCJ="no"
+else
+    echo ""
+    echo "ParaProf: Warning: GCJ detected!"
+    echo ""
+    echo "You will likely receive an error because GCJ does not fully implement Java/Swing"
+    echo ""
+    echo "It is recommended that you install a full Java implementation from java.sun.com"
+    echo ""
+    echo ""
+fi
+
 # Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 1000m (1000MB). If you run out of memory, decrease this number.
 if [ "$OLDJDK" = "yes" ]
 then
