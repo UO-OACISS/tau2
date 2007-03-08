@@ -20,7 +20,7 @@ public class SourceManager extends JFrame {
     private SourceRegion toFind;
 
     private Map sourceViewers = new TreeMap();
-    
+
     public ArrayList getCurrentElements() {
         ArrayList list = new ArrayList();
         for (int i = 0; i < listModel.getSize(); i++) {
@@ -45,7 +45,7 @@ public class SourceManager extends JFrame {
                 SourceViewer sourceViewer = (SourceViewer) sourceViewers.get(list[j]);
                 if (sourceViewer == null) {
                     sourceViewer = new SourceViewer(list[j]);
-                    sourceViewers.put(list[j],sourceViewer);
+                    sourceViewers.put(list[j], sourceViewer);
                 }
                 sourceViewer.highlightRegion(region);
                 sourceViewer.setVisible(true);
@@ -169,10 +169,11 @@ public class SourceManager extends JFrame {
         gbc.weighty = 0;
         button = new JButton("Remove");
         button.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 int index = dirList.getSelectedIndex();
-                listModel.removeElementAt(index);
+                if (index > 0) {
+                    listModel.removeElementAt(index);
+                }
             }
         });
         addCompItem(button, gbc, 1, 2, 1, 1);
