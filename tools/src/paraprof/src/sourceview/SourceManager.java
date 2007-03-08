@@ -171,7 +171,7 @@ public class SourceManager extends JFrame {
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int index = dirList.getSelectedIndex();
-                if (index > 0) {
+                if (index >= 0) {
                     listModel.removeElementAt(index);
                 }
             }
