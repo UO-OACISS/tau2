@@ -157,7 +157,7 @@ CREATE TABLE tracesum (
 );
 
 CREATE TABLE machine_thread_map (
-    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT ATOMIC_EVENT_PK PRIMARY KEY,
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT MACHINE_THREAD_PK PRIMARY KEY,
     trial                     INT       NOT NULL,
     node                      INT       NOT NULL,
     context                   INT       NOT NULL,
