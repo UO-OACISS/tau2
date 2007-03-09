@@ -11,5 +11,5 @@ then
 fi
 
 echo "BEGIN_EXCLUDE_LIST" > throttle.tau
-cat $*  | grep Throttle | awk '{print $4 $5 $6 $7 $8 $9;}' | sort | uniq >>throttle.tau 
+cat $*  | grep Throttle | awk '{print $4 $5 $6 $7 $8 $9;}' | sort | uniq | sed s/\\[.*//  >>throttle.tau
 echo "END_EXCLUDE_LIST" >> throttle.tau
