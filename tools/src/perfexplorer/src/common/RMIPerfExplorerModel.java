@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.25 2007/02/08 23:28:50 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.26 2007/03/09 16:04:59 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -36,6 +36,8 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected boolean mainEventOnly = true;
 	protected boolean eventExclusive100 = false;
 	protected String chartSeriesName = null;
+	protected String chartMetadataFieldName = null;
+	protected String chartMetadataFieldValue = null;
 	protected String chartXAxisName = null;
 	protected String chartYAxisName = null;
 	protected String chartXAxisLabel = null;
@@ -882,6 +884,42 @@ public class RMIPerfExplorerModel implements Serializable {
      */
 	public void setChartSeriesName(String seriesName) {
 		this.chartSeriesName = seriesName;
+	}
+
+    /**
+     * Get the XML field name
+     *
+     * @return
+     */
+	public String getChartMetadataFieldName() {
+		return this.chartMetadataFieldName;
+	}
+
+    /**
+     * Set the XML field name
+     *
+     * @param fieldName
+     */
+	public void setChartMetadataFieldName(String fieldName) {
+		this.chartMetadataFieldName = fieldName;
+	}
+
+    /**
+     * Get the XML field value
+     *
+     * @return
+     */
+	public String getChartMetadataFieldValue() {
+		return this.chartMetadataFieldValue;
+	}
+
+    /**
+     * Set the XML field value
+     *
+     * @param fieldValue
+     */
+	public void setChartMetadataFieldValue(String fieldValue) {
+		this.chartMetadataFieldValue = fieldValue;
 	}
 
     /**

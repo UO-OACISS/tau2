@@ -354,10 +354,22 @@ public class ScriptFacade {
     	model.addEventName(eventName);
     }
 
-     public void setMetricName(String metricName) {
+    public void setMetricName(String metricName) {
     	model.setMetricName(metricName);
     }
+
+    //public void addMetricName(String metricName) {
+    	//model.addMetricName(metricName);
+    //}
     
+	public void setChartMetadataFieldName(String fieldName) {
+		model.setChartMetadataFieldName(fieldName);
+	}
+
+	public void setChartMetadataFieldValue(String fieldValue) {
+		model.setChartMetadataFieldValue(fieldValue);
+	}
+
 	public void setChartSeriesName(String seriesName) {
 		model.setChartSeriesName(seriesName);
 	}

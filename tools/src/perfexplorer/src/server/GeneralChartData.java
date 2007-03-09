@@ -25,12 +25,25 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.*;
+import java.util.regex.*;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.*;
+import javax.xml.transform.stream.*;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.*;
+import org.xml.sax.*;
+import java.io.StringReader;
+import java.io.Reader;
+
 /**
  * The GeneralChartData class is used to select data from the database which 
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.6 2007/02/28 03:39:11 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.7 2007/03/09 16:04:59 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -94,6 +107,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 			DB db = PerfExplorerServer.getServer().getDB();
 
 			Object object = model.getCurrentSelection();
+
+////////////////////////////////
 
 			// create and populate the temporary trial table
 			buf = buildCreateTableStatement("temp_trial", db);
@@ -184,40 +199,71 @@ public class GeneralChartData extends RMIGeneralChartData {
 			statement.execute();
 			statement.close();
 
-/*
+/////////////////////////
+
 			// create and populate the temporary XML_METADATA table
-			buf = buildCreateTableStatement("temp_metric", db);
-    		buf.append("(select metric.* from metric ");
-			buf.append("inner join temp_trial ");
-			buf.append("on metric.trial = temp_trial.id ");
-			// add the where clause
-			List metricNames = model.getMetricNames();
-			if (metricNames != null) {
-				if (db.getDBType().compareTo("db2") == 0) {
-					buf.append("where metric.name like ? ");
-				} else {
-					buf.append("where metric.name = ? ");
-				}
-				for (int i = 1 ; i < metricNames.size() ; i++) {
-					if (db.getDBType().compareTo("db2") == 0) {
-						buf.append("or metric.name like ? ");
-					} else {
-						buf.append("or metric.name = ? ");
-					}
-				}
-			}
-			buf.append(") ");
+			buf = buildCreateTableStatement("temp_xml_metadata", db);
+			buf.append(" (trial int, metadata_name text, metadata_value text)");
 			statement = db.prepareStatement(buf.toString());
-			if (metricNames != null) {
-				for (int i = 1 ; i <= metricNames.size() ; i++) {
-					String tmp = (String)metricNames.get(i-1);
-					statement.setString(i, tmp);
-				}
-			}
 			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
-*/
+
+			statement = db.prepareStatement("select id, XML_METADATA from temp_trial ");
+			//System.out.println(statement.toString());
+			ResultSet xmlResults = statement.executeQuery();
+
+			// build a factory
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			// ask the factory for the document builder
+			DocumentBuilder builder = factory.newDocumentBuilder();
+
+			db.setAutoCommit(false);
+
+			while (xmlResults.next() != false) {
+				// by adding these, we ensure only the main event
+				// will be selected in the next temporary table creation!
+				Reader reader = new StringReader(xmlResults.getString(2));
+				InputSource source = new InputSource(reader);
+				Document metadata = builder.parse(source);
+				// build the xpath object to jump around in that document
+				XPath xpath = XPathFactory.newInstance().newXPath();
+				xpath.setNamespaceContext(new TauNamespaceContext());
+	
+				// get the common profile attributes from the metadata
+				NodeList names = (NodeList) 
+					xpath.evaluate("/metadata/CommonProfileAttributes/attribute/name", 
+					metadata, XPathConstants.NODESET);
+
+				NodeList values = (NodeList) 
+					xpath.evaluate("/metadata/CommonProfileAttributes/attribute/value", 
+					metadata, XPathConstants.NODESET);
+
+				for (int i = 0 ; i < names.getLength() ; i++) {
+					Node name = (Node)names.item(i).getFirstChild();
+					Node value = (Node)values.item(i).getFirstChild();
+					if ((model.getChartMetadataFieldName() == null ||
+					     model.getChartMetadataFieldName().equals(name.getNodeValue())) &&
+						(model.getChartMetadataFieldValue() == null ||
+					     model.getChartMetadataFieldValue().equals(value.getNodeValue()))) {
+						buf = new StringBuffer();
+						buf.append("insert into temp_xml_metadata VALUES (?,?,?)");
+						PreparedStatement statement2 = db.prepareStatement(buf.toString());
+						statement2.setInt(1, xmlResults.getInt(1));
+						statement2.setString(2, name.getNodeValue());
+						statement2.setString(3, value.getNodeValue());
+						//System.out.println(statement2.toString());
+						statement2.executeUpdate();
+						statement2.close();
+					}
+				}
+			} 
+			db.commit();
+			db.setAutoCommit(true);
+			xmlResults.close();
+			statement.close();
+
+/////////////////////////
 
 			// create and populate the temporary metric table
 			buf = buildCreateTableStatement("temp_metric", db);
@@ -228,17 +274,17 @@ public class GeneralChartData extends RMIGeneralChartData {
 			// add the where clause
 			List metricNames = model.getMetricNames();
 			if (metricNames != null) {
-				if (db.getDBType().compareTo("db2") == 0) {
-					buf.append("where metric.name like ? ");
-				} else {
-					buf.append("where metric.name = ? ");
-				}
+				//if (db.getDBType().compareTo("db2") == 0) {
+					buf.append("where upper(metric.name) like ? ");
+				//} else {
+					//buf.append("where metric.name = ? ");
+				//}
 				for (int i = 1 ; i < metricNames.size() ; i++) {
-					if (db.getDBType().compareTo("db2") == 0) {
-						buf.append("or metric.name like ? ");
-					} else {
-						buf.append("or metric.name = ? ");
-					}
+					//if (db.getDBType().compareTo("db2") == 0) {
+						buf.append("or upper(metric.name) like ? ");
+					//} else {
+						//buf.append("or metric.name = ? ");
+					//}
 				}
 			}
 			buf.append(") ");
@@ -246,12 +292,14 @@ public class GeneralChartData extends RMIGeneralChartData {
 			if (metricNames != null) {
 				for (int i = 1 ; i <= metricNames.size() ; i++) {
 					String tmp = (String)metricNames.get(i-1);
-					statement.setString(i, tmp);
+					statement.setString(i, tmp.toUpperCase());
 				}
 			}
 			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
+
+////////////////////////////////
 
 			// if we only want the main event, handle that
 			// we need a sub query.  Bah.
@@ -277,7 +325,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 				//System.out.println(statement.toString());
 				ResultSet results = statement.executeQuery();
 
-				int columnCounter = 0;
 				while (results.next() != false) {
 					// by adding these, we ensure only the main event
 					// will be selected in the next temporary table creation!
@@ -286,6 +333,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 				results.close();
 				statement.close();
 			} 
+
+////////////////////////////////
 
 			// create and populate the temporary event table
 			buf = buildCreateTableStatement("temp_event", db);
@@ -413,6 +462,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 			statement.execute();
 			statement.close();
 
+////////////////////////////////
+
 			// The user wants parametric study data, with the data
 			// organized with two axes, the x and the y.
 			// unlike scalability: 
@@ -437,6 +488,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("on interval_mean_summary.interval_event = temp_event.id ");
 			buf.append("inner join temp_trial ");
 			buf.append("on temp_event.trial = temp_trial.id ");
+			buf.append("inner join temp_xml_metadata ");
+			buf.append("on temp_event.trial = temp_xml_metadata.trial ");
 			buf.append("inner join experiment ");
 			buf.append("on temp_trial.experiment = experiment.id ");
 			buf.append("inner join application ");
@@ -451,7 +504,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 
-			int columnCounter = 0;
 			while (results.next() != false) {
 				// System.out.print(results.getString(1) + ": " );
 				// System.out.print(results.getString(2) + ", " );
@@ -477,6 +529,16 @@ public class GeneralChartData extends RMIGeneralChartData {
 			statement.close();
 
 			statement = db.prepareStatement("drop table temp_metric");
+			//System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
+
+			statement = db.prepareStatement("truncate table temp_xml_metadata");
+			//System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
+
+			statement = db.prepareStatement("drop table temp_xml_metadata");
 			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
