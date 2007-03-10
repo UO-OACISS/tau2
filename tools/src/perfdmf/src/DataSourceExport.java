@@ -285,7 +285,22 @@ public class DataSourceExport {
         ostream.close();
 
     }
+    
+    private static String xmlFixUp(String string) {
+        string = string.replaceAll("&","&amp;");
+        string = string.replaceAll(">","&gt;");
+        string = string.replaceAll("<","&lt;");
+        string = string.replaceAll("\n","&#xa;");
+        return string;
+    }
 
+    private static void writeXMLSnippet(BufferedWriter bw, Map metaData) throws IOException {
+        for (Iterator it2 = metaData.keySet().iterator(); it2.hasNext();) {
+            String name = (String)it2.next();
+            String value = (String)metaData.get(name);
+            bw.write("<attribute><name>"+xmlFixUp(name)+"</name><value>"+xmlFixUp(value)+"</value></attribute>");
+        }
+    }
     private static void writeMetric(File root, DataSource dataSource, int metricID, Function[] functions, String[] groupStrings,
             UserEvent[] userEvents) throws IOException {
 
@@ -294,7 +309,7 @@ public class DataSourceExport {
         int numGroups = dataSource.getNumGroups();
 
         for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
-            edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+            Thread thread = (Thread) it.next();
 
             File file = new File(root + "/profile." + thread.getNodeID() + "." + thread.getContextID() + "."
                     + thread.getThreadID());
@@ -317,8 +332,17 @@ public class DataSourceExport {
             } else {
                 bw.write(count + " templated_functions_MULTI_" + dataSource.getMetricName(metricID) + "\n");
             }
-            bw.write("# Name Calls Subrs Excl Incl ProfileCalls\n");
-
+            
+            if (dataSource.getMetaData() != null) {
+                bw.write("# Name Calls Subrs Excl Incl ProfileCalls<metadata>");
+                writeXMLSnippet(bw, dataSource.getMetaData());
+                writeXMLSnippet(bw, thread.getMetaData());
+                bw.write("</metadata>\n");
+                
+            } else {
+                bw.write("# Name Calls Subrs Excl Incl ProfileCalls\n");
+            }
+            
             // write out function profiles
             for (int i = 0; i < functions.length; i++) {
                 FunctionProfile fp = thread.getFunctionProfile(functions[i]);
