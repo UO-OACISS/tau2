@@ -38,11 +38,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.23 2007/03/02 20:10:05 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.24 2007/03/10 03:17:33 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  */
 public class ParaProfUtils {
 
@@ -1121,6 +1121,9 @@ public class ParaProfUtils {
     // remove the source code location, if preferences are set for it
     private static String removeSource(String str) {
         if (!ParaProf.preferences.getShowSourceLocation()) {
+            if (str.startsWith("Loop:")) {
+                return str;
+            }
             while (str.indexOf("[{") != -1) {
                 int a = str.indexOf("[{");
                 int b = str.indexOf("}]");
