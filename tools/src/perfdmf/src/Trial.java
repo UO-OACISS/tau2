@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.15 2007/03/08 20:46:07 amorris Exp $
+ * CVS $Id: Trial.java,v 1.16 2007/03/10 03:52:59 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -45,9 +45,8 @@ public class Trial implements Serializable {
     private String fields[];
 
     protected DataSource dataSource = null;
-    private File metadataFile = null;
 
-	private Map metaData = null;
+    private Map metaData = null;
 
     public Trial() {
         if (Trial.fieldNames == null) {
@@ -440,7 +439,6 @@ public class Trial implements Serializable {
 
             Vector trials = new Vector();
 
-            //System.out.println(buf);
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
                 Trial trial = new Trial();
@@ -485,12 +483,12 @@ public class Trial implements Serializable {
             boolean haveDate = false;
             java.sql.Timestamp timestamp = null;
             String dateString = null;
-            
+
             if (getMetaData() != null) {
                 dateString = (String) getMetaData().get("UTC Time");
             }
             if (dateString == null) {
-                dateString = (String) ((Thread)getDataSource().getAllThreads().get(0)).getMetaData().get("UTC Time");
+                dateString = (String) ((Thread) getDataSource().getAllThreads().get(0)).getMetaData().get("UTC Time");
             }
             if (dateString != null) {
                 try {
@@ -520,12 +518,12 @@ public class Trial implements Serializable {
             }
 
             // set the other metadata, if it exists
-			// UNCOMMENT THIS WHEN WE KNOW FOR SURE WHAT THE TAU
-			// METADATA WILL LOOK LIKE 
-			String tmp = getDataSource().getMetadataString();
-			if (tmp != null && tmp.length() > 0) {
-				setField(XML_METADATA, tmp);
-			}
+            // UNCOMMENT THIS WHEN WE KNOW FOR SURE WHAT THE TAU
+            // METADATA WILL LOOK LIKE 
+            String tmp = getDataSource().getMetadataString();
+            if (tmp != null && tmp.length() > 0) {
+                setField(XML_METADATA, tmp);
+            }
 
             // Check if the date column exists and is a timestamp
             boolean dateColumnFound = false;
@@ -844,11 +842,10 @@ public class Trial implements Serializable {
             } catch (SQLException e) {
                 System.err.println("Unable to add " + XML_METADATA + " column to trial table.");
                 e.printStackTrace();
-			}
-		}
+            }
+        }
     }
 
-    
     public Map getMetaData() {
         return metaData;
     }
