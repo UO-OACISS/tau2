@@ -1,13 +1,10 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.awt.Component;
 import java.io.*;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
-
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 
 public class DataSourceExport {
 
@@ -24,8 +21,8 @@ public class DataSourceExport {
         FileOutputStream out = new FileOutputStream(file);
         writeDelimited(dataSource, out);
     }
-    public static void writeDelimited(DataSource dataSource, OutputStream out) throws IOException
-    {
+
+    public static void writeDelimited(DataSource dataSource, OutputStream out) throws IOException {
         OutputStreamWriter outWriter = new OutputStreamWriter(out);
         BufferedWriter bw = new BufferedWriter(outWriter);
 
@@ -96,8 +93,8 @@ public class DataSourceExport {
         FileOutputStream ostream = new FileOutputStream(file);
         writePacked(dataSource, ostream);
     }
-    public static void writePacked(DataSource dataSource, OutputStream ostream) throws IOException 
-    {
+
+    public static void writePacked(DataSource dataSource, OutputStream ostream) throws IOException {
         GZIPOutputStream gzip = new GZIPOutputStream(ostream);
         BufferedOutputStream bw = new BufferedOutputStream(gzip);
         DataOutputStream p = new DataOutputStream(bw);
@@ -122,13 +119,51 @@ public class DataSourceExport {
         p.writeChar('K'); // two bytes
 
         // write out version
-        p.writeInt(1); // four bytes
+        p.writeInt(2); // four bytes
 
         // write out lowest compatibility version
         p.writeInt(1); // four bytes
 
-        // write out size of header in bytes
-        p.writeInt(0); // four bytes
+        // Write meta-data
+        ByteArrayOutputStream headerStream = new ByteArrayOutputStream();
+        DataOutputStream headerData = new DataOutputStream(headerStream);
+
+        // future versions can put another header block here, we will skip this many bytes
+        headerData.writeInt(0);
+
+        if (dataSource.getMetaData() != null) {
+            // write out the trial meta-data, this data is normalized across all threads (i.e. it applies to all threads)
+            Map metaData = dataSource.getMetaData();
+            headerData.writeInt(metaData.size());
+            for (Iterator it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                String name = (String) it2.next();
+                String value = (String) metaData.get(name);
+                headerData.writeUTF(name);
+                headerData.writeUTF(value);
+            }
+        } else {
+            headerData.writeInt(0);
+        }
+
+        headerData.writeInt(dataSource.getAllThreads().size());
+        for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = (Thread) it.next();
+            Map metaData = thread.getMetaData();
+            headerData.writeInt(thread.getNodeID());
+            headerData.writeInt(thread.getContextID());
+            headerData.writeInt(thread.getThreadID());
+            headerData.writeInt(metaData.size());
+            for (Iterator it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                String name = (String) it2.next();
+                String value = (String) metaData.get(name);
+                headerData.writeUTF(name);
+                headerData.writeUTF(value);
+            }
+        }
+        headerData.close();
+
+        p.writeInt(headerData.size());
+        p.write(headerStream.toByteArray());
 
         // write out metric names
         p.writeInt(numMetrics);
@@ -187,7 +222,7 @@ public class DataSourceExport {
 
         // write out each thread's data
         for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
-            edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+            Thread thread = (Thread) it.next();
 
             p.writeInt(thread.getNodeID());
             p.writeInt(thread.getContextID());
@@ -357,7 +392,7 @@ public class DataSourceExport {
             }
             numFunctions++;
         }
-            
+
         // write out group names
         Group groups[] = new Group[numGroups];
         for (Iterator it = dataSource.getGroups(); it.hasNext();) {
@@ -369,7 +404,6 @@ public class DataSourceExport {
         Function functions[] = new Function[numFunctions];
         String groupStrings[] = new String[numFunctions];
         idx = 0;
-
 
         // write out function names
         for (Iterator it = dataSource.getFunctions(); it.hasNext();) {

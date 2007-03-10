@@ -17,9 +17,9 @@ import org.w3c.dom.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.15 2007/02/20 01:16:18 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.16 2007/03/10 03:53:43 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  */
 public abstract class DataSource {
 
@@ -73,7 +73,7 @@ public abstract class DataSource {
     protected volatile boolean reloading;
 
     protected Map metaData;
-	private File metadataFile;
+    private File metadataFile;
     private Map masterMetaData = new TreeMap();
     private StringBuffer metadataString = new StringBuffer();
 
@@ -1122,41 +1122,7 @@ public abstract class DataSource {
         this.metaData = metaData;
     }
 
-    public void aggregateMetaData() {
-
-        metaData = new TreeMap();
-        
-        Thread node0 = (Thread) getAllThreads().get(0);
-
-		// this is Kevin's code for creating the XML string to put
-		// into the XML_METADATA column in the trial table.
-
-        Map masterMap = new TreeMap();
-        // populate the master map with all the values from profile.0.0.0
-        for (Iterator it2 = node0.getMetaData().keySet().iterator(); it2.hasNext();) {
-            String name = (String) it2.next();
-            String value = (String) node0.getMetaData().get(name);
-            masterMap.put(name, value);
-        }
-
-        // iterate through the profiles...
-        for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
-            // for each metadata name/value pair...
-            for (Iterator it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
-                String name = (String) it2.next();
-                String value = (String) thread.getMetaData().get(name);
-                // if the current profile has this key, check the value to make sure
-                // it is the same.  If not, remove the key from the master map
-                if (masterMap.containsKey(name)) {
-                    String tmp = (String)masterMap.get(name);
-                    if (!value.equals(tmp)) {
-                        masterMap.remove(name);
-                    }
-                }
-            }
-        }
-
+    public void buildXMLMetaData() {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
             // create the XML DOM document builder
@@ -1170,37 +1136,36 @@ public abstract class DataSource {
             root.setAttribute("xmlns:tau", "http://www.cs.uoregon.edu/research/tau");
             document.appendChild(root);
 
+            // create the common attribute node
+            if (metaData.size() > 0) {
+                root.appendChild(document.createTextNode("\n  "));
+                Element master = (Element) document.createElement("tau:CommonProfileAttributes");
+                root.appendChild(master);
+                root.appendChild(document.createTextNode("\n"));
 
-			// create the common attribute node
-			if (masterMap.size() > 0) {
-				root.appendChild(document.createTextNode("\n  "));
-            	Element master = (Element) document.createElement("tau:CommonProfileAttributes");
-           		root.appendChild(master);
-				root.appendChild(document.createTextNode("\n"));
-
-            	// output the first thread of name / value pairs, like this:
-            	// <attribute><name>xxx</name><value>yyy</value></attribute>
-            	for (Iterator it2 = masterMap.keySet().iterator(); it2.hasNext();) {
-                	String name = (String) it2.next();
-                	String value = (String) node0.getMetaData().get(name);
-                	Element attribute = (Element) document.createElement("tau:attribute");
-					master.appendChild(document.createTextNode("\n    "));
-                	master.appendChild(attribute);
-                	Element attrName = (Element) document.createElement("tau:name");
-					attribute.appendChild(document.createTextNode("\n      "));
-                	attribute.appendChild(attrName);
-                	attrName.appendChild(document.createTextNode(name));
-                	Element attrValue = (Element) document.createElement("tau:value");
-					attribute.appendChild(document.createTextNode("\n      "));
-                	attribute.appendChild(attrValue);
-                	attrValue.appendChild(document.createTextNode(value));
-					attribute.appendChild(document.createTextNode("\n    "));
-            	}
-				master.appendChild(document.createTextNode("\n  "));
-			}
+                // output the first thread of name / value pairs, like this:
+                // <attribute><name>xxx</name><value>yyy</value></attribute>
+                for (Iterator it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                    String name = (String) it2.next();
+                    String value = (String) metaData.get(name);
+                    Element attribute = (Element) document.createElement("tau:attribute");
+                    master.appendChild(document.createTextNode("\n    "));
+                    master.appendChild(attribute);
+                    Element attrName = (Element) document.createElement("tau:name");
+                    attribute.appendChild(document.createTextNode("\n      "));
+                    attribute.appendChild(attrName);
+                    attrName.appendChild(document.createTextNode(name));
+                    Element attrValue = (Element) document.createElement("tau:value");
+                    attribute.appendChild(document.createTextNode("\n      "));
+                    attribute.appendChild(attrValue);
+                    attrValue.appendChild(document.createTextNode(value));
+                    attribute.appendChild(document.createTextNode("\n    "));
+                }
+                master.appendChild(document.createTextNode("\n  "));
+            }
 
             // for all threads of execution, output the attributes
-			// that are different for one or more threads
+            // that are different for one or more threads
             for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
                 Thread thread = (Thread) it.next();
                 // output the first thread of name / value pairs, like this:
@@ -1212,38 +1177,38 @@ public abstract class DataSource {
                 delta.setAttribute("context", Integer.toString(thread.getContextID()));
                 delta.setAttribute("thread", Integer.toString(thread.getThreadID()));
 
-				boolean addit = false;
+                boolean addit = false;
 
-               	for (Iterator it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
-                   	String name = (String) it2.next();
-                   	String value = (String) thread.getMetaData().get(name);
-                   	// if this name/value pair is not in the master, then 
-                   	// append it to the tree.
-                   	if (!masterMap.containsKey(name)) {
-                       	Element attribute = (Element) document.createElement("tau:attribute");
-						delta.appendChild(document.createTextNode("\n    "));
-                       	delta.appendChild(attribute);
-                       	Element attrName = (Element) document.createElement("tau:name");
-						attribute.appendChild(document.createTextNode("\n      "));
-                       	attribute.appendChild(attrName);
-                       	attrName.appendChild(document.createTextNode(name));
-                       	Element attrValue = (Element) document.createElement("tau:value");
-						attribute.appendChild(document.createTextNode("\n      "));
-                       	attribute.appendChild(attrValue);
-                       	attrValue.appendChild(document.createTextNode(value));
-						attribute.appendChild(document.createTextNode("\n    "));
-						addit = true;
-                   	}
-               	}
-				delta.appendChild(document.createTextNode("\n  "));
+                for (Iterator it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
+                    String name = (String) it2.next();
+                    String value = (String) thread.getMetaData().get(name);
+                    // if this name/value pair is not in the master, then 
+                    // append it to the tree.
+                    if (!metaData.containsKey(name)) {
+                        Element attribute = (Element) document.createElement("tau:attribute");
+                        delta.appendChild(document.createTextNode("\n    "));
+                        delta.appendChild(attribute);
+                        Element attrName = (Element) document.createElement("tau:name");
+                        attribute.appendChild(document.createTextNode("\n      "));
+                        attribute.appendChild(attrName);
+                        attrName.appendChild(document.createTextNode(name));
+                        Element attrValue = (Element) document.createElement("tau:value");
+                        attribute.appendChild(document.createTextNode("\n      "));
+                        attribute.appendChild(attrValue);
+                        attrValue.appendChild(document.createTextNode(value));
+                        attribute.appendChild(document.createTextNode("\n    "));
+                        addit = true;
+                    }
+                }
+                delta.appendChild(document.createTextNode("\n  "));
 
-				if (addit) {
-                	// don't add it to the tree, unless it has items that differ from
-                	// the master record
-					root.appendChild(document.createTextNode("  "));
-               		root.appendChild(delta);
-					root.appendChild(document.createTextNode("\n"));
-				}
+                if (addit) {
+                    // don't add it to the tree, unless it has items that differ from
+                    // the master record
+                    root.appendChild(document.createTextNode("  "));
+                    root.appendChild(delta);
+                    root.appendChild(document.createTextNode("\n"));
+                }
 
             }
 
@@ -1271,49 +1236,55 @@ public abstract class DataSource {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             StreamResult result = new StreamResult(stream);
             transformer.transform(source, result);
-			// don't output the XML if there isn't anything.
-			if (root.hasChildNodes()) {
-            	metadataString.append(stream.toString());
-			}
+            // don't output the XML if there isn't anything.
+            if (root.hasChildNodes()) {
+                metadataString.append(stream.toString());
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-		// this is Alan's code for extracting the date/time,
-		// and creating the intersection
+    }
+
+    public void aggregateMetaData() {
+
+        metaData = new TreeMap();
+        Thread node0 = (Thread) getAllThreads().get(0);
 
         // must have at least one thread
-        if (node0 != null) {
+        if (node0 == null) {
+            return;
+        }
 
-            for (Iterator it = node0.getMetaData().keySet().iterator(); it.hasNext();) {
-                String name = (String) it.next();
-                String value = (String) node0.getMetaData().get(name);
-                metaData.put(name, value);
-            }
+        // First, add all name/value pairs from the first node (any node, really)
+        for (Iterator it = node0.getMetaData().keySet().iterator(); it.hasNext();) {
+            String name = (String) it.next();
+            String value = (String) node0.getMetaData().get(name);
+            metaData.put(name, value);
+        }
 
-            for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
-                Thread thread = (Thread) it.next();
-                for (Iterator it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
-                    String name = (String) it2.next();
-                    String value = (String) thread.getMetaData().get(name);
+        // Now iterate through all nodes and remove from the master set (metaData) any that differ
+        for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = (Thread) it.next();
+            for (Iterator it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
+                String name = (String) it2.next();
+                String value = (String) thread.getMetaData().get(name);
 
-                    String trialValue = (String) metaData.get(name);
-                    if (trialValue == null || !value.equals(trialValue)) {
-                        metaData.remove(name);
-                    }
+                String trialValue = (String) metaData.get(name);
+                if (trialValue == null || !value.equals(trialValue)) {
+                    metaData.remove(name);
                 }
             }
+        }
 
-            for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
-                Thread thread = (Thread) it.next();
-
-                for (Iterator it2 = metaData.keySet().iterator(); it2.hasNext();) {
-                    String name = (String) it2.next();
-                    thread.getMetaData().remove(name);
-                }
+        // Now remove the normalized name/value pairs from the thread-specific structures
+        for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = (Thread) it.next();
+            for (Iterator it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                String name = (String) it2.next();
+                thread.getMetaData().remove(name);
             }
-
         }
 
     }
@@ -1335,8 +1306,8 @@ public abstract class DataSource {
         return;
     }
 
-	public String getMetadataString () {
-		return metadataString.toString();
-	}
+    public String getMetadataString() {
+        return metadataString.toString();
+    }
 
 }

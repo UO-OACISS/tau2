@@ -3,6 +3,7 @@ package edu.uoregon.tau.perfdmf;
 import java.io.*;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 import java.security.Security;
 
@@ -11,9 +12,9 @@ import java.security.Security;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.9 2007/02/13 18:44:37 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.10 2007/03/10 03:53:43 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -64,12 +65,20 @@ public class PackedProfileDataSource extends DataSource {
         InputStream istream;
         if (file.toString().toLowerCase().startsWith("http:/")) {
             // When it gets converted from a String to a File http:// turns into http:/
-            URL url = new URL("http://" + file.toString().substring(6));
+            URL url = new URL("http://" + file.toString().substring(6).replace('\\', '/'));
+            istream = url.openStream();
+        } else if (file.toString().toLowerCase().startsWith("https:/")) {
+            // When it gets converted from a String to a File https:// turns into https:/
+            System.out.println("found url");
+            System.setProperty("java.protocol.handler.pkgs",
+              "com.sun.net.ssl.internal.www.protocol");
+            Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
+            URL url = new URL("https://" + file.toString().substring(7).replace('\\','/'));
             istream = url.openStream();
         }  else {
             istream = new FileInputStream(file);
         }
-        
+
         tracker = new TrackerInputStream(istream);
         GZIPInputStream gzip = new GZIPInputStream(tracker);
         BufferedInputStream bis = new BufferedInputStream(gzip);
@@ -81,25 +90,58 @@ public class PackedProfileDataSource extends DataSource {
         char cookie1 = p.readChar();
         char cookie2 = p.readChar();
         char cookie3 = p.readChar();
-        
+
         if (!(cookie1 == 'P' && cookie2 == 'P' && cookie3 == 'K')) {
             throw new DataSourceException("This doesn't look like a packed profile");
         }
-        
+
         // read file version
         int version = p.readInt();
-        
+
         // read lowest compatibility version
         int compatible = p.readInt();
-        
-        if (compatible != 1) {
-            throw new DataSourceException("This packed profile is not compatible, please upgrade\nVersion: " + compatible + " > " + "1");
+
+        if (compatible > 2) {
+            throw new DataSourceException("This packed profile is not compatible, please upgrade\nVersion: " + compatible + " > "
+                    + "2");
         }
-        
-        // skip over header
-        int bytesToSkip = p.readInt();
-        p.skipBytes(bytesToSkip);
-        
+
+        if (version >= 2) {
+            int metadataHeaderSize = p.readInt(); // older versions will skip over this many bytes
+
+            // skip over next section (future capability)
+            int bytesToSkip = p.readInt();
+            p.skipBytes(bytesToSkip);
+            
+            metaData = new TreeMap();
+            int numTrialMetaData = p.readInt();
+            for (int i = 0; i < numTrialMetaData; i++) {
+                String name = p.readUTF();
+                String value = p.readUTF();
+                metaData.put(name,value);
+            }
+            
+            // process thread meta-data
+            int numThreads = p.readInt();
+            for (int i = 0; i < numThreads; i++) {
+                int nodeID = p.readInt();
+                int contextID = p.readInt();
+                int threadID = p.readInt();
+
+                Thread thread = addThread(nodeID, contextID, threadID);
+                int numMetadata = p.readInt();
+                for (int j = 0; j < numMetadata; j++) {
+                    String name = p.readUTF();
+                    String value = p.readUTF();
+                    thread.getMetaData().put(name, value);
+                }
+            }
+        } else {
+            // skip over header
+            int bytesToSkip = p.readInt();
+            p.skipBytes(bytesToSkip);
+        }
+
         // process metrics
         int numMetrics = p.readInt();
         for (int i = 0; i < numMetrics; i++) {
@@ -190,14 +232,14 @@ public class PackedProfileDataSource extends DataSource {
             setUserEventsPresent(true);
         }
 
-        
         this.generateDerivedData(); // mean, percentages, etc.
+        this.buildXMLMetaData();
 
         //time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + time);
 
     }
-    
+
     /**
      * A stream wrapper that tracks progress
      */
