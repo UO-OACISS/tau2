@@ -106,6 +106,24 @@ def XMLharder(pe):
 	pe.setChartConstantProblem(1)
 	pe.doGeneralChart()
 
+def CompilerByEvent(pe):
+	pe.setApplication("GTC compiler options")
+	# pe.setExperiment("ocracoke-noinline")
+	pe.setMetricName("Time")
+	pe.setChartTitle("GTC Compiler options by event")
+	pe.setDimensionReduction(TransformationType.OVER_X_PERCENT, "1")
+	pe.setChartSeriesName("interval_event.name")
+	pe.setChartXAxisName("temp_xml_metadata.metadata_value", "Compiler Options")
+	pe.setChartMetadataFieldName("Compiler Options")
+	pe.setChartYAxisName("avg(interval_mean_summary.exclusive)", "Total Time (seconds)")
+	pe.setChartMainEventOnly(0);
+	pe.setChartLogYAxis(0);
+	pe.setChartEventNoCallPath(1)
+	pe.setChartEventExclusive100(0)
+	pe.setChartScalability(0)
+	pe.setChartConstantProblem(0)
+	pe.doGeneralChart()
+
 print "--------------- JPython test script start ------------"
 
 pe = ScriptFacade()
@@ -113,7 +131,8 @@ pe = ScriptFacade()
 # XMLharder(pe)
 # TotalExecutionTime(pe)
 # Speedup(pe)
-SpeedupByEvent(pe)
+# SpeedupByEvent(pe)
+CompilerByEvent(pe)
 # Simple(pe)
 
 # pe.exit()

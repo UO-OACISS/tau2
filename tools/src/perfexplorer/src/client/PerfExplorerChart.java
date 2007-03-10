@@ -21,6 +21,8 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.Range;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
@@ -248,12 +250,20 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			}
 		}
 
+		PlotOrientation orientation = null;
+		if (rawData.getCategoryType() == Integer.class) {
+			// don't mess with the domain axis
+            orientation = PlotOrientation.VERTICAL;        // the plot orientation
+		} else {
+            orientation = PlotOrientation.HORIZONTAL;        // the plot orientation
+		}
+
         JFreeChart chart = ChartFactory.createLineChart(
             model.getChartTitle(),  // chart title
             model.getChartXAxisLabel(),  // domain axis label
             model.getChartYAxisLabel(),  // range axis label
             dataset,                         // data
-            PlotOrientation.VERTICAL,        // the plot orientation
+            orientation,        // the plot orientation
             true,                            // legend
             true,                            // tooltips
             false                            // urls
@@ -283,6 +293,16 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 		rangeAxis.setAutoRangeIncludesZero(true);
+
+/*
+		if (rawData.getCategoryType() == Integer.class) {
+			// don't mess with the domain axis
+		} else {
+        	CategoryAxis domainAxis = plot.getDomainAxis();
+			domainAxis.setSkipCategoryLabelsToFit(true);
+			domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
+		}
+*/
 
 		if (model.getChartLogYAxis()) {
         	LogarithmicAxis axis = new LogarithmicAxis(

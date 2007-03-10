@@ -43,7 +43,7 @@ import java.io.Reader;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.7 2007/03/09 16:04:59 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.8 2007/03/10 00:46:37 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -251,7 +251,11 @@ public class GeneralChartData extends RMIGeneralChartData {
 						PreparedStatement statement2 = db.prepareStatement(buf.toString());
 						statement2.setInt(1, xmlResults.getInt(1));
 						statement2.setString(2, name.getNodeValue());
-						statement2.setString(3, value.getNodeValue());
+						if (value == null) {
+							statement2.setString(3, "");
+						} else {
+							statement2.setString(3, value.getNodeValue());
+						}
 						//System.out.println(statement2.toString());
 						statement2.executeUpdate();
 						statement2.close();
