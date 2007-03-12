@@ -17,9 +17,9 @@ import org.w3c.dom.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.16 2007/03/10 03:53:43 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.17 2007/03/12 17:46:56 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  */
 public abstract class DataSource {
 
@@ -855,8 +855,8 @@ public abstract class DataSource {
      * present. Adds do not have to be consecutive (ie., nodes can be added out of order).
      * The node created will have an id matching the given id.
      *
-     * @param	nodeID The id of the node to be added.
-     * @return	The Node that was added.
+     * @param    nodeID The id of the node to be added.
+     * @return    The Node that was added.
      */
     public Node addNode(int nodeID) {
         Object obj = nodes.get(new Integer(nodeID));
@@ -883,8 +883,8 @@ public abstract class DataSource {
     /**
      * Gets the node with the specified node id.  If the node is not found, the function returns null.
      *
-     * @param	nodeID The id of the node sought.
-     * @return	The node found (or null if it was not).
+     * @param    nodeID The id of the node sought.
+     * @return    The node found (or null if it was not).
      */
     public Node getNode(int nodeID) {
         return (Node) nodes.get(new Integer(nodeID));
@@ -893,7 +893,7 @@ public abstract class DataSource {
     /**
      * Returns the number of nodes in this NCT object.
      *
-     * @return	The number of nodes.
+     * @return    The number of nodes.
      */
     public int getNumberOfNodes() {
         return nodes.size();
@@ -902,7 +902,7 @@ public abstract class DataSource {
     /**
      * Returns the list of nodes in this object as an Iterator.
      *
-     * @return	An Iterator over node objects.
+     * @return    An Iterator over node objects.
      */
     public Iterator getNodes() {
         return nodes.values().iterator();
@@ -1136,11 +1136,13 @@ public abstract class DataSource {
             root.setAttribute("xmlns:tau", "http://www.cs.uoregon.edu/research/tau");
             document.appendChild(root);
 
+            Element master = null;
+
             // create the common attribute node
             if (metaData.size() > 0) {
                 root.appendChild(document.createTextNode("\n  "));
-                Element master = (Element) document.createElement("tau:CommonProfileAttributes");
-                root.appendChild(master);
+                master = (Element) document.createElement("tau:CommonProfileAttributes");
+                   root.appendChild(master);
                 root.appendChild(document.createTextNode("\n"));
 
                 // output the first thread of name / value pairs, like this:
@@ -1220,8 +1222,39 @@ public abstract class DataSource {
                 Element oldRoot = oldDocument.getDocumentElement();
                 // here's the magic step!
                 org.w3c.dom.Node imported = document.importNode(oldRoot, true);
-                // add the root of the second document to our root
-                root.appendChild(imported);
+                System.out.println(imported.getPrefix());
+                System.out.println(imported.getNodeName());
+                if (master != null 
+                    && imported.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE 
+                    && imported.getNodeName().equals("tau:metadata")) {
+                    // extract it out, and add it to our tree!
+                    NodeList nodes = imported.getChildNodes();
+                    for (int i = 0 ; i < nodes.getLength() ; i++) {
+                        org.w3c.dom.Node cpa = nodes.item(i);
+                        // System.out.println("\t" + cpa.getNodeName());
+                        if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE 
+                            && cpa.getNodeName().equals("tau:CommonProfileAttributes")) {
+                            
+                            NodeList attrs = cpa.getChildNodes();
+                            // System.out.println("length: " + attrs.getLength());
+                            for (int j = 0 ; j < attrs.getLength() ; j++) {
+                                // System.out.println("\t\tj:" + j);
+                                org.w3c.dom.Node tmp = attrs.item(j);
+                                if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE 
+                                    && tmp.getNodeName().equals("tau:attribute")) {
+                                    // System.out.println("\t\tname:" + tmp.getNodeName());
+                                    master.appendChild(tmp);
+                                }
+                                // System.out.println("\t\tend j:" + j);
+                            }
+                            
+                            //root.appendChild(cpa);
+                        }
+                    }
+                } else {
+                    // add the root of the second document to our root
+                    root.appendChild(imported);
+                }
             }
 
             // normalize all whitespace in the file
