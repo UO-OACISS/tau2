@@ -1875,6 +1875,7 @@ bool addThenEndifClauses(char *currentline, char *previousline, int currentcol)
     exit(1);
   }
 
+  if (currentcol < 0) currentcol = strlen(currentline);
   /* fill in checkbuf until the current construct */
   for  (i = 0; i < currentcol; i++)
   { /* currentcol is (*it)->col - 1; */
@@ -2690,7 +2691,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
 	    case ALLOCATE_STMT:
                 alloccol = CPDB_GetSubstringCol(inbuf,"allocate");
-		if (addThenEndifClauses(inbuf, previousline, alloccol - 1))
+		if (addThenEndifClauses(inbuf, previousline, alloccol - 1)  && (alloccol != 0))
 		{
 		/* only write till the alloc column. This assumes statement 
 		begins on col 1? even if it is "20 if (x.gt.2) allocate(A)" */
@@ -2714,14 +2715,46 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 }
 		else
 		{ /* there is no if clause */
-		  ostr<<"\n"<<inbuf<<endl;
-		  inputLineNo+= printTauAllocStmt(istr, ostr, inbuf, it); 
+		  /* If the PDB file puts the continued if statement on the 
+                     same line as allocate, we need to take care of it. e.g.,
+     6         if ( value .gt. 3) &
+     7           allocate(A(2))
+    PDB:  rstmt st#2 fallocate so#1 6 8 so#1 7 23 NA NA
+    PDB:  rstmt st#1 fsingle_if so#1 6 8 so#1 7 23 st#3 st#2
+		  */
+
+                  is_if_stmt = addThenEndifClauses(inbuf, inbuf, alloccol - 1);
+#ifdef DEBUG
+                  printf("IS IT IF??? %d alloccol = %d\n", is_if_stmt, alloccol);
+#endif /* DEBUG */
+		  if (is_if_stmt && (alloccol == 0)) { 
+			/* handle this separately. write the current statement */
+		     printf("TAU ERROR: <file=%s,line=%d>: Currently we cannot handle allocate statements that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the allocate statement and re-try.\n", f->name(), inputLineNo);
+		       ostr<<inbuf<<endl;
+/* matching of ( and ) does not work in this case if the line is split up. 
+		     do {
+		      printf("INSIDE IS_IT_IF\n");
+		       ostr<<inbuf<<endl;
+		       alloccol = CPDB_GetSubstringCol(inbuf,"allocate");
+		       istr.getline(inbuf, INBUF_SIZE); 
+		       inputLineNo++;
+                     } while (alloccol != 0);
+		     ostr <<"\t then \n\t";
+		     inputLineNo+= printTauAllocStmt(istr, ostr, inbuf, it);
+		     ostr <<"\t endif"<<endl;
+*/
+		
+		  }
+		  else {
+		    ostr<<"\n"<<inbuf<<endl;
+		    inputLineNo+= printTauAllocStmt(istr, ostr, inbuf, it); 
+		  }
 		}	
                 instrumented = true;
 		break;
 	    case DEALLOCATE_STMT:
                 dealloccol = CPDB_GetSubstringCol(inbuf,"deallocate");
-                if (addThenEndifClauses(inbuf, previousline, dealloccol - 1))
+                if (addThenEndifClauses(inbuf, previousline, dealloccol - 1) && (dealloccol != 0))
                 {
                 /* only write till the alloc column. This assumes statement
                 begins on col 1? even if it is "20 if (x.gt.2) allocate(A)" */
@@ -2750,10 +2783,30 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 }
                 else
                 { /* there is no if clause, write TAU_DEALLOC, then stmt */
-                  inputLineNo+=printTauDeallocStmt(istr, ostr, inbuf, it, false);
+                  /* If the PDB file puts the continued if statement on the
+                     same line as allocate, we need to take care of it. e.g.,
+     6         if ( value .gt. 3) &
+     7           deallocate(A   )
+    PDB:  rstmt st#2 fdeallocate so#1 6 8 so#1 7 23 NA NA
+    PDB:  rstmt st#1 fsingle_if so#1 6 8 so#1 7 23 st#3 st#2
+                  */
+
+                  is_if_stmt = addThenEndifClauses(inbuf, inbuf, dealloccol - 1);
+#ifdef DEBUG
+                  printf("IS IT IF??? %d dealloccol = %d\n", is_if_stmt, dealloccol);
+#endif /* DEBUG */
+                  if (is_if_stmt && (dealloccol == 0)) {
+                        /* handle this separately. write the current statement */
+                     printf("TAU ERROR: <file=%s,line=%d>: Currently we cannot handle de-allocate statements that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the de-allocate statement and re-try.\n", f->name(), inputLineNo);
+                       ostr<<inbuf<<endl;
+                  }
+                  else {
+
+                    inputLineNo+=printTauDeallocStmt(istr, ostr, inbuf, it, false);
 /* 
-		  ostr<<inbuf<<endl;
+		    ostr<<inbuf<<endl;
 */
+                  }
                 }
                 instrumented = true;
 		break;
@@ -3148,8 +3201,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.136 $   $Date: 2007/03/12 16:31:41 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.136 2007/03/12 16:31:41 sameer Exp $
+ * $Revision: 1.137 $   $Date: 2007/03/12 17:44:53 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.137 2007/03/12 17:44:53 sameer Exp $
  ***************************************************************************/
 
 
