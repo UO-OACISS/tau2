@@ -1794,12 +1794,24 @@ bool continuedFromLine(char *line)
 {
   int length = strlen(line);
 
-  int i = length-1;
+  int i = length - 1;
 #ifdef DEBUG 
-  cout <<"Starting check from "<<line[i]<<endl;
+  cout <<"CONTINUEDFROMLINE: Line = "<<line<<":Starting check from "<<line[i]<<endl;
+  cout <<"length = "<<length <<endl;
 #endif /* DEBUG */
-  if (line[i] == '&') return true; /* it is continued */
-  else return false; /* no continuation characters found */
+  for (i = length -1; i != 0; i--)
+  { 
+#ifdef DEBUG
+    printf("continuedFromLine: checking ... line[%d] = %c\n", i, line[i]);
+#endif /* DEBUG */
+    if (line[i] == ' ') continue;
+    if (line[i] == '&') return true; /* it is continued */
+    else return false; /* nope. something else! */
+  }
+/* OLD CODE :
+  if (line[i] == '&') return true; 
+  else return false; */ /* no continuation characters found */
+  return false; 
 }
 /* -------------------------------------------------------------------------- */
 /* -- is it a continuation line? Check for a ) from the end of current line
@@ -1851,6 +1863,7 @@ bool isContinuationLine(char *currentline, char *previousline, int columnToCheck
   /* we haven't checked the previous line yet... */
 #ifdef DEBUG
   cout <<"Reached here: currentline= "<<currentline<<endl;
+  cout <<"Reached here: previousline= "<<currentline<<endl;
 #endif /* DEBUG */
   if (continuedFromLine(previousline))
     return true; /* put in a then/endif clause as there is continuation */
@@ -2208,7 +2221,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
   int space, i, j, k, c;
-  int docol, ifcol, thencol, gotocol, alloccol, dealloccol;
+  int docol, ifcol, thencol, gotocol, alloccol, dealloccol, startcol;
   if (!ostr) {
     cerr << "Error: Cannot open '" << outfile << "'" << endl;
     return false;
@@ -2695,8 +2708,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		{
 		/* only write till the alloc column. This assumes statement 
 		begins on col 1? even if it is "20 if (x.gt.2) allocate(A)" */
-		  if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
-		  for(i=(*it)->col-1; i< alloccol - 1; i++) {
+		  //printf("alloccol = %d, it->col = %d\n", alloccol, (*it)->col);
+                  startcol = (*it)->col == alloccol ? 1: (*it)->col ;
+		  for(i=startcol - 1; i< alloccol - 1; i++) {
 #ifdef DEBUG
                     cout << "Writing (1.4): "<<inbuf[i]<<endl;
 #endif /* DEBUG */
@@ -2729,7 +2743,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 		  if (is_if_stmt && (alloccol == 0)) { 
 			/* handle this separately. write the current statement */
-		     printf("TAU ERROR: <file=%s,line=%d>: Currently we cannot handle allocate statements that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the allocate statement and re-try.\n", f->name(), inputLineNo);
+		     printf("TAU ERROR: <file=%s,line=%d>:  Currently we cannot handle allocate statements in this version of PDT that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the allocate statement and re-try, or upgrade your PDT package.\n", f->name(), inputLineNo);
 		       ostr<<inbuf<<endl;
 /* matching of ( and ) does not work in this case if the line is split up. 
 		     do {
@@ -2758,8 +2772,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 {
                 /* only write till the alloc column. This assumes statement
                 begins on col 1? even if it is "20 if (x.gt.2) allocate(A)" */
-		  if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
-                  for(i=(*it)->col-1; i< dealloccol - 1; i++) {
+		  // if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
+                  startcol = (*it)->col == dealloccol ? 1: (*it)->col ;
+                  for(i=startcol-1; i< dealloccol - 1; i++) {
 #ifdef DEBUG
                     printf("Writing (1.7):: %c\n",inbuf[i]);
 #endif /* DEBUG */
@@ -2797,7 +2812,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
                   if (is_if_stmt && (dealloccol == 0)) {
                         /* handle this separately. write the current statement */
-                     printf("TAU ERROR: <file=%s,line=%d>: Currently we cannot handle de-allocate statements that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the de-allocate statement and re-try.\n", f->name(), inputLineNo);
+                     printf("TAU ERROR: <file=%s,line=%d>: Currently we cannot handle de-allocate statements in this version of PDT that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the de-allocate statement and re-try, or upgrade your PDT package.\n", f->name(), inputLineNo);
                        ostr<<inbuf<<endl;
                   }
                   else {
@@ -3201,8 +3216,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.137 $   $Date: 2007/03/12 17:44:53 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.137 2007/03/12 17:44:53 sameer Exp $
+ * $Revision: 1.138 $   $Date: 2007/03/12 22:09:35 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.138 2007/03/12 22:09:35 sameer Exp $
  ***************************************************************************/
 
 
