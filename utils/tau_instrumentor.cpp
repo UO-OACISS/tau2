@@ -1764,6 +1764,28 @@ bool isKeywordPresent(char *line, char *keyword)
    return present; /* is it present? */
 }
 
+/* -------------------------------------------------------------------------- */
+/* -- remove ! from the line and replace it with \0 ------------------------- */
+/* -------------------------------------------------------------------------- */
+void removeCommentFromLine(char * & inbuf)
+{
+  char *line = inbuf;
+  int i, len;
+    
+  len = strlen(line);
+  for (i=0 ; i < len, *line; i++, line++)
+  {
+    if (*line == '!') {
+      *line = '\0'; 
+      break;
+    }
+  }
+#ifdef DEBUG
+  printf("removeCommentFromLine: after cleaning inbuf= %s\n", inbuf);
+#endif /* DEBUG */
+  return ;
+}
+
 
 /* -------------------------------------------------------------------------- */
 /* -- is it a continuation line? Checking the previous line for an &          */
@@ -1776,7 +1798,7 @@ bool continuedFromLine(char *line)
 #ifdef DEBUG 
   cout <<"Starting check from "<<line[i]<<endl;
 #endif /* DEBUG */
-  if (line[i] == '&') return true; /* it is contued */
+  if (line[i] == '&') return true; /* it is continued */
   else return false; /* no continuation characters found */
 }
 /* -------------------------------------------------------------------------- */
@@ -1886,6 +1908,8 @@ bool addThenEndifClauses(char *currentline, char *previousline, int currentcol)
 
    if (is_if_stmt == false) 
    {
+     //removeCommentFromLine(currentline);
+     removeCommentFromLine(previousline);
      if(isContinuationLine(currentline, previousline, currentcol - 1 ))
      { /* check from one less than the current column number: (*it)->col - 2. */
        is_if_stmt = true; 
@@ -1919,23 +1943,110 @@ const char * stripModuleFromName(const string functionname)
   return nm;
 }
 
+
+/* -------------------------------------------------------------------------- */
+/* -- does it continue onto the next line? ---------------------------------- */
+/* -------------------------------------------------------------------------- */
+int doesStmtContinueOntoNextLine(char * & inbuf, int openparens)
+{
+  char *line = inbuf;
+  int i, len;
+    
+  len = strlen(line);
+  for (i=0 ; i < len, *line; i++, line++)
+  {
+    if (*line == '(') openparens ++;
+    if (*line == ')') openparens --;
+    if (*line == '!') {
+      *line = '\0'; 
+      break;
+    }
+  }
+  return openparens;
+ 
+} 
+
+/* -------------------------------------------------------------------------- */
+/* -- isFreeFormat returns true if it has a & in the current line ----------- */
+/* -------------------------------------------------------------------------- */
+bool isFreeFormat(char inbuf[])
+{ /* get rid of ! */
+  if (strstr(inbuf, "&"))
+  {
+#ifdef DEBUG
+    printf("Continuation character found -- Free format\n");
+#endif /* DEBUG */
+    return true;
+  }  
+  else return false;
+}
+
 /* -------------------------------------------------------------------------- */
 /* -- Write call TAU_ALLOC(...) statement ----------------------------------- */
 /* -------------------------------------------------------------------------- */
-void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
+int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
 {
  /* consider the string: allocate(A(100), stat=ierr) */
 #ifdef DEBUG
   cout <<"Allocate Stmt: line ="<<(*it)->line<<endl;
   cout <<"inbuf ="<<inbuf<<endl;
 #endif /* DEBUG */
-  char varname[1024], allocstmt[64*1024], suffixstmt[64*1024];
-  char *line = inbuf;
+  char varname[1024], suffixstmt[64*1024];
+  char *allocstmt = new char [INBUF_SIZE];
   int i, openparens, len;
-  char *ptr = line;
   bool done = false; 
   string prefix, suffix;
+  int linesread = 0;
+  bool isfree;
+  char *start;
+  char *line;
+
+  removeCommentFromLine(inbuf);
+  string nextline(inbuf);
+  line = inbuf;
+  /* count the number of open parentheses present on a line */
+  if (openparens=doesStmtContinueOntoNextLine(inbuf, 0))
+  { 
+#ifdef DEBUG
+    printf("Contination line: %s\n", inbuf);
+#endif /* DEBUG */
+    isfree = isFreeFormat(inbuf);
+    do {
+       if (istr.getline(allocstmt, INBUF_SIZE) == NULL)
+       { 
+         perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
+         exit(1);
+       }
+       removeCommentFromLine(allocstmt);
+       /* if the file is in free format, start the next line by getting rid of the
+          first six columns */
+       if (!isfree) start = &allocstmt[6];
+       else start = allocstmt; 
+       while (start && *start == ' ') start ++; /* eat up leading spaces */
+       len = strlen(start); 
+       nextline.append(start, len);
+#ifdef DEBUG
+       printf("nextline=%s\n", nextline.c_str()); 
+#endif /* DEBUG */
+       ostr <<allocstmt<<endl;
+       linesread ++; /* the number of lines processed. We need to return this */
+    } while (openparens = doesStmtContinueOntoNextLine(allocstmt, openparens)); 
+    line = (char *) nextline.c_str();     
+#ifdef DEBUG
+    printf("AFTER PROCESSING: line = %s\n", line);
+#endif /* DEBUG */
+  }
+  else
+  {
+#ifdef DEBUG 
+    printf("NOT Continuation line: %s\n", inbuf);
+#endif /* DEBUG */
+  }
+
 /* NEW CODE! */
+#ifdef DEBUG
+  printf("after joining lines, line = %s\n", line);
+#endif /* DEBUG */
   while (*line && *line != '(') line++;
   line++; /* skip first ( */
   while (!done)
@@ -1947,10 +2058,13 @@ void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<item
 #ifdef DEBUG
       printf("varname[%d] = %c\n", i, varname[i]);
 #endif /* DEBUG */
+      if (varname[i] == '&') varname[i] = ' '; /* we don't want &B */
     }
     varname[i] = '\0';
   
-    if (!strstr(varname, "=")) {
+    /* what about ! comment */
+    if (!strstr(varname, "="))
+    {
     /* we don't want stat=ierr argument */
     /* We need to break up this into a continuation line if it exceeds 72 chars */
 /*
@@ -1958,9 +2072,11 @@ void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<item
           <<tau_size_tok<<"("<<varname<<"), '"<< (*it)->snippet<< ", var="
           <<varname<<"')"<<endl;
 */
+     char *p = varname;
+     while (p && *p == ' ') p++; /* eat up leading space */
      sprintf(allocstmt, "       call TAU_ALLOC(%s, %d, %s(%s), '",
-	varname, (*it)->line, tau_size_tok.c_str(), varname);
-     sprintf(suffixstmt, "%s, variable=%s", (*it)->snippet.c_str(), varname);
+	p, (*it)->line, tau_size_tok.c_str(), p);
+     sprintf(suffixstmt, "%s, variable=%s", (*it)->snippet.c_str(), p);
      string prefix=string(allocstmt);
      string suffix=string(suffixstmt);
      writeLongFortranStatement(ostr, prefix, suffix);
@@ -1978,9 +2094,10 @@ void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<item
       if (*line == ')') openparens --;
       if (openparens == 0) break;
 #ifdef DEBUG
-      printf("line = %c\n", *line);
+      printf("line = %c, openparens = %d\n", *line, openparens);
 #endif /* DEBUG */
     }
+    //printf("after loop: openparens = %d\n", openparens);
     while (*line && *line != ',') line++; /* go to the first ( */
     if (*line) line++; /* skip , */
     else done = true;
@@ -1988,26 +2105,71 @@ void printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<item
     printf("Got: line = %s, varname=%s, done=%d\n", line, varname, done);
 #endif /* DEBUG */
   }
-  return;
+  delete[] allocstmt;
+  return linesread;
 
 }
 /* -------------------------------------------------------------------------- */
 /* -- Write call TAU_DEALLOC(...) statement --------------------------------- */
 /* -------------------------------------------------------------------------- */
-void printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
+int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it, bool writetab)
 {
-  char deallocstmt[64*1024], suffixstmt[64*1024];
+  int i, len;
+  char suffixstmt[64*1024];
+  int openparens, linesread=0; /* how many additional lines (cont) did we read? */
+  char *deallocstmt = new char[INBUF_SIZE];
+  int isfree;
+  char *start;
+  list<string> statements;
+
+  statements.push_back(inbuf); /* initialize the list of statements to inbuf */
 #ifdef DEBUG 
   cout <<"Deallocate Stmt: line ="<<(*it)->line<<endl;
   printf("Deallocate Stmt: line = %d... \n",(*it)->line);
   cout <<"inbuf ="<<*inbuf<<endl;
 #endif /* DEBUG */
-  char *tok = strtok(strdup(inbuf), "()");
+
+  removeCommentFromLine(inbuf);
+  string nextline(inbuf); 
+
+  /* first we need to figure out if this line is a continuation line */
+  if (openparens=doesStmtContinueOntoNextLine(inbuf, 0))
+  { /* yes it does! */
+#ifdef DEBUG
+    printf("Contination line: %s\n", inbuf);
+#endif /* DEBUG */
+    isfree = isFreeFormat(inbuf);
+    do {
+       if (istr.getline(deallocstmt, INBUF_SIZE) == NULL)
+       { 
+         perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
+         exit(1);
+       }
+       removeCommentFromLine(deallocstmt);
+       statements.push_back(deallocstmt);
+       /* if the file is in free format, start the next line by getting rid of the
+          first six columns */
+       if (!isfree) start = &deallocstmt[6];
+       else start = deallocstmt; 
+       while (start && *start == ' ') start ++; /* eat up leading spaces */
+       len = strlen(start); 
+       nextline.append(start, len);
+       //nextline.append(string("\n", 1));
+#ifdef DEBUG
+       printf("nextline=%s\n", nextline.c_str()); 
+#endif /* DEBUG */
+       linesread ++; /* the number of lines processed. We need to return this */
+    } while (openparens = doesStmtContinueOntoNextLine(deallocstmt, openparens)); 
+  }
+
+  char *tok = strtok(strdup(nextline.c_str()), "()");
   while (tok != NULL)
   {
     tok = strtok(NULL, ",)");
     if (tok && !strstr(tok, "=")) /* it doesn't contain a = */
     {
+      len = strlen(tok);
+      while (*tok == ' ' || *tok == '&') tok++; /* get rid of spaces or leading & */
 #ifdef DEBUG
       cout <<"use token = "<<tok<<endl;
 #endif /* DEBUG */
@@ -2025,7 +2187,12 @@ void printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<it
   }
 
 //  ostr<<"\t call TAU_DEALLOC(A, "<<(*it)->line<< ", '"<< (*it)->snippet<< ", var=A')"<<endl;
-
+  if (writetab) ostr<<"\t";
+  for (list<string>::iterator it = statements.begin(); it != statements.end();
+	it++)
+    ostr <<(*it)<<endl;
+  delete [] deallocstmt;
+  return linesread;
 }
 /* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
@@ -2542,13 +2709,13 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                     ostr <<inbuf[i];
                   }
 		  ostr<<endl;
-		  printTauAllocStmt(istr, ostr, &inbuf[alloccol], it);
+		  inputLineNo+= printTauAllocStmt(istr, ostr, &inbuf[alloccol-1], it);
                   ostr<<"\t endif"<<endl;
                 }
 		else
 		{ /* there is no if clause */
-		  ostr<<inbuf<<endl;
-		  printTauAllocStmt(istr, ostr, inbuf, it); 
+		  ostr<<"\n"<<inbuf<<endl;
+		  inputLineNo+= printTauAllocStmt(istr, ostr, inbuf, it); 
 		}	
                 instrumented = true;
 		break;
@@ -2567,9 +2734,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                   }
                   ostr<<"\t then \n";
 		  /* first write TAU_DEALLOC, then the deallocate stmt */
-                  printTauDeallocStmt(istr, ostr, &inbuf[dealloccol], it);
-		  ostr<<"\t";
+                  inputLineNo+=printTauDeallocStmt(istr, ostr, &inbuf[dealloccol-1], it, true);
 		  /* now the deallocate stmt */
+#ifdef DONT
+		  ostr<<"\t";
                   for(i=dealloccol-1; i< strlen(inbuf); i++) {
 #ifdef DEBUG
                     printf("Writing (1.8):: %c\n",inbuf[i]);
@@ -2577,12 +2745,15 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                     ostr <<inbuf[i];
                   }
                   ostr<<endl;
+#endif /* DONT */
                   ostr<<"\t endif"<<endl;
                 }
                 else
                 { /* there is no if clause, write TAU_DEALLOC, then stmt */
-                  printTauDeallocStmt(istr, ostr, inbuf, it);
+                  inputLineNo+=printTauDeallocStmt(istr, ostr, inbuf, it, false);
+/* 
 		  ostr<<inbuf<<endl;
+*/
                 }
                 instrumented = true;
 		break;
@@ -2977,8 +3148,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.135 $   $Date: 2007/03/03 03:30:20 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.135 2007/03/03 03:30:20 sameer Exp $
+ * $Revision: 1.136 $   $Date: 2007/03/12 16:31:41 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.136 2007/03/12 16:31:41 sameer Exp $
  ***************************************************************************/
 
 
