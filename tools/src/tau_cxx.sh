@@ -85,24 +85,24 @@ if [ $options_specified = no ] ; then
 fi
 
 if [ $invoke_without_tau = yes ] ; then
-cat <<EOF > /tmp/makefile.tau$$
+cat <<EOF > /tmp/makefile.tau.$USER.$$
   include $MAKEFILE
   all:
 	@\$(TAU_CXX) $NON_TAUARGS
 EOF
-make -s -f /tmp/makefile.tau$$
-/bin/rm -f /tmp/makefile.tau$$
+make -s -f /tmp/makefile.tau.$USER.$$
+/bin/rm -f /tmp/makefile.tau.$USER.$$
 fi
 
 
 if [ $invoke_with_tau = yes ] ; then
-cat <<EOF > /tmp/makefile.tau$$
+cat <<EOF > /tmp/makefile.tau.$USER.$$
 include $MAKEFILE
 all:
 	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_CXX) $TAUARGS
 
 EOF
-make -s -f /tmp/makefile.tau$$
-/bin/rm -f /tmp/makefile.tau$$
+make -s -f /tmp/makefile.tau.$USER.$$
+/bin/rm -f /tmp/makefile.tau.$USER.$$
 fi
 
