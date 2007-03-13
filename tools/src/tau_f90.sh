@@ -88,30 +88,30 @@ if [ $invoke_without_tau = yes ] ; then
 cat <<EOF > /tmp/makefile.tau$$
   include $MAKEFILE
   all:
-ifeq (\$(TAU_F90),)
-	echo "Error, no fortran compiler specified in TAU configure (use -fortran=<>)"
-else
-	@\$(TAU_F90) $NON_TAUARGS
-endif
+	@if [ "x\$(TAU_F90)" = "x" ] ; then \
+	echo "Error, no fortran compiler specified in TAU configure (use -fortran=<>)" ; \
+	else \
+	\$(TAU_F90) $NON_TAUARGS ; \
+	fi
 EOF
-make -s -f /tmp/makefile.tau$$
-/bin/rm -f /tmp/makefile.tau$$
+make -s -f /tmp/makefile.tau.$USER.$$
+/bin/rm -f /tmp/makefile.tau.$USER.$$
 fi
 
 
 if [ $invoke_with_tau = yes ] ; then
-cat <<EOF > /tmp/makefile.tau$$
+cat <<EOF > /tmp/makefile.tau.$USER.$$
 include $MAKEFILE
 all:
-ifeq (\$(TAU_F90),)
-	echo "Error, no fortran compiler specified in TAU configure (use -fortran=<>)"
-else
-	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_F90) $TAUARGS
-endif
+	@if [ "x\$(TAU_F90)" = "x" ] ; then \
+	echo "Error, no fortran compiler specified in TAU configure (use -fortran=<>)" ; \
+	else \
+	\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_F90) $TAUARGS ; \
+	fi
 
 EOF
-make -s -f /tmp/makefile.tau$$
-/bin/rm -f /tmp/makefile.tau$$
+make -s -f /tmp/makefile.tau.$USER.$$
+/bin/rm -f /tmp/makefile.tau.$USER.$$
 fi
 
 
