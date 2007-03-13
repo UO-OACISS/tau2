@@ -2001,6 +2001,7 @@ bool isFreeFormat(char inbuf[])
 int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
 {
  /* consider the string: allocate(A(100), stat=ierr) */
+ // ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
 #ifdef DEBUG
   cout <<"Allocate Stmt: line ="<<(*it)->line<<endl;
   cout <<"inbuf ="<<inbuf<<endl;
@@ -2136,6 +2137,7 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
   char *start;
   list<string> statements;
 
+  //ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
   statements.push_back(inbuf); /* initialize the list of statements to inbuf */
 #ifdef DEBUG 
   cout <<"Deallocate Stmt: line ="<<(*it)->line<<endl;
@@ -2431,7 +2433,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
                 writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
 
-		ostr << "      ";
+		//ostr << "      ";
+		// IMPORTANT: If the formatting of the next statement is wrong, please remove the above comment!
 		// write the rest of the original statement
      		for (k = (*it)->col-1; k < write_upto ; k++) {
 		  ostr << inbuf[k];
@@ -2708,11 +2711,14 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		{
 		/* only write till the alloc column. This assumes statement 
 		begins on col 1? even if it is "20 if (x.gt.2) allocate(A)" */
-		  //printf("alloccol = %d, it->col = %d\n", alloccol, (*it)->col);
-                  startcol = (*it)->col == alloccol ? 1: (*it)->col ;
+		  startcol = alloccol == (*it)->col ? (*it)->col: 1;
+#ifdef DEBUG
+		  printf("TAB:: alloccol = %d, it->col = %d, startcol=%d\n", alloccol, (*it)->col, startcol);
+#endif /* DEBUG */
+		  //if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
 		  for(i=startcol - 1; i< alloccol - 1; i++) {
 #ifdef DEBUG
-                    cout << "Writing (1.4): "<<inbuf[i]<<endl;
+                    cout << "Writing (1.4): "<<inbuf[i]<<" startcol="<<(*it)->col-1<<endl;
 #endif /* DEBUG */
                     ostr <<inbuf[i];
                   }
@@ -2772,11 +2778,14 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 {
                 /* only write till the alloc column. This assumes statement
                 begins on col 1? even if it is "20 if (x.gt.2) allocate(A)" */
-		  // if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
-                  startcol = (*it)->col == dealloccol ? 1: (*it)->col ;
-                  for(i=startcol-1; i< dealloccol - 1; i++) {
+		  //if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
+		  startcol = dealloccol == (*it)->col ? (*it)->col: 1;
 #ifdef DEBUG
-                    printf("Writing (1.7):: %c\n",inbuf[i]);
+		  printf("TAB:: dealloccol = %d, it->col = %d, startcol=%d\n", alloccol, (*it)->col, startcol);
+#endif /* DEBUG */
+		  for(i=0; i< dealloccol - 1; i++) {
+#ifdef DEBUG
+                    printf("Writing (1.7):: inbuf[%d] = %c\n",i, inbuf[i]);
 #endif /* DEBUG */
                     ostr <<inbuf[i];
                   }
@@ -3216,8 +3225,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.138 $   $Date: 2007/03/12 22:09:35 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.138 2007/03/12 22:09:35 sameer Exp $
+ * $Revision: 1.139 $   $Date: 2007/03/13 00:38:29 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.139 2007/03/13 00:38:29 sameer Exp $
  ***************************************************************************/
 
 
