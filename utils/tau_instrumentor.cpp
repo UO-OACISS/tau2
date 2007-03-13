@@ -2001,7 +2001,7 @@ bool isFreeFormat(char inbuf[])
 int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
 {
  /* consider the string: allocate(A(100), stat=ierr) */
- // ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
+ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
 #ifdef DEBUG
   cout <<"Allocate Stmt: line ="<<(*it)->line<<endl;
   cout <<"inbuf ="<<inbuf<<endl;
@@ -2137,7 +2137,7 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
   char *start;
   list<string> statements;
 
-  //ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
+  ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
   statements.push_back(inbuf); /* initialize the list of statements to inbuf */
 #ifdef DEBUG 
   cout <<"Deallocate Stmt: line ="<<(*it)->line<<endl;
@@ -2433,7 +2433,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
                 writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
 
-		//ostr << "      ";
+		ostr << "      ";
 		// IMPORTANT: If the formatting of the next statement is wrong, please remove the above comment!
 		// write the rest of the original statement
      		for (k = (*it)->col-1; k < write_upto ; k++) {
@@ -3225,8 +3225,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.139 $   $Date: 2007/03/13 00:38:29 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.139 2007/03/13 00:38:29 sameer Exp $
+ * $Revision: 1.140 $   $Date: 2007/03/13 01:17:02 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.140 2007/03/13 01:17:02 sameer Exp $
  ***************************************************************************/
 
 
