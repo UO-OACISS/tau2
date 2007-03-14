@@ -33,14 +33,22 @@ public class LoadTrial {
 
         System.err.println("Usage: perfdmf_loadtrial -e <experiment id> -n <name> [options] <files>\n\n"
                 + "Required Arguments:\n\n"
-                + "  -e, --experimentid <number>    Specify associated experiment ID for this trial\n"
-                + "  -n, --name <text>              Specify the name of the trial\n\n" + "Optional Arguments:\n\n"
-                + "  -f, --filetype <filetype>      Specify type of performance data, options are:\n"
-                + "                                   profiles (default), pprof, dynaprof, mpip,\n"
-                + "                                   gprof, psrun, hpm, packed, cube, hpc\n"
-                + "  -t, --trialid <number>         Specify trial ID\n"
-                + "  -i, --fixnames                 Use the fixnames option for gprof\n\n"
-                + "  -m, --metadata <filename>      XML metadata for the trial\n" + "Notes:\n"
+                + "  -n, --name <text>               Specify the name of the trial\n"
+                + "  -e, --experimentid <number>     Specify associated experiment ID\n"
+				+ "                                    for this trial\n"
+				+ "               ...or...\n"
+                + "  -n, --name <text>               Specify the name of the trial\n"
+                + "  -a, --applicationname <string>  Specify associated application name\n"
+				+ "                                    for this trial\n"
+                + "  -x, --experimentname <string>   Specify associated experiment name\n"
+				+ "                                    for this trial\n"
+				+ "\n" + "Optional Arguments:\n\n"
+                + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
+                + "                                    profiles (default), pprof, dynaprof, mpip,\n"
+                + "                                    gprof, psrun, hpm, packed, cube, hpc\n"
+                + "  -t, --trialid <number>          Specify trial ID\n"
+                + "  -i, --fixnames                  Use the fixnames option for gprof\n\n"
+                + "  -m, --metadata <filename>       XML metadata for the trial\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -50,7 +58,11 @@ public class LoadTrial {
                 + "    experiment 12 and give the trial the name \"Batch 001\"\n\n"
                 + "  perfdmf_loadtrial -e 12 -n \"HPM data 01\" -f hpm perfhpm*\n"
                 + "    This will load perfhpm* files of type HPMToolkit into experiment 12 and give\n"
-                + "    the trial the name \"HPM data 01\"\n");
+                + "    the trial the name \"HPM data 01\"\n"
+                + "  perfdmf_loadtrial -an \"NPB2.3\" -en \"parametric\" -n \"64\"\n"
+                + "    This will load profile.* (or multiple counters directories MULTI_*) into\n"
+				+ "    the experiment named \"parametric\" under the application named \"NPB2.3\" \n"
+				+ "    and give the trial the name \"64\"\n");
     }
 
     /*
@@ -77,20 +89,26 @@ public class LoadTrial {
 
     }
 
-    public boolean checkForExp(String expid) {
-        this.expID = Integer.parseInt(expid);
+    public boolean checkForExp(String expid, String appName, String expName) {
+		if (expid != null) {
+        	this.expID = Integer.parseInt(expid);
 
-        try {
-            exp = databaseAPI.setExperiment(this.expID);
-        } catch (Exception e) {
-
-        }
-        if (exp == null) {
-            System.err.println("Experiment id " + expid + " not found,  please enter a valid experiment ID.");
-            System.exit(-1);
-            return false;
-        } else
-            return true;
+        	try {
+            	exp = databaseAPI.setExperiment(this.expID);
+        	} catch (Exception e) {
+        	}
+        	if (exp == null) {
+            	System.err.println("Experiment id " + expid + 
+						" not found,  please enter a valid experiment ID.");
+            	System.exit(-1);
+            	return false;
+        	} else
+            	return true;
+		} else {
+			Experiment exp = databaseAPI.getExperiment (appName, expName, true);
+			this.expID = exp.getID();
+			return true;
+		}
     }
 
     public boolean checkForTrial(String trialid) {
@@ -250,6 +268,8 @@ public class LoadTrial {
         CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
         CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
         CmdLineParser.Option metadataOpt = parser.addStringOption('m', "metadata");
+        CmdLineParser.Option appNameOpt = parser.addStringOption('a', "applicationname");
+        CmdLineParser.Option expNameOpt = parser.addStringOption('x', "experimentname");
 
         try {
             parser.parse(args);
@@ -264,6 +284,8 @@ public class LoadTrial {
         //String sourceFile = (String)parser.getOptionValue(sourcefileOpt);
         String experimentID = (String) parser.getOptionValue(experimentidOpt);
         String trialName = (String) parser.getOptionValue(nameOpt);
+        String appName = (String) parser.getOptionValue(appNameOpt);
+        String expName = (String) parser.getOptionValue(expNameOpt);
 
         //String problemFile = (String)parser.getOptionValue(problemOpt);
         String trialID = (String) parser.getOptionValue(trialOpt);
@@ -288,8 +310,12 @@ public class LoadTrial {
             //            System.err.println("Please enter a valid source file.");
             //            LoadTrial.usage();
             //            System.exit(-1);
-        } else if (experimentID == null) {
-            System.err.println("Error: Missing experiment id\n");
+        } else if (experimentID == null && expName == null) {
+            System.err.println("Error: Missing experiment id or name\n");
+            LoadTrial.usage();
+            System.exit(-1);
+        } else if (expName != null && appName == null) {
+            System.err.println("Error: Missing application name\n");
             LoadTrial.usage();
             System.exit(-1);
         }
@@ -350,7 +376,7 @@ public class LoadTrial {
         }
 
         LoadTrial trans = new LoadTrial(configFile, sourceFiles);
-        trans.checkForExp(experimentID);
+        trans.checkForExp(experimentID, appName, expName);
         if (trialID != null) {
             trans.checkForTrial(trialID);
             trans.trialID = Integer.parseInt(trialID);
