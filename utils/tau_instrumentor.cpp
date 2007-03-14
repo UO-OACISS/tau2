@@ -2027,7 +2027,6 @@ bool isRequestOnSameLineAsPreviousRequest(vector<itemRef *>::iterator& it, vecto
 int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
 {
  /* consider the string: allocate(A(100), stat=ierr) */
-ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
 #ifdef DEBUG
   cout <<"Allocate Stmt: line ="<<(*it)->line<<endl;
   cout <<"inbuf ="<<inbuf<<endl;
@@ -2083,6 +2082,8 @@ ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
     printf("NOT Continuation line: %s\n", inbuf);
 #endif /* DEBUG */
   }
+
+  ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
 
 /* NEW CODE! */
 #ifdef DEBUG
@@ -2463,7 +2464,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		printf("Before 2.1: (*it)->col = %d, write_upto=%d\n", (*it)->col, write_upto);
 #endif /* DEBUG */
 		if ((*it)->col != 1)
-		  ostr << "      ";
+		  ostr << "       ";
 		// IMPORTANT: If the formatting of the next statement is wrong, please remove the above comment!
 		// write the rest of the original statement
      		for (k = (*it)->col-1; k < write_upto ; k++) {
@@ -3264,8 +3265,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.144 $   $Date: 2007/03/14 18:35:12 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.144 2007/03/14 18:35:12 sameer Exp $
+ * $Revision: 1.145 $   $Date: 2007/03/14 19:12:31 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.145 2007/03/14 19:12:31 sameer Exp $
  ***************************************************************************/
 
 
