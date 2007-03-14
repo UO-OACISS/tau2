@@ -158,7 +158,7 @@ static bool itemEqual(const itemRef* r1, const itemRef* r2) {
  
 
 
-string getInstrumentedName(const pdbItem *item, bool fat) {
+string getInstrumentedName(const pdbItem *item) {
   // create the instrumented routine name
   std::ostringstream oss;
   pdbRoutine *pdbr = (pdbRoutine*)item;
@@ -170,17 +170,18 @@ string getInstrumentedName(const pdbItem *item, bool fat) {
     fullfile = strchr(fullfile,TAU_DIR_CHARACTER)+1;
   }
 
-  if (fat) {
-    // we only have fat item data for C/C++ right now
-    pdbFatItem *fatItem = (pdbFatItem*)item;
+  // we only have fat item data for C/C++ right now
+  pdbFatItem *fatItem = (pdbFatItem*)item;
+
+  if (fatItem->headBegin().line() == 0) {
+    oss << item->fullName() << " [{" << fullfile << "} {" << loc.line() << "," << loc.col() << "}]";
+  } else {
     oss << item->fullName() << " [{" << fullfile 
 	<< "} {" 
 	<< fatItem->headBegin().line() << "," << fatItem->headBegin().col() 
 	<< "}-{" 
 	<< fatItem->bodyEnd().line() << "," << fatItem->bodyEnd().col() 
 	<< "}]";
-  } else {
-    oss << item->fullName() << " [{" << fullfile << "} {" << loc.line() << "," << loc.col() << "}]";
   }
 
   string instrumentedName(oss.str());
@@ -708,7 +709,7 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
   #endif
   	      // leave some leading spaces for formatting...
   
-  	      ostr <<"  TAU_PROFILE(\"" << getInstrumentedName((*it)->item, true) ;
+  	      ostr <<"  TAU_PROFILE(\"" << getInstrumentedName((*it)->item) ;
   	      if (!((*it)->isTarget))
   	      { // it is a template member. Help it by giving an additional ()
   	      // if the item is a member function or a static member func give
@@ -1003,7 +1004,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
   else
   {
     ostr <<"\tTAU_PROFILE_TIMER(tautimer, \""<<
-      getInstrumentedName(i->item, true) << "\", \" " << "\",";
+      getInstrumentedName(i->item) << "\", \" " << "\",";
       // ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
     if (strcmp(i->item->name().c_str(), "main")==0)
@@ -1044,7 +1045,7 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
   else
   {
     ostr <<"{ \n\tTAU_PROFILE_TIMER(tautimer, \""<<
-      getInstrumentedName(i->item, true) << "\", \" " << "\", ";
+      getInstrumentedName(i->item) << "\", \" " << "\", ";
       //((pdbRoutine *)(i->item))->signature()->name() << "\", ";
   
     if (strcmp(i->item->name().c_str(), "main")==0)
@@ -2332,7 +2333,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif
 
 	  // get the instrumented routine name
-	  string instrumentedName = getInstrumentedName((*it)->item, false);
+	  string instrumentedName = getInstrumentedName((*it)->item);
 
 	  /* set instrumented = true after inserting instrumentation */
 	  switch((*it)->kind)
@@ -3234,8 +3235,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.141 $   $Date: 2007/03/14 01:38:30 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.141 2007/03/14 01:38:30 amorris Exp $
+ * $Revision: 1.142 $   $Date: 2007/03/14 02:56:48 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.142 2007/03/14 02:56:48 amorris Exp $
  ***************************************************************************/
 
 
