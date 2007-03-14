@@ -12,9 +12,9 @@ import java.security.Security;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.10 2007/03/10 03:53:43 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.11 2007/03/14 17:31:08 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -66,14 +66,6 @@ public class PackedProfileDataSource extends DataSource {
         if (file.toString().toLowerCase().startsWith("http:/")) {
             // When it gets converted from a String to a File http:// turns into http:/
             URL url = new URL("http://" + file.toString().substring(6).replace('\\', '/'));
-            istream = url.openStream();
-        } else if (file.toString().toLowerCase().startsWith("https:/")) {
-            // When it gets converted from a String to a File https:// turns into https:/
-            System.out.println("found url");
-            System.setProperty("java.protocol.handler.pkgs",
-              "com.sun.net.ssl.internal.www.protocol");
-            Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
-            URL url = new URL("https://" + file.toString().substring(7).replace('\\','/'));
             istream = url.openStream();
         }  else {
             istream = new FileInputStream(file);
