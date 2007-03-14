@@ -2006,6 +2006,22 @@ bool isFreeFormat(char inbuf[])
 }
 
 /* -------------------------------------------------------------------------- */
+/* -- isFreeFormat returns true if it has a & in the current line ----------- */
+/* -------------------------------------------------------------------------- */
+bool isRequestOnSameLineAsPreviousRequest(vector<itemRef *>::iterator& it, vector<itemRef *>& itemvec)
+{
+  int currentLine = (*it)->line;
+  int prevLine = it == itemvec.begin()? 0 : (*(it-1))->line; /* if it is null, prevLine = 0 */
+  if (currentLine == prevLine) {
+#ifdef DEBUG
+   printf("isRequestOnSameLineAsPreviousRequest returns true line = %d\n", currentLine);
+#endif /* DEBUG */
+    return true;
+  }
+  else return false;
+}
+
+/* -------------------------------------------------------------------------- */
 /* -- Write call TAU_ALLOC(...) statement ----------------------------------- */
 /* -------------------------------------------------------------------------- */
 int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
@@ -2728,14 +2744,17 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		{
 		/* only write till the alloc column. This assumes statement 
 		begins on col 1? even if it is "20 if (x.gt.2) allocate(A)" */
-		  startcol = alloccol == (*it)->col ? (*it)->col: 1;
+		  startcol = (alloccol == (*it)->col ? (*it)->col: 1);
+		  if(!isRequestOnSameLineAsPreviousRequest(it, itemvec))
+		    startcol = 1;
+		  /* the previous instrumentation request does not write upto our current column number */
 #ifdef DEBUG
-		  printf("TAB:: alloccol = %d, it->col = %d, startcol=%d\n", alloccol, (*it)->col, startcol);
+		  printf("TAB:: line = %d, alloccol = %d, it->col = %d, startcol=%d, last line = %d last col = %d \n", (*it)->line, alloccol, (*it)->col, startcol, (*(it-1))->line, (*(it-1))->col);
 #endif /* DEBUG */
 		  //if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
 		  for(i=startcol - 1; i< alloccol - 1; i++) {
 #ifdef DEBUG
-                    cout << "Writing (1.4): "<<inbuf[i]<<" startcol="<<(*it)->col-1<<endl;
+                    cout << "Writing (1.4): "<<inbuf[i]<<" startcol="<<startcol<<endl;
 #endif /* DEBUG */
                     ostr <<inbuf[i];
                   }
@@ -2796,11 +2815,14 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 /* only write till the alloc column. This assumes statement
                 begins on col 1? even if it is "20 if (x.gt.2) allocate(A)" */
 		  //if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
-		  startcol = dealloccol == (*it)->col ? (*it)->col: 1;
+		  startcol = (dealloccol == (*it)->col ? (*it)->col: 1);
+		  if(!isRequestOnSameLineAsPreviousRequest(it, itemvec))
+		    startcol = 1;
+		  /* the previous instrumentation request does not write upto our current column number */
 #ifdef DEBUG
-		  printf("TAB:: dealloccol = %d, it->col = %d, startcol=%d\n", alloccol, (*it)->col, startcol);
+		  printf("TAB:: dealloccol = %d, it->col = %d, startcol=%d\n", dealloccol, (*it)->col, startcol);
 #endif /* DEBUG */
-		  for(i=0; i< dealloccol - 1; i++) {
+		  for(i=startcol - 1; i< dealloccol - 1; i++) {
 #ifdef DEBUG
                     printf("Writing (1.7):: inbuf[%d] = %c\n",i, inbuf[i]);
 #endif /* DEBUG */
@@ -3242,8 +3264,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.143 $   $Date: 2007/03/14 16:39:22 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.143 2007/03/14 16:39:22 sameer Exp $
+ * $Revision: 1.144 $   $Date: 2007/03/14 18:35:12 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.144 2007/03/14 18:35:12 sameer Exp $
  ***************************************************************************/
 
 
