@@ -127,6 +127,14 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
   {
     if (r1->col == r2->col)
     { /* they're both equal */
+
+      
+      // we must first check if they are both BODY_BEGIN and return false in that case
+      // otherwise it just depends on which is r1 and which is r2
+      // STL sort requires strict weak ordering, meaning that two elements are equal
+      // then this routine must return (x,y) as false and (y,x) as false
+      if (r1->kind == BODY_BEGIN && r2->kind == BODY_BEGIN) return false;
+
       if (r1->kind == BODY_BEGIN) return true; 
       if (r2->kind == BODY_BEGIN) return false; 
       if (r1->kind == INSTRUMENTATION_POINT) return false; 
@@ -462,6 +470,7 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     }
 
   }
+
 /* Now sort all these locations */
   sort(itemvec.begin(), itemvec.end(), locCmp);
 
@@ -3224,9 +3233,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.140 $   $Date: 2007/03/13 01:17:02 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.140 2007/03/13 01:17:02 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.141 $   $Date: 2007/03/14 01:38:30 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.141 2007/03/14 01:38:30 amorris Exp $
  ***************************************************************************/
 
 
