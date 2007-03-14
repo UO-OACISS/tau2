@@ -2443,11 +2443,18 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
                 writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
 
-		ostr << "      ";
+#ifdef DEBUG
+		printf("Before 2.1: (*it)->col = %d, write_upto=%d\n", (*it)->col, write_upto);
+#endif /* DEBUG */
+		if ((*it)->col != 1)
+		  ostr << "      ";
 		// IMPORTANT: If the formatting of the next statement is wrong, please remove the above comment!
 		// write the rest of the original statement
      		for (k = (*it)->col-1; k < write_upto ; k++) {
 		  ostr << inbuf[k];
+#ifdef DEBUG
+		  printf("WRITING 2.1 : inbuf[%d] = %c\n", k, inbuf[k]);
+#endif /* DEBUG */
 		}
 
 		/* should we write the carriage return? */
@@ -3234,9 +3241,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.142 $   $Date: 2007/03/14 02:56:48 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.142 2007/03/14 02:56:48 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.143 $   $Date: 2007/03/14 16:39:22 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.143 2007/03/14 16:39:22 sameer Exp $
  ***************************************************************************/
 
 
