@@ -832,6 +832,7 @@ the open brace. */
 	        } /* or there are no more instrumentation requests -- flush out */
 		for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
 		  ostr<<inbuf[k]; 
+                ostr<<endl;
 	    	break;
 	  case STOP_LOOP_TIMER:
 		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
@@ -3265,8 +3266,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.145 $   $Date: 2007/03/14 19:12:31 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.145 2007/03/14 19:12:31 sameer Exp $
+ * $Revision: 1.146 $   $Date: 2007/03/16 17:35:28 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.146 2007/03/16 17:35:28 sameer Exp $
  ***************************************************************************/
 
 
