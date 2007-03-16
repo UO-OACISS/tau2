@@ -69,7 +69,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/SprocLayer.h   $(INCDIR)/PyGroups.h         \
 		$(INCDIR)/PyExceptions.h $(INCDIR)/PyDatabase.h       \
 		$(INCDIR)/PyBindings.h   $(INCDIR)/PyTimer.h          \
-		$(INCDIR)/RenciSTFF.h
+		$(INCDIR)/RenciSTFF.h    $(INCDIR)/PapiThreadLayer.h
 
 LDFLAGS	      = $(PCXX_OPT) 
 
@@ -351,6 +351,9 @@ PthreadLayer.o   : PthreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 SprocLayer.o   : SprocLayer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+PapiThreadLayer.o   : PapiThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)

@@ -94,6 +94,8 @@ int RtsLayer::myThread(void)
 	// C++ app shouldn't use this unless there's a VM
 #elif TAU_OPENMP
   return OpenMPLayer::GetThreadId();
+#elif TAU_PAPI_THREADS
+  return PapiThreadLayer::GetThreadId();
 #else  // if no other thread package is available 
   return 0;
 #endif // PTHREADS
@@ -125,6 +127,8 @@ void RtsLayer::RegisterThread()
   TulipThreadLayer::RegisterThread();
 #elif TAU_OPENMP
   OpenMPLayer::RegisterThread();
+#elif TAU_PAPI_THREADS
+  PapiThreadLayer::RegisterThread();
 #endif // PTHREADS
 // Note: Java thread registration is done at the VM layer in TauJava.cpp
   return;
@@ -270,6 +274,8 @@ void RtsLayer::LockDB(void)
   JavaThreadLayer::LockDB();
 #elif TAU_OPENMP
   OpenMPLayer::LockDB();
+#elif TAU_PAPI_THREADS
+  PapiThreadLayer::LockDB();
 #endif // PTHREADS
   return ; // do nothing if threads are not used
 }
@@ -292,6 +298,8 @@ void RtsLayer::UnLockDB(void)
   JavaThreadLayer::UnLockDB();
 #elif TAU_OPENMP
   OpenMPLayer::UnLockDB();
+#elif TAU_PAPI_THREADS
+  PapiThreadLayer::UnLockDB();
 #endif // PTHREADS
   return;
 }
@@ -314,6 +322,8 @@ void RtsLayer::LockEnv(void)
   JavaThreadLayer::LockEnv();
 #elif TAU_OPENMP
   OpenMPLayer::LockEnv();
+#elif TAU_PAPI_THREADS
+  PapiThreadLayer::LockEnv();
 #endif // PTHREADS
   return ; // do nothing if threads are not used
 }
@@ -336,15 +346,17 @@ void RtsLayer::UnLockEnv(void)
   JavaThreadLayer::UnLockEnv();
 #elif TAU_OPENMP
   OpenMPLayer::UnLockEnv();
+#elif TAU_PAPI_THREADS
+  PapiThreadLayer::UnLockEnv();
 #endif // PTHREADS
   return;
 }
 
 
 /***************************************************************************
- * $RCSfile: RtsThread.cpp,v $   $Author: anataraj $
- * $Revision: 1.23 $   $Date: 2006/11/09 05:14:12 $
- * VERSION: $Id: RtsThread.cpp,v 1.23 2006/11/09 05:14:12 anataraj Exp $
+ * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
+ * $Revision: 1.24 $   $Date: 2007/03/16 23:49:41 $
+ * VERSION: $Id: RtsThread.cpp,v 1.24 2007/03/16 23:49:41 amorris Exp $
  ***************************************************************************/
 
 

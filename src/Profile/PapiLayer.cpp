@@ -304,6 +304,24 @@ int PapiLayer::initializeSingleCounter() {
   return 0;
 }
 
+#ifdef TAU_PAPI_THREADS
+// note, this only works on linux
+#include <sys/types.h>
+#include <linux/unistd.h>
+_syscall0(pid_t,gettid)
+pid_t gettid(void);
+
+unsigned long papi_thread_gettid(void) {
+#ifdef SYS_gettid  
+  return(syscall(SYS_gettid));
+#elif defined(__NR_gettid)
+  return(syscall(__NR_gettid));
+#else
+  return(gettid());
+#endif
+}
+#endif /* TAU_PAPI_THREADS */
+
 /////////////////////////////////////////////////
 int PapiLayer::initializePAPI() {
 #ifdef TAU_PAPI_DEBUG
@@ -315,7 +333,7 @@ int PapiLayer::initializePAPI() {
   for (int i=0; i<TAU_MAX_THREADS; i++) {
     ThreadList[i] = NULL;
   }
-        
+
   // Initialize PAPI
   int papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
   if (papi_ver != PAPI_VER_CURRENT) {
@@ -327,9 +345,15 @@ int PapiLayer::initializePAPI() {
     return -1;
   }
 
+
+  int rc;
+
+#ifdef TAU_PAPI_THREADS
+  rc = PAPI_thread_init((unsigned long (*)(void))papi_thread_gettid);
+#else /* TAU_PAPI_THREADS */
+
 #ifndef __alpha
   // There must be some problem with PAPI_thread_init on alpha
-  int rc;
 #ifndef PAPI_VERSION
   /* PAPI 2 support goes here */
   rc = PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread),0);
@@ -340,6 +364,9 @@ int PapiLayer::initializePAPI() {
   /* PAPI future support goes here */
 #error "Unsupported PAPI Version, probably too new"
 #endif 
+
+#endif
+
   
   if (rc != PAPI_OK) {
     fprintf(stderr, "Error Initializing PAPI: %s\n", PAPI_strerror(rc));
