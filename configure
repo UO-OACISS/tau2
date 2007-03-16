@@ -159,6 +159,7 @@ python=no
 extradir=
 awe=no
 pthread=no
+papithread=no
 charm=no
 muse=no
 muse_event=no
@@ -408,6 +409,11 @@ do
  
   -pthread)
       pthread=yes
+    shift
+    ;;
+
+  -papithread)
+      papithread=yes
     shift
     ;;
 
@@ -1053,6 +1059,7 @@ do
     echo "       options         [xt3|bgl|ibm64|ibm64linux|sunx86_64             "
     echo "                        |solaris2-64|sgin32|sgi64|sgio32]              "
     echo "-pthread .................................. Use pthread thread package."
+    echo "-papithread .................................. Use PAPI thread package."
     echo "-charm=<dir> .............................. Use charm++ thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
@@ -3772,6 +3779,25 @@ if [ $pthread = yes ]
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
     echo "$machine: PTDIR = $ptdir" >> ./build/Config.info
     tauoptions="${tauoptions}-pthread"
+fi
+
+if [ $papithread = yes ] ; then
+    if [ $papi = no ] ; then
+	echo ""
+	echo "Error: To use the PAPI thread layer, you must specify -papi=<dir>"
+	echo ""
+	exit
+    fi
+
+    if [ ! `uname -s ` = Linux ] ; then
+	echo ""
+	echo "Error: The PAPI thread layer only works on Linux"
+	echo ""
+	exit
+    fi
+
+    fixmakeargs="$fixmakeargs TAU_PAPI_THREADS"
+    tauoptions="${tauoptions}-papithread"
 fi
 
 if [ $charm = yes ]
