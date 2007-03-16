@@ -74,7 +74,7 @@ int tau_pthread_create (pthread_t *threadp,
 #define MAX_TAU_COUNTERS 25
 #endif /* TAU_MULTIPLE_COUNTERS */
 
-#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC))
+#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))
 
 
 #ifndef TAU_MAX_THREADS
@@ -110,6 +110,8 @@ int tau_pthread_create (pthread_t *threadp,
 #include <Profile/JavaThreadLayer.h>
 
 #include <Profile/SprocLayer.h>
+
+#include <Profile/PapiThreadLayer.h>
 
 #include <Profile/RtsLayer.h>
 
@@ -312,7 +314,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.74 $   $Date: 2007/02/27 23:06:00 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.74 2007/02/27 23:06:00 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: amorris $
+ * $Revision: 1.75 $   $Date: 2007/03/16 23:48:09 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.75 2007/03/16 23:48:09 amorris Exp $ 
  ***************************************************************************/
