@@ -12,9 +12,9 @@ import java.security.Security;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.11 2007/03/14 17:31:08 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.12 2007/03/17 00:22:23 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -98,6 +98,7 @@ public class PackedProfileDataSource extends DataSource {
                     + "2");
         }
 
+        metaData = new TreeMap();
         if (version >= 2) {
             int metadataHeaderSize = p.readInt(); // older versions will skip over this many bytes
 
@@ -105,7 +106,6 @@ public class PackedProfileDataSource extends DataSource {
             int bytesToSkip = p.readInt();
             p.skipBytes(bytesToSkip);
             
-            metaData = new TreeMap();
             int numTrialMetaData = p.readInt();
             for (int i = 0; i < numTrialMetaData; i++) {
                 String name = p.readUTF();
