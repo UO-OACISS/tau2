@@ -21,9 +21,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.12 2007/01/04 01:55:31 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.13 2007/03/17 00:50:26 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {
@@ -241,6 +241,8 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         } else if (tmpString.equals("colorEvent")) {
             panel.repaint();
         } else if (tmpString.equals("dataEvent")) {
+            dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
+            setupMenus();
             sortLocalData();
             this.setHeader();
             panel.repaint();
