@@ -1,3 +1,4 @@
+#!/bin/sh
 # This script was written by Felix Wolf [UTK, FZJ]. It extracts the list of
 # those routines that call an MPI routine directly or indirectly and generates
 # a selective instrumentation file that can be fed to the tau_instrumentor for
