@@ -250,12 +250,9 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			}
 		}
 
-		PlotOrientation orientation = null;
-		if (rawData.getCategoryType() == Integer.class) {
-			// don't mess with the domain axis
-            orientation = PlotOrientation.VERTICAL;        // the plot orientation
-		} else {
-            orientation = PlotOrientation.HORIZONTAL;        // the plot orientation
+		PlotOrientation orientation = PlotOrientation.VERTICAL;
+		if (model.getChartHorizontal()) {
+            orientation = PlotOrientation.HORIZONTAL;
 		}
 
         JFreeChart chart = ChartFactory.createLineChart(

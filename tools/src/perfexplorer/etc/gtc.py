@@ -119,6 +119,7 @@ def CompilerByEvent(pe):
 	pe.setChartMainEventOnly(0);
 	pe.setChartLogYAxis(0);
 	pe.setChartEventNoCallPath(1)
+	pe.setChartHorizontal(1)
 	pe.setChartEventExclusive100(0)
 	pe.setChartScalability(0)
 	pe.setChartConstantProblem(0)

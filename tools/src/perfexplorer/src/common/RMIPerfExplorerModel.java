@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.26 2007/03/09 16:04:59 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.27 2007/03/19 19:23:05 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -46,6 +46,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected boolean chartLogYAxis = false;
 	protected boolean chartScalability = false;
 	protected boolean chartEfficiency = false;
+	protected boolean chartHorizontal = false;
 
 	// more cluster settings
 	protected AnalysisType clusterMethod = null;
@@ -1048,6 +1049,24 @@ public class RMIPerfExplorerModel implements Serializable {
      */
 	public void setChartEfficiency(boolean efficiency) {
 		this.chartEfficiency = efficiency;
+	}
+
+    /**
+     * Set the horizontal chart option
+     *
+     * @param seriesName
+     */
+	public void setChartHorizontal(boolean horizontal) {
+		this.chartHorizontal = horizontal;
+	}
+
+    /**
+     * Get the horizontal chart option
+     *
+     * @return
+     */
+	public boolean getChartHorizontal() {
+		return this.chartHorizontal;
 	}
 
 }

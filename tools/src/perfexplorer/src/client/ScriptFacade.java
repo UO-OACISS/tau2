@@ -434,4 +434,12 @@ public class ScriptFacade {
 		else
 			model.setConstantProblem(true);
 	}
+
+	public void setChartHorizontal(int value) {
+		if (value == 0)
+			model.setChartHorizontal(false);
+		else
+			model.setChartHorizontal(true);
+	}
+
 }

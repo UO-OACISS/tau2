@@ -17,9 +17,12 @@ import common.RMISortableIntervalEvent;
 import common.RMIPerfExplorerModel;
 import common.TransformationType;
 import common.PerfExplorerOutput;
+import java.io.File;
 
 public class PerfExplorerActionListener implements ActionListener {
 
+	public final static String LOADSCRIPT = "Load Analysis Script";
+	public final static String RERUNSCRIPT = "Re-run Analysis Script";
 	public final static String QUIT = "Quit PerfExplorer";
 	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
 	public final static String LOOK_AND_FEEL = "Set Look and Feel: ";
@@ -64,6 +67,8 @@ public class PerfExplorerActionListener implements ActionListener {
 
 	private PerfExplorerClient mainFrame;
 
+	private String scriptName;
+
 	public PerfExplorerActionListener (PerfExplorerClient mainFrame) {
 		super();
 		this.mainFrame = mainFrame;
@@ -74,6 +79,7 @@ public class PerfExplorerActionListener implements ActionListener {
 			Object EventSrc = event.getSource();
 			if(EventSrc instanceof JMenuItem) {
 				String arg = event.getActionCommand();
+			// file menu items
 				if(arg.equals(QUIT)) {
 					System.exit(0);
 				} else if(arg.equals(QUIT_SERVER)) {
@@ -100,6 +106,10 @@ public class PerfExplorerActionListener implements ActionListener {
 							}
 						}
 					}
+				} else if (arg.equals(LOADSCRIPT)) {
+					loadScript();
+				} else if (arg.equals(RERUNSCRIPT)) {
+					runScript();
 			// help menu items
 				} else if (arg.equals(ABOUT)) {
 					createAboutWindow();
@@ -666,5 +676,28 @@ public class PerfExplorerActionListener implements ActionListener {
 			constantProblem = theModel.getConstantProblem();
 		}
 		return (!forceIt && constantProblem == null) ? false : true;
+	}
+
+	private boolean loadScript () {
+		// open a file chooser dialog
+		JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+		int returnVal = fc.showOpenDialog(mainFrame);
+		scriptName = fc.getSelectedFile().getAbsolutePath();
+		runScript();
+		return true;
+	}
+
+	private boolean runScript() {
+		if (scriptName == null) {
+			// make sure a script file has been loaded first
+			JOptionPane.showMessageDialog(mainFrame, 
+				"Please load a script first.",
+				"Script File Not Found", JOptionPane.ERROR_MESSAGE);
+			return false;
+		} else {
+			// run the script
+			edu.uoregon.tau.common.TauScripter.execfile(scriptName);
+			return true;
+		}
 	}
 }

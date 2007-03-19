@@ -43,7 +43,7 @@ import java.io.Reader;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.8 2007/03/10 00:46:37 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.9 2007/03/19 19:23:05 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -226,6 +226,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 				Reader reader = new StringReader(xmlResults.getString(2));
 				InputSource source = new InputSource(reader);
 				Document metadata = builder.parse(source);
+
+				/* this is the 1.5 way
 				// build the xpath object to jump around in that document
 				XPath xpath = XPathFactory.newInstance().newXPath();
 				xpath.setNamespaceContext(new TauNamespaceContext());
@@ -238,7 +240,12 @@ public class GeneralChartData extends RMIGeneralChartData {
 				NodeList values = (NodeList) 
 					xpath.evaluate("/metadata/CommonProfileAttributes/attribute/value", 
 					metadata, XPathConstants.NODESET);
+				*/
 
+				/* this is the 1.3 through 1.4 way */
+				NodeList names = org.apache.xpath.XPathAPI.selectNodeList(metadata, "/metadata/CommonProfileAttributes/attribute/name");
+				NodeList values = org.apache.xpath.XPathAPI.selectNodeList(metadata, "/metadata/CommonProfileAttributes/attribute/value");
+				
 				for (int i = 0 ; i < names.getLength() ; i++) {
 					Node name = (Node)names.item(i).getFirstChild();
 					Node value = (Node)values.item(i).getFirstChild();
