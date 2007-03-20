@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.13 2006/11/09 01:44:12 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.14 2007/03/20 18:59:23 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -33,6 +33,7 @@ import javax.swing.tree.*;
 
 import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.paraprof.tablemodel.*;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
@@ -1401,7 +1402,15 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     }
 
     private Component getTable(Object obj) {
-        return (new JScrollPane(new JTable(new ParaProfManagerTableModel(this, obj, treeModel))));
+        if (obj instanceof ParaProfApplication) {
+            return (new JScrollPane(new JTable(new ApplicationTableModel(this, (ParaProfApplication)obj, treeModel))));
+        } else if (obj instanceof ParaProfExperiment) {
+            return (new JScrollPane(new JTable(new ExperimentTableModel(this, (ParaProfExperiment)obj, treeModel))));
+        } else if (obj instanceof ParaProfTrial) {
+            return (new JScrollPane(new JTable(new TrialTableModel(this, (ParaProfTrial)obj, treeModel))));
+        } else {
+            return (new JScrollPane(new JTable(new MetricTableModel(this, (ParaProfMetric)obj, treeModel))));
+        }
     }
 
     public ParaProfApplication addApplication(boolean dBApplication, DefaultMutableTreeNode treeNode) throws SQLException {
