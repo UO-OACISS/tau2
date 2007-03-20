@@ -1184,6 +1184,8 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
   static char exit_type[EXIT_KEYWORD_SIZE]; // to read the line
   string exit_expression;
   bool abort_used = false;
+  char newline;
+  newline = '\n'; /* for C \ processing in return statements */
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
   string timercode; /* for outer-loop level timer-based instrumentation */
@@ -1361,7 +1363,10 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		    cout <<"Return for a non void routine "<<endl;
 #endif /* DEBUG */
 		    for (k = (*it)->col+strlen(use_return_nonvoid)-1; (inbuf[k] != ';') && (k<inbufLength) ; k++)
+		    {
 		      ret_expression.append(&inbuf[k], 1);
+                      if (inbuf[k] == '\\' ) ret_expression.append(&newline, 1);
+		    }
 #ifdef DEBUG
 		    cout <<"k = "<<k<<" inbuf = "<<inbuf[k]<<endl;
 #endif /* DEBUG */
@@ -1390,6 +1395,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 			for(l=0; (inbuf[l] != ';') && (l < inbufLength); l++)
 			{
 			  ret_expression.append(&inbuf[l], 1);
+                          if (inbuf[l] == '\\') ret_expression.append(&newline, 1);
 			}
 		      } while(inbuf[l] != ';');
 			/* copy the buffer into inbuf */
@@ -3266,8 +3272,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.146 $   $Date: 2007/03/16 17:35:28 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.146 2007/03/16 17:35:28 sameer Exp $
+ * $Revision: 1.147 $   $Date: 2007/03/20 01:55:28 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.147 2007/03/20 01:55:28 sameer Exp $
  ***************************************************************************/
 
 
