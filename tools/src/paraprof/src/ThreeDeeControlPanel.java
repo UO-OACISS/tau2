@@ -21,9 +21,9 @@ import edu.uoregon.tau.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.6 2007/01/04 01:55:32 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.7 2007/03/20 19:00:06 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -569,7 +569,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     settings.setVisType(VisType.SCATTER_PLOT);
                 }
 
-                window.redraw();
+                window.resetSplitPane();
                 createSubPanel();
             }
         } catch (Exception e) {
