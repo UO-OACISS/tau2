@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.11 2006/12/28 03:05:59 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.12 2007/03/20 17:12:52 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class DatabaseAPI {
 
@@ -1071,20 +1071,21 @@ public class DatabaseAPI {
         this.itemsDone++;
 
         //stmt.addBatch();
-        try {
+//        try {
             stmt.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println(e);
-            System.out.println(stmt.toString());
-            System.out.println("exclusive: " + fp.getExclusive(metricID));
-            System.out.println("inclusive: " + fp.getInclusive(metricID));
-            System.out.println("numThreads: " + numThreads);
-            System.out.println("numcalls: " + fp.getNumCalls());
-            System.out.println("numsubr: " + fp.getNumSubr());
-            System.out.println("inclusivepercall: " + fp.getInclusivePerCall(metricID));
-            System.exit(9);
-        }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            System.out.println(e);
+//            System.out.println(stmt.toString());
+//            System.out.println("exclusive: " + fp.getExclusive(metricID));
+//            System.out.println("exclusive percent: " + fp.getExclusivePercent(metricID));
+//            System.out.println("inclusive: " + fp.getInclusive(metricID));
+//            System.out.println("inclusive percent: " + fp.getExclusivePercent(metricID));
+//            System.out.println("numThreads: " + numThreads);
+//            System.out.println("numcalls: " + fp.getNumCalls());
+//            System.out.println("numsubr: " + fp.getNumSubr());
+//            System.out.println("inclusivepercall: " + fp.getInclusivePerCall(metricID));
+//        }
     }
 
     private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map functionMap, Map metricMap) throws SQLException {
