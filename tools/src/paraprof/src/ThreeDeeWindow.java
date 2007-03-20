@@ -73,6 +73,13 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         });
         this.ppTrial = ppTrial;
 
+        settings.setColorMetricID(ppTrial.getDefaultMetricID());
+        settings.setHeightMetricID(ppTrial.getDefaultMetricID());
+        settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 0);
+        settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 1);
+        settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 2);
+        settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 3);
+        
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setSortType(SortType.NAME);
 
@@ -104,13 +111,16 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         // initialize the scatterplot functions to the 4 most varying functions
         // we just get the first four stddev functions
         DataSorter dataSorter = new DataSorter(ppTrial);
+        dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
         dataSorter.setDescendingOrder(true);
         List stdDevList = dataSorter.getFunctionProfiles(dataSource.getStdDevData());
         int count = 0;
         for (Iterator it = stdDevList.iterator(); it.hasNext() && count < 4;) {
             PPFunctionProfile fp = (PPFunctionProfile) it.next();
-            settings.setScatterFunction(fp.getFunction(), count);
-            count++;
+            if (!fp.isCallPathObject()) {
+                settings.setScatterFunction(fp.getFunction(), count);
+                count++;
+            }
         }
 
         // if the number of threads is above this threshold, we default to the scatterplot
@@ -453,6 +463,13 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     }
 
     public void redraw() {
+        jSplitPane.revalidate();
+        jSplitPane.validate();
+        updateSettings(settings);
+        visRenderer.redraw();
+    }
+    
+    public void resetSplitPane() {
         // We try to get the JSplitPane to reset the divider since the 
         // different plots have differing widths of controls 
         jSplitPane.revalidate();
