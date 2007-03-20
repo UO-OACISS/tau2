@@ -4,6 +4,7 @@ from common import AnalysisType
 from common import EngineType
 
 def TotalExecutionTime(pe):
+	pe.resetChartDefaults();
 	pe.setApplication("GTC")
 	pe.setMetricName("Time")
 	pe.setExperiment("ocracoke-O2")
@@ -15,12 +16,11 @@ def TotalExecutionTime(pe):
 	pe.setChartXAxisName("trial.node_count * trial.contexts_per_node * trial.threads_per_context", "Threads of Execution")
 	pe.setChartYAxisName("avg(interval_mean_summary.inclusive)", "Total Time (seconds)")
 	pe.setChartMainEventOnly(1);
-	pe.setChartLogYAxis(0);
 	pe.setChartEventNoCallPath(1)
-	pe.setChartEventExclusive100(0)
 	pe.doGeneralChart()
 
 def Speedup(pe):
+	pe.resetChartDefaults();
 	pe.setApplication("GTC")
 	pe.setMetricName("Time")
 	pe.setExperiment("ocracoke-O2")
@@ -32,14 +32,13 @@ def Speedup(pe):
 	pe.setChartXAxisName("trial.node_count * trial.contexts_per_node * trial.threads_per_context", "Threads of Execution")
 	pe.setChartYAxisName("avg(interval_mean_summary.inclusive)", "Speedup")
 	pe.setChartMainEventOnly(1);
-	pe.setChartLogYAxis(0);
 	pe.setChartEventNoCallPath(1)
-	pe.setChartEventExclusive100(0)
 	pe.setChartScalability(1)
 	pe.setChartConstantProblem(1)
 	pe.doGeneralChart()
 
 def SpeedupByEvent(pe):
+	pe.resetChartDefaults();
 	pe.setApplication("GTC")
 	pe.setMetricName("Time")
 	pe.addExperiment("ocracoke-O5")
@@ -47,15 +46,13 @@ def SpeedupByEvent(pe):
 	pe.setChartSeriesName("interval_event.name")
 	pe.setChartXAxisName("trial.node_count * trial.contexts_per_node * trial.threads_per_context", "Threads of Execution")
 	pe.setChartYAxisName("avg(interval_mean_summary.inclusive)", "Total Time (seconds)")
-	pe.setChartMainEventOnly(0);
-	pe.setChartLogYAxis(0);
 	pe.setChartEventNoCallPath(1)
-	pe.setChartEventExclusive100(0)
 	pe.setChartScalability(1)
 	pe.setChartConstantProblem(1)
 	pe.doGeneralChart()
 
 def Simple(pe):
+	pe.resetChartDefaults();
 	pe.setApplication("GTC")
 	pe.setMetricName("Time")
 	pe.setExperiment("ocracoke-O2")
@@ -64,16 +61,15 @@ def Simple(pe):
 	pe.setChartXAxisName("trial.node_count * trial.contexts_per_node * trial.threads_per_context", "Threads of Execution")
 	pe.setChartYAxisName("avg(interval_mean_summary.inclusive)", "Total Time (seconds)")
 	pe.setChartMainEventOnly(1);
-	pe.setChartLogYAxis(0);
 	pe.setChartEventNoCallPath(1)
-	pe.setChartEventExclusive100(0)
 	pe.setChartConstantProblem(1)
 	pe.doGeneralChart()
 
 def XMLtest(pe):
+	pe.resetChartDefaults();
 	pe.setApplication("GTC")
 	pe.setExperiment("ocracoke-O2")
-	pe.addExperiment("Jacquard")
+	pe.addExperiment("jacquard")
 	pe.setMetricName("%TIME%")
 	pe.setChartTitle("GTC Total Execution Time")
 	pe.setChartSeriesName("temp_xml_metadata.metadata_value")
@@ -82,16 +78,15 @@ def XMLtest(pe):
 	pe.setChartXAxisName("trial.node_count * trial.contexts_per_node * trial.threads_per_context", "Threads of Execution")
 	pe.setChartYAxisName("avg(interval_mean_summary.inclusive)", "Total Time (seconds)")
 	pe.setChartMainEventOnly(1);
-	pe.setChartLogYAxis(0);
 	pe.setChartEventNoCallPath(1)
-	pe.setChartEventExclusive100(0)
 	pe.setChartConstantProblem(1)
 	pe.doGeneralChart()
 
 def XMLharder(pe):
+	pe.resetChartDefaults();
 	pe.setApplication("GTC")
 	pe.setExperiment("ocracoke-O2")
-	pe.addExperiment("Jacquard")
+	pe.addExperiment("jacquard")
 	pe.setMetricName("%TIME%")
 	pe.setChartTitle("GTC Total Execution Time")
 	pe.setChartXAxisName("temp_xml_metadata.metadata_value", "TAU Architecture")
@@ -100,13 +95,12 @@ def XMLharder(pe):
 	pe.setChartSeriesName("trial.node_count * trial.contexts_per_node * trial.threads_per_context")
 	pe.setChartYAxisName("avg(interval_mean_summary.inclusive)", "Total Time (seconds)")
 	pe.setChartMainEventOnly(1);
-	pe.setChartLogYAxis(0);
 	pe.setChartEventNoCallPath(1)
-	pe.setChartEventExclusive100(0)
 	pe.setChartConstantProblem(1)
 	pe.doGeneralChart()
 
 def CompilerByEvent(pe):
+	pe.resetChartDefaults();
 	pe.setApplication("GTC compiler options")
 	# pe.setExperiment("ocracoke-noinline")
 	pe.setMetricName("Time")
@@ -116,25 +110,20 @@ def CompilerByEvent(pe):
 	pe.setChartXAxisName("temp_xml_metadata.metadata_value", "Compiler Options")
 	pe.setChartMetadataFieldName("Compiler Options")
 	pe.setChartYAxisName("avg(interval_mean_summary.exclusive)", "Total Time (seconds)")
-	pe.setChartMainEventOnly(0);
-	pe.setChartLogYAxis(0);
 	pe.setChartEventNoCallPath(1)
 	pe.setChartHorizontal(1)
-	pe.setChartEventExclusive100(0)
-	pe.setChartScalability(0)
-	pe.setChartConstantProblem(0)
 	pe.doGeneralChart()
 
 print "--------------- JPython test script start ------------"
 
 pe = ScriptFacade()
-# XMLtest(pe)
-# XMLharder(pe)
-# TotalExecutionTime(pe)
-# Speedup(pe)
-# SpeedupByEvent(pe)
+XMLtest(pe)
+XMLharder(pe)
+TotalExecutionTime(pe)
+Speedup(pe)
+SpeedupByEvent(pe)
 CompilerByEvent(pe)
-# Simple(pe)
+Simple(pe)
 
 # pe.exit()
 

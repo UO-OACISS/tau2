@@ -43,7 +43,7 @@ import java.io.Reader;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.9 2007/03/19 19:23:05 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.10 2007/03/20 00:14:15 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -201,6 +201,13 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 /////////////////////////
 
+			boolean gotXMLData = false;
+			if (model.getChartMetadataFieldName() != null ||
+				model.getChartMetadataFieldValue() != null ||
+				model.getChartSeriesName().toUpperCase().indexOf("XML") > 0 ||
+				model.getChartXAxisName().toUpperCase().indexOf("XML") > 0) {
+				gotXMLData = true;
+
 			// create and populate the temporary XML_METADATA table
 			buf = buildCreateTableStatement("temp_xml_metadata", db);
 			buf.append(" (trial int, metadata_name text, metadata_value text)");
@@ -243,8 +250,10 @@ public class GeneralChartData extends RMIGeneralChartData {
 				*/
 
 				/* this is the 1.3 through 1.4 way */
-				NodeList names = org.apache.xpath.XPathAPI.selectNodeList(metadata, "/metadata/CommonProfileAttributes/attribute/name");
-				NodeList values = org.apache.xpath.XPathAPI.selectNodeList(metadata, "/metadata/CommonProfileAttributes/attribute/value");
+				NodeList names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+					"/metadata/CommonProfileAttributes/attribute/name");
+				NodeList values = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+					"/metadata/CommonProfileAttributes/attribute/value");
 				
 				for (int i = 0 ; i < names.getLength() ; i++) {
 					Node name = (Node)names.item(i).getFirstChild();
@@ -273,6 +282,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			db.setAutoCommit(true);
 			xmlResults.close();
 			statement.close();
+			}
 
 /////////////////////////
 
@@ -499,8 +509,10 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("on interval_mean_summary.interval_event = temp_event.id ");
 			buf.append("inner join temp_trial ");
 			buf.append("on temp_event.trial = temp_trial.id ");
-			buf.append("inner join temp_xml_metadata ");
-			buf.append("on temp_event.trial = temp_xml_metadata.trial ");
+			if (gotXMLData) {
+				buf.append("inner join temp_xml_metadata ");
+				buf.append("on temp_event.trial = temp_xml_metadata.trial ");
+			}
 			buf.append("inner join experiment ");
 			buf.append("on temp_trial.experiment = experiment.id ");
 			buf.append("inner join application ");
@@ -544,15 +556,17 @@ public class GeneralChartData extends RMIGeneralChartData {
 			statement.execute();
 			statement.close();
 
-			statement = db.prepareStatement("truncate table temp_xml_metadata");
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
+			if (gotXMLData) {
+				statement = db.prepareStatement("truncate table temp_xml_metadata");
+				//System.out.println(statement.toString());
+				statement.execute();
+				statement.close();
 
-			statement = db.prepareStatement("drop table temp_xml_metadata");
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
+				statement = db.prepareStatement("drop table temp_xml_metadata");
+				//System.out.println(statement.toString());
+				statement.execute();
+				statement.close();
+			}
 
 			statement = db.prepareStatement("truncate table temp_trial");
 			//System.out.println(statement.toString());

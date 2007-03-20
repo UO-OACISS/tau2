@@ -442,4 +442,22 @@ public class ScriptFacade {
 			model.setChartHorizontal(true);
 	}
 
+	public void resetChartDefaults() {
+		model.setCurrentSelection(model.getApplication());
+    	this.setDimensionReduction(TransformationType.NONE, null);
+		this.setChartMetadataFieldName(null);
+		this.setChartMetadataFieldValue(null);
+		this.setChartSeriesName(null);
+		this.setChartXAxisName(null, null);
+		this.setChartYAxisName(null, null);
+		this.setChartTitle(null);
+		this.setChartMainEventOnly(0);
+		this.setChartEventNoCallPath(0);
+		this.setChartEventExclusive100(0);
+		this.setChartLogYAxis(0);
+		this.setChartScalability(0);
+		this.setChartEfficiency(0);
+		this.setChartConstantProblem(0);
+		this.setChartHorizontal(0);
+	}
 }
