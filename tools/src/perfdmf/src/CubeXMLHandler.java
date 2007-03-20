@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.4 2007/02/13 20:11:18 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.5 2007/03/20 17:14:26 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -34,9 +34,9 @@ public class CubeXMLHandler extends DefaultHandler {
 
     private Map metricMap = new HashMap(); // map cube metricId Strings to PerfDMF Metric classes
     private Map regionMap = new HashMap(); // map cube regionId Strings to Function names (Strings)
-    private Map csiteMap = new HashMap();  // map cube csiteId Strings to regionId Strings 
-    private Map cnodeMap = new HashMap();  // map cube cnodeId Strings to csiteId Strings
-    private Map uomMap = new HashMap();    // map cube metricId Strings to uom (unit of measure) Strings
+    private Map csiteMap = new HashMap(); // map cube csiteId Strings to regionId Strings 
+    private Map cnodeMap = new HashMap(); // map cube cnodeId Strings to csiteId Strings
+    private Map uomMap = new HashMap(); // map cube metricId Strings to uom (unit of measure) Strings
 
     private CubeDataSource cubeDataSource;
 
@@ -48,8 +48,8 @@ public class CubeXMLHandler extends DefaultHandler {
     private List threads = new ArrayList();
     private Metric metric;
 
-    private int nodeID = 0;
-    private int threadID = 0;
+    // changed to 3 if detected, some things are different
+    private int version = 2;
 
     private Metric calls = new Metric();
 
@@ -66,7 +66,7 @@ public class CubeXMLHandler extends DefaultHandler {
     // these maps were added to speed up the lookup of flat and parent profiles
     private Map parentMap = new HashMap(); // map functions to their parent functions ("A=>B=>C" -> "A=>B")
     private Map flatMap = new HashMap(); // map functions to their flat functions ("A=>B=>C" -> "C")
-    
+
     private static class CubeProcess {
         public int rank;
         public List threads = new ArrayList();
@@ -97,23 +97,25 @@ public class CubeXMLHandler extends DefaultHandler {
         callpathGroup = cubeDataSource.addGroup("CUBE_CALLPATH");
     }
 
-    public void endDocument() throws SAXException {
-    }
+    public void endDocument() throws SAXException {}
 
     private String getFunctionName(Object callSiteID) {
-        return (String) regionMap.get(csiteMap.get(callSiteID));
+        if (version == 3) {
+            return (String) regionMap.get(callSiteID);
+        } else {
+            return (String) regionMap.get(csiteMap.get(callSiteID));
+        }
     }
 
-    
     private String getInsensitiveValue(Attributes attributes, String key) {
-        for (int i=0; i<attributes.getLength(); i++) {
+        for (int i = 0; i < attributes.getLength(); i++) {
             if (attributes.getLocalName(i).equalsIgnoreCase(key)) {
                 return attributes.getValue(i);
             }
         }
         return null;
     }
-    
+
     /* (non-Javadoc)
      * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
      */
@@ -123,25 +125,33 @@ public class CubeXMLHandler extends DefaultHandler {
         // after development is done here this should be changed to if/else if's at least
 
         if (localName.equalsIgnoreCase("cube")) {
-            String version = (String)getInsensitiveValue(attributes, "version");
-            if (!version.equals("2.0")) {
-                throw new DataSourceException("PerfDMF only reads version 2.0 cube files (Found version " + version + ")");
+            String version = (String) getInsensitiveValue(attributes, "version");
+            //          if (!version.equals("2.0")) {
+            //          throw new DataSourceException("PerfDMF only reads version 2.0 cube files (Found version " + version + ")");
+            //      }
+            if (version.equals("3.0")) {
+                this.version = 3;
             }
-            
+
         } else if (localName.equalsIgnoreCase("metric")) {
             metricIDStack.push(metricID);
-            metricID = getInsensitiveValue(attributes,"id");
+            metricID = getInsensitiveValue(attributes, "id");
         } else if (localName.equalsIgnoreCase("region")) {
-            regionID = getInsensitiveValue(attributes,"id");
-        } else
-
-        if (localName.equalsIgnoreCase("csite")) {
-            csiteID = getInsensitiveValue(attributes,"id");
+            regionID = getInsensitiveValue(attributes, "id");
+        } else if (localName.equalsIgnoreCase("csite")) {
+            csiteID = getInsensitiveValue(attributes, "id");
         } else if (localName.equalsIgnoreCase("cnode")) {
-            cnodeID = getInsensitiveValue(attributes,"id");
-            csiteID = getInsensitiveValue(attributes,"csiteid");
+            cnodeID = getInsensitiveValue(attributes, "id");
+            csiteID = getInsensitiveValue(attributes, "csiteid");
+            callee = getInsensitiveValue(attributes, "calleeid");
 
-            String functionName = getFunctionName(csiteID);
+            String functionName;
+
+            if (version == 3) {
+                functionName = getFunctionName(callee);
+            } else {
+                functionName = getFunctionName(csiteID);
+            }
 
             Stack stackCopy = (Stack) cnodeStack.clone();
 
@@ -158,14 +168,17 @@ public class CubeXMLHandler extends DefaultHandler {
             }
 
             cnodeMap.put(cnodeID, function);
-
-            cnodeStack.push(csiteID);
+            if (version == 3) {
+                cnodeStack.push(callee);
+            } else {
+                cnodeStack.push(csiteID);
+            }
         } else if (localName.equalsIgnoreCase("matrix")) {
-            metricID = getInsensitiveValue(attributes,"metricid");
+            metricID = getInsensitiveValue(attributes, "metricid");
             metric = (Metric) metricMap.get(metricID);
             currentMetric++;
         } else if (localName.equalsIgnoreCase("row")) {
-            cnodeID = getInsensitiveValue(attributes,"cnodeid");
+            cnodeID = getInsensitiveValue(attributes, "cnodeid");
         } else if (localName.equalsIgnoreCase("process")) {
             cubeProcess = new CubeProcess(-1);
             cubeProcesses.add(cubeProcess);
@@ -193,7 +206,7 @@ public class CubeXMLHandler extends DefaultHandler {
             CubeThread cubeThread = new CubeThread(Integer.parseInt(rank));
             cubeProcess.threads.add(cubeThread);
             rank = (String) rankStack.pop();
-        } else if (localName.equalsIgnoreCase("locations")) {
+        } else if (localName.equalsIgnoreCase("locations") || localName.equalsIgnoreCase("system")) {
             for (int i = 0; i < cubeProcesses.size(); i++) {
                 CubeProcess cubeProcess = (CubeProcess) cubeProcesses.get(i);
                 Node node = cubeDataSource.addNode(cubeProcess.rank);
@@ -209,6 +222,9 @@ public class CubeXMLHandler extends DefaultHandler {
             rankStack.push(rank);
             rank = accumulator.toString();
         } else if (localName.equalsIgnoreCase("name")) {
+            nameStack.push(name);
+            name = accumulator.toString();
+        } else if (localName.equalsIgnoreCase("disp_name")) {
             nameStack.push(name);
             name = accumulator.toString();
         } else if (localName.equalsIgnoreCase("uom")) {
@@ -250,7 +266,7 @@ public class CubeXMLHandler extends DefaultHandler {
         } else if (localName.equalsIgnoreCase("row")) {
 
             Function function = (Function) cnodeMap.get(cnodeID);
-            
+
             String data = accumulator.toString();
 
             StringTokenizer tokenizer = new StringTokenizer(data, " \t\n\r");
@@ -311,8 +327,6 @@ public class CubeXMLHandler extends DefaultHandler {
         }
     }
 
-    
-
     // given A => B => C, this retrieves the FP for C
     private FunctionProfile getFlatFunctionProfile(Thread thread, Function function) {
         if (!function.isCallPathFunction()) {
@@ -336,7 +350,6 @@ public class CubeXMLHandler extends DefaultHandler {
 
     }
 
-    
     // retrieve the parent profile on a given thread (A=>B for A=>B=>C)
     private FunctionProfile getParent(Thread thread, Function function) {
         if (!function.isCallPathFunction()) {
