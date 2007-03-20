@@ -77,7 +77,7 @@ MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
-		TauHooks.o TauHandler.o TauMemory.o \
+		TauHooks.o TauHandler.o TauMemory.o MetaData.o \
 		$(PARAM_O) $(EVENTS_O) $(THR_O) \
 		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(CALLPATH_O) $(PYTHON_O) $(MUSE_O) \
@@ -321,6 +321,9 @@ Profile.class	: Profile.java
 	$(JDKDIR)/bin/javac Profile.java 
 
 Profiler.o 	: Profiler.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+MetaData.o 	: MetaData.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TulipTimers.o 	: TulipTimers.cpp $(HDRS)
