@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.7 2007/01/21 23:16:13 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.8 2007/03/20 17:03:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		Function
  */
 public class FunctionProfile {
@@ -98,9 +98,17 @@ public class FunctionProfile {
 
     public double getInclusivePercent(int metric) {
         if (thread.getNodeID() >= 0) {
-            return getInclusive(metric) / thread.getPercentDivider(metric);
+            double dividend = thread.getPercentDivider(metric);
+            if (dividend == 0) {
+                return 0;
+            }
+            return getInclusive(metric) / dividend;
         } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN) {
-            return function.getTotalInclusive(metric) / thread.getPercentDivider(metric);
+            double dividend = thread.getPercentDivider(metric);
+            if (dividend == 0) {
+                return 0;
+            }
+            return function.getTotalInclusive(metric) / dividend;
         } else if (thread.getNodeID() == Thread.STDDEV) {
             return getInclusive(metric) / function.getMeanInclusive(metric) * 100.0;
         }
@@ -113,9 +121,17 @@ public class FunctionProfile {
 
     public double getExclusivePercent(int metric) {
         if (thread.getNodeID() >= 0) {
-            return getExclusive(metric) / thread.getPercentDivider(metric);
+            double dividend = thread.getPercentDivider(metric);
+            if (dividend == 0) {
+                return 0;
+            }
+            return getExclusive(metric) / dividend;
         } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN) {
-            return function.getTotalExclusive(metric) / thread.getPercentDivider(metric);
+            double dividend = thread.getPercentDivider(metric);
+            if (dividend == 0) {
+                return 0;
+            }
+            return function.getTotalExclusive(metric) / dividend;
         } else if (thread.getNodeID() == Thread.STDDEV) {
             return getExclusive(metric) / function.getMeanExclusive(metric) * 100.0;
         }
