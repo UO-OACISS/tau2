@@ -374,6 +374,34 @@ int PapiLayer::initializePAPI() {
   }
 #endif /* __alpha */
 
+  // set the PAPI domain if desired
+  static const char *papi_domain = getenv("TAU_PAPI_DOMAIN");
+  if (papi_domain != NULL) {
+    int domain = PAPI_DOM_USER;
+    if (!strcmp(papi_domain,"PAPI_DOM_USER")) {
+      domain = PAPI_DOM_USER;
+    } else if (!strcmp(papi_domain,"PAPI_DOM_KERNEL")) {
+      domain = PAPI_DOM_KERNEL;
+    } else if (!strcmp(papi_domain,"PAPI_DOM_OTHER")) {
+      domain = PAPI_DOM_OTHER;
+    } else if (!strcmp(papi_domain,"PAPI_DOM_SUPERVISOR")) {
+      domain = PAPI_DOM_SUPERVISOR;
+    } else if (!strcmp(papi_domain,"PAPI_DOM_ALL")) {
+      domain = PAPI_DOM_ALL;
+    } else if (!strcmp(papi_domain,"PAPI_DOM_MIN")) {
+      domain = PAPI_DOM_MIN;
+    } else if (!strcmp(papi_domain,"PAPI_DOM_MAX")) {
+      domain = PAPI_DOM_MAX;
+    }
+    
+    rc = PAPI_set_domain(domain);
+    if (rc != PAPI_OK) {
+      fprintf(stderr, "Error setting PAPI domain: %s\n", PAPI_strerror(rc));
+      return -1;
+    }
+  }
+  
+
   return 0;
 }
 
