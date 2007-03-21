@@ -429,6 +429,7 @@ int PapiLayer::initializePAPI() {
 	fprintf (stderr, "Warning: Unknown PAPI domain, \"%s\"\n", token);
       }
 
+      checkDomain(thisDomain, token);
       domain |= thisDomain;
       token = strtok(NULL,":");
     }
