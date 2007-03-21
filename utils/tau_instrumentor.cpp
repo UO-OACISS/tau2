@@ -1,4 +1,4 @@
-//#define DEBUG 1
+#define DEBUG 1
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -2281,7 +2281,7 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
   while (tok != NULL)
   {
     tok = strtok(NULL, ",)");
-    if (tok && !strstr(tok, "=")) /* it doesn't contain a = */
+    if (tok && *tok != ' ' && !strstr(tok, "=")) /* it doesn't contain a = */
     {
       len = strlen(tok);
       while (*tok == ' ' || *tok == '&') tok++; /* get rid of spaces or leading & */
@@ -3337,8 +3337,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.149 $   $Date: 2007/03/21 22:48:46 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.149 2007/03/21 22:48:46 sameer Exp $
+ * $Revision: 1.150 $   $Date: 2007/03/21 23:19:36 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.150 2007/03/21 23:19:36 sameer Exp $
  ***************************************************************************/
 
 
