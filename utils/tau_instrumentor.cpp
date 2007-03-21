@@ -2013,6 +2013,96 @@ bool isFreeFormat(char inbuf[])
 }
 
 /* -------------------------------------------------------------------------- */
+/* -- getVariableName returns true if it is done, and has no more variables - */
+/* -- to process in the same line. Extracts variable name from line.        - */
+/* -------------------------------------------------------------------------- */
+bool getVariableName(char * &line, char * & varname)
+{
+  int len, i, openparens, varlen;
+  bool done = false;
+  bool foundcompoundstmt = false;
+  char *lastptr;
+  char *firstptr = line;
+  char token = ' ';
+  do {
+    len = strlen(line);
+#ifdef DEBUG
+    printf("AT THE BEGINNING : line=%s\n", line);
+#endif
+
+    for (i = 0; i < len && *line != ',' && *line != ')' && *line != '('; i++, line++)
+    { /* check for the variable name. parsing shouldn't reach a  , ) or ( */
+      varname[i] = *line;
+      lastptr = line;
+#ifdef DEBUG
+      printf("varname[%d] = %c\n", i, varname[i]);
+#endif /* DEBUG */
+      if (varname[i] == '&') varname[i] = ' '; /* we don't want &B */
+    }
+    varname[i] = '\0';
+    lastptr ++; /* increment to the end of the variable name */
+
+    while (*line && *line != '(') line++; /* go to the first ( */
+    /* next count the number of ( opened before we reach a ) */
+    len = strlen(line);
+    for (i = 0, openparens = 0; i < len, *line; i++, line++)
+    {
+      if (*line == '(') openparens ++;
+      if (*line == ')') openparens --;
+      if (openparens == 0) break;
+#ifdef DEBUG
+      printf("line = %c, openparens = %d\n", *line, openparens);
+#endif /* DEBUG */
+    }
+    //printf("after loop: openparens = %d\n", openparens);
+    if (*line == ')') line ++;
+    while (*line && *line == ' ') line++; /* skip whitespaces */
+#ifdef DEBUG
+    printf("GETVARNAME: line = %c\n", *line); 
+#endif /* DEBUG */
+
+    token = *line; /* assign token here! */
+
+    if (token == '%') 
+    {
+#ifdef DEBUG 
+      printf("FOUND a percentage symbol AFTER the variable parsing is completed!! line = %s\n", line);
+      /* implies a compound object. A variable that is part of a user defined type is present */
+#endif /* DEBUG */
+      line++; /* advance one token*/
+      foundcompoundstmt = true; /* found % */
+    }
+    else 
+    { /* look for the comma */
+      while (*line && *line != ',') line++; /* go to the first ( */
+      if (*line) line++; /* skip , */
+      else done = true;
+    }
+
+  } while (token == '%');
+#ifdef DEBUG
+  printf("foundcompoundstmt = %d, lastptr = %c\n",foundcompoundstmt, *lastptr);
+#endif /* DEBUG */
+  if (foundcompoundstmt)
+  {
+    for (i=0; firstptr != lastptr; i++)
+    {
+      varname[i] = *firstptr;
+#ifdef DEBUG
+      printf("ASSIGNING varname[%d] = %c\n", i, varname[i]);
+#endif /* DEBUG */
+      firstptr++;
+    }
+    varname[i] = '\0';
+  }
+#ifdef DEBUG
+    printf("Got: line = %s, varname=%s, done=%d\n", line, varname, done);
+#endif /* DEBUG */
+  return done;
+
+
+}
+/* -------------------------------------------------------------------------- */
 /* -- isFreeFormat returns true if it has a & in the current line ----------- */
 /* -------------------------------------------------------------------------- */
 bool isRequestOnSameLineAsPreviousRequest(vector<itemRef *>::iterator& it, vector<itemRef *>& itemvec)
@@ -2038,7 +2128,7 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
   cout <<"Allocate Stmt: line ="<<(*it)->line<<endl;
   cout <<"inbuf ="<<inbuf<<endl;
 #endif /* DEBUG */
-  char varname[1024], suffixstmt[64*1024];
+  char suffixstmt[64*1024];
   char *allocstmt = new char [INBUF_SIZE];
   int i, openparens, len;
   bool done = false; 
@@ -2047,6 +2137,7 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
   bool isfree;
   char *start;
   char *line;
+  char *varname = new char [INBUF_SIZE]; 
 
   removeCommentFromLine(inbuf);
   string nextline(inbuf);
@@ -2098,18 +2189,10 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
 #endif /* DEBUG */
   while (*line && *line != '(') line++;
   line++; /* skip first ( */
+
   while (!done)
   {
-    len = strlen(line);
-    for (i = 0; i < len && *line != ',' && *line != ')' && *line != '('; i++, line++)
-    { /* check for the variable name. parsing shouldn't reach a  , ) or ( */
-      varname[i] = *line; 
-#ifdef DEBUG
-      printf("varname[%d] = %c\n", i, varname[i]);
-#endif /* DEBUG */
-      if (varname[i] == '&') varname[i] = ' '; /* we don't want &B */
-    }
-    varname[i] = '\0';
+    done = getVariableName(line, varname);
   
     /* what about ! comment */
     if (!strstr(varname, "="))
@@ -2134,27 +2217,9 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
 #endif /* DEBUG */
     }
     else break; /* end of processing */
-    while (*line && *line != '(') line++; /* go to the first ( */
-    /* next count the number of ( opened before we reach a ) */
-    len = strlen(line);
-    for (i = 0, openparens = 0; i < len, *line; i++, line++)
-    {
-      if (*line == '(') openparens ++;
-      if (*line == ')') openparens --;
-      if (openparens == 0) break;
-#ifdef DEBUG
-      printf("line = %c, openparens = %d\n", *line, openparens);
-#endif /* DEBUG */
-    }
-    //printf("after loop: openparens = %d\n", openparens);
-    while (*line && *line != ',') line++; /* go to the first ( */
-    if (*line) line++; /* skip , */
-    else done = true;
-#ifdef DEBUG
-    printf("Got: line = %s, varname=%s, done=%d\n", line, varname, done);
-#endif /* DEBUG */
   }
   delete[] allocstmt;
+  delete[] varname;
   return linesread;
 
 }
@@ -3272,8 +3337,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.147 $   $Date: 2007/03/20 01:55:28 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.147 2007/03/20 01:55:28 sameer Exp $
+ * $Revision: 1.148 $   $Date: 2007/03/21 22:09:36 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.148 2007/03/21 22:09:36 sameer Exp $
  ***************************************************************************/
 
 
