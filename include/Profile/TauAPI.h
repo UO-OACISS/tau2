@@ -43,6 +43,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 extern "C" char * Tau_phase_enable(const char *group);
 
 extern "C" void Tau_profile_snapshot(char *name);
+extern "C" void Tau_metadata(char *name, char *value);
 extern "C" void Tau_profile_snapshot_1l(char *name, int number);
 
 
@@ -333,6 +334,7 @@ or tauFI->method();
 
 #define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
+#define TAU_METADATA(name, value)               Tau_metadata(name, value);
 
 #ifdef NO_RTTI
 /* #define CT(obj) string(#obj) */
@@ -453,6 +455,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.59 $   $Date: 2007/01/04 02:36:57 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.59 2007/01/04 02:36:57 amorris Exp $ 
+ * $Revision: 1.60 $   $Date: 2007/03/21 19:09:21 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.60 2007/03/21 19:09:21 amorris Exp $ 
  ***************************************************************************/

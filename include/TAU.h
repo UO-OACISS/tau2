@@ -126,7 +126,7 @@
 
 #define TAU_PROFILE_SNAPSHOT(name)
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)
-
+#define TAU_METADATA(name, value)
 #endif /* PROFILING_ON || TRACING_ON */
 
 #endif /* _TAU_H_ */
