@@ -36,6 +36,10 @@
 #include "tauarch.h"
 #include "Profile/tau_types.h"
 
+
+char * TauGetCounterString(void);
+
+
 // Static holder for snapshot file handles
 static FILE **TauGetSnapshotFiles() {
   static FILE **snapshotFiles = NULL;
@@ -52,6 +56,13 @@ static FILE **TauGetSnapshotFiles() {
 static int *TauGetSnapshotEventCounts() {
   static int eventCounts[TAU_MAX_THREADS];
   return eventCounts;
+}
+
+// Static holder for metadata name/value pairs
+// These come from TAU_METADATA calls
+static vector<pair<char*,char*> >& TheMetaData() {
+  static vector<pair<char*,char*> > metadata;
+  return metadata;
 }
 
 
@@ -292,6 +303,8 @@ static int writeMetaData(FILE *fp, bool newline) {
   writeXMLAttribute(fp, "pid", getpid(), newline);
 #endif
 
+
+
 #ifdef __linux__
   // doesn't work on ia64 for some reason
   //fprintf (fp, "\t<linux_tid>%d</linux_tid>\n", gettid());
@@ -349,7 +362,31 @@ static int writeMetaData(FILE *fp, bool newline) {
   fclose(f);
 
 
-#endif
+  char buffer[4096];
+  bzero(buffer, 4096);
+  int rc = readlink("/proc/self/exe", buffer, 4096);
+  if (rc != -1) {
+    writeXMLAttribute(fp, "Executable", buffer, newline);
+  }
+  bzero(buffer, 4096);
+  rc = readlink("/proc/self/cwd", buffer, 4096);
+  if (rc != -1) {
+    writeXMLAttribute(fp, "CWD", buffer, newline);
+  }
+#endif /* __linux__ */
+
+  char *user = getenv("USER");
+  if (user != NULL) {
+    writeXMLAttribute(fp, "username", user, newline);
+  }
+
+  // write out the user-specified (some from TAU) attributes
+  for (int i=0; i < TheMetaData().size(); i++) {
+    char *name = TheMetaData()[i].first;
+    char *value = TheMetaData()[i].second;
+    writeXMLAttribute(fp, name, value, newline);
+  }
+
 
   fprintf (fp, "</metadata>%s", endl);
 
@@ -624,9 +661,19 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 }
 
 
+extern "C" void Tau_metadata(char *name, char *value) {
+  // make copies
+  char *myName = strdup(name);
+  char *myValue = strdup(value);
+  TheMetaData().push_back(pair<char*,char*>(name,value));
+}
+
+
 int Tau_writeProfileMetaData(FILE *fp) {
 #ifdef TAU_DISABLE_METADATA
   return 0;
 #endif
   return writeMetaData(fp, false);
 }
+
+
