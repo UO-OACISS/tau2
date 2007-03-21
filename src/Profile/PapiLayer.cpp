@@ -42,6 +42,30 @@ int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
 
 
+// Some versions of PAPI don't have these defined
+// so we'll define them to 0 and if the user tries to use them
+// we'll print out a warning
+#ifndef PAPI_DOM_USER
+#define PAPI_DOM_USER 0
+#endif
+
+#ifndef PAPI_DOM_KERNEL
+#define PAPI_DOM_KERNEL 0
+#endif
+
+#ifndef PAPI_DOM_SUPERVISOR
+#define PAPI_DOM_SUPERVISOR 0
+#endif
+
+#ifndef PAPI_DOM_OTHER
+#define PAPI_DOM_OTHER 0
+#endif
+
+#ifndef PAPI_DOM_ALL
+#define PAPI_DOM_ALL 0
+#endif
+
+
 #ifdef TAU_PAPI_DEBUG
 #include <stdarg.h>
 static void dmesg(int level, char* format, ...) {
@@ -322,6 +346,15 @@ unsigned long papi_thread_gettid(void) {
 }
 #endif /* TAU_PAPI_THREADS */
 
+
+/////////////////////////////////////////////////
+void PapiLayer::checkDomain(int domain, char *domainstr) {
+  if (domain == 0) {
+    fprintf (stderr, "Warning: PAPI domain \"%s\" is not available with this version of PAPI\n", domainstr);
+  }
+}
+
+
 /////////////////////////////////////////////////
 int PapiLayer::initializePAPI() {
 #ifdef TAU_PAPI_DEBUG
@@ -377,23 +410,32 @@ int PapiLayer::initializePAPI() {
   // set the PAPI domain if desired
   static char *papi_domain = getenv("TAU_PAPI_DOMAIN");
   if (papi_domain != NULL) {
+    TAU_METADATA("PAPI Domain", papi_domain);
     int domain = 0;
     char *token = strtok(papi_domain,":");
     while (token != NULL) {
+      int thisDomain = 0;
       if (!strcmp(token,"PAPI_DOM_USER")) {
-	domain |= PAPI_DOM_USER;
+	thisDomain |= PAPI_DOM_USER;
       } else if (!strcmp(token,"PAPI_DOM_KERNEL")) {
-	domain |= PAPI_DOM_KERNEL;
+	thisDomain |= PAPI_DOM_KERNEL;
       } else if (!strcmp(token,"PAPI_DOM_OTHER")) {
-	domain |= PAPI_DOM_OTHER;
+	thisDomain |= PAPI_DOM_OTHER;
       } else if (!strcmp(token,"PAPI_DOM_SUPERVISOR")) {
-	domain |= PAPI_DOM_SUPERVISOR;
+	thisDomain |= PAPI_DOM_SUPERVISOR;
       } else if (!strcmp(token,"PAPI_DOM_ALL")) {
-	domain |= PAPI_DOM_ALL;
+	thisDomain |= PAPI_DOM_ALL;
+      } else {
+	fprintf (stderr, "Warning: Unknown PAPI domain, \"%s\"\n", token);
       }
+
+      domain |= thisDomain;
       token = strtok(NULL,":");
     }
     
+    if (domain == 0) {
+      fprintf (stderr, "Warning, No valid PAPI domains specified\n");
+    }
     rc = PAPI_set_domain(domain);
     if (rc != PAPI_OK) {
       fprintf(stderr, "Error setting PAPI domain: %s\n", PAPI_strerror(rc));
