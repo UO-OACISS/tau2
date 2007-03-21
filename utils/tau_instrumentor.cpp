@@ -2294,7 +2294,7 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
 */
      sprintf(deallocstmt, "       call TAU_DEALLOC(%s, %d, '",
         tok, (*it)->line);
-     sprintf(suffixstmt, "%s, variable=%s", (*it)->snippet, tok);
+     sprintf(suffixstmt, "%s, variable=%s", (*it)->snippet.c_str(), tok);
      string prefix=string(deallocstmt);
      string suffix=string(suffixstmt);
      writeLongFortranStatement(ostr, prefix, suffix);
@@ -3337,8 +3337,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.148 $   $Date: 2007/03/21 22:09:36 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.148 2007/03/21 22:09:36 sameer Exp $
+ * $Revision: 1.149 $   $Date: 2007/03/21 22:48:46 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.149 2007/03/21 22:48:46 sameer Exp $
  ***************************************************************************/
 
 
