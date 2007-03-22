@@ -3,9 +3,31 @@
 TAUROOT=@TAUROOTDIR@
 TAUARCH=@ARCH@
 
+
+usage()
+{
+    echo ""
+    echo "Usage: tauex [options] -- <exe> <exe options>"
+    echo ""
+    echo "Options:"
+    echo "        -u: User mode counts"
+    echo "        -k: Kernel mode counts"
+    echo "        -S: Supervisor mode counts"
+    echo "        -I: Interrupt mode counts"
+    echo "        -e <event> : Specify PAPI preset or native event"
+    echo "        -T <MPI,OPENMP,TRACE,PROFILE,CALLPATH> : specify TAU option"
+    echo "        -XrunTAU-<options> : specify TAU library directly"
+    echo ""
+    echo "Example:"
+    echo "    mpirun -np 2 tauex -e PAPI_TOT_CYC -e PAPI_FP_OPS -T MPI,PROFILE -- ./ring"
+    echo ""
+    exit
+}
+
 if [ $# = 0 ] ; then
-    echo "Usage $0 program"
+    usage
 fi
+
 
 
 ProfileSpecified="false"
@@ -16,8 +38,10 @@ TauOptions=""
 TauOptionsExclude=""
 Counters="GET_TIME_OF_DAY"
 NumCounters=1
-process="true"
 verbose=false
+binding_specified=""
+unset TAU_PAPI_DOMAIN
+export TAU_PAPI_DOMAIN
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -58,62 +82,103 @@ for arg in "$@" ; do
 	      processT=true
 	      shift
 	      ;;
-	  --)
-	      process=false
+	  -u) 
+	      TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN:PAPI_DOM_USER
 	      shift
 	      ;;
+	  -k) 
+	      TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN:PAPI_DOM_KERNEL
+	      shift
+	      ;;
+	  -S) 
+	      TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN:PAPI_DOM_SUPERVISOR
+	      shift
+	      ;;
+	  -I) 
+	      TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN:PAPI_DOM_OTHER
+	      shift
+	      ;;
+	  -XrunTAU-*)
+	      myarg=`echo $arg | sed 's/-XrunTAU-//'`
+	      binding_specified="shared-$myarg"
+	      shift
+	      ;;
+	  -help)
+	      usage
+	      ;;
+	  --help)
+	      usage
+	      ;;
+	  --)
+	      shift
+	      break
+	      ;;
+	  *)
+	      echo "Unknown option: $arg"
+	      exit
       esac
   fi
 done
 
-
-if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
-    ProfileSpecified="true"
+if [ $verbose = "true" ] ; then
+    echo ""
+    echo "Program to run : $@"
+    echo ""
 fi
 
 
-if [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "false" ] ; then
-    TauOptionsExclude="trace"
-elif [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "true" ] ; then
-    TauOptions="$TauOptions profile trace"
-elif [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "true" ] ; then
-    TauOptionsExclude="profile"
-    TauOptions="$TauOptions trace"
-fi
-
-if [ $NumCounters -gt 1 ] ; then
-    TauOptions="$TauOptions multiplecounters papi"
-fi
-
-bindings=`ls $TAUROOT/$TAUARCH/lib | grep shared`
-
-for opt in $TauOptions; do 
-    newbindings=""
-    for b in $bindings ; do
-	add=`echo $b | grep -i $opt`
-	newbindings="$newbindings $add"
+if [ "x$binding-specified" = "x" ] ; then
+    if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
+	ProfileSpecified="true"
+    fi
+    
+    
+    if [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "false" ] ; then
+	TauOptionsExclude="trace"
+    elif [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "true" ] ; then
+	TauOptions="$TauOptions profile trace"
+    elif [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "true" ] ; then
+	TauOptionsExclude="profile"
+	TauOptions="$TauOptions trace"
+    fi
+    
+    if [ $NumCounters -gt 1 ] ; then
+	TauOptions="$TauOptions multiplecounters papi"
+    fi
+    
+    bindings=`ls $TAUROOT/$TAUARCH/lib | grep shared`
+    
+    for opt in $TauOptions; do 
+	newbindings=""
+	for b in $bindings ; do
+	    add=`echo $b | grep -i $opt`
+	    newbindings="$newbindings $add"
+	done
+	bindings=$newbindings
     done
-    bindings=$newbindings
-done
-
-for opt in $TauOptionsExclude; do 
-    newbindings=""
-    for b in $bindings ; do
-	add=`echo $b | grep -v -i $opt`
-	newbindings="$newbindings $add"
+    
+    for opt in $TauOptionsExclude; do 
+	newbindings=""
+	for b in $bindings ; do
+	    add=`echo $b | grep -v -i $opt`
+	    newbindings="$newbindings $add"
+	done
+	bindings=$newbindings
     done
-    bindings=$newbindings
-done
+    
+    
+    theBinding=""
+    for b in $bindings ; do
+	theBinding=$b
+    done
 
 
-theBinding=""
-for b in $bindings ; do
-    theBinding=$b
-done
-
-if [ "x$theBinding" = "x" ] ; then
-    echo "Error: Couldn't find a matching TAU binding"
-    exit
+    if [ "x$theBinding" = "x" ] ; then
+	echo "Error: Couldn't find a matching TAU binding"
+	exit
+    fi
+else
+    theBinding=$binding_specified
 fi
 
 # unset any counters that may be active
@@ -128,11 +193,14 @@ for c in $Counters ; do
     counter=$(( $counter + 1 ))
 done
 
+
+export LD_LIBRARY_PATH=$TAUROOT/$TAUARCH/lib/$theBinding:$LD_LIBRARY_PATH
+
 if [ $verbose = "true" ] ; then
     echo "Matching bindings: $bindings"
     echo "Using $theBinding"
+    echo "Setting LD_LIBRARY_PATH to $LD_LIBRARY_PATH"
 fi
-export LD_LIBRARY_PATH=$TAUROOT/$TAUARCH/lib/$theBinding:$LD_LIBRARY_PATH
 
 # execute the program
 "$@"
