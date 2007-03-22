@@ -90,6 +90,7 @@ void Tau_mark_group_as_phase(void **ptr);
 void Tau_profile_callstack(void );
 void Tau_profile_snapshot(char *name);
 void Tau_profile_snapshot_1l(char *name, int number);
+void Tau_metadata(char *name, char *value);
 
 
   
@@ -1461,6 +1462,33 @@ void TAU_PROFILE_SNAPSHOT(char *name, int slen) {
   tau_profile_snapshot_(name, slen);
 }
 
+
+//////////////////////////////////////////////////////////////////////
+// Metadata routines
+//////////////////////////////////////////////////////////////////////
+void tau_metadata_(char *name, char *value, int nlen, int vlen) {
+  char *fname = getFortranName(name, nlen);
+  char *fvalue = getFortranName(value, vlen);
+  Tau_metadata(fname, fvalue);
+  free (fname);
+  free (fvalue);
+}
+
+void tau_metadata(char *name, char *value, int nlen, int vlen) {
+  tau_metadata_(name, value, nlen, vlen);
+}
+
+void tau_metadata__(char *name, char *value, int nlen, int vlen) {
+  tau_metadata_(name, value, nlen, vlen);
+}
+
+void TAU_METADATA(char *name, char *value, int nlen, int vlen) {
+  tau_metadata_(name, value, nlen, vlen);
+}
+
+
+
+
 void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen) 
 {
   char *fname = getFortranName(name, slen);
@@ -1507,7 +1535,7 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.56 $   $Date: 2007/02/27 23:06:00 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.56 2007/02/27 23:06:00 sameer Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.57 $   $Date: 2007/03/22 01:15:01 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.57 2007/03/22 01:15:01 amorris Exp $ 
  ***************************************************************************/
