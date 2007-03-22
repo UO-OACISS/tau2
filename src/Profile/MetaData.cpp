@@ -665,7 +665,7 @@ extern "C" void Tau_metadata(char *name, char *value) {
   // make copies
   char *myName = strdup(name);
   char *myValue = strdup(value);
-  TheMetaData().push_back(pair<char*,char*>(name,value));
+  TheMetaData().push_back(pair<char*,char*>(myName,myValue));
 }
 
 
