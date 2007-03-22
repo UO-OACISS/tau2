@@ -2233,6 +2233,108 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
   int openparens, linesread=0; /* how many additional lines (cont) did we read? */
   char *deallocstmt = new char[INBUF_SIZE];
   int isfree;
+  bool done = false; 
+  char *varname = new char [INBUF_SIZE]; 
+  char *start;
+  char *line;
+  list<string> statements;
+
+  ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
+  statements.push_back(inbuf); /* initialize the list of statements to inbuf */
+#ifdef DEBUG
+  cout <<"Deallocate Stmt: line ="<<(*it)->line<<endl;
+  printf("Deallocate Stmt: line = %d... \n",(*it)->line);
+  cout <<"inbuf ="<<*inbuf<<endl;
+#endif /* DEBUG */
+
+  removeCommentFromLine(inbuf);
+  string nextline(inbuf);
+  line = inbuf;
+
+  /* first we need to figure out if this line is a continuation line */
+  if (openparens=doesStmtContinueOntoNextLine(inbuf, 0))
+  { /* yes it does! */
+#ifdef DEBUG
+    printf("Contination line: %s\n", inbuf);
+#endif /* DEBUG */
+    isfree = isFreeFormat(inbuf);
+    do {
+       if (istr.getline(deallocstmt, INBUF_SIZE) == NULL)
+       {
+         perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
+         exit(1);
+       }
+       removeCommentFromLine(deallocstmt);
+       statements.push_back(deallocstmt);
+       /* if the file is in free format, start the next line by getting rid of the
+          first six columns */
+       if (!isfree) start = &deallocstmt[6];
+       else start = deallocstmt;
+       while (start && *start == ' ') start ++; /* eat up leading spaces */
+       len = strlen(start);
+       nextline.append(start, len);
+       //nextline.append(string("\n", 1));
+#ifdef DEBUG
+       printf("nextline=%s\n", nextline.c_str());
+#endif /* DEBUG */
+       linesread ++; /* the number of lines processed. We need to return this */
+    } while (openparens = doesStmtContinueOntoNextLine(deallocstmt, openparens));
+  }
+
+  line = (char *) nextline.c_str();     
+
+
+  while (*line && *line != '(') line++;
+  line++; /* skip first ( */
+
+  while (!done)
+  {
+    done = getVariableName(line, varname);
+
+    /* what about ! comment */
+    if (!strstr(varname, "="))
+    {
+    /* we don't want stat=ierr argument */
+    /* We need to break up this into a continuation line if it exceeds 72 chars */
+/*
+      ostr<<"\t call TAU_ALLOC("<<varname<<", "<<(*it)->line<< ", "
+          <<tau_size_tok<<"("<<varname<<"), '"<< (*it)->snippet<< ", var="
+          <<varname<<"')"<<endl;
+*/
+     char *p = varname;
+     while (p && *p == ' ') p++; /* eat up leading space */
+
+/* new */
+     sprintf(deallocstmt, "       call TAU_DEALLOC(%s, %d, '",
+        p, (*it)->line);
+     sprintf(suffixstmt, "%s, variable=%s", (*it)->snippet.c_str(), p);
+     string prefix=string(deallocstmt);
+     string suffix=string(suffixstmt);
+     writeLongFortranStatement(ostr, prefix, suffix);
+
+#ifdef DEBUG
+      printf("Putting in file: varname=%s, line = %s\n", varname, line);
+#endif /* DEBUG */
+    }
+    else break; /* end of processing */
+  }
+//  ostr<<"\t call TAU_DEALLOC(A, "<<(*it)->line<< ", '"<< (*it)->snippet<< ", var=A')"<<endl;
+  if (writetab) ostr<<"\t";
+  for (list<string>::iterator it = statements.begin(); it != statements.end();
+	it++)
+    ostr <<(*it)<<endl;
+  delete [] deallocstmt;
+  delete[] varname;
+  return linesread;
+
+}
+int printTauDeallocStmtOrig(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it, bool writetab)
+{
+  int i, len;
+  char suffixstmt[64*1024];
+  int openparens, linesread=0; /* how many additional lines (cont) did we read? */
+  char *deallocstmt = new char[INBUF_SIZE];
+  int isfree;
   char *start;
   list<string> statements;
 
@@ -3337,8 +3439,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.151 $   $Date: 2007/03/21 23:23:52 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.151 2007/03/21 23:23:52 sameer Exp $
+ * $Revision: 1.152 $   $Date: 2007/03/22 01:26:44 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.152 2007/03/22 01:26:44 sameer Exp $
  ***************************************************************************/
 
 
