@@ -1144,7 +1144,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       { /* we need to instrument all io statements in this routine */
 	printf("process I/O statements in Fortran routine\n");
       }
-      if ((*it)->getKind() == TAU_MEMORY || memory_flag)
+      if ((*it)->getKind() == TAU_MEMORY )
       { /* we need to instrument all memory statements in this routine */
 #ifdef DEBUG
 	printf("processing memory allocate/de-allocate statements in Fortran routine...\n");
@@ -1172,7 +1172,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
   printf("INSIDE addFileInstrumentationRequests empty Instrumentation List? %d \n", isInstrumentListEmpty());
 #endif /* DEBUG */
 
-  if (isInstrumentListEmpty() && memory_flag && p.language() == PDB::LA_FORTRAN) 
+  if (memory_flag && p.language() == PDB::LA_FORTRAN) 
   { /* instrumentation list is empty, but the user specified a -memory flag 
        for a fortran file. This is equivalent to instrumenting all memory 
        references */
@@ -1295,6 +1295,6 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.39 $   $Date: 2007/02/28 19:02:18 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.39 2007/02/28 19:02:18 sameer Exp $
+ * $Revision: 1.40 $   $Date: 2007/03/23 17:27:08 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.40 2007/03/23 17:27:08 sameer Exp $
  ***************************************************************************/
