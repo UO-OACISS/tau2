@@ -474,6 +474,16 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 
 /* Now sort all these locations */
   sort(itemvec.begin(), itemvec.end(), locCmp);
+  itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
+#ifdef DEBUG
+  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
+   iter++)
+  {
+    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"<<endl;
+  }
+#endif /* DEBUGnstall
+ */
+  return ; /* everything is ok */
 
 }
 
@@ -2193,6 +2203,9 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
   while (!done)
   {
     done = getVariableName(line, varname);
+#ifdef DEBUG
+    printf("After getVariableName: done = %d, line = %s, varname = %s\n", done, line, varname);
+#endif /* DEBUG */
   
     /* what about ! comment */
     if (!strstr(varname, "="))
@@ -3439,8 +3452,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.152 $   $Date: 2007/03/22 01:26:44 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.152 2007/03/22 01:26:44 sameer Exp $
+ * $Revision: 1.153 $   $Date: 2007/03/23 05:46:43 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.153 2007/03/23 05:46:43 sameer Exp $
  ***************************************************************************/
 
 
