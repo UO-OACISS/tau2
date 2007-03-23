@@ -3218,7 +3218,7 @@ int main(int argc, char **argv)
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
     cout <<"-noinline: disables the instrumentation of inline functions in C++"<<endl;
     cout <<"-noinit: does not call TAU_INIT(&argc,&argv). This disables a.out --profile <group[+<group>]> processing."<<endl;
-    cout <<"-memory: calls #include <malloc.h> at the beginning of each C/C++ file for malloc/free replacement."<<endl;
+    cout <<"-memory: calls #include <malloc.h> at the beginning of each C/C++ file for malloc/free replacement and traps Fortran 90 allocate/deallocate statements."<<endl;
     cout <<"-g groupname: puts all routines in a profile group. "<<endl;
     cout <<"-i headerfile: instead of <Profile/Profiler.h> a user can specify a different header file for TAU macros"<<endl;
     cout<<"-c : Force a C++ program to be instrumented as if it were a C program with explicit timer start/stops"<<endl;
@@ -3483,8 +3483,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.154 $   $Date: 2007/03/23 17:25:32 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.154 2007/03/23 17:25:32 sameer Exp $
+ * $Revision: 1.155 $   $Date: 2007/03/23 17:32:21 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.155 2007/03/23 17:32:21 sameer Exp $
  ***************************************************************************/
 
 
