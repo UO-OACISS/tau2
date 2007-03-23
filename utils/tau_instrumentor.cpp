@@ -117,9 +117,13 @@ extern bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef
 
 void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *i, pdbRoutine::callvec & c); /* in this file below */
 
+/* A strict weak ordering is a binary predicate that compares two objects, returning true if the first preceeds the second */
 static bool locCmp(const itemRef* r1, const itemRef* r2) {
 
   if (r1 == r2) { // strict weak ordering requires false on equal elements
+#ifdef DEBUG 
+    printf("locCmp: r1 == r2, returning false\n");
+#endif /* DEBUG */
     return false;
   }
 
@@ -136,7 +140,7 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
       if (r1->kind == BODY_BEGIN && r2->kind == BODY_BEGIN) return false;
 
       if (r1->kind == BODY_BEGIN) return true; 
-      if (r2->kind == BODY_BEGIN) return false; 
+      if (r2->kind == BODY_BEGIN) return false; /* body begin must always come first */
       if (r1->kind == INSTRUMENTATION_POINT) return false; 
       return true; 
     }
@@ -153,7 +157,11 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
 
 static bool itemEqual(const itemRef* r1, const itemRef* r2) {
   return ( (r1->line == r2->line) &&
-           (r1->col  == r2->col) && (r1->kind == r2->kind)); 
+           (r1->col  == r2->col) && 
+           (r1->kind == r2->kind) && 
+           (r1->isTarget == r2->isTarget) && 
+	   (r1->attribute == r2->attribute) && 
+	   (r1->snippet == r2->snippet)); 
 }
  
 
@@ -330,7 +338,7 @@ bool retval;
       }
     }
   }
-  sort(itemvec.begin(), itemvec.end(), locCmp);
+  stable_sort(itemvec.begin(), itemvec.end(), locCmp);
   itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
 #ifdef DEBUG
   for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
@@ -399,13 +407,22 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 	processExitOrAbort(itemvec, *rit, c); 
     }
   }
-  sort(itemvec.begin(), itemvec.end(), locCmp);
+#ifdef DEBUG
+  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
+   iter++)
+  {
+    cout <<"Before SORT: Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"
+	 <<"snippet = "<<(*iter)->snippet<<endl;
+  }
+#endif /* DEBUG */
+  stable_sort(itemvec.begin(), itemvec.end(), locCmp);
   itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
 #ifdef DEBUG
   for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
    iter++)
   {
-    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"<<endl;
+    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"
+	 <<"snippet = "<<(*iter)->snippet<<endl;
   }
 #endif /* DEBUG */
 }
@@ -473,13 +490,20 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
   }
 
 /* Now sort all these locations */
-  sort(itemvec.begin(), itemvec.end(), locCmp);
+#ifdef DEBUG 
+  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
+   iter++)
+  {
+    cout <<"BEFORE sort: Items ("<<(*iter)->line<<", "<<(*iter)->col<<")" <<" snippet = "<<(*iter)->snippet<<endl;
+  }
+#endif /* DEBUG */
+  stable_sort(itemvec.begin(), itemvec.end(), locCmp);
   itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
 #ifdef DEBUG
   for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
    iter++)
   {
-    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"<<endl;
+    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")" <<" snippet = "<<(*iter)->snippet<<endl;
   }
 #endif /* DEBUGnstall
  */
@@ -918,7 +942,12 @@ the open brace. */
             printf("it col -1 = %d, write_upto = %d\n", (*it)->col-1, write_upto);
 #endif /* DEBUG */
 	    for (i = (*it)->col-1; i < write_upto; i++)
+            {
+#ifdef DEBUG
+              printf("Writing (3.1) inbuf[%d] = %c\n", i, inbuf[i]);
+#endif /* DEBUG */
               ostr << inbuf[i]; 
+            }
 	    if (print_cr) ostr <<endl; 
 	    break;
 	  default:
@@ -1641,7 +1670,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
                     ostr <<inbuf[i]; \
 		  } \
                   ostr << snippetcode <<endl; \
-		  ostr <<"\t"; /* write a tab */ \
+		  ostr <<"\t";  /* write a tab */ \
                   for (i=col-1; i < write_upto; i++) \
                     ostr <<inbuf[i]; \
                   if (print_cr) ostr<<endl; \
@@ -2827,7 +2856,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		    addMoreInvocations(rid, (*it)->snippet); /* assign the list of strings to the list */
 		  }
 		  else
+                  {
 		    WRITE_SNIPPET((*it)->attribute, (*it)->col, 0, (*it)->snippet);
+                  }
 		  /* if there is another instrumentation point on the same line, it will take care of the write_upto part */
 		}
 		else {
@@ -3452,8 +3483,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.153 $   $Date: 2007/03/23 05:46:43 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.153 2007/03/23 05:46:43 sameer Exp $
+ * $Revision: 1.154 $   $Date: 2007/03/23 17:25:32 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.154 2007/03/23 17:25:32 sameer Exp $
  ***************************************************************************/
 
 
