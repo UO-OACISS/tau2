@@ -251,11 +251,31 @@ void TauMPIInitStub(int *rank)
   TAU_PROFILE_SET_NODE(*rank);
   dprintf("Setting rank = %d\n", *rank);
 }
+
+int TauRenameTimer(char *oldName, char *newName)
+{
+  vector<FunctionInfo *>::iterator it;
+  string *newfuncname = new string(newName);
+
+  dprintf("Inside TauRenameTimer: Old = %s, New = %s\n", oldName, newName);
+  for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++){
+    //Check to see that it is one of the requested functions.
+    dprintf("Comparing %s with %s\n", (*it)->GetName(), oldName);
+    if (strcmp(oldName, (*it)->GetName()) == 0)
+    {
+      (*it)->SetName(*newfuncname);
+      dprintf("Renaming %s to%s\n", oldName, newfuncname->c_str());
+      return 1; /* found it! */
+    }
+  }
+  dprintf("Didn't find the routine!\n");
+  return 0; /* didn't find it! */
+}
 } // extern "C"
 
 // EOF TauHooks.cpp
 /***************************************************************************
- * $RCSfile: TauHooks.cpp,v $   $Author: amorris $
- * $Revision: 1.23 $   $Date: 2006/10/09 18:53:50 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.23 2006/10/09 18:53:50 amorris Exp $ 
+ * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
+ * $Revision: 1.24 $   $Date: 2007/03/24 01:32:54 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.24 2007/03/24 01:32:54 sameer Exp $ 
  ***************************************************************************/
