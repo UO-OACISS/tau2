@@ -579,17 +579,17 @@ double TauWindowsUsecD(void)
 
 #ifdef TAU_MULTIPLE_COUNTERS
 void RtsLayer::getUSecD (int tid, double *values){
-#if (defined(TAU_EPILOG) && !defined(PROFILING_ON)) 
+#if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
   return;
-#endif /* TAU_EPILOG, PROFILING_ON */
+#endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
   MultipleCounterLayer::getCounters(tid, values);
 }
 #else //TAU_MULTIPLE_COUNTERS
 double RtsLayer::getUSecD (int tid) {
 
-#if (defined(TAU_EPILOG) && !defined(PROFILING_ON)) 
+#if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
   return 0;
-#endif /* TAU_EPILOG, PROFILING_ON */
+#endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
 
 
 #ifdef TAU_PCL
@@ -888,6 +888,7 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
 	  */
  	case '0' :
 	  RtsLayer::enableProfileGroup(TAU_GROUP_0);
+	  printf("ENABLING 0!\n");
 	  break;
 	case '1' : // User1
 	  switch (str[1])
@@ -1399,7 +1400,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.83 $   $Date: 2007/02/27 00:04:13 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.83 2007/02/27 00:04:13 amorris Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.84 $   $Date: 2007/03/24 01:04:02 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.84 2007/03/24 01:04:02 sameer Exp $ 
  ***************************************************************************/
