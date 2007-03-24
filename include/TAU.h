@@ -16,9 +16,28 @@
 #ifndef _TAU_H_
 #define _TAU_H_
 
+#ifndef TAU_DISABLE_API
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern void Tau_start(char *name);
+extern void Tau_stop(char *name);
+#ifdef __cplusplus
+}
+#endif
+
+/* define the easy to use API */
+#define TAU_START(name) Tau_start(name)
+#define TAU_STOP(name) Tau_stop(name)
+#else /* TAU_DISABLE_API is defined! Define these two to nulls */
+#define TAU_START(name) 
+#define TAU_STOP(name)
+#endif /* TAU_DISABLE_API */
+
 #if (defined(PROFILING_ON) || defined(TRACING_ON))
 #include <Profile/Profiler.h>
 #else
+
 
 /* Otherwise, declare the macros as null. TAU API follows: */
 #define TYPE_STRING(profileString, str)

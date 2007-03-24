@@ -227,6 +227,59 @@ void tau_pure_stop__(char *fname, int flen) {
   tau_pure_stop(fname, flen);
 }
 
+/* C API */
+void Tau_start(char *name)
+{
+  tau_pure_start(name, strlen(name));
+}
+
+
+void TAU_START(char *fname, int flen)
+{
+  tau_pure_start(fname, flen);
+}
+
+void tau_start(char *fname, int flen)
+{
+  tau_pure_start(fname, flen);
+}
+
+void tau_start_(char *fname, int flen)
+{
+  tau_pure_start(fname, flen);
+}
+
+void tau_start__(char *fname, int flen)
+{
+  tau_pure_start(fname, flen);
+}
+
+void TAU_STOP(char *fname, int flen)
+{
+  tau_pure_stop(fname, flen);
+}
+
+void tau_stop(char *fname, int flen)
+{
+  tau_pure_stop(fname, flen);
+}
+
+void tau_stop_(char *fname, int flen)
+{
+  tau_pure_stop(fname, flen);
+}
+
+void tau_stop__(char *fname, int flen)
+{
+  tau_pure_stop(fname, flen);
+}
+
+/* C API */
+void Tau_stop(char *name)
+{
+  tau_pure_stop(name, strlen(name));
+}
+
 void tau_profile_timer_(void **ptr, char *fname, int flen)
 {
   
@@ -1535,7 +1588,7 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.57 $   $Date: 2007/03/22 01:15:01 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.57 2007/03/22 01:15:01 amorris Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.58 $   $Date: 2007/03/24 01:56:57 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.58 2007/03/24 01:56:57 sameer Exp $ 
  ***************************************************************************/

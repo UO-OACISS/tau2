@@ -191,6 +191,8 @@ extern "C" {
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot(name, expr);
 
 
+extern void Tau_start(char *name);
+extern void Tau_stop(char *name);
 extern void Tau_specify_mapping_data1(long data, const char *name);
 extern void Tau_bcast_data(int data);
 extern void Tau_reduce_data(int data);
@@ -369,8 +371,8 @@ extern void Tau_profile_snapshot_1l(char *name, int number);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.45 $   $Date: 2007/01/04 02:36:57 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.45 2007/01/04 02:36:57 amorris Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: sameer $
+ * $Revision: 1.46 $   $Date: 2007/03/24 01:56:06 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.46 2007/03/24 01:56:06 sameer Exp $
  ***************************************************************************/
 

@@ -36,6 +36,8 @@
 // To ensure that Profiling does not add any runtime overhead when it 
 // is turned off, these macros expand to null.
 //////////////////////////////////////////////////////////////////////
+extern "C" void Tau_start(char *name);
+extern "C" void Tau_stop(char *name);
 extern "C" void Tau_start_timer(void * function_info, int phase );
 extern "C" void Tau_stop_timer(void * function_info); 
 extern "C" void Tau_create_top_level_timer_if_necessary(void);
@@ -454,7 +456,7 @@ or tauFI->method();
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.60 $   $Date: 2007/03/21 19:09:21 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.60 2007/03/21 19:09:21 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.61 $   $Date: 2007/03/24 01:56:06 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.61 2007/03/24 01:56:06 sameer Exp $ 
  ***************************************************************************/
