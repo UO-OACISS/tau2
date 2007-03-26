@@ -9,9 +9,9 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.8 2007/02/13 00:48:22 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.9 2007/03/26 21:04:11 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
@@ -31,6 +31,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     private int currentId;
     private String currentName;
+    private String currentValue;
     private String currentGroup;
     private long currentTimestamp;
     
@@ -74,6 +75,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
         ThreadData data = new ThreadData();
         data.thread = dataSource.addThread(nodeID, contextID, threadID);
         threadMap.put(threadName, data);
+        currentThread = data;
     }
 
     private void handleDefinitions(Attributes attributes) {
@@ -143,6 +145,8 @@ public class SnapshotXMLHandler extends DefaultHandler {
             handleThread(attributes);
         } else if (localName.equals("name")) {
             accumulator = new StringBuffer();
+        } else if (localName.equals("value")) {
+            accumulator = new StringBuffer();
         } else if (localName.equals("group")) {
             accumulator = new StringBuffer();
         } else if (localName.equals("utc_date")) {
@@ -161,6 +165,8 @@ public class SnapshotXMLHandler extends DefaultHandler {
             handleIntervalData(attributes);
             accumulator = new StringBuffer();
         }
+        
+        
 
     }
 
@@ -170,6 +176,8 @@ public class SnapshotXMLHandler extends DefaultHandler {
             currentThread = null;
         } else if (localName.equals("name")) {
             currentName = accumulator.toString();
+        } else if (localName.equals("value")) {
+            currentValue = accumulator.toString();
         } else if (localName.equals("utc_date")) {
             try {
                 currentDate = DataSource.dateTime.parse(accumulator.toString());
@@ -186,9 +194,12 @@ public class SnapshotXMLHandler extends DefaultHandler {
             handleMetric(currentName);
         } else if (localName.equals("event")) {
             handleEvent(currentName, currentGroup);
+        } else if (localName.equals("attribute")) {
+            currentThread.thread.getMetaData().put(currentName,currentValue);
         } else if (localName.equals("interval_data")) {
             handleIntervalDataEnd();
         }
+
 
     }
 

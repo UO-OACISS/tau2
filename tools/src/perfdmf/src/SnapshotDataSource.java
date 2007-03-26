@@ -13,9 +13,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.7 2007/02/13 00:48:22 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.8 2007/03/26 21:04:11 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class SnapshotDataSource extends DataSource {
 
@@ -171,6 +171,7 @@ public class SnapshotDataSource extends DataSource {
             //System.out.println("Snapshot reading took " + time + " ms");
             //System.out.println("found " + this.getThread(0,0,0).getNumSnapshots() + " snapshots");
             this.generateDerivedData();
+            this.aggregateMetaData();
 
         } catch (SAXException e) {
             e.printStackTrace();
