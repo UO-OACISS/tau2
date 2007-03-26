@@ -579,11 +579,87 @@ void TAU_SET_INTERRUPT_INTERVAL(int value)
 {
 } 
 
+void Tau_start_timer(void * timer, int phase) 
+{
+}
+
+void Tau_stop_timer(void *) 
+{
+}
+ 
+void Tau_create_top_level_timer_if_necessary(void)
+{
+}
+
+void Tau_stop_top_level_timer_if_necessary(void)
+{
+}
+
+void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group, char *group_name)
+{
+}
+
+int tau_totalnodes(int set_or_get, int value)
+{
+  return 0;
+}
+
+void Tau_trace_recvmsg(int type, int source, int length)
+{
+}
+
+void Tau_trace_sendmsg(int type, int destination, int length)
+{
+}
+
+void Tau_set_node(int node)
+{
+}
+
+
+void Tau_bcast_data(int data)
+{
+}
+
+void Tau_reduce_data(int data)
+{
+}
+
+void Tau_alltoall_data(int data)
+{
+}
+
+void Tau_scatter_data(int data)
+{
+}
+
+void Tau_gather_data(int data)
+{
+}
+
+void Tau_allgather_data(int data) 
+{
+}
+
+void Tau_allreduce_data(int data)
+{
+}
+
+void Tau_scan_data(int data)
+{
+}
+
+void Tau_reducescatter_data(int data)
+{
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////
 } /* extern "C" */
 
 /***************************************************************************
- * $RCSfile: TauDisable.cpp,v $   $Author: khuck $
- * $Revision: 1.7 $   $Date: 2006/04/06 00:08:27 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.7 2006/04/06 00:08:27 khuck Exp $ 
+ * $RCSfile: TauDisable.cpp,v $   $Author: sameer $
+ * $Revision: 1.8 $   $Date: 2007/03/26 21:53:05 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.8 2007/03/26 21:53:05 sameer Exp $ 
  ***************************************************************************/
