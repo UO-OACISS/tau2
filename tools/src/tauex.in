@@ -127,7 +127,7 @@ if [ $verbose = "true" ] ; then
 fi
 
 
-if [ "x$binding-specified" = "x" ] ; then
+if [ "x$binding_specified" = "x" ] ; then
     if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
 	ProfileSpecified="true"
     fi
