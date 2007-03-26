@@ -19,9 +19,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.4 2007/03/20 17:37:01 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.5 2007/03/26 18:13:45 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
@@ -41,24 +41,22 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
         this.model = model;
         this.alternateName = alternateName;
 
-        String pathDelimeter = "=>";
         if (functionProfile != null) {
-            displayName = ParaProfUtils.getDisplayName(functionProfile.getFunction());
-            if (model.getReversedCallPaths()) {
-                pathDelimeter = "<=";
+
+            if (model.getWindow().getTreeMode()) {
+                if (model.getReversedCallPaths()) {
+                    displayName = ParaProfUtils.getReversedLeafDisplayName(functionProfile.getFunction());
+                } else {
+                    displayName = ParaProfUtils.getLeafDisplayName(functionProfile.getFunction());
+                }
             } else {
-                pathDelimeter = "=>";
+                displayName = ParaProfUtils.getDisplayName(functionProfile.getFunction());
             }
+
         } else {
             displayName = alternateName;
         }
 
-        if (model.getWindow().getTreeMode()) {
-            int loc = displayName.lastIndexOf(pathDelimeter);
-            if (loc != -1) {
-                displayName = displayName.substring(loc + 2).trim();
-            }
-        }
     }
 
     public FunctionProfile getFunctionProfile() {

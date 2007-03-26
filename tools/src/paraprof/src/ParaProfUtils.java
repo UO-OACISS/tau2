@@ -38,11 +38,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.24 2007/03/10 03:17:33 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.25 2007/03/26 18:13:45 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  */
 public class ParaProfUtils {
 
@@ -1141,6 +1141,26 @@ public class ParaProfUtils {
             return removeSource(function.getName());
         }
     }
+ 
+    public static String getLeafDisplayName(Function function) {
+        String name = function.getName();
+        int loc = name.lastIndexOf("=>");
+        if (loc != -1) {
+            name = name.substring(loc + 2).trim();
+        }
+        return removeSource(name);
+    }
+
+    public static String getReversedLeafDisplayName(Function function) {
+        String name = function.getReversedName();
+        int loc = name.lastIndexOf("<=");
+        if (loc != -1) {
+            name = name.substring(loc + 2).trim();
+        }
+        return removeSource(name);
+    }
+
+    
 
     public static String getThreadIdentifier(Thread thread) {
 
