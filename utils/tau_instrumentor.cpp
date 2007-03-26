@@ -2190,7 +2190,7 @@ bool isRequestOnSameLineAsPreviousRequest(vector<itemRef *>::iterator& it, vecto
 /* -------------------------------------------------------------------------- */
 /* -- Write call TAU_ALLOC(...) statement ----------------------------------- */
 /* -------------------------------------------------------------------------- */
-int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it)
+int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it, char *& laststatement)
 {
  /* consider the string: allocate(A(100), stat=ierr) */
 #ifdef DEBUG
@@ -2224,6 +2224,7 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
          perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
          exit(1);
        }
+       strcpy(laststatement, allocstmt); /* save buffer and pass it out of the routine */
        removeCommentFromLine(allocstmt);
        /* if the file is in free format, start the next line by getting rid of the
           first six columns */
@@ -2298,7 +2299,7 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
 /* -------------------------------------------------------------------------- */
 /* -- Write call TAU_DEALLOC(...) statement --------------------------------- */
 /* -------------------------------------------------------------------------- */
-int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it, bool writetab)
+int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it, bool writetab, char *& laststatement)
 {
   int i, len;
   char suffixstmt[64*1024];
@@ -2336,6 +2337,7 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
          perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
          exit(1);
        }
+       strcpy(laststatement, deallocstmt); /* copy it in */
        removeCommentFromLine(deallocstmt);
        statements.push_back(deallocstmt);
        /* if the file is in free format, start the next line by getting rid of the
@@ -2491,7 +2493,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   string file(f->name());
   string codesnippet; /* for START_TIMER, STOP_TIMER */
   static char inbuf[INBUF_SIZE]; // to read the line
-  static char previousline[INBUF_SIZE]; // to read the line
+  static char * previousline = new char [INBUF_SIZE]; // to read the line
   char *checkbuf=NULL; // Assign inbuf to checkbuf for return processing
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
@@ -3015,7 +3017,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                     ostr <<inbuf[i];
                   }
 		  ostr<<endl;
-		  inputLineNo+= printTauAllocStmt(istr, ostr, &inbuf[alloccol-1], it);
+		  inputLineNo+= printTauAllocStmt(istr, ostr, &inbuf[alloccol-1], it, previousline);
+		  strcpy(inbuf, previousline); /* update last line read */
                   ostr<<"\t endif"<<endl;
                 }
 		else
@@ -3028,7 +3031,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
     PDB:  rstmt st#1 fsingle_if so#1 6 8 so#1 7 23 st#3 st#2
 		  */
 
-                  is_if_stmt = addThenEndifClauses(inbuf, inbuf, alloccol - 1);
+                  is_if_stmt = addThenEndifClauses(inbuf, previousline, alloccol - 1);
 #ifdef DEBUG
                   printf("IS IT IF??? %d alloccol = %d\n", is_if_stmt, alloccol);
 #endif /* DEBUG */
@@ -3052,7 +3055,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  }
 		  else {
 		    ostr<<"\n"<<inbuf<<endl;
-		    inputLineNo+= printTauAllocStmt(istr, ostr, inbuf, it); 
+		    inputLineNo+= printTauAllocStmt(istr, ostr, inbuf, it, previousline); 
+		    strcpy(inbuf, previousline); /* update last line read */
 		  }
 		}	
                 instrumented = true;
@@ -3079,7 +3083,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                   }
                   ostr<<"\t then \n";
 		  /* first write TAU_DEALLOC, then the deallocate stmt */
-                  inputLineNo+=printTauDeallocStmt(istr, ostr, &inbuf[dealloccol-1], it, true);
+                  inputLineNo+=printTauDeallocStmt(istr, ostr, &inbuf[dealloccol-1], it, true, previousline);
+		  strcpy(inbuf, previousline); /* update last line read */
 		  /* now the deallocate stmt */
 #ifdef DONT
 		  ostr<<"\t";
@@ -3103,9 +3108,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
     PDB:  rstmt st#1 fsingle_if so#1 6 8 so#1 7 23 st#3 st#2
                   */
 
-                  is_if_stmt = addThenEndifClauses(inbuf, inbuf, dealloccol - 1);
+                  is_if_stmt = addThenEndifClauses(inbuf, previousline, dealloccol - 1);
 #ifdef DEBUG
-                  printf("IS IT IF??? %d dealloccol = %d\n", is_if_stmt, dealloccol);
+                  printf("IS IT IF STMT??? %d dealloccol = %d\n", is_if_stmt, dealloccol);
 #endif /* DEBUG */
                   if (is_if_stmt && (dealloccol == 0)) {
                         /* handle this separately. write the current statement */
@@ -3114,7 +3119,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                   }
                   else {
 
-                    inputLineNo+=printTauDeallocStmt(istr, ostr, inbuf, it, false);
+                    inputLineNo+=printTauDeallocStmt(istr, ostr, inbuf, it, false, previousline);
+		    strcpy(inbuf, previousline); /* copy last line read over */
 /* 
 		    ostr<<inbuf<<endl;
 */
@@ -3142,6 +3148,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   }
   // written everything. quit and debug!
   ostr.close();
+  delete [] previousline;
   return true; /* end of instrumentFFile */
 }
 
@@ -3513,8 +3520,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.156 $   $Date: 2007/03/26 20:48:28 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.156 2007/03/26 20:48:28 sameer Exp $
+ * $Revision: 1.157 $   $Date: 2007/03/26 22:58:11 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.157 2007/03/26 22:58:11 sameer Exp $
  ***************************************************************************/
 
 
