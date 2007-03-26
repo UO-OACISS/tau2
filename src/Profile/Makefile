@@ -117,6 +117,8 @@ TAU_TARGET	      = libtau$(TAU_CONFIG)$(LSX)
 
 TAU_DISABLE   = libTauDisable$(LSX)
 
+TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
+
 ##############################################
 #MPI#MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 #MPI#TAU_MPI_OBJS = TauMpi.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF#
@@ -193,6 +195,7 @@ BITS = 32
 
 TAU_BINDINGSDIR = $(INSTALLDEST)/bindings$(TAU_CONFIG)
 TAU_SHAREDDIR = $(INSTALLDEST)/shared$(TAU_CONFIG)
+TAU_DISABLE_SHAREDDIR = $(INSTALLDEST)/shared-disable
 
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB)
@@ -207,9 +210,12 @@ $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS)  $(TAU_SHLIB) $(OBJS) $(EXTRAOBJS) $(TAU_MPI_OBJS) $(EXTRA_LIBS) $(LEXTRA) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS)
 
-$(TAU_DISABLE): TauDisable.o
+$(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED)
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
 		$(TAU_RANLIB) $(TAU_DISABLE)
+
+$(TAU_DISABLE_SHARED) : TauDisable.o
+		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_DISABLE_SHARED) TauDisable.o
 
 libTauMpi$(TAU_CONFIG)$(LSX): TauMpi.c TauFMpi.c
 		$(MAKE) -f Makefile.wrapper  
@@ -224,11 +230,16 @@ $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 		$(TAU_INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_CONFIG)
 
-$(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE)
+$(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE) $(TAU_DISABLE_SHARED)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
+		cd $(INSTALLDEST)
+		@if [ -d $(TAU_DISABLE_SHAREDDIR) ] ; then true; \
+		    else mkdir $(TAU_DISABLE_SHAREDDIR); fi
+		cd $(TAU_DISABLE_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
+		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) libTAU$(TAU_SHLIBX)
 
 $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		@echo Installing $? in $(INSTALLDEST)
