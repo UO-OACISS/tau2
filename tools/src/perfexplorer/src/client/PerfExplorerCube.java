@@ -5,6 +5,8 @@ import java.awt.*;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import java.net.URL;
+import edu.uoregon.tau.common.Utility;
 
 import common.RMICubeData;
 
@@ -89,6 +91,9 @@ public class PerfExplorerCube {
         frame.setLocation(xPosition, yPosition);
         frame.setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
+        URL url = Utility.getResource("tau32x32.gif");
+		if (url != null) 
+			frame.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 
         frame.getContentPane().add(panel);
         frame.pack();

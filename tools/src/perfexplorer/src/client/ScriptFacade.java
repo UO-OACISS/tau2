@@ -460,4 +460,16 @@ public class ScriptFacade {
 		this.setChartConstantProblem(0);
 		this.setChartHorizontal(0);
 	}
+
+	public ListIterator getApplicationList() {
+		return connection.getApplicationList();
+	}
+
+	public ListIterator getExperimentList() {
+		return connection.getExperimentList(model.getApplication().getID());
+	}
+
+	public ListIterator getTrialList() {
+		return connection.getTrialList(model.getExperiment().getID());
+	}
 }

@@ -21,6 +21,9 @@ import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import java.text.DecimalFormat;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.VectorExport;
+import java.net.URL;
+import edu.uoregon.tau.common.Utility;
+import java.awt.Toolkit;
 
 public class PerfExplorerChartWindow extends JFrame implements ActionListener, ImageExport {
 
@@ -38,6 +41,9 @@ public class PerfExplorerChartWindow extends JFrame implements ActionListener, I
         this.getContentPane().add(this.panel);
 		ActionListener listener = this;
 		this.setJMenuBar(new PerfExplorerChartJMenuBar(listener));
+        URL url = Utility.getResource("tau32x32.gif");
+		if (url != null) 
+			setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 		centerFrame(this);
 		this.pack();
 		this.setVisible(true);

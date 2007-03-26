@@ -19,6 +19,9 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import java.text.DecimalFormat;
 import java.text.FieldPosition;
+import java.net.URL;
+import edu.uoregon.tau.common.Utility;
+import java.awt.Toolkit;
 
 public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
 
@@ -74,7 +77,11 @@ public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
         NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
-		return new PerfExplorerProbabilityPlot(chart, "Normal Probability Plot");
+		JFrame window = new PerfExplorerProbabilityPlot(chart, "Normal Probability Plot");
+        URL url = Utility.getResource("tau32x32.gif");
+		if (url != null) 
+			window.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
+		return window;
     }
 
 	private static double SND(double r) {

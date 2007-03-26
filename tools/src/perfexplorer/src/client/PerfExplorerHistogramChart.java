@@ -25,6 +25,9 @@ import org.jfree.ui.RefineryUtilities;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.data.xy.XYDataset;
+import java.net.URL;
+import edu.uoregon.tau.common.Utility;
+import java.awt.Toolkit;
 
 /**
  * A demo of the {@link HistogramDataset} class.
@@ -62,7 +65,12 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
             }
         });
 
-		return new PerfExplorerHistogramChart (chart, "Distributions of Significant Events");
+		JFrame window = new PerfExplorerHistogramChart (chart, 
+			"Distributions of Significant Events");
+        URL url = Utility.getResource("tau32x32.gif");
+		if (url != null) 
+			window.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
+		return window;
 	}
 
     private static IntervalXYDataset createDataset(RMIChartData inData) {

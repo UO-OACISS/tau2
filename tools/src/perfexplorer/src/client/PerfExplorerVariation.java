@@ -16,6 +16,9 @@ import javax.swing.JTable;
 import javax.swing.JScrollPane;
 import javax.swing.JScrollBar;
 import common.RMIVarianceData;
+import java.net.URL;
+import edu.uoregon.tau.common.Utility;
+import java.awt.Toolkit;
 
 /**
  * @author khuck
@@ -80,6 +83,10 @@ public class PerfExplorerVariation {
         frame.setLocation(xPosition, yPosition);
         frame.setSize(new java.awt.Dimension(windowWidth, windowHeight));
         scrollPane.setPreferredSize(new java.awt.Dimension(windowWidth, windowHeight));
+
+        URL url = Utility.getResource("tau32x32.gif");
+		if (url != null) 
+			frame.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 
         frame.getContentPane().add(scrollPane);
         frame.pack();

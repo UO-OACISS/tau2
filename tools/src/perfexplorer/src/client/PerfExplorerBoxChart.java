@@ -31,6 +31,9 @@ import org.jfree.ui.RefineryUtilities;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.labels.CategoryToolTipGenerator;
 import org.jfree.data.category.CategoryDataset;
+import java.net.URL;
+import edu.uoregon.tau.common.Utility;
+import java.awt.Toolkit;
 
 /**
  * A simple demonstration application showing how to create a box-and-whisker
@@ -52,6 +55,9 @@ public class PerfExplorerBoxChart extends PerfExplorerChartWindow {
 		BoxAndWhiskerCategoryDataset dataset = createDataset(data);
         JFreeChart chart = createChart(dataset);
 		JFrame frame = new PerfExplorerBoxChart(chart, "Distributions of Significant Events");
+        URL url = Utility.getResource("tau32x32.gif");
+		if (url != null) 
+			frame.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 	}
 
     /**
