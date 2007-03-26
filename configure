@@ -1852,10 +1852,22 @@ case $cxx_compiler in
       fi
       ibmxlc=yes
 
+
       compilerLocation=`which $cxx_compiler`
       if [ "x$compilerLocation" = "x/usr/bin/$cxx_compiler" ] ; then
-	  if [ -h $compilerLocation ] ; then
-	      compilerLocation=`readlink $compilerLocation`
+	  # if xlc or blrts_xlc is found in /usr/bin, it is likely a
+	  # symlink.  Since we use ../lib to locate the libraries
+	  # we will dereference the symlink once.  Don't do it more 
+          # than once, or you'll end up with the wrong thing
+
+	  # check for readlink first
+	  readlink=`which readlink`
+	  if [ "x$readlink" != "x" ] ; then
+	      if [ -x "$readlink" ] ; then
+		  if [ -h $compilerLocation ] ; then
+		      compilerLocation=`readlink $compilerLocation`
+		  fi
+	      fi
 	  fi
       fi
       extradircxx=`echo $compilerLocation | sed s/$cxx_compiler/../`
