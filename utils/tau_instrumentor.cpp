@@ -2082,6 +2082,17 @@ bool getVariableName(char * &line, char * & varname)
     lastptr ++; /* increment to the end of the variable name */
 
     while (*line && *line != '(') line++; /* go to the first ( */
+
+#ifdef DEBUG 
+    printf("after going for ( -- *line = %c\n", *line);
+#endif /* DEBUG */
+
+    if (!*line) {
+#ifdef DEBUG
+     printf("There were no ( in the allocate statement. Look for , as in allocate(x,y)\n");
+#endif /* DEBUG */
+     line = lastptr; /* reset it */
+    }
     /* next count the number of ( opened before we reach a ) */
     len = strlen(line);
     for (i = 0, openparens = 0; i < len, *line; i++, line++)
@@ -2097,7 +2108,8 @@ bool getVariableName(char * &line, char * & varname)
     if (*line == ')') line ++;
     while (*line && *line == ' ') line++; /* skip whitespaces */
 #ifdef DEBUG
-    printf("GETVARNAME: line = %c\n", *line); 
+    if (*line)
+      printf("GETVARNAME: line = %c\n", *line); 
 #endif /* DEBUG */
 
     token = *line; /* assign token here! */
@@ -2113,9 +2125,27 @@ bool getVariableName(char * &line, char * & varname)
     }
     else 
     { /* look for the comma */
-      while (*line && *line != ',') line++; /* go to the first ( */
-      if (*line) line++; /* skip , */
-      else done = true;
+      while (*line && *line != ',') line++; /* go to the first , */
+
+#ifdef DEBUG 
+      if (*line) 
+        printf("After looking for , line = %c, next = %c, done = %d\n", *line, *(line+1), done);
+#endif /* DEBUG */
+      if (*line) {
+#ifdef DEBUG
+        printf("NOT a NULL *line = %c\n", *line);
+#endif /* DEBUG */
+        line++; /* skip , */
+      }
+      else  {
+#ifdef DEBUG 
+       printf("NULL??? *line = %c\n", *line);
+#endif /* DEBUG */
+       done = true;
+#ifdef DEBUG 
+       printf("And after that: looking for , line = %c, done = %d\n", *line, done);
+#endif /* DEBUG */
+      }
     }
 
   } while (token == '%');
@@ -3483,8 +3513,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.155 $   $Date: 2007/03/23 17:32:21 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.155 2007/03/23 17:32:21 sameer Exp $
+ * $Revision: 1.156 $   $Date: 2007/03/26 20:48:28 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.156 2007/03/26 20:48:28 sameer Exp $
  ***************************************************************************/
 
 
