@@ -55,7 +55,7 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     private boolean square = true;
     private boolean topTen = true;
 
-    private final static String ST_TOP_TEN = "Top Ten";
+    private final static String ST_TOP_TEN = "Top 20";
     private final static String ST_DIFFERENTIAL = "Differential";
     private final static String ST_SQUARE = "Square";
     private final static String ST_TIMELINE = "Timeline";
@@ -67,7 +67,7 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     private JToggleButton button_timeline = new JToggleButton(ST_TIMELINE, square);
     private JToggleButton button_differential = new JToggleButton(ST_DIFFERENTIAL, differential);
 
-    private final static int topNum = 10;
+    private final static int topNum = 20;
     
     public SnapshotBreakdownWindow(ParaProfTrial ppTrial, Thread thread, Component owner) {
         this.ppTrial = ppTrial;
@@ -142,8 +142,9 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         List snapshots = thread.getSnapshots();
         List functions = dataSorter.getBasicFunctionProfiles(thread);
 
-        long firstTime = ((Snapshot) snapshots.get(0)).getTimestamp();
-        long lastTime = firstTime;
+        //long firstTime = ((Snapshot) snapshots.get(0)).getTimestamp();
+        long firstTime = Long.parseLong(((String)thread.getMetaData().get("Starting Timestamp")));
+        long duration = 0;
 
         int max = functions.size();
         if (topTen) {
@@ -158,9 +159,24 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
             if (topTen && y == topNum) {
                 s = new XYSeries("Other", true, false);
             } else {
-                s = new XYSeries(fp.getName(), true, false);
+                String str = fp.getName();
+                while (str.indexOf("[{") != -1) {
+                    int a = str.indexOf("[{");
+                    int b = str.indexOf("}]");
+                    str = str.substring(0,a) + str.substring(b+2);
+                }
+                s = new XYSeries(str, true, false);
             }
-            for (int x = 1; x < snapshots.size() - 1; x++) {
+            
+//            int start = 1;
+            int start = 0;
+
+//            if (timeline) {
+//                start = 1;
+//            }
+            int stop = snapshots.size();
+            //int stop = 51;
+            for (int x = start; x < stop; x++) {
                 int snapshotID = x;
                 double value;
 
@@ -188,20 +204,27 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
 
                 Snapshot snapshot = (Snapshot) snapshots.get(x);
                 long time = snapshot.getTimestamp() - firstTime;
-                lastTime = time;
+                duration = time;
 
                 if (timeline) {
-                    if (square) {
+                    long lastTime;
+                    long prevTime;
+                    if (x == 0) {
+                        lastTime = firstTime;
+                        prevTime = 0;
+                    } else {
                         Snapshot last = (Snapshot) snapshots.get(x - 1);
-                        long prevTime = last.getTimestamp() - firstTime;
+                        lastTime = last.getTimestamp();
+                        prevTime = last.getTimestamp() - firstTime;
+                    }
+                    if (square) {
                         s.add(0.0001 + (double) (prevTime) / 1000000, value);
 
                         s.add((double) (time) / 1000000, value);
 
                     } else if (middleTime) {
-                        Snapshot last = (Snapshot) snapshots.get(x - 1);
 
-                        double bobtime = time - ((snapshot.getTimestamp() - last.getTimestamp()) / 2);
+                        double bobtime = time - ((snapshot.getTimestamp() - lastTime) / 2);
                         s.add((double) (bobtime) / 1000000, value);
 
                     } else {
@@ -209,8 +232,8 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
                     }
                 } else {
                     if (square) {
-                        s.add(x - 0.9999, value);
                         s.add(x, value);
+                        s.add(x+0.9999, value);
                     } else {
                         s.add(x, value);
                     }
@@ -240,7 +263,13 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         if (timeline) {
             XYPlot plot = chart.getXYPlot();
             NumberAxis axis = new NumberAxis("Timeline (seconds)");
-            axis.setRange(new Range(0, (double) lastTime / 1000000));
+            axis.setRange(new Range(0, (double) duration / 1000000));
+            plot.setDomainAxis(0, axis);
+        } else {
+            XYPlot plot = chart.getXYPlot();
+            NumberAxis axis = new NumberAxis("Snapshots");
+            System.out.println(snapshots.size());
+            axis.setRange(new Range(0, (double)snapshots.size()));
             plot.setDomainAxis(0, axis);
         }
 
@@ -290,7 +319,7 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         //optionsMenu.add(new)
 
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
-        mainMenu.add(optionsMenu);
+        //mainMenu.add(optionsMenu);
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         if (ParaProf.scripts.size() > 0) {
             mainMenu.add(ParaProfUtils.createScriptMenu(ppTrial, this));

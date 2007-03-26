@@ -38,11 +38,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.25 2007/03/26 18:13:45 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.26 2007/03/26 18:19:39 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  */
 public class ParaProfUtils {
 
@@ -881,9 +881,9 @@ public class ParaProfUtils {
         }
 
         // snapshots are disabled for this release
-        if (thread.getNumSnapshots() > 1) {
-            threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
-        }
+        //if (thread.getNumSnapshots() > 1) {
+        //    threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
+        //}
 
         threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
         threadPopup.show(owner, evt.getX(), evt.getY());

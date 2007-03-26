@@ -32,8 +32,8 @@ public class ThreadSnapshotBarChartModel extends AbstractBarChartModel {
         this.ppTrial = ppTrial;
         this.thread = thread;
         filter = new ObjectFilter(thread.getSnapshots());
-        filter.hide(thread.getSnapshots().get(0));
-        filter.hide(thread.getSnapshots().get(thread.getSnapshots().size()-1));
+        //filter.hide(thread.getSnapshots().get(0));
+        //filter.hide(thread.getSnapshots().get(thread.getSnapshots().size()-1));
         snapshots = filter.getObjects();
         
         list = dataSorter.getBasicFunctionProfiles(thread);
