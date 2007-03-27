@@ -3993,13 +3993,15 @@ fi
 
 if [ $vampirtrace = yes ]; then
 cat <<EOF>vttest.cpp
+#include "Profile/Profiler.h"
 #include "Profile/TauVampirTrace.h"
 int foo(void)
 {
   uint64_t x;
+  return 0;
 }
 EOF
-  if $cxx_compiler $orig_useropt -Iinclude -I$vampirtracedir/include -c vttest.cpp 1> /dev/null 2>&1
+  if $cxx_compiler $orig_useropt -Iinclude -I$vampirtracedir/include -c vttest.cpp -DTRACING_ON -DTAU_DOT_H_LESS_HEADERS 1> /dev/null 2>&1
   then
     echo "VampirTrace check successful"
   else
