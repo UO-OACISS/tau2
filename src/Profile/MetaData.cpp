@@ -397,7 +397,7 @@ static int writeMetaData(FILE *fp, bool newline) {
 
 
 int Profiler::Snapshot(char *name, bool finalize, int tid) {
-
+  return 0;
    FILE *fp = TauGetSnapshotFiles()[tid];
    if (finalize && !fp) { 
      // finalize is true at the end of execution (regular profile output), if we haven't written a snapshot, don't bother
