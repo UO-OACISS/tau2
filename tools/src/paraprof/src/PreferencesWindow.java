@@ -44,7 +44,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     private JCheckBox meanIncludeNullBox = new JCheckBox(
             "<html>Interpret threads that do not call a given function as a 0 value for statistics computation</html>");
     private JCheckBox generateIntermediateCallPathDataBox = new JCheckBox(
-            "<html>Generate data for reverse calltree<br>(requires lots of memory)</html>");
+    "<html>Generate data for reverse calltree<br>(requires lots of memory)<br>(does not apply to currently loaded profiles)</html>");
 
     private JCheckBox showSourceLocationsBox = new JCheckBox("<html>Show Source Locations</html>");
     
@@ -97,8 +97,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProfUtils.setFrameIcon(this);
 
 
-        int windowWidth = 550;
-        int windowHeight = 550;
+        int windowWidth = 650;
+        int windowHeight = 520;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
         //There is really no need to resize this window.
