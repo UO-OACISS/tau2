@@ -27,6 +27,13 @@ Version 2.16 changes (from 2.15):
 15. Supports PDT v3.10 with EDG v3.8 C++/C parsers [LLNL].
 16. Added support for application signatures [RENCI].
 17. Added support for SiCortex Linux platform [SiCortex].
+18. Added support for tracking leaks and dynamic memory allocation/deallocations in Fortran.
+19. Improved tau memory tracking module to handle multi-line statements in Fortran.
+20. Python profiler overhead is greatly reduced.
+21. tauex script added for switching between libraries.
+22. -optShared option added in tau_compiler.sh for linking in TAU's shared objs.23. Easy to use TAU API (TAU_START("string"), TAU_STOP("string")) introduced.
+24. Paraprof enhancements include support for Cube 3.
+25. PAPI threads (configure -papithreads) and PAPI Domains added for x86 linux.
 
 
 
