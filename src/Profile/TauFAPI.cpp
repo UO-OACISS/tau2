@@ -1544,8 +1544,42 @@ void TAU_METADATA(char *name, char *value, int nlen, int vlen) {
 
 void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen) 
 {
-  char *fname = getFortranName(name, slen);
-  Tau_track_memory_allocation(fname, *line, *size, ptr);
+    char *localname = (char *) malloc((size_t)slen+1);
+    char *modname = (char *) malloc((size_t)slen+1);
+    char *tmp = localname;
+    char *tmp2 = modname;
+    int skipwhite = 1;
+    int idx = 0;
+    strncpy(localname, name, slen);
+    localname[slen] = '\0';
+
+    // check for unprintable characters
+    for(int i=0; i<strlen(localname); i++) {
+      if (!VALID_NAME_CHAR(localname[i])) {
+        localname[i] = '\0';
+        break;
+      }
+    }
+
+    // fix continuation lines
+    for(int j=0; j<strlen(localname); j++) {
+      if (localname[j] == '&') {
+        skipwhite = 1;
+      } else {
+        if (skipwhite && localname[j] == ' ') {
+          // nothing, skip over it
+        } else {
+          modname[idx++] = localname[j];
+          skipwhite = 0;
+        }
+      }
+    }
+    modname[idx] = 0;
+    localname = modname;
+
+  Tau_track_memory_allocation(localname, *line, *size, ptr);
+  free(tmp);
+  free(tmp2);
 }
 
 void tau_alloc(void ** ptr, int* line, int *size, char *name, int slen) 
@@ -1565,8 +1599,43 @@ void TAU_ALLOC(void ** ptr, int* line, int *size, char *name, int slen)
 
 void tau_dealloc_(void ** ptr, int* line, char *name, int slen) 
 {
-  char *fname = getFortranName(name, slen);
-  Tau_track_memory_deallocation(fname, *line, ptr);
+    char *localname = (char *) malloc((size_t)slen+1);
+    char *modname = (char *) malloc((size_t)slen+1);
+    char *tmp = localname;
+    char *tmp2 = modname;
+    int skipwhite = 1;
+    int idx = 0;
+    strncpy(localname, name, slen);
+    localname[slen] = '\0';
+
+    // check for unprintable characters
+    for(int i=0; i<strlen(localname); i++) {
+      if (!VALID_NAME_CHAR(localname[i])) {
+        localname[i] = '\0';
+        break;
+      }
+    }
+
+    // fix continuation lines
+    for(int j=0; j<strlen(localname); j++) {
+      if (localname[j] == '&') {
+        skipwhite = 1;
+      } else {
+        if (skipwhite && localname[j] == ' ') {
+          // nothing, skip over it
+        } else {
+          modname[idx++] = localname[j];
+          skipwhite = 0;
+        }
+      }
+    }
+    modname[idx] = 0;
+    localname = modname;
+
+
+  Tau_track_memory_deallocation(localname, *line, ptr);
+  free(tmp);
+  free(tmp2);
 }
 
 void tau_dealloc(void ** ptr, int* line, char *name, int slen) 
@@ -1589,6 +1658,6 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.58 $   $Date: 2007/03/24 01:56:57 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.58 2007/03/24 01:56:57 sameer Exp $ 
+ * $Revision: 1.59 $   $Date: 2007/03/27 00:54:17 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.59 2007/03/27 00:54:17 sameer Exp $ 
  ***************************************************************************/
