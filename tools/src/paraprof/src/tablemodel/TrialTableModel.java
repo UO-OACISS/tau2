@@ -35,13 +35,13 @@ public class TrialTableModel extends AbstractTableModel {
             fieldNames.add(ppTrial.getTrial().getFieldName(i));
         }
 
-        Map metaData = ppTrial.getTrial().getMetaData();
-        if (metaData != null) {
-            for (Iterator it = metaData.keySet().iterator(); it.hasNext();) {
-                String string = (String) it.next();
-                fieldNames.add(string);
-            }
-        }
+//        Map metaData = ppTrial.getTrial().getMetaData();
+//        if (metaData != null) {
+//            for (Iterator it = metaData.keySet().iterator(); it.hasNext();) {
+//                String string = (String) it.next();
+//                fieldNames.add(string);
+//            }
+//        }
 
     }
 
