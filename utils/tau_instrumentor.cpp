@@ -2338,6 +2338,9 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
          exit(1);
        }
        strcpy(laststatement, deallocstmt); /* copy it in */
+#ifdef DEBUG
+       printf("LASTSTATEMENT = %s\n", laststatement);
+#endif /* DEBUG */
        removeCommentFromLine(deallocstmt);
        statements.push_back(deallocstmt);
        /* if the file is in free format, start the next line by getting rid of the
@@ -2497,7 +2500,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   char *checkbuf=NULL; // Assign inbuf to checkbuf for return processing
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
-  int space, i, j, k, c;
+  int space, i, j, k, c, additionalLinesRead;
   int docol, ifcol, thencol, gotocol, alloccol, dealloccol, startcol;
   if (!ostr) {
     cerr << "Error: Cannot open '" << outfile << "'" << endl;
@@ -3017,8 +3020,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                     ostr <<inbuf[i];
                   }
 		  ostr<<endl;
-		  inputLineNo+= printTauAllocStmt(istr, ostr, &inbuf[alloccol-1], it, previousline);
-		  strcpy(inbuf, previousline); /* update last line read */
+		  additionalLinesRead=printTauAllocStmt(istr, ostr, &inbuf[alloccol-1], it, previousline);
+		  inputLineNo += additionalLinesRead; 
+                  if (additionalLinesRead)
+		    strcpy(inbuf, previousline); /* update last line read */
                   ostr<<"\t endif"<<endl;
                 }
 		else
@@ -3055,8 +3060,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  }
 		  else {
 		    ostr<<"\n"<<inbuf<<endl;
-		    inputLineNo+= printTauAllocStmt(istr, ostr, inbuf, it, previousline); 
-		    strcpy(inbuf, previousline); /* update last line read */
+		    additionalLinesRead = printTauAllocStmt(istr, ostr, inbuf, it, previousline); 
+		    inputLineNo += additionalLinesRead;
+                    if (additionalLinesRead)
+                      strcpy(inbuf, previousline); /* update last line read */
 		  }
 		}	
                 instrumented = true;
@@ -3083,8 +3090,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                   }
                   ostr<<"\t then \n";
 		  /* first write TAU_DEALLOC, then the deallocate stmt */
-                  inputLineNo+=printTauDeallocStmt(istr, ostr, &inbuf[dealloccol-1], it, true, previousline);
-		  strcpy(inbuf, previousline); /* update last line read */
+                  additionalLinesRead=printTauDeallocStmt(istr, ostr, &inbuf[dealloccol-1], it, true, previousline);
+		  inputLineNo+=additionalLinesRead;
+		  if (additionalLinesRead)
+		    strcpy(inbuf, previousline); /* update last line read */
 		  /* now the deallocate stmt */
 #ifdef DONT
 		  ostr<<"\t";
@@ -3119,8 +3128,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                   }
                   else {
 
-                    inputLineNo+=printTauDeallocStmt(istr, ostr, inbuf, it, false, previousline);
-		    strcpy(inbuf, previousline); /* copy last line read over */
+                    additionalLinesRead=printTauDeallocStmt(istr, ostr, inbuf, it, false, previousline);
+		    inputLineNo+=additionalLinesRead;
+		    if (additionalLinesRead)
+		      strcpy(inbuf, previousline); /* update last line read */
 /* 
 		    ostr<<inbuf<<endl;
 */
@@ -3137,6 +3148,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
         lit = it;		
       } /* reached line */
       strcpy(previousline, inbuf); /* save the current line */
+#ifdef DEBUG
+      printf("SAVING %s\n", previousline);
+#endif /* DEBUG */
       memset(inbuf, INBUF_SIZE, 0); // reset to zero
     } /* while */
   } /* while lit!= end */
@@ -3520,8 +3534,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.157 $   $Date: 2007/03/26 22:58:11 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.157 2007/03/26 22:58:11 sameer Exp $
+ * $Revision: 1.158 $   $Date: 2007/03/27 01:24:55 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.158 2007/03/27 01:24:55 sameer Exp $
  ***************************************************************************/
 
 
