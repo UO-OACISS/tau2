@@ -804,6 +804,15 @@ int processMemBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& i
     /* NOTE: We currently do not support goto in C/C++ to close the timer.
      * This needs to be added at some point -- similar to Fortran */
     switch(k) {
+#ifdef PDB_FORTRAN_EXTENDED_STATEMENTS_LEVEL_2
+      case pdbStmt::ST_FEXIT:
+      case pdbStmt::ST_FCYCLE:
+      case pdbStmt::ST_FWHERE:
+        if (s->downStmt())
+          processMemBlock(s->downStmt(), ro, itemvec, level, parentDO);
+        break; /* don't go into extraStmt for Fortran EXIT to avoid looping */
+#endif /* PDB_FORTRAN_EXTENDED_STATEMENTS_LEVEL_1 */
+
       case pdbStmt::ST_FGOTO:
 	break;
       case pdbStmt::ST_FALLOCATE:
@@ -902,6 +911,15 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
       case pdbStmt::ST_GOTO:
 
 #ifndef PDT_NOFSTMTS
+
+#ifdef PDB_FORTRAN_EXTENDED_STATEMENTS_LEVEL_2
+      case pdbStmt::ST_FEXIT:
+      case pdbStmt::ST_FCYCLE:
+      case pdbStmt::ST_FWHERE:
+        if (s->downStmt())
+          processBlock(s->downStmt(), ro, itemvec, level, parentDO);
+        break; /* don't go into extraStmt for Fortran EXIT to avoid looping */
+#endif /* PDB_FORTRAN_EXTENDED_STATEMENTS_LEVEL_1 */
 //       case pdbStmt::ST_FCYCLE:
 //       case pdbStmt::ST_FEXIT:
       case pdbStmt::ST_FGOTO:
@@ -1295,6 +1313,6 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.40 $   $Date: 2007/03/23 17:27:08 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.40 2007/03/23 17:27:08 sameer Exp $
+ * $Revision: 1.41 $   $Date: 2007/03/27 22:11:05 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.41 2007/03/27 22:11:05 sameer Exp $
  ***************************************************************************/
