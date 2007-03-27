@@ -4561,8 +4561,33 @@ then
   echo "TAU: installed tau_poe in ${targetdir}/${architecture}/bin"
 fi
 
-cp ${tauroot}/tools/src/jtf_writer/tf_writer.jar ${targetdir}/${architecture}/lib
-echo "TAU: installed TAU's Java trace writer api tf_writer.jar"
+cp ${tauroot}/tools/src/jtau_tf/bin/TAU_tf.jar ${targetdir}/${architecture}/lib
+echo "TAU: installed Java trace reader/writer api in ${targetdir}/${architecture}/lib"
+
+
+if [ $trace = yes ]
+then
+    cat ${tauroot}/tools/src/contrib/slog2sdk/bin/jumpshot.skel | 
+    sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/jumpshot
+    chmod a+rx ${targetdir}/${architecture}/bin/jumpshot
+
+    cat ${tauroot}/tools/src/contrib/slog2sdk/bin/slog2print.skel | 
+    sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/slog2print
+    chmod a+rx ${targetdir}/${architecture}/bin/slog2print
+
+    cat ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.skel | 
+    sed -e 's,@OLDJDK@,'$oldjdk',' -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau2slog2
+    chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2
+
+    echo "TAU: installed tau2slog2, slog2print and jumpshot in ${targetdir}/${architecture}/bin"
+
+    cp ${tauroot}/tools/src/contrib/slog2sdk/lib/jumpshot.jar ${targetdir}/${architecture}/lib
+    cp ${tauroot}/tools/src/contrib/slog2sdk/lib/traceTOslog2.jar ${targetdir}/${architecture}/lib
+    cp ${tauroot}/tools/src/contrib/slog2sdk/lib/slog2printserial.jar ${targetdir}/${architecture}/lib
+    cp ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.jar ${targetdir}/${architecture}/lib
+    echo "TAU: installed required slog2sdk jars in ${targetdir}/${architecture}/lib"
+fi
+
 
 if [ $slog2 = yes ]
 then
@@ -4583,10 +4608,11 @@ then
     
     slog2dir=$targetdir/$architecture
   fi
-  utils/slogconverter/tau2slog2.skel $jdkdir $targetdir $slog2dir $architecture > $targetdir/$architecture/bin/tau2slog2
-  chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2
-  echo "TAU: installed tau2slog2 in ${targetdir}/${architecture}/bin"
+  utils/slogconverter/tau2slog2.skel $jdkdir $targetdir $slog2dir $architecture > $targetdir/$architecture/bin/tau2slog2JNI
+  chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2JNI
+  echo "TAU: installed tau2slog2JNI in ${targetdir}/${architecture}/bin"
 fi
+
 
 echo "TAU: installed tauex in ${targetdir}/${architecture}/bin"
 cat ${tauroot}/tools/src/tauex.in | 
