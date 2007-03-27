@@ -19,6 +19,7 @@
 #define _TAU_MALLOC_H_
 #define _MALLOC_H 1 
 
+#include <stdlib.h>
 #include <sys/types.h>
 /* needed for Linux stdlib.h */
 #define __malloc_and_calloc_defined 
