@@ -977,6 +977,10 @@ fi
 	echo "NOTE: Using VAMPIRTRACE Tracing Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     VAMPIRTRACEINTS)
+	echo "NOTE: Using -DTAU_64BITTYPES_NEEDED -DHAVE_INTTYPES_H for VampirTrace ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      VAMPIRTRACEMPI)
 	echo "NOTE: Using VAMPIRTRACE's MPI Wrapper Library ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
