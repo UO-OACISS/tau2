@@ -2160,6 +2160,7 @@ bool getVariableName(char * &line, char * & varname)
 #ifdef DEBUG
       printf("ASSIGNING varname[%d] = %c\n", i, varname[i]);
 #endif /* DEBUG */
+      if (varname[i] == '&') varname[i] = ' '; /* we don't want &B */
       firstptr++;
     }
     varname[i] = '\0';
@@ -3534,8 +3535,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.158 $   $Date: 2007/03/27 01:24:55 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.158 2007/03/27 01:24:55 sameer Exp $
+ * $Revision: 1.159 $   $Date: 2007/03/27 16:58:20 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.159 2007/03/27 16:58:20 sameer Exp $
  ***************************************************************************/
 
 
