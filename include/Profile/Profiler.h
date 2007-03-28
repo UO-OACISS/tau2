@@ -66,6 +66,9 @@ int tau_pthread_create (pthread_t *threadp,
 #endif /* TAU_LIBRARY_SOURCE */
 
 
+/* This is to get TAU_START/TAU_STOP since some codes just #include <Profile/Profiler.h> */
+#include <TAU.h>
+
 #if (defined (__cplusplus ) && !defined (TAU_USE_C_API))
 
 #include <Profile/ProfileGroups.h>
@@ -315,6 +318,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.75 $   $Date: 2007/03/16 23:48:09 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.75 2007/03/16 23:48:09 amorris Exp $ 
+ * $Revision: 1.76 $   $Date: 2007/03/28 03:01:23 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.76 2007/03/28 03:01:23 amorris Exp $ 
  ***************************************************************************/
