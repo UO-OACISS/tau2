@@ -62,6 +62,7 @@ NOTE: tau_setup is a Java based GUI tool for installing TAU on your system.
 
 % ./configure -help 
 
+
 TAU Configuration Utility 
 ***********************************************************************
 Usage: configure [OPTIONS]
@@ -86,6 +87,7 @@ Usage: configure [OPTIONS]
        options         [xt3|bgl|ibm64|ibm64linux|sunx86_64             
                         |solaris2-64|sgin32|sgi64|sgio32]              
 -pthread .................................. Use pthread thread package.
+-papithread .................................. Use PAPI thread package.
 -charm=<dir> .............................. Use charm++ thread package.
 -sproc .................................. Use SGI sproc thread package.
 -tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
@@ -307,6 +309,11 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    environment variable PAPI_EVENT to PAPI_FP_INS (for example). Refer to the
    TAU User's Guide or PAPI Documentation for other event names.
    [ Ref : http://icl.cs.utk.edu/projects/papi/api/ ]
+
+-papithread
+
+   Specifies the use of PAPI's thread layer for OpenMP/pthread instead of TAU's
+   thread layer. This option works under Linux x86 at this time. 
    
 -jdk=<directory>
    Specifies the location of the Java 2 development kit (jdk1.2+). See
