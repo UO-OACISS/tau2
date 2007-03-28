@@ -69,7 +69,8 @@ public class ScriptFacade {
 	 * 
 	 * @param name
 	 */
-    public void setApplication(String name) {
+    public Application setApplication(String name) {
+        Application app = null;
         // check the argument
         if (name == null)
             throw new IllegalArgumentException("Application name cannot be null.");
@@ -78,7 +79,7 @@ public class ScriptFacade {
 
         boolean found = false;
         for (ListIterator apps = connection.getApplicationList(); apps.hasNext() && !found; ) {
-            Application app = (Application)apps.next();
+            app = (Application)apps.next();
             if (app.getName().equals(name)) {
                 model.setCurrentSelection(app);;
                 found = true;
@@ -86,6 +87,7 @@ public class ScriptFacade {
         }
         if (!found)
             throw new NoSuchElementException("Application '" + name + "' not found.");
+		return app;
     }
 
 	/**
@@ -93,7 +95,8 @@ public class ScriptFacade {
 	 * 
 	 * @param name
 	 */
-    public void setExperiment(String name) {
+    public Experiment setExperiment(String name) {
+		Experiment exp = null;
         // check the argument
         if (name == null)
             throw new IllegalArgumentException("Experiment name cannot be null.");
@@ -106,7 +109,7 @@ public class ScriptFacade {
         boolean found = false;
         for (ListIterator exps = connection.getExperimentList(app.getID());
              exps.hasNext() && !found;) {
-            Experiment exp = (Experiment)exps.next();
+            exp = (Experiment)exps.next();
             if (exp.getName().equals(name)) {
                 model.setCurrentSelection(exp);
                 found = true;
@@ -114,6 +117,7 @@ public class ScriptFacade {
         }
         if (!found)
             throw new NoSuchElementException("Experiment '" + name + "' not found.");
+		return exp;
     }
 
 	/**
@@ -121,7 +125,8 @@ public class ScriptFacade {
 	 * 
 	 * @param name
 	 */
-    public void setTrial(String name) {
+    public Trial setTrial(String name) {
+		Trial trial = null;
         // check the argument
         if (name == null)
             throw new IllegalArgumentException("Trial name cannot be null.");
@@ -134,7 +139,7 @@ public class ScriptFacade {
         boolean found = false;
         for (ListIterator trials = connection.getTrialList(exp.getID());
              trials.hasNext() && !found;) {
-            Trial trial = (Trial)trials.next();
+            trial = (Trial)trials.next();
             if (trial.getName().equals(name)) {
                 model.setCurrentSelection(trial);
                 found = true;
@@ -142,6 +147,7 @@ public class ScriptFacade {
         }
         if (!found)
             throw new NoSuchElementException("Trial '" + name + "' not found.");
+		return trial;
     }
 
 	/**
@@ -323,6 +329,31 @@ public class ScriptFacade {
 	 * 
 	 * @param name
 	 */
+    public void addApplication(String name) {
+        // check the argument
+        if (name == null)
+            throw new IllegalArgumentException("Application name cannot be null.");
+        if (name.equals(""))
+            throw new IllegalArgumentException("Application name cannot be an empty string.");
+
+        boolean found = false;
+        for (ListIterator apps = connection.getApplicationList();
+             apps.hasNext() && !found;) {
+            Application app = (Application)apps.next();
+            if (app.getName().equals(name)) {
+                model.addSelection(app);
+                found = true;
+            }
+        }
+        if (!found)
+            throw new NoSuchElementException("Application '" + name + "' not found.");
+    }
+
+	/**
+	 * Set the focus on the experiment specified.
+	 * 
+	 * @param name
+	 */
     public void addExperiment(String name) {
         // check the argument
         if (name == null)
@@ -471,5 +502,9 @@ public class ScriptFacade {
 
 	public ListIterator getTrialList() {
 		return connection.getTrialList(model.getExperiment().getID());
+	}
+
+	public ListIterator getEventList(Trial trial, int metricIndex) {
+		return connection.getEventList(trial.getID(), metricIndex);
 	}
 }

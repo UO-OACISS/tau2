@@ -43,7 +43,7 @@ import java.io.Reader;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.10 2007/03/20 00:14:15 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.11 2007/03/28 00:43:18 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -519,8 +519,9 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("on experiment.application = application.id ");
 			// no where clause (thanks to the temporary tables)
 			// group by clause, in case there are operations on the columns
-			buf.append("group by " + fixClause(seriesName, db));
-			buf.append(", " + fixClause(xAxisName, db) + " " );
+			//buf.append("group by " + fixClause(seriesName, db));
+			//buf.append(", " + fixClause(xAxisName, db) + " " );
+			buf.append("group by series_name, xaxis_value ");
 			// add the order by clause
 			buf.append("order by 1, 2 ");
 			statement = db.prepareStatement(buf.toString());
