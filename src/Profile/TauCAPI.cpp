@@ -739,8 +739,12 @@ extern "C" void Tau_pure_stop(char *name) {
   FunctionInfo *fi;
   string n = string(name);
   map<string, FunctionInfo *>::iterator it = pureMap.find(n);
-  fi = (*it).second;
-  Tau_stop_timer(fi);
+  if (it == pureMap.end()) {
+    fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
+  } else {
+    fi = (*it).second;
+    Tau_stop_timer(fi);
+  }
 }
 
 #if (!defined(TAU_WINDOWS))
@@ -781,7 +785,7 @@ extern "C" void Tau_profile_snapshot(char *name) {
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.61 $   $Date: 2007/01/04 02:36:29 $
- * VERSION: $Id: TauCAPI.cpp,v 1.61 2007/01/04 02:36:29 amorris Exp $
+ * $Revision: 1.62 $   $Date: 2007/03/28 02:55:22 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.62 2007/03/28 02:55:22 amorris Exp $
  ***************************************************************************/
 
