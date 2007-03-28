@@ -23,6 +23,8 @@ pdtcxxopt=
 pdtcxxarg=
 vtf=no
 otf=no
+vampirtrace=no
+vptopt=
 vtfopt=
 slogopt=
 useropt=no
@@ -210,6 +212,12 @@ do
     shift
     ;;
 
+  -vampirtrace*)
+    vampirtrace=yes
+    vptopt="$vptopt $arg"
+    shift
+    ;;
+
   -otf=*)
     otf=yes
     otfdir=`echo $arg | sed -e 's/-otf=//'`
@@ -377,12 +385,12 @@ echo " " > wishver
 # Add TRACE
     if [ $epilog = yes -a $papi = yes ]
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir<wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vptopt $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vptopt $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir<wishver
       make clean; make install
     fi
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt $otfopt  $slogopt <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vptopt $vtfopt $otfopt $slogopt"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vptopt $vtfopt $otfopt  $slogopt <wishver
     make clean; make install
   
     if [ $papi = yes ]
@@ -393,8 +401,14 @@ echo " " > wishver
       make clean; make install
 # Add -TRACE -papi multiplecounters to it
       echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt $otfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
       make clean; make install
+      if [ $vampirtrace = yes ]
+      then 
+# No need to have -MULTIPLECOUNTERS with Vampirtrace
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt -papi=$papidir"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt $vptopt $vtfopt $otfopt $slogopt -papi=$papidir <wishver 
+      fi
 # Add -PROFILECALLPATH -papi multiplecounters to it
       echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE"
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE <wishver
