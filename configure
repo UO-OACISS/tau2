@@ -684,7 +684,13 @@ do
       then
         echo "Error: Cannot access JDK directory $jdkdir"
         exit 1
-      fi
+      fi 
+      jv=`$jdkdir/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+    if [ `echo $jv | sed -e s/1.6\.*// | wc -c` -eq 1 ] || [ `echo $jv | sed -e s/1.7\.*// | wc -c` -eq 1 ]
+    then
+        echo "Error: Specify a JDK of version 1.5 or earlier"
+        exit 1
+    fi
     shift
     ;;
 
