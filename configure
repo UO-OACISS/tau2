@@ -1551,6 +1551,12 @@ if [ $phase = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILECALLPATH PROFILEPHASE"
     tauoptions="${tauoptions}-phase"
+   if [ $callpath = yes ]
+   then
+     echo "ERROR: Incompatible options specified."
+     echo "You must choose between -PROFILECALLPATH and -PROFILEPHASE. You cannot choose both!!"
+     exit 1
+   fi
 fi
 
 if [ $setnode0 = yes -a $trace = no ]
