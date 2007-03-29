@@ -2534,7 +2534,7 @@ MPI_Status * array_of_statuses;
 #ifdef TAU_TRACK_MSG
   for (i=0; i < *outcount; i++) {
     TauProcessRecv( (saverequest [array_of_indices[i]]),
-			        &(array_of_statuses [array_of_indices[i]]),
+			        &(array_of_statuses[i]),
 			        "MPI_Testsome" );
   }
   if (need_to_free) {
@@ -2928,7 +2928,7 @@ MPI_Status * array_of_statuses;
 #ifdef TAU_TRACK_MSG
   for (i=0; i < *outcount; i++) {
     TauProcessRecv( (saverequest [array_of_indices[i]]),
-			        &(array_of_statuses [array_of_indices[i]]),
+			        &(array_of_statuses[i]),
 			        "MPI_Waitsome" );
   }
   if (need_to_free) {
