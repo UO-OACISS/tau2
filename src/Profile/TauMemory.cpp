@@ -69,8 +69,9 @@ struct TaultLong
 #define TAU_USER_EVENT_TYPE TauContextUserEvent
 //#define TAU_USER_EVENT_TYPE TauUserEvent
 //#define TAU_MALLOC_MAP_TYPE long*, TAU_USER_EVENT_TYPE *, Tault2Longs
-#define TAU_MALLOC_MAP_TYPE pair<long,long>, TauUserEvent *, less<pair<long,long> >
+#define TAU_MALLOC_MAP_TYPE pair<long,unsigned long>, TauUserEvent *, less<pair<long,unsigned long> >
 #define TAU_MEMORY_LEAK_MAP_TYPE long, TauUserEvent *, TaultLong
+//#define TAU_MEMORY_LEAK_MAP_TYPE long, TauUserEvent *, less<long>
 
 //////////////////////////////////////////////////////////////////////
 map<TAU_MALLOC_MAP_TYPE >& TheTauMallocMap(void)
@@ -95,6 +96,16 @@ map<TAU_MEMORY_LEAK_MAP_TYPE >& TheTauMemoryLeakMap(void)
 // This routine
 //////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////
+unsigned long Tau_hash(unsigned char *str)
+{
+  unsigned long hash = 5381;
+  int c;
+   
+  while (c = *str++)
+    hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+  return hash;
+}
 
 
 //////////////////////////////////////////////////////////////////////
@@ -118,7 +129,11 @@ multimap<TAU_POINTER_SIZE_MAP_TYPE >& TheTauPointerSizeMap(void)
 TAU_USER_EVENT_TYPE* Tau_malloc_before(const char *file, int line, size_t size)
 {
 /* we use pair<long,long> (line, file) as the key to index the mallocmap */
-  map<TAU_MALLOC_MAP_TYPE >::iterator it = TheTauMallocMap().find(pair<long, long>(line,(long)file));
+  unsigned long file_hash = Tau_hash((unsigned char *)file);
+#ifdef DEBUGPROF
+  printf("C++: Tau_malloc_before: file = %s, ptr=%lx,  long file = %uld\n", file, file, file_hash);
+#endif /* DEBUGPROF */
+  map<TAU_MALLOC_MAP_TYPE >::iterator it = TheTauMallocMap().find(pair<long, unsigned long>(line,file_hash));
   TAU_USER_EVENT_TYPE *e ;
 
   if (it == TheTauMallocMap().end())
@@ -131,7 +146,7 @@ TAU_USER_EVENT_TYPE* Tau_malloc_before(const char *file, int line, size_t size)
 #endif /* DEBUGPROF */
     e = new TAU_USER_EVENT_TYPE(s);
     e->TriggerEvent(size);
-    TheTauMallocMap()[pair<long,long>(line, (long)file)] = e->contextevent;
+    TheTauMallocMap()[pair<long,unsigned long>(line, file_hash)] = e->contextevent;
     /* do not store the TauContextUserEvent, but the UserEvent that represents
     the full name at the point of execution  of trigger. The former is just
     a vessel for storing the last stored value of the context event. The latter
@@ -168,6 +183,16 @@ void Tau_malloc_after(TauVoidPointer ptr, size_t size, TAU_USER_EVENT_TYPE *e)
   /* store the size of memory allocated with the address of the pointer */
   //TheTauPointerSizeMap()[(long)p1] = pair<size_t, long>(size, (long) e); 
   TheTauPointerSizeMap().insert(pair<const long, pair<size_t, long> >((long)p1, pair<size_t, long>(size, (long) e->contextevent))); 
+#ifdef DEBUGPROF
+    printf("Added to the PointerMap: <%lx <%d, %lx>>\n", (long) p1, size, e->contextevent);
+    for(multimap<TAU_POINTER_SIZE_MAP_TYPE>::iterator iter = TheTauPointerSizeMap().begin(); iter != TheTauPointerSizeMap().end(); iter++)
+    {
+      printf("After INSERT: Entries in PointerSizeMap: <%lx <%d, %lx>>\n", (long) (*iter).first, (long)(*iter).second.first, (*iter).second.second);
+      
+      TauUserEvent *e1 = (TauUserEvent *) ((*iter).second.second);
+      printf("            : %s\n", e1->GetEventName());
+    }
+#endif /* DEBUGPROF */
   return;
 }
 
@@ -201,6 +226,7 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
 //////////////////////////////////////////////////////////////////////
 void Tau_track_memory_allocation(const char *file, int line, size_t size, TauVoidPointer ptr)
 {
+  //printf("allocation: %s:%d, ptr = %lx\n", file, line, ptr);
 #ifdef DEBUGPROF
   printf("allocation: %d, ptr = %lx\n", line, ptr);
 #endif /* DEBUGPROF */
@@ -224,19 +250,58 @@ TauVoidPointer Tau_new(const char *file, int line, size_t size, TauVoidPointer p
 size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
 {
   pair<size_t, long> result; 
+  typedef multimap<TAU_POINTER_SIZE_MAP_TYPE>::iterator I;
+  typedef pair<I, I> Range;
+  I i, lastitem; 
 #ifdef TAU_WINDOWS
   char *p1 = (char*) (void*)p;
 #else
   char *p1 = p;
 #endif
-  multimap<TAU_POINTER_SIZE_MAP_TYPE >::iterator it = TheTauPointerSizeMap().find((long)p1);
+  Range range = TheTauPointerSizeMap().equal_range((long) p1);
+  bool found = false;
+  for (I i = range.first; i != range.second; i++)
+  {
+    if (found == true) 
+      cout <<"TAU WARNING: more than one allocation at the same address "<<i->first<<endl;
+    lastitem = i;
+    found = true; 
+  }
+  
+  
+/*
+  printf("Trying to get size for <%lx =? %lx>\n", (long)p1, p);
+  multimap<TAU_POINTER_SIZE_MAP_TYPE >::iterator it = TheTauPointerSizeMap().upper_bound((long)p1);
   if (it == TheTauPointerSizeMap().end())
     return 0; // don't know the size 
   else
+*/
+  if (!found) return 0; /* don't know the size */
+  else 
   {
-    result = (*it).second;
     /* We need to delete this entry in the free map */
-    TheTauPointerSizeMap().erase(it);
+    result = lastitem->second; 
+#ifdef DEBUGPROF
+    printf("Trying to erase <%lx, %d>\n", (long)p1, result.first);
+    for(multimap<TAU_POINTER_SIZE_MAP_TYPE>::iterator iter = TheTauPointerSizeMap().begin(); iter != TheTauPointerSizeMap().end(); iter++)
+    {
+      printf("BEFORE ERASE: Entries in PointerSizeMap: <%lx <%d, %lx>>\n", (*iter).first, (*iter).second.first, (*iter).second.second);
+      TauUserEvent *e1 = (TauUserEvent *) ((*iter).second.second);
+      printf("            : %s\n", e1->GetEventName());
+    }
+#endif /* DEBUGPROF */
+
+    TheTauPointerSizeMap().erase(lastitem);
+
+#ifdef DEBUGPROF
+    printf("ERASING size = %d\n", result.first);
+    for(multimap<TAU_POINTER_SIZE_MAP_TYPE>::iterator iter = TheTauPointerSizeMap().begin(); iter != TheTauPointerSizeMap().end(); iter++)
+    {
+      printf("AFTER ERASE: Entries in PointerSizeMap: <%lx <%d, %lx>>\n", (*iter).first, (*iter).second.first, (*iter).second.second);
+      TauUserEvent *e1 = (TauUserEvent *) ((*iter).second.second);
+      printf("            : %s\n", e1->GetEventName());
+    }
+#endif /* DEBUGPROF */
     return result.first; /* or size_t, the first entry of the pair */
   }
 }
@@ -247,7 +312,11 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
 void Tau_free_before(const char *file, int line, TauVoidPointer p)
 {
   /* We've set the key */
-  map<TAU_MALLOC_MAP_TYPE >::iterator it = TheTauMallocMap().find(pair<long,long>(line,(long)file));
+  unsigned long file_hash = Tau_hash((unsigned char *)file);
+#ifdef DEBUGPROF
+  printf("C++: Tau_free_before: file = %s, ptr=%lx,  long file = %uld\n", file, file, file_hash);
+#endif /* DEBUGPROF */
+  map<TAU_MALLOC_MAP_TYPE >::iterator it = TheTauMallocMap().find(pair<long,unsigned long>(line,file_hash));
   TAU_USER_EVENT_TYPE *e;
 
   size_t sz = TauGetMemoryAllocatedSize(p);
@@ -257,12 +326,12 @@ void Tau_free_before(const char *file, int line, TauVoidPointer p)
     char *s = new char [strlen(file)+32];  
     sprintf(s, "free size <file=%s, line=%d>",file, line);
 #ifdef DEBUGPROF
-    printf("C++: Tau_free: creating new user event %s\n", s);
+    printf("C++: Tau_free: creating new user event %s, size=%d\n", s, sz);
 #endif /* DEBUGPROF */
     e = new TAU_USER_EVENT_TYPE(s);
     e->TriggerEvent(sz);
-    //mallocmap.insert(map<TAU_MALLOC_MAP_TYPE >::value_type(pair<long,long>(line,file), e));
-    TheTauMallocMap()[pair<long,long>(line, (long) file)] = e->contextevent;
+    //mallocmap.insert(map<TAU_MALLOC_MAP_TYPE >::value_type(pair<long,unsigned long>(line,file_hash), e));
+    TheTauMallocMap()[pair<long,unsigned long>(line, file_hash)] = e->contextevent;
     delete[] (s); 
   }
   else
@@ -312,6 +381,7 @@ void* Tau_realloc(const char *file, int line, TauVoidPointer p, size_t size)
 //////////////////////////////////////////////////////////////////////
 void Tau_track_memory_deallocation(const char *file, int line, TauVoidPointer ptr)
 {
+  //printf("DEallocation: %s:%d, ptr = %lx\n", file, line, ptr);
 #ifdef DEBUGPROF
   printf("DEallocation: %d, ptr = %lx\n", line, ptr);
 #endif /* DEBUGPROF */
@@ -446,6 +516,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.22 $   $Date: 2006/07/13 00:35:23 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.22 2006/07/13 00:35:23 sameer Exp $ 
+ * $Revision: 1.23 $   $Date: 2007/03/30 22:36:42 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.23 2007/03/30 22:36:42 sameer Exp $ 
  ***************************************************************************/
