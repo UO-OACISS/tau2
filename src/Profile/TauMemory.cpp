@@ -263,7 +263,11 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
   for (I i = range.first; i != range.second; i++)
   {
     if (found == true) 
-      cout <<"TAU WARNING: more than one allocation at the same address "<<i->first<<endl;
+    {
+      TauUserEvent *ev = (TauUserEvent *)(i->second.second);
+      fprintf(stderr, "TAU WARNING <%d>: more than one allocation detected at the same address %p [%s]\n", 
+	RtsLayer::myNode(), i->first, ev->GetEventName()); 
+    }
     lastitem = i;
     found = true; 
   }
@@ -516,6 +520,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 2007/03/30 22:36:42 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.23 2007/03/30 22:36:42 sameer Exp $ 
+ * $Revision: 1.24 $   $Date: 2007/03/30 22:55:45 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.24 2007/03/30 22:55:45 sameer Exp $ 
  ***************************************************************************/
