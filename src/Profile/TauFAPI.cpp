@@ -1577,6 +1577,9 @@ void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen)
     modname[idx] = 0;
     localname = modname;
 
+#ifdef DEBUG_PROF
+  printf("ALLOCATE ptr %p *ptr %p line %d size %d\n", ptr, *ptr, *line, *size);
+#endif /* DEBUG_PROF */
   Tau_track_memory_allocation(localname, *line, *size, ptr);
   free(tmp);
   free(tmp2);
@@ -1632,7 +1635,9 @@ void tau_dealloc_(void ** ptr, int* line, char *name, int slen)
     modname[idx] = 0;
     localname = modname;
 
-
+#ifdef DEBUG_PROF
+  printf("DEALLOCATE ptr %p *ptr %p line %ld\n", ptr,  *ptr, *line);
+#endif /* DEBUG_PROF */
   Tau_track_memory_deallocation(localname, *line, ptr);
   free(tmp);
   free(tmp2);
@@ -1658,6 +1663,6 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.59 $   $Date: 2007/03/27 00:54:17 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.59 2007/03/27 00:54:17 sameer Exp $ 
+ * $Revision: 1.60 $   $Date: 2007/03/30 22:43:12 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.60 2007/03/30 22:43:12 sameer Exp $ 
  ***************************************************************************/
