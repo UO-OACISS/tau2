@@ -333,7 +333,7 @@ static int writeMetaData(FILE *fp, bool newline) {
       if (strncmp(line, "family", 6) == 0) {
 	writeXMLAttribute(fp, "CPU Type", value, newline);
       }
-      if (strncmp(line, "cpu  ", 5) == 0) {
+      if (strncmp(line, "cpu\t", 4) == 0) {
 	writeXMLAttribute(fp, "CPU Type", value, newline);
       }
       if (strncmp(line, "cache size", 10) == 0) {
