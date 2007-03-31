@@ -169,6 +169,7 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
 #SUNCC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
 #CATAMOUNT#TAU_SHLIB = #ENDIF#
+#CATAMOUNT#TAU_DISABLE_SHARED = #ENDIF#
 
 ##############################################
 # If JAVA or DYNINST is defined, TAU_DSO is defined
