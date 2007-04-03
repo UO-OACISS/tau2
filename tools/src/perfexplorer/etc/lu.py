@@ -3,8 +3,36 @@ from common import TransformationType
 from common import AnalysisType
 from common import EngineType
 
+million = 1000000
+
 def findMetric(metrics, findme):
 	i = 0;
+	if findme == "TIME":
+		# look for the usual "Time" metric from TAU
+		for metric in metrics:
+			name = metric.getName().upper()
+			# print name
+			if name == findme:
+				return i
+			i += 1
+		i = 0
+		# look for the usual "WALL_CLOCK_TIME" from PAPI/TAU
+		for metric in metrics:
+			name = metric.getName().upper()
+			# print name
+			if name.find("WALL_CLOCK_TIME") > -1:
+				return i
+			i += 1
+		i = 0
+		# look for the usual "GET_TIME_OF_DAY" from PAPI/TAU
+		for metric in metrics:
+			name = metric.getName().upper()
+			# print name
+			if name.find("GET_TIME_OF_DAY") > -1:
+				return i
+			i += 1
+		i = 0
+
 	for metric in metrics:
 		name = metric.getName().upper()
 		# print name
@@ -28,8 +56,8 @@ def findMain(events, metric):
 	main = {}
 	for key in events.keys():
 		data = events[key]
-		if data.getInclusive() > inclusive:
-			inclusive = data.getInclusive()
+		if data.getInclusive(metric) > inclusive:
+			inclusive = data.getInclusive(metric)
 			main["name"] = key
 	main["inclusive"] = inclusive
 	return main
@@ -50,6 +78,13 @@ def mapMetrics(baseMetrics, otherMetrics):
 		i += 1
 	return metricMap
 
+def sort_by_value(d):
+    """ Returns the keys of dictionary d sorted by their values """
+    items=d.items()
+    backitems=[ [v[1],v[0]] for v in items]
+    backitems.sort()
+    return [ backitems[i][1] for i in range(0,len(backitems))]
+
 def pairwiseEvent(baseEvents, otherEvents, i, j, filter):
 	faster = {}
 	slower = {}
@@ -64,21 +99,24 @@ def pairwiseEvent(baseEvents, otherEvents, i, j, filter):
 		else:
 			slower[event] = abs(diff)
 	results = {}
-	items = faster.items()
-	items.sort()
-	results["faster"] = items
-	items = slower.items()
-	items.sort()
-	results["slower"] = items
+	#items = faster.items()
+	#items.sort()
+	#print items
+	results["faster"] = faster
+	#items = slower.items()
+	#items.sort()
+	results["slower"] = slower
 	return results
 
 def mainReport(baseMain, otherMain, baseName, otherName):
 	if baseMain["inclusive"] > otherMain["inclusive"]:
-		print "\nBaseline trial is relatively slower than second trial.\n"
+		tmp = "\nSelected trial (" + otherName + ") is relatively faster than baseline trial (" + baseName + ").\n"
+		print tmp
 		percentage = (baseMain["inclusive"] - otherMain["inclusive"]) / otherMain["inclusive"]
 		fasterSlower = -1
 	elif baseMain["inclusive"] < otherMain["inclusive"]:
-		print "\nBaseline trial is relatively faster than second trial.\n"
+		tmp = "\nSelected trial (" + otherName + ") is relatively slower than baseline trial (" + baseName + ").\n"
+		print tmp
 		percentage = (otherMain["inclusive"] - baseMain["inclusive"]) / baseMain["inclusive"]
 		fasterSlower = 1
 	else:
@@ -87,58 +125,69 @@ def mainReport(baseMain, otherMain, baseName, otherName):
 		percentage = 0.0
 	# print "\t", baseName, baseMain["name"], ":", baseMain["inclusive"], "seconds\n", 
 	# print "\t", otherName, otherMain["name"], ":", otherMain["inclusive"], "seconds\n", 
-	print "\t", baseName, ":", baseMain["inclusive"]/1000000, "seconds\n", 
-	print "\t", otherName, ":", otherMain["inclusive"]/1000000, "seconds\n", 
-	if fasterSlower < 0:
+	print "\t", baseName, ":", baseMain["inclusive"]/million, "seconds\n", 
+	print "\t", otherName, ":", otherMain["inclusive"]/million, "seconds\n", 
+	if fasterSlower > 0:
 		print "\t Relative Difference: ", percentage*100, "% slower\n"
-	elif fasterSlower > 0:
+	elif fasterSlower < 0:
 		print "\t Relative Difference: ", percentage*100, "% faster\n"
 	else:
 		print "\t Relative Difference: ", percentage*100, "%\n"
 	return fasterSlower
 
-def showSignificantTimeEvents(diffs, type, significant):
+def showSignificantTimeEvents(diffs, type, totalRuntime, significant, baseEvents, x):
 	events = diffs[type]
-	x = 0
 	shown = 0
-	for event in events:
+	orderedKeys = sort_by_value(events)
+	orderedKeys.reverse()
+	for key in orderedKeys:
 		# don't show more than 10 differences
-		if x >= 10:
-			break
-		# don't show insignificant differences
-		if event[1] > 1000000:
-			print "\t", event[0], ":", event[1]/1000000, "seconds", type, "than baseline"
-			significant.append(event[0])
-			shown += 1
-		x += 1
+		if shown < 10:
+			# don't show insignificant differences
+			if events[key] / totalRuntime > .01:
+				if baseEvents[key].getExclusive(x) > 0:
+					percent = ( events[key]/baseEvents[key].getExclusive(x) ) * 100.0
+				else:
+					percent = 0.0
+				print "\t", key, ":", events[key]/million, "seconds", type.upper(), "than baseline (", percent, "% )"
+
+				significant[key] = 1
+				shown += 1
+			else:
+				significant[key] = 0
+		else:
+			significant[key] = 0
 	return shown
 		
 
-def showSignificantEvents(diffs, type):
+def showSignificantEvents(diffs, type, significant, baseEvents, x):
 	events = diffs[type]
 	if type == "faster":
-		type = "fewer"
+		type = "LESS"
 	else:
-		type = "more"
+		type = "MORE"
 
-	x = 0
 	shown = 0
-	for event in events:
-		# don't show more than 10 differences
-		if x >= 10:
-			break
+	orderedKeys = sort_by_value(events)
+	orderedKeys.reverse()
+	for key in orderedKeys:
 		# don't show insignificant differences
-		if event[1] > 1000000:
-			print "\t", event[0], ":", event[1]/1000000, "million", type, "than baseline"
+		if significant[key] == 1:
+			if baseEvents[key].getExclusive(x) > 0:
+				percent = ( events[key]/baseEvents[key].getExclusive(x) ) * 100.0
+			else:
+				percent = 0.0
+			print "\t", key, ":", events[key]/million, "million", type, "than baseline (", percent, "% )"
 			shown += 1
-		x += 1
 	return shown
 
 def DoAnalysis(pe):
 	# set the application, experiment, trial
-	pe.setApplication("simple_papi-DSTATIC_MATRIX")
-	pe.setExperiment("-O0")
-	baseTrial = pe.setTrial("regular")
+	pe.setApplication("NPB2.3")
+	pe.setExperiment("LU")
+	baseTrialName = "lu.W.8"
+	otherTrialName = "lu.W.16"
+	baseTrial = pe.setTrial(baseTrialName)
 
 	# baseMetrics is a List
 	baseMetrics = baseTrial.getMetrics().toArray()
@@ -150,11 +199,13 @@ def DoAnalysis(pe):
 	baseEvents = getEvents(pe, baseTrial, baseTime)
 	
 	# find the main event
+	print baseTime
 	baseMain = findMain(baseEvents, baseTime)
 	# print baseMain
 	
 	# get the other trial
-	otherTrial = pe.setTrial("strided")
+	# pe.setExperiment("garuda")
+	otherTrial = pe.setTrial(otherTrialName)
 
 	# otherMetrics is a List
 	otherMetrics = otherTrial.getMetrics().toArray()
@@ -162,6 +213,7 @@ def DoAnalysis(pe):
 	# find the time metric
 	metricMap = mapMetrics(baseMetrics, otherMetrics)
 	otherTime = metricMap[baseTime]
+	print otherTime
 
 	# get all the data for each event
 	otherEvents = getEvents(pe, otherTrial, otherTime)
@@ -181,10 +233,12 @@ def DoAnalysis(pe):
 	diffs = pairwiseEvent(baseEvents, otherEvents, baseTime, otherTime, None)
 
 	# tell the user the significant differences
-	significant = []
+	significant = {}
 	print "Significant", baseMetrics[baseTime], "differences between trials:\n"
-	shown = showSignificantTimeEvents(diffs, "faster", significant)
-	shown += showSignificantTimeEvents(diffs, "slower", significant)
+	shown = showSignificantTimeEvents(diffs, "faster", baseMain["inclusive"], significant, baseEvents, baseTime)
+	if shown > 0:
+		print ""
+	shown += showSignificantTimeEvents(diffs, "slower", baseMain["inclusive"], significant, baseEvents, baseTime)
 	if shown == 0:
 		print "\t None.\n"
 
@@ -194,13 +248,19 @@ def DoAnalysis(pe):
 	x = 0
 	for metric in baseMetrics:
 		if x != baseTime:
-			y = metricMap[x]
-			diffs = pairwiseEvent(baseEvents, otherEvents, x, y, significant)
-			print "\nSignificant", baseMetrics[x], "differences between trials:\n"
-			shown = showSignificantEvents(diffs, "faster")
-			shown += showSignificantEvents(diffs, "slower")
-			if shown == 0:
-				print "\t None.\n"
+			try:
+				y = metricMap[x]
+			except KeyError:
+				pass
+			else:
+				diffs = pairwiseEvent(baseEvents, otherEvents, x, y, significant)
+				print "\nSignificant", baseMetrics[x], "differences between trials:\n"
+				shown = showSignificantEvents(diffs, "faster", significant, baseEvents, x)
+				if shown > 0:
+					print ""
+				shown += showSignificantEvents(diffs, "slower", significant, baseEvents, x)
+				if shown == 0:
+					print "\t None.\n"
 		x += 1
 	
 print "--------------- JPython test script start ------------"
@@ -211,5 +271,5 @@ DoAnalysis(pe)
 print "\n"
 print "---------------- JPython test script end -------------"
 
-pe.exit()
+# pe.exit()
 
