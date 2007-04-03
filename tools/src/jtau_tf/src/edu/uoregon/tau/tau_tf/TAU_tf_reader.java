@@ -19,56 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 
-public class TAU_tf_reader {
-	
-	public interface Ttf_DefClkPeriod{
-		public int DefClkPeriod(Object userData, double clkPeriod);
-	}
-	
-	public interface Ttf_DefThread{
-		public int DefThread(Object userData, int nodeToken, int threadToken, String threadName);
-	}
-	
-	public interface Ttf_DefStateGroup{
-		public int DefStateGroup(Object userData, int stateGroupToken, String stateGroupName);
-	}	
-	
-	public interface Ttf_DefState{
-		public int DefState(Object userData, int stateToken, String stateName, int stateGoupToken);
-	}	
-	
-	public interface Ttf_DefUserEvent{
-		public int DefUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing);
-	}
-	
-	public interface Ttf_EnterState{
-		public int EnterState(Object userData, long time, int nodeToken, int threadToken, int stateToken);
-	}		
-
-	public interface Ttf_LeaveState{
-		public int LeaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken);
-	}	
-	
-	public interface Ttf_SendMessage{
-		public int SendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
-				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageCom);
-	}	
-	
-	public interface Ttf_RecvMessage{
-		public int RecvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
-				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageCom);
-	}
-	
-	public interface Ttf_EventTrigger{
-		public int EventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken,
-				double userEventValue);
-	}		
-	
-	public interface Ttf_EndTrace{
-		public int EndTrace(Object userData, int nodeToken, int threadToken);
-	}	
-	
-	
+public class TAU_tf_reader {	
 	static int intReverseBytes(int value){
 		//Integer.
 		ByteBuffer bb = ByteBuffer.allocate(4);
@@ -264,7 +215,7 @@ public class TAU_tf_reader {
 	
 	/* Event ID is not found in the event map. Re-read the event 
 	 * description file */
-	static boolean refreshTables(Ttf_file tFile, Ttf_Callbacks cb)
+	static boolean refreshTables(Ttf_file tFile,Ttf_Callbacks cb, Object userData)//, 
 	{
 		int i,j,k; 
 		String linebuf, eventname, traceflag; //[LINEMAX]=2||64*1024,[LINEMAX],[32]
@@ -332,8 +283,8 @@ public class TAU_tf_reader {
 						if (eventDescr.Param.equals("EntryExit"))
 						{ /* it is not a user defined event */
 							tFile.GroupIdMap.put(eventDescr.Group,new Integer(groupid));
-							if (cb.DefStateGroup!=null)
-								cb.DefStateGroup.DefStateGroup(cb.UserData, groupid, eventDescr.Group); 
+							//if (cb.DefStateGroup!=null)
+								cb.DefStateGroup(userData, groupid, eventDescr.Group); 
 						}
 					}
 					else
@@ -343,14 +294,14 @@ public class TAU_tf_reader {
 					/* invoke callback for registering a new state */
 					if (eventDescr.Param.equals("TriggerValue"))
 					{ /* it is a user defined event */
-						if (cb.DefUserEvent!=null)
-							cb.DefUserEvent.DefUserEvent(cb.UserData, localEventId, 
+						//if (cb.DefUserEvent!=null)
+							cb.DefUserEvent(userData, localEventId, 
 									eventDescr.EventName, eventDescr.Tag);
 					}
 					else if(eventDescr.Param.equals("EntryExit"))//(!eventDescr.Param.equals("TriggerValue"))//
 					{ /* it is an entry/exit event */
-						if (cb.DefState!=null)
-							cb.DefState.DefState(cb.UserData, localEventId, eventDescr.EventName,groupid);
+						//if (cb.DefState!=null)
+							cb.DefState(userData, localEventId, eventDescr.EventName,groupid);
 					}
 				}
 				//else
@@ -446,7 +397,7 @@ public class TAU_tf_reader {
 	/* read n events and call appropriate handlers.
 	 * Returns the number of records read (can be 0).
 	 * Returns a -1 value when an error takes place. Check errno */
-	public static int Ttf_ReadNumEvents( Ttf_file tFile, Ttf_Callbacks callbacks, int numberOfEvents ){
+	public static int Ttf_ReadNumEvents( Ttf_file tFile, Ttf_Callbacks callbacks, int numberOfEvents, Object userData){
 		Event[] traceBuffer = new Event[TAU_BUFSIZE];
 		int recordsRead=0, recordsToRead;
 		long otherTid, otherNid, msgLen, msgTag;
@@ -460,8 +411,8 @@ public class TAU_tf_reader {
 		/* if clock needs to be initialized, initialize it */
 		if (!tFile.ClkInitialized)
 		{
-			if (callbacks.DefClkPeriod != null)
-				callbacks.DefClkPeriod.DefClkPeriod(callbacks.UserData, 1E-6);
+			//if (callbacks.DefClkPeriod != null)
+				callbacks.DefClkPeriod(userData, 1E-6);
 			/* set flag to initialized */
 			tFile.ClkInitialized = true; 
 
@@ -502,7 +453,7 @@ public class TAU_tf_reader {
 			if (!isEventIDRegistered(tFile, event_GetEv(tFile, traceBuffer, i)))
 			{
 				/* if event id is not found in the event id map, read the EDF file */
-				if (!refreshTables(tFile, callbacks))
+				if (!refreshTables(tFile, callbacks, userData))
 				{ /* error */
 					System.out.println("Refresh Tables Error");
 					return -1;
@@ -527,8 +478,8 @@ public class TAU_tf_reader {
 				/* this pair of node and thread has not been encountered before*/
 				nodename="process "+nidtid;//nid+":"+tid;
 				/* invoke callback routine */
-				if (callbacks.DefThread!=null)
-					callbacks.DefThread.DefThread(callbacks.UserData, nid, tid, nodename);
+				//if (callbacks.DefThread!=null)
+					callbacks.DefThread(userData, nid, tid, nodename);
 				/* add it to the map! */
 				tFile.NidTidMap.put(nidtid, one);
 			}
@@ -551,15 +502,15 @@ public class TAU_tf_reader {
 			{ /* entry/exit event */
 				if (parameter == 1)
 				{ /* entry event, invoke the callback routine */
-					if (callbacks.EnterState!=null)
-						callbacks.EnterState.EnterState(callbacks.UserData, ts, nid, 
+					//if (callbacks.EnterState!=null)
+						callbacks.EnterState(userData, ts, nid, 
 								tid,event_GetEv(tFile, traceBuffer, i));
 				}
 				else
 				{ if (parameter == -1)
 					{ /* exit event */
-						if (callbacks.LeaveState!=null)
-							callbacks.LeaveState.LeaveState(callbacks.UserData,ts, nid, 
+						//if (callbacks.LeaveState!=null)
+							callbacks.LeaveState(userData,ts, nid, 
 									tid,event_GetEv(tFile, traceBuffer, i));
 					}
 				}
@@ -568,13 +519,13 @@ public class TAU_tf_reader {
 			{
 				if ((eventDescr.Param != null) && (eventDescr.Param.equals("TriggerValue")))
 				{ /* User defined event */
-					if (callbacks.EventTrigger!=null) {
+					//if (callbacks.EventTrigger!=null) {
 						parameter = event_GetPar(tFile, traceBuffer, i);
 
-						callbacks.EventTrigger.EventTrigger(callbacks.UserData, ts, nid, tid, 
+						callbacks.EventTrigger(userData, ts, nid, tid, 
 								event_GetEv(tFile, traceBuffer, i), 
 								parameter);
-					}
+					//}
 				}
 				if (eventDescr.Tag == TAU_MESSAGE_SEND_EVENT) 
 				{/* send message */
@@ -588,8 +539,8 @@ public class TAU_tf_reader {
 
 					/* If the application is multithreaded, insert call for matching sends/recvs here */
 					otherTid = 0;
-					if (callbacks.SendMessage!=null) 
-						callbacks.SendMessage.SendMessage(callbacks.UserData, ts, nid, tid, (int)otherNid, 
+					//if (callbacks.SendMessage!=null) 
+						callbacks.SendMessage(userData, ts, nid, tid, (int)otherNid, 
 								(int)otherTid, (int)msgLen, (int)msgTag, (int)comm);
 			/* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
 			 * tid (other), size, tag */
@@ -607,8 +558,8 @@ public class TAU_tf_reader {
 
 						/* If the application is multithreaded, insert call for matching sends/recvs here */
 						otherTid = 0;
-						if (callbacks.RecvMessage!=null) 
-							callbacks.RecvMessage.RecvMessage(callbacks.UserData, ts, (int)otherNid, 
+						//if (callbacks.RecvMessage!=null) 
+							callbacks.RecvMessage(userData, ts, (int)otherNid, 
 									(int)otherTid, nid, tid, (int)msgLen, (int)msgTag, (int)comm);
 						/* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
 						 * tid (other), size, tag */
@@ -633,8 +584,8 @@ public class TAU_tf_reader {
 						/* see if an end of the trace callback is registered and 
 						 * if it is, invoke it.*/
 					if(tFile.NidTidMap.get(nidtid).equals(zero))
-						if (callbacks.EndTrace!=null) 
-							callbacks.EndTrace.EndTrace(callbacks.UserData, nid, tid);
+						//if (callbacks.EndTrace!=null) 
+							callbacks.EndTrace(userData, nid, tid);
 					}
 				}
 			} /* is it a WALL_CLOCK record? */      
