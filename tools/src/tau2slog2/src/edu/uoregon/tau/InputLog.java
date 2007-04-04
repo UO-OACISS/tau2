@@ -16,7 +16,7 @@ import java.util.Stack;
 import java.util.TreeMap;
 import base.drawable.*;
 import base.io.BufArrayOutputStream;
-import edu.uoregon.tau.tau_tf.*;
+import edu.uoregon.tau.trace.*;
 
 class PrimEvent
 {
@@ -34,10 +34,11 @@ class PrimEvent
 public class InputLog implements base.drawable.InputAPI
 {
 	//private static String filespec;
+	private TraceReaderCallbacks ev_cb;
 	private static long filehandle;
 	private static int num_topology_returned;
-	private Ttf_Callbacks ev_cb;
-	private Ttf_file tFileEvRead;
+
+	private TraceReader tFileEvRead;
 	private static double clockP;
 	private static boolean eventReady;
 	private static boolean doneReading;
@@ -110,6 +111,8 @@ public class InputLog implements base.drawable.InputAPI
 
 	private boolean open(String tautrc, String tauedf)
 	{
+		//private 
+		
 		categories = new TreeMap();//base.drawable.Category[128];
 		numcats=0;
 		maxcats=0;
@@ -125,19 +128,19 @@ public class InputLog implements base.drawable.InputAPI
 		getcolors = new Random(0);
 		noMonEvents=new HashSet();
 		
-		Ttf_Callbacks def_cb = new TAUReaderInit();
-		Ttf_file tFileDefRead=TAU_tf_reader.Ttf_OpenFileForInput(tautrc,tauedf);
+		TraceReaderCallbacks def_cb = new TAUReaderInit();
+		TraceReader tFileDefRead=TraceFactory.OpenFileForInput(tautrc,tauedf);
 		//System.out.println()
-		TAU_tf_reader.Ttf_SetSubtractFirstTimestamp(tFileDefRead, false);
+		tFileDefRead.setSubtractFirstTimestamp(false);
 		int recs_read=0;
 		int arch_read=0;
 		do{
-			recs_read=TAU_tf_reader.Ttf_ReadNumEvents(tFileDefRead, def_cb, 1024,null);
+			recs_read=tFileDefRead.readNumEvents(def_cb, 1024,null);
 			arch_read+=recs_read;
 			//if(recs_read>0)
 			//System.out.println("Read "+recs_read+" records");
 		}while(recs_read!=0);//&&((Integer)tb.UserData).intValue()!=0
-		TAU_tf_reader.Ttf_CloseFile(tFileDefRead);
+		tFileDefRead.closeTrace();
 		
 		if(maxthread>0)
 		{
@@ -153,15 +156,15 @@ public class InputLog implements base.drawable.InputAPI
 		msgstack = new Stack[maxnode+1][maxthread+1];
 		noMonEventCycle = new int[maxnode+1][maxthread+1];
 		
-		ev_cb= new TAUReader();
-		tFileEvRead=TAU_tf_reader.Ttf_OpenFileForInput(tautrc,tauedf);
-		TAU_tf_reader.Ttf_SetSubtractFirstTimestamp(tFileDefRead, false);
+		ev_cb = new TAUReader();
+		tFileEvRead=TraceFactory.OpenFileForInput(tautrc,tauedf);
+		tFileDefRead.setSubtractFirstTimestamp(false);
 		return true;
 	}
 
 	public boolean close()
 	{
-		TAU_tf_reader.Ttf_CloseFile(tFileEvRead);
+		tFileEvRead.closeTrace();
 		return true;
 	}
 
@@ -177,7 +180,7 @@ public class InputLog implements base.drawable.InputAPI
 		{
 			while(!eventReady)
 			{
-				if(TAU_tf_reader.Ttf_ReadNumEvents(tFileEvRead, ev_cb, 1, null)==0)
+				if(tFileEvRead.readNumEvents(ev_cb, 1, null)==0)
 				{
 					doneReading=true;
 					if(maxthread>0)//maxnode>=0&&
@@ -290,14 +293,14 @@ public class InputLog implements base.drawable.InputAPI
 		return bary_outs.getByteArrayBuf();
 	}	
 	
-	private static class TAUReaderInit implements Ttf_Callbacks{
+	private static class TAUReaderInit implements TraceReaderCallbacks{
 		
-		public int DefClkPeriod(Object userData, double clkPeriod) {
+		public int defClkPeriod(Object userData, double clkPeriod) {
 			clockP =clkPeriod;
 			return 0;
 		}
 		
-		public int DefThread(Object userData, int nodeToken, int threadToken, String threadName){
+		public int defThread(Object userData, int nodeToken, int threadToken, String threadName){
 			//System.out.println("DefThread nid "+nodeToken+" tid "+threadToken+", thread name "+threadName);
 			//global.put(new Point(nodeToken,threadToken), new Integer(numthreads));
 			numthreads++;
@@ -307,9 +310,9 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 		
-		public int DefStateGroup(Object userData, int stateGroupToken, String stateGroupName){return 0;}
+		public int defStateGroup(Object userData, int stateGroupToken, String stateGroupName){return 0;}
 		
-		public int DefState(Object userData, int stateToken, String stateName, int stateGroupToken){
+		public int defState(Object userData, int stateToken, String stateName, int stateGroupToken){
 			//System.out.println("DefState stateid "+stateToken+" stateName "+stateName+" stategroup id "+stateGroupToken);
 			String name = stateName;
 			if(name.charAt(0)=='"' && name.charAt(name.length()-1)=='"')
@@ -321,7 +324,7 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 		
-		public int DefUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing){
+		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing){
 			
 			if(monotonicallyIncreasing==0)
 			{
@@ -339,11 +342,11 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 		
-		public int EnterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){return 0;}
-		public int LeaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){return 0;}
+		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){return 0;}
+		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){return 0;}
 		
 		/*Message retistration.  (Message sending is defined in TAUReader below)*/
-		public int SendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
+		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
 			String tag=Integer.toString(messageTag);
 			tag="."+tag+".";
@@ -357,16 +360,16 @@ public class InputLog implements base.drawable.InputAPI
 			numcats++;
 			return 0;
 		}
-		public int EventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {return 0;}
+		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {return 0;}
 
-		public int RecvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageCom) {return 0;}
+		public int recvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageCom) {return 0;}
 		
-		public int EndTrace(Object userData, int nodeToken, int threadToken){return 0;}
+		public int endTrace(Object userData, int nodeToken, int threadToken){return 0;}
 	}
 	
-	private static class TAUReader implements Ttf_Callbacks{
+	private static class TAUReader implements TraceReaderCallbacks{
 		
-		public int EnterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
+		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Entered state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
 			//eventstack[nodeToken][threadToken];
 			if(eventstack[nodeToken][threadToken]==null)
@@ -375,7 +378,7 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 		
-		public int LeaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
+		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Leaving state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
 			if(eventstack[nodeToken][threadToken]==null||eventstack[nodeToken][threadToken].size()==0)
 			{
@@ -395,7 +398,7 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 		
-		public int SendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
+		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
 			if(msgstack[sourceNodeToken][sourceThreadToken]==null)msgstack[sourceNodeToken][sourceThreadToken]=new Stack();
 			if(msgstack[sourceNodeToken][sourceThreadToken].size()>0)
@@ -419,7 +422,7 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 		
-		public int RecvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
+		public int recvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
 			if(msgstack[sourceNodeToken][sourceThreadToken]==null)msgstack[sourceNodeToken][sourceThreadToken]=new Stack();
 			PrimEvent leave;
@@ -444,7 +447,7 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 		
-		public int EventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken,
+		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken,
 				double userEventValue){
 			//System.out.println("EventTrigger: time "+time+", nid "+nodeToken+" tid "+threadToken+" event id "+userEventToken+" triggered value "+userEventValue);
 			if(noMonEvents.contains(new Integer(userEventToken)))
@@ -477,16 +480,16 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 
-		public int DefClkPeriod(Object userData, double clkPeriod) {return 0;}
+		public int defClkPeriod(Object userData, double clkPeriod) {return 0;}
 
-		public int DefState(Object userData, int stateToken, String stateName, int stateGoupToken) {return 0;}
+		public int defState(Object userData, int stateToken, String stateName, int stateGoupToken) {return 0;}
 
-		public int DefStateGroup(Object userData, int stateGroupToken, String stateGroupName) {return 0;}
+		public int defStateGroup(Object userData, int stateGroupToken, String stateGroupName) {return 0;}
 
-		public int DefThread(Object userData, int nodeToken, int threadToken, String threadName) {return 0;}
+		public int defThread(Object userData, int nodeToken, int threadToken, String threadName) {return 0;}
 
-		public int DefUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing) {return 0;}
+		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing) {return 0;}
 
-		public int EndTrace(Object userData, int nodeToken, int threadToken) {return 0;}
+		public int endTrace(Object userData, int nodeToken, int threadToken) {return 0;}
 	}
 }
