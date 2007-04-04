@@ -10,10 +10,8 @@
  * This file (Ttf_file.java) contains several  classes used by the TAU_tf library
  */
 
-package edu.uoregon.tau.tau_tf;
+package edu.uoregon.tau.trace;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.util.Map;
 
 /* 
@@ -39,7 +37,7 @@ class Event {
 
 
 /* Stores the definition info for a TAU event */
-class Ttf_EventDescr {
+class EventDescr {
 	int  Eid; /* event id */
 	String Group; /* state as in TAU_VIZ */
 	String EventName; /* name as in "foo" */
@@ -94,9 +92,7 @@ class Pair implements Comparable{
 }
 
 /*This holds all of the structures and data relevant to input/output of a trace file*/
-public class Ttf_file {
-	DataOutputStream Foid;//The trace file output handle
-	DataInputStream Fiid;//The trace file input handle
+public class TraceFile {
 	String EdfFile;//Name of the edf file being read or written
 	Map NidTidMap;//=new HashMap();
 	Map EventIdMap;//=new HashMap();;
