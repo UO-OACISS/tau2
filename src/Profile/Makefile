@@ -121,7 +121,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 
 ##############################################
 #MPI#MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
-#MPI#TAU_MPI_OBJS = TauMpi.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF#
+#MPI#TAU_MPI_OBJS = TauMpi.o ClockSync.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF#
 #MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
@@ -218,7 +218,7 @@ $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED)
 $(TAU_DISABLE_SHARED) : TauDisable.o
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_DISABLE_SHARED) TauDisable.o
 
-libTauMpi$(TAU_CONFIG)$(LSX): TauMpi.c TauFMpi.c
+libTauMpi$(TAU_CONFIG)$(LSX): TauMpi.c TauFMpi.c ClockSync.cpp
 		$(MAKE) -f Makefile.wrapper  
 
 libTauShmem$(TAU_CONFIG)$(LSX): 

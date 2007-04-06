@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #define TAU_MAX_REQUESTS  4096
 
+#ifdef TAU_SYNCHRONIZE_CLOCKS
+extern void TauSyncClocks(int rank, int size);
+#endif
+
 
 /* This file uses the MPI Profiling Interface with TAU instrumentation.
    It has been adopted from the MPE Profiling interface wrapper generator
@@ -1377,6 +1381,10 @@ char *** argv;
 
   PMPI_Comm_size( MPI_COMM_WORLD, &size );
   tau_totalnodes(1, size); /* Set the totalnodes */
+
+#ifdef TAU_SYNCHRONIZE_CLOCKS
+  TauSyncClocks(procid_0, size);
+#endif
 
 #ifdef TAU_TRACK_MSG
   requests_head_0 = requests_tail_0 = 0;
