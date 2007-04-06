@@ -731,7 +731,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         Thread thread = (Thread) threads.get(settings.getSelections()[1]);
 
-        Function function = ppTrial.getDataSource().getFunction((String) functionNames.get(settings.getSelections()[0]));
+        Function function = (Function) functions.get(settings.getSelections()[0]);
+
         FunctionProfile fp = thread.getFunctionProfile(function);
 
         if (fp == null) {
@@ -760,7 +761,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         Thread thread = (Thread) threads.get(settings.getSelections()[1]);
 
-        Function function = ppTrial.getDataSource().getFunction((String) functionNames.get(settings.getSelections()[0]));
+        Function function = (Function) functions.get(settings.getSelections()[0]);
         FunctionProfile fp = thread.getFunctionProfile(function);
 
         if (fp == null) {
