@@ -347,6 +347,19 @@ void MultipleCounterLayer::getCounters(int tid, double values[])
   }
 }
 
+// a low overhead way to get a single counter without getting all the others
+double MultipleCounterLayer::getSingleCounter(int tid, int counter) {
+  static bool initFlag = initializeMultiCounterLayer();
+  static double values[MAX_TAU_COUNTERS];;
+
+  if (functionArray[counter] == NULL) {
+    return 0.0;
+  }
+  
+  MultipleCounterLayer::functionArray[counter](tid, values);
+  return values[counter];
+}
+
 char * MultipleCounterLayer::getCounterNameAt(int position)
 {
   if(position < MAX_TAU_COUNTERS)
