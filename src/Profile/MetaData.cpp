@@ -343,8 +343,8 @@ static int writeMetaData(FILE *fp, bool newline) {
 	writeXMLAttribute(fp, "CPU Cores", value, newline);
       }
     }
+    fclose(f);
   }
-  fclose(f);
 
   f = fopen("/proc/meminfo", "r");
   if (f) {
@@ -358,8 +358,8 @@ static int writeMetaData(FILE *fp, bool newline) {
 	writeXMLAttribute(fp, "Memory Size", value, newline);
       }
     }
+    fclose(f);
   }
-  fclose(f);
 
 
   char buffer[4096];
