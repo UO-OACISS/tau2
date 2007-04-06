@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  * This class is the RMI class which contains the tree of views to be 
  * constructed in the PerfExplorerClient.
  *
- * <P>CVS $Id: RMIView.java,v 1.8 2007/01/04 21:20:03 khuck Exp $</P>
+ * <P>CVS $Id: RMIView.java,v 1.9 2007/04/06 22:20:49 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -26,6 +27,7 @@ public class RMIView implements Serializable {
 
 	private static List fieldNames = null;
 	private List fields = null;
+	private DefaultMutableTreeNode node = null;
 
 	public RMIView () {
 		fields = new ArrayList();
@@ -108,5 +110,13 @@ public class RMIView implements Serializable {
 
 	public String toString() {
 		return getField("NAME");
+	}
+
+	public void setDMTN(DefaultMutableTreeNode node) {
+		this.node = node;
+	}
+
+	public DefaultMutableTreeNode getDMTN() {
+		return this.node;
 	}
 }

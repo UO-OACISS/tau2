@@ -313,6 +313,11 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		createSubView.addActionListener(listener);
 		viewMenu.add(createSubView);
 
+		//Add a menu item.
+		JMenuItem deleteView = new JMenuItem(PerfExplorerActionListener.DELETE_CURRENT_VIEW);
+		deleteView.addActionListener(listener);
+		viewMenu.add(deleteView);
+
 		this.add(viewMenu);
 	}
 

@@ -43,7 +43,7 @@ import clustering.ClusterException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.43 2007/02/05 22:59:04 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.44 2007/04/06 22:20:49 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -823,7 +823,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List
 	 */
 	public List getPossibleValues (String tableName, String columnName) {
-		PerfExplorerOutput.println("getPossibleValues()...");
+		//PerfExplorerOutput.println("getPossibleValues()...");
 		List values = new ArrayList();
 		try {
 			DB db = this.getDB();
@@ -903,6 +903,29 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			e.printStackTrace();
 		}
 		return viewID;
+	}
+
+	/**
+	 * This method deletes a view for the PerfExplorerClient application.
+	 * The id is the id of the view to be deleted.  All sub-views will
+	 * be deleted as well.
+	 * 
+	 * @param id
+	 */
+	public void deleteView(String id) {
+		//PerfExplorerOutput.println("createNewView()...");
+		try {
+			DB db = this.getDB();
+			PreparedStatement statement = null;
+			statement = db.prepareStatement("delete from trial_view where id = ?");
+			statement.setString(1, id);
+			statement.execute();
+			statement.close();
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't delete the view from the database!";
+			System.err.println(error);
+			e.printStackTrace();
+		}
 	}
 
 	/**

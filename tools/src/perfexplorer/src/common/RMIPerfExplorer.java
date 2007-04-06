@@ -9,7 +9,7 @@ import java.util.List;
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.6 2007/02/05 22:59:04 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.7 2007/04/06 22:20:49 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -242,6 +242,15 @@ public interface RMIPerfExplorer extends Remote {
      * @throws RemoteException
      */
     public List getTrialList(String criteria) throws RemoteException;
+
+    /**
+     * Deletes a view from the view hierarchy.
+     *
+     * @param id
+     * @return
+     * @throws RemoteException
+     */
+    public void deleteView(String id) throws RemoteException;
 
 	
 }

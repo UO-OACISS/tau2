@@ -60,7 +60,8 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String FRACTION_PHASE_CHART = "Phase Fraction of Total Runtime";
 	// arbitrary view menu items
 	public final static String CREATE_NEW_VIEW = "Create New View";
-	public final static String CREATE_NEW_SUB_VIEW = "Create New Sub-view";
+	public final static String CREATE_NEW_SUB_VIEW = "Create New Sub-View";
+	public final static String DELETE_CURRENT_VIEW = "Delete Selected View";
 	public final static String DO_IQR_BOXCHART = "Create BoxChart";
 	public final static String DO_HISTOGRAM = "Create Histograms";
 	public final static String DO_PROBABILITY_PLOT = "Create Normal Probability Plot";
@@ -218,6 +219,8 @@ public class PerfExplorerActionListener implements ActionListener {
 					PerfExplorerViews.createNewView(mainFrame, parent);
 				} else if (arg.equals(CREATE_NEW_SUB_VIEW)) {
 					PerfExplorerViews.createNewSubView(mainFrame);
+				} else if (arg.equals(DELETE_CURRENT_VIEW)) {
+					PerfExplorerViews.deleteCurrentView(mainFrame);
 				} else {
 					System.out.println("unknown event! " + arg);
 				}

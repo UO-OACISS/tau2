@@ -6,6 +6,7 @@ from common import EngineType
 False = 0
 True = 1
 million = 1000000
+billion = 1000000000
 
 def findMetric(metrics, findme):
 	i = 0;
@@ -103,12 +104,30 @@ def pairwiseEvent(baseEvents, otherEvents, i, j, filter):
 		else:
 			slower[event] = abs(diff)
 	results = {}
-	#items = faster.items()
-	#items.sort()
-	#print items
 	results["faster"] = faster
-	#items = slower.items()
-	#items.sort()
+	results["slower"] = slower
+	return results
+
+def pairwiseEventDerived(baseEvents, otherEvents, i, j, m, n, filter):
+	faster = {}
+	slower = {}
+	for event in baseEvents.keys():
+		if filter[event] == 1:
+			baseValues = baseEvents[event]
+			otherValues = otherEvents[event]
+			baseSeconds = baseValues.getExclusive(m) / million
+			otherSeconds = otherValues.getExclusive(n) / million
+			baseGFLOP = baseValues.getExclusive(i) / billion
+			otherGFLOP = otherValues.getExclusive(j) / billion
+			baseGFLOPS = baseGFLOP / baseSeconds
+			otherGFLOPS = otherGFLOP / otherSeconds
+			diff = (baseGFLOPS - otherGFLOPS)
+			if diff > 0:
+				faster[event] = abs(diff)
+			else:
+				slower[event] = abs(diff)
+	results = {}
+	results["faster"] = faster
 	results["slower"] = slower
 	return results
 
@@ -185,12 +204,35 @@ def showSignificantEvents(diffs, type, significant, baseEvents, x):
 			shown += 1
 	return shown
 
+def showSignificantEventsDerived(diffs, type, significant, baseEvents, x, m):
+	events = diffs[type]
+	if type == "faster":
+		type = "LESS"
+	else:
+		type = "MORE"
+
+	shown = 0
+	orderedKeys = sort_by_value(events)
+	orderedKeys.reverse()
+	for key in orderedKeys:
+		# don't show insignificant differences
+		if significant[key] == 1:
+			if baseEvents[key].getExclusive(x) > 0:
+				baseSeconds = baseEvents[key].getExclusive(x) / million
+				baseGFLOP = baseEvents[key].getExclusive(x) / billion
+				percent = ( events[key]/(baseGFLOP/baseSeconds) ) * 100.0
+			else:
+				percent = 0.0
+			print "\t", key, ":", events[key], type, "than baseline (", percent, "% )"
+			shown += 1
+	return shown
+
 def DoAnalysis(pe):
 	# set the application, experiment, trial
 	pe.setApplication("NPB2.3")
-	pe.setExperiment("LU")
-	baseTrialName = "LU.C.8"
-	otherTrialName = "LU.C.16"
+	pe.setExperiment("garuda")
+	baseTrialName = "results.8"
+	otherTrialName = "results.16"
 	baseTrial = pe.setTrial(baseTrialName)
 
 	# baseMetrics is a List
@@ -198,6 +240,7 @@ def DoAnalysis(pe):
 
 	# find the time metric
 	baseTime = findMetric(baseMetrics, "TIME")
+	baseFlops = findMetric(baseMetrics, "PAPI_FP_INS")
 
 	# get all the data for each event
 	baseEvents = getEvents(pe, baseTrial, baseTime, "TAU_CALLPATH", False)
@@ -263,6 +306,16 @@ def DoAnalysis(pe):
 				shown += showSignificantEvents(diffs, "slower", significant, baseEvents, x)
 				if shown == 0:
 					print "\t None.\n"
+				if x == baseFlops:
+				# also do GFLOP/Second per processor
+					diffs = pairwiseEventDerived(baseEvents, otherEvents, x, y, baseTime, otherTime, significant)
+					print "\nSignificant GFLOP/sec per processor differences between trials:\n"
+					shown = showSignificantEventsDerived(diffs, "faster", significant, baseEvents, x, baseTime)
+					if shown > 0:
+						print ""
+					shown += showSignificantEventsDerived(diffs, "slower", significant, baseEvents, x, baseTime)
+					if shown == 0:
+						print "\t None.\n"
 		x += 1
 	
 print "--------------- JPython test script start ------------"

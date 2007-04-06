@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import javax.swing.tree.DefaultTreeModel;
 
 public class PerfExplorerViews {
 
@@ -142,6 +143,29 @@ public class PerfExplorerViews {
 		if (viewName != null) {
 			String viewID = (String) myViews.get(viewName);
 			createNewView(mainFrame, Integer.parseInt(viewID));
+		}
+	}
+
+	public static void deleteCurrentView(JFrame mainFrame) {
+		PerfExplorerModel model = PerfExplorerModel.getModel();
+		Object selection = model.getCurrentSelection();
+		if (selection instanceof RMIView) {
+			// get the server
+			PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+			RMIView view = (RMIView)selection;
+			// delete the view
+			server.deleteView(view.getField("id"));
+
+			// get the tree
+			JTree tree = PerfExplorerJTree.getTree();
+			DefaultTreeModel treeModel = (DefaultTreeModel)tree.getModel();
+
+			// delete the node from the tree
+			treeModel.removeNodeFromParent(view.getDMTN());
+		} else {
+			JOptionPane.showMessageDialog(mainFrame, 
+				"Current selection is not a View.\nPlease select the view to delete before attempting to delete it.",
+				"Selection Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 }

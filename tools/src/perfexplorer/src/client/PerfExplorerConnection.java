@@ -245,6 +245,14 @@ public class PerfExplorerConnection {
 	return viewID;
     }
 
+    public void deleteView (String id) {
+		try {
+	    	server.deleteView(id);
+		} catch (RemoteException e) {
+	    	handleError(e, "deleteView(" + id + ")");
+		}
+    }
+
     public List getViews(int parent) {
 	List views = null;
 	try {

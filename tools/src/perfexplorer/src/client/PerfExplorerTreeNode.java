@@ -7,6 +7,7 @@ package client;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.tree.*;
+import common.RMIView;
 
 
 public class PerfExplorerTreeNode extends DefaultMutableTreeNode {
@@ -14,6 +15,10 @@ public class PerfExplorerTreeNode extends DefaultMutableTreeNode {
 
     public PerfExplorerTreeNode(Object nodeObject) {
         super(nodeObject);
+		if (nodeObject instanceof RMIView) {
+			RMIView view = (RMIView)nodeObject;
+			view.setDMTN(this);
+		}
     }
     
     public PerfExplorerTreeNode(Object nodeObject, boolean allowsChildren) {
