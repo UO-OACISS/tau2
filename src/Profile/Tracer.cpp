@@ -99,10 +99,10 @@ x_uint64 pcxx_GetUSecLong(int tid)
 //   RtsLayer::getUSecD(tid, tracerValues);
 //   double value = tracerValues[0];
 
-  double value = MultipleCounterLayer::getSingleCounter(tid, 0);
+  x_uint64 value = MultipleCounterLayer::getSingleCounter(tid, 0);
 
 #else //TAU_MULTIPLE_COUNTERS
-  double value = RtsLayer::getUSecD(tid);
+  x_uint64 value = RtsLayer::getUSecD(tid);
 #endif // TAU_MULTIPLE_COUNTERS
 
 #ifdef TAU_SYNCHRONIZE_CLOCKS
