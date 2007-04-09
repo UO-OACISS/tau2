@@ -18,11 +18,52 @@ import java.util.Map;
  * Event stores the essential data of a TAU event, event 64 represents
 */
 class Event {
-	int ev;    /* -- event id   int32     -- */
-	char nid;   /* -- node id    uint16     -- */
-	char tid;   /* -- thread id  uint16     -- */
-	long par;   /* -- event parameter int64 -- */
-	long ti;    /* -- time [us]?   uint64   -- */
+	private int ev;    /* -- event id   int32     -- */
+	private char nid;   /* -- node id    uint16     -- */
+	private char tid;   /* -- thread id  uint16     -- */
+	private long par;   /* -- event parameter int64 -- */
+	private long ti;    /* -- time [us]?   uint64   -- */
+	
+	Event(int ev, char nid, char tid, long par, long ti){
+		this.ev=ev;
+		this.nid=nid;
+		this.tid=tid;
+		this.par=par;
+		this.ti=ti;
+	}
+	
+	Event(){}
+	
+	public int getEventID() {
+		return ev;
+	}
+	public void setEventID(int ev) {
+		this.ev = ev;
+	}
+	public char getNodeID() {
+		return nid;
+	}
+	public void setNodeID(char nid) {
+		this.nid = nid;
+	}
+	public long getParameter() {
+		return par;
+	}
+	public void setParameter(long par) {
+		this.par = par;
+	}
+	public long getTime() {
+		return ti;
+	}
+	public void setTime(long ti) {
+		this.ti = ti;
+	}
+	public char getThreadID() {
+		return tid;
+	}
+	public void setThreadID(char tid) {
+		this.tid = tid;
+	}
 }
 
 /* As event, but for 64 bit platforms */
@@ -38,58 +79,97 @@ class Event {
 
 /* Stores the definition info for a TAU event */
 class EventDescr {
-	int  Eid; /* event id */
-	String Group; /* state as in TAU_VIZ */
-	String EventName; /* name as in "foo" */
-	int  Tag; /* -7 for send etc. */
-	String Param; /* param as in EntryExit */
+	private int  Eid; /* event id */
+	private String Group; /* state as in TAU_VIZ */
+	private String EventName; /* name as in "foo" */
+	private int  Tag; /* -7 for send etc. */
+	private String Param; /* param as in EntryExit */
+	EventDescr(){}
+	EventDescr(int eid, String group, String eventName, int tag, String param) {
+		Eid = eid;
+		Group = group;
+		EventName = eventName;
+		Tag = tag;
+		Param = param;
+	}
+	public int getEventId() {
+		return Eid;
+	}
+	public void setEventId(int eid) {
+		Eid = eid;
+	}
+	public String getEventName() {
+		return EventName;
+	}
+	public void setEventName(String eventName) {
+		EventName = eventName;
+	}
+	public String getGroup() {
+		return Group;
+	}
+	public void setGroup(String group) {
+		Group = group;
+	}
+	public String getParameter() {
+		return Param;
+	}
+	public void setParameter(String param) {
+		Param = param;
+	}
+	public int getTag() {
+		return Tag;
+	}
+	public void setTag(int tag) {
+		Tag = tag;
+	}
 }
 
 /*Stores a pair of Objects*/
-class Pair implements Comparable{
-	private Object first;
-	private Object second;
-	public Pair(Object first, Object second){
+/*
+class CharPair implements Comparable{
+	private char first;
+	private char second;
+	public CharPair(char first, char second){
 		this.first=first;
 		this.second=second;
 	}
-	public Pair(Pair pair){
+	public CharPair(CharPair pair){
 		this.first=pair.first();
 		this.second=pair.second();
 	}
-	public Pair(){
-		this.first=null;
-		this.second=null;
+	public CharPair(){
+		this.first=0;
+		this.second=0;
 	}
-	public Object first(){
+	public char first(){
 		return this.first;
 	}
-	public Object second(){
+	public char second(){
 		return this.second;
 	}
-	public void setFirst(Object first){
+	public void setFirst(char first){
 		this.first=first;
 	}
-	public void setSecond(Object second){
+	public void setSecond(char second){
 		this.second=second;
 	}
 	public String toString(){
-		return "("+first.toString()+", "+second.toString()+")";
+		return "("+first+", "+second+")";
 	}
 	public boolean equals(Object target){
 		if(this == target)return true;
-		if(!(target instanceof Pair))return false;
-		Pair targ = (Pair)target;
-		return(this.first.equals(targ.first)&&this.second.equals(targ.second));
+		if(!(target instanceof CharPair))return false;
+		CharPair targ = (CharPair)target;
+		return(this.first==(targ.first)&&this.second==(targ.second));
 	}
 	public int compareTo(Object arg) {
-		if(!(arg instanceof Pair))return -1;
-		Pair parg = (Pair)arg;
+		if(!(arg instanceof CharPair))return -1;
+		CharPair parg = (CharPair)arg;
 		if(this.equals(parg))
 			return 0;
 		else return 1;
 	}
-}
+}*/
 
 /*This holds all of the structures and data relevant to input/output of a trace file*/
 public class TraceFile {

@@ -25,6 +25,8 @@ public class TraceReader extends TraceFile{
 	private final static int FORMAT_64_SWAP=4;
 	
 	
+	TraceReader(){}
+	
 	private static int intReverseBytes(int value){
 		//Integer.
 		ByteBuffer bb = ByteBuffer.allocate(4);
@@ -60,22 +62,22 @@ public class TraceReader extends TraceFile{
 	/* for 32 bit platforms (24 bytes)*/
 	
 	void determineFormat() throws IOException{
-		Event evt = new Event();
+		Event evt = new Event();//Fiid.readInt(),Fiid.readChar(),Fiid.readChar(),Fiid.readLong(),Fiid.readLong());
 		Fiid.mark(128);
-		evt.ev=Fiid.readInt();
-		evt.nid=Fiid.readChar();
-		evt.tid=Fiid.readChar();
-		evt.par=Fiid.readLong();
-		evt.ti=Fiid.readLong();
+		evt.setEventID(Fiid.readInt());
+		evt.setNodeID(Fiid.readChar());
+		evt.setThreadID(Fiid.readChar());
+		evt.setParameter(Fiid.readLong());
+		evt.setTime(Fiid.readLong());
 		format=FORMAT_NATIVE;
-		if(evt.par==3)
+		if(evt.getParameter()==3)
 		{
 			format=FORMAT_32;
 			eventSize=24;
 			//System.out.println("Default!");
 		}
 		else
-		if(longReverseBytes(evt.par)==3)
+		if(longReverseBytes(evt.getParameter())==3)
 		{
 			format=FORMAT_32_SWAP;
 			eventSize=24;
@@ -84,20 +86,20 @@ public class TraceReader extends TraceFile{
 		else{
 			Fiid.reset();
 			//Event64 evt64 = new Event64();
-			evt.ev=(int)Fiid.readLong();
-			evt.nid=Fiid.readChar();
-			evt.tid=Fiid.readChar();
+			evt.setEventID((int)Fiid.readLong());
+			evt.setNodeID(Fiid.readChar());
+			evt.setThreadID(Fiid.readChar());
 			Fiid.readInt();
-			evt.par=Fiid.readLong();
-			evt.ti=Fiid.readLong();
-			if(evt.par==3)
+			evt.setParameter(Fiid.readLong());
+			evt.setTime(Fiid.readLong());
+			if(evt.getParameter()==3)
 			{
 				format=FORMAT_64;
 				eventSize=32;
 				//System.out.println("64!");
 			}
 			else
-			if(longReverseBytes(evt.par)==3)
+			if(longReverseBytes(evt.getParameter())==3)
 			{
 				format=FORMAT_64_SWAP;
 				eventSize=32;
@@ -124,13 +126,12 @@ public class TraceReader extends TraceFile{
 			while(x<numread&&x<records){
 				//tFile.Fid.read(b);
 				//Integer.
-				evt = new Event();
-				//tFile.Fid.r
-				evt.ev=Fiid.readInt();
-				evt.nid=Fiid.readChar(); //.readChar();
-				evt.tid=Fiid.readChar();//readChar();
-				evt.par=Fiid.readLong();
-				evt.ti=Fiid.readLong();
+				evt = new Event();//Fiid.readInt(),Fiid.readChar(),Fiid.readChar(),Fiid.readLong(),Fiid.readLong());
+				evt.setEventID(Fiid.readInt());
+				evt.setNodeID(Fiid.readChar());
+				evt.setThreadID(Fiid.readChar());
+				evt.setParameter(Fiid.readLong());
+				evt.setTime(Fiid.readLong());
 				traceBuffer[x]=evt;
 				x++;
 				//System.out.println("ID: "+x+" NID: "+c1+" TID: "+c2+" PAR: "+l1+" TID: "+l2);
@@ -139,12 +140,12 @@ public class TraceReader extends TraceFile{
 		if(format==2)
 		{
 			while(x<numread&&x<records){
-				evt = new Event();
-				evt.ev=intReverseBytes(Fiid.readInt());
-				evt.nid=charReverseBytes(Fiid.readChar());
-				evt.tid=charReverseBytes(Fiid.readChar());
-				evt.par=longReverseBytes(Fiid.readLong());
-				evt.ti=longReverseBytes(Fiid.readLong());
+				evt = new Event();//intReverseBytes(Fiid.readInt()),charReverseBytes(Fiid.readChar()),charReverseBytes(Fiid.readChar()),longReverseBytes(Fiid.readLong()),longReverseBytes(Fiid.readLong()));
+				evt.setEventID(intReverseBytes(Fiid.readInt()));
+				evt.setNodeID(charReverseBytes(Fiid.readChar()));
+				evt.setThreadID(charReverseBytes(Fiid.readChar()));
+				evt.setParameter(longReverseBytes(Fiid.readLong()));
+				evt.setTime(longReverseBytes(Fiid.readLong()));
 				traceBuffer[x]=evt;
 				x++;
 				//System.out.println("ID: "+x+" NID: "+c1+" TID: "+c2+" PAR: "+l1+" TID: "+l2);
@@ -155,12 +156,12 @@ public class TraceReader extends TraceFile{
 		{
 			while(x<numread&&x<records){
 				evt = new Event();
-				evt.ev=(int)Fiid.readLong();
-				evt.nid=Fiid.readChar();
-				evt.tid=Fiid.readChar();
+				evt.setEventID((int)Fiid.readLong());
+				evt.setNodeID(Fiid.readChar());
+				evt.setThreadID(Fiid.readChar());
 				Fiid.readInt();
-				evt.par=Fiid.readLong();
-				evt.ti=Fiid.readLong();
+				evt.setParameter(Fiid.readLong());
+				evt.setTime(Fiid.readLong());
 			
 				//System.out.println("ID: "+evt.ev+" NID: "+(int)evt.nid+" TID: "+(int)evt.tid+" PAR: "+evt.par+" TIM: "+evt.ti);
 			
@@ -173,12 +174,12 @@ public class TraceReader extends TraceFile{
 		{
 			while(x<numread&&x<records){
 				evt = new Event();
-				evt.ev=(int)longReverseBytes(Fiid.readLong());
-				evt.nid=charReverseBytes(Fiid.readChar());
-				evt.tid=charReverseBytes(Fiid.readChar());
+				evt.setEventID((int)longReverseBytes(Fiid.readLong()));
+				evt.setNodeID(charReverseBytes(Fiid.readChar()));
+				evt.setThreadID(charReverseBytes(Fiid.readChar()));
 				Fiid.readInt();
-				evt.par=longReverseBytes(Fiid.readLong());
-				evt.ti=longReverseBytes(Fiid.readLong());
+				evt.setParameter(longReverseBytes(Fiid.readLong()));
+				evt.setTime(longReverseBytes(Fiid.readLong()));
 			
 				//System.out.println("ID: "+evt.ev+" NID: "+(int)evt.nid+" TID: "+(int)evt.tid+" PAR: "+evt.par+" TIM: "+evt.ti);
 			
@@ -190,23 +191,23 @@ public class TraceReader extends TraceFile{
 	}
 	
 	private static int event_GetEv(Event[] traceBuffer, int index){
-		return (traceBuffer[index]).ev;
+		return (traceBuffer[index]).getEventID();
 	}
 	
 	private static int event_GetNid(Event[] traceBuffer, int index){
-		return (traceBuffer[index]).nid;
+		return (traceBuffer[index]).getNodeID();
 	}
 	
 	private static int event_GetTid(Event[] traceBuffer, int index){
-		return (traceBuffer[index]).tid;
+		return (traceBuffer[index]).getThreadID();
 	}
 	
 	private static long event_GetPar(Event[] traceBuffer, int index){
-		return (traceBuffer[index]).par;
+		return (traceBuffer[index]).getParameter();
 	}
 	
 	private static long event_GetTi(Event[] traceBuffer, int index){
-		return (traceBuffer[index]).ti;
+		return (traceBuffer[index]).getTime();
 	}
 	
 	/* Look for an event in the event map */
@@ -267,43 +268,42 @@ public class TraceReader extends TraceFile{
 				{
 					/* couldn't locate the event id */
 					/* fill an event description object */
-					EventDescr eventDescr = new EventDescr();
-					eventDescr.Eid = localEventId;
+					EventDescr eventDescr = new EventDescr(localEventId, new String(eventname), new String(group),tag,new String(param));
+					/*eventDescr.Eid = localEventId;
 					eventDescr.EventName = new String(eventname);
 					eventDescr.Group = new String(group);
 					eventDescr.Tag = tag;
-					eventDescr.Param = new String(param);
+					eventDescr.Param = new String(param);*/
 					EventIdMap.put(new Integer(localEventId),eventDescr); /* add it to the map */
 
-					if (!GroupIdMap.containsKey(eventDescr.Group))
+					if (!GroupIdMap.containsKey(eventDescr.getGroup()))
 					{ 
 						/* group id not found. Generate group id on the fly */
 						groupid = GroupIdMap.size()+1;
 						
 						/* invoke group callback */
 						/* check Param to see if its a user defined event */
-						if (eventDescr.Param.equals("EntryExit"))
+						if (eventDescr.getParameter().equals("EntryExit"))
 						{ /* it is not a user defined event */
-							GroupIdMap.put(eventDescr.Group,new Integer(groupid));
+							GroupIdMap.put(eventDescr.getGroup(),new Integer(groupid));
 							//if (cb.DefStateGroup!=null)
-								cb.defStateGroup(userData, groupid, eventDescr.Group); 
+								cb.defStateGroup(userData, groupid, eventDescr.getGroup()); 
 						}
 					}
 					else
 					{ /* retrieve the stored group id token */
-						groupid = ((Integer)GroupIdMap.get(eventDescr.Group)).intValue();
+						groupid = ((Integer)GroupIdMap.get(eventDescr.getGroup())).intValue();
 					}
 					/* invoke callback for registering a new state */
-					if (eventDescr.Param.equals("TriggerValue"))
+					if (eventDescr.getParameter().equals("TriggerValue"))//||eventDescr.Param.equals("none")
 					{ /* it is a user defined event */
 						//if (cb.DefUserEvent!=null)
-							cb.defUserEvent(userData, localEventId, 
-									eventDescr.EventName, eventDescr.Tag);
+							cb.defUserEvent(userData, localEventId, eventDescr.getEventName(), eventDescr.getTag());
 					}
-					else if(eventDescr.Param.equals("EntryExit"))//(!eventDescr.Param.equals("TriggerValue"))//
+					else if(eventDescr.getParameter().equals("EntryExit"))//(!eventDescr.Param.equals("TriggerValue"))//
 					{ /* it is an entry/exit event */
 						//if (cb.DefState!=null)
-							cb.defState(userData, localEventId, eventDescr.EventName,groupid);
+							cb.defState(userData, localEventId, eventDescr.getEventName(),groupid);
 					}
 				}
 				//else
@@ -410,7 +410,6 @@ public class TraceReader extends TraceFile{
 		/* See if the events are all present */
 		for (int i = 0; i < recordsRead; i++)
 		{
-			//convertEvent(tFile, traceBuffer, i);
 			if (!isEventIDRegistered(event_GetEv(traceBuffer, i)))
 			{
 				/* if event id is not found in the event id map, read the EDF file */
@@ -420,8 +419,7 @@ public class TraceReader extends TraceFile{
 					return -1;
 				}
 				if (!isEventIDRegistered(event_GetEv(traceBuffer, i)))
-				{ /* even after reading the edf file, if we don't find the event id, 
-				then there's an error */
+				{ /* even after reading the edf file, if we don't find the event id, then there's an error */
 					System.out.println("ID Reg error");
 					return -1;
 				}
@@ -430,7 +428,7 @@ public class TraceReader extends TraceFile{
 		    /* event is OK. Examine each event and invoke callbacks for Entry/Exit/Node*/
 		    /* first check nodeid, threadid */
 
-			nid = event_GetNid(traceBuffer, i);//ints
+			nid = event_GetNid(traceBuffer, i);
 			tid = event_GetTid(traceBuffer, i);
 			nidtid=nid+":"+tid;
 			
@@ -439,27 +437,21 @@ public class TraceReader extends TraceFile{
 				/* this pair of node and thread has not been encountered before*/
 				nodename="process "+nidtid;//nid+":"+tid;
 				/* invoke callback routine */
-				//if (callbacks.DefThread!=null)
-					callbacks.defThread(userData, nid, tid, nodename);
+				callbacks.defThread(userData, nid, tid, nodename);
 				/* add it to the map! */
 				NidTidMap.put(nidtid, one);
 			}
 		    /* check the event to see if it is entry or exit */
-			long ts;
+			long ts=event_GetTi(traceBuffer, i);
 			if (subtractFirstTimestamp) {
-				ts = event_GetTi(traceBuffer, i) - FirstTimestamp;
-			} else {
-				ts = event_GetTi(traceBuffer, i);
+				ts -= FirstTimestamp;
 			}
+			
 			long parameter = event_GetPar(traceBuffer, i);
 			/* Get param entry from EventIdMap */
 			
-			EventDescr eventDescr = (EventDescr)EventIdMap.get(
-					new Integer(event_GetEv(traceBuffer, i)));
-			//if(eventDescr==null)
-			//System.out.println("DEF: "+event_GetEv(tFile,traceBuffer,i));
-			//System.out.println("DEF:"+eventDescr.Eid+" "+eventDescr.EventName+" "+eventDescr.Group+" "+eventDescr.Param+" "+eventDescr.Tag);
-			if ((eventDescr.Param != null) && ((eventDescr.Param.equals("EntryExit"))))
+			EventDescr eventDescr = (EventDescr)EventIdMap.get(new Integer(event_GetEv(traceBuffer, i)));
+			if ((eventDescr.getParameter() != null) && ((eventDescr.getParameter().equals("EntryExit"))))
 			{ /* entry/exit event */
 				if (parameter == 1)
 				{ /* entry event, invoke the callback routine */
@@ -478,17 +470,15 @@ public class TraceReader extends TraceFile{
 			} /* entry exit events *//* add message passing events here */
 			else 
 			{
-				if ((eventDescr.Param != null) && (eventDescr.Param.equals("TriggerValue")))
+				if ((eventDescr.getParameter() != null) && (eventDescr.getParameter().equals("TriggerValue")))//||eventDescr.Param.equals("none")
 				{ /* User defined event */
 					//if (callbacks.EventTrigger!=null) {
-						parameter = event_GetPar(traceBuffer, i);
+						//parameter = event_GetPar(traceBuffer, i);
 
-						callbacks.eventTrigger(userData, ts, nid, tid, 
-								event_GetEv(traceBuffer, i), 
-								parameter);
+						callbacks.eventTrigger(userData, ts, nid, tid, event_GetEv(traceBuffer, i),parameter);
 					//}
 				}
-				if (eventDescr.Tag == TAU_MESSAGE_SEND_EVENT) 
+				if (eventDescr.getTag() == TAU_MESSAGE_SEND_EVENT) 
 				{/* send message */
 		        /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
 					long xpar = parameter;
@@ -508,7 +498,7 @@ public class TraceReader extends TraceFile{
 				}
 				else
 				{ /* Check if it is a message receive operation */
-					if (eventDescr.Tag == TAU_MESSAGE_RECV_EVENT)
+					if (eventDescr.getTag() == TAU_MESSAGE_RECV_EVENT)
 					{/* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
 						long xpar = parameter;
 						/* extract the information from the parameter */
@@ -527,15 +517,16 @@ public class TraceReader extends TraceFile{
 					}
 				}
 			}
-			if ((parameter == 0) && (eventDescr.EventName != null) &&(eventDescr.EventName.equals("\"FLUSH_CLOSE\""))) {
+			if ((parameter == 0) && (eventDescr.getEventName()!= null) &&(eventDescr.getEventName().equals("\"FLUSH_CLOSE\""))) {
 				/* reset the flag in NidTidMap to 0 (from 1) */
 				NidTidMap.put(nidtid,zero);
 				/* setting this flag to 0 tells us that a flush close has taken place 
 				 * on this node, thread */
-			} else {
-				/* see if it is a WALL_CLOCK record */
-				if ((parameter != 1) && (parameter != -1) && (eventDescr.EventName != null) 
-						&& (eventDescr.EventName.equals("\"WALL_CLOCK\""))) {
+			} 
+			else 
+			{/* see if it is a WALL_CLOCK record */
+				if ((parameter != 1) && (parameter != -1) && (eventDescr.getEventName() != null) 
+						&& (eventDescr.getEventName().equals("\"WALL_CLOCK\""))) {
 			/* ok, it is a wallclock event alright. But is it the *last* wallclock event?
 			 * We can confirm that it is if the NidTidMap flag has been set to 0 by a 
 			 * previous FLUSH_CLOSE call */
@@ -544,9 +535,9 @@ public class TraceReader extends TraceFile{
 					{/*printf("LAST WALL_CLOCK! End of trace file detected \n");*/
 						/* see if an end of the trace callback is registered and 
 						 * if it is, invoke it.*/
-					if(NidTidMap.get(nidtid).equals(zero))
-						//if (callbacks.EndTrace!=null) 
+					if(NidTidMap.get(nidtid).equals(zero))//if (callbacks.EndTrace!=null) 
 							callbacks.endTrace(userData, nid, tid);
+						//System.out.println("Wallclock at "+ts);
 					}
 				}
 			} /* is it a WALL_CLOCK record? */      

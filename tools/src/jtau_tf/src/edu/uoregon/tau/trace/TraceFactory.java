@@ -77,8 +77,8 @@ public class TraceFactory {
 
 		TraceWriter tFile = new TraceWriter();
 		tFile.traceBuffer = new Event[TAU_MAX_RECORDS];
-		tFile.traceBuffer[0]=new Event();
-		tFile.tracePosition = 1; // 0 will be the EV_INIT record
+		//tFile.traceBuffer[0]=new Event();
+		tFile.tracePosition = 0; // 0 will be the EV_INIT record
 		tFile.initialized = false;
 
 		tFile.Foid=p;
@@ -109,41 +109,44 @@ public class TraceFactory {
 
 		/* define some events */
 
-		EventDescr newEventDesc = new EventDescr();
-
-		newEventDesc.Eid = PCXX_EV_INIT;
+		EventDescr newEventDesc = new EventDescr(PCXX_EV_INIT,"TRACER","EV_INIT",0,"none");
+		/*newEventDesc.Eid = PCXX_EV_INIT;
 		newEventDesc.Group = "TRACER";
 		newEventDesc.EventName = "EV_INIT";
 		newEventDesc.Tag = 0;
-		newEventDesc.Param = "none";
+		newEventDesc.Param = "none";*/
 		tFile.EventIdMap.put(new Integer(PCXX_EV_INIT),newEventDesc);//[PCXX_EV_INIT] = newEventDesc;
-		newEventDesc = new EventDescr();
-		newEventDesc.Eid = PCXX_EV_CLOSE;
+		
+		newEventDesc = new EventDescr(PCXX_EV_CLOSE,"TRACER","FLUSH_CLOSE",0,"none");
+		/*newEventDesc.Eid = PCXX_EV_CLOSE;
 		newEventDesc.Group = "TRACER";
 		newEventDesc.EventName = "FLUSH_CLOSE";
 		newEventDesc.Tag = 0;
-		newEventDesc.Param = "none";
+		newEventDesc.Param = "none";*/
 		tFile.EventIdMap.put(new Integer(PCXX_EV_CLOSE),newEventDesc);//[PCXX_EV_CLOSE] = newEventDesc;
-		newEventDesc = new EventDescr();
-		newEventDesc.Eid = PCXX_EV_WALL_CLOCK;
+		
+		newEventDesc = new EventDescr(PCXX_EV_WALL_CLOCK,"TRACER","WALL_CLOCK",0,"none");
+		/*newEventDesc.Eid = PCXX_EV_WALL_CLOCK;
 		newEventDesc.Group = "TRACER";
 		newEventDesc.EventName = "WALL_CLOCK";
 		newEventDesc.Tag = 0;
-		newEventDesc.Param = "none";
+		newEventDesc.Param = "none";*/
 		tFile.EventIdMap.put(new Integer(PCXX_EV_WALL_CLOCK),newEventDesc);//[PCXX_EV_WALL_CLOCK] = newEventDesc;
-		newEventDesc = new EventDescr();
-		newEventDesc.Eid = TAU_MESSAGE_SEND;
+		
+		newEventDesc = new EventDescr(TAU_MESSAGE_SEND,"TAU_MESSAGE","MESSAGE_SEND",-7,"par");
+		/*newEventDesc.Eid = TAU_MESSAGE_SEND;
 		newEventDesc.Group = "TAU_MESSAGE";
 		newEventDesc.EventName = "MESSAGE_SEND";
 		newEventDesc.Tag = -7;
-		newEventDesc.Param = "par";
+		newEventDesc.Param = "par";*/
+		
 		tFile.EventIdMap.put(new Integer(TAU_MESSAGE_SEND),newEventDesc);//[TAU_MESSAGE_SEND] = newEventDesc;
-		newEventDesc = new EventDescr();
-		newEventDesc.Eid = TAU_MESSAGE_RECV;
+		newEventDesc = new EventDescr(TAU_MESSAGE_RECV,"TAU_MESSAGE","MESSAGE_RECV",-8,"par");
+		/*newEventDesc.Eid = TAU_MESSAGE_RECV;
 		newEventDesc.Group = "TAU_MESSAGE";
 		newEventDesc.EventName = "MESSAGE_RECV";
 		newEventDesc.Tag = -8;
-		newEventDesc.Param = "par";
+		newEventDesc.Param = "par";*/
 		tFile.EventIdMap.put(new Integer(TAU_MESSAGE_RECV),newEventDesc);//[TAU_MESSAGE_RECV] = newEventDesc;
 
 		/* return file handle */
