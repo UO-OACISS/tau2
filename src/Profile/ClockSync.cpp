@@ -45,6 +45,13 @@ bool& TheTauTraceSyncOffsetSet() {
 }
 
 
+// We're probably going to have to change this for some platforms
+#include <unistd.h>
+static long getUniqueMachineIdentifier() {
+  return gethostid();
+}
+
+
 
 double TauSyncAdjustTimeStamp(double timestamp) {
   if (TheTauTraceSyncOffsetSet() == false) {
@@ -67,7 +74,7 @@ static double getPreSyncTime(int tid = 0) {
 }
 
 
-static double masterServeOffset(int slave) {
+static double masterServeOffset(int slave, MPI_Comm comm) {
   int lcount;
   int i, min;
   double tsend[SYNC_LOOP_COUNT], trecv[SYNC_LOOP_COUNT];
@@ -81,8 +88,8 @@ static double masterServeOffset(int slave) {
 
   for (i = 0; i < lcount; i++) {
     tsend[i] = getPreSyncTime();
-    PMPI_Send(NULL, 0, MPI_INT, slave, 1, MPI_COMM_WORLD);
-    PMPI_Recv(NULL, 0, MPI_INT, slave, 2, MPI_COMM_WORLD, &stat);
+    PMPI_Send(NULL, 0, MPI_INT, slave, 1, comm);
+    PMPI_Recv(NULL, 0, MPI_INT, slave, 2, comm, &stat);
     trecv[i] = getPreSyncTime();
   }
 
@@ -99,16 +106,16 @@ static double masterServeOffset(int slave) {
   sync_time = tsend[min] + (pingpong_time / 2);
 
   // send index of minimum ping-pong
-  PMPI_Send(&min, 1, MPI_INT, slave, 3, MPI_COMM_WORLD);
+  PMPI_Send(&min, 1, MPI_INT, slave, 3, comm);
   // send sync_time
-  PMPI_Send(&sync_time, 1, MPI_DOUBLE, slave, 4, MPI_COMM_WORLD);
+  PMPI_Send(&sync_time, 1, MPI_DOUBLE, slave, 4, comm);
 
   // master has no offset
   return 0.0;
 }
 
 
-static double slaveDetermineOffset(int master, int rank) {
+static double slaveDetermineOffset(int master, int rank, MPI_Comm comm) {
   int i, min;
   double tsendrecv[SYNC_LOOP_COUNT];
   double sync_time;
@@ -116,44 +123,18 @@ static double slaveDetermineOffset(int master, int rank) {
 
   // perform ping-pong loop
   for (i = 0; i < SYNC_LOOP_COUNT; i++) {
-    PMPI_Recv(NULL, 0, MPI_INT, master, 1, MPI_COMM_WORLD, &stat);
+    PMPI_Recv(NULL, 0, MPI_INT, master, 1, comm, &stat);
     tsendrecv[i] = getPreSyncTime();
-    PMPI_Send(NULL, 0, MPI_INT, master, 2, MPI_COMM_WORLD);
+    PMPI_Send(NULL, 0, MPI_INT, master, 2, comm);
   }
 
   // recieve the index of the ping-pong with the lowest time
-  PMPI_Recv(&min, 1, MPI_INT, master, 3, MPI_COMM_WORLD,  &stat);
+  PMPI_Recv(&min, 1, MPI_INT, master, 3, comm,  &stat);
   // recieve the sync_time from the master
-  PMPI_Recv(&sync_time, 1, MPI_DOUBLE, master, 4, MPI_COMM_WORLD, &stat);
+  PMPI_Recv(&sync_time, 1, MPI_DOUBLE, master, 4, comm, &stat);
 
   double ltime = tsendrecv[min];
   return sync_time - ltime;
-}
-
-
-
-
-static double determineOffset(int rank, int size) {
-  int i;
-  double offset;
-
-  offset = 0.0;
-
-  PMPI_Barrier(MPI_COMM_WORLD);
-
-  for (i = 1; i < size; i++) {
-    PMPI_Barrier(MPI_COMM_WORLD);
-    if (rank == i ){
-      offset = slaveDetermineOffset(0, i);
-    } else if (rank == 0) {
-      offset = masterServeOffset(i);
-    }
-  }
-
-  PMPI_Barrier(MPI_COMM_WORLD);
-
-
-  return offset;
 }
 
 
@@ -163,7 +144,18 @@ extern "C" void TauSyncClocks(int rank, int size) {
 
   PMPI_Barrier(MPI_COMM_WORLD);
   printf ("TAU: Clock Synchonization active on node : %d\n", rank);
-  //   printf ("Zero offset for node %d = %.16G\n", rank, TheTauTraceBeginningOffset());
+
+
+  MPI_Comm machineComm;
+
+  PMPI_Comm_split(MPI_COMM_WORLD, getUniqueMachineIdentifier(), 0, &machineComm);
+
+  int machineRank;
+  int numProcsThisMachine;
+  PMPI_Comm_rank(machineComm, &machineRank);
+  PMPI_Comm_size(machineComm, &numProcsThisMachine);
+
+//   printf ("world rank %d, pform_id = %d, node rank = %d\n", rank, getUniqueMachineIdentifier(), machineRank);
 
   // clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
   // we reset to zero so that the offsets won't be so large as to give us negative numbers
@@ -171,11 +163,47 @@ extern "C" void TauSyncClocks(int rank, int size) {
   TheTauTraceBeginningOffset() = getPreSyncTime();
   PMPI_Barrier(MPI_COMM_WORLD);
 
+  // inter-machine communicator
+  MPI_Comm interMachineComm;
+  int numMachines;
 
-  double syncOffset = determineOffset(rank, size);
-  //   printf ("TAU: Sync Offset for node %d = %.16G\n", rank, syncOffset);
+  // sync rank is the rank within the inter-machine communicator
+  int syncRank;
 
-  TheTauTraceSyncOffset() = syncOffset;
+  // create a communicator with one process from each machine
+  PMPI_Comm_split(MPI_COMM_WORLD, machineRank, 0, &interMachineComm);
+  PMPI_Comm_rank(interMachineComm, &syncRank);
+  PMPI_Comm_size(interMachineComm, &numMachines);
+
+  double offset;
+
+  offset = 0.0;
+
+  PMPI_Barrier(MPI_COMM_WORLD);
+
+  if (machineRank == 0) {
+    for (int i = 1; i < numMachines; i++) {
+      PMPI_Barrier(interMachineComm);
+      if (syncRank == i ){
+	offset = slaveDetermineOffset(0, i, interMachineComm);
+      } else if (syncRank == 0) {
+	offset = masterServeOffset(i, interMachineComm);
+      }
+    }
+  }
+
+  // broadcast the result to other processes on this machine
+  PMPI_Bcast(&offset, 1, MPI_DOUBLE, 0, machineComm);
+
+  // broadcast the associated starting offset
+  double startOffset = TheTauTraceBeginningOffset();
+  PMPI_Bcast(&startOffset, 1, MPI_DOUBLE, 0, machineComm);
+  TheTauTraceBeginningOffset() = startOffset;
+
+  PMPI_Barrier(MPI_COMM_WORLD);
+
+
+  TheTauTraceSyncOffset() = offset;
   TheTauTraceSyncOffsetSet() = true;
 
 }
