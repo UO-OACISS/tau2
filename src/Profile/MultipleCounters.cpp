@@ -44,6 +44,15 @@ using namespace std;
 #endif /* TAU_EPILOG */
 #endif // TRACING_ON
 
+#if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
+#ifndef TAU_CATAMOUNT
+#define TAU_CATAMOUNT
+#endif /* TAU_CATAMOUNT */
+#include <catamount/dclock.h>
+#endif /* __QK_USER__ || __LIBCATAMOUNT__ */
+
+
+
 #ifdef TAU_MPI
 extern TauUserEvent& TheSendEvent(void);
 extern TauUserEvent& TheRecvEvent(void);
