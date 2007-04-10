@@ -26,6 +26,7 @@
 
 #include <TAU.h>
 #include <mpi.h>
+#include <stdio.h>
 
 #define SYNC_LOOP_COUNT 10
 
