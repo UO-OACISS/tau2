@@ -6,6 +6,7 @@
 
 #ifdef TAU_SYNCHRONIZE_CLOCKS
 extern void TauSyncClocks(int rank, int size);
+extern void TauSyncFinalClocks(int rank, int size);
 #endif
 
 
@@ -1332,10 +1333,18 @@ MPI_Errhandler errhandler;
 int  MPI_Finalize(  )
 {
   int  returnVal;
+  int size;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+#ifdef TAU_SYNCHRONIZE_CLOCKS
+
+  PMPI_Comm_size( MPI_COMM_WORLD, &size );
+
+  TauSyncFinalClocks(procid_0, size);
+#endif
+
   returnVal = PMPI_Finalize(  );
 
   TAU_PROFILE_STOP(tautimer);
