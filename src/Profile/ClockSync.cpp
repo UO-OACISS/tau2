@@ -27,6 +27,17 @@
 #include <TAU.h>
 #include <mpi.h>
 #include <stdio.h>
+#include <Profile/tau_types.h>
+
+
+#ifdef TRACING_ON
+#ifdef TAU_EPILOG
+#include "elg_trc.h"
+#else /* TAU_EPILOG */
+#define PCXX_EVENT_SRC
+#include "Profile/pcxx_events.h"
+#endif /* TAU_EPILOG */
+#endif // TRACING_ON 
 
 #define SYNC_LOOP_COUNT 10
 
@@ -140,29 +151,14 @@ static double slaveDetermineOffset(int master, int rank, MPI_Comm comm) {
 
 
 
-// The MPI_Init wrapper calls this routine
-extern "C" void TauSyncClocks(int rank, int size) {
-
-  PMPI_Barrier(MPI_COMM_WORLD);
-  printf ("TAU: Clock Synchonization active on node : %d\n", rank);
-
-
+static double getTimeOffset(int rank, int size) {
   MPI_Comm machineComm;
-
   PMPI_Comm_split(MPI_COMM_WORLD, getUniqueMachineIdentifier(), 0, &machineComm);
 
   int machineRank;
   int numProcsThisMachine;
   PMPI_Comm_rank(machineComm, &machineRank);
   PMPI_Comm_size(machineComm, &numProcsThisMachine);
-
-//   printf ("world rank %d, pform_id = %d, node rank = %d\n", rank, getUniqueMachineIdentifier(), machineRank);
-
-  // clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
-  // we reset to zero so that the offsets won't be so large as to give us negative numbers
-  // on some nodes.  This also allows us to easily use 0 before MPI_Init.
-  TheTauTraceBeginningOffset() = getPreSyncTime();
-  PMPI_Barrier(MPI_COMM_WORLD);
 
   // inter-machine communicator
   MPI_Comm interMachineComm;
@@ -176,9 +172,12 @@ extern "C" void TauSyncClocks(int rank, int size) {
   PMPI_Comm_rank(interMachineComm, &syncRank);
   PMPI_Comm_size(interMachineComm, &numMachines);
 
-  double offset;
+  // broadcast the associated starting offset
+  double startOffset = TheTauTraceBeginningOffset();
+  PMPI_Bcast(&startOffset, 1, MPI_DOUBLE, 0, machineComm);
+  TheTauTraceBeginningOffset() = startOffset;
 
-  offset = 0.0;
+  double offset = 0.0;
 
   PMPI_Barrier(MPI_COMM_WORLD);
 
@@ -196,15 +195,52 @@ extern "C" void TauSyncClocks(int rank, int size) {
   // broadcast the result to other processes on this machine
   PMPI_Bcast(&offset, 1, MPI_DOUBLE, 0, machineComm);
 
-  // broadcast the associated starting offset
-  double startOffset = TheTauTraceBeginningOffset();
-  PMPI_Bcast(&startOffset, 1, MPI_DOUBLE, 0, machineComm);
-  TheTauTraceBeginningOffset() = startOffset;
+
+  return offset;
+}
+
+// The MPI_Finalize wrapper calls this routine
+extern "C" void TauSyncFinalClocks(int rank, int size) {
+  double offset = getTimeOffset(rank, size);
+  double diff = TheTauTraceSyncOffset() - offset;
+//   printf ("%d: Difference in offset is %.16G (%.16G - %.16G)\n", rank, diff, TheTauTraceSyncOffset(), offset);
+
+  offset = getTimeOffset(rank, size);
+  TAU_REGISTER_EVENT(endOffset, "TauTraceClockOffsetEnd");
+  TraceEvent((endOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
+
+//   printf ("%d: Foffset = %.16G\n", rank, offset);
+//   offset = getTimeOffset(rank, size);
+//   printf ("%d: Foffset = %.16G\n", rank, offset);
+//   offset = getTimeOffset(rank, size);
+//   printf ("%d: Foffset = %.16G\n", rank, offset);
+}
+
+// The MPI_Init wrapper calls this routine
+extern "C" void TauSyncClocks(int rank, int size) {
 
   PMPI_Barrier(MPI_COMM_WORLD);
+  printf ("TAU: Clock Synchonization active on node : %d\n", rank);
+  // clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
+  // we reset to zero so that the offsets won't be so large as to give us negative numbers
+  // on some nodes.  This also allows us to easily use 0 before MPI_Init.
+  TheTauTraceBeginningOffset() = getPreSyncTime();
+
+  double offset;
+
+  offset = getTimeOffset(rank, size);
+  TAU_REGISTER_EVENT(beginOffset, "TauTraceClockOffsetStart");
+  TraceEvent((beginOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
+
+//   printf ("%d: offset = %.16G\n", rank, offset);
+//   offset = getTimeOffset(rank, size);
+//   printf ("%d: offset = %.16G\n", rank, offset);
+//   offset = getTimeOffset(rank, size);
+//   printf ("%d: offset = %.16G\n", rank, offset);
 
 
   TheTauTraceSyncOffset() = offset;
   TheTauTraceSyncOffsetSet() = true;
+  PMPI_Barrier(MPI_COMM_WORLD);
 
 }
