@@ -5,6 +5,7 @@
 **    Copyright 2007  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+**    Forschungszentrum Juelich                                            **
 ****************************************************************************/
 /****************************************************************************
 **	File 		: ClockSync.cpp  				   **
