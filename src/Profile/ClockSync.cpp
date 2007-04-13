@@ -67,8 +67,6 @@ static long getUniqueMachineIdentifier() {
   return gethostid();
 }
 
-
-
 double TauSyncAdjustTimeStamp(double timestamp) {
   if (TheTauTraceSyncOffsetSet() == false) {
     // return 0 until sync'd
@@ -205,19 +203,15 @@ static double getTimeOffset(int rank, int size) {
 
 // The MPI_Finalize wrapper calls this routine
 extern "C" void TauSyncFinalClocks(int rank, int size) {
+  // only do this when tracing
+#ifdef TRACING_ON
   double offset = getTimeOffset(rank, size);
   double diff = TheTauTraceSyncOffset() - offset;
-//   printf ("%d: Difference in offset is %.16G (%.16G - %.16G)\n", rank, diff, TheTauTraceSyncOffset(), offset);
 
   offset = getTimeOffset(rank, size);
   TAU_REGISTER_EVENT(endOffset, "TauTraceClockOffsetEnd");
   TraceEvent((endOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
-
-//   printf ("%d: Foffset = %.16G\n", rank, offset);
-//   offset = getTimeOffset(rank, size);
-//   printf ("%d: Foffset = %.16G\n", rank, offset);
-//   offset = getTimeOffset(rank, size);
-//   printf ("%d: Foffset = %.16G\n", rank, offset);
+#endif
 }
 
 // The MPI_Init wrapper calls this routine
@@ -230,21 +224,16 @@ extern "C" void TauSyncClocks(int rank, int size) {
   // on some nodes.  This also allows us to easily use 0 before MPI_Init.
   TheTauTraceBeginningOffset() = getPreSyncTime();
 
-  double offset;
+  double offset = 0;
 
+  // only do this when tracing
+#ifdef TRACING_ON
   offset = getTimeOffset(rank, size);
   TAU_REGISTER_EVENT(beginOffset, "TauTraceClockOffsetStart");
   TraceEvent((beginOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
-
-//   printf ("%d: offset = %.16G\n", rank, offset);
-//   offset = getTimeOffset(rank, size);
-//   printf ("%d: offset = %.16G\n", rank, offset);
-//   offset = getTimeOffset(rank, size);
-//   printf ("%d: offset = %.16G\n", rank, offset);
-
+#endif
 
   TheTauTraceSyncOffset() = offset;
   TheTauTraceSyncOffsetSet() = true;
   PMPI_Barrier(MPI_COMM_WORLD);
-
 }
