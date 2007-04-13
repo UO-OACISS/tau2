@@ -156,7 +156,21 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
 }
 
 static bool itemEqual(const itemRef* r1, const itemRef* r2) {
-  return ( (r1->line == r2->line) &&
+#ifdef DEBUG
+  printf("Comparing <%d:%d> with <%d:%d> kind = %d vs %d, target %d vs %d, attribute %d vs %d\n",
+	r1->line, r1->col, r2->line, r2->col, r1->kind, r2->kind, r1->isTarget, r2->isTarget, r1->attribute, r2->attribute);
+#endif /* DEBUG */
+  /* two loops on the same line shouldn't be instrumented twice -- happens with templates with different instantiations. */
+  if ((r1->line == r2->line) && (r1->col == r2->col) && (r1->kind == r2->kind) &&
+	(r1->isTarget == r2->isTarget) && (r1->attribute == r2->attribute) &&
+	((r1->kind == START_LOOP_TIMER ) || (r1->kind == STOP_LOOP_TIMER))) {
+#ifdef DEBUG
+    printf("Items are equal returning true!\n");
+#endif /* DEBUG */
+    return true; /* they are equal -- don't bother checking the snippet part.*/
+  }
+  else 
+    return ( (r1->line == r2->line) &&
            (r1->col  == r2->col) && 
            (r1->kind == r2->kind) && 
            (r1->isTarget == r2->isTarget) && 
@@ -3535,8 +3549,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.160 $   $Date: 2007/04/13 00:43:59 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.160 2007/04/13 00:43:59 sameer Exp $
+ * $Revision: 1.161 $   $Date: 2007/04/13 01:10:22 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.161 2007/04/13 01:10:22 sameer Exp $
  ***************************************************************************/
 
 
