@@ -842,7 +842,8 @@ the open brace. */
 		  ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
 		  for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
 		    ostr<<inbuf[k]; 
-		  ostr <<" }";
+                  ostr <<endl;
+		  ostr <<"      }";
 		  ostr <<endl;
 		  instrumented = true; 
 		} else {
@@ -3549,8 +3550,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.161 $   $Date: 2007/04/13 01:10:22 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.161 2007/04/13 01:10:22 sameer Exp $
+ * $Revision: 1.162 $   $Date: 2007/04/13 01:20:05 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.162 2007/04/13 01:20:05 sameer Exp $
  ***************************************************************************/
 
 
