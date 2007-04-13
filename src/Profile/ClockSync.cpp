@@ -26,6 +26,9 @@
 
 
 #include <TAU.h>
+
+// this is generally needed for mpich2
+#define MPICH_IGNORE_CXX_SEEK
 #include <mpi.h>
 #include <stdio.h>
 #include <Profile/tau_types.h>
