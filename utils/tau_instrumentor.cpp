@@ -2716,7 +2716,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		printf("Before 2.1: (*it)->col = %d, write_upto=%d\n", (*it)->col, write_upto);
 #endif /* DEBUG */
 		if ((*it)->col != 1)
-		  ostr << "       ";
+		  ostr << "      ";
 		// IMPORTANT: If the formatting of the next statement is wrong, please remove the above comment!
 		// write the rest of the original statement
      		for (k = (*it)->col-1; k < write_upto ; k++) {
@@ -2796,7 +2796,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    if (is_if_stmt)
 	    { 
 	       ostr << "then"<<endl;
-	       ostr << "       ";
+	       ostr << "      ";
 #ifdef DEBUG
 		cout <<"WRITING (6:then..): then"<<endl;
 #endif /* DEBUG */
@@ -3535,8 +3535,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.159 $   $Date: 2007/03/27 16:58:20 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.159 2007/03/27 16:58:20 sameer Exp $
+ * $Revision: 1.160 $   $Date: 2007/04/13 00:43:59 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.160 2007/04/13 00:43:59 sameer Exp $
  ***************************************************************************/
 
 
