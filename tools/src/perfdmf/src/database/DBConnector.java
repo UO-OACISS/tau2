@@ -339,17 +339,30 @@ public class DBConnector implements DB {
     //     }
 
     public static boolean isReadAbleType(int type) {
-        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB || type == java.sql.Types.INTEGER
-                || type == java.sql.Types.DECIMAL || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
-                || type == java.sql.Types.LONGVARCHAR || type == java.sql.Types.TIME || type == java.sql.Types.TIMESTAMP)
+        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB 
+				|| type == java.sql.Types.INTEGER || type == java.sql.Types.DECIMAL 
+				|| type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
+                || type == java.sql.Types.LONGVARCHAR || type == java.sql.Types.TIME 
+				|| type == java.sql.Types.TIMESTAMP 
+				// added binary types for XML_METADATA_GZ processing
+				|| type == java.sql.Types.BINARY 
+				|| type == java.sql.Types.VARBINARY 
+				|| type == java.sql.Types.LONGVARBINARY 
+				|| type == java.sql.Types.BLOB)
             return true;
         return false;
     }
 
     public static boolean isWritableType(int type) {
-        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB || type == java.sql.Types.INTEGER
-                || type == java.sql.Types.DECIMAL || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
-                || type == java.sql.Types.LONGVARCHAR)
+        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB 
+				|| type == java.sql.Types.INTEGER || type == java.sql.Types.DECIMAL 
+				|| type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT 
+				|| type == java.sql.Types.LONGVARCHAR 
+				// added binary types for XML_METADATA_GZ processing
+				|| type == java.sql.Types.BINARY 
+				|| type == java.sql.Types.VARBINARY 
+				|| type == java.sql.Types.LONGVARBINARY 
+				|| type == java.sql.Types.BLOB)
             return true;
         return false;
     }

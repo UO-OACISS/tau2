@@ -5,6 +5,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.Date;
 
+import edu.uoregon.tau.common.Gzip;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
 
@@ -19,7 +20,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.17 2007/03/19 17:23:32 amorris Exp $
+ * CVS $Id: Trial.java,v 1.18 2007/04/14 01:07:08 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -36,6 +37,7 @@ public class Trial implements Serializable {
     private static String fieldNames[];
     private static int fieldTypes[];
     public static final String XML_METADATA = new String("XML_METADATA");
+    public static final String XML_METADATA_GZ = new String("XML_METADATA_GZ");
 
     private int trialID;
     private int experimentID;
@@ -450,7 +452,15 @@ public class Trial implements Serializable {
                 trial.setName(resultSet.getString(pos++));
 
                 for (int i = 0; i < Trial.fieldNames.length; i++) {
-                    trial.setField(i, resultSet.getString(pos++));
+					if (Trial.fieldNames[i].equalsIgnoreCase(XML_METADATA_GZ)) {
+						InputStream compressedStream = resultSet.getBinaryStream(pos++);
+						String tmp = Gzip.decompress(compressedStream);
+						//trial.setField(i, tmp);
+						if (tmp != null && tmp.length() > 0)
+							trial.setField(XML_METADATA, tmp);
+					} else {
+						trial.setField(i, resultSet.getString(pos++));
+					}
                 }
 
                 trials.addElement(trial);
@@ -505,6 +515,8 @@ public class Trial implements Serializable {
 
             // FIRST!  Check if the trial table has a metadata column
             checkForMetadataColumn(db);
+            // SECOND!  Check if the trial table has a zipped metadata column
+            checkForMetadataColumn2(db);
 
             // get the fields since this is an insert
             if (!itExists) {
@@ -526,7 +538,8 @@ public class Trial implements Serializable {
             if (getDataSource() != null) {
                 String tmp = getDataSource().getMetadataString();
                 if (tmp != null && tmp.length() > 0) {
-                    setField(XML_METADATA, tmp);
+                    setField(XML_METADATA, null);
+                    setField(XML_METADATA_GZ, tmp);
                 }
             }
 
@@ -584,7 +597,16 @@ public class Trial implements Serializable {
             statement.setInt(pos++, experimentID);
             for (int i = 0; i < this.getNumFields(); i++) {
                 if (DBConnector.isWritableType(this.getFieldType(i))) {
-                    statement.setString(pos++, this.getField(i));
+					if (this.getFieldName(i).equalsIgnoreCase(XML_METADATA_GZ)) {
+						if (this.getField(i) == null) {
+							statement.setNull(pos++, this.getFieldType(i));
+						} else {
+							byte[] compressed = Gzip.compress(this.getField(i));
+							ByteArrayInputStream in = new ByteArrayInputStream(compressed);
+							statement.setBinaryStream(pos++, in, compressed.length);
+						}
+					} else
+                    	statement.setString(pos++, this.getField(i));
                 }
             }
 
@@ -832,20 +854,58 @@ public class Trial implements Serializable {
             // create the column in the database
             sql.append("ALTER TABLE " + db.getSchemaPrefix() + "trial ADD COLUMN ");
             sql.append(XML_METADATA);
-            if ((db.getDBType().equalsIgnoreCase("oracle")) || (db.getDBType().equalsIgnoreCase("derby"))) {
-                sql.append(" CLOB");
+            if (db.getDBType().equalsIgnoreCase("oracle")) {
+                sql.append(" CLOB"); // defaults to 4 GB max
+            } else if (db.getDBType().equalsIgnoreCase("derby")) {
+                sql.append(" CLOB"); // defaults to 1 MB max
             } else if (db.getDBType().equalsIgnoreCase("db2")) {
-                sql.append(" CLOB");
+                sql.append(" CLOB"); // defaults to 1 GB max
             } else if (db.getDBType().equalsIgnoreCase("mysql")) {
-                sql.append(" TEXT");
+                sql.append(" TEXT"); // defaults to 64 KB max
             } else if (db.getDBType().equalsIgnoreCase("postgresql")) {
-                sql.append(" TEXT");
+                sql.append(" TEXT");  // defaults to 4 GB max
             }
 
             try {
                 db.execute(sql.toString());
             } catch (SQLException e) {
                 System.err.println("Unable to add " + XML_METADATA + " column to trial table.");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void checkForMetadataColumn2(DB db) {
+        String[] columns = Trial.getFieldNames(db);
+        boolean found = false;
+        // loop through the column names, and see if we have this column already
+        for (int i = 0; i < columns.length; i++) {
+            if (columns[i].equalsIgnoreCase(XML_METADATA_GZ)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            StringBuffer sql = new StringBuffer();
+            // create the column in the database
+            sql.append("ALTER TABLE " + db.getSchemaPrefix() + "trial ADD COLUMN ");
+            sql.append(XML_METADATA_GZ);
+            if (db.getDBType().equalsIgnoreCase("oracle")) {
+                sql.append(" BLOB"); // defaults to 4 GB max
+            } else if (db.getDBType().equalsIgnoreCase("derby")) {
+                sql.append(" BLOB"); // defaults to 1 MB max
+            } else if (db.getDBType().equalsIgnoreCase("db2")) {
+                sql.append(" BLOB"); // defaults to 1 GB max
+            } else if (db.getDBType().equalsIgnoreCase("mysql")) {
+                sql.append(" BLOB"); // defaults to 64 KB max
+            } else if (db.getDBType().equalsIgnoreCase("postgresql")) {
+                sql.append(" BYTEA");  // defaults to 4 GB max
+            }
+
+            try {
+                db.execute(sql.toString());
+            } catch (SQLException e) {
+                System.err.println("Unable to add " + XML_METADATA_GZ + " column to trial table.");
                 e.printStackTrace();
             }
         }

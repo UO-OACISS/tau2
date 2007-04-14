@@ -17,9 +17,9 @@ import org.w3c.dom.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.17 2007/03/12 17:46:56 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.18 2007/04/14 01:07:08 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  */
 public abstract class DataSource {
 
@@ -1140,10 +1140,8 @@ public abstract class DataSource {
 
             // create the common attribute node
             if (metaData.size() > 0) {
-                root.appendChild(document.createTextNode("\n  "));
                 master = (Element) document.createElement("tau:CommonProfileAttributes");
                    root.appendChild(master);
-                root.appendChild(document.createTextNode("\n"));
 
                 // output the first thread of name / value pairs, like this:
                 // <attribute><name>xxx</name><value>yyy</value></attribute>
@@ -1151,19 +1149,14 @@ public abstract class DataSource {
                     String name = (String) it2.next();
                     String value = (String) metaData.get(name);
                     Element attribute = (Element) document.createElement("tau:attribute");
-                    master.appendChild(document.createTextNode("\n    "));
                     master.appendChild(attribute);
                     Element attrName = (Element) document.createElement("tau:name");
-                    attribute.appendChild(document.createTextNode("\n      "));
                     attribute.appendChild(attrName);
                     attrName.appendChild(document.createTextNode(name));
                     Element attrValue = (Element) document.createElement("tau:value");
-                    attribute.appendChild(document.createTextNode("\n      "));
                     attribute.appendChild(attrValue);
                     attrValue.appendChild(document.createTextNode(value));
-                    attribute.appendChild(document.createTextNode("\n    "));
                 }
-                master.appendChild(document.createTextNode("\n  "));
             }
 
             // for all threads of execution, output the attributes
@@ -1188,28 +1181,21 @@ public abstract class DataSource {
                     // append it to the tree.
                     if (!metaData.containsKey(name)) {
                         Element attribute = (Element) document.createElement("tau:attribute");
-                        delta.appendChild(document.createTextNode("\n    "));
                         delta.appendChild(attribute);
                         Element attrName = (Element) document.createElement("tau:name");
-                        attribute.appendChild(document.createTextNode("\n      "));
                         attribute.appendChild(attrName);
                         attrName.appendChild(document.createTextNode(name));
                         Element attrValue = (Element) document.createElement("tau:value");
-                        attribute.appendChild(document.createTextNode("\n      "));
                         attribute.appendChild(attrValue);
                         attrValue.appendChild(document.createTextNode(value));
-                        attribute.appendChild(document.createTextNode("\n    "));
                         addit = true;
                     }
                 }
-                delta.appendChild(document.createTextNode("\n  "));
 
                 if (addit) {
                     // don't add it to the tree, unless it has items that differ from
                     // the master record
-                    root.appendChild(document.createTextNode("  "));
                     root.appendChild(delta);
-                    root.appendChild(document.createTextNode("\n"));
                 }
 
             }
