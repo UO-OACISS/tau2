@@ -379,7 +379,8 @@ public class TestHarness {
 	*/
 		//edu.uoregon.tau.common.TauScripter.execfile("/Users/khuck/tau2/tools/src/perfexplorer/etc/generalcharttest.py");
 		//edu.uoregon.tau.common.TauScripter.execfile("etc/generalcharttest.py");
-		edu.uoregon.tau.common.TauScripter.execfile("etc/lu-interactive.py");
+		//edu.uoregon.tau.common.TauScripter.execfile("etc/lu-interactive.py");
+		edu.uoregon.tau.common.TauScripter.execfile("etc/gtc.py");
 	}
 		
 

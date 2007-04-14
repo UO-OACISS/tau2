@@ -17,6 +17,7 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.common.Gzip;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.*;
+//import javax.xml.xpath.*;
 import java.util.regex.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.*;
@@ -37,13 +38,14 @@ import org.w3c.dom.*;
 import org.xml.sax.*;
 import java.io.StringReader;
 import java.io.Reader;
+import java.io.InputStream;
 
 /**
  * The GeneralChartData class is used to select data from the database which 
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.11 2007/03/28 00:43:18 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.12 2007/04/14 01:09:02 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -216,7 +218,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			statement.execute();
 			statement.close();
 
-			statement = db.prepareStatement("select id, XML_METADATA from temp_trial ");
+			statement = db.prepareStatement("select id, XML_METADATA, XML_METADATA_GZ from temp_trial ");
 			//System.out.println(statement.toString());
 			ResultSet xmlResults = statement.executeQuery();
 
@@ -228,9 +230,15 @@ public class GeneralChartData extends RMIGeneralChartData {
 			db.setAutoCommit(false);
 
 			while (xmlResults.next() != false) {
+				// get the uncompressed string first...
+				String tmp = xmlResults.getString(2);
+				if (tmp == null || tmp.length() == 0) {
+					InputStream compressedStream = xmlResults.getBinaryStream(3);
+					tmp = Gzip.decompress(compressedStream);
+				}
 				// by adding these, we ensure only the main event
 				// will be selected in the next temporary table creation!
-				Reader reader = new StringReader(xmlResults.getString(2));
+				Reader reader = new StringReader(tmp);
 				InputSource source = new InputSource(reader);
 				Document metadata = builder.parse(source);
 

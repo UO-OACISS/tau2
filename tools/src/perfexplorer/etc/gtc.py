@@ -5,7 +5,7 @@ from common import EngineType
 
 def TotalExecutionTime(pe):
 	pe.resetChartDefaults();
-	pe.setApplication("GTC")
+	pe.setApplication("gtc")
 	pe.setMetricName("Time")
 	pe.setExperiment("ocracoke-O2")
 	pe.addExperiment("ocracoke-O3")
@@ -21,7 +21,7 @@ def TotalExecutionTime(pe):
 
 def Speedup(pe):
 	pe.resetChartDefaults();
-	pe.setApplication("GTC")
+	pe.setApplication("gtc")
 	pe.setMetricName("Time")
 	pe.setExperiment("ocracoke-O2")
 	pe.addExperiment("ocracoke-O3")
@@ -39,7 +39,7 @@ def Speedup(pe):
 
 def SpeedupByEvent(pe):
 	pe.resetChartDefaults();
-	pe.setApplication("GTC")
+	pe.setApplication("gtc")
 	pe.setMetricName("Time")
 	pe.addExperiment("ocracoke-O5")
 	pe.setChartTitle("GTC Total Execution Time")
@@ -53,7 +53,7 @@ def SpeedupByEvent(pe):
 
 def Simple(pe):
 	pe.resetChartDefaults();
-	pe.setApplication("GTC")
+	pe.setApplication("gtc")
 	pe.setMetricName("Time")
 	pe.setExperiment("ocracoke-O2")
 	pe.setChartTitle("GTC Total Execution Time")
@@ -67,9 +67,9 @@ def Simple(pe):
 
 def XMLtest(pe):
 	pe.resetChartDefaults();
-	pe.setApplication("GTC")
+	pe.setApplication("gtc")
 	pe.setExperiment("ocracoke-O2")
-	pe.addExperiment("jacquard")
+	#pe.addExperiment("jacquard")
 	pe.setMetricName("%TIME%")
 	pe.setChartTitle("GTC Total Execution Time")
 	pe.setChartSeriesName("temp_xml_metadata.metadata_value")
@@ -84,9 +84,9 @@ def XMLtest(pe):
 
 def XMLharder(pe):
 	pe.resetChartDefaults();
-	pe.setApplication("GTC")
+	pe.setApplication("gtc")
 	pe.setExperiment("ocracoke-O2")
-	pe.addExperiment("jacquard")
+	#pe.addExperiment("jacquard")
 	pe.setMetricName("%TIME%")
 	pe.setChartTitle("GTC Total Execution Time")
 	pe.setChartXAxisName("temp_xml_metadata.metadata_value", "TAU Architecture")
@@ -101,7 +101,7 @@ def XMLharder(pe):
 
 def CompilerByEvent(pe):
 	pe.resetChartDefaults();
-	pe.setApplication("GTC compiler options")
+	pe.setApplication("gtc-overhead2")
 	# pe.setExperiment("ocracoke-noinline")
 	pe.setMetricName("Time")
 	pe.setChartTitle("GTC Compiler options by event")
@@ -117,6 +117,7 @@ def CompilerByEvent(pe):
 print "--------------- JPython test script start ------------"
 
 pe = ScriptFacade()
+Simple(pe)
 XMLtest(pe)
 XMLharder(pe)
 TotalExecutionTime(pe)
