@@ -27,22 +27,22 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 	public JComponent getTab(int index) {
 		JComponent comp = null;
 		switch(index) {
-		case (0): {
-			comp = this.panel1;
-			break;
-		}
-		case (1): {
-			comp = this.panel2;
-			break;
-		}
-		case (2): {
-			comp = this.panel3;
-			break;
-		}
-		case (3): {
-			comp = this.panel4;
-			break;
-		}
+			case (0): {
+				comp = this.panel1;
+				break;
+			}
+			case (1): {
+				comp = this.panel2;
+				break;
+			}
+			case (2): {
+				comp = this.panel3;
+				break;
+			}
+			case (3): {
+				comp = this.panel4;
+				break;
+			}
 		}
 		return comp;
 	}

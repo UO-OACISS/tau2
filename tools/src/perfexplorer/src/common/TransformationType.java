@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * This class is used as a typesafe enumeration.
  *
- * <P>CVS $Id: TransformationType.java,v 1.1 2006/09/13 23:28:21 khuck Exp $</P>
+ * <P>CVS $Id: TransformationType.java,v 1.2 2007/04/17 22:31:11 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -84,7 +84,7 @@ public final class TransformationType implements Serializable {
      */
     public static Object[] getDimensionReductions() {
 //        Object[] options = {LINEAR_PROJECTION, OVER_X_PERCENT, REGRESSION, NONE};
-        Object[] options = {OVER_X_PERCENT, NONE};
+        Object[] options = {NONE, OVER_X_PERCENT};
         return options;
     }
     

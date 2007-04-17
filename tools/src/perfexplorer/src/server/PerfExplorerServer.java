@@ -43,7 +43,7 @@ import clustering.ClusterException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.45 2007/04/17 03:25:17 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.46 2007/04/17 22:31:11 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -687,24 +687,56 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("select distinct count(m.name), m.name ");
 			}
 			buf.append(" from metric m inner join trial t on m.trial = t.id ");
+			buf.append(" inner join experiment e on t.experiment = e.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				buf.append(" where t.experiment in (");
 				List selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
-					buf.append (modelData.getExperiment().getID());
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application = ");
+						buf.append(modelData.getApplication().getID());
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment = ");
+						buf.append(modelData.getExperiment().getID());
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id = ");
+						buf.append(modelData.getTrial().getID());
+					}
 				} else {
-					for (int i = 0 ; i < selections.size() ; i++) {
-						Experiment exp = (Experiment)selections.get(i);
-						if (i > 0)
-							buf.append(",");
-						buf.append(exp.getID());
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Application app = (Application)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(app.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Experiment exp = (Experiment)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(exp.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Trial trial = (Trial)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(trial.getID());
+						}
+						buf.append(")");
 					}
 				}
-				buf.append(")");
 			}
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append(" group by cast (m.name as VARCHAR(256)) order by 1 desc");
@@ -752,24 +784,56 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("select distinct ie.name ");
 			}
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			buf.append(" inner join experiment e on t.experiment = e.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				buf.append(" where t.experiment in (");
 				List selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
-					buf.append (modelData.getExperiment().getID());
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application = ");
+						buf.append(modelData.getApplication().getID());
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment = ");
+						buf.append(modelData.getExperiment().getID());
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id = ");
+						buf.append(modelData.getTrial().getID());
+					}
 				} else {
-					for (int i = 0 ; i < selections.size() ; i++) {
-						Experiment exp = (Experiment)selections.get(i);
-						if (i > 0)
-							buf.append(",");
-						buf.append(exp.getID());
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Application app = (Application)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(app.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Experiment exp = (Experiment)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(exp.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Trial trial = (Trial)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(trial.getID());
+						}
+						buf.append(")");
 					}
 				}
-				buf.append(")");
 			}
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			//PerfExplorerOutput.println(statement.toString());
@@ -1375,16 +1439,31 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		DB db = this.getDB();
 		List list = new ArrayList();
 		String[] app = Application.getFieldNames(db);
+		list.add ("application.id");
+		list.add ("application.name");
 		for (int i = 0 ; i < app.length ; i++) {
 			list.add ("application." + app[i]);
 		}
+		list.add ("experiment.id");
+		list.add ("experiment.name");
+		list.add ("experiment.applciation");
 		String[] exp = Experiment.getFieldNames(db);
 		for (int i = 0 ; i < exp.length ; i++) {
 			list.add ("experiment." + exp[i]);
 		}
+		list.add ("trial.id");
+		list.add ("trial.name");
+		list.add ("trial.experiment");
 		String[] trial = Trial.getFieldNames(db);
 		for (int i = 0 ; i < trial.length ; i++) {
-			if (!trial[i].equalsIgnoreCase(Trial.XML_METADATA_GZ)) {
+			if (trial[i].equalsIgnoreCase(Trial.XML_METADATA_GZ)) {
+				// don't add it
+			} else if (trial[i].equalsIgnoreCase("node_count") ||
+					   trial[i].equalsIgnoreCase("contexts_per_node")) {
+				// don't add it
+			} else if (trial[i].equalsIgnoreCase("threads_per_context")) {
+				list.add ("trial.threads_of_execution");
+			} else {
 				list.add ("trial." + trial[i]);
 			}
 		}

@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.27 2007/03/19 19:23:05 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.28 2007/04/17 22:31:11 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -576,8 +576,12 @@ public class RMIPerfExplorerModel implements Serializable {
      * @param groupName
      */
 	public void setGroupName (String groupName) {
-		this.groupNames = new ArrayList();
-		this.groupNames.add(groupName);
+		if (groupName == null) {
+			this.groupNames = null;
+		} else {
+			this.groupNames = new ArrayList();
+			this.groupNames.add(groupName);
+		}
 	}
 
     /**
@@ -630,8 +634,12 @@ public class RMIPerfExplorerModel implements Serializable {
      * @param metricName
      */
 	public void setMetricName (String metricName) {
-		this.metricNames = new ArrayList();
-		this.metricNames.add(metricName);
+		if (metricName == null) {
+			this.metricNames = null;
+		} else {
+			this.metricNames = new ArrayList();
+			this.metricNames.add(metricName);
+		}
 	}
 
 	/**
@@ -708,8 +716,12 @@ public class RMIPerfExplorerModel implements Serializable {
      * @param eventNames
      */
 	public void setEventName (String eventName) {
-		this.eventNames = new ArrayList();
-		this.eventNames.add(eventName);
+		if (eventName == null) {
+			this.eventNames = null;
+		} else {
+			this.eventNames = new ArrayList();
+			this.eventNames.add(eventName);
+		}
 	}
 	
     /**

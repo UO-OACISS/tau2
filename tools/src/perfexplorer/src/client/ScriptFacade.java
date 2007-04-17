@@ -474,7 +474,10 @@ public class ScriptFacade {
 	}
 
 	public void resetChartDefaults() {
-		model.setCurrentSelection(model.getApplication());
+		//model.setCurrentSelection(model.getApplication());
+		model.setGroupName(null);
+		model.setMetricName(null);
+		model.setEventName(null);
     	this.setDimensionReduction(TransformationType.NONE, null);
 		this.setChartMetadataFieldName(null);
 		this.setChartMetadataFieldValue(null);

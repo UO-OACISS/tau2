@@ -18,7 +18,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import java.util.List;
-import java.util.Vector;
+import java.util.Iterator;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -49,6 +49,7 @@ import edu.uoregon.tau.common.VectorExport;
 public class ChartPane extends JScrollPane implements ActionListener {
 
 	private static ChartPane thePane = null;
+	private PerfExplorerConnection server = null;
 
 	private JPanel mainPanel = null;
 	private ScriptFacade facade = null;
@@ -62,19 +63,38 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private JToggleButton efficiency = new JToggleButton ("Efficiency");
 	private JToggleButton constantProblem = new JToggleButton ("Weak Scaling");
 	private JToggleButton horizontal = new JToggleButton ("Horizontal");
+
+	private List tableColumns = null;
 	private JLabel titleLabel = new JLabel("Chart Title:");
 	private JTextField chartTitle = new MyJTextField(10);
 	private JLabel seriesLabel = new JLabel("Series Name/Value:");
+	private JComboBox series = null;
 	private JLabel xaxisNameLabel = new JLabel("X Axis Name:");
+	private JTextField xaxisName = new MyJTextField(10);
 	private JLabel yaxisNameLabel = new JLabel("Y Axis Name:");
+	private JTextField yaxisName = new MyJTextField(10);
 	private JLabel xaxisValueLabel = new JLabel("X Axis Value:");
+   	private JComboBox xaxisValue = null;
 	private JLabel yaxisValueLabel = new JLabel("Y Axis Value:");
+   	private JComboBox yaxisValue = null;
 	private JLabel dimensionLabel = new JLabel("Dimension reduction:");
+   	private JComboBox dimension = new MyJComboBox();
+	private JLabel dimensionXLabel = new JLabel("Cutoff (0<x<100):");
+	private JTextField dimensionXValue = new MyJTextField(10);
 	private JLabel eventLabel = new JLabel("Event:");
+   	private JComboBox event = new MyJComboBox();
 	private JLabel metricLabel = new JLabel("Metric:");
+   	private JComboBox metric = new MyJComboBox();
 	private JLabel valueLabel = new JLabel("Value:");
+   	private JComboBox value = new MyJComboBox();
 	private JLabel xmlNameLabel = new JLabel("XML Field:");
+   	private JComboBox xmlName = new MyJComboBox();
 	private JLabel xmlValueLabel = new JLabel("XML Value:");
+   	private JComboBox xmlValue = new MyJComboBox();
+	
+
+	private JButton apply = null;
+	private JButton reset = null;
 
 	public static ChartPane getPane () {
 		if (thePane == null) {
@@ -86,9 +106,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		return thePane;
 	}
 
-
 	private ChartPane (JPanel mainPanel) {
 		super(mainPanel);
+		this.server = PerfExplorerConnection.getConnection();
 		this.mainPanel = mainPanel;
 		this.facade = new ScriptFacade();
 		JScrollBar jScrollBar = this.getVerticalScrollBar();
@@ -99,135 +119,270 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		this.mainPanel.add(createLeftMenu(), BorderLayout.WEST);
 		// create the dummy chart panel
 		this.mainPanel.add(createChartPanel(), BorderLayout.CENTER);
+		resetChartSettings();
 	}
 
-	public JPanel createLeftMenu() {
-		// create a new panel, with a vertical box layout
-		JPanel left = new JPanel();
-		left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+	private void resetChartSettings() {
+		// top toggle buttons
+		this.mainOnly.setSelected(true);
+		this.callPath.setSelected(false);
+		this.logY.setSelected(false);
+		this.scalability.setSelected(false);
+		this.efficiency.setSelected(false);
+		this.constantProblem.setSelected(false);
+		this.horizontal.setSelected(false);
+		// left text fields
+		// left combo boxes
+		this.dimension.setSelectedIndex(0);
+		this.dimensionXLabel.setEnabled(false);
+		this.dimensionXValue.setEnabled(false);
+		this.eventLabel.setEnabled(false);
+		this.event.setEnabled(false);
+		this.xmlNameLabel.setEnabled(false);
+		this.xmlName.setEnabled(false);
+		this.xmlValueLabel.setEnabled(false);
+		this.xmlValue.setEnabled(false);
 
-		left.add(titleLabel);
-		left.add(chartTitle);
-
-		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-
-		List dummy = server.getChartFieldNames();
-		left.add(seriesLabel);
-		JComboBox series = new MyJComboBox(dummy);
-		left.add(series);
-
-		left.add(xaxisNameLabel);
-		JTextField xaxisName = new MyJTextField(10);
-		left.add(xaxisName);
-
-		left.add(xaxisValueLabel);
-		JComboBox xaxisValue = new MyJComboBox(dummy);
-		left.add(xaxisValue);
-
-		left.add(yaxisNameLabel);
-		JTextField yaxisName = new MyJTextField(10);
-		left.add(yaxisName);
-
-		left.add(yaxisValueLabel);
-		JComboBox yaxisValue = new MyJComboBox(dummy);
-		left.add(yaxisValue);
-
-		left.add(dimensionLabel);
-		JComboBox dimension = new MyJComboBox(dummy);
-		left.add(dimension);
-
-		left.add(eventLabel);
-		JComboBox event = new MyJComboBox(dummy);
-		left.add(event);
-
-		left.add(metricLabel);
-		JComboBox metric = new MyJComboBox(dummy);
-		left.add(metric);
-
-		left.add(valueLabel);
-		JComboBox value = new MyJComboBox(dummy);
-		left.add(value);
-
-		left.add(xmlNameLabel);
-		JComboBox xmlName = new MyJComboBox(dummy);
-		left.add(xmlName);
-
-		left.add(xmlValueLabel);
-		JComboBox xmlValue = new MyJComboBox(dummy);
-		left.add(xmlValue);
-
-		JButton apply = new JButton ("Apply");
-		apply.setToolTipText("Apply changes and redraw chart");
-		apply.setActionCommand(UPDATE_COMMAND);
-		apply.addActionListener(this);
-		left.add(apply);
-
-		JButton reset = new JButton ("Reset");
-		reset.setToolTipText("Reset changes and clear chart");
-		reset.setActionCommand(UPDATE_COMMAND);
-		reset.addActionListener(this);
-		left.add(reset);
-
-		return (left);
+		// series name 
+		for (Iterator itr = tableColumns.iterator() ; itr.hasNext() ; ) {
+			Object o = itr.next();
+			String tmp = (String)o;
+			if (tmp.equalsIgnoreCase("experiment.name")) {
+				this.series.setSelectedItem(o);
+			} else if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
+				this.xaxisValue.setSelectedItem(o);
+			}
+		}
+		this.yaxisValue.setSelectedIndex(0);
+		refreshDynamicControls();
 	}
 
-	public JPanel createTopMenu() {
+	private void refreshDynamicControls() {
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Object selection = theModel.getCurrentSelection();
+		this.metric.removeAllItems();
+		this.event.removeAllItems();
+		if ((selection instanceof Application) ||
+		    (selection instanceof Experiment) ||
+		    (selection instanceof Trial)) {
+			List metrics = server.getPotentialMetrics(theModel);
+			for (Iterator itr = metrics.iterator() ; itr.hasNext() ; ) {
+				this.metric.addItem(itr.next());
+			}
+			List events = server.getPotentialEvents(theModel);
+			this.event.addItem("All Events");
+			for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
+				this.event.addItem(itr.next());
+			}
+		}
+	}
+
+	private JPanel createTopMenu() {
 		JPanel top = new JPanel();
 		top.setLayout(new BoxLayout(top, BoxLayout.X_AXIS));
 
 		this.mainOnly.setToolTipText("Only select the \"main\" event (i.e. maximum inclusive)");
-		this.mainOnly.setSelected(true);
+		this.mainOnly.addActionListener(this);
 		top.add(this.mainOnly);
 
 		this.callPath.setToolTipText("Include \"call path\" events (i.e. main() => foo())");
-		this.callPath.setSelected(false);
+		this.callPath.addActionListener(this);
 		top.add(this.callPath);
 
 		// excl100.setToolTipText("");
 		// top.add(excl100);
 
 		this.logY.setToolTipText("Use a Logarithmic Y axis");
-		this.logY.setSelected(false);
+		this.logY.addActionListener(this);
 		top.add(this.logY);
 
 		this.scalability.setToolTipText("Create a Scalability Chart");
-		this.scalability.setSelected(false);
+		this.scalability.addActionListener(this);
 		top.add(this.scalability);
 
 		this.efficiency.setToolTipText("Create a Relative Efficiency Chart");
-		this.efficiency.setSelected(false);
+		this.efficiency.addActionListener(this);
 		top.add(this.efficiency);
 
-		this.constantProblem.setToolTipText("Strong Scaling problem or not (else Weak Scaling)");
-		this.constantProblem.setSelected(false);
+		this.constantProblem.setToolTipText("Scaling type (Weak Scaling or Strong Scaling)");
+		this.constantProblem.addActionListener(this);
 		top.add(this.constantProblem);
 
 		this.horizontal.setToolTipText("Create a horizontal chart");
-		this.horizontal.setSelected(false);
+		this.horizontal.addActionListener(this);
 		top.add(this.horizontal);
 
 		return (top);
 	}
 
-	public JPanel createChartPanel() {
+	private JPanel createLeftMenu() {
+		// create a new panel, with a vertical box layout
+		JPanel left = new JPanel();
+		left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+
+		// chart title
+		left.add(titleLabel);
+		left.add(chartTitle);
+
+		this.tableColumns = server.getChartFieldNames();
+
+		// series name
+		left.add(seriesLabel);
+		series = new MyJComboBox(tableColumns);
+		left.add(series);
+
+		// x axis value
+		left.add(xaxisNameLabel);
+		left.add(xaxisName);
+		left.add(xaxisValueLabel);
+		xaxisValue = new MyJComboBox(tableColumns);
+		left.add(xaxisValue);
+
+		// y axis value
+		left.add(yaxisNameLabel);
+		left.add(yaxisName);
+		left.add(yaxisValueLabel);
+		String[] valueOptions = {
+					"mean.inclusive", 
+					"mean.exclusive", 
+					"mean.inclusive_percentage", 
+					"mean.exclusive_percentage", 
+					"mean.call", 
+					"mean.subroutines", 
+					"mean.inclusive_per_call", 
+					"mean.sum_exclusive_squared",
+					"total.inclusive", 
+					"total.exclusive", 
+					"total.inclusive_percentage", 
+					"total.exclusive_percentage", 
+					"total.call", 
+					"total.subroutines", 
+					"total.inclusive_per_call", 
+					"total.sum_exclusive_squared"
+					};
+		yaxisValue = new MyJComboBox(valueOptions);
+		left.add(yaxisValue);
+
+		// dimension reduction
+		left.add(dimensionLabel);
+		Object[] dimensionOptions = TransformationType.getDimensionReductions();
+		dimension = new MyJComboBox(dimensionOptions);
+		dimension.addActionListener(this);
+		left.add(dimension);
+		left.add(dimensionXLabel);
+		left.add(dimensionXValue);
+
+		// metric of interest
+		left.add(metricLabel);
+		metric = new MyJComboBox();
+		left.add(metric);
+
+		// event of interest
+		left.add(eventLabel);
+		event = new MyJComboBox();
+		left.add(event);
+
+		// XML metadata
+		left.add(xmlNameLabel);
+		xmlName = new MyJComboBox();
+		left.add(xmlName);
+		left.add(xmlValueLabel);
+		xmlValue = new MyJComboBox();
+		left.add(xmlValue);
+
+		// apply button
+		apply = new JButton ("Apply");
+		apply.setToolTipText("Apply changes and redraw chart");
+		apply.addActionListener(this);
+		left.add(apply);
+
+		// reset button
+		reset = new JButton ("Reset");
+		reset.setToolTipText("Reset changes and clear chart");
+		reset.addActionListener(this);
+		left.add(reset);
+
+		return (left);
+	}
+
+	private JPanel createChartPanel() {
 		this.chartPanel = new JPanel(new BorderLayout());
 		return (this.chartPanel);
 	}
 
-	public void updateChart () {
+	private void updateChart () {
 		// the user has selected the application, experiment, trial 
 		// from the navigation tree.  Now set the other parameters.
 		// We will use the ScriptFacade class to set the parameters -
 		// all options should be set using the scripting interface.
+		facade.resetChartDefaults();
 
-		// TESTING!
-	    facade.resetChartDefaults();
-    	facade.setMetricName("Time");
+		// title
     	facade.setChartTitle(chartTitle.getText());
-    	facade.setChartSeriesName("experiment.name");
-    	facade.setChartXAxisName("trial.node_count * trial.contexts_per_node * trial.threads_per_context", "Threads of Execution");
-    	facade.setChartYAxisName("avg(interval_mean_summary.inclusive)", "Total Time (seconds)");
+
+		// series name
+		Object obj = series.getSelectedItem();
+		String tmp = (String)obj;
+		if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
+			tmp = "trial.node_count * trial.contexts_per_node * trial.threads_per_context";
+		} else if (tmp.equalsIgnoreCase("trial.XML_METADATA")) {
+			tmp = "temp_xml_metadata.metadata_value";
+		}
+    	facade.setChartSeriesName(tmp);
+
+		// x axis
+   		obj = xaxisValue.getSelectedItem();
+		tmp = (String)obj;
+		if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
+			tmp = "trial.node_count * trial.contexts_per_node * trial.threads_per_context";
+		}
+		String label = xaxisName.getText();
+		if (label == null || label.length() == 0)
+			label = tmp;
+ 		facade.setChartXAxisName(tmp, label);
+
+		// y axis
+    	obj = yaxisValue.getSelectedItem();
+		tmp = (String)obj;
+		tmp = tmp.replaceAll("mean", "interval_mean_summary");
+		tmp = tmp.replaceAll("total", "interval_total_summary");
+		tmp = "avg(" + tmp + ")";
+		label = yaxisName.getText();
+		if (label == null || label.length() == 0)
+			label = tmp;
+		facade.setChartYAxisName(tmp, label);
+
+		// metric name
+		obj = metric.getSelectedItem();
+		tmp = (String)obj;
+    	facade.setMetricName(tmp);
+
+		// dimension reduction
+		obj = dimension.getSelectedItem();
+		TransformationType type = (TransformationType)obj;
+		if (type == TransformationType.OVER_X_PERCENT) {
+			label = dimensionXValue.getText();
+			if (label == null || label.length() == 0) {
+    			facade.setDimensionReduction(TransformationType.NONE, null);
+			} else {
+    			facade.setDimensionReduction(TransformationType.OVER_X_PERCENT, label);
+			}
+		} else {
+    		facade.setDimensionReduction(TransformationType.NONE, null);
+		}
+
+		// other options
     	facade.setChartMainEventOnly(this.mainOnly.isSelected()?1:0);
+    	if (!this.mainOnly.isSelected()) {
+			obj = this.event.getSelectedItem();
+			tmp = (String)obj;
+			if (!tmp.equals("All Events")) {
+				facade.setEventName(tmp);
+			} else {
+				facade.setEventName(null);
+			}
+		}
+
     	facade.setChartEventNoCallPath(this.callPath.isSelected()?0:1); //reversed logic
     	facade.setChartLogYAxis(this.logY.isSelected()?1:0);
     	facade.setChartScalability(this.scalability.isSelected()?1:0);
@@ -245,7 +400,65 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		// if action is "apply", update the chart
-		updateChart();
+		Object source = e.getSource();
+		if (source == apply) {
+			PerfExplorerModel theModel = PerfExplorerModel.getModel();
+			Object selection = theModel.getCurrentSelection();
+			if ((selection instanceof Application) ||
+		    	(selection instanceof Experiment) ||
+		    	(selection instanceof Trial)) {
+				updateChart();
+			} else {
+				// tell the user they need to select something
+				 JOptionPane.showMessageDialog(
+				 	PerfExplorerClient.getMainFrame(), 
+				 	"Please select one or more Applications, Experiments or Trials.",
+					"Selection Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		if (source == reset) {
+			resetChartSettings();
+		}
+		// check some toggle options
+		if (source == scalability) {
+			if (scalability.isSelected()) {
+				efficiency.setSelected(false);
+			}
+		}
+		if (source == efficiency) {
+			if (efficiency.isSelected()) {
+				scalability.setSelected(false);
+			}
+		}
+		if (source == constantProblem) {
+			if (constantProblem.isSelected()) {
+				constantProblem.setText("Strong Scaling");
+			} else {
+				constantProblem.setText("Weak Scaling");
+			}
+		}
+		if (source == mainOnly) {
+			if (mainOnly.isSelected()) {
+				this.eventLabel.setEnabled(false);
+				this.event.setEnabled(false);
+				this.series = new MyJComboBox(tableColumns);
+			} else {
+				this.eventLabel.setEnabled(true);
+				this.event.setEnabled(true);
+				this.series.addItem("interval_event.name");
+				refreshDynamicControls();
+			}
+		}
+		// check some left options
+		if (source == dimension) {
+			if (dimension.getSelectedIndex() == 0) {
+				this.dimensionXLabel.setEnabled(false);
+				this.dimensionXValue.setEnabled(false);
+			} else {
+				this.dimensionXLabel.setEnabled(true);
+				this.dimensionXValue.setEnabled(true);
+			}
+		}
 	}
 
 	/**
@@ -254,9 +467,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	 * the x-axis, and some measurement on the y-axis.
 	 *
 	 */
-	public static JFreeChart doGeneralChart () {
-		// get the server
-		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+	private JFreeChart doGeneralChart () {
 		// get the data
 		PerfExplorerModel model = PerfExplorerModel.getModel();
 		RMIGeneralChartData rawData = server.requestGeneralChartData(
@@ -379,7 +590,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		return chart;
 	}
 
-	public class MyJTextField extends javax.swing.JTextField
+	private class MyJTextField extends javax.swing.JTextField
 	{   
     	public MyJTextField() {
         	super();
@@ -412,10 +623,14 @@ public class ChartPane extends JScrollPane implements ActionListener {
     	}
 	}
 
-	public class MyJComboBox extends javax.swing.JComboBox
+	private class MyJComboBox extends javax.swing.JComboBox
 	{   
     	public MyJComboBox(Object[] items) {
         	super(items);
+    	}
+
+    	public MyJComboBox() {
+        	super();
     	}
 
     	public MyJComboBox(List items) {
@@ -438,5 +653,11 @@ public class ChartPane extends JScrollPane implements ActionListener {
         	maxSize.height = prefSize.height;
         	return maxSize;
     	}
+	}
+
+	private class ChartPanelException extends Exception {
+		ChartPanelException (String message) {
+			super(message);
+		}
 	}
 }
