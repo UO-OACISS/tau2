@@ -79,7 +79,7 @@ public class TraceFactory {
 		tFile.traceBuffer = new Event[TAU_MAX_RECORDS];
 		//tFile.traceBuffer[0]=new Event();
 		tFile.tracePosition = 0; // 0 will be the EV_INIT record
-		tFile.initialized = false;
+		//tFile.initialized = false;
 
 		tFile.Foid=p;
 
@@ -97,7 +97,7 @@ public class TraceFactory {
 
 		tFile.GroupIdMap = new HashMap();
 
-		tFile.groupNameMap = new HashMap();
+		//tFile.groupNameMap = new HashMap();
 
 		tFile.needsEdfFlush = true;
 
@@ -105,7 +105,7 @@ public class TraceFactory {
 		//tFile.ClkInitialized = false;
 		
 		/* initialize the first timestamp for the trace */
-		tFile.FirstTimestamp = 0;
+		//tFile.FirstTimestamp = 0;
 
 		/* define some events */
 

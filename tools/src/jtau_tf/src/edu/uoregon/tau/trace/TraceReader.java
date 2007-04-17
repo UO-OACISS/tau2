@@ -10,6 +10,7 @@ package edu.uoregon.tau.trace;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -23,7 +24,12 @@ public class TraceReader extends TraceFile{
 	private final static int FORMAT_32_SWAP = 2;
 	private final static int FORMAT_64 =3;
 	private final static int FORMAT_64_SWAP=4;
-	
+	long FirstTimestamp;
+	boolean ClkInitialized;
+	boolean subtractFirstTimestamp;
+	boolean nonBlocking;
+	int format;
+	int eventSize;
 	
 	TraceReader(){}
 	
@@ -118,12 +124,16 @@ public class TraceReader extends TraceFile{
 	private int readEvents(Event[] traceBuffer, int numread) throws IOException{
 		int x=0;
 		Event evt;// = new Event();
-		int bytes=Fiid.available();
-		int records=bytes/eventSize;
+		//Fiid.
+		//int bytes=Fiid.available();
+		//if(bytes<0)bytes*=-1;
+		//int records=bytes/eventSize;
 		
 		//byte[] b = new byte[24];
+		
+		try{		
 		if(format<2)
-			while(x<numread&&x<records){
+			while(x<numread){//&&x<records
 				//tFile.Fid.read(b);
 				//Integer.
 				evt = new Event();//Fiid.readInt(),Fiid.readChar(),Fiid.readChar(),Fiid.readLong(),Fiid.readLong());
@@ -139,7 +149,7 @@ public class TraceReader extends TraceFile{
 		else
 		if(format==2)
 		{
-			while(x<numread&&x<records){
+			while(x<numread){//&&x<records
 				evt = new Event();//intReverseBytes(Fiid.readInt()),charReverseBytes(Fiid.readChar()),charReverseBytes(Fiid.readChar()),longReverseBytes(Fiid.readLong()),longReverseBytes(Fiid.readLong()));
 				evt.setEventID(intReverseBytes(Fiid.readInt()));
 				evt.setNodeID(charReverseBytes(Fiid.readChar()));
@@ -154,7 +164,7 @@ public class TraceReader extends TraceFile{
 		else
 		if(format==3)
 		{
-			while(x<numread&&x<records){
+			while(x<numread){//&&x<records
 				evt = new Event();
 				evt.setEventID((int)Fiid.readLong());
 				evt.setNodeID(Fiid.readChar());
@@ -172,7 +182,7 @@ public class TraceReader extends TraceFile{
 		else
 		if(format==4)
 		{
-			while(x<numread&&x<records){
+			while(x<numread){//&&x<records
 				evt = new Event();
 				evt.setEventID((int)longReverseBytes(Fiid.readLong()));
 				evt.setNodeID(charReverseBytes(Fiid.readChar()));
@@ -187,6 +197,9 @@ public class TraceReader extends TraceFile{
 				x++;
 			}			
 		}
+		
+		}catch(EOFException e){System.out.println("Reached end of trace file.");}
+		
 		return x;
 	}
 	

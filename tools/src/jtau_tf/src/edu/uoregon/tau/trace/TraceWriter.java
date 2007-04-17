@@ -46,7 +46,12 @@ public class TraceWriter extends TraceFile {
 	private static final int TAU_MAX_RECORDS = 64*1024;
 	
 	private HashSet checkInit = new HashSet();
-
+	long lastTimestamp;
+	boolean needsEdfFlush;
+	
+	Event[] traceBuffer;
+	int tracePosition;
+	
 	TraceWriter(){}
 	
 	private String StringPair(int nod,int thd){
@@ -112,18 +117,18 @@ public class TraceWriter extends TraceFile {
 
 	  // returns stateGroupToken
 	public int defStateGroup(String stateGroupName, int stateGroupToken) {
-		groupNameMap.put(new Integer(stateGroupToken),stateGroupName);
+		GroupIdMap.put(new Integer(stateGroupToken),stateGroupName);
 		return 0;
 	}
 
 	public int defState(int stateToken, String stateName, int stateGroupToken){
 		
-		if(!groupNameMap.containsKey(new Integer(stateGroupToken))){
+		if(!GroupIdMap.containsKey(new Integer(stateGroupToken))){
 			//throw new Exception("Ttf_DefState: Have not seen"+stateGroupToken+"stateGroupToken before, please define it first\n");
 			return -1;
 		}
 
-		EventDescr newEventDesc = new EventDescr(stateToken,(String)groupNameMap.get(new Integer(stateGroupToken)),stateName,0,"EntryExit");
+		EventDescr newEventDesc = new EventDescr(stateToken,(String)GroupIdMap.get(new Integer(stateGroupToken)),stateName,0,"EntryExit");
 		/*newEventDesc.Eid = stateToken;
 		newEventDesc.Group = (String)groupNameMap.get(new Integer(stateGroupToken));
 		newEventDesc.EventName = stateName;

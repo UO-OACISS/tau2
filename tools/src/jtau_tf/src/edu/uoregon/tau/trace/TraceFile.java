@@ -177,17 +177,17 @@ public class TraceFile {
 	Map NidTidMap;//=new HashMap();
 	Map EventIdMap;//=new HashMap();;
 	Map GroupIdMap;//=new HashMap();
-	long FirstTimestamp;
-	boolean ClkInitialized;
-	boolean subtractFirstTimestamp;
-	boolean nonBlocking;
-	int format;    // The format of the Events
-	int eventSize; // size of the corresponding Event class in bytes
+	//long FirstTimestamp;
+	//boolean ClkInitialized;
+	//boolean subtractFirstTimestamp;
+	//boolean nonBlocking;
+	//int format;    // The format of the Events
+	//int eventSize; // size of the corresponding Event class in bytes
 	// For Trace Writing
-	Event[] traceBuffer;
-	int tracePosition;
-	boolean needsEdfFlush;
-	Map groupNameMap;
-	boolean initialized;
-	long lastTimestamp;
+	//Event[] traceBuffer;
+	//int tracePosition;
+	//boolean needsEdfFlush;
+	//Map groupNameMap;
+	//boolean initialized;
+	//long lastTimestamp;
 }
