@@ -14,6 +14,7 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 	private JComponent panel1 = null;
 	private JComponent panel2 = null;
 	private JComponent panel3 = null;
+	private JComponent panel4 = null;
 
 	public static PerfExplorerJTabbedPane getPane () {
 		if (thePane == null) {
@@ -38,6 +39,10 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 			comp = this.panel3;
 			break;
 		}
+		case (3): {
+			comp = this.panel4;
+			break;
+		}
 		}
 		return comp;
 	}
@@ -57,16 +62,22 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 		splitPane.setBottomComponent(null);
 		splitPane.setDividerLocation(200);
 		this.panel1 = splitPane;
-		panel1.setPreferredSize(new Dimension(500, 500));
+		panel1.setPreferredSize(new Dimension(600, 500));
 		this.addTab("Analysis Management", icon, panel1, "Request Cluster Analysis");
 
 		this.panel2 = PerformanceExplorerPane.getPane();
-		panel2.setPreferredSize(new Dimension(500, 500));
+		panel2.setPreferredSize(new Dimension(600, 500));
 		this.addTab("Cluster Results", icon, panel2, "View Cluster Results");
 
 		this.panel3 = PerfExplorerCorrelationPane.getPane();
-		panel3.setPreferredSize(new Dimension(500, 500));
+		panel3.setPreferredSize(new Dimension(600, 500));
 		this.addTab("Correlation Results", icon, panel3, "View Correlation Results");
+
+		if (PerfExplorerConnection.getConnection().getConnectionString().indexOf("derby") < 0) {
+			this.panel4 = ChartPane.getPane();
+			panel4.setPreferredSize(new Dimension(600, 500));
+			this.addTab("Charts", icon, panel4, "Custom Performance Charts");
+		}
 	}
 
     /** Returns an ImageIcon, or null if the path was invalid. */

@@ -9,7 +9,7 @@ import java.util.List;
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.7 2007/04/06 22:20:49 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.8 2007/04/17 03:25:16 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -251,6 +251,15 @@ public interface RMIPerfExplorer extends Remote {
      * @throws RemoteException
      */
     public void deleteView(String id) throws RemoteException;
+
+    /**
+     * Returns the full list of possible table.column selections for graphs.
+     *
+     * @return a list of table.column names
+     * @throws RemoteException
+     */
+    public List getChartFieldNames() throws RemoteException;
+
 
 	
 }

@@ -322,4 +322,14 @@ public class PerfExplorerConnection {
 		}
 		return list;
 	}
+
+	public List getChartFieldNames() {
+		List list = null;
+		try {
+			list = server.getChartFieldNames();
+		} catch (RemoteException e) {
+	    	handleError(e, "getChartFieldNames()");
+		}
+		return list;
+	}
 }

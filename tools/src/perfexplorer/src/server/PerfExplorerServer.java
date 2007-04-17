@@ -43,7 +43,7 @@ import clustering.ClusterException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.44 2007/04/06 22:20:49 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.45 2007/04/17 03:25:17 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1361,6 +1361,34 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 */
 	public List getTrialList(String criteria) {
 		return QueryManager.getTrialList(criteria);
+	}
+
+	/**
+	 * Requests a TrialList object from the PerfDMF database,
+	 * based on the application id which is passed in.
+	 * 
+	 * @param criteria a formatted string specifying the 
+	 *		  criteria for selecting the trial
+	 * @return List of PerfDMF Trial objects.
+	 */
+	public List getChartFieldNames() {
+		DB db = this.getDB();
+		List list = new ArrayList();
+		String[] app = Application.getFieldNames(db);
+		for (int i = 0 ; i < app.length ; i++) {
+			list.add ("application." + app[i]);
+		}
+		String[] exp = Experiment.getFieldNames(db);
+		for (int i = 0 ; i < exp.length ; i++) {
+			list.add ("experiment." + exp[i]);
+		}
+		String[] trial = Trial.getFieldNames(db);
+		for (int i = 0 ; i < trial.length ; i++) {
+			if (!trial[i].equalsIgnoreCase(Trial.XML_METADATA_GZ)) {
+				list.add ("trial." + trial[i]);
+			}
+		}
+		return list;
 	}
 
 	/**

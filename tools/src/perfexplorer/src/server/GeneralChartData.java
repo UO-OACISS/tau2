@@ -45,7 +45,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.12 2007/04/14 01:09:02 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.13 2007/04/17 03:25:17 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -84,7 +84,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 	 */
 	public static GeneralChartData getChartData(RMIPerfExplorerModel model, 
 			ChartDataType dataType) {
-		PerfExplorerOutput.println("getChartData(" + model.toString() + ")...");
+		//PerfExplorerOutput.println("getChartData(" + model.toString() + ")...");
 		GeneralChartData chartData = new GeneralChartData(model, dataType);
 		chartData.doQuery();
 		return chartData;

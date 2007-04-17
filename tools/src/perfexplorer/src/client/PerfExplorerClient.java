@@ -56,7 +56,7 @@ public class PerfExplorerClient extends JFrame {
 		});
 
 		// window stuff
-		int windowWidth = 800;
+		int windowWidth = 1000;
 		int windowHeight = 515;
 
         //Grab the screen size.
