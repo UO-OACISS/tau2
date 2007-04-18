@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashSet;
+import java.util.Collections;
 
 import javax.xml.parsers.ParserConfigurationException;
 //import javax.xml.xpath.*;
@@ -46,7 +47,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.15 2007/04/18 15:25:08 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.16 2007/04/18 18:47:40 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -267,6 +268,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 				for (int i = 0 ; i < names.getLength() ; i++) {
 					Node name = (Node)names.item(i).getFirstChild();
 					Node value = (Node)values.item(i).getFirstChild();
+					//System.out.println(name.getNodeValue()+" =? "+model.getChartMetadataFieldName());
 					if ((model.getChartMetadataFieldName() == null ||
 					     model.getChartMetadataFieldName().equals(name.getNodeValue())) &&
 						(model.getChartMetadataFieldValue() == null ||
@@ -774,9 +776,14 @@ public class GeneralChartData extends RMIGeneralChartData {
 				
 				for (int i = 0 ; i < names.getLength() ; i++) {
 					Node name = (Node)names.item(i).getFirstChild();
-					if (model.getChartMetadataFieldName() == null ||
-					    model.getChartMetadataFieldName().equals(name.getNodeValue()))
-						set.add(name.getNodeValue());
+					set.add(name.getNodeValue());
+				}
+				names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+					"/metadata/ProfileAttributes/attribute/name");
+				
+				for (int i = 0 ; i < names.getLength() ; i++) {
+					Node name = (Node)names.item(i).getFirstChild();
+					set.add(name.getNodeValue());
 				}
 			} 
 
@@ -797,6 +804,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			e.printStackTrace();
 		}
 		List list = new ArrayList(set);
+		Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
 		return list;
 	}
 

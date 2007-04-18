@@ -59,6 +59,9 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 			PerfExplorerTableModel model = (PerfExplorerTableModel)AnalysisManagementPane.getPane().getTable().getModel();
 			model.updateObject(object);
 			// update the managment view
+		} else if (index == 3) {
+			ChartPane.getPane().refreshDynamicControls(true, true, true);
+			// update the results view
 		} else {
 			PerformanceExplorerPane.getPane().updateImagePanel();
 			// update the results view

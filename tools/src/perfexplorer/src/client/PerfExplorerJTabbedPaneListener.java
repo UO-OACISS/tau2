@@ -14,8 +14,10 @@ public class PerfExplorerJTabbedPaneListener implements ChangeListener {
 		} else if (index == 1) {
 			// update the results view
 			PerformanceExplorerPane.getPane().updateImagePanel();
-		} else {
+		} else if (index == 2) {
 			PerfExplorerCorrelationPane.getPane().updateImagePanel();
+		} else {
+			ChartPane.getPane().refreshDynamicControls(true, true, true);
 		}
 	}
 
