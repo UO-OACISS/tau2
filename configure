@@ -103,6 +103,7 @@
 # If a file name is given, it must contain all these definitions.
 # No checking is done to ensure that it does so.
 
+rm -f .clean
 rm -f .last_config
 
 # This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them

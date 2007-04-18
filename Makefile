@@ -14,12 +14,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=default
+CONFIG_ARCH=x86_64
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=-g
-TAUROOT=
+USER_OPT=
+TAUROOT=/home/amorris/tau2
 #######################################################################
  
 include include/Makefile
@@ -103,7 +103,7 @@ tests:
              $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" ) || exit $?; done
 	@echo "***************** DONE ************************"
 
-install:
+install: .clean
 	@echo "Determining Configuration..."
 	@if [ x`utils/ConfigQuery -arch` = xdefault ] ; then \
           (echo Run the configure script before attempting to compile ; \
@@ -113,6 +113,10 @@ install:
 	@for i in ${SUBDIR}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
              $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" HOSTTYPE=$(HOSTTYPE) install) || exit $?; done
 	@echo "***************** DONE ************************"
+
+.clean:
+	@for i in ${SUBDIR} ${EXAMPLES} ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" clean); done
+	touch .clean
 
 clean:
 	@for i in ${SUBDIR} ${EXAMPLES} ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" clean); done
