@@ -25,6 +25,7 @@ import java.sql.SQLException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
 
 import javax.xml.parsers.ParserConfigurationException;
 //import javax.xml.xpath.*;
@@ -45,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.14 2007/04/18 05:11:35 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.15 2007/04/18 15:25:08 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -629,7 +630,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 		// region, if necessary
 		StringBuffer buf = null;
 		PreparedStatement statement = null;
-		List list = new ArrayList();
+		HashSet set = new HashSet();
 		try {
 			DB db = PerfExplorerServer.getServer().getDB();
 
@@ -728,14 +729,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 /////////////////////////
 
-			// create and populate the temporary XML_METADATA table
-			buf = buildCreateTableStatement("temp_xml_metadata", db);
-			buf.append(" (trial int, metadata_name text, metadata_value text)");
-			statement = db.prepareStatement(buf.toString());
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
-
 			statement = db.prepareStatement("select id, XML_METADATA, XML_METADATA_GZ from temp_trial ");
 			//System.out.println(statement.toString());
 			ResultSet xmlResults = statement.executeQuery();
@@ -778,66 +771,14 @@ public class GeneralChartData extends RMIGeneralChartData {
 				/* this is the 1.3 through 1.4 way */
 				NodeList names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
 					"/metadata/CommonProfileAttributes/attribute/name");
-				NodeList values = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-					"/metadata/CommonProfileAttributes/attribute/value");
 				
 				for (int i = 0 ; i < names.getLength() ; i++) {
 					Node name = (Node)names.item(i).getFirstChild();
-					Node value = (Node)values.item(i).getFirstChild();
-					if ((model.getChartMetadataFieldName() == null ||
-					     model.getChartMetadataFieldName().equals(name.getNodeValue())) &&
-						(model.getChartMetadataFieldValue() == null ||
-					     model.getChartMetadataFieldValue().equals(value.getNodeValue()))) {
-						buf = new StringBuffer();
-						buf.append("insert into temp_xml_metadata VALUES (?,?,?)");
-						PreparedStatement statement2 = db.prepareStatement(buf.toString());
-						statement2.setInt(1, xmlResults.getInt(1));
-						statement2.setString(2, name.getNodeValue());
-						if (value == null) {
-							statement2.setString(3, "");
-						} else {
-							statement2.setString(3, value.getNodeValue());
-						}
-						//System.out.println(statement2.toString());
-						statement2.executeUpdate();
-						statement2.close();
-					}
+					if (model.getChartMetadataFieldName() == null ||
+					    model.getChartMetadataFieldName().equals(name.getNodeValue()))
+						set.add(name.getNodeValue());
 				}
 			} 
-			db.commit();
-			db.setAutoCommit(true);
-			xmlResults.close();
-			statement.close();
-			// The user wants parametric study data, with the data
-			// organized with two axes, the x and the y.
-			// unlike scalability: 
-			// NO ASSUMPTION ABOUT WHICH COLUMN IS THE SERIES NAME,
-			// Y AXIS OR X AXIS!
-			String seriesName = model.getChartSeriesName();
-			String xAxisName = model.getChartXAxisName();
-			String yAxisName = model.getChartYAxisName();
-			buf = new StringBuffer();
-			buf.append("select distinct metadata_name from temp_xml_metadata");
-			buf.append(" order by 1");
-			statement = db.prepareStatement(buf.toString());
-			//System.out.println(statement.toString());
-			ResultSet results = statement.executeQuery();
-
-			while (results.next() != false) {
-				list.add(results.getString(1));
-			} 
-			results.close();
-			statement.close();
-
-			statement = db.prepareStatement("truncate table temp_xml_metadata");
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
-
-			statement = db.prepareStatement("drop table temp_xml_metadata");
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
 
 			statement = db.prepareStatement("truncate table temp_trial");
 			//System.out.println(statement.toString());
@@ -855,6 +796,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
+		List list = new ArrayList(set);
 		return list;
 	}
 

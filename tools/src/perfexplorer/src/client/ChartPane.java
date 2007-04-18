@@ -89,8 +89,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
    	private JComboBox value = new MyJComboBox();
 	private JLabel xmlNameLabel = new JLabel("XML Field:");
    	private JComboBox xmlName = new MyJComboBox();
-	private JLabel xmlValueLabel = new JLabel("XML Value:");
-   	private JComboBox xmlValue = new MyJComboBox();
+	//private JLabel xmlValueLabel = new JLabel("XML Value:");
+   	//private JComboBox xmlValue = new MyJComboBox();
 	
 
 	private JButton apply = null;
@@ -140,8 +140,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		this.event.setEnabled(false);
 		this.xmlNameLabel.setEnabled(false);
 		this.xmlName.setEnabled(false);
-		this.xmlValueLabel.setEnabled(false);
-		this.xmlValue.setEnabled(false);
+		//this.xmlValueLabel.setEnabled(false);
+		//this.xmlValue.setEnabled(false);
 
 		// series name 
 		for (Iterator itr = tableColumns.iterator() ; itr.hasNext() ; ) {
@@ -154,31 +154,40 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			}
 		}
 		this.yaxisValue.setSelectedIndex(0);
-		refreshDynamicControls();
+		refreshDynamicControls(true, true, false);
 	}
 
-	private void refreshDynamicControls() {
+	private void refreshDynamicControls(boolean getMetrics, boolean getEvents, boolean getXML) {
 		PerfExplorerModel theModel = PerfExplorerModel.getModel();
 		Object selection = theModel.getCurrentSelection();
-		this.metric.removeAllItems();
-		this.event.removeAllItems();
-		this.xmlName.removeAllItems();
+		if (getMetrics)
+			this.metric.removeAllItems();
+		if (getEvents)
+			this.event.removeAllItems();
+		if (getXML)
+			this.xmlName.removeAllItems();
 		if ((selection instanceof Application) ||
 		    (selection instanceof Experiment) ||
 		    (selection instanceof Trial)) {
-			List metrics = server.getPotentialMetrics(theModel);
-			for (Iterator itr = metrics.iterator() ; itr.hasNext() ; ) {
-				this.metric.addItem(itr.next());
-			}
-			List events = server.getPotentialEvents(theModel);
-			this.event.addItem("All Events");
-			for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
-				this.event.addItem(itr.next());
-			}
-			List xmlEvents = server.getXMLFields(theModel);
-			for (Iterator itr = xmlEvents.iterator() ; itr.hasNext() ; ) {
-				this.xmlName.addItem(itr.next());
-			}
+			if (getMetrics) {
+				List metrics = server.getPotentialMetrics(theModel);
+				for (Iterator itr = metrics.iterator() ; itr.hasNext() ; ) {
+					this.metric.addItem(itr.next());
+				}
+			} 
+			if (getEvents) {
+				List events = server.getPotentialEvents(theModel);
+				this.event.addItem("All Events");
+				for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
+					this.event.addItem(itr.next());
+				}
+			} 
+			if (getXML) {
+				List xmlEvents = server.getXMLFields(theModel);
+				for (Iterator itr = xmlEvents.iterator() ; itr.hasNext() ; ) {
+					this.xmlName.addItem(itr.next());
+				}
+			} 
 		}
 	}
 
@@ -238,16 +247,14 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		left.add(series);
 
 		// x axis value
-		left.add(xaxisNameLabel);
-		left.add(xaxisName);
 		left.add(xaxisValueLabel);
 		xaxisValue = new MyJComboBox(tableColumns);
 		xaxisValue.addActionListener(this);
 		left.add(xaxisValue);
+		left.add(xaxisNameLabel);
+		left.add(xaxisName);
 
 		// y axis value
-		left.add(yaxisNameLabel);
-		left.add(yaxisName);
 		left.add(yaxisValueLabel);
 		String[] valueOptions = {
 					"mean.inclusive", 
@@ -269,6 +276,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 					};
 		yaxisValue = new MyJComboBox(valueOptions);
 		left.add(yaxisValue);
+		left.add(yaxisNameLabel);
+		left.add(yaxisName);
 
 		// dimension reduction
 		left.add(dimensionLabel);
@@ -293,9 +302,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		left.add(xmlNameLabel);
 		xmlName = new MyJComboBox();
 		left.add(xmlName);
-		left.add(xmlValueLabel);
-		xmlValue = new MyJComboBox();
-		left.add(xmlValue);
+		//left.add(xmlValueLabel);
+		//xmlValue = new MyJComboBox();
+		//left.add(xmlValue);
 
 		// apply button
 		apply = new JButton ("Apply");
@@ -334,6 +343,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			tmp = "trial.node_count * trial.contexts_per_node * trial.threads_per_context";
 		} else if (tmp.equalsIgnoreCase("trial.XML_METADATA")) {
 			tmp = "temp_xml_metadata.metadata_value";
+   			Object obj2 = xaxisValue.getSelectedItem();
+			String tmp2 = (String)obj2;
+		    facade.setChartMetadataFieldName(tmp2);
 		}
     	facade.setChartSeriesName(tmp);
 
@@ -342,6 +354,11 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		tmp = (String)obj;
 		if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
 			tmp = "trial.node_count * trial.contexts_per_node * trial.threads_per_context";
+		} else if (tmp.equalsIgnoreCase("trial.XML_METADATA")) {
+			tmp = "temp_xml_metadata.metadata_value";
+   			Object obj2 = xaxisValue.getSelectedItem();
+			String tmp2 = (String)obj2;
+		    facade.setChartMetadataFieldName(tmp2);
 		}
 		String label = xaxisName.getText();
 		if (label == null || label.length() == 0)
@@ -422,29 +439,23 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				 	"Please select one or more Applications, Experiments or Trials.",
 					"Selection Error", JOptionPane.ERROR_MESSAGE);
 			}
-		}
-		if (source == reset) {
+		} else if (source == reset) {
 			resetChartSettings();
-		}
-		// check some toggle options
-		if (source == scalability) {
+		} else if (source == scalability) {
 			if (scalability.isSelected()) {
 				efficiency.setSelected(false);
 			}
-		}
-		if (source == efficiency) {
+		} else if (source == efficiency) {
 			if (efficiency.isSelected()) {
 				scalability.setSelected(false);
 			}
-		}
-		if (source == constantProblem) {
+		} else if (source == constantProblem) {
 			if (constantProblem.isSelected()) {
 				constantProblem.setText("Strong Scaling");
 			} else {
 				constantProblem.setText("Weak Scaling");
 			}
-		}
-		if (source == mainOnly) {
+		} else if (source == mainOnly) {
 			if (mainOnly.isSelected()) {
 				this.eventLabel.setEnabled(false);
 				this.event.setEnabled(false);
@@ -453,11 +464,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				this.eventLabel.setEnabled(true);
 				this.event.setEnabled(true);
 				this.series.addItem("interval_event.name");
-				refreshDynamicControls();
+				refreshDynamicControls(false, true, false);
 			}
-		}
-		// check some left options
-		if (source == dimension) {
+		} else if (source == dimension) {
 			if (dimension.getSelectedIndex() == 0) {
 				this.dimensionXLabel.setEnabled(false);
 				this.dimensionXValue.setEnabled(false);
@@ -465,24 +474,17 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				this.dimensionXLabel.setEnabled(true);
 				this.dimensionXValue.setEnabled(true);
 			}
-		}
-		if (source == series) {
-			Object obj = xaxisValue.getSelectedItem();
+		} else if ((source == series) || 
+				   (source == xaxisValue)) {
+			Object obj = series.getSelectedItem();
 			String tmp = (String)obj;
-			if (tmp.equalsIgnoreCase("trial.xml_metadata")) {
+			Object obj2 = xaxisValue.getSelectedItem();
+			String tmp2 = (String)obj2;
+			if (tmp.equalsIgnoreCase("trial.xml_metadata") ||
+				tmp2.equalsIgnoreCase("trial.xml_metadata")) {
 				this.xmlNameLabel.setEnabled(true);
 				this.xmlName.setEnabled(true);
-			} else {
-				this.xmlNameLabel.setEnabled(false);
-				this.xmlName.setEnabled(false);
-			}
-		}
-		if (source == xaxisValue) {
-			Object obj = xaxisValue.getSelectedItem();
-			String tmp = (String)obj;
-			if (tmp.equalsIgnoreCase("trial.xml_metadata")) {
-				this.xmlNameLabel.setEnabled(true);
-				this.xmlName.setEnabled(true);
+				refreshDynamicControls(false, false, true);
 			} else {
 				this.xmlNameLabel.setEnabled(false);
 				this.xmlName.setEnabled(false);
