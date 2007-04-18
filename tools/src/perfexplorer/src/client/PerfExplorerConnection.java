@@ -332,4 +332,15 @@ public class PerfExplorerConnection {
 		}
 		return list;
 	}
+
+    public List getXMLFields(PerfExplorerModel model) {
+		List results = null;
+		try {
+	    	results = server.getXMLFields(model);
+		} catch (RemoteException e) {
+	    	handleError(e, "getXMLFields(" + model.toString() + ")");
+		}
+		return results;
+    }
+
 }

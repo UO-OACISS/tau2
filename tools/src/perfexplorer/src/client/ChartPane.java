@@ -66,13 +66,13 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 	private List tableColumns = null;
 	private JLabel titleLabel = new JLabel("Chart Title:");
-	private JTextField chartTitle = new MyJTextField(10);
+	private JTextField chartTitle = new MyJTextField(5);
 	private JLabel seriesLabel = new JLabel("Series Name/Value:");
 	private JComboBox series = null;
 	private JLabel xaxisNameLabel = new JLabel("X Axis Name:");
-	private JTextField xaxisName = new MyJTextField(10);
+	private JTextField xaxisName = new MyJTextField(5);
 	private JLabel yaxisNameLabel = new JLabel("Y Axis Name:");
-	private JTextField yaxisName = new MyJTextField(10);
+	private JTextField yaxisName = new MyJTextField(5);
 	private JLabel xaxisValueLabel = new JLabel("X Axis Value:");
    	private JComboBox xaxisValue = null;
 	private JLabel yaxisValueLabel = new JLabel("Y Axis Value:");
@@ -80,7 +80,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private JLabel dimensionLabel = new JLabel("Dimension reduction:");
    	private JComboBox dimension = new MyJComboBox();
 	private JLabel dimensionXLabel = new JLabel("Cutoff (0<x<100):");
-	private JTextField dimensionXValue = new MyJTextField(10);
+	private JTextField dimensionXValue = new MyJTextField(5);
 	private JLabel eventLabel = new JLabel("Event:");
    	private JComboBox event = new MyJComboBox();
 	private JLabel metricLabel = new JLabel("Metric:");
@@ -162,6 +162,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		Object selection = theModel.getCurrentSelection();
 		this.metric.removeAllItems();
 		this.event.removeAllItems();
+		this.xmlName.removeAllItems();
 		if ((selection instanceof Application) ||
 		    (selection instanceof Experiment) ||
 		    (selection instanceof Trial)) {
@@ -173,6 +174,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			this.event.addItem("All Events");
 			for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
 				this.event.addItem(itr.next());
+			}
+			List xmlEvents = server.getXMLFields(theModel);
+			for (Iterator itr = xmlEvents.iterator() ; itr.hasNext() ; ) {
+				this.xmlName.addItem(itr.next());
 			}
 		}
 	}
@@ -229,6 +234,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		// series name
 		left.add(seriesLabel);
 		series = new MyJComboBox(tableColumns);
+		series.addActionListener(this);
 		left.add(series);
 
 		// x axis value
@@ -236,6 +242,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		left.add(xaxisName);
 		left.add(xaxisValueLabel);
 		xaxisValue = new MyJComboBox(tableColumns);
+		xaxisValue.addActionListener(this);
 		left.add(xaxisValue);
 
 		// y axis value
@@ -459,6 +466,28 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				this.dimensionXValue.setEnabled(true);
 			}
 		}
+		if (source == series) {
+			Object obj = xaxisValue.getSelectedItem();
+			String tmp = (String)obj;
+			if (tmp.equalsIgnoreCase("trial.xml_metadata")) {
+				this.xmlNameLabel.setEnabled(true);
+				this.xmlName.setEnabled(true);
+			} else {
+				this.xmlNameLabel.setEnabled(false);
+				this.xmlName.setEnabled(false);
+			}
+		}
+		if (source == xaxisValue) {
+			Object obj = xaxisValue.getSelectedItem();
+			String tmp = (String)obj;
+			if (tmp.equalsIgnoreCase("trial.xml_metadata")) {
+				this.xmlNameLabel.setEnabled(true);
+				this.xmlName.setEnabled(true);
+			} else {
+				this.xmlNameLabel.setEnabled(false);
+				this.xmlName.setEnabled(false);
+			}
+		}
 	}
 
 	/**
@@ -627,14 +656,17 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	{   
     	public MyJComboBox(Object[] items) {
         	super(items);
+			setPrototypeDisplayValue("WWWWW");
     	}
 
     	public MyJComboBox() {
         	super();
+			setPrototypeDisplayValue("WWWWW");
     	}
 
     	public MyJComboBox(List items) {
         	super(items.toArray());
+			setPrototypeDisplayValue("WWWWW");
     	}
 
     	public Dimension getPreferredSize() {

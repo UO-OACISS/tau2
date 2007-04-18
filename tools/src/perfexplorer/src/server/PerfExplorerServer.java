@@ -43,7 +43,7 @@ import clustering.ClusterException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.46 2007/04/17 22:31:11 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.47 2007/04/18 05:11:35 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -614,6 +614,17 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public RMIGeneralChartData requestGeneralChartData(RMIPerfExplorerModel modelData, ChartDataType dataType) {
 		//PerfExplorerOutput.println("requestChartData(" + modelData.toString() + ")...");
 		GeneralChartData chartData = GeneralChartData.getChartData(modelData, dataType);
+		return chartData;
+	}
+
+	/**
+	 * Make an interactive request for XML fields.
+	 * 
+	 * @param modelData
+	 * @return List
+	 */
+	public List getXMLFields(RMIPerfExplorerModel modelData) {
+		List chartData = GeneralChartData.getXMLFields(modelData);
 		return chartData;
 	}
 

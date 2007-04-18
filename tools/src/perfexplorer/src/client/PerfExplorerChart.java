@@ -291,15 +291,13 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 		rangeAxis.setAutoRangeIncludesZero(true);
 
-/*
 		if (rawData.getCategoryType() == Integer.class) {
 			// don't mess with the domain axis
 		} else {
         	CategoryAxis domainAxis = plot.getDomainAxis();
 			domainAxis.setSkipCategoryLabelsToFit(true);
-			domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
+			domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 		}
-*/
 
 		if (model.getChartLogYAxis()) {
         	LogarithmicAxis axis = new LogarithmicAxis(
