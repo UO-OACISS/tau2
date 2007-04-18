@@ -38,11 +38,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.26 2007/03/26 18:19:39 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.27 2007/04/18 22:03:46 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  */
 public class ParaProfUtils {
 
@@ -1069,6 +1069,9 @@ public class ParaProfUtils {
         fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.TXT));
         fileChooser.addChoosableFileFilter(new ParaProfFileFilter(ParaProfFileFilter.PPK));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+
 
         int resultValue = fileChooser.showSaveDialog(owner);
         if (resultValue != JFileChooser.APPROVE_OPTION) {
