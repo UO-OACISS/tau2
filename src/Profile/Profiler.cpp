@@ -34,7 +34,6 @@
 #include "Profile/Profiler.h"
 #include "tauarch.h"
 
-
 #ifdef TAU_WINDOWS
   typedef __int64 x_int64;
   typedef unsigned __int64 x_uint64;
@@ -635,6 +634,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
           TheLastTimeStamp[tid][i] = CurrentTime[i]; 
         }
 #endif /* TAU_OPENMP */
+
+#if defined(TAUKTAU)
+#ifdef KTAU_DEBUGPROF
+	printf("Profiler::Stop: --EXIT-- %s \n", CurrentProfiler[tid]->ThisFunction->GetName());
+#endif /*KTAU_DEBUGPROF*/
+	ThisKtauProfiler->Stop(this, AddInclFlag);
+#endif /* TAUKTAU */
 
 #ifdef PROFILING_ON
 #ifdef TAU_COMPENSATE
@@ -3403,9 +3409,9 @@ double& Profiler::TheTauThrottlePerCall(void)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.164 $   $Date: 2007/03/20 23:30:10 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.164 2007/03/20 23:30:10 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: anataraj $
+ * $Revision: 1.165 $   $Date: 2007/04/19 03:21:44 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.165 2007/04/19 03:21:44 anataraj Exp $ 
  ***************************************************************************/
 
 	

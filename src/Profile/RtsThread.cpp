@@ -54,6 +54,9 @@ void TraceCallStack(int tid, Profiler *current);
 #ifdef TAUKTAU_MERGE
 #include <Profile/KtauFuncInfo.h>
 #endif //TAUKTAU_MERGE
+#ifdef TAUKTAU_SHCTR
+#include <Profile/KtauCounters.h>
+#endif //TAUKTAU_SHCTR
 #endif //TAUKTAU
 
 //////////////////////////////////////////////////////////////////////
@@ -160,6 +163,10 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
   // PAPI must be reinitialized in the child
   PapiLayer::reinitializePAPI();
 #endif
+
+#ifdef TAUKTAU_SHCTR
+     KtauCounters::RegisterFork(opcode);//forking needs to be tested further
+#endif	// TAUKTAU_SHCTR
 
   TAU_PROFILE_SET_NODE(nodeid);
   // First, set the new id 
@@ -354,9 +361,9 @@ void RtsLayer::UnLockEnv(void)
 
 
 /***************************************************************************
- * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.24 $   $Date: 2007/03/16 23:49:41 $
- * VERSION: $Id: RtsThread.cpp,v 1.24 2007/03/16 23:49:41 amorris Exp $
+ * $RCSfile: RtsThread.cpp,v $   $Author: anataraj $
+ * $Revision: 1.25 $   $Date: 2007/04/19 03:21:45 $
+ * VERSION: $Id: RtsThread.cpp,v 1.25 2007/04/19 03:21:45 anataraj Exp $
  ***************************************************************************/
 
 

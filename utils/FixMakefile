@@ -251,6 +251,16 @@ fi
 	echo "s,^KTAU_INCDIR=.*$,KTAU_INCDIR=$ktauinc,g" >> $sedout
 	;;
 
+     ktauincuser=*)
+        ktauincuser=`echo $1 | sed -e 's/^ktauincuser=//'`
+	echo "s,^KTAU_INCUSERDIR=.*$,KTAU_INCUSERDIR=$ktauincuser,g" >> $sedout
+	;;
+
+     ktaulib=*)
+        ktaulib=`echo $1 | sed -e 's/^ktaulib=//'`
+	echo "s,^KTAU_LIB=.*$,KTAU_LIB=$ktaulib,g" >> $sedout
+	;;
+
      ktausym=*)
         ktausym=`echo $1 | sed -e 's/^ktausym=//'`
       echo "s,^KTAU_KALLSYMS_PATH=.*$,KTAU_KALLSYMS_PATH=$ktausym,g" >> $sedout
@@ -615,6 +625,10 @@ fi
         ;;
      KTAU_MERGE)
 	echo NOTE: Using Kernel Profiling with merging user-space profile
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     KTAU_SHCTR)
+	echo NOTE: Using Kernel Profiling with shared OS counter support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      MUSE)

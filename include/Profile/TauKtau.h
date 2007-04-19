@@ -21,7 +21,7 @@
 #ifndef _TAUKTAU_H_
 #define _TAUKTAU_H_
 
-#include "Profile/ktau_proc_interface.h"
+#include <ktau_proc_interface.h>
 #include <Profile/KtauSymbols.h>
 
 #include <Profile/ProfileGroups.h> //for enum TauFork_t
@@ -91,6 +91,6 @@ private:
 #endif /* _TAUKTAU_H_*/
 /***************************************************************************
  * $RCSfile: TauKtau.h,v $   $Author: anataraj $
- * $Revision: 1.2 $   $Date: 2006/11/09 05:41:33 $
- * POOMA_VERSION_ID: $Id: TauKtau.h,v 1.2 2006/11/09 05:41:33 anataraj Exp $ 
+ * $Revision: 1.3 $   $Date: 2007/04/19 03:21:44 $
+ * POOMA_VERSION_ID: $Id: TauKtau.h,v 1.3 2007/04/19 03:21:44 anataraj Exp $ 
  ***************************************************************************/

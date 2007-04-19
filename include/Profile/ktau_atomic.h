@@ -47,7 +47,7 @@ static __inline__ int atomic_sub_return(int i, atomic_t *v)
 }
 #endif /* TAU_ppc */
 
-#include <Profile/ktau_proc_interface.h>
+#include <ktau_proc_interface.h>
 
 #define kernel_incltime_low(X) (((X)+0)->ktime)
 #define kernel_incltime_high(X) (((X)+1)->ktime)
@@ -78,7 +78,7 @@ static inline unsigned long read_kcalls(volatile ktau_state* pstate) {
 #endif  /*_KTAU_ATOMIC_H */
 /***************************************************************************
  * $RCSfile: ktau_atomic.h,v $   $Author: anataraj $
- * $Revision: 1.1 $   $Date: 2005/12/01 02:50:56 $
- * POOMA_VERSION_ID: $Id: ktau_atomic.h,v 1.1 2005/12/01 02:50:56 anataraj Exp $ 
+ * $Revision: 1.2 $   $Date: 2007/04/19 03:21:44 $
+ * POOMA_VERSION_ID: $Id: ktau_atomic.h,v 1.2 2007/04/19 03:21:44 anataraj Exp $ 
  ***************************************************************************/
 

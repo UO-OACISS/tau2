@@ -51,6 +51,10 @@ string& KtauSymbols::MapSym(unsigned int addr) {
 	return table[addr];
 }
 
+unsigned long KtauSymbols::MapRevSym(string func_name) {
+	return rev_table[func_name];
+}
+
 int KtauSymbols::ReadKallsyms()
 {
         char line[LINE_SIZE];
@@ -79,6 +83,7 @@ int KtauSymbols::ReadKallsyms()
                 if(!strcmp("T",flag) || !strcmp("t",flag)){
                         if(!found_stext && !strcmp("stext",func_name)){
 				table[ktau_str2ll(addr,NULL,16)] = string(func_name);
+				rev_table[string(func_name)] = ktau_str2ll(addr,NULL,16);
                                 //kallsyms_map[kallsyms_size].addr = ktau_str2ll(addr,NULL,16);
                                 //strcpy(kallsyms_map[kallsyms_size++].name, func_name);
                                 found_stext = 1;
@@ -87,6 +92,7 @@ int KtauSymbols::ReadKallsyms()
                                                 table[ktau_str2ll(addr,NULL,16)].c_str());
                         } else{
 				table[ktau_str2ll(addr,NULL,16)] = string(func_name);
+				rev_table[string(func_name)] = ktau_str2ll(addr,NULL,16);
                                 //kallsyms_map[kallsyms_size].addr = ktau_str2ll(addr,NULL,16);
                                 //strcpy(kallsyms_map[kallsyms_size++].name, func_name);
                                 if(DEBUG)printf("ReadKallsyms: address %llx , name %s \n",
@@ -95,6 +101,7 @@ int KtauSymbols::ReadKallsyms()
                         }
                 }else if(!strcmp("_etext",func_name)){
 			table[ktau_str2ll(addr,NULL,16)] = string(func_name);
+			rev_table[string(func_name)] = ktau_str2ll(addr,NULL,16);
                         //kallsyms_map[kallsyms_size].addr = ktau_str2ll(addr,NULL,16);
                         //strcpy(kallsyms_map[kallsyms_size++].name, func_name);
 			if(DEBUG)printf("ReadKallsyms: address %llx , name %s \n",

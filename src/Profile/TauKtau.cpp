@@ -31,7 +31,7 @@
 
 #include "Profile/Profiler.h"
 #include "Profile/TauKtau.h"
-#include "Profile/ktau_proc_interface.h"
+#include <ktau_proc_interface.h>
 #include "Profile/KtauProfiler.h"
 
 using namespace std;
@@ -153,7 +153,7 @@ int TauKtau::StartKProfile()
 	int selfpid = 0; //ALL
 	//startSize = read_size(KTAU_PROFILE, 1, &selfpid, 1, 0, NULL, -1);
 	//startSize = read_size(KTAU_PROFILE, 1, &selfpid, 1, 0, NULL, 2);
-	startSize = read_size(KTAU_PROFILE, 0 /*ALL*/, &selfpid, 0/*ALL*/, 0, NULL, -1);
+	startSize = read_size(KTAU_TYPE_PROFILE, 0 /*ALL*/, &selfpid, 0/*ALL*/, 0, NULL, -1);
 	if(startSize <= 0) {
 		return -1;
 	}
@@ -167,7 +167,7 @@ int TauKtau::StartKProfile()
 	startBufTWO = (char*) malloc(startSizeTWO);
 
 	//startSize = read_data(KTAU_PROFILE, 1, &selfpid, 1, startBuf, startSize, 0, NULL);
-	startSize = read_data(KTAU_PROFILE, 0 /*ALL*/, &selfpid, 0/*ALL*/, startBuf, startSize, 0, NULL);
+	startSize = read_data(KTAU_TYPE_PROFILE, 0 /*ALL*/, &selfpid, 0/*ALL*/, startBuf, startSize, 0, NULL);
 	if(startSize <= 0) {
 		free(startBuf);
 		startBuf = NULL;
@@ -191,7 +191,7 @@ int TauKtau::StopKProfile()
 	int selfpid = 0; //ALL
 
 	//stopSize = read_size(KTAU_PROFILE, 1, &selfpid, 1, 0, NULL, 2);
-	stopSize = read_size(KTAU_PROFILE, 0/*ALL*/, &selfpid, 0/*ALL*/, 0, NULL, -1);
+	stopSize = read_size(KTAU_TYPE_PROFILE, 0/*ALL*/, &selfpid, 0/*ALL*/, 0, NULL, -1);
 	if(stopSize <= 0) {
 		return -1;
 	}
@@ -205,7 +205,7 @@ int TauKtau::StopKProfile()
 	stopBufTWO = (char*) malloc(stopSizeTWO);
 
 	//stopSize = read_data(KTAU_PROFILE, 1, &selfpid, 1, stopBuf, stopSize, 0, NULL);
-	stopSize = read_data(KTAU_PROFILE, 0/*ALL*/, &selfpid, 0/*ALL*/, stopBuf, stopSize, 0, NULL);
+	stopSize = read_data(KTAU_TYPE_PROFILE, 0/*ALL*/, &selfpid, 0/*ALL*/, stopBuf, stopSize, 0, NULL);
 	if(stopSize <= 0) {
 		free(stopBuf);
 		stopBuf = NULL;
@@ -253,7 +253,7 @@ int TauKtau::AggrKProfiles(char* start, int startSz, char* stop, int stopSz, kta
 	long startProcNum =  0;
 	long stopProcNum  = 0;
 
-	startProcNum = unpack_bindata(KTAU_PROFILE, start, startSz, &startOutput);
+	startProcNum = unpack_bindata(KTAU_TYPE_PROFILE, start, startSz, &startOutput);
 	if(startProcNum < 0) {
 		return -1;
 	}
@@ -271,7 +271,7 @@ int TauKtau::AggrKProfiles(char* start, int startSz, char* stop, int stopSz, kta
 	aggr_many_profiles(startOutput, startProcNum, 2048, paggr_start_prof);
 	paggr_start_prof->pid = 0;
 
-	stopProcNum  = unpack_bindata(KTAU_PROFILE, stop, stopSz, &stopOutput);
+	stopProcNum  = unpack_bindata(KTAU_TYPE_PROFILE, stop, stopSz, &stopOutput);
 	if(stopProcNum < 0) {
 		return -1;
 	}
@@ -730,12 +730,12 @@ int TauKtau::DiffKProfileTWO(char* startB, char* stopB, int startSz, int stopSz,
 		return -1;
 	}
 
-	startProcNum = unpack_bindata(KTAU_PROFILE, startB, startSz, &startOut);
+	startProcNum = unpack_bindata(KTAU_TYPE_PROFILE, startB, startSz, &startOut);
 	if(startProcNum < 0) {
 		return -1;
 	}
 
-	stopProcNum  = unpack_bindata(KTAU_PROFILE, stopB, stopSz, &stopOut);
+	stopProcNum  = unpack_bindata(KTAU_TYPE_PROFILE, stopB, stopSz, &stopOut);
 	if(stopProcNum < 0) {
 		return -1;
 	}
@@ -761,12 +761,12 @@ int TauKtau::DiffKProfile(void)
 		return -1;
 	}
 
-	startProcNum = unpack_bindata(KTAU_PROFILE, startBuf, startSize, &startOutput);
+	startProcNum = unpack_bindata(KTAU_TYPE_PROFILE, startBuf, startSize, &startOutput);
 	if(startProcNum < 0) {
 		return -1;
 	}
 
-	stopProcNum  = unpack_bindata(KTAU_PROFILE, stopBuf, stopSize, &stopOutput);
+	stopProcNum  = unpack_bindata(KTAU_TYPE_PROFILE, stopBuf, stopSize, &stopOutput);
 	if(stopProcNum < 0) {
 		return -1;
 	}
@@ -935,7 +935,7 @@ int TauKtau::MergingKProfileEvent(FILE* fp){
 
 /***************************************************************************
  * $RCSfile: TauKtau.cpp,v $   $Author: anataraj $
- * $Revision: 1.5 $   $Date: 2006/11/10 07:25:42 $
+ * $Revision: 1.6 $   $Date: 2007/04/19 03:21:45 $
  ***************************************************************************/
 
 	

@@ -17,6 +17,10 @@ using namespace std;
 #include <sys/time.h>
 #include <stdio.h>
 
+#ifdef TAUKTAU_SHCTR
+#include "Profile/KtauCounters.h"
+#endif //TAUKTAU_SHCTR
+
 #ifdef CPU_TIME
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -141,6 +145,11 @@ PCL_CNT_TYPE MultipleCounterLayer::CounterList[MAX_TAU_COUNTERS];
 PCL_FP_CNT_TYPE MultipleCounterLayer::FpCounterList[MAX_TAU_COUNTERS];
 #endif//TAU_PCL
 
+#ifdef TAUKTAU_SHCTR
+int MultipleCounterLayer::ktauMCL_CP[MAX_TAU_COUNTERS];
+int MultipleCounterLayer::ktauMCL_FP;
+#endif//TAUKTAU_SHCTR
+
 #ifdef TRACING_ON
 TauUserEvent **MultipleCounterLayer::counterEvents; 
 #endif /* TRACING_ON */
@@ -157,7 +166,8 @@ firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   papiMCLInit,
 						   papiWallClockMCLInit,
 						   papiVirtualMCLInit,
-						   pclMCLInit};
+						   pclMCLInit,
+						   ktauMCLInit};
 
 int MultipleCounterLayer::numberOfActiveFunctions = 0;
 secondListType MultipleCounterLayer::functionArray[] = { };
@@ -191,6 +201,9 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
       MultipleCounterLayer::CounterList[a] = 0;
       MultipleCounterLayer::FpCounterList[a] = 0;      
 #endif//TAU_PCL
+#ifdef TAUKTAU_SHCTR
+      MultipleCounterLayer::ktauMCL_CP[a] = -1;
+#endif//TAUKTAU_SHCTR
     }
 
 #ifdef TAU_PCL
@@ -253,6 +266,9 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     MultipleCounterLayer::numberOfPCLHWCounters = 0;
     MultipleCounterLayer::pclMCL_FP = -1;
 #endif//TAU_PCL
+#ifdef TAUKTAU_SHCTR
+    MultipleCounterLayer::ktauMCL_FP = -1;
+#endif//TAUKTAU_SHCTR
 
 
   //Get the counter names from the environment.
@@ -726,6 +742,55 @@ bool MultipleCounterLayer::pclMCLInit(int functionPosition){
 #endif//TAU_PCL
 }
 
+
+bool MultipleCounterLayer::ktauMCLInit(int functionPosition){
+#ifdef TAUKTAU_SHCTR
+
+  int rc = KtauCounters::initializeKtauCounters(false); // do not lock, it's already locked
+  if (rc != 0) {
+    return false;
+  }
+
+  bool returnValue = false;
+  for (int i=0; i<MAX_TAU_COUNTERS; i++) {
+    int counterID = -1;
+    if (MultipleCounterLayer::names[i] != NULL) {
+      if (strstr(MultipleCounterLayer::names[i],"KTAU_") != NULL) {
+	//Reset the name  to get symbol name
+	//Shift the string down.
+	int counter = 0;
+	while (names[i][5+counter]!='\0') {
+	  MultipleCounterLayer::names[i][counter]=MultipleCounterLayer::names[i][5+counter];
+	  counter++;
+	}
+        MultipleCounterLayer::names[i][counter]='\0';
+#ifdef DEBUG_PROF
+        cout << "Adjusted counter name is: " << names[i] << endl;
+#endif /* DEBUG_PROF */
+        counterID = KtauCounters::addCounter(MultipleCounterLayer::names[i]);
+      }
+	
+      if (counterID >= 0) {
+        ktauMCL_CP[counterID] = i;
+        MultipleCounterLayer::counterUsed[i] = true;
+        MultipleCounterLayer::numberOfCounters[i] = 1;
+        returnValue = true;
+      }
+    }
+  }
+  
+  if (returnValue) { // at least one KTAU counter was available
+    MultipleCounterLayer::functionArray[functionPosition] = ktauMCL;
+    ktauMCL_FP = functionPosition;
+    return true;
+  }
+  return false;
+#else //TAUKTAU_SHCTR
+  return false;
+#endif//TAUKTAU_SHCTR
+}
+
+
 bool MultipleCounterLayer::linuxTimerMCLInit(int functionPosition){
 #ifdef  TAU_LINUX_TIMERS
   for(int i=0; i<MAX_TAU_COUNTERS; i++){
@@ -918,6 +983,29 @@ void MultipleCounterLayer::pclMCL(int tid, double values[]){
     }
   }
 #endif//TAU_PCL
+}
+
+
+void MultipleCounterLayer::ktauMCL(int tid, double values[]){
+#ifdef TAUKTAU_SHCTR
+  //declaration (this is implemented in RtsLater.cpp)
+  extern double KTauGetMHz(void);
+
+  int numKtauValues;
+  long long *ktauValues = KtauCounters::getAllCounters(tid, &numKtauValues);
+  
+  if (ktauValues) {
+    for(int i=0; i<numKtauValues; i++) {
+      //sometimes due to double-precision issues the below
+      //division can result in very small negative exclusive
+      //times. Currently there is no fix implemented for this.
+      //The thing to do maybe is to add a check in Profiler.cpp
+      //to make sure no negative values are set.
+      values[ktauMCL_CP[i]] = ktauValues[i]/KTauGetMHz();
+    }
+  }
+
+#endif//TAUKTAU_SHCTR
 }
 
 #ifdef TAU_LINUX_TIMERS

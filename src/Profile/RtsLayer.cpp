@@ -474,7 +474,7 @@ extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
 
 #endif /* TAU_LINUX_TIMERS */
 
-#if defined(TAUKTAU) || defined(TAUKTAU_MERGE)
+#if defined(TAUKTAU) || defined(TAUKTAU_MERGE) || defined(TAUKTAU_SHCTR)
 ///////////////////////////////////////////////////////////////////////////
 double KTauGetMHz(void)
 {
@@ -1400,7 +1400,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.84 $   $Date: 2007/03/24 01:04:02 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.84 2007/03/24 01:04:02 sameer Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: anataraj $
+ * $Revision: 1.85 $   $Date: 2007/04/19 03:21:45 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.85 2007/04/19 03:21:45 anataraj Exp $ 
  ***************************************************************************/

@@ -28,7 +28,13 @@ extern "C" {
 #include <rts.h>
 #endif
 
-#define SIZE_OF_INIT_ARRAY 13 //!!Change this if functions are added to the system!!
+#ifdef TAUKTAU_SHCTR
+extern "C" {
+#include "KtauCounters.h"
+}
+#endif /* TAUKTAU_SHCTR */
+
+#define SIZE_OF_INIT_ARRAY 14 //!!Change this if functions are added to the system!!
 
 
 //Some useful typedefs
@@ -96,6 +102,9 @@ class MultipleCounterLayer
 
   static bool pclMCLInit(int functionPosition);
   static void pclMCL(int tid, double values[]);
+
+  static bool ktauMCLInit(int functionPosition);
+  static void ktauMCL(int tid, double values[]);
   //*********************
   //End - List of counter and init. functions.
   //*********************
@@ -167,6 +176,11 @@ class MultipleCounterLayer
   static PCL_CNT_TYPE CounterList[MAX_TAU_COUNTERS];
   static PCL_FP_CNT_TYPE FpCounterList[MAX_TAU_COUNTERS];
 #endif//TAU_PCL
+
+#ifdef TAUKTAU_SHCTR
+  static int ktauMCL_CP[MAX_TAU_COUNTERS];
+  static int ktauMCL_FP; 
+#endif//TAUKTAU_SHCTR
 
   static firstListType initArray[SIZE_OF_INIT_ARRAY];
   static secondListType functionArray[MAX_TAU_COUNTERS];

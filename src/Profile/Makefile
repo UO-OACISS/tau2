@@ -81,7 +81,8 @@ OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		$(PARAM_O) $(EVENTS_O) $(THR_O) \
 		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(CALLPATH_O) $(PYTHON_O) $(MUSE_O) \
-		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O) $(RENCI_STFF_O)
+		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
+		$(RENCI_STFF_O)
 
 PRINT	      = pr
 
@@ -461,12 +462,6 @@ TauHandler.o : TauHandler.cpp $(HDRS)
 
 TauMemory.o : TauMemory.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
-
-ktau_proc_interface.o : ktau_proc_interface.c $(HDRS)
-	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
-
-ktau_diff_profiles.o : ktau_diff_profiles.c $(HDRS)
-	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
 
 ktau_syscall.o : ktau_syscall.c $(HDRS)
 	$(CC) $(CXXFLAGS) -c $(@:.o=.c)

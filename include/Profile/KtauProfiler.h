@@ -53,6 +53,8 @@ class KtauProfiler {
 
         int VerifyMerge(FunctionInfo* thatFunction);
 
+	static KtauSymbols& getKtauSym() { return KtauSym; }
+
 	//The actual profile state
 	TauKtau KernProf;
 
@@ -90,7 +92,7 @@ extern char* merge_grp_name[NO_MERGE_GRPS+1];
 #endif /* _KTAUPROFILER_H_ */
 /***************************************************************************
  * $RCSfile: KtauProfiler.h,v $   $Author: anataraj $
- * $Revision: 1.4 $   $Date: 2006/11/09 05:41:33 $
- * POOMA_VERSION_ID: $Id: KtauProfiler.h,v 1.4 2006/11/09 05:41:33 anataraj Exp $ 
+ * $Revision: 1.5 $   $Date: 2007/04/19 03:21:44 $
+ * POOMA_VERSION_ID: $Id: KtauProfiler.h,v 1.5 2007/04/19 03:21:44 anataraj Exp $ 
  ***************************************************************************/
 

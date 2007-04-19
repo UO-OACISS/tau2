@@ -35,12 +35,15 @@ class KtauSymbols {
 	~KtauSymbols();
 
 	string& MapSym(unsigned int);
+	unsigned long MapRevSym(string);
 	int ReadKallsyms();
 
 	private:
 	//stl map to hold the addr-to-name lookup data
 	typedef map<unsigned int, string> KERN_SYMTAB;
 	KERN_SYMTAB table;
+	typedef map<string, unsigned long> KERN_REV_SYMTAB;
+	KERN_REV_SYMTAB rev_table;
 
 	//file-path to the kernel-symbol info
 	const string filepath;
@@ -49,7 +52,7 @@ class KtauSymbols {
 #endif /* _KTAUSYMBOLS_H_  */
 /***************************************************************************
  * $RCSfile: KtauSymbols.h,v $   $Author: anataraj $
- * $Revision: 1.1 $   $Date: 2005/12/01 02:50:56 $
- * POOMA_VERSION_ID: $Id: KtauSymbols.h,v 1.1 2005/12/01 02:50:56 anataraj Exp $ 
+ * $Revision: 1.2 $   $Date: 2007/04/19 03:21:44 $
+ * POOMA_VERSION_ID: $Id: KtauSymbols.h,v 1.2 2007/04/19 03:21:44 anataraj Exp $ 
  ***************************************************************************/
 

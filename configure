@@ -257,7 +257,10 @@ ibmxlc_r=no
 fortran_compiler=no
 ktau=no
 ktau_merge=no
+ktau_shctr=no
 ktauinc=
+ktauincuser=
+ktaulib=
 ktausym=
 catamount=no
 gpshmem=no
@@ -440,6 +443,11 @@ do
     shift
     ;;
 
+  -ktau_shctr)
+      ktau_shctr=yes
+    shift
+    ;;
+
   -ktauinc=*)
     ktauinc=`echo $arg | sed -e 's/-ktauinc=//' -e 's/ /#/g'`
     if [ ! -d $ktauinc ]
@@ -450,12 +458,31 @@ do
     shift
     ;;
 
+  -ktauincuser=*)
+    ktauincuser=`echo $arg | sed -e 's/-ktauincuser=//' -e 's/ /#/g'`
+    if [ ! -d $ktauincuser ]
+    then
+      echo "Error: Cannot access KTAU user include directory $ktauincuser"
+      exit 1
+    fi
+    shift
+    ;;
+
+  -ktaulib=*)
+    ktaulib=`echo $arg | sed -e 's/-ktaulib=//' -e 's/ /#/g'`
+    if [ ! -d $ktaulib ]
+    then
+      echo "Error: Cannot access KTAU user lib $ktaulib"
+      exit 1
+    fi
+    shift
+    ;;
+
   -ktausym=*)
     ktausym=`echo $arg | sed -e 's/-ktausym=//' -e 's/ /#/g'`
     if [ ! -e $ktausym ]
     then
-      echo "Error: Cannot access KTAU Linux Kernel Symbol Table $ktausym"
-      exit 1
+      echo "Warning: Cannot access KTAU Linux Kernel Symbol Table $ktausym locally (Does it exist on the compute nodes?). Continuing."
     fi
     shift
     ;;
@@ -1113,7 +1140,10 @@ do
     echo "-ktau ........................................... Kernel TAU Profiling."
     echo "-ktau_merge ........................ Kernel TAU Profiling with merging."
     echo "                                                    user-space profile."
+    echo "-ktau_shctr ........................ Kernel TAU Profiling with shared- "
+    echo "                                                   OS counters support."
     echo "-ktauinc=<dir> ............... Specify location of Linux Kernel source."
+    echo "-ktauincuser=<dir> ............... Specify location of KTAU user incls."
     echo "-ktausym=<path to System.map>  ...... Specify location of Linux Kernel."
     echo "                                                          Symbol Table."
     echo "-muse ................................. Specify the use of MAGNET/MUSE." 
@@ -3904,14 +3934,20 @@ fi
 
 if [ $ktau = yes ]
   then
-    fixmakeargs="$fixmakeargs KTAU ktauinc=$ktauinc ktausym=$ktausym"
+    fixmakeargs="$fixmakeargs KTAU ktauinc=$ktauinc ktauincuser=$ktauincuser ktaulib=$ktaulib ktausym=$ktausym"
     tauoptions="${tauoptions}-ktau"
 fi
 
 if [ $ktau_merge = yes ]
   then
-    fixmakeargs="$fixmakeargs KTAU_MERGE ktauinc=$ktauinc ktausym=$ktausym"
+    fixmakeargs="$fixmakeargs KTAU_MERGE ktauinc=$ktauinc ktauincuser=$ktauincuser ktaulib=$ktaulib ktausym=$ktausym"
     tauoptions="${tauoptions}-ktau_merge"
+fi
+
+if [ $ktau_shctr = yes ]
+  then
+    fixmakeargs="$fixmakeargs KTAU_SHCTR ktauinc=$ktauinc ktauincuser=$ktauincuser ktaulib=$ktaulib ktausym=$ktausym"
+    tauoptions="${tauoptions}-ktau_shctr"
 fi
 
 if [ $vtf = yes ]

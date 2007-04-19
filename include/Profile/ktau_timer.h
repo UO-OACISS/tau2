@@ -105,6 +105,17 @@ __inline__ unsigned long long int rdtsc(void)
 
 #endif /*AIX*/
 #else /*PPC32*/
+#ifdef TAU_x86_64
+/*****************************************/
+/* The low-level x86_64-class timer     */
+/*****************************************/
+static __inline__ unsigned long long int rdtsc()
+{
+     unsigned int x = 0, y = 0;
+     __asm__ volatile ("rdtsc" : "=a" (x), "=d" (y));
+     return ( ((unsigned long)x) | (((unsigned long)y)<<32) );
+}
+#else /*x86_64*/
 /*****************************************/
 /* The low-level Pentium-class timer     */
 /*****************************************/
@@ -114,7 +125,7 @@ __inline__ unsigned long long int rdtsc()
      __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
      return x;
 }
-
+#endif /*x86_64*/
 #endif /*PPC32*/
 #endif /*BGL*/
 
@@ -204,7 +215,7 @@ int main(int argc, char **argv){
 #endif /* KTAU_TIMER_H */
 /***************************************************************************
  * $RCSfile: ktau_timer.h,v $   $Author: anataraj $
- * $Revision: 1.1 $   $Date: 2005/12/01 02:50:56 $
- * POOMA_VERSION_ID: $Id: ktau_timer.h,v 1.1 2005/12/01 02:50:56 anataraj Exp $ 
+ * $Revision: 1.2 $   $Date: 2007/04/19 03:21:44 $
+ * POOMA_VERSION_ID: $Id: ktau_timer.h,v 1.2 2007/04/19 03:21:44 anataraj Exp $ 
  ***************************************************************************/
 
