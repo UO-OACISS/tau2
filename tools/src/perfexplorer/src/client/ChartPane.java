@@ -61,7 +61,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private JToggleButton logY = new JToggleButton ("Log Y");
 	private JToggleButton scalability = new JToggleButton ("Scalability");
 	private JToggleButton efficiency = new JToggleButton ("Efficiency");
-	private JToggleButton constantProblem = new JToggleButton ("Weak Scaling");
+	private JToggleButton constantProblem = new JToggleButton ("Strong Scaling");
 	private JToggleButton horizontal = new JToggleButton ("Horizontal");
 
 	private List tableColumns = null;
@@ -176,10 +176,22 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				}
 			} 
 			if (getEvents && !this.mainOnly.isSelected()) {
-				List events = server.getPotentialEvents(theModel);
-				this.event.addItem("All Events");
-				for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
-					this.event.addItem(itr.next());
+				Object obj = series.getSelectedItem();
+				String tmp = (String)obj;
+				if (tmp.equalsIgnoreCase("interval_event.name")) {
+					List events = server.getPotentialEvents(theModel);
+					this.event.addItem("All Events");
+					this.eventLabel.setText("Event:");
+					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
+						this.event.addItem(itr.next());
+					}
+				} else if (tmp.equalsIgnoreCase("interval_event.group_name")) {
+					List events = server.getPotentialGroups(theModel);
+					this.event.addItem("All Groups");
+					this.eventLabel.setText("Group:");
+					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
+						this.event.addItem(itr.next());
+					}
 				}
 			} 
 			if (getXML) {
@@ -225,7 +237,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		this.efficiency.addActionListener(this);
 		top.add(this.efficiency);
 
-		this.constantProblem.setToolTipText("Scaling type (Weak Scaling or Strong Scaling)");
+		this.constantProblem.setToolTipText("Scaling type (Strong Scaling or Weak Scaling)");
 		this.constantProblem.addActionListener(this);
 		top.add(this.constantProblem);
 
@@ -251,6 +263,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		left.add(seriesLabel);
 		series = new MyJComboBox(tableColumns);
 		series.addItem("interval_event.name");
+		series.addItem("interval_event.group_name");
 		series.addActionListener(this);
 		left.add(series);
 
@@ -322,7 +335,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		// reset button
 		reset = new JButton ("Reset");
-		reset.setToolTipText("Reset changes and clear chart");
+		reset.setToolTipText("Change back to default settings");
 		reset.addActionListener(this);
 		left.add(reset);
 
@@ -379,7 +392,15 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		tmp = (String)obj;
 		tmp = tmp.replaceAll("mean", "interval_mean_summary");
 		tmp = tmp.replaceAll("total", "interval_total_summary");
-		tmp = "avg(" + tmp + ")";
+		String operation = "avg";
+    	if (!this.mainOnly.isSelected()) {
+			obj = this.series.getSelectedItem();
+			String tmp2 = (String)obj;
+			if (tmp2.equalsIgnoreCase("interval_event.group_name")) {
+				operation = "sum";
+			}
+		}
+		tmp = operation + "(" + tmp + ")";
 		label = yaxisName.getText();
 		if (label == null || label.length() == 0)
 			label = tmp;
@@ -407,12 +428,26 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		// other options
     	facade.setChartMainEventOnly(this.mainOnly.isSelected()?1:0);
     	if (!this.mainOnly.isSelected()) {
-			obj = this.event.getSelectedItem();
+			obj = this.series.getSelectedItem();
 			tmp = (String)obj;
-			if (!tmp.equals("All Events")) {
-				facade.setEventName(tmp);
-			} else {
-				facade.setEventName(null);
+			facade.setEventName(null);
+			facade.setGroupName(null);
+			if (tmp.equalsIgnoreCase("interval_event.name")) {
+				obj = this.event.getSelectedItem();
+				tmp = (String)obj;
+				if (!tmp.equals("All Events")) {
+					facade.setEventName(tmp);
+				} else {
+					facade.setEventName(null);
+				}
+			} else if (tmp.equalsIgnoreCase("interval_event.group_name")) {
+				obj = this.event.getSelectedItem();
+				tmp = (String)obj;
+				if (!tmp.equals("All Groups")) {
+					facade.setGroupName(tmp);
+				} else {
+					facade.setGroupName(null);
+				}
 			}
 		}
 
@@ -460,9 +495,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			}
 		} else if (source == constantProblem) {
 			if (constantProblem.isSelected()) {
-				constantProblem.setText("Strong Scaling");
-			} else {
 				constantProblem.setText("Weak Scaling");
+			} else {
+				constantProblem.setText("Strong Scaling");
 			}
 		} else if (source == mainOnly) {
 			if (mainOnly.isSelected()) {
@@ -496,6 +531,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				this.xmlNameLabel.setEnabled(false);
 				this.xmlName.setEnabled(false);
 			}
+			if (tmp.equalsIgnoreCase("interval_event.name") ||
+				tmp.equalsIgnoreCase("interval_event.group_name")) {
+				refreshDynamicControls(false, true, false);
+			}
 		}
 	}
 
@@ -527,16 +566,13 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
 					if (!row.series.equals(baseline.series)) {
-						//System.out.println(row.series);
 						baseline = row;
 					}
 					if (model.getConstantProblem().booleanValue()) {
-						//System.out.println("value: " + row.value);
 						
-						double ratio = baseline.categoryInteger.doubleValue() / row.categoryInteger.doubleValue();
-						//System.out.println("ratio: " + ratio);
+						double ratio = baseline.categoryInteger.doubleValue() / 
+							row.categoryInteger.doubleValue();
 						double efficiency = baseline.value/row.value;
-						//System.out.println("efficiency: " + efficiency);
         				dataset.addValue(efficiency / ratio, row.series, row.categoryInteger);
 					} else {
         				dataset.addValue(baseline.value / row.value, row.series, row.categoryInteger);
@@ -550,18 +586,57 @@ public class ChartPane extends JScrollPane implements ActionListener {
         			dataset.addValue(key.doubleValue()/rawData.getMinimum(), "Ideal", key);
 				}
 
+			} else if (model.getChartEfficiency()) {
+
+				// create an "ideal" line.
+				// If we have categorical data, this method won't work...
+				/*
+        		dataset.addValue(1.0, "Ideal", new Integer(rawData.getMinimum()));
+        		dataset.addValue(rawData.getMaximum()/rawData.getMinimum(), "Ideal", 
+					new Integer(rawData.getMaximum()));
+				*/
+
+				// get the baseline values
+				common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
+
+				// iterate through the values
+				for (int i = 0 ; i < rawData.getRows() ; i++) {
+					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+					if (!row.series.equals(baseline.series)) {
+						baseline = row;
+					}
+					if (model.getConstantProblem().booleanValue()) {
+						/*
+						double ratio = baseline.categoryInteger.doubleValue() / 
+							row.categoryInteger.doubleValue();
+						double efficiency = baseline.value/row.value;
+        				dataset.addValue(efficiency / ratio, row.series, row.categoryInteger);
+						*/
+        				dataset.addValue(baseline.value / row.value, row.series, row.categoryInteger);
+					} else {
+        				dataset.addValue((baseline.value * baseline.categoryInteger.doubleValue())/ (row.value * row.categoryInteger.doubleValue()), row.series, row.categoryInteger);
+					}
+				}
+
+				// create an "ideal" line.
+				List keys = dataset.getColumnKeys();
+				for (int i = 0 ; i < keys.size() ; i++) {
+					Integer key = (Integer)keys.get(i);
+        			dataset.addValue(1.0, "Ideal", key);
+				}
+
 			} else {
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        			dataset.addValue(row.value / 1000000, row.series, row.categoryInteger);
+        			dataset.addValue(row.value /*/ 1000000*/, row.series, row.categoryInteger);
 				}
 			}
 		} else {
 			// iterate through the values
 			for (int i = 0 ; i < rawData.getRows() ; i++) {
 				common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        		dataset.addValue(row.value / 1000000, row.series, row.categoryString);
+        		dataset.addValue(row.value /*/ 1000000*/, row.series, row.categoryString);
 			}
 		}
 

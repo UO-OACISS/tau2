@@ -385,6 +385,14 @@ public class ScriptFacade {
     	model.addEventName(eventName);
     }
 
+    public void setGroupName(String groupName) {
+    	model.setGroupName(groupName);
+    }
+
+    public void addGroupName(String groupName) {
+    	model.addGroupName(groupName);
+    }
+
     public void setMetricName(String metricName) {
     	model.setMetricName(metricName);
     }
