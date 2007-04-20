@@ -18,6 +18,7 @@ public class PerfExplorerJTabbedPaneListener implements ChangeListener {
 			PerfExplorerCorrelationPane.getPane().updateImagePanel();
 		} else {
 			ChartPane.getPane().refreshDynamicControls(true, true, true);
+			ChartPane.getPane().drawChart();
 		}
 	}
 

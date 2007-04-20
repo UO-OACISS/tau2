@@ -61,6 +61,7 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 			// update the managment view
 		} else if (index == 3) {
 			ChartPane.getPane().refreshDynamicControls(true, true, true);
+			ChartPane.getPane().drawChart();
 			// update the results view
 		} else {
 			PerformanceExplorerPane.getPane().updateImagePanel();

@@ -174,24 +174,27 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				for (Iterator itr = metrics.iterator() ; itr.hasNext() ; ) {
 					this.metric.addItem(itr.next());
 				}
+				this.metric.setSelectedIndex(0);
 			} 
 			if (getEvents && !this.mainOnly.isSelected()) {
 				Object obj = series.getSelectedItem();
 				String tmp = (String)obj;
-				if (tmp.equalsIgnoreCase("interval_event.name")) {
-					List events = server.getPotentialEvents(theModel);
-					this.event.addItem("All Events");
-					this.eventLabel.setText("Event:");
-					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
-						this.event.addItem(itr.next());
-					}
-				} else if (tmp.equalsIgnoreCase("interval_event.group_name")) {
+				if (tmp.equalsIgnoreCase("interval_event.group_name")) {
 					List events = server.getPotentialGroups(theModel);
 					this.event.addItem("All Groups");
 					this.eventLabel.setText("Group:");
 					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
 						this.event.addItem(itr.next());
 					}
+					this.event.setSelectedIndex(0);
+				} else {
+					List events = server.getPotentialEvents(theModel);
+					this.event.addItem("All Events");
+					this.eventLabel.setText("Event:");
+					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
+						this.event.addItem(itr.next());
+					}
+					this.event.setSelectedIndex(0);
 				}
 			} 
 			if (getXML) {
@@ -205,6 +208,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 					for (Iterator itr = xmlEvents.iterator(); itr.hasNext();) {
 						this.xmlName.addItem(itr.next());
 					}
+					this.xmlName.setSelectedIndex(0);
 				}
 			} 
 		}
@@ -255,6 +259,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		// chart title
 		left.add(titleLabel);
+		this.chartTitle.addActionListener(this);
 		left.add(chartTitle);
 
 		this.tableColumns = server.getChartFieldNames();
@@ -271,8 +276,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		left.add(xaxisValueLabel);
 		xaxisValue = new MyJComboBox(tableColumns);
 		xaxisValue.addActionListener(this);
+		this.xaxisValue.addActionListener(this);
 		left.add(xaxisValue);
 		left.add(xaxisNameLabel);
+		this.xaxisName.addActionListener(this);
 		left.add(xaxisName);
 
 		// y axis value
@@ -296,8 +303,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 					"total.sum_exclusive_squared"
 					};
 		yaxisValue = new MyJComboBox(valueOptions);
+		this.yaxisValue.addActionListener(this);
 		left.add(yaxisValue);
 		left.add(yaxisNameLabel);
+		this.yaxisName.addActionListener(this);
 		left.add(yaxisName);
 
 		// dimension reduction
@@ -305,23 +314,28 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		Object[] dimensionOptions = TransformationType.getDimensionReductions();
 		dimension = new MyJComboBox(dimensionOptions);
 		dimension.addActionListener(this);
+		this.dimension.addActionListener(this);
 		left.add(dimension);
 		left.add(dimensionXLabel);
+		this.dimensionXValue.addActionListener(this);
 		left.add(dimensionXValue);
 
 		// metric of interest
 		left.add(metricLabel);
 		metric = new MyJComboBox();
+		this.metric.addActionListener(this);
 		left.add(metric);
 
 		// event of interest
 		left.add(eventLabel);
 		event = new MyJComboBox();
+		this.event.addActionListener(this);
 		left.add(event);
 
 		// XML metadata
 		left.add(xmlNameLabel);
 		xmlName = new MyJComboBox();
+		this.xmlName.addActionListener(this);
 		left.add(xmlName);
 		//left.add(xmlValueLabel);
 		//xmlValue = new MyJComboBox();
@@ -536,6 +550,20 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				refreshDynamicControls(false, true, false);
 			}
 		}
+		drawChart();
+	}
+
+	public void drawChart() {
+		// draw the chart!
+		/*
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Object selection = theModel.getCurrentSelection();
+		if ((selection instanceof Application) ||
+	    	(selection instanceof Experiment) ||
+	    	(selection instanceof Trial)) {
+			updateChart();
+		}
+		*/
 	}
 
 	/**

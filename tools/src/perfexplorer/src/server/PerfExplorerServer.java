@@ -43,7 +43,7 @@ import clustering.ClusterException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.47 2007/04/18 05:11:35 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.48 2007/04/20 17:06:47 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -644,24 +644,56 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			StringBuffer buf;
 			buf = new StringBuffer("select distinct ie.group_name ");
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			buf.append(" inner join experiment e on t.experiment = e.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				buf.append(" where t.experiment in (");
 				List selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
-					buf.append (modelData.getExperiment().getID());
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application = ");
+						buf.append(modelData.getApplication().getID());
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment = ");
+						buf.append(modelData.getExperiment().getID());
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id = ");
+						buf.append(modelData.getTrial().getID());
+					}
 				} else {
-					for (int i = 0 ; i < selections.size() ; i++) {
-						Experiment exp = (Experiment)selections.get(i);
-						if (i > 0)
-							buf.append(",");
-						buf.append(exp.getID());
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Application app = (Application)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(app.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Experiment exp = (Experiment)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(exp.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Trial trial = (Trial)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(trial.getID());
+						}
+						buf.append(")");
 					}
 				}
-				buf.append(")");
 			}
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
