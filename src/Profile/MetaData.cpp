@@ -40,6 +40,31 @@
 char * TauGetCounterString(void);
 
 
+static x_uint64 getTimeStamp() {
+  x_uint64 timestamp;
+#ifdef TAU_WINDOWS
+  timeStamp = TauWindowsUsecD();
+#else
+  struct timeval tp;
+  gettimeofday (&tp, 0);
+  timestamp = (x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec;
+#endif
+  return timestamp;
+}
+
+// We keep track of the timestamp at the initialization of TheFunctionDB()
+// see FunctionInfo.cpp
+// I do this because otherwise it is impossible to determine the duration
+// of the first snapshot.  The user may not be using a time based metric
+// so I can't just look at the top-level timer.  Instead, I just grab this
+// at the earliest point.
+static x_uint64 firstTimeStamp;
+bool Tau_snapshot_initialization() {
+  firstTimeStamp = getTimeStamp();
+  return true;
+}
+
+
 // Static holder for snapshot file handles
 static FILE **TauGetSnapshotFiles() {
   static FILE **snapshotFiles = NULL;
@@ -195,8 +220,6 @@ static int writeXMLTime(FILE *fp, bool newline) {
    char buf[4096];
    struct tm *thisTime = gmtime(&theTime);
    strftime (buf,4096,"%Y-%m-%dT%H:%M:%SZ", thisTime);
-//    fprintf (fp, "<utcTime>%s</utcTime>\n", buf);
-//   fprintf (fp, "<utc_date>%s</utc_date>%s", buf, endl);
    fprintf (fp, "<attribute><name>UTC Time</name><value>%s</value></attribute>%s", buf, endl);
 
    thisTime = localtime(&theTime);
@@ -211,11 +234,10 @@ static int writeXMLTime(FILE *fp, bool newline) {
      tzone[4] = tzone[3];
      tzone[3] = ':';
    }
-//    fprintf (fp, "<local_time>%s%s</local_time>%s", buf, tzone, endl);
    fprintf (fp, "<attribute><name>Local Time</name><value>%s%s</value></attribute>%s", buf, tzone, endl);
 
-
-
+   // write out the timestamp (number of microseconds since epoch (unsigned long long)
+   fprintf (fp, "<attribute><name>Timestamp</name><value>%lld</value></attribute>%s", getTimeStamp(), endl);
 
    return 0;
 }
@@ -279,6 +301,10 @@ static int writeMetaData(FILE *fp, bool newline) {
 
   fprintf (fp, "<metadata>%s", endl);
 
+  char tmpstr[1024];
+  sprintf (tmpstr, "%lld", firstTimeStamp);
+  writeXMLAttribute(fp, "Starting Timestamp", tmpstr, newline);
+
   writeXMLTime(fp, newline);
 
 #ifndef TAU_WINDOWS
@@ -302,7 +328,6 @@ static int writeMetaData(FILE *fp, bool newline) {
 
   writeXMLAttribute(fp, "pid", getpid(), newline);
 #endif
-
 
 
 #ifdef __linux__
@@ -397,7 +422,6 @@ static int writeMetaData(FILE *fp, bool newline) {
 
 
 int Profiler::Snapshot(char *name, bool finalize, int tid) {
-  return 0;
    FILE *fp = TauGetSnapshotFiles()[tid];
    if (finalize && !fp) { 
      // finalize is true at the end of execution (regular profile output), if we haven't written a snapshot, don't bother
@@ -525,18 +549,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
    //writeXMLTime(fp, true);
 
-   x_uint64 timestamp;
-
-#ifdef TAU_WINDOWS
-   timestamp = TauWindowsUsecD();
-#else
-   struct timeval tp;
-   gettimeofday (&tp, 0);
-   timestamp = (x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec;
-#endif
-
-
-   fprintf (fp, "<timestamp>%lld</timestamp>\n", timestamp);
+   fprintf (fp, "<timestamp>%lld</timestamp>\n", getTimeStamp());
 
 
 

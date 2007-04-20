@@ -73,6 +73,8 @@ using namespace std;
 #endif // TRACING_ON 
 
 
+bool Tau_snapshot_initialization();
+
 //////////////////////////////////////////////////////////////////////
 // The purpose of this subclass of vector is to give us a chance to execute
 // some code when TheFunctionDB is destroyed.  For Dyninst, this is necessary
@@ -96,6 +98,9 @@ public:
 //////////////////////////////////////////////////////////////////////
 vector<FunctionInfo*>& TheFunctionDB(void)
 { // FunctionDB contains pointers to each FunctionInfo static object
+
+  // we need the timestamp of the "start"
+  static bool flag = Tau_snapshot_initialization();
 
   // we now use the above FIvector, which subclasses vector
   //static vector<FunctionInfo*> FunctionDB;
@@ -497,7 +502,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
   }
 }
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.47 $   $Date: 2007/02/09 21:00:07 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.47 2007/02/09 21:00:07 sameer Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
+ * $Revision: 1.48 $   $Date: 2007/04/20 15:35:39 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.48 2007/04/20 15:35:39 amorris Exp $ 
  ***************************************************************************/
