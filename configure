@@ -309,7 +309,6 @@ do
       then
         cxx_compiler=$myarg
       else
-	echo "myarg = $myarg"
         testxlc=`echo $myarg | sed -e 's/xl//'`
 	if [ "y$testxlc" = "y$myarg" ]
         then
