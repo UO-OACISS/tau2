@@ -57,14 +57,14 @@ extern "C" void Tau_profile_snapshot_1l(char *name, int number);
 #define TAU_PROFILE(name, type, group) \
         static TauGroup_t tau_gr = group; \
         static FunctionInfo tauFI(name, type, tau_gr, #group); \
-        Profiler tauFP(&tauFI, tau_gr);
+        tau::Profiler tauFP(&tauFI, tau_gr);
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE(name, type, group) \
         static TauGroup_t tau_group = group; \
 	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
         static FunctionInfo tauFInfo(name, type, tau_group, TauGroupNameUsed); \
-        Profiler tauFProf(&tauFInfo, tau_group); \
+        tau::Profiler tauFProf(&tauFInfo, tau_group); \
 	tauFProf.SetPhase(1);
 #else /* TAU_PROFILEPHASE */
 #define TAU_PHASE TAU_PROFILE
@@ -122,7 +122,7 @@ or tauFI->method();
 	static FunctionInfo *tauFI = NULL; \
         if (tauFI == 0) \
           tauCreateFI(&tauFI, name, type, tau_gr, #group); \
-	Profiler tauFP(tauFI, tau_gr); 
+	tau::Profiler tauFP(tauFI, tau_gr); 
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE(name, type, group) \
@@ -130,7 +130,7 @@ or tauFI->method();
 	static FunctionInfo *tauFInfo = NULL; \
 	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
         tauCreateFI(&tauFInfo, name, type, tau_group, TauGroupNameUsed); \
-	Profiler tauFProf(tauFInfo, tau_group); \
+	tau::Profiler tauFProf(tauFInfo, tau_group); \
 	tauFProf.SetPhase(1);
 #else
 #define TAU_PHASE TAU_PROFILE
@@ -165,8 +165,8 @@ or tauFI->method();
 #define TAU_PHASE_CREATE_DYNAMIC TAU_PROFILE_TIMER_DYNAMIC
 #endif /* TAU_PROFILEPHASE */
 
-// Construct a Profiler obj and a FunctionInfo obj with an extended name
-// e.g., FunctionInfo loop1fi(); Profiler loop1(); 
+// Construct a tau::Profiler obj and a FunctionInfo obj with an extended name
+// e.g., FunctionInfo loop1fi(); tau::Profiler loop1(); 
 #define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
  				Tau_start_timer(var##fi, 0);
 
@@ -197,21 +197,21 @@ or tauFI->method();
 #endif  /* TAU_MAX_THREADS */
 
 #ifdef TAU_PROFILEPARAM
-#define TAU_PROFILE_PARAM1L(b,c)  	Profiler::AddProfileParamData(b,c)
+#define TAU_PROFILE_PARAM1L(b,c)  	tau::Profiler::AddProfileParamData(b,c)
 #else   /* TAU_PROFILEPARAM */
 #define TAU_PROFILE_PARAM1L(b,c)  
 #endif /* TAU_PROFILEPARAM */
 
 
-// Construct a Profiler obj and a FunctionInfo obj with an extended name
-// e.g., FunctionInfo loop1fi(); Profiler loop1();
+// Construct a tau::Profiler obj and a FunctionInfo obj with an extended name
+// e.g., FunctionInfo loop1fi(); tau::Profiler loop1();
 #define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
                                 Tau_start_timer(var##fi, 0);
 #define TAU_PROFILE_STOP(var)  if (var##tau_gr & RtsLayer::TheProfileMask()) \
                                 Tau_stop_timer(var##fi);
 
 #define TAU_PROFILE_STMT(stmt) stmt;
-#define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
+#define TAU_PROFILE_EXIT(msg)  tau::Profiler::ProfileExit(msg); 
 #define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
 #define TAU_INIT(argc, argv) RtsLayer::ProfileInit(*argc, *argv);
 #define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
@@ -224,11 +224,11 @@ or tauFI->method();
 
 #define TAU_GLOBAL_TIMER_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
 	int tau_tid = RtsLayer::myThread(); \
-	Profiler *t = new Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
+	tau::Profiler *t = new tau::Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
         t->Start(tau_tid); }
 
 #define TAU_GLOBAL_TIMER_STOP()  {int tau_threadid = RtsLayer::myThread(); \
-                Profiler *p = Profiler::CurrentProfiler[tau_threadid]; \
+                tau::Profiler *p = tau::Profiler::CurrentProfiler[tau_threadid]; \
 		p->Stop(tau_threadid); \
 		delete p; \
 		}
@@ -243,7 +243,7 @@ or tauFI->method();
 
 #define TAU_GLOBAL_PHASE_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
 	int tau_tid = RtsLayer::myThread(); \
-	Profiler *t = new Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
+	tau::Profiler *t = new tau::Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
 	t->SetPhase(1); \
         t->Start(tau_tid); }
 
@@ -261,35 +261,35 @@ or tauFI->method();
 /* The above macros are for use with global timers in a multi-threaded application */
 
 #ifdef PROFILE_CALLSTACK
-#define TAU_PROFILE_CALLSTACK()    Profiler::CallStackTrace();
+#define TAU_PROFILE_CALLSTACK()    tau::Profiler::CallStackTrace();
 #else
 #define TAU_PROFILE_CALLSTACK() 
 #endif /* PROFILE_CALLSTACK */
 
-#define TAU_DB_DUMP() Profiler::DumpData();
-#define TAU_DB_DUMP_PREFIX(prefix) Profiler::DumpData(false, RtsLayer::myThread(), prefix);
-#define TAU_DB_DUMP_INCR() Profiler::DumpData(true);
-#define TAU_DB_PURGE() Profiler::PurgeData();
-#define TAU_GET_FUNC_NAMES(functionList, num) Profiler::theFunctionList(&functionList, &num);
-#define TAU_DUMP_FUNC_NAMES() Profiler::dumpFunctionNames();
+#define TAU_DB_DUMP() tau::Profiler::DumpData();
+#define TAU_DB_DUMP_PREFIX(prefix) tau::Profiler::DumpData(false, RtsLayer::myThread(), prefix);
+#define TAU_DB_DUMP_INCR() tau::Profiler::DumpData(true);
+#define TAU_DB_PURGE() tau::Profiler::PurgeData();
+#define TAU_GET_FUNC_NAMES(functionList, num) tau::Profiler::theFunctionList(&functionList, &num);
+#define TAU_DUMP_FUNC_NAMES() tau::Profiler::dumpFunctionNames();
 #ifdef TAU_MULTIPLE_COUNTERS
 #define TAU_GET_COUNTER_NAMES(counterList, num) MultipleCounterLayer::theCounterList(&counterList, &num);
 #else //TAU_MULTIPLE_COUNTERS
-#define TAU_GET_COUNTER_NAMES(counterList, num) Profiler::theCounterList(&counterList, &num);
+#define TAU_GET_COUNTER_NAMES(counterList, num) tau::Profiler::theCounterList(&counterList, &num);
 #endif //TAU_MULTIPLE_COUNTERS
 #define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8) \
-                               Profiler::getFunctionValues(v1,v2,&v3,&v4,&v5,&v6,&v7,&v8);
+                               tau::Profiler::getFunctionValues(v1,v2,&v3,&v4,&v5,&v6,&v7,&v8);
 #define TAU_DUMP_FUNC_VALS(v1,v2) \
-                               Profiler::dumpFunctionValues(v1,v2);
+                               tau::Profiler::dumpFunctionValues(v1,v2);
 #define TAU_DUMP_FUNC_VALS_INCR(v1,v2) \
-                               Profiler::dumpFunctionValues(v1,v2,true);
+                               tau::Profiler::dumpFunctionValues(v1,v2,true);
 
 
 // UserEvents
 
-#define TAU_GET_EVENT_NAMES(eventList, num) Profiler::getUserEventList(&eventList, &num);
+#define TAU_GET_EVENT_NAMES(eventList, num) tau::Profiler::getUserEventList(&eventList, &num);
 #define TAU_GET_EVENT_VALS(v1,v2,v3,v4,v5,v6,v7) \
-                               Profiler::getUserEventValues(v1,v2,&v3,&v4,&v5,&v6,&v7);
+                               tau::Profiler::getUserEventValues(v1,v2,&v3,&v4,&v5,&v6,&v7);
 
 #define TAU_REGISTER_EVENT(event, name)  	static TauUserEvent event(name);
 #define TAU_EVENT(event, data) 		 	(event).TriggerEvent(data);
@@ -457,6 +457,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.61 $   $Date: 2007/03/24 01:56:06 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.61 2007/03/24 01:56:06 sameer Exp $ 
+ * $Revision: 1.62 $   $Date: 2007/04/25 01:07:04 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.62 2007/04/25 01:07:04 sameer Exp $ 
  ***************************************************************************/

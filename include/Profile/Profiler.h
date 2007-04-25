@@ -160,6 +160,7 @@ class KtauProfiler;
 //
 //////////////////////////////////////////////////////////////////////
 */
+namespace tau {
 class Profiler
 {
 public:
@@ -306,6 +307,11 @@ private:
 	bool 	RecordEvent; /* true when an MPI call is in the callpath */
 #endif /* TAU_MPITRACE */
 };
+};
+#ifdef TAU_LIBRARY_SOURCE
+using tau::Profiler;
+#endif /* TAU_LIBRARY_SOURCE */
+
 
 
 #endif /* PROFILING_ON || TRACING_ON */
@@ -317,7 +323,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.76 $   $Date: 2007/03/28 03:01:23 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.76 2007/03/28 03:01:23 amorris Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.77 $   $Date: 2007/04/25 01:07:04 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.77 2007/04/25 01:07:04 sameer Exp $ 
  ***************************************************************************/

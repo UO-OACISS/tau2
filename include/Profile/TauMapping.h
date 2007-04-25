@@ -41,7 +41,7 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 #define TAU_MAPPING(stmt, group)   \
   { \
     static FunctionInfo TauMapFI(#stmt, " " , group, #group); \
-    static Profiler *TauMapProf = new Profiler(&TauMapFI, group, true); \
+    static tau::Profiler *TauMapProf = new tau::Profiler(&TauMapFI, group, true); \
     TheTauMapFI(group) = &TauMapFI; \
     TauMapProf->Start(); \
     stmt; \
@@ -57,7 +57,7 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
   { \
     static FunctionInfo *TauMapFI = NULL; \
     tauCreateFI(&TauMapFI, #stmt, " " , group, #group); \
-    static Profiler *TauMapProf = new Profiler(TauMapFI, group, true); \
+    static tau::Profiler *TauMapProf = new tau::Profiler(TauMapFI, group, true); \
     TheTauMapFI(group) = TauMapFI; \
     TauMapProf->Start(); \
     stmt; \
@@ -107,7 +107,7 @@ This error should be reported when FuncInfoVar is NULL
 	  //printf("ERROR: TAU_MAPPING_LINK map returns NULL FunctionInfo *\n"); \
 There's no error when FunctionInfo * is NULL. A region may not be active.
 */
-/* OLD --> did a return. Instead Profiler should check for Null. */
+/* OLD --> did a return. Instead tau::Profiler should check for Null. */
 /*
 #define TAU_MAPPING_LINK(FuncInfoVar, Group) FuncInfoVar = TheTauMapFI(Group); \
 	if (FuncInfoVar == (FunctionInfo *)NULL) { \
@@ -120,15 +120,15 @@ There's no error when FunctionInfo * is NULL. A region may not be active.
    and this behaves pretty much like TAU_PROFILE macro, except this gives in the
    FunctionInfo object pointer instead of name and type strings. 
 */
-#define TAU_MAPPING_PROFILE(FuncInfoVar) Profiler FuncInfoVar##Prof(FuncInfoVar, FuncInfoVar != (FunctionInfo *) 0 ? FuncInfoVar->GetProfileGroup() : TAU_DEFAULT, false);
+#define TAU_MAPPING_PROFILE(FuncInfoVar) tau::Profiler FuncInfoVar##Prof(FuncInfoVar, FuncInfoVar != (FunctionInfo *) 0 ? FuncInfoVar->GetProfileGroup() : TAU_DEFAULT, false);
 
 /* TAU_MAPPING_PROFILE_TIMER acts like TAU_PROFILE_TIMER by creating a profiler
    object that can be subsequently used with TAU_PROFILE_START and 
    TAU_PROFILE_STOP
 */
-#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar, tid) Profiler *Timer; \
-   Timer = new Profiler(FuncInfoVar,  FuncInfoVar != (FunctionInfo *) 0 ? FuncInfoVar->GetProfileGroup() : TAU_DEFAULT, true, tid); \
-   if (Timer == (Profiler *) NULL) {\
+#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar, tid) tau::Profiler *Timer; \
+   Timer = new tau::Profiler(FuncInfoVar,  FuncInfoVar != (FunctionInfo *) 0 ? FuncInfoVar->GetProfileGroup() : TAU_DEFAULT, true, tid); \
+   if (Timer == (tau::Profiler *) NULL) {\
      printf("ERROR: TAU_MAPPING_PROFILE_TIMER: new returns NULL Profiler *\n");\
    }
    
@@ -139,10 +139,10 @@ There's no error when FunctionInfo * is NULL. A region may not be active.
 
 /* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer 
 */
-#define TAU_MAPPING_PROFILE_STOP(tid) { Profiler *cur = Profiler::CurrentProfiler[tid]; cur->Stop(tid); delete cur; }
-#define TAU_MAPPING_PROFILE_EXIT(msg, tid)  Profiler::ProfileExit(msg, tid); 
-#define TAU_MAPPING_DB_DUMP(tid)  Profiler::DumpData(tid); 
-#define TAU_MAPPING_DB_PURGE(tid)  Profiler::PurgeData(tid); 
+#define TAU_MAPPING_PROFILE_STOP(tid) { tau::Profiler *cur = tau::Profiler::CurrentProfiler[tid]; cur->Stop(tid); delete cur; }
+#define TAU_MAPPING_PROFILE_EXIT(msg, tid)  tau::Profiler::ProfileExit(msg, tid); 
+#define TAU_MAPPING_DB_DUMP(tid)  tau::Profiler::DumpData(tid); 
+#define TAU_MAPPING_DB_PURGE(tid)  tau::Profiler::PurgeData(tid); 
 #define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  RtsLayer::setMyNode(node, tid); 
 #define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name) timer->SetPrimaryGroupName(name);
 #define TAU_MAPPING_PROFILE_GET_GROUP_NAME(timer) timer->GetPrimaryGroup();
