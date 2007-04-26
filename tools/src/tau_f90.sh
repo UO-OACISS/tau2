@@ -85,7 +85,7 @@ if [ $options_specified = no ] ; then
 fi
 
 if [ $invoke_without_tau = yes ] ; then
-cat <<EOF > /tmp/makefile.tau$$
+cat <<EOF > /tmp/makefile.tau$USER.$$
   include $MAKEFILE
   all:
 	@if [ "x\$(TAU_F90)" = "x" ] ; then \
