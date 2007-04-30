@@ -80,8 +80,10 @@ public class SourceManager extends JFrame {
             String directory = (String) listModel.getElementAt(i);
             File file = new File(directory);
             File[] children = file.listFiles();
-            if (searchLocations(region, children, true)) {
-                return;
+            if (children != null) {
+                if (searchLocations(region, children, true)) {
+                    return;
+                }
             }
         }
 
