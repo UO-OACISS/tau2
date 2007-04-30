@@ -69,6 +69,12 @@ if [ -f "${HOME}/.ParaProf/ParaProfPreferences.dat" ] ; then
     cp "${HOME}/.ParaProf/ParaProfPreferences.dat" . ; \
 fi
 
+if [ "$MACHINE" = "apple" ]; then
+	EXTRA_OPTIONS="-Xdock:name=ParaProf -Xdock:icon=${TAUROOT}/${MACHINE}/lib/tau-medium.png -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
+else
+	EXTRA_OPTIONS=""
+fi
+
 # get the jdbc jar file from the configuration file
 JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} 2>/dev/null | sed s/jdbc_db_jarfile://`
 
@@ -98,7 +104,7 @@ fi
 # Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 1000m (1000MB). If you run out of memory, decrease this number.
 if [ "$OLDJDK" = "yes" ]
 then
-java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.verbose=error -cp ${LIBDIR}/paraprof-1.3.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/tau-common.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph-1.3.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar:{LIBDIR}/jfreechart-0.9.21.jar:${LIBDIR}/jcommon-0.9.6.jar:${LIBDIR}/jython.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
+java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.verbose=error -cp ${LIBDIR}/paraprof-1.3.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/tau-common.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph-1.3.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar:{LIBDIR}/jfreechart-0.9.21.jar:${LIBDIR}/jcommon-0.9.6.jar:${LIBDIR}/jython.jar ${EXTRA_OPTIONS} edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
 else
-java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${LIBDIR}/paraprof.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/tau-common.jar:${LIBDIR}/vis.jar:${LIBDIR}/jogl.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar:${LIBDIR}/batik-combined.jar:${LIBDIR}/jfreechart-0.9.21.jar:${LIBDIR}/jcommon-0.9.6.jar:${LIBDIR}/jython.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
+java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${LIBDIR}/paraprof.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/tau-common.jar:${LIBDIR}/vis.jar:${LIBDIR}/jogl.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar:${LIBDIR}/batik-combined.jar:${LIBDIR}/jfreechart-0.9.21.jar:${LIBDIR}/jcommon-0.9.6.jar:${LIBDIR}/jython.jar ${EXTRA_OPTIONS} edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
 fi
