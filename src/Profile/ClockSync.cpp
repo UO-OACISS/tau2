@@ -208,8 +208,8 @@ extern "C" void TauSyncFinalClocks(int rank, int size) {
   double offset = getTimeOffset(rank, size);
   double diff = TheTauTraceSyncOffset() - offset;
 
-  offset = getTimeOffset(rank, size);
   TAU_REGISTER_EVENT(endOffset, "TauTraceClockOffsetEnd");
+  offset = getTimeOffset(rank, size);
   TraceEvent((endOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
 #endif
 }
@@ -228,12 +228,16 @@ extern "C" void TauSyncClocks(int rank, int size) {
 
   // only do this when tracing
 #ifdef TRACING_ON
-  offset = getTimeOffset(rank, size);
   TAU_REGISTER_EVENT(beginOffset, "TauTraceClockOffsetStart");
-  TraceEvent((beginOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
+  offset = getTimeOffset(rank, size);
 #endif
 
   TheTauTraceSyncOffset() = offset;
   TheTauTraceSyncOffsetSet() = true;
+
+#ifdef TRACING_ON
+  TraceEvent((beginOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
+#endif
+
   PMPI_Barrier(MPI_COMM_WORLD);
 }
