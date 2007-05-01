@@ -2839,10 +2839,15 @@ then
     else
       vampirtracelibdir=vtlib
     fi
-    wrapperlib="-L$vampirtracedir/$vampirtracelibdir -lvt.mpi -lotf -lz"
+    if [ $vampirtrace = yes -a -f $vampirtracedir/lib/libvt.fmpi.a -o -f $vampirtracedir/vtlib/libvt.fmpi.a ] 
+    then
+      vtfortranwrapper="-lvt.fmpi"
+    fi 
+    wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir $vtfortranwrapper -lvt.mpi -lotf -lz"
     if [ $openmp = yes ] 
     then
-      wrapperlib="-L$vampirtracedir/$vampirtracelibdir -lvt.ompi -lotf -lz"
+# should we have a -lvt.fmpi here? 
+      wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -lvt.ompi -lotf -lz"
     fi
   fi 
   
@@ -2872,10 +2877,6 @@ then
       if [ $epilog = yes -a -f $epiloglibdir/libfmpi.a ]
       then
         mpiflibargs="$wrapperlib -lfmpi"
-      fi 
-      if [ $vampirtrace = yes -a -f $vampirtracedir/lib/libvt.fmpi.a -o -f $vampirtracedir/vtlib/libvt.fmpi.a ] 
-      then
-        mpiflibargs="$wrapperlib -lvt.fmpi"
       fi 
  
 

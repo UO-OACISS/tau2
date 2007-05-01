@@ -697,7 +697,18 @@ v) To configure TAU for SGI Altix system, you may use
    % ./configure -c++=icpc  -cc=icc -fortran=intel -mpi ...
    Use TAU with Intel C++ compiler and use the MPI library in /usr/include and /usr/lib. 
  
-   % ./configure -TRACE -PROFILE 
+vi) To configure TAU with VampirTrace using Intel Fortran compilers under Linux, 
+    please configure VampirTrace with support for PAPI and fmpi-lib as follows:
+    % setenv CC icc; setenv CXX icpc; setenv F90 ifort; setenv FC ifort
+    % cd VampirTrace-<version>; 
+    % ./configure --with-papi-dir=/usr/local/packages/papi-3.5.0 --enable-omp --enable-mpi --enable-fmpi-lib --prefix=/usr/local/packages/vampirtrace-5.2.5-mpich2
+    % make clean; make ; make install
+    Then, you may configure TAU using:
+
+    % cd tau-2.<x>; ./configure -papi=/usr/local/packages/papi-3.5.0 -vampirtrace=/usr/local/packages/vampirtrace-5.2.5-mpich2 -cc=icc -c++=icpc -fortran=intel -pdt=/usr/local/packages/pdtoolkit-3.9 -mpiinc=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/include -mpilib=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/lib
+    % make clean install
+
+vi) % ./configure -TRACE -PROFILE 
    Enable both profiling and tracing.
 
 ***********************************************************************
@@ -1053,5 +1064,6 @@ III) Software Requirements :
      % setenv OMP_NUM_THREADS 2
      % mandel
      % pprof
+
 
 If you have any questions, please contact us at tau-bugs@cs.uoregon.edu. 
