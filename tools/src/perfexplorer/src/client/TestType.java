@@ -9,6 +9,7 @@ public final class TestType {
 	public static final TestType CORRELATION = new TestType("correlation");
 	public static final TestType SCRIPT = new TestType("script");
 	public static final TestType VIEWS = new TestType("views");
+	public static final TestType RULES = new TestType("rules");
 	public static final TestType ALL = new TestType("all");
 
 	private TestType(String name) {
@@ -33,6 +34,8 @@ public final class TestType {
 			return SCRIPT;
 		if (lowerName.equals(VIEWS.toString()))
 			return VIEWS;
+		if (lowerName.equals(RULES.toString()))
+			return RULES;
 		if (lowerName.equals(ALL.toString()))
 			return ALL;
 		Exception e = new Exception ("Unknown test type.");

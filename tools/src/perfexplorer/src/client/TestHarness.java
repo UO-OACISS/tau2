@@ -80,7 +80,6 @@ public class TestHarness {
 
 				// DB2
 				//setSelection("FLASH", "hydro radiation scaling on BG/L", "tau64p.ppk/64p/scaling/hydro-radiation-scaling/flash/flash/taudata/packages/disk2/", "Time");
-
 				testVisualization();
 			}
 		} catch (Exception e) {
@@ -116,8 +115,18 @@ public class TestHarness {
 				System.out.println("Testing clustering...");
 				//setSelection("sweep3d", "150.1 Strong Scaling 2", "32", "time");
 				setSelection("FLASH", "hydro radiation scaling on BG/L", "tau64p.ppk/64p/scaling/hydro-radiation-scaling/flash/flash/taudata/packages/disk2/", "Time");
-
 				testCluster();
+			}
+		} catch (Exception e) {
+			System.err.println("TestHarness exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+		try {
+			if (test == TestType.RULES || test == TestType.ALL) {
+				System.out.println("Testing rules...");
+				//setSelection("NPB2.3", "garuda", "results.8", "GET_TIME_OF_DAY");
+				testRules();
 			}
 		} catch (Exception e) {
 			System.err.println("TestHarness exception: " + e.getMessage());
@@ -129,7 +138,6 @@ public class TestHarness {
 				System.out.println("Testing correlation...");
 				//setSelection("sweep3d", "150.1 Strong Scaling 2", "32", "time");
 				setSelection("FLASH", "hydro radiation scaling on BG/L", "tau64p.ppk/64p/scaling/hydro-radiation-scaling/flash/flash/taudata/packages/disk2/", "Time");
-
 				testCorrelation();
 			}
 		} catch (Exception e) {
@@ -148,7 +156,7 @@ public class TestHarness {
 			e.printStackTrace();
 		}
 
-/*		finally {
+		finally {
 			System.out.println("Shutting down server...");
 			connection.stopServer();
 			try {
@@ -159,7 +167,7 @@ public class TestHarness {
 			}
 			System.out.println("Exiting...");
 			System.exit(0);
-		}*/
+		}
 	}
 
 	private Application setApplication(String name) {
@@ -340,6 +348,10 @@ public class TestHarness {
 		if (status.equalsIgnoreCase("Request already exists"))
 			System.out.println(connection.requestAnalysis(model, true));
 		java.lang.Thread.sleep(5000);
+	}
+
+	public void testRules() throws Exception {
+		//RuleHarness.processRules();
 	}
 
 	public void testCorrelation() throws Exception {
