@@ -76,7 +76,7 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 		if (PerfExplorerConnection.getConnection().getConnectionString().indexOf("derby") < 0) {
 			this.panel4 = ChartPane.getPane();
 			panel4.setPreferredSize(new Dimension(600, 500));
-			this.addTab("Charts", icon, panel4, "Custom Performance Charts");
+			this.addTab("Custom Charts", icon, panel4, "Custom Performance Charts");
 		}
 	}
 
