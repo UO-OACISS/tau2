@@ -85,6 +85,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
    	private JComboBox event = new MyJComboBox();
 	private JLabel metricLabel = new JLabel("Metric:");
    	private JComboBox metric = new MyJComboBox();
+	private JLabel unitsLabel = new JLabel("Units:");
+   	private JComboBox units = new MyJComboBox();
 	private JLabel valueLabel = new JLabel("Value:");
    	private JComboBox value = new MyJComboBox();
 	private JLabel xmlNameLabel = new JLabel("XML Field:");
@@ -149,7 +151,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			String tmp = (String)o;
 			if (tmp.equalsIgnoreCase("experiment.name")) {
 				this.series.setSelectedItem(o);
-			} else if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
+			//} else if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
+				//this.xaxisValue.setSelectedItem(o);
+			} else if (tmp.equalsIgnoreCase("trial.xml_metadata")) {
 				this.xaxisValue.setSelectedItem(o);
 			}
 		}
@@ -206,9 +210,12 @@ public class ChartPane extends JScrollPane implements ActionListener {
 					tmp2.equalsIgnoreCase("trial.xml_metadata")) {
 					List xmlEvents = server.getXMLFields(theModel);
 					for (Iterator itr = xmlEvents.iterator(); itr.hasNext();) {
-						this.xmlName.addItem(itr.next());
+						String next = (String)itr.next();
+						this.xmlName.addItem(next);
+						if (next.equalsIgnoreCase("UTC Time"))
+							this.xmlName.setSelectedItem(next);
 					}
-					this.xmlName.setSelectedIndex(0);
+					//this.xmlName.setSelectedIndex(0);
 				}
 			} 
 		}
@@ -326,6 +333,20 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		this.metric.addActionListener(this);
 		left.add(metric);
 
+		// units of interest
+		String[] unitOptions = {
+					"microseconds", 
+					"milliseconds", 
+					"seconds",
+					"minutes",
+					"hours"
+					};
+		left.add(unitsLabel);
+		units = new MyJComboBox(unitOptions);
+		this.units.addActionListener(this);
+		this.units.setSelectedIndex(2);  // default to seconds
+		left.add(this.units);
+
 		// event of interest
 		left.add(eventLabel);
 		event = new MyJComboBox();
@@ -387,18 +408,24 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		// x axis
    		obj = xaxisValue.getSelectedItem();
 		tmp = (String)obj;
+		String tmp2 = null;
 		if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
 			tmp = "trial.node_count * trial.contexts_per_node * trial.threads_per_context";
 		} else if (tmp.equalsIgnoreCase("trial.XML_METADATA")) {
 			tmp = "temp_xml_metadata.metadata_value";
    			Object obj2 = xmlName.getSelectedItem();
-			String tmp2 = (String)obj2;
+			tmp2 = (String)obj2;
 		    facade.setChartMetadataFieldName(tmp2);
 		    facade.setChartMetadataFieldValue(null);
 		}
 		String label = xaxisName.getText();
-		if (label == null || label.length() == 0)
-			label = tmp;
+		if (label == null || label.length() == 0) {
+			if (tmp.equalsIgnoreCase("temp_xml_metadata.metadata_value")) {
+				label = tmp2;
+			} else {
+				label = tmp;
+			}
+		}
  		facade.setChartXAxisName(tmp, label);
 
 		// y axis
@@ -409,7 +436,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		String operation = "avg";
     	if (!this.mainOnly.isSelected()) {
 			obj = this.series.getSelectedItem();
-			String tmp2 = (String)obj;
+			tmp2 = (String)obj;
 			if (tmp2.equalsIgnoreCase("interval_event.group_name")) {
 				operation = "sum";
 			}
@@ -418,12 +445,18 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		label = yaxisName.getText();
 		if (label == null || label.length() == 0)
 			label = tmp;
+		label += " - "  + (String)this.units.getSelectedItem();
 		facade.setChartYAxisName(tmp, label);
 
 		// metric name
 		obj = metric.getSelectedItem();
 		tmp = (String)obj;
     	facade.setMetricName(tmp);
+
+		// units name
+		obj = units.getSelectedItem();
+		tmp = (String)obj;
+    	facade.setChartUnits(tmp);
 
 		// dimension reduction
 		obj = dimension.getSelectedItem();
@@ -579,6 +612,22 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			model, ChartDataType.PARAMETRIC_STUDY_DATA);
 
         PECategoryDataset dataset = new PECategoryDataset();
+
+		String units = model.getChartUnits();
+		if (units == null) 
+			units = new String("microseconds");
+
+		double conversion = 1.0;
+		if (units.equals("milliseconds")) {
+			conversion = 1000.0;
+		} else if (units.equals("seconds")) {
+			conversion = 1000000.0;
+		} else if (units.equals("minutes")) {
+			conversion = 60000000.0;
+		} else if (units.equals("hours")) {
+			conversion = 3600000000.0;
+		} 
+
 		if (rawData.getCategoryType() == Integer.class) {
 			if (model.getChartScalability()) {
 
@@ -657,14 +706,14 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        			dataset.addValue(row.value /*/ 1000000*/, row.series, row.categoryInteger);
+        			dataset.addValue(row.value / conversion, row.series, row.categoryInteger);
 				}
 			}
 		} else {
 			// iterate through the values
 			for (int i = 0 ; i < rawData.getRows() ; i++) {
 				common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        		dataset.addValue(row.value /*/ 1000000*/, row.series, row.categoryString);
+        		dataset.addValue(row.value / conversion, row.series, row.categoryString);
 			}
 		}
 

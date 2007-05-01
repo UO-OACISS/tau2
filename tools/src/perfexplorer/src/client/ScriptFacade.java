@@ -425,6 +425,10 @@ public class ScriptFacade {
 		model.setChartTitle(title);
 	}
 
+	public void setChartUnits(String units) {
+		model.setChartUnits(units);
+	}
+
 	public void setChartMainEventOnly(int value) {
 		if (value == 0)
 			model.setMainEventOnly(false);
