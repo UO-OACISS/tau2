@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.Collections;
 
 import javax.xml.parsers.ParserConfigurationException;
-//import javax.xml.xpath.*;
 import java.util.regex.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.*;
@@ -47,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.16 2007/04/18 18:47:40 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.17 2007/05/01 20:35:31 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -244,27 +243,32 @@ public class GeneralChartData extends RMIGeneralChartData {
 				InputSource source = new InputSource(reader);
 				Document metadata = builder.parse(source);
 
-				/* this is the 1.5 way
-				// build the xpath object to jump around in that document
-				XPath xpath = XPathFactory.newInstance().newXPath();
-				xpath.setNamespaceContext(new TauNamespaceContext());
+				NodeList names = null;
+				NodeList values = null;
+
+				try {
+					/* this is the 1.3 through 1.4 way */
+					names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+						"/metadata/CommonProfileAttributes/attribute/name");
+					values = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+						"/metadata/CommonProfileAttributes/attribute/value");
+				} catch (NoClassDefFoundError e) {
+
+					/* this is the 1.5 way */
+					// build the xpath object to jump around in that document
+					javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
+					xpath.setNamespaceContext(new TauNamespaceContext());
 	
-				// get the common profile attributes from the metadata
-				NodeList names = (NodeList) 
-					xpath.evaluate("/metadata/CommonProfileAttributes/attribute/name", 
-					metadata, XPathConstants.NODESET);
+					// get the common profile attributes from the metadata
+					names = (NodeList) 
+						xpath.evaluate("/metadata/CommonProfileAttributes/attribute/name", 
+						metadata, javax.xml.xpath.XPathConstants.NODESET);
 
-				NodeList values = (NodeList) 
-					xpath.evaluate("/metadata/CommonProfileAttributes/attribute/value", 
-					metadata, XPathConstants.NODESET);
-				*/
-
-				/* this is the 1.3 through 1.4 way */
-				NodeList names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-					"/metadata/CommonProfileAttributes/attribute/name");
-				NodeList values = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-					"/metadata/CommonProfileAttributes/attribute/value");
-				
+					values = (NodeList) 
+						xpath.evaluate("/metadata/CommonProfileAttributes/attribute/value", 
+						metadata, javax.xml.xpath.XPathConstants.NODESET);
+				}
+			
 				for (int i = 0 ; i < names.getLength() ; i++) {
 					Node name = (Node)names.item(i).getFirstChild();
 					Node value = (Node)values.item(i).getFirstChild();
@@ -770,21 +774,49 @@ public class GeneralChartData extends RMIGeneralChartData {
 					metadata, XPathConstants.NODESET);
 				*/
 
-				/* this is the 1.3 through 1.4 way */
-				NodeList names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-					"/metadata/CommonProfileAttributes/attribute/name");
+				NodeList names = null;
+
+				try {
+					/* this is the 1.3 through 1.4 way */
+					names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+						"/metadata/CommonProfileAttributes/attribute/name");
+					for (int i = 0 ; i < names.getLength() ; i++) {
+						Node name = (Node)names.item(i).getFirstChild();
+						set.add(name.getNodeValue());
+					}
+					names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+						"/metadata/ProfileAttributes/attribute/name");
 				
-				for (int i = 0 ; i < names.getLength() ; i++) {
-					Node name = (Node)names.item(i).getFirstChild();
-					set.add(name.getNodeValue());
-				}
-				names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-					"/metadata/ProfileAttributes/attribute/name");
+					for (int i = 0 ; i < names.getLength() ; i++) {
+						Node name = (Node)names.item(i).getFirstChild();
+						set.add(name.getNodeValue());
+					}
+				} catch (NoClassDefFoundError e) {
+					/* this is the 1.5 way */
+					// build the xpath object to jump around in that document
+					javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
+					xpath.setNamespaceContext(new TauNamespaceContext());
+	
+					// get the common profile attributes from the metadata
+					names = (NodeList) 
+						xpath.evaluate("/metadata/CommonProfileAttributes/attribute/name", 
+						metadata, javax.xml.xpath.XPathConstants.NODESET);
+
+					for (int i = 0 ; i < names.getLength() ; i++) {
+						Node name = (Node)names.item(i).getFirstChild();
+						set.add(name.getNodeValue());
+					}
 				
-				for (int i = 0 ; i < names.getLength() ; i++) {
-					Node name = (Node)names.item(i).getFirstChild();
-					set.add(name.getNodeValue());
+					names = (NodeList) 
+						xpath.evaluate("/metadata/CommonProfileAttributes/attribute/name", 
+						metadata, javax.xml.xpath.XPathConstants.NODESET);
+
+					for (int i = 0 ; i < names.getLength() ; i++) {
+						Node name = (Node)names.item(i).getFirstChild();
+						set.add(name.getNodeValue());
+					}
 				}
+
 			} 
 
 			statement = db.prepareStatement("truncate table temp_trial");
