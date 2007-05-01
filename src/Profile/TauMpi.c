@@ -1516,6 +1516,10 @@ int *provided;
   PMPI_Comm_size( MPI_COMM_WORLD, &size );
   tau_totalnodes(1, size); /* Set the totalnodes */
 
+#ifdef TAU_SYNCHRONIZE_CLOCKS
+  TauSyncClocks(procid_0, size);
+#endif
+
 #ifdef TAU_TRACK_MSG
   requests_head_0 = requests_tail_0 = 0;
 #endif /* TAU_TRACK_MSG */
