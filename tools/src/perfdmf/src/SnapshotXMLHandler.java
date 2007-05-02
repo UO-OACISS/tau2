@@ -9,9 +9,9 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.10 2007/05/02 17:18:04 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.11 2007/05/02 19:39:09 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
@@ -32,8 +32,6 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private String currentValue;
     private String currentGroup;
     private long currentTimestamp;
-
-    private boolean firstSnapshotFound;
 
     private static class ThreadData {
         public Thread thread;
@@ -86,12 +84,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private void handleProfile(Attributes attributes) {
         String threadID = attributes.getValue("thread");
         currentThread = (ThreadData) threadMap.get(threadID);
-        if (!firstSnapshotFound) {
-            currentSnapshot = (Snapshot) currentThread.thread.getSnapshots().get(0);
-            firstSnapshotFound = true;
-        } else {
-            currentSnapshot = currentThread.thread.addSnapshot("");
-        }
+        currentSnapshot = currentThread.thread.addSnapshot("");
     }
 
     private void handleIntervalData(Attributes attributes) {

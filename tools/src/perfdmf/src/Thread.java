@@ -1,16 +1,15 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.util.*;
-import java.io.*;
 
 /**
  * This class represents a Thread.  It contains an array of FunctionProfiles and 
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.7 2007/05/02 17:18:05 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.8 2007/05/02 19:39:09 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -36,6 +35,8 @@ public class Thread implements Comparable {
     private List snapshots = new ArrayList();
     private Map metaData = new TreeMap();
 
+    private boolean firstSnapshotFound;
+
     public Thread(int nodeID, int contextID, int threadID, int numMetrics) {
         numMetrics = Math.max(numMetrics, 1);
         this.nodeID = nodeID;
@@ -45,7 +46,8 @@ public class Thread implements Comparable {
         this.numMetrics = numMetrics;
 
         // create the first snapshot
-        addSnapshot("");
+        Snapshot snapshot = new Snapshot("", snapshots.size());
+        snapshots.add(snapshot);
     }
 
     public String toString() {
@@ -93,6 +95,11 @@ public class Thread implements Comparable {
     }
 
     public Snapshot addSnapshot(String name) {
+        
+        if (!firstSnapshotFound) {
+            firstSnapshotFound = true;
+            return (Snapshot)snapshots.get(0);
+        }
         Snapshot snapshot = new Snapshot(name, snapshots.size());
         snapshots.add(snapshot);
 
