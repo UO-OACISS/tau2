@@ -20,17 +20,19 @@
 
 #ifndef TAU_DISABLE_METADATA
 #include "tau_config.h"
-#if (!defined(TAU_WINDOWS))
+#if defined(TAU_WINDOWS)
+double TauWindowsUsecD(); // from RtsLayer.cpp
+#else
 #include <sys/utsname.h> // for host identification (uname)
 #include <unistd.h>
-#endif
-#endif
+#include <sys/time.h>
+#endif /* TAU_WINDOWS */
+#endif /* TAU_DISABLE_METADATA */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <sys/time.h>
 
 #include "Profile/Profiler.h"
 #include "tauarch.h"
@@ -43,7 +45,7 @@ char * TauGetCounterString(void);
 static x_uint64 getTimeStamp() {
   x_uint64 timestamp;
 #ifdef TAU_WINDOWS
-  timeStamp = TauWindowsUsecD();
+  timestamp = TauWindowsUsecD();
 #else
   struct timeval tp;
   gettimeofday (&tp, 0);
