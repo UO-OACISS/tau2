@@ -11,11 +11,8 @@
 
 package edu.uoregon.tau.perfdmf.database;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.sql.SQLException;
-import java.io.IOException;
 
 public class ConnectionManager {
     private String perfdmfUser;

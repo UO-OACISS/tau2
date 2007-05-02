@@ -1,9 +1,10 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.util.Hashtable;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-import java.util.Hashtable;
 
 /*** SAX Handler which creates SQL to load a xml document into the database. ***/
 

@@ -1,19 +1,16 @@
 package edu.uoregon.tau.perfdmf.loader;
 
-import edu.uoregon.tau.perfdmf.database.*;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
+
+import edu.uoregon.tau.perfdmf.database.DB;
 
 /** For applications or experiments, Load checks if there is a duplicate, 
     if so, reject loading. Otherwise, load them into database.  For trials, 

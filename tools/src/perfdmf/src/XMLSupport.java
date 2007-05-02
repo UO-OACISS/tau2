@@ -7,8 +7,6 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.util.*;
-import java.io.*;
 
 public class XMLSupport {
 

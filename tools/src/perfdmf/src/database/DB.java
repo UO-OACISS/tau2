@@ -1,10 +1,6 @@
 package edu.uoregon.tau.perfdmf.database;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.DatabaseMetaData;
+import java.sql.*;
 
 /*** Interface to access a DBMS ***/
 

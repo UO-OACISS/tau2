@@ -1,16 +1,16 @@
 package edu.uoregon.tau.paraprof.enums;
 
-import edu.uoregon.tau.paraprof.*;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.UserEvent;
+import edu.uoregon.tau.perfdmf.UserEventProfile;
 
 /**
  * type-safe enum pattern for value type
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: UserEventValueType.java,v 1.2 2005/10/18 22:50:35 amorris Exp $</P>
+ * <P>CVS $Id: UserEventValueType.java,v 1.3 2007/05/02 19:45:06 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public abstract class UserEventValueType {
 

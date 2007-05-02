@@ -1,13 +1,12 @@
 package edu.uoregon.tau.perfdmf;
 
-import edu.uoregon.tau.perfdmf.database.DB;
-
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Vector;
+import java.sql.SQLException;
 import java.util.Hashtable;
-import java.util.Enumeration;
+import java.util.Vector;
+
+import edu.uoregon.tau.perfdmf.database.DB;
 
 /**
  * Holds all the data for a interval location profile in the database.
@@ -26,7 +25,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.4 2006/12/28 03:05:59 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.5 2007/05/02 19:43:28 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1

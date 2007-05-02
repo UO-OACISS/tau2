@@ -2,24 +2,21 @@ package edu.uoregon.tau.paraprof.barchart;
 
 import java.awt.Color;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
 import edu.uoregon.tau.paraprof.*;
-import edu.uoregon.tau.perfdmf.Function;
-import edu.uoregon.tau.perfdmf.FunctionProfile;
-import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
 
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.9 2007/01/04 01:55:32 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.10 2007/05/02 19:45:06 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {

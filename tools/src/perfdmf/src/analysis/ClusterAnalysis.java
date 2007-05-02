@@ -1,17 +1,19 @@
 package edu.uoregon.tau.perfdmf.analysis;
 
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfdmf.database.*;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.database.DB;
 
 /**
  * This is the top level class for doing cluster analysis.
  * TBA
  *
- * <P>CVS $Id: ClusterAnalysis.java,v 1.1 2005/09/26 20:24:35 amorris Exp $</P>
+ * <P>CVS $Id: ClusterAnalysis.java,v 1.2 2007/05/02 19:43:28 amorris Exp $</P>
  * @author	Kevin Huck
  * @version	0.1
  * @since	0.1

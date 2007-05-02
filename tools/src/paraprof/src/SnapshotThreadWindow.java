@@ -15,6 +15,7 @@ import edu.uoregon.tau.paraprof.barchart.AbstractBarChartModel;
 import edu.uoregon.tau.paraprof.barchart.BarChartPanel;
 import edu.uoregon.tau.paraprof.barchart.ThreadSnapshotBarChartModel;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.util.ObjectFilter;
 import edu.uoregon.tau.perfdmf.Thread;
 
 

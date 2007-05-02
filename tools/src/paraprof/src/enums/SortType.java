@@ -1,15 +1,14 @@
 package edu.uoregon.tau.paraprof.enums;
 
-import edu.uoregon.tau.paraprof.*;
 
 /**
  * type-safe enum pattern for type of sorting
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: SortType.java,v 1.1 2005/09/26 21:12:45 amorris Exp $</P>
+ * <P>CVS $Id: SortType.java,v 1.2 2007/05/02 19:45:06 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class SortType {
 

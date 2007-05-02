@@ -9,12 +9,14 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import javax.swing.*;
 
-import edu.uoregon.tau.perfdmf.*;
-
-import java.util.*;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.DatabaseException;
 
 public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 

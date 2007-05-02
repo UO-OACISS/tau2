@@ -9,8 +9,9 @@
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
+
+import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Thread;
-import edu.uoregon.tau.perfdmf.*;
 
 public class PPThread {
 

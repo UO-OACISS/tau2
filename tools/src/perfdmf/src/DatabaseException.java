@@ -1,7 +1,7 @@
 package edu.uoregon.tau.perfdmf;
 
 
-import java.sql.*;
+import java.sql.SQLException;
 
 
 public class DatabaseException extends RuntimeException {

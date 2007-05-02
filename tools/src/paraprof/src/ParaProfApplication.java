@@ -8,10 +8,14 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
-import javax.swing.tree.*;
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfdmf.database.*;
+import java.util.Enumeration;
+import java.util.ListIterator;
+import java.util.Vector;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+
+import edu.uoregon.tau.perfdmf.Application;
 
 public class ParaProfApplication extends Application implements ParaProfTreeNodeUserObject {
 

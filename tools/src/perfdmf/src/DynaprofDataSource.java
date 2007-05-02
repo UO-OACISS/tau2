@@ -7,7 +7,8 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
-import java.util.*;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 public class DynaprofDataSource extends DataSource {
 

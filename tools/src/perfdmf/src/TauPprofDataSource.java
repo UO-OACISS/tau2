@@ -8,7 +8,9 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
 
 public class TauPprofDataSource extends DataSource {
 

@@ -2,12 +2,10 @@ package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
 import java.sql.SQLException;
-import java.util.Iterator;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
@@ -17,9 +15,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeDataSource.java,v 1.2 2006/03/29 20:14:38 amorris Exp $</P>
+ * <P>CVS $Id: CubeDataSource.java,v 1.3 2007/05/02 19:43:28 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class CubeDataSource extends DataSource {
 

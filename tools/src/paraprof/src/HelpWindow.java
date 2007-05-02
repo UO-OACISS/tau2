@@ -9,14 +9,16 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
 import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.text.*;
-import javax.swing.border.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Observable;
+import java.util.Observer;
 
-import edu.uoregon.tau.perfdmf.*;
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 
 public class HelpWindow extends JFrame implements ActionListener, Observer {
 

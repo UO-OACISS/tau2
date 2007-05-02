@@ -1,14 +1,12 @@
 package edu.uoregon.tau.perfdmf;
 
-import edu.uoregon.tau.perfdmf.database.*;
-
+import java.io.*;
 import java.sql.*;
-import java.util.List;
 import java.util.ArrayList;
-import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.IOException;
+import java.util.List;
+
+import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 /**
  * Holds all the data for a machine/thread_map in the database.  
@@ -18,7 +16,7 @@ import java.io.IOException;
  * A machine is associated with a trial, and has one or more
  * interval_location_profiles associated with it.
  *
- * <P>CVS $Id: Machine.java,v 1.1 2007/01/03 00:57:18 khuck Exp $</P>
+ * <P>CVS $Id: Machine.java,v 1.2 2007/05/02 19:43:28 amorris Exp $</P>
  * @author	Kevin Huck
  * @version	0.2
  * @since	0.2

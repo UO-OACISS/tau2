@@ -1,7 +1,8 @@
 package edu.uoregon.tau.perfdmf.loader;
 
-import edu.uoregon.tau.perfdmf.database.*;
 import jargs.gnu.CmdLineParser;
+import edu.uoregon.tau.perfdmf.database.ConnectionManager;
+import edu.uoregon.tau.perfdmf.database.DB;
 
 public class LoadExperiment {
     private Load load = null;

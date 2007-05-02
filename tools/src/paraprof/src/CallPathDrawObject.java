@@ -1,13 +1,13 @@
 package edu.uoregon.tau.paraprof;
 
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Function;
 
 /**
  * CallPathDrawObject: This object is used to hold data for the CallPathTextWindowPanel
  *   
- * <P>CVS $Id: CallPathDrawObject.java,v 1.8 2007/03/02 20:09:10 amorris Exp $</P>
+ * <P>CVS $Id: CallPathDrawObject.java,v 1.9 2007/05/02 19:45:05 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		CallPathTextWindow
  * @see		CallPathTextWindowPanel
  */

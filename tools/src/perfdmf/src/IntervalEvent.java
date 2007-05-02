@@ -1,12 +1,12 @@
 package edu.uoregon.tau.perfdmf;
 
-import edu.uoregon.tau.perfdmf.database.DB;
-
-import java.util.Vector;
-import java.util.Hashtable;
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Hashtable;
+import java.util.Vector;
+
+import edu.uoregon.tau.perfdmf.database.DB;
 
 /**
  * Holds all the data for an interval_event in the database.
@@ -25,7 +25,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: IntervalEvent.java,v 1.3 2006/04/10 19:55:50 khuck Exp $</P>
+ * <P>CVS $Id: IntervalEvent.java,v 1.4 2007/05/02 19:43:28 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1

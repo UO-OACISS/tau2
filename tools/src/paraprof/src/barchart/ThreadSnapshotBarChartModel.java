@@ -2,7 +2,6 @@ package edu.uoregon.tau.paraprof.barchart;
 
 import java.awt.Color;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JComponent;
@@ -34,7 +33,7 @@ public class ThreadSnapshotBarChartModel extends AbstractBarChartModel {
         filter = new ObjectFilter(thread.getSnapshots());
         //filter.hide(thread.getSnapshots().get(0));
         //filter.hide(thread.getSnapshots().get(thread.getSnapshots().size()-1));
-        snapshots = filter.getObjects();
+        snapshots = filter.getFilteredObjects();
         
         list = dataSorter.getBasicFunctionProfiles(thread);
     }

@@ -1,20 +1,17 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.*;
 
 import javax.swing.JComponent;
-import java.awt.Color;
 
 /**
  * This component sits atop the call graph window displaying a bar of colors (the scale).
  * It also contains the static functions for getting a color given a value 0..1
  *  
  * 
- * <P>CVS $Id: ColorBar.java,v 1.1 2005/09/26 21:12:03 amorris Exp $</P>
+ * <P>CVS $Id: ColorBar.java,v 1.2 2007/05/02 19:45:05 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  * @see CallGraphWindow
  */
 public class ColorBar extends JComponent {

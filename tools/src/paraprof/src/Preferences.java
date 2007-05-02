@@ -8,9 +8,13 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
-import java.io.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Point;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Vector;
 
 public class Preferences implements Serializable {
 

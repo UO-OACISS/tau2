@@ -6,9 +6,8 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
-import edu.uoregon.tau.paraprof.ParaProfMetric;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
-import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.paraprof.ParaProfMetric;
 
 public class MetricTableModel extends AbstractTableModel {
 

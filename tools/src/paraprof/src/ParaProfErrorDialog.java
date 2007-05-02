@@ -1,14 +1,16 @@
 package edu.uoregon.tau.paraprof;
 
-import edu.uoregon.tau.common.TauRuntimeException;
-import edu.uoregon.tau.perfdmf.*;
-
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import javax.swing.*;
-import javax.swing.event.*;
-import java.io.*;
+
+import edu.uoregon.tau.common.TauRuntimeException;
+import edu.uoregon.tau.perfdmf.DataSourceException;
+import edu.uoregon.tau.perfdmf.DatabaseException;
 
 public class ParaProfErrorDialog extends JFrame implements ActionListener {
 

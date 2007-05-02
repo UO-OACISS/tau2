@@ -2,7 +2,6 @@ package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
 import java.sql.SQLException;
-import java.util.List;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -13,9 +12,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.8 2007/03/26 21:04:11 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.9 2007/05/02 19:43:28 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class SnapshotDataSource extends DataSource {
 

@@ -2,16 +2,14 @@ package edu.uoregon.tau.paraprof;
 
 import java.util.*;
 
-import edu.uoregon.tau.perfdmf.*;
-
 /**
  * ApplicationManager
  * This controls the adding of applications to the system.
  *  
  * 
- * <P>CVS $Id: ApplicationManager.java,v 1.13 2005/09/26 21:12:01 amorris Exp $</P>
+ * <P>CVS $Id: ApplicationManager.java,v 1.14 2007/05/02 19:45:05 amorris Exp $</P>
  * @author	Robert Bell
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  */
 public class ApplicationManager extends Observable {
 

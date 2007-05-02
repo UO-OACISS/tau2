@@ -6,8 +6,6 @@ import java.awt.event.ActionListener;
 import java.util.*;
 
 import javax.swing.*;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
 
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.Function;
@@ -18,9 +16,9 @@ import edu.uoregon.tau.perfdmf.UserEvent;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.5 2007/01/04 01:55:31 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.6 2007/05/02 19:45:05 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */

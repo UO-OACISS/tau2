@@ -1,11 +1,13 @@
 package edu.uoregon.tau.perfdmf.analysis;
 
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfdmf.database.*;
-
-import java.sql.*;
-import java.util.Vector;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ListIterator;
+import java.util.Vector;
+
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.database.DB;
 
 public class Scalability {
 	private DB db = null;

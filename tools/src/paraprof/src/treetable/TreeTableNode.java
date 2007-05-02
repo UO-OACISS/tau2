@@ -1,27 +1,22 @@
 package edu.uoregon.tau.paraprof.treetable;
 
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Graphics;
 import java.util.*;
 
-import javax.swing.Icon;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import edu.uoregon.tau.paraprof.ColorBar;
-import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
-import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * Represents a node in the TreeTable
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.5 2007/03/26 18:13:45 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.6 2007/05/02 19:45:07 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;

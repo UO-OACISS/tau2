@@ -14,10 +14,8 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
-import java.util.*;
-
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
 
 public class MpiPDataSource extends DataSource {
 

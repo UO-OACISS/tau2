@@ -1,11 +1,11 @@
 package edu.uoregon.tau.paraprof;
 
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.*;
 
-import edu.uoregon.tau.perfdmf.*;
+import javax.swing.*;
 
 /**
  * @author amorris

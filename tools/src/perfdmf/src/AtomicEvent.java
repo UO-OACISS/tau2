@@ -1,11 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import edu.uoregon.tau.perfdmf.database.DB;
-
-import java.sql.ResultSet;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
+
+import edu.uoregon.tau.perfdmf.database.DB;
 
 /**
  * Holds all the data for a atomic event in the database.
@@ -18,7 +18,7 @@ import java.util.Vector;
  * A atomic event has particular information, including the name of the atomic event, 
  * the TAU group, and the application, experiment and trial IDs.
  *
- * <P>CVS $Id: AtomicEvent.java,v 1.2 2006/02/08 01:25:45 khuck Exp $</P>
+ * <P>CVS $Id: AtomicEvent.java,v 1.3 2007/05/02 19:43:28 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1

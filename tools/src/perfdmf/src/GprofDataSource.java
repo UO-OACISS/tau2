@@ -1,8 +1,8 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
-import java.util.*;
-import java.lang.reflect.Array;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 public class GprofDataSource extends DataSource {
 

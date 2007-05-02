@@ -22,8 +22,8 @@ import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.*;
 import edu.uoregon.tau.perfdmf.Function;
-import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 
 public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner, ScrollBarController,

@@ -1,18 +1,20 @@
 package edu.uoregon.tau.paraprof;
 
-import java.io.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+
 import javax.swing.*;
 
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.DataSource;
 
 /**
  * A window that lets the user select a profile format and launch a JFileChooser
  * 
- * <P>CVS $Id: LoadTrialWindow.java,v 1.3 2006/11/08 23:17:58 amorris Exp $</P>
+ * <P>CVS $Id: LoadTrialWindow.java,v 1.4 2007/05/02 19:45:05 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class LoadTrialWindow extends JFrame implements ActionListener {
 

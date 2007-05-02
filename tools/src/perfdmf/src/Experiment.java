@@ -1,13 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import edu.uoregon.tau.perfdmf.database.*;
-
+import java.io.*;
 import java.sql.*;
 import java.util.Vector;
-import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.IOException;
+
+import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 /**
  * Holds all the data for an experiment in the database.  
@@ -17,7 +15,7 @@ import java.io.IOException;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.5 2006/06/27 03:02:16 scottb Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.6 2007/05/02 19:43:28 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1

@@ -6,7 +6,7 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.util.*;
+import java.util.Iterator;
 
 public class CallPathUtilFuncs {
 

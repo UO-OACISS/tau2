@@ -15,7 +15,7 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.EventQueue;
-import java.io.*;
+import java.io.File;
 import java.util.*;
 
 import javax.swing.tree.DefaultMutableTreeNode;

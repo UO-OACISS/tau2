@@ -9,11 +9,12 @@
 
 package edu.uoregon.tau.paraprof;
 
-import javax.swing.*;
+import java.util.Iterator;
 
-import edu.uoregon.tau.perfdmf.*;
+import javax.swing.JOptionPane;
 
-import java.util.*;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Thread;
 
 

@@ -1,6 +1,5 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.util.*;
 
 public class UserEventProfile {
 

@@ -18,8 +18,10 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import edu.uoregon.tau.paraprof.enums.*;
+import java.awt.Color;
+
+import edu.uoregon.tau.paraprof.enums.SortType;
+import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
 

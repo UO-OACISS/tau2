@@ -1,16 +1,17 @@
 package edu.uoregon.tau.paraprof.enums;
 
-import edu.uoregon.tau.paraprof.*;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.paraprof.ParaProfException;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
+import edu.uoregon.tau.perfdmf.Metric;
 
 /**
  * type-safe enum pattern for type of Valueing
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: ValueType.java,v 1.6 2007/05/02 17:19:22 amorris Exp $</P>
+ * <P>CVS $Id: ValueType.java,v 1.7 2007/05/02 19:45:06 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 
 public abstract class ValueType {

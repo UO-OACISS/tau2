@@ -1,11 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import edu.uoregon.tau.perfdmf.database.DB;
-
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Vector;
+
+import edu.uoregon.tau.perfdmf.database.DB;
 /**
  * Holds all the data for a atomic event data object in the database.
  * This object is returned by the DataSession class and all of its subtypes.
@@ -19,7 +19,7 @@ import java.util.Vector;
  * the node, context and thread that identify the location, and the data collected for this
  * location, such as sample count, maximum value, minimum value, mean value and sum squared.  
  *
- * <P>CVS $Id: AtomicLocationProfile.java,v 1.1 2005/09/26 20:24:25 amorris Exp $</P>
+ * <P>CVS $Id: AtomicLocationProfile.java,v 1.2 2007/05/02 19:43:28 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1

@@ -1,13 +1,12 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.util.Date;
 
 /**
  * Snapshot object representing a Snapshot
  *
- * <P>CVS $Id: Snapshot.java,v 1.4 2007/02/13 00:48:22 amorris Exp $</P>
+ * <P>CVS $Id: Snapshot.java,v 1.5 2007/05/02 19:43:28 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class Snapshot {
 

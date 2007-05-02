@@ -7,7 +7,9 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+import java.util.Vector;
 
 public class ParaProfIterator implements ListIterator{
 

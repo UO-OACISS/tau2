@@ -19,7 +19,6 @@ import javax.swing.tree.TreePath;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.JTreeTable;
-import edu.uoregon.tau.common.treetable.JTreeTable.TreeTableCellRenderer;
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
@@ -33,9 +32,9 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.11 2007/03/03 00:18:13 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.12 2007/05/02 19:45:07 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {

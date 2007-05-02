@@ -9,15 +9,15 @@
 
 package edu.uoregon.tau.perfdmf.loader;
 
-import edu.uoregon.tau.perfdmf.database.*;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.sql.*;
 import jargs.gnu.CmdLineParser;
+
+import java.io.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import edu.uoregon.tau.perfdmf.database.ConnectionManager;
+import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
 public class ConfigureTest {
     private static String Usage = "Usage: configure [{-h,--help}] [{-g,--configfile} filename] [{-t,--tauroot} path]";

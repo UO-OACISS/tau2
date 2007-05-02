@@ -15,15 +15,15 @@ import edu.uoregon.tau.paraprof.barchart.*;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
-import edu.uoregon.tau.perfdmf.UserEvent;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UserEvent;
 
 /**
  * The UserEventWindow shows one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventWindow.java,v 1.26 2006/12/01 00:36:52 amorris Exp $</P>
+ * <P>CVS $Id: UserEventWindow.java,v 1.27 2007/05/02 19:45:06 amorris Exp $</P>
  * @author  Alan Morris, Robert Bell
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  * @see GlobalBarChartModel
  */
 public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {

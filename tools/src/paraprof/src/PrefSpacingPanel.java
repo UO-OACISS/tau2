@@ -10,8 +10,10 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
-import javax.swing.*;
-import javax.swing.event.*;
+
+import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class PrefSpacingPanel extends JPanel implements ChangeListener {
 

@@ -4,19 +4,19 @@
  * It allows the user to change the meta data associated with a trial.
  *  
  * 
- * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.11 2007/02/13 00:46:24 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.12 2007/05/02 19:45:05 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		ParaProfManagerWindow
  */
 
 package edu.uoregon.tau.paraprof;
 
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfdmf.database.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.tree.DefaultTreeModel;
 
-import javax.swing.tree.*;
-import javax.swing.table.*;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 public class ParaProfManagerTableModel extends AbstractTableModel {
 

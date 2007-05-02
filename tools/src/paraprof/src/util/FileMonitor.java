@@ -21,9 +21,9 @@ package edu.uoregon.tau.paraprof.util;
  @author <a href="mailto:jacob.dreyer@geosoft.no">Jacob Dreyer</a>
  */
 
-import java.util.*;
 import java.io.File;
 import java.lang.ref.WeakReference;
+import java.util.*;
 
 public class FileMonitor {
     private Timer timer;

@@ -9,13 +9,15 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
-import java.io.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.*;
+
 import javax.swing.*;
 
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.DataSource;
 
 public class PreferencesWindow extends JFrame implements ActionListener, Observer {
 

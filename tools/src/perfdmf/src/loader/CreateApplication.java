@@ -1,7 +1,8 @@
 package edu.uoregon.tau.perfdmf.loader;
 
-import edu.uoregon.tau.perfdmf.*;
 import jargs.gnu.CmdLineParser;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
 
 public class CreateApplication {
 

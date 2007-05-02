@@ -1,12 +1,13 @@
 package edu.uoregon.tau.perfdmf.loader;
 
-import edu.uoregon.tau.perfdmf.database.*;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import edu.uoregon.tau.perfdmf.database.DB;
 
 /*** SAX Handler which creates SQL to load a document into the database. ***/
 

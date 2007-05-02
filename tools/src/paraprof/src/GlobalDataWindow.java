@@ -11,9 +11,10 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 
-import edu.uoregon.tau.paraprof.barchart.*;
+import edu.uoregon.tau.paraprof.barchart.AbstractBarChartModel;
+import edu.uoregon.tau.paraprof.barchart.BarChartPanel;
+import edu.uoregon.tau.paraprof.barchart.GlobalBarChartModel;
 import edu.uoregon.tau.paraprof.enums.SortType;
-import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.SortListener;
 import edu.uoregon.tau.perfdmf.Function;
@@ -21,9 +22,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.13 2007/03/17 00:50:26 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.14 2007/05/02 19:45:05 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {

@@ -8,9 +8,7 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-
-import edu.uoregon.tau.perfdmf.*;
+import java.awt.Color;
 
 public class ColorPair implements Comparable {
 

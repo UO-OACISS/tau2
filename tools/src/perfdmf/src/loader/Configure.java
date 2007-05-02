@@ -6,7 +6,6 @@ import java.io.*;
 import java.sql.ResultSet;
 
 import edu.uoregon.tau.common.Common;
-import edu.uoregon.tau.common.Gzip;
 import edu.uoregon.tau.common.Wget;
 import edu.uoregon.tau.common.tar.Tar;
 import edu.uoregon.tau.perfdmf.database.*;

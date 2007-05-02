@@ -1,15 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import edu.uoregon.tau.perfdmf.database.DB;
-
-import java.sql.SQLException;
-import java.sql.PreparedStatement;
 import java.io.Serializable;
 
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.2 2006/03/29 20:14:38 amorris Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.3 2007/05/02 19:43:28 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1

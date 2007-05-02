@@ -8,9 +8,10 @@
 
 package edu.uoregon.tau.paraprof;
 
-import edu.uoregon.tau.perfdmf.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 
-import javax.swing.tree.*;
+import edu.uoregon.tau.perfdmf.Metric;
 
 public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject {
     private ParaProfTrial ppTrial = null;

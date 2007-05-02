@@ -1,6 +1,7 @@
 package edu.uoregon.tau.paraprof.tablemodel;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;

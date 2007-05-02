@@ -11,10 +11,16 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.StringReader;
 import java.util.*;
-import org.xml.sax.*;
-import org.xml.sax.helpers.*;
+
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 class NoOpEntityResolver implements EntityResolver {
     public InputSource resolveEntity(String publicId, String systemId) {

@@ -1,9 +1,11 @@
 package edu.uoregon.tau.paraprof;
 
 
-import edu.uoregon.tau.perfdmf.*;
+import java.awt.Color;
 
-import java.awt.*;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.Group;
+import edu.uoregon.tau.perfdmf.UserEvent;
 
 /**
  * LedgerDataElement
@@ -11,9 +13,9 @@ import java.awt.*;
  * This provides the ledger window classes a uniform interface to dealing with these objects.
  * It also holds draw coordinates for mouse events.
  * 
- * <P>CVS $Id: LedgerDataElement.java,v 1.4 2007/01/04 01:55:31 amorris Exp $</P>
+ * <P>CVS $Id: LedgerDataElement.java,v 1.5 2007/05/02 19:45:05 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		LedgerWindow
  * @see		LedgerWindowPanel
  */

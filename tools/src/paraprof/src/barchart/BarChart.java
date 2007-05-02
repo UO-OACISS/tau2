@@ -7,8 +7,6 @@ import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
 
 import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
@@ -19,9 +17,9 @@ import edu.uoregon.tau.paraprof.Searcher;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.8 2007/01/04 01:55:32 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.9 2007/05/02 19:45:06 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, MouseMotionListener, BarChartModelListener {

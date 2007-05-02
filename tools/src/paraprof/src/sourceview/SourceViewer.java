@@ -1,9 +1,8 @@
 package edu.uoregon.tau.paraprof.sourceview;
 
-import java.awt.*;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
-import java.awt.print.PrinterException;
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.Rectangle;
 import java.io.File;
 import java.net.URL;
 
@@ -11,7 +10,6 @@ import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 
-import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;

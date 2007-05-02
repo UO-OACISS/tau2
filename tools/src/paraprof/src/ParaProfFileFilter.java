@@ -1,13 +1,13 @@
 package edu.uoregon.tau.paraprof;
 
-import java.io.*;
+import java.io.File;
 
 /**
  * A custom FileFilter
  * 
- * <P>CVS $Id: ParaProfFileFilter.java,v 1.2 2006/03/30 03:03:53 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfFileFilter.java,v 1.3 2007/05/02 19:45:05 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 
 public class ParaProfFileFilter extends javax.swing.filechooser.FileFilter {

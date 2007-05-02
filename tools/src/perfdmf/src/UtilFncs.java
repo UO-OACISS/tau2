@@ -6,7 +6,7 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.*;
 

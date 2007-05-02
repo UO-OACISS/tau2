@@ -1,8 +1,8 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.awt.*;
-import java.io.*;
+import java.awt.Color;
+import java.io.Serializable;
 
 public class Group implements Serializable, Comparable {
 

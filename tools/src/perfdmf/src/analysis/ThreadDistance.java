@@ -1,10 +1,12 @@
 package edu.uoregon.tau.perfdmf.analysis;
 
-import edu.uoregon.tau.perfdmf.*;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
 
 public class ThreadDistance extends DistanceAnalysis {
 
