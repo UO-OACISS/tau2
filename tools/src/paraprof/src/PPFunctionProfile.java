@@ -117,7 +117,7 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public double getInclusivePerCall() {
-        return functionProfile.getInclusivePerCall(dataSorter.getSelectedMetricID());
+        return functionProfile.getInclusivePerCall(dataSorter.getSelectedMetricID(), dataSorter.getSelectedSnapshot());
     }
 
     public Iterator getChildProfiles() {
@@ -133,7 +133,7 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public double getValue() {
-        return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID());
+        return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), dataSorter.getSelectedSnapshot());
     }
 
     private int checkDescending(int value) {
@@ -167,13 +167,13 @@ public class PPFunctionProfile implements Comparable {
             return compareNCT(other);
         
         } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
-            return checkDescending(compareToHelper(valueType.getValue(this.getMeanProfile(), dataSorter.getSortMetric()),
-                    valueType.getValue(other.getMeanProfile(), dataSorter.getSortMetric()), this.getMeanProfile(),
+            return checkDescending(compareToHelper(valueType.getValue(this.getMeanProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot()),
+                    valueType.getValue(other.getMeanProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot()), this.getMeanProfile(),
                     other.getMeanProfile()));
 
         } else if (dataSorter.getSortType() == SortType.VALUE) {
-            return checkDescending(compareToHelper(valueType.getValue(this.getFunctionProfile(), dataSorter.getSortMetric()),
-                    valueType.getValue(other.getFunctionProfile(), dataSorter.getSortMetric())));
+            return checkDescending(compareToHelper(valueType.getValue(this.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot()),
+                    valueType.getValue(other.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot())));
         } else {
             throw new ParaProfException("Unexpected sort type: " + dataSorter.getSortType());
         }

@@ -10,8 +10,7 @@ import java.net.URL;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
@@ -23,26 +22,23 @@ import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
-import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
-import edu.uoregon.tau.paraprof.interfaces.SortListener;
-import edu.uoregon.tau.paraprof.interfaces.UnitListener;
+import edu.uoregon.tau.paraprof.interfaces.*;
 import edu.uoregon.tau.paraprof.script.ParaProfFunctionScript;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
-import edu.uoregon.tau.perfdmf.Thread;
 
 /**
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.27 2007/04/18 22:03:46 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.28 2007/05/02 17:19:22 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  */
 public class ParaProfUtils {
 
@@ -881,9 +877,9 @@ public class ParaProfUtils {
         }
 
         // snapshots are disabled for this release
-        //if (thread.getNumSnapshots() > 1) {
-        //    threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
-        //}
+        if (thread.getNumSnapshots() > 1) {
+            threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
+        }
 
         threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
         threadPopup.show(owner, evt.getX(), evt.getY());
@@ -1072,7 +1068,6 @@ public class ParaProfUtils {
 
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
 
-
         int resultValue = fileChooser.showSaveDialog(owner);
         if (resultValue != JFileChooser.APPROVE_OPTION) {
             return;
@@ -1144,7 +1139,7 @@ public class ParaProfUtils {
             return removeSource(function.getName());
         }
     }
- 
+
     public static String getLeafDisplayName(Function function) {
         String name = function.getName();
         int loc = name.lastIndexOf("=>");
@@ -1162,8 +1157,6 @@ public class ParaProfUtils {
         }
         return removeSource(name);
     }
-
-    
 
     public static String getThreadIdentifier(Thread thread) {
 
@@ -1236,6 +1229,53 @@ public class ParaProfUtils {
         if (url != null) {
             frame.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
         }
+    }
+
+    public static void createMetricToolbarItems(JToolBar bar, ParaProfTrial ppTrial, final DataSorter dataSorter, final ToolBarListener listener) {
+        
+        
+
+        
+        Vector metricList = new Vector();
+        
+        for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
+            metricList.add(ppTrial.getMetricName(i));
+        }
+
+        
+        
+        final JComboBox metricBox = new JComboBox(metricList);
+        metricBox.setPreferredSize(new Dimension(1,1));
+
+        
+        final JComboBox valueBox = new JComboBox(ValueType.VALUES);
+        valueBox.setPreferredSize(new Dimension(1,1));
+
+
+        ActionListener actionListener = new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+ 
+                dataSorter.setSelectedMetricID(metricBox.getSelectedIndex());
+                dataSorter.setValueType((ValueType)valueBox.getSelectedItem());
+                listener.toolBarUsed();
+ 
+                // TODO Auto-generated method stub
+                
+            }
+            
+        };
+
+        metricBox.addActionListener(actionListener);
+        valueBox.addActionListener(actionListener);
+
+        
+        
+ 
+        bar.add(metricBox);
+        bar.add(valueBox);
+ 
+        
     }
 
     private static Component createMetricMenu(ParaProfTrial ppTrial, final ValueType valueType, boolean enabled,

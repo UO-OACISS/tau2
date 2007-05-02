@@ -32,11 +32,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.60 2007/03/26 18:19:39 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.61 2007/05/02 17:19:22 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.60 $
+ * @version $Revision: 1.61 $
  */
 public class ParaProf implements ActionListener {
 
@@ -434,9 +434,8 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = 8;
             } else if (fileTypeString.equals("hpc")) {
                 ParaProf.fileType = 9;
-// Disabled for 2.16.3 release
-//            } else if (fileTypeString.equals("snap")) {
-//                ParaProf.fileType = 10;
+            } else if (fileTypeString.equals("snap")) {
+                ParaProf.fileType = 10;
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();

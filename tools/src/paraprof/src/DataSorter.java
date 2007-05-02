@@ -14,15 +14,16 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.7 2007/02/03 01:40:11 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.8 2007/05/02 17:19:22 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  */
 public class DataSorter implements Comparator {
 
     private ParaProfTrial ppTrial = null;
 
     private int selectedMetricID;
+    private int selectedSnapshot;
     private ValueType valueType;
     private UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
 
@@ -46,6 +47,7 @@ public class DataSorter implements Comparator {
         this.valueType = DataSorter.defaultValueType;
         this.sortValueType = DataSorter.defaultValueType;
         this.descendingOrder = DataSorter.defaultSortOrder;
+        this.selectedSnapshot = -1; // -1 = final snapshot
     }
 
     public boolean isTimeMetric() {
@@ -496,12 +498,13 @@ public class DataSorter implements Comparator {
             return compareNCT(left, right);
 
         } else if (sortType == SortType.MEAN_VALUE) {
-            return compareToHelper(type.getValue(left.getFunction().getMeanProfile(), getSortMetric()), type.getValue(
-                    right.getFunction().getMeanProfile(), getSortMetric()), left.getFunction().getMeanProfile(),
-                    right.getFunction().getMeanProfile());
+            return compareToHelper(type.getValue(left.getFunction().getMeanProfile(), getSortMetric(), selectedSnapshot),
+                    type.getValue(right.getFunction().getMeanProfile(), getSortMetric(), selectedSnapshot),
+                    left.getFunction().getMeanProfile(), right.getFunction().getMeanProfile());
 
         } else if (sortType == SortType.VALUE) {
-            return compareToHelper(type.getValue(left, getSortMetric()), type.getValue(right, getSortMetric()));
+            return compareToHelper(type.getValue(left, getSortMetric(), selectedSnapshot), type.getValue(right, getSortMetric(),
+                    selectedSnapshot));
         } else {
             throw new ParaProfException("Unexpected sort type: " + sortType);
         }
@@ -609,6 +612,14 @@ public class DataSorter implements Comparator {
         this.selectedMetricID = metric;
     }
 
+    public double getValue(FunctionProfile fp) {
+        return valueType.getValue(fp, selectedMetricID, selectedSnapshot);
+    }
+
+    public double getValue(FunctionProfile fp, int snapshot) {
+        return valueType.getValue(fp, selectedMetricID, snapshot);
+    }
+
     public int getSelectedMetricID() {
         return selectedMetricID;
     }
@@ -663,5 +674,13 @@ public class DataSorter implements Comparator {
 
     public static void setDefaultSortOrder(boolean order) {
         DataSorter.defaultSortOrder = order;
+    }
+
+    public int getSelectedSnapshot() {
+        return selectedSnapshot;
+    }
+
+    public void setSelectedSnapshot(int selectedSnapshot) {
+        this.selectedSnapshot = selectedSnapshot;
     }
 }

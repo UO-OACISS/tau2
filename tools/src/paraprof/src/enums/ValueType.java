@@ -8,9 +8,9 @@ import edu.uoregon.tau.perfdmf.*;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: ValueType.java,v 1.5 2006/04/27 19:31:16 amorris Exp $</P>
+ * <P>CVS $Id: ValueType.java,v 1.6 2007/05/02 17:19:22 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 
 public abstract class ValueType {
@@ -18,8 +18,14 @@ public abstract class ValueType {
     private final String name;
     private final String classname;
     
-    public abstract double getValue(FunctionProfile functionProfile, int metric);
+    public abstract double getValue(FunctionProfile functionProfile, int metric, int snapshot);
+    //public abstract double getValue(FunctionProfile functionProfile, int metric, int snapshot);
 
+    public double getValue(FunctionProfile functionProfile, int metric) {
+        return getValue(functionProfile, metric, -1);
+    }
+    
+    
     public abstract String getSuffix(int units, Metric metric);
 
     public abstract int getUnits(int units, Metric metric);
@@ -67,11 +73,11 @@ public abstract class ValueType {
 
     public static final ValueType EXCLUSIVE = new ValueType("Exclusive", "ValueType.EXCLUSIVE") {
 
-        public double getValue(FunctionProfile functionProfile, int metric) {
+        public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
             if (functionProfile.getFunction().isPhase() && functionProfile.getFunction().isCallPathFunction()) {
-                return functionProfile.getInclusive(metric);
+                return functionProfile.getInclusive(snapshot, metric);
             } else {
-                return functionProfile.getExclusive(metric);
+                return functionProfile.getExclusive(snapshot, metric);
             }
         }
 
@@ -89,11 +95,11 @@ public abstract class ValueType {
     };
 
     public static final ValueType EXCLUSIVE_PERCENT = new ValueType("Exclusive percent", "ValueType.EXCLUSIVE_PERCENT") {
-        public double getValue(FunctionProfile functionProfile, int metric) {
+        public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
             if (functionProfile.getFunction().isPhase() && functionProfile.getFunction().isCallPathFunction()) {
-                return functionProfile.getInclusivePercent(metric);
+                return functionProfile.getInclusivePercent(snapshot, metric);
             } else {
-                return functionProfile.getExclusivePercent(metric);
+                return functionProfile.getExclusivePercent(snapshot, metric);
             }
         }
 
@@ -107,8 +113,8 @@ public abstract class ValueType {
     };
 
     public static final ValueType INCLUSIVE = new ValueType("Inclusive", "ValueType.INCLUSIVE") {
-        public double getValue(FunctionProfile functionProfile, int metric) {
-            return functionProfile.getInclusive(metric);
+        public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
+            return functionProfile.getInclusive(snapshot, metric);
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -125,8 +131,8 @@ public abstract class ValueType {
     };
 
     public static final ValueType INCLUSIVE_PERCENT = new ValueType("Inclusive percent", "ValueType.INCLUSIVE_PERCENT") {
-        public double getValue(FunctionProfile functionProfile, int metric) {
-            return functionProfile.getInclusivePercent(metric);
+        public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
+            return functionProfile.getInclusivePercent(metric, snapshot);
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -139,8 +145,8 @@ public abstract class ValueType {
     };
 
     public static final ValueType NUMCALLS = new ValueType("Number of Calls", "ValueType.NUMCALLS") {
-        public double getValue(FunctionProfile functionProfile, int metric) {
-            return functionProfile.getNumCalls();
+        public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
+            return functionProfile.getNumCalls(snapshot);
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -153,8 +159,8 @@ public abstract class ValueType {
     };
 
     public static final ValueType NUMSUBR = new ValueType("Number of Child Calls", "ValueType.NUMSUBR") {
-        public double getValue(FunctionProfile functionProfile, int metric) {
-            return functionProfile.getNumSubr();
+        public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
+            return functionProfile.getNumSubr(snapshot);
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -167,8 +173,8 @@ public abstract class ValueType {
     };
 
     public static final ValueType INCLUSIVE_PER_CALL = new ValueType("Inclusive per Call", "ValueType.INCLUSIVE_PER_CALL") {
-        public double getValue(FunctionProfile functionProfile, int metric) {
-            return functionProfile.getInclusivePerCall(metric);
+        public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
+            return functionProfile.getInclusivePerCall(metric, snapshot);
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -185,8 +191,8 @@ public abstract class ValueType {
     };
 
     public static final ValueType EXCLUSIVE_PER_CALL = new ValueType("Exclusive per Call", "ValueType.EXCLUSIVE_PER_CALL") {
-        public double getValue(FunctionProfile functionProfile, int metric) {
-            return functionProfile.getExclusivePerCall(metric);
+        public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
+            return functionProfile.getExclusivePerCall(metric, snapshot);
         }
 
         public String getSuffix(int units, Metric metric) {

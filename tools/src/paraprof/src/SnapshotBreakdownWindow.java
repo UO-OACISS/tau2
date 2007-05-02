@@ -1,6 +1,8 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -22,11 +24,13 @@ import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeries;
 
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.ToolBarListener;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Snapshot;
 import edu.uoregon.tau.perfdmf.Thread;
 
-public class SnapshotBreakdownWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
+public class SnapshotBreakdownWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow,
+        ToolBarListener {
 
     private ParaProfTrial ppTrial;
     private Thread thread;
@@ -68,7 +72,7 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     private JToggleButton button_differential = new JToggleButton(ST_DIFFERENTIAL, differential);
 
     private final static int topNum = 20;
-    
+
     public SnapshotBreakdownWindow(ParaProfTrial ppTrial, Thread thread, Component owner) {
         this.ppTrial = ppTrial;
         this.thread = thread;
@@ -86,22 +90,43 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         //      panel.getVerticalScrollBar().setUnitIncrement(35);
         //        getContentPane().add(panel);
 
+        createToolbar();
+        chart = createChart();
+
+        panel = new ChartPanel(chart);
+        getContentPane().add(panel);
+
+        setSize(ParaProfUtils.checkSize(new Dimension(defaultWidth, defaultHeight)));
+        setLocation(WindowPlacer.getNewLocation(this, owner));
+
+        //        pack();
+        setupMenus();
+
+        ParaProfUtils.setFrameIcon(this);
+    }
+
+    private void recreateChart() {
+        topTen = button_topTen.isSelected();
+        square = button_square.isSelected();
+        timeline = button_timeline.isSelected();
+        differential = button_differential.isSelected();
+
+        getContentPane().remove(panel);
+        chart = createChart();
+        panel = new ChartPanel(chart);
+        getContentPane().add(panel);
+
+        // redraw
+        validate();
+        repaint();
+    }
+
+    private void createToolbar() {
+
         ActionListener toolbarListener = new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-                topTen = button_topTen.isSelected();
-                square = button_square.isSelected();
-                timeline = button_timeline.isSelected();
-                differential = button_differential.isSelected();
-
-                getContentPane().remove(panel);
-                chart = createChart();
-                panel = new ChartPanel(chart);
-                getContentPane().add(panel);
-
-                // redraw
-                validate();
-                repaint();
+                recreateChart();
 
             }
 
@@ -118,21 +143,13 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         bar.add(button_differential);
         bar.add(button_timeline);
 
+        bar.addSeparator();
+        ParaProfUtils.createMetricToolbarItems(bar, ppTrial, dataSorter, this);
+        bar.addSeparator();
+
         //getContentPane().setLayout(new GridBagLayout());
         getContentPane().add(bar, BorderLayout.NORTH);
 
-        chart = createChart();
-
-        panel = new ChartPanel(chart);
-        getContentPane().add(panel);
-
-        setSize(ParaProfUtils.checkSize(new Dimension(defaultWidth, defaultHeight)));
-        setLocation(WindowPlacer.getNewLocation(this, owner));
-
-        //        pack();
-        setupMenus();
-
-        ParaProfUtils.setFrameIcon(this);
     }
 
     private JFreeChart createChart() {
@@ -143,19 +160,19 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         List functions = dataSorter.getBasicFunctionProfiles(thread);
 
         //long firstTime = ((Snapshot) snapshots.get(0)).getTimestamp();
-        long firstTime = Long.parseLong(((String)thread.getMetaData().get("Starting Timestamp")));
+        long firstTime = Long.parseLong(((String) thread.getMetaData().get("Starting Timestamp")));
         long duration = 0;
 
         int max = functions.size();
         if (topTen) {
-            max = Math.min(topNum+1, functions.size());
+            max = Math.min(topNum + 1, functions.size());
         }
 
         for (int y = 0; y < max; y++) {
             FunctionProfile fp = (FunctionProfile) functions.get(y);
 
             XYSeries s;
-            
+
             if (topTen && y == topNum) {
                 s = new XYSeries("Other", true, false);
             } else {
@@ -163,17 +180,17 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
                 while (str.indexOf("[{") != -1) {
                     int a = str.indexOf("[{");
                     int b = str.indexOf("}]");
-                    str = str.substring(0,a) + str.substring(b+2);
+                    str = str.substring(0, a) + str.substring(b + 2);
                 }
                 s = new XYSeries(str, true, false);
             }
-            
-//            int start = 1;
+
+            //            int start = 1;
             int start = 0;
 
-//            if (timeline) {
-//                start = 1;
-//            }
+            //            if (timeline) {
+            //                start = 1;
+            //            }
             int stop = snapshots.size();
             //int stop = 51;
             for (int x = start; x < stop; x++) {
@@ -184,22 +201,35 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
                     value = 0;
                     for (int z = y; z < functions.size(); z++) {
                         FunctionProfile f = (FunctionProfile) functions.get(z);
+
                         if (differential && snapshotID != 0) {
-                            value += f.getExclusive(snapshotID, ppTrial.getDefaultMetricID())
-                                    - f.getExclusive(snapshotID - 1, ppTrial.getDefaultMetricID());
+                            value += dataSorter.getValue(f, snapshotID) - dataSorter.getValue(f, snapshotID - 1);
                         } else {
-                            value += f.getExclusive(snapshotID, ppTrial.getDefaultMetricID());
+                            value += dataSorter.getValue(f, snapshotID);
                         }
+
+                        //                        if (differential && snapshotID != 0) {
+                        //                            value += f.getExclusive(snapshotID, ppTrial.getDefaultMetricID())
+                        //                                    - f.getExclusive(snapshotID - 1, ppTrial.getDefaultMetricID());
+                        //                        } else {
+                        //                            value += f.getExclusive(snapshotID, ppTrial.getDefaultMetricID());
+                        //                        }
                     }
 
                 } else {
 
                     if (differential && snapshotID != 0) {
-                        value = fp.getExclusive(snapshotID, ppTrial.getDefaultMetricID())
-                                - fp.getExclusive(snapshotID - 1, ppTrial.getDefaultMetricID());
+                        value = dataSorter.getValue(fp, snapshotID) - dataSorter.getValue(fp, snapshotID - 1);
                     } else {
-                        value = fp.getExclusive(snapshotID, ppTrial.getDefaultMetricID());
+                        value = dataSorter.getValue(fp, snapshotID);
                     }
+
+                    //                    if (differential && snapshotID != 0) {
+                    //                        value = fp.getExclusive(snapshotID, ppTrial.getDefaultMetricID())
+                    //                                - fp.getExclusive(snapshotID - 1, ppTrial.getDefaultMetricID());
+                    //                    } else {
+                    //                        value = fp.getExclusive(snapshotID, ppTrial.getDefaultMetricID());
+                    //                    }
                 }
 
                 Snapshot snapshot = (Snapshot) snapshots.get(x);
@@ -233,7 +263,7 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
                 } else {
                     if (square) {
                         s.add(x, value);
-                        s.add(x+0.9999, value);
+                        s.add(x + 0.9999, value);
                     } else {
                         s.add(x, value);
                     }
@@ -243,10 +273,16 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
             dataSet.addSeries(s);
         }
 
+        ParaProfMetric ppMetric = ppTrial.getMetric(dataSorter.getSelectedMetricID());
+        int units = dataSorter.getValueType().getUnits(0, ppMetric);
+        String suffix = dataSorter.getValueType().getSuffix(units, ppMetric).trim();
+
+        String yAxisLabel = dataSorter.getValueType() + " (" + suffix + ")";
+
         JFreeChart chart = ChartFactory.createStackedXYAreaChart("Snapshot Breakdown", "Snapshots", // domain axis label
                 //JFreeChart chart = ChartFactory.createXYLineChart("Snapshot Breakdown", "Snapshots", // domain axis label
                 //JFreeChart chart = ChartFactory.createXYAreaChart("Snapshot Breakdown", "Snapshots", // domain axis label
-                "Exclusive value (microseconds)", // range axis label
+                yAxisLabel, // range axis label
                 dataSet, // data
                 PlotOrientation.VERTICAL, // the plot orientation
                 true, // legend
@@ -269,7 +305,7 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
             XYPlot plot = chart.getXYPlot();
             NumberAxis axis = new NumberAxis("Snapshots");
             System.out.println(snapshots.size());
-            axis.setRange(new Range(0, (double)snapshots.size()));
+            axis.setRange(new Range(0, (double) snapshots.size()));
             plot.setDomainAxis(0, axis);
         }
 
@@ -386,6 +422,10 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     //        }
     //
     //        panel.repaint();
+    }
+
+    public void toolBarUsed() {
+        recreateChart();
     }
 
 }
