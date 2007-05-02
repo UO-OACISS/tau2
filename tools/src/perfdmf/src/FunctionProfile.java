@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.8 2007/03/20 17:03:02 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.9 2007/05/02 17:18:04 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		Function
  */
 public class FunctionProfile {
@@ -43,7 +43,8 @@ public class FunctionProfile {
 
     public FunctionProfile(Function function, int numMetrics, int snapshots) {
         numMetrics = Math.max(numMetrics, 1);
-        data = new double[((numMetrics + 1) * METRIC_SIZE) * snapshots];
+        data = new double[((numMetrics + 1) * METRIC_SIZE + 2) * snapshots];
+
         this.function = function;
     }
 
@@ -67,11 +68,12 @@ public class FunctionProfile {
         return this.getDouble(metric, INCLUSIVE);
     }
 
-    public double getInclusive(int metric, int snapshot) {
+    public double getInclusive(int snapshot, int metric) {
         return this.getDouble(snapshot, metric, INCLUSIVE);
     }
 
     public void setExclusive(int metric, double value) {
+        //System.out.println(this + ".setExclusive(" + metric + "," + value + ")");
         this.putDouble(metric, EXCLUSIVE, value);
     }
 
@@ -84,19 +86,24 @@ public class FunctionProfile {
     }
 
     public double getExclusive(int metric) {
+
         //        if (function.isPhase()) {
         //            return this.getDouble(metric, 0);
         //        } else {
         //            return this.getDouble(metric, 1);
         //        }
-        return this.getDouble(metric, EXCLUSIVE);
+        double value = this.getDouble(metric, EXCLUSIVE);
+
+        ///System.out.println(this + ".getExclusive(" + metric + ") = " + value);
+
+        return value;
     }
 
-    public void setInclusivePercent(int metric, double value) {
-        //this.putDouble(thread.getNumSnapshots() - 1, metric, INCLUSIVE_PERCENT, value);
-    }
-
-    public double getInclusivePercent(int metric) {
+    // TODO: A bunch of these methods are not using the snapshot
+    public double getInclusivePercent(int metric, int snapshot) {
+        if (snapshot == -1) {
+            snapshot = thread.getNumSnapshots() - 1;
+        }
         if (thread.getNodeID() >= 0) {
             double dividend = thread.getPercentDivider(metric);
             if (dividend == 0) {
@@ -110,16 +117,21 @@ public class FunctionProfile {
             }
             return function.getTotalInclusive(metric) / dividend;
         } else if (thread.getNodeID() == Thread.STDDEV) {
-            return getInclusive(metric) / function.getMeanInclusive(metric) * 100.0;
+            return getInclusive(snapshot, metric) / function.getMeanInclusive(metric) * 100.0;
         }
         throw new RuntimeException("Bad Thread ID = " + thread);
+
     }
 
-    public void setExclusivePercent(int metric, double value) {
-        //this.putDouble(thread.getNumSnapshots() - 1, metric, EXCLUSIVE_PERCENT, value);
+    public double getInclusivePercent(int metric) {
+        return getInclusivePercent(metric, -1);
     }
 
-    public double getExclusivePercent(int metric) {
+    // TODO: A bunch of these methods are not using the snapshot
+    public double getExclusivePercent(int metric, int snapshot) {
+        if (snapshot == -1) {
+            snapshot = thread.getNumSnapshots() - 1;
+        }
         if (thread.getNodeID() >= 0) {
             double dividend = thread.getPercentDivider(metric);
             if (dividend == 0) {
@@ -138,12 +150,23 @@ public class FunctionProfile {
         throw new RuntimeException("Bad Thread ID = " + thread);
     }
 
+    public double getExclusivePercent(int metric) {
+        return getExclusivePercent(metric, -1);
+    }
+
     public void setNumCalls(double value) {
         this.putDouble(0, CALLS, value);
     }
 
     public double getNumCalls() {
-        return getDouble(0, CALLS);
+        return getNumCalls(-1);
+    }
+
+    public double getNumCalls(int snapshot) {
+        if (snapshot == -1) {
+            snapshot = thread.getNumSnapshots() - 1;
+        }
+        return getDouble(snapshot, 0, CALLS);
     }
 
     public void setNumSubr(double value) {
@@ -151,21 +174,42 @@ public class FunctionProfile {
     }
 
     public double getNumSubr() {
-        return getDouble(0, SUBR);
+        return getNumSubr(-1);
+    }
+
+    public double getNumSubr(int snapshot) {
+        if (snapshot == -1) {
+            snapshot = thread.getNumSnapshots() - 1;
+        }
+        return getDouble(snapshot, 0, SUBR);
     }
 
     public double getInclusivePerCall(int metric) {
-        if (this.getNumCalls() == 0) {
+        return getInclusivePerCall(metric, -1);
+    }
+
+    public double getInclusivePerCall(int metric, int snapshot) {
+        if (snapshot == -1) {
+            snapshot = thread.getNumSnapshots() - 1;
+        }
+        if (this.getNumCalls(snapshot) == 0) {
             return 0;
         }
-        return this.getInclusive(metric) / this.getNumCalls();
+        return this.getInclusive(snapshot, metric) / this.getNumCalls(snapshot);
     }
 
     public double getExclusivePerCall(int metric) {
-        if (this.getNumCalls() == 0) {
+        return getExclusivePerCall(metric, -1);
+    }
+
+    public double getExclusivePerCall(int metric, int snapshot) {
+        if (snapshot == -1) {
+            snapshot = thread.getNumSnapshots() - 1;
+        }
+        if (this.getNumCalls(snapshot) == 0) {
             return 0;
         }
-        return this.getExclusive(metric) / this.getNumCalls();
+        return this.getExclusive(snapshot, metric) / this.getNumCalls(snapshot);
     }
 
     public void addMetric() {
@@ -312,12 +356,17 @@ public class FunctionProfile {
     }
 
     private double getDouble(int snapshot, int metric, int offset) {
+        if (snapshot == -1) {
+            snapshot = thread.getNumSnapshots() - 1;
+        }
+
         int numMetrics = thread.getNumMetrics();
         int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
         return data[location];
     }
 
     private double getDouble(int metric, int offset) {
+        // use the last snapshot (final value)
         int snapshot = thread.getNumSnapshots() - 1;
         int numMetrics = thread.getNumMetrics();
         int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;

@@ -17,9 +17,9 @@ import org.w3c.dom.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.18 2007/04/14 01:07:08 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.19 2007/05/02 17:18:04 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  */
 public abstract class DataSource {
 
@@ -831,19 +831,6 @@ public abstract class DataSource {
                 }
                 stddevProfile.setInclusive(i, stdDev);
 
-                if (topLevelInclSum[i] != 0) {
-                    totalProfile.setInclusivePercent(i, totalProfile.getInclusive(i) / topLevelInclSum[i] * 100);
-                    totalProfile.setExclusivePercent(i, totalProfile.getExclusive(i) / topLevelInclSum[i] * 100);
-
-                    meanProfile.setInclusivePercent(i, totalProfile.getInclusivePercent(i));
-                    meanProfile.setExclusivePercent(i, totalProfile.getExclusivePercent(i));
-                    if (meanProfile.getInclusive(i) != 0) {
-                        stddevProfile.setInclusivePercent(i, stddevProfile.getInclusive(i) / meanProfile.getInclusive(i) * 100);
-                    }
-                    if (meanProfile.getExclusive(i) != 0) {
-                        stddevProfile.setExclusivePercent(i, stddevProfile.getExclusive(i) / meanProfile.getExclusive(i) * 100);
-                    }
-                }
             }
         }
     }

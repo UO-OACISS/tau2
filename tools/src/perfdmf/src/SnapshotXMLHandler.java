@@ -9,13 +9,11 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.9 2007/03/26 21:04:11 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.10 2007/05/02 17:18:04 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
-
-   
 
     private SnapshotDataSource dataSource;
 
@@ -34,7 +32,9 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private String currentValue;
     private String currentGroup;
     private long currentTimestamp;
-    
+
+    private boolean firstSnapshotFound;
+
     private static class ThreadData {
         public Thread thread;
         public Map metricMap = new HashMap();
@@ -46,11 +46,11 @@ public class SnapshotXMLHandler extends DefaultHandler {
     }
 
     public void startDocument() throws SAXException {
-        //System.out.println("startDocument");
+    //System.out.println("startDocument");
     }
 
     public void endDocument() throws SAXException {
-        //System.out.println("endDocument");
+    //System.out.println("endDocument");
     }
 
     private void handleMetric(String name) {
@@ -86,7 +86,12 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private void handleProfile(Attributes attributes) {
         String threadID = attributes.getValue("thread");
         currentThread = (ThreadData) threadMap.get(threadID);
-        currentSnapshot = currentThread.thread.addSnapshot("");
+        if (!firstSnapshotFound) {
+            currentSnapshot = (Snapshot) currentThread.thread.getSnapshots().get(0);
+            firstSnapshotFound = true;
+        } else {
+            currentSnapshot = currentThread.thread.addSnapshot("");
+        }
     }
 
     private void handleIntervalData(Attributes attributes) {
@@ -165,8 +170,6 @@ public class SnapshotXMLHandler extends DefaultHandler {
             handleIntervalData(attributes);
             accumulator = new StringBuffer();
         }
-        
-        
 
     }
 
@@ -181,10 +184,9 @@ public class SnapshotXMLHandler extends DefaultHandler {
         } else if (localName.equals("utc_date")) {
             try {
                 currentDate = DataSource.dateTime.parse(accumulator.toString());
-            } catch (java.text.ParseException e) {
-            }
+            } catch (java.text.ParseException e) {}
         } else if (localName.equals("timestamp")) {
-            currentTimestamp = Long.parseLong(accumulator.toString()); 
+            currentTimestamp = Long.parseLong(accumulator.toString());
         } else if (localName.equals("group")) {
             currentGroup = accumulator.toString();
         } else if (localName.equals("profile")) {
@@ -195,11 +197,10 @@ public class SnapshotXMLHandler extends DefaultHandler {
         } else if (localName.equals("event")) {
             handleEvent(currentName, currentGroup);
         } else if (localName.equals("attribute")) {
-            currentThread.thread.getMetaData().put(currentName,currentValue);
+            currentThread.thread.getMetaData().put(currentName, currentValue);
         } else if (localName.equals("interval_data")) {
             handleIntervalDataEnd();
         }
-
 
     }
 

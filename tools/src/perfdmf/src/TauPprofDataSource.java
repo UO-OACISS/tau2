@@ -205,13 +205,13 @@ public class TauPprofDataSource extends DataSource {
 
                     
                     totalProfile.setExclusive(metric, functionDataLine1.d0);
-                    totalProfile.setExclusivePercent(metric, functionDataLine1.d1);
+                    //totalProfile.setExclusivePercent(metric, functionDataLine1.d1);
                     
                     break;
                 case 1:
 
                     totalProfile.setInclusive(metric, functionDataLine1.d0);
-                    totalProfile.setInclusivePercent(metric, functionDataLine1.d1);
+                    //totalProfile.setInclusivePercent(metric, functionDataLine1.d1);
 
                     
 
@@ -234,13 +234,13 @@ public class TauPprofDataSource extends DataSource {
                 
 
                     meanProfile.setExclusive(metric, functionDataLine1.d0);
-                    meanProfile.setExclusivePercent(metric, functionDataLine1.d1);
+                    //meanProfile.setExclusivePercent(metric, functionDataLine1.d1);
                     break;
                 case 3:
                     //Now set the values correctly.
 
                     meanProfile.setInclusive(metric, functionDataLine1.d0);
-                    meanProfile.setInclusivePercent(metric, functionDataLine1.d1);
+                    //meanProfile.setInclusivePercent(metric, functionDataLine1.d1);
 
                     //Set number of calls/subroutines/inclusivePerCall.
                     inputString = br.readLine();
@@ -281,7 +281,7 @@ public class TauPprofDataSource extends DataSource {
                         thread.addFunctionProfile(functionProfile);
                     }
                     functionProfile.setExclusive(metric, functionDataLine1.d0);
-                    functionProfile.setExclusivePercent(metric, functionDataLine1.d1);
+                    //functionProfile.setExclusivePercent(metric, functionDataLine1.d1);
                     //Now check the max values on this thread.
 //                    if ((thread.getMaxExclusive(metric)) < functionDataLine1.d0)
 //                        thread.setMaxExclusive(metric, functionDataLine1.d0);
@@ -299,7 +299,7 @@ public class TauPprofDataSource extends DataSource {
                     functionProfile = thread.getFunctionProfile(function);
 
                     functionProfile.setInclusive(metric, functionDataLine1.d0);
-                    functionProfile.setInclusivePercent(metric, functionDataLine1.d1);
+                    //functionProfile.setInclusivePercent(metric, functionDataLine1.d1);
 //                    if ((thread.getMaxInclusive(metric)) < functionDataLine1.d0)
 //                        thread.setMaxInclusive(metric, functionDataLine1.d0);
 //                    if ((thread.getMaxInclusivePercent(metric)) < functionDataLine1.d1)

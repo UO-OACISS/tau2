@@ -362,8 +362,8 @@ public class HPMToolkitDataSource extends DataSource {
             //double tmpValue = iEventValue / ((double) (header3.i0));
             //functionProfile.setInclusivePerCall(metric, tmpValue);
         }
-        functionProfile.setExclusivePercent(metric, 0);
-        functionProfile.setInclusivePercent(metric, 0);
+        //functionProfile.setExclusivePercent(metric, 0);
+        //functionProfile.setInclusivePercent(metric, 0);
         functionProfile.setNumCalls(header3.i0);
         functionProfile.setNumSubr(0);
 
@@ -447,8 +447,8 @@ public class HPMToolkitDataSource extends DataSource {
 //        if (function.getMaxInclusivePerCall(metric) < (dEventValue / header3.i0))
 //            function.setMaxInclusivePerCall(metric, (dEventValue / header3.i0));
 
-        functionProfile.setExclusivePercent(metric, 0);
-        functionProfile.setInclusivePercent(metric, 0);
+        //functionProfile.setExclusivePercent(metric, 0);
+        //functionProfile.setInclusivePercent(metric, 0);
         functionProfile.setNumCalls(header3.i0);
         functionProfile.setNumSubr(0);
 

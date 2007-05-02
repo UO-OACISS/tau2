@@ -269,9 +269,9 @@ public class MpiPDataSource extends DataSource {
                             thread.addFunctionProfile(functionProfile);
                         }
                         functionProfile.setExclusive(metric, callsiteData.d5);
-                        functionProfile.setExclusivePercent(metric, callsiteData.d3);
+                        //functionProfile.setExclusivePercent(metric, callsiteData.d3);
                         functionProfile.setInclusive(metric, callsiteData.d5);
-                        functionProfile.setInclusivePercent(metric, callsiteData.d3);
+                        //functionProfile.setInclusivePercent(metric, callsiteData.d3);
                         functionProfile.setNumCalls(callsiteData.i2);
                         functionProfile.setNumSubr(0);
 
@@ -325,10 +325,10 @@ public class MpiPDataSource extends DataSource {
                         thread.addFunctionProfile(functionProfile);
 
                         functionProfile.setInclusive(metric, inclusive);
-                        functionProfile.setInclusivePercent(metric, 100);
+                        //functionProfile.setInclusivePercent(metric, 100);
 
                         functionProfile.setExclusive(metric, exclusive);
-                        functionProfile.setExclusivePercent(metric, exclusivePercent);
+                        //functionProfile.setExclusivePercent(metric, exclusivePercent);
                         functionProfile.setNumCalls(1);
                         functionProfile.setNumSubr(numSubroutines);
                     }

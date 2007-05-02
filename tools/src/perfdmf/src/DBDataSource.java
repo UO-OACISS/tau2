@@ -9,9 +9,9 @@ import edu.uoregon.tau.perfdmf.database.DB;
 /**
  * Reads a single trial from the database
  *  
- * <P>CVS $Id: DBDataSource.java,v 1.5 2007/01/04 01:34:35 amorris Exp $</P>
+ * <P>CVS $Id: DBDataSource.java,v 1.6 2007/05/02 17:18:04 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class DBDataSource extends DataSource {
 
@@ -56,8 +56,8 @@ public class DBDataSource extends DataSource {
             for (int i = 0; i < numMetrics; i++) {
                 functionProfile.setExclusive(i, ilp.getExclusive(i));
                 functionProfile.setInclusive(i, ilp.getInclusive(i));
-                functionProfile.setExclusivePercent(i, ilp.getExclusivePercentage(i));
-                functionProfile.setInclusivePercent(i, ilp.getInclusivePercentage(i));
+                //functionProfile.setExclusivePercent(i, ilp.getExclusivePercentage(i));
+                //functionProfile.setInclusivePercent(i, ilp.getInclusivePercentage(i));
                 // we don't store this as a value, it is derived
                 //functionProfile.setInclusivePerCall(i, fdo.getInclusivePerCall(i));
                 functionProfile.setNumCalls(ilp.getNumCalls());
