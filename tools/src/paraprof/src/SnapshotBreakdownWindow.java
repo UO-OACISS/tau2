@@ -1,8 +1,6 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -10,8 +8,6 @@ import java.util.Observable;
 import java.util.Observer;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -23,13 +19,15 @@ import org.jfree.data.Range;
 import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeries;
 
+import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.ToolBarListener;
+import edu.uoregon.tau.paraprof.util.ObjectFilter;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Snapshot;
 import edu.uoregon.tau.perfdmf.Thread;
 
-public class SnapshotBreakdownWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow,
+public class SnapshotBreakdownWindow extends JFrame implements ActionListener, Observer, ParaProfWindow, ImageExport,
         ToolBarListener {
 
     private ParaProfTrial ppTrial;
@@ -72,12 +70,16 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     private JToggleButton button_differential = new JToggleButton(ST_DIFFERENTIAL, differential);
 
     private final static int topNum = 20;
+    private ObjectFilter filter;
 
     public SnapshotBreakdownWindow(ParaProfTrial ppTrial, Thread thread, Component owner) {
         this.ppTrial = ppTrial;
         this.thread = thread;
 
         PPThread ppThread = new PPThread(thread, ppTrial);
+
+        filter = new ObjectFilter(thread.getSnapshots());
+        filter.addObserver(this);
 
         this.setTitle("TAU: ParaProf: Snapshots for " + ppThread.getFullName() + " - "
                 + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
@@ -193,7 +195,12 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
             //            }
             int stop = snapshots.size();
             //int stop = 51;
-            for (int x = start; x < stop; x++) {
+
+            List filteredSnapshots = filter.getFilteredObjects();
+            for (int i = 0; i < filteredSnapshots.size(); i++) {
+                int x = ((Snapshot) filteredSnapshots.get(i)).getID();
+
+                //for (int x = start; x < stop; x++) {
                 int snapshotID = x;
                 double value;
 
@@ -352,10 +359,19 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
 
         //sJCheckBoxMenuItem areaBox = new JCheckBoxMenuItem("Areatrue);
 
+        JMenu filterMenu = new JMenu("Filter");
+        JMenuItem filterSnapshots = new JMenuItem("Filter Snapshots");
+        filterSnapshots.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                filter.showFrame("Filter Snapshots");
+            }
+        });
+        filterMenu.add(filterSnapshots);
         //optionsMenu.add(new)
 
-        mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
+        mainMenu.add(ParaProfUtils.createFileMenu(this, panel, this));
         //mainMenu.add(optionsMenu);
+        mainMenu.add(filterMenu);
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         if (ParaProf.scripts.size() > 0) {
             mainMenu.add(ParaProfUtils.createScriptMenu(ppTrial, this));
@@ -372,13 +388,7 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     }
 
     public void update(Observable o, Object arg) {
-    // TODO Auto-generated method stub
-
-    }
-
-    public void stateChanged(ChangeEvent e) {
-    // TODO Auto-generated method stub
-
+        recreateChart();
     }
 
     public void closeThisWindow() {
@@ -422,6 +432,16 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     //        }
     //
     //        panel.repaint();
+    }
+
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+        panel.setDoubleBuffered(false);
+        panel.paintAll(g2D);
+        panel.setDoubleBuffered(true);
+    }
+
+    public Dimension getImageSize(boolean fullScreen, boolean header) {
+        return panel.getSize();
     }
 
     public void toolBarUsed() {
