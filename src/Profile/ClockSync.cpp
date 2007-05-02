@@ -155,7 +155,7 @@ static double slaveDetermineOffset(int master, int rank, MPI_Comm comm) {
 
 static double getTimeOffset(int rank, int size) {
   MPI_Comm machineComm;
-  PMPI_Comm_split(MPI_COMM_WORLD, getUniqueMachineIdentifier(), 0, &machineComm);
+  PMPI_Comm_split(MPI_COMM_WORLD, getUniqueMachineIdentifier() & 0x7FFFFFFF, 0, &machineComm);
 
   int machineRank;
   int numProcsThisMachine;
@@ -207,7 +207,9 @@ extern "C" void TauSyncFinalClocks(int rank, int size) {
 #ifdef TRACING_ON
   double offset = getTimeOffset(rank, size);
   double diff = TheTauTraceSyncOffset() - offset;
-
+  if (rank == 3) {
+    fprintf (stderr,"%.16G\n", offset);
+  }
   TAU_REGISTER_EVENT(endOffset, "TauTraceClockOffsetEnd");
   offset = getTimeOffset(rank, size);
   TraceEvent((endOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
