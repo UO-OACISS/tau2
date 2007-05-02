@@ -207,9 +207,6 @@ extern "C" void TauSyncFinalClocks(int rank, int size) {
 #ifdef TRACING_ON
   double offset = getTimeOffset(rank, size);
   double diff = TheTauTraceSyncOffset() - offset;
-  if (rank == 3) {
-    fprintf (stderr,"%.16G\n", offset);
-  }
   TAU_REGISTER_EVENT(endOffset, "TauTraceClockOffsetEnd");
   offset = getTimeOffset(rank, size);
   TraceEvent((endOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
