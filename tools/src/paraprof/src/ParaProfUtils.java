@@ -34,11 +34,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.28 2007/05/02 17:19:22 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.29 2007/05/03 22:28:13 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.28 $
+ * @version $Revision: 1.29 $
  */
 public class ParaProfUtils {
 
@@ -139,12 +139,12 @@ public class ParaProfUtils {
         frame.getContentPane().add(c, gbc);
     }
 
-    public static void addCompItem(Container jPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+    public static void addCompItem(Container container, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
         gbc.gridx = x;
         gbc.gridy = y;
         gbc.gridwidth = w;
         gbc.gridheight = h;
-        jPanel.add(c, gbc);
+        container.add(c, gbc);
     }
 
     public static void print(Printable printable) {
@@ -1231,51 +1231,32 @@ public class ParaProfUtils {
         }
     }
 
-    public static void createMetricToolbarItems(JToolBar bar, ParaProfTrial ppTrial, final DataSorter dataSorter, final ToolBarListener listener) {
-        
-        
+    public static void createMetricToolbarItems(JToolBar bar, ParaProfTrial ppTrial, final DataSorter dataSorter,
+            final ToolBarListener listener) {
 
-        
         Vector metricList = new Vector();
-        
+
         for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
             metricList.add(ppTrial.getMetricName(i));
         }
 
-        
-        
         final JComboBox metricBox = new JComboBox(metricList);
-        metricBox.setPreferredSize(new Dimension(1,1));
-
-        
         final JComboBox valueBox = new JComboBox(ValueType.VALUES);
-        valueBox.setPreferredSize(new Dimension(1,1));
-
 
         ActionListener actionListener = new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
- 
                 dataSorter.setSelectedMetricID(metricBox.getSelectedIndex());
-                dataSorter.setValueType((ValueType)valueBox.getSelectedItem());
+                dataSorter.setValueType((ValueType) valueBox.getSelectedItem());
                 listener.toolBarUsed();
- 
-                // TODO Auto-generated method stub
-                
             }
-            
+
         };
 
         metricBox.addActionListener(actionListener);
         valueBox.addActionListener(actionListener);
 
-        
-        
- 
         bar.add(metricBox);
         bar.add(valueBox);
- 
-        
     }
 
     private static Component createMetricMenu(ParaProfTrial ppTrial, final ValueType valueType, boolean enabled,
