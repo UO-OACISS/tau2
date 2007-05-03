@@ -34,11 +34,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.29 2007/05/03 22:28:13 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.30 2007/05/03 22:53:54 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.29 $
+ * @version $Revision: 1.30 $
  */
 public class ParaProfUtils {
 
@@ -1242,6 +1242,8 @@ public class ParaProfUtils {
 
         final JComboBox metricBox = new JComboBox(metricList);
         final JComboBox valueBox = new JComboBox(ValueType.VALUES);
+        metricBox.setMaximumSize(metricBox.getPreferredSize());
+        valueBox.setMaximumSize(valueBox.getPreferredSize());
 
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent e) {

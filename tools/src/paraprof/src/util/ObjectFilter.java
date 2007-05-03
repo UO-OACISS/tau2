@@ -69,6 +69,14 @@ public class ObjectFilter extends Observable {
         numHidden = 0;
     }
 
+    public void closeWindow() {
+        if (frame != null) {
+            frame.setVisible(false);
+            frame.dispose();
+            frame = null;
+        }
+    }
+
     public void showFrame(String title) {
 
         if (frame == null) {

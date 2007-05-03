@@ -1,11 +1,9 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.util.*;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
 
 import javax.swing.*;
 
@@ -62,6 +60,14 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     private final static String ST_SQUARE = "Square";
     private final static String ST_TIMELINE = "Timeline";
 
+    private final static int STYLE_STACKED = 0;
+    private final static int STYLE_TRANSPARENT_AREA = 1;
+    private final static int STYLE_LINE = 2;
+
+    private final static String ST_STYLE_STACKED = "Stacked";
+    private final static String ST_STYLE_TRANSPARENT_AREA = "Area";
+    private final static String ST_STYLE_LINE = "Line";
+
     private JFreeChart chart;
 
     private JToggleButton button_topTen = new JToggleButton(ST_TOP_TEN, topTen);
@@ -71,6 +77,7 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
 
     private final static int topNum = 20;
     private ObjectFilter filter;
+    private int style = STYLE_STACKED;
 
     public SnapshotBreakdownWindow(ParaProfTrial ppTrial, Thread thread, Component owner) {
         this.ppTrial = ppTrial;
@@ -84,6 +91,12 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         this.setTitle("TAU: ParaProf: Snapshots for " + ppThread.getFullName() + " - "
                 + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
 
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent evt) {
+                closeThisWindow();
+            }
+        });
+        
         dataSorter = new DataSorter(ppTrial);
         //model = new ThreadSnapshotBarChartModel(this, dataSorter, ppTrial, thread);
         //panel = new BarChartPanel(model);
@@ -105,6 +118,8 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         setupMenus();
 
         ParaProfUtils.setFrameIcon(this);
+        ParaProf.incrementNumWindows();
+
     }
 
     private void recreateChart() {
@@ -126,24 +141,39 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     private void createToolbar() {
 
         ActionListener toolbarListener = new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 recreateChart();
-
             }
-
         };
 
-        JToolBar bar = new JToolBar();
+        Vector styleList = new Vector();
+        styleList.add(ST_STYLE_STACKED);
+        styleList.add(ST_STYLE_TRANSPARENT_AREA);
+        styleList.add(ST_STYLE_LINE);
+        final JComboBox styleBox = new JComboBox(styleList);
+        styleBox.setMaximumSize(styleBox.getPreferredSize());
+
+        styleBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setStyle(styleBox.getSelectedIndex());
+                toolBarUsed();
+            }
+        });
 
         button_topTen.addActionListener(toolbarListener);
         button_square.addActionListener(toolbarListener);
         button_differential.addActionListener(toolbarListener);
         button_timeline.addActionListener(toolbarListener);
+
+        JToolBar bar = new JToolBar();
+
         bar.add(button_topTen);
         bar.add(button_square);
         bar.add(button_differential);
         bar.add(button_timeline);
+
+        bar.addSeparator();
+        bar.add(styleBox);
 
         bar.addSeparator();
         ParaProfUtils.createMetricToolbarItems(bar, ppTrial, dataSorter, this);
@@ -152,6 +182,10 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         //getContentPane().setLayout(new GridBagLayout());
         getContentPane().add(bar, BorderLayout.NORTH);
 
+    }
+
+    public void setStyle(int style) {
+        this.style = style;
     }
 
     private JFreeChart createChart() {
@@ -286,21 +320,45 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
 
         String yAxisLabel = dataSorter.getValueType() + " (" + suffix + ")";
 
-        JFreeChart chart = ChartFactory.createStackedXYAreaChart("Snapshot Breakdown", "Snapshots", // domain axis label
-                //JFreeChart chart = ChartFactory.createXYLineChart("Snapshot Breakdown", "Snapshots", // domain axis label
-                //JFreeChart chart = ChartFactory.createXYAreaChart("Snapshot Breakdown", "Snapshots", // domain axis label
-                yAxisLabel, // range axis label
-                dataSet, // data
-                PlotOrientation.VERTICAL, // the plot orientation
-                true, // legend
-                true, // tooltips
-                false // urls
-        );
+        JFreeChart chart = null;
+        if (style == STYLE_STACKED) {
+            chart = ChartFactory.createStackedXYAreaChart("Snapshot Breakdown", "Snapshots", // domain axis label
+                    yAxisLabel, // range axis label
+                    dataSet, // data
+                    PlotOrientation.VERTICAL, // the plot orientation
+                    true, // legend
+                    true, // tooltips
+                    false // urls
+            );
+
+        } else if (style == STYLE_TRANSPARENT_AREA) {
+            chart = ChartFactory.createXYAreaChart("Snapshot Breakdown", "Snapshots", // domain axis label
+                    yAxisLabel, // range axis label
+                    dataSet, // data
+                    PlotOrientation.VERTICAL, // the plot orientation
+                    true, // legend
+                    true, // tooltips
+                    false // urls
+            );
+            //chart.getPlot().setForegroundAlpha(0.65f);
+            chart.getPlot().setForegroundAlpha(0.4f);
+
+        } else if (style == STYLE_LINE) {
+            chart = ChartFactory.createXYLineChart("Snapshot Breakdown", "Snapshots", // domain axis label
+                    yAxisLabel, // range axis label
+                    dataSet, // data
+                    PlotOrientation.VERTICAL, // the plot orientation
+                    true, // legend
+                    true, // tooltips
+                    false // urls
+            );
+
+        } else {
+            throw new ParaProfException("Unrecognized style: " + style);
+        }
 
         //chart.getPlot().
 
-        //chart.getPlot().setForegroundAlpha(0.65f);
-        //chart.getPlot().setForegroundAlpha(0.4f);
         //
 
         if (timeline) {
@@ -335,25 +393,11 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         nameCheckBox.addActionListener(this);
         optionsMenu.add(nameCheckBox);
 
-        normalizeCheckBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setNormalized(normalizeCheckBox.isSelected());
-            }
-        });
-        optionsMenu.add(normalizeCheckBox);
-
         orderByMeanCheckBox.addActionListener(this);
         optionsMenu.add(orderByMeanCheckBox);
 
         orderCheckBox.addActionListener(this);
         optionsMenu.add(orderCheckBox);
-
-        stackBarsCheckBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setStackBars(stackBarsCheckBox.isSelected());
-            }
-        });
-        optionsMenu.add(stackBarsCheckBox);
 
         optionsMenu.add(new JSeparator());
 
@@ -392,46 +436,23 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     }
 
     public void closeThisWindow() {
-    // TODO Auto-generated method stub
+        try {
+            filter.closeWindow();
+            setVisible(false);
+            ppTrial.deleteObserver(this);
+            ParaProf.decrementNumWindows();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // do nothing
+        }
+        dispose();
 
     }
 
     public void help(boolean display) {
     // TODO Auto-generated method stub
 
-    }
-
-    public boolean getNormalized() {
-        return normalizeCheckBox.isSelected();
-    }
-
-    public void setNormalized(boolean value) {
-    //        normalizeCheckBox.setSelected(value);
-    //        panel.getBarChart().setNormalized(normalizeCheckBox.isSelected());
-    //        panel.repaint();
-    }
-
-    public void setStackBars(boolean value) {
-    //        stackBarsCheckBox.setSelected(value);
-    //
-    //        if (value) {
-    //            normalizeCheckBox.setEnabled(true);
-    //            orderByMeanCheckBox.setEnabled(true);
-    //
-    //            panel.getBarChart().setNormalized(getNormalized());
-    //            panel.getBarChart().setStacked(true);
-    //
-    //        } else {
-    //            normalizeCheckBox.setSelected(false);
-    //            normalizeCheckBox.setEnabled(false);
-    //            orderByMeanCheckBox.setSelected(true);
-    //            orderByMeanCheckBox.setEnabled(false);
-    //
-    //            panel.getBarChart().setNormalized(getNormalized());
-    //            panel.getBarChart().setStacked(false);
-    //        }
-    //
-    //        panel.repaint();
     }
 
     public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
