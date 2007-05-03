@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.7 2007/03/10 03:18:16 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.8 2007/05/03 22:03:56 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -34,7 +34,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
     // A RowBlob is the data needed for one row.  If we're comparing trial A to trial B, then
     // a single RowBlob will contain two PPFunctionProfiles, one for each trial.
-    private static class RowBlob extends ArrayList {
+    private class RowBlob extends ArrayList implements Comparable {
         String functionName;
 
         public RowBlob(String functionName) {
@@ -59,6 +59,21 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             } else {
                 return super.get(index);
             }
+        }
+
+        private double getMax() {
+            double max = 0;
+            for (int i = 0; i < ppTrials.size(); i++) {
+                PPFunctionProfile ppFp = (PPFunctionProfile) this.get(i);
+                if (ppFp != null) {
+                    max = Math.max(max, ppFp.getValue());
+                }
+            }
+            return max;
+        }
+
+        public int compareTo(Object arg0) {
+            return (int) (((RowBlob) arg0).getMax() - getMax());
         }
 
     }
@@ -142,6 +157,8 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         }
 
+        Collections.sort(rows);
+
         fireModelChanged();
     }
 
@@ -151,7 +168,6 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
     public int getSubSize() {
         return ppTrials.size();
-        //return ((List) rows.get(0)).size();
     }
 
     public String getLabel(int row) {
@@ -179,8 +195,8 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         } else {
             String percentString = "";
-            if (getValue(row, 0) != 0 && subIndex != 0) {
-            //if (getValue(row, 0) != 0) {
+            if (getValue(row, 0) > 0 && subIndex != 0) {
+                //if (getValue(row, 0) != 0) {
                 // compute the ratio of this value to the first one
                 double ratio = value / getValue(row, 0) * 100.0f;
                 percentString = " (" + UtilFncs.getOutputString(0, ratio, 2) + "%)";
@@ -206,12 +222,12 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     }
 
     public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
-        // TODO Auto-generated method stub
+    // TODO Auto-generated method stub
 
     }
 
     public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
-        // TODO Auto-generated method stub
+    // TODO Auto-generated method stub
 
     }
 
@@ -231,8 +247,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     }
 
     public static void main(String[] args) {
-        final ParaProf paraProf = new ParaProf();
-        paraProf.initialize();
+        ParaProf.initialize();
 
         File[] files = new File[1];
         files[0] = new File("/home/amorris/data/packed/lu.C.512.ppk");
@@ -248,7 +263,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         window.addThread(lu128, lu128.getDataSource().getMeanData());
 
-        window.show();
+        window.setVisible(true);
 
     }
 
