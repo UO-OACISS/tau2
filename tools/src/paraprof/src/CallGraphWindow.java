@@ -31,9 +31,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.8 2007/05/02 19:45:05 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.9 2007/05/03 00:15:42 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener, ChangeListener, Observer, ImageExport,
         Printable, ParaProfWindow {
@@ -583,18 +583,20 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     private double getMaxValue(CallGraphOption option, int metric) {
         double maxValue = 1;
+        // temporary, use the last (final) snapshot
+        int snapshot = thread.getNumSnapshots() - 1;
         if (option == CallGraphOption.EXCLUSIVE) {
-            maxValue = thread.getMaxExclusive(metric);
+            maxValue = thread.getMaxExclusive(metric, snapshot);
         } else if (option == CallGraphOption.INCLUSIVE) {
-            maxValue = thread.getMaxInclusive(metric);
+            maxValue = thread.getMaxInclusive(metric, snapshot);
         } else if (option == CallGraphOption.NUMCALLS) {
-            maxValue = thread.getMaxNumCalls();
+            maxValue = thread.getMaxNumCalls(snapshot);
         } else if (option == CallGraphOption.NUMSUBR) {
-            maxValue = thread.getMaxNumSubr();
+            maxValue = thread.getMaxNumSubr(snapshot);
         } else if (option == CallGraphOption.INCLUSIVE_PER_CALL) {
-            maxValue = thread.getMaxInclusivePerCall(metric);
+            maxValue = thread.getMaxInclusivePerCall(metric, snapshot);
         } else if (option == CallGraphOption.EXCLUSIVE_PER_CALL) {
-            maxValue = thread.getMaxExclusivePerCall(metric);
+            maxValue = thread.getMaxExclusivePerCall(metric, snapshot);
         } else if (option == CallGraphOption.STATIC) {
             maxValue = 1;
         } else if (this.widthOption == CallGraphOption.NAME_LENGTH) {
@@ -812,8 +814,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             fillLevels(root, levels, 0);
         }
 
-      
-
         // Order Levels
 
         runSugiyama(levels);
@@ -917,7 +917,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             }
         }
 
-        
         ConnectionSet cs = new ConnectionSet();
         List edgeList = new ArrayList();
 

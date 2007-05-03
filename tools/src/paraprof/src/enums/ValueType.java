@@ -9,9 +9,9 @@ import edu.uoregon.tau.perfdmf.Metric;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: ValueType.java,v 1.7 2007/05/02 19:45:06 amorris Exp $</P>
+ * <P>CVS $Id: ValueType.java,v 1.8 2007/05/03 00:15:43 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 
 public abstract class ValueType {
@@ -133,7 +133,7 @@ public abstract class ValueType {
 
     public static final ValueType INCLUSIVE_PERCENT = new ValueType("Inclusive percent", "ValueType.INCLUSIVE_PERCENT") {
         public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
-            return functionProfile.getInclusivePercent(metric, snapshot);
+            return functionProfile.getInclusivePercent(snapshot, metric);
         }
 
         public String getSuffix(int units, Metric metric) {
