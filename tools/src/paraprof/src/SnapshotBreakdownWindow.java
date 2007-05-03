@@ -25,8 +25,7 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Snapshot;
 import edu.uoregon.tau.perfdmf.Thread;
 
-public class SnapshotBreakdownWindow extends JFrame implements ActionListener, Observer, ParaProfWindow, ImageExport,
-        ToolBarListener {
+public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaProfWindow, ImageExport, ToolBarListener {
 
     private ParaProfTrial ppTrial;
     private Thread thread;
@@ -38,14 +37,6 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
 
     private static int defaultWidth = 750;
     private static int defaultHeight = 610;
-
-    private JMenu optionsMenu;
-    private JCheckBoxMenuItem nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
-    private JCheckBoxMenuItem normalizeCheckBox = new JCheckBoxMenuItem("Normalize Bars", true);
-    private JCheckBoxMenuItem orderByMeanCheckBox = new JCheckBoxMenuItem("Order By Mean", true);
-    private JCheckBoxMenuItem orderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
-    private JCheckBoxMenuItem stackBarsCheckBox = new JCheckBoxMenuItem("Stack Bars Together", true);
-    private JCheckBoxMenuItem metaDataCheckBox;
 
     private DefaultTableXYDataset dataSet = new DefaultTableXYDataset();
 
@@ -96,7 +87,7 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
                 closeThisWindow();
             }
         });
-        
+
         dataSorter = new DataSorter(ppTrial);
         //model = new ThreadSnapshotBarChartModel(this, dataSorter, ppTrial, thread);
         //panel = new BarChartPanel(model);
@@ -179,9 +170,7 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
         ParaProfUtils.createMetricToolbarItems(bar, ppTrial, dataSorter, this);
         bar.addSeparator();
 
-        //getContentPane().setLayout(new GridBagLayout());
         getContentPane().add(bar, BorderLayout.NORTH);
-
     }
 
     public void setStyle(int style) {
@@ -382,25 +371,6 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
 
-        optionsMenu = new JMenu("Options");
-
-        metaDataCheckBox = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
-        metaDataCheckBox.addActionListener(this);
-        optionsMenu.add(metaDataCheckBox);
-
-        optionsMenu.add(new JSeparator());
-
-        nameCheckBox.addActionListener(this);
-        optionsMenu.add(nameCheckBox);
-
-        orderByMeanCheckBox.addActionListener(this);
-        optionsMenu.add(orderByMeanCheckBox);
-
-        orderCheckBox.addActionListener(this);
-        optionsMenu.add(orderCheckBox);
-
-        optionsMenu.add(new JSeparator());
-
         //sJCheckBoxMenuItem areaBox = new JCheckBoxMenuItem("Areatrue);
 
         JMenu filterMenu = new JMenu("Filter");
@@ -426,11 +396,6 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
 
     }
 
-    public void actionPerformed(ActionEvent e) {
-    // TODO Auto-generated method stub
-
-    }
-
     public void update(Observable o, Object arg) {
         recreateChart();
     }
@@ -443,8 +408,8 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
             ParaProf.decrementNumWindows();
 
         } catch (Exception e) {
-            e.printStackTrace();
             // do nothing
+            e.printStackTrace();
         }
         dispose();
 
@@ -452,7 +417,6 @@ public class SnapshotBreakdownWindow extends JFrame implements ActionListener, O
 
     public void help(boolean display) {
     // TODO Auto-generated method stub
-
     }
 
     public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
