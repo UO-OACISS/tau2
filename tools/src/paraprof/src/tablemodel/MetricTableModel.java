@@ -13,11 +13,13 @@ public class MetricTableModel extends AbstractTableModel {
 
     private ParaProfMetric metric;
     private String[] columnNames = { "MetricField", "Value" };
+    private DefaultTreeModel defaultTreeModel;
     private List fieldNames;
     private List fieldValues;
 
     public MetricTableModel(ParaProfManagerWindow paraProfManager, ParaProfMetric metric, DefaultTreeModel defaultTreeModel) {
         this.metric = metric;
+        this.defaultTreeModel = defaultTreeModel;
 
         fieldNames = new ArrayList();
         fieldNames.add("Name");
@@ -34,6 +36,30 @@ public class MetricTableModel extends AbstractTableModel {
         fieldValues.add(new Integer(metric.getID()));
     }
 
+    
+    public boolean isCellEditable(int r, int c) {
+        if (c == 1 && r == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void setValueAt(Object obj, int r, int c) {
+        if (c == 0 || r != 0)
+            return;
+        if (!(obj instanceof String)) {
+            return;
+        }
+        String string = (String) obj;
+
+        fieldValues.set(0,string);
+        metric.setName(string);
+        defaultTreeModel.nodeChanged(metric.getDMTN());
+
+    }
+    
+    
     public int getColumnCount() {
         return 2;
     }
