@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.9 2007/05/02 17:18:04 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.10 2007/05/03 00:15:15 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		Function
  */
 public class FunctionProfile {
@@ -100,18 +100,18 @@ public class FunctionProfile {
     }
 
     // TODO: A bunch of these methods are not using the snapshot
-    public double getInclusivePercent(int metric, int snapshot) {
+    public double getInclusivePercent(int snapshot, int metric) {
         if (snapshot == -1) {
             snapshot = thread.getNumSnapshots() - 1;
         }
         if (thread.getNodeID() >= 0) {
-            double dividend = thread.getPercentDivider(metric);
+            double dividend = thread.getPercentDivider(metric, snapshot);
             if (dividend == 0) {
                 return 0;
             }
-            return getInclusive(metric) / dividend;
+            return getInclusive(snapshot, metric) / dividend;
         } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN) {
-            double dividend = thread.getPercentDivider(metric);
+            double dividend = thread.getPercentDivider(metric, snapshot);
             if (dividend == 0) {
                 return 0;
             }
@@ -124,22 +124,22 @@ public class FunctionProfile {
     }
 
     public double getInclusivePercent(int metric) {
-        return getInclusivePercent(metric, -1);
+        return getInclusivePercent(-1, metric);
     }
 
     // TODO: A bunch of these methods are not using the snapshot
-    public double getExclusivePercent(int metric, int snapshot) {
+    public double getExclusivePercent(int snapshot, int metric) {
         if (snapshot == -1) {
             snapshot = thread.getNumSnapshots() - 1;
         }
         if (thread.getNodeID() >= 0) {
-            double dividend = thread.getPercentDivider(metric);
+            double dividend = thread.getPercentDivider(metric, snapshot);
             if (dividend == 0) {
                 return 0;
             }
-            return getExclusive(metric) / dividend;
+            return getExclusive(snapshot, metric) / dividend;
         } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN) {
-            double dividend = thread.getPercentDivider(metric);
+            double dividend = thread.getPercentDivider(metric, snapshot);
             if (dividend == 0) {
                 return 0;
             }
@@ -151,7 +151,7 @@ public class FunctionProfile {
     }
 
     public double getExclusivePercent(int metric) {
-        return getExclusivePercent(metric, -1);
+        return getExclusivePercent(-1, metric);
     }
 
     public void setNumCalls(double value) {

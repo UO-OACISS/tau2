@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.20 2007/05/02 19:43:28 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.21 2007/05/03 00:15:15 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  */
 public abstract class DataSource {
 
@@ -703,11 +703,13 @@ public abstract class DataSource {
         for (int i = 0; i < numMetrics; i++) { // for each metric
             for (Iterator it = allThreads.iterator(); it.hasNext();) { // for each thread
                 Thread thread = (Thread) it.next();
-                topLevelInclSum[i] += thread.getMaxInclusive(i);
+                topLevelInclSum[i] += thread.getMaxInclusive(i, thread.getNumSnapshots() - 1);
             }
-            totalData.setPercentDivider(i, topLevelInclSum[i] / 100.0);
-            meanData.setPercentDivider(i, topLevelInclSum[i] / 100.0);
-            stddevData.setPercentDivider(i, topLevelInclSum[i] / 100.0);
+            // for now, the derived 'threads' only have one snapshot
+            int snapshot = 0;
+            totalData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+            meanData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+            stddevData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
         }
 
         for (Iterator l = this.getFunctions(); l.hasNext();) { // for each function
@@ -1131,7 +1133,7 @@ public abstract class DataSource {
             // create the common attribute node
             if (metaData.size() > 0) {
                 master = (Element) document.createElement("tau:CommonProfileAttributes");
-                   root.appendChild(master);
+                root.appendChild(master);
 
                 // output the first thread of name / value pairs, like this:
                 // <attribute><name>xxx</name><value>yyy</value></attribute>
@@ -1200,30 +1202,29 @@ public abstract class DataSource {
                 org.w3c.dom.Node imported = document.importNode(oldRoot, true);
                 System.out.println(imported.getPrefix());
                 System.out.println(imported.getNodeName());
-                if (master != null 
-                    && imported.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE 
-                    && imported.getNodeName().equals("tau:metadata")) {
+                if (master != null && imported.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+                        && imported.getNodeName().equals("tau:metadata")) {
                     // extract it out, and add it to our tree!
                     NodeList nodes = imported.getChildNodes();
-                    for (int i = 0 ; i < nodes.getLength() ; i++) {
+                    for (int i = 0; i < nodes.getLength(); i++) {
                         org.w3c.dom.Node cpa = nodes.item(i);
                         // System.out.println("\t" + cpa.getNodeName());
-                        if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE 
-                            && cpa.getNodeName().equals("tau:CommonProfileAttributes")) {
-                            
+                        if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+                                && cpa.getNodeName().equals("tau:CommonProfileAttributes")) {
+
                             NodeList attrs = cpa.getChildNodes();
                             // System.out.println("length: " + attrs.getLength());
-                            for (int j = 0 ; j < attrs.getLength() ; j++) {
+                            for (int j = 0; j < attrs.getLength(); j++) {
                                 // System.out.println("\t\tj:" + j);
                                 org.w3c.dom.Node tmp = attrs.item(j);
-                                if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE 
-                                    && tmp.getNodeName().equals("tau:attribute")) {
+                                if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+                                        && tmp.getNodeName().equals("tau:attribute")) {
                                     // System.out.println("\t\tname:" + tmp.getNodeName());
                                     master.appendChild(tmp);
                                 }
                                 // System.out.println("\t\tend j:" + j);
                             }
-                            
+
                             //root.appendChild(cpa);
                         }
                     }

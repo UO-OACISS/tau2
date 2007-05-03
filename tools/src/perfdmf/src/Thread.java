@@ -7,9 +7,9 @@ import java.util.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.8 2007/05/02 19:39:09 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.9 2007/05/03 00:15:15 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -20,13 +20,9 @@ public class Thread implements Comparable {
     private int nodeID, contextID, threadID;
     private List functionProfiles = new ArrayList();
     private List userEventProfiles = new ArrayList();
-    private double[] maxData;
-    private double maxNumCalls;
-    private double maxNumSubr;
     private boolean trimmed;
     private boolean relationsBuilt;
     private int numMetrics;
-    private static final int METRIC_SIZE = 7;
 
     public static final int MEAN = -1;
     public static final int TOTAL = -2;
@@ -37,13 +33,33 @@ public class Thread implements Comparable {
 
     private boolean firstSnapshotFound;
 
+    // two dimensional, snapshots x metrics
+    private ThreadData[][] threadData;
+
+    private static class ThreadData {
+
+        public double maxNumCalls;
+        public double maxNumSubr;
+
+        public double maxInclusive;
+        public double maxInclusivePercent;
+        public double maxInclusivePerCall;
+        public double maxExclusive;
+        public double maxExclusivePercent;
+        public double maxExclusivePerCall;
+
+        public double percentDivider;
+    }
+
     public Thread(int nodeID, int contextID, int threadID, int numMetrics) {
         numMetrics = Math.max(numMetrics, 1);
         this.nodeID = nodeID;
         this.contextID = contextID;
         this.threadID = threadID;
-        maxData = new double[numMetrics * METRIC_SIZE];
+        //maxData = new double[numMetrics * METRIC_SIZE];
         this.numMetrics = numMetrics;
+
+        recreateData();
 
         // create the first snapshot
         Snapshot snapshot = new Snapshot("", snapshots.size());
@@ -77,14 +93,9 @@ public class Thread implements Comparable {
     }
 
     public void addMetric() {
-        int currentLength = maxData.length;
-        double[] newArray = new double[currentLength + METRIC_SIZE];
-
-        for (int i = 0; i < currentLength; i++) {
-            newArray[i] = maxData[i];
-        }
-        maxData = newArray;
         numMetrics++;
+
+        recreateData();
 
         for (Iterator it = getFunctionProfiles().iterator(); it.hasNext();) {
             FunctionProfile fp = (FunctionProfile) it.next();
@@ -95,10 +106,10 @@ public class Thread implements Comparable {
     }
 
     public Snapshot addSnapshot(String name) {
-        
+
         if (!firstSnapshotFound) {
             firstSnapshotFound = true;
-            return (Snapshot)snapshots.get(0);
+            return (Snapshot) snapshots.get(0);
         }
         Snapshot snapshot = new Snapshot(name, snapshots.size());
         snapshots.add(snapshot);
@@ -112,7 +123,20 @@ public class Thread implements Comparable {
             }
         }
 
+        recreateData();
+
         return snapshot;
+    }
+
+    private void recreateData() {
+        int numSnapshots = getNumSnapshots();
+        int numMetrics = getNumMetrics();
+        threadData = new ThreadData[getNumSnapshots()][getNumMetrics()];
+        for (int s = 0; s < getNumSnapshots(); s++) {
+            for (int m = 0; m < getNumMetrics(); m++) {
+                threadData[s][m] = new ThreadData();
+            }
+        }
     }
 
     public List getSnapshots() {
@@ -192,72 +216,74 @@ public class Thread implements Comparable {
     }
 
     public void setThreadData(int metric) {
-        setThreadValues(metric, metric);
+        setThreadValues(metric, metric, 0, getNumSnapshots() - 1);
     }
 
     public void setThreadDataAllMetrics() {
-        setThreadValues(0, this.getNumMetrics() - 1);
+        setThreadValues(0, this.getNumMetrics() - 1, 0, getNumSnapshots() - 1);
     }
 
     // compute max values and percentages for threads (not mean/total)
-    private void setThreadValues(int startMetric, int endMetric) {
-        for (int metric = startMetric; metric <= endMetric; metric++) {
-            double maxInclusive = 0;
-            double maxExclusive = 0;
-            double maxInclusivePerCall = 0;
-            double maxExclusivePerCall = 0;
-            double maxNumCalls = 0;
-            double maxNumSubr = 0;
+    private void setThreadValues(int startMetric, int endMetric, int startSnapshot, int endSnapshot) {
+        for (int snapshot = startSnapshot; snapshot <= endSnapshot; snapshot++) {
+            for (int metric = startMetric; metric <= endMetric; metric++) {
+                ThreadData data = threadData[snapshot][metric];
+                double maxInclusive = 0;
+                double maxExclusive = 0;
+                double maxInclusivePerCall = 0;
+                double maxExclusivePerCall = 0;
+                double maxNumCalls = 0;
+                double maxNumSubr = 0;
 
-            for (Iterator it = this.getFunctionProfileIterator(); it.hasNext();) {
-                FunctionProfile fp = (FunctionProfile) it.next();
-                if (fp == null) {
-                    continue;
+                for (Iterator it = this.getFunctionProfileIterator(); it.hasNext();) {
+                    FunctionProfile fp = (FunctionProfile) it.next();
+                    if (fp == null) {
+                        continue;
+                    }
+                    if (fp.getFunction().isPhase()) {
+                        maxExclusive = Math.max(maxExclusive, fp.getInclusive(snapshot, metric));
+                        maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getInclusivePerCall(metric, snapshot));
+                    } else {
+                        maxExclusive = Math.max(maxExclusive, fp.getExclusive(snapshot, metric));
+                        maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getExclusivePerCall(metric, snapshot));
+                    }
+                    maxInclusive = Math.max(maxInclusive, fp.getInclusive(snapshot, metric));
+                    maxInclusivePerCall = Math.max(maxInclusivePerCall, fp.getInclusivePerCall(metric, snapshot));
+                    maxNumCalls = Math.max(maxNumCalls, fp.getNumCalls(snapshot));
+                    maxNumSubr = Math.max(maxNumSubr, fp.getNumSubr(snapshot));
                 }
-                if (fp.getFunction().isPhase()) {
-                    maxExclusive = Math.max(maxExclusive, fp.getInclusive(metric));
-                    maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getInclusivePerCall(metric));
-                } else {
-                    maxExclusive = Math.max(maxExclusive, fp.getExclusive(metric));
-                    maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getExclusivePerCall(metric));
+
+                data.maxExclusive = maxExclusive;
+                data.maxInclusive = maxInclusive;
+                data.maxExclusivePerCall = maxExclusivePerCall;
+                data.maxInclusivePerCall = maxInclusivePerCall;
+                data.maxNumCalls = maxNumCalls;
+                data.maxNumSubr = maxNumSubr;
+
+                // Note: Assumption is made that the max inclusive value is the value required to calculate
+                // percentage (ie, divide by). Thus, we are assuming that the sum of the exclusive
+                // values is equal to the max inclusive value. This is a reasonable assumption. This also gets
+                // us out of sticky situations when call path data is present (this skews attempts to calculate
+                // the total exclusive value unless checks are made to ensure that we do not 
+                // include call path objects).
+                if (this.getNodeID() > -1) { // don't do this for mean/total
+                    data.percentDivider = data.maxInclusive / 100.0;
                 }
-                maxInclusive = Math.max(maxInclusive, fp.getInclusive(metric));
-                maxInclusivePerCall = Math.max(maxInclusivePerCall, fp.getInclusivePerCall(metric));
-                maxNumCalls = Math.max(maxNumCalls, fp.getNumCalls());
-                maxNumSubr = Math.max(maxNumSubr, fp.getNumSubr());
-            }
 
-            this.setMaxInclusive(metric, maxInclusive);
-            this.setMaxExclusive(metric, maxExclusive);
-            this.setMaxInclusivePerCall(metric, maxInclusivePerCall);
-            this.setMaxExclusivePerCall(metric, maxExclusivePerCall);
-            this.setMaxNumCalls(maxNumCalls);
-            this.setMaxNumSubr(maxNumSubr);
-
-            // Note: Assumption is made that the max inclusive value is the value required to calculate
-            // percentage (ie, divide by). Thus, we are assuming that the sum of the exclusive
-            // values is equal to the max inclusive value. This is a reasonable assumption. This also gets
-            // us out of sticky situations when call path data is present (this skews attempts to calculate
-            // the total exclusive value unless checks are made to ensure that we do not 
-            // include call path objects).
-            if (this.getNodeID() > -1) { // don't do this for mean/total
-                double inclusiveMax = this.getMaxInclusive(metric);
-                setPercentDivider(metric, inclusiveMax / 100.0);
-            }
-
-            double maxInclusivePercent = 0;
-            double maxExclusivePercent = 0;
-            for (Iterator it = this.getFunctionProfileIterator(); it.hasNext();) {
-                FunctionProfile fp = (FunctionProfile) it.next();
-                if (fp == null) {
-                    continue;
+                double maxInclusivePercent = 0;
+                double maxExclusivePercent = 0;
+                for (Iterator it = this.getFunctionProfileIterator(); it.hasNext();) {
+                    FunctionProfile fp = (FunctionProfile) it.next();
+                    if (fp == null) {
+                        continue;
+                    }
+                    maxExclusivePercent = Math.max(maxExclusivePercent, fp.getExclusivePercent(snapshot, metric));
+                    maxInclusivePercent = Math.max(maxInclusivePercent, fp.getInclusivePercent(snapshot, metric));
                 }
-                maxExclusivePercent = Math.max(maxExclusivePercent, fp.getExclusivePercent(metric));
-                maxInclusivePercent = Math.max(maxInclusivePercent, fp.getInclusivePercent(metric));
-            }
 
-            this.setMaxInclusivePercent(metric, maxInclusivePercent);
-            this.setMaxExclusivePercent(metric, maxExclusivePercent);
+                data.maxExclusivePercent = maxExclusivePercent;
+                data.maxInclusivePercent = maxInclusivePercent;
+            }
         }
     }
 
@@ -265,86 +291,44 @@ public class Thread implements Comparable {
         return metaData;
     }
 
-    private void setMaxInclusive(int metric, double inDouble) {
-        this.insertDouble(metric, 0, inDouble);
+    public double getMaxInclusive(int metric, int snapshot) {
+        return threadData[snapshot][metric].maxInclusive;
     }
 
-    public double getMaxInclusive(int metric) {
-        return this.getDouble(metric, 0);
+    public double getMaxExclusive(int metric, int snapshot) {
+        return threadData[snapshot][metric].maxExclusive;
     }
 
-    private void setMaxExclusive(int metric, double inDouble) {
-        this.insertDouble(metric, 1, inDouble);
+    public double getMaxInclusivePercent(int metric, int snapshot) {
+        return threadData[snapshot][metric].maxInclusivePercent;
     }
 
-    public double getMaxExclusive(int metric) {
-        return this.getDouble(metric, 1);
+    public double getMaxExclusivePercent(int metric, int snapshot) {
+        return threadData[snapshot][metric].maxExclusivePercent;
     }
 
-    private void setMaxInclusivePercent(int metric, double inDouble) {
-        this.insertDouble(metric, 2, inDouble);
+    public double getMaxInclusivePerCall(int metric, int snapshot) {
+        return threadData[snapshot][metric].maxInclusivePerCall;
     }
 
-    public double getMaxInclusivePercent(int metric) {
-        return this.getDouble(metric, 2);
+    public double getMaxExclusivePerCall(int metric, int snapshot) {
+        return threadData[snapshot][metric].maxExclusivePerCall;
     }
 
-    private void setMaxExclusivePercent(int metric, double inDouble) {
-        this.insertDouble(metric, 3, inDouble);
+    public void setPercentDivider(int metric, int snapshot, double divider) {
+        threadData[snapshot][metric].percentDivider = divider;
     }
 
-    public double getMaxExclusivePercent(int metric) {
-        return this.getDouble(metric, 3);
+    public double getPercentDivider(int metric, int snapshot) {
+        return threadData[snapshot][metric].percentDivider;
     }
 
-    private void setMaxInclusivePerCall(int metric, double inDouble) {
-        this.insertDouble(metric, 4, inDouble);
+    public double getMaxNumCalls(int snapshot) {
+        return threadData[snapshot][0].maxNumCalls;
     }
 
-    public double getMaxInclusivePerCall(int metric) {
-        return this.getDouble(metric, 4);
-    }
-
-    private void setMaxExclusivePerCall(int metric, double inDouble) {
-        this.insertDouble(metric, 5, inDouble);
-    }
-
-    public double getMaxExclusivePerCall(int metric) {
-        return this.getDouble(metric, 5);
-    }
-
-    public void setPercentDivider(int metric, double inDouble) {
-        this.insertDouble(metric, 6, inDouble);
-    }
-
-    public double getPercentDivider(int metric) {
-        return this.getDouble(metric, 6);
-    }
-
-    private void setMaxNumCalls(double inDouble) {
-        maxNumCalls = inDouble;
-    }
-
-    public double getMaxNumCalls() {
-        return maxNumCalls;
-    }
-
-    private void setMaxNumSubr(double inDouble) {
-        maxNumSubr = inDouble;
-    }
-
-    public double getMaxNumSubr() {
-        return maxNumSubr;
-    }
-
-    private void insertDouble(int metric, int offset, double inDouble) {
-        int actualLocation = (metric * METRIC_SIZE) + offset;
-        maxData[actualLocation] = inDouble;
-    }
-
-    private double getDouble(int metric, int offset) {
-        int actualLocation = (metric * METRIC_SIZE) + offset;
-        return maxData[actualLocation];
+    public double getMaxNumSubr(int snapshot) {
+        return threadData[snapshot][0].maxNumSubr;
     }
 
 }
