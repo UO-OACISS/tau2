@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.10 2007/05/03 00:15:15 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.11 2007/05/04 01:38:43 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		Function
  */
 public class FunctionProfile {
@@ -78,7 +78,13 @@ public class FunctionProfile {
     }
 
     public void setExclusive(int snapshot, int metric, double value) {
+        try {
         this.putDouble(snapshot, metric, EXCLUSIVE, value);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
     }
 
     public double getExclusive(int snapshot, int metric) {
@@ -154,6 +160,10 @@ public class FunctionProfile {
         return getExclusivePercent(-1, metric);
     }
 
+    public void setNumCalls(int snapshot, double value) {
+        this.putDouble(snapshot, 0, CALLS, value);
+    }
+
     public void setNumCalls(double value) {
         this.putDouble(0, CALLS, value);
     }
@@ -167,6 +177,10 @@ public class FunctionProfile {
             snapshot = thread.getNumSnapshots() - 1;
         }
         return getDouble(snapshot, 0, CALLS);
+    }
+
+    public void setNumSubr(int snapshot, double value) {
+        this.putDouble(snapshot, 0, SUBR, value);
     }
 
     public void setNumSubr(double value) {
@@ -185,10 +199,10 @@ public class FunctionProfile {
     }
 
     public double getInclusivePerCall(int metric) {
-        return getInclusivePerCall(metric, -1);
+        return getInclusivePerCall(-1, metric);
     }
 
-    public double getInclusivePerCall(int metric, int snapshot) {
+    public double getInclusivePerCall(int snapshot, int metric) {
         if (snapshot == -1) {
             snapshot = thread.getNumSnapshots() - 1;
         }
@@ -199,10 +213,10 @@ public class FunctionProfile {
     }
 
     public double getExclusivePerCall(int metric) {
-        return getExclusivePerCall(metric, -1);
+        return getExclusivePerCall(-1, metric);
     }
 
-    public double getExclusivePerCall(int metric, int snapshot) {
+    public double getExclusivePerCall(int snapshot, int metric) {
         if (snapshot == -1) {
             snapshot = thread.getNumSnapshots() - 1;
         }

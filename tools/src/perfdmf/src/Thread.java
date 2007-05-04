@@ -7,9 +7,9 @@ import java.util.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.9 2007/05/03 00:15:15 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.10 2007/05/04 01:38:43 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -35,6 +35,8 @@ public class Thread implements Comparable {
 
     // two dimensional, snapshots x metrics
     private ThreadData[][] threadData;
+
+    private long startTime;
 
     private static class ThreadData {
 
@@ -109,7 +111,9 @@ public class Thread implements Comparable {
 
         if (!firstSnapshotFound) {
             firstSnapshotFound = true;
-            return (Snapshot) snapshots.get(0);
+            Snapshot snapshot = (Snapshot) snapshots.get(0);
+            snapshot.setName(name);
+            return snapshot;
         }
         Snapshot snapshot = new Snapshot(name, snapshots.size());
         snapshots.add(snapshot);
@@ -225,6 +229,12 @@ public class Thread implements Comparable {
 
     // compute max values and percentages for threads (not mean/total)
     private void setThreadValues(int startMetric, int endMetric, int startSnapshot, int endSnapshot) {
+
+        String startString = (String) getMetaData().get("Starting Timestamp");
+        if (startString != null) {
+            setStartTime(Long.parseLong(startString));
+        }
+
         for (int snapshot = startSnapshot; snapshot <= endSnapshot; snapshot++) {
             for (int metric = startMetric; metric <= endMetric; metric++) {
                 ThreadData data = threadData[snapshot][metric];
@@ -242,13 +252,13 @@ public class Thread implements Comparable {
                     }
                     if (fp.getFunction().isPhase()) {
                         maxExclusive = Math.max(maxExclusive, fp.getInclusive(snapshot, metric));
-                        maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getInclusivePerCall(metric, snapshot));
+                        maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getInclusivePerCall(snapshot, metric));
                     } else {
                         maxExclusive = Math.max(maxExclusive, fp.getExclusive(snapshot, metric));
-                        maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getExclusivePerCall(metric, snapshot));
+                        maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getExclusivePerCall(snapshot, metric));
                     }
                     maxInclusive = Math.max(maxInclusive, fp.getInclusive(snapshot, metric));
-                    maxInclusivePerCall = Math.max(maxInclusivePerCall, fp.getInclusivePerCall(metric, snapshot));
+                    maxInclusivePerCall = Math.max(maxInclusivePerCall, fp.getInclusivePerCall(snapshot, metric));
                     maxNumCalls = Math.max(maxNumCalls, fp.getNumCalls(snapshot));
                     maxNumSubr = Math.max(maxNumSubr, fp.getNumSubr(snapshot));
                 }
@@ -329,6 +339,14 @@ public class Thread implements Comparable {
 
     public double getMaxNumSubr(int snapshot) {
         return threadData[snapshot][0].maxNumSubr;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
     }
 
 }
