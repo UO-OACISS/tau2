@@ -8,11 +8,13 @@
 package edu.uoregon.tau;
 
 import java.io.DataOutputStream;
+import java.util.ArrayList;
+import java.util.EmptyStackException;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.TreeMap;
 import base.drawable.*;
 import base.io.BufArrayOutputStream;
@@ -28,12 +30,53 @@ class PrimEvent
 	int stateToken;
 }
 
+class EZStack extends ArrayList{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4135823375949466058L;
+
+	public EZStack() {
+    }
+	public void push(Object o){
+		add(o);
+	}
+	
+	public Object peek(){
+		int	len = size();
+
+		if (len == 0)
+		    throw new EmptyStackException();
+		return get(len - 1);
+	}
+	
+	public Object pop(){
+		Object obj;
+		
+		int	len = size();
+
+		obj = peek();
+		remove(len - 1);
+
+		return obj;
+	}
+	
+	public boolean empty() {
+		return size() == 0;
+	    }
+}
+
 /*
    This class provides the Java version of TRACE-API.
 */
 public class InputLog implements base.drawable.InputAPI
 {
 	//private static String filespec;
+	
+	private static Integer ZERO = new Integer(0);
+	private static Integer ONE = new Integer(1);
+	private static Integer TWO = new Integer(2);
+	
 	private TraceReaderCallbacks ev_cb;
 	private static long filehandle;
 	private static int num_topology_returned;
@@ -52,19 +95,24 @@ public class InputLog implements base.drawable.InputAPI
 	
 	//private static Map global;
 //	private static Map threadspernode;
-	private static int numthreads;
+	//private static int numthreads;
 	private static int maxnode;
 	private static int maxthread;
-	private static Stack[][] eventstack;
-	private static Stack[][] msgstack;
-	private static int[] offset;
+	private static HashMap eventstack;
+	private static HashMap msgstack;
+	//private static int[] offset;
 	
 	private static Random getcolors;
 	private static String msgtags;
-	private static int noMonEventCycle[][];
+	private static HashMap noMonEventCycle;
 	private static Set noMonEvents;
 	
-	private static int GlobalID(int localnodeid, int localthreadid)
+	private static int GlobalID(int tid, int nid){
+		//System.out.println("n: "+nid+ " t: "+tid);
+		return (nid << 16)+tid;
+	}
+	
+	/*private static int GlobalID(int localnodeid, int localthreadid)
 	{
 	  if (maxthread>0)
 	  {
@@ -81,7 +129,7 @@ public class InputLog implements base.drawable.InputAPI
 	  { 
 	    return localnodeid;
 	  }
-	}  
+	}  */
 
 	public InputLog( String tautrc, String tauedf )
 	{
@@ -121,7 +169,7 @@ public class InputLog implements base.drawable.InputAPI
 		eventReady=false;
 		doneReading=false;
 		
-		numthreads=0;
+		//numthreads=0;
 		maxnode=0;
 		maxthread=0;
 		msgtags="";
@@ -132,6 +180,7 @@ public class InputLog implements base.drawable.InputAPI
 		TraceReader tFileDefRead=TraceFactory.OpenFileForInput(tautrc,tauedf);
 		//System.out.println()
 		tFileDefRead.setSubtractFirstTimestamp(false);
+		tFileDefRead.setDefsOnly(true);
 		int recs_read=0;
 		int arch_read=0;
 		do{
@@ -142,7 +191,7 @@ public class InputLog implements base.drawable.InputAPI
 		}while(recs_read!=0);//&&((Integer)tb.UserData).intValue()!=0
 		tFileDefRead.closeTrace();
 		
-		if(maxthread>0)
+		/*if(maxthread>0)
 		{
 			offset=new int[maxnode+2];
 			offset[0]=0;
@@ -151,10 +200,10 @@ public class InputLog implements base.drawable.InputAPI
 				for(int i=0;i<maxnode+1;i++)
 					offset[i+1]=offset[i]+maxthread+1;
 			}
-		}
-		eventstack = new Stack[maxnode+1][maxthread+1];
-		msgstack = new Stack[maxnode+1][maxthread+1];
-		noMonEventCycle = new int[maxnode+1][maxthread+1];
+		}*/
+		eventstack = new HashMap();// Stack[maxnode+1][maxthread+1];
+		msgstack = new HashMap();// Stack[maxnode+1][maxthread+1];
+		noMonEventCycle = new HashMap();//[maxnode+1][maxthread+1];
 		
 		ev_cb = new TAUReader();
 		tFileEvRead=TraceFactory.OpenFileForInput(tautrc,tauedf);
@@ -303,9 +352,7 @@ public class InputLog implements base.drawable.InputAPI
 		public int defThread(Object userData, int nodeToken, int threadToken, String threadName){
 			//System.out.println("DefThread nid "+nodeToken+" tid "+threadToken+", thread name "+threadName);
 			//global.put(new Point(nodeToken,threadToken), new Integer(numthreads));
-			numthreads++;
-			if(nodeToken>maxnode)maxnode=nodeToken;
-			if(threadToken>maxthread)maxthread=threadToken;
+			//numthreads++;
 			
 			return 0;
 		}
@@ -345,21 +392,9 @@ public class InputLog implements base.drawable.InputAPI
 		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){return 0;}
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){return 0;}
 		
-		/*Message retistration.  (Message sending is defined in TAUReader below)*/
+		/*Message registration.  (Message sending is defined in TAUReader below)*/
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
-				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
-			String tag=Integer.toString(messageTag);
-			tag="."+tag+".";
-			if(msgtags.indexOf(tag)>=0)//msgtags.contains(tag)
-				return 0;
-			msgtags+=tag;
-			logformat.trace.DobjDef newobj= new logformat.trace.DobjDef(messageTag, "message", Topology.ARROW_ID, 
-					255,255,255, 255, 3, "msg_tag=%d, msg_size=%d", null);
-
-			categories.put(new Integer(numcats), newobj);
-			numcats++;
-			return 0;
-		}
+				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){return 0;}
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {return 0;}
 
 		public int recvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageCom) {return 0;}
@@ -372,20 +407,22 @@ public class InputLog implements base.drawable.InputAPI
 		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Entered state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
 			//eventstack[nodeToken][threadToken];
-			if(eventstack[nodeToken][threadToken]==null)
-				eventstack[nodeToken][threadToken]=new Stack();
-			eventstack[nodeToken][threadToken].push(new PrimEvent(time,stateToken));
+			Integer glob = new Integer(GlobalID(nodeToken,threadToken));
+			if(!eventstack.containsKey(glob))//  eventstack[nodeToken][threadToken]==null
+				eventstack.put(glob, new EZStack());  //[nodeToken][threadToken]=new Stack();
+			((EZStack)eventstack.get(glob)).push(new PrimEvent(time,stateToken));//eventstack[nodeToken][threadToken].push(new PrimEvent(time,stateToken));
 			return 0;
 		}
 		
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Leaving state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
-			if(eventstack[nodeToken][threadToken]==null||eventstack[nodeToken][threadToken].size()==0)
+			Integer glob = new Integer(GlobalID(nodeToken,threadToken));
+			if(!eventstack.containsKey(glob)||((EZStack)eventstack.get(glob)).size()==0)//if(eventstack[nodeToken][threadToken]==null||eventstack[nodeToken][threadToken].size()==0)
 			{
 				System.err.println("Fault: Exit from empty or uninitialized thread");
 				System.exit(1);
 			}
-			PrimEvent leave = (PrimEvent)eventstack[nodeToken][threadToken].pop();
+			PrimEvent leave = (PrimEvent) (((EZStack)eventstack.get(glob)).pop());
 			if(leave.stateToken!=stateToken)
 			{
 				System.err.println("Fault: Event order failure.");
@@ -400,13 +437,31 @@ public class InputLog implements base.drawable.InputAPI
 		
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
-			if(msgstack[sourceNodeToken][sourceThreadToken]==null)msgstack[sourceNodeToken][sourceThreadToken]=new Stack();
-			if(msgstack[sourceNodeToken][sourceThreadToken].size()>0)
+			
+			
+
+			String tag=Integer.toString(messageTag);
+			tag="."+tag+".";
+			if(msgtags.indexOf(tag)<0)//msgtags.contains(tag)
 			{
-				if(((PrimEvent)msgstack[sourceNodeToken][sourceThreadToken].peek()).stateToken==messageTag)
+				msgtags+=tag;
+				logformat.trace.DobjDef newobj= new logformat.trace.DobjDef(messageTag, "message", Topology.ARROW_ID, 
+						255,255,255, 255, 3, "msg_tag=%d, msg_size=%d", null);
+
+				categories.put(new Integer(numcats), newobj);
+				numcats++;
+				//return 0;
+			}
+			
+			Integer sourceGlob = new Integer(GlobalID(sourceNodeToken,sourceThreadToken));
+			
+			if(!msgstack.containsKey(sourceGlob))msgstack.put(sourceGlob, new EZStack());//[sourceNodeToken][sourceThreadToken]=new Stack();
+			if(((EZStack)msgstack.get(sourceGlob)).size()>0)
+			{
+				if(((PrimEvent)((EZStack)msgstack.get(sourceGlob)).peek()).stateToken==messageTag)
 				{
 					//We've already seen a recieve for this event!
-					PrimEvent leave = (PrimEvent)msgstack[sourceNodeToken][sourceThreadToken].pop();
+					PrimEvent leave = (PrimEvent)((EZStack)msgstack.get(sourceGlob)).pop();
 					System.out.println("Reversed Message: time "+time+", source nid "+ sourceNodeToken +
 							" tid "+sourceThreadToken+", destination nid "+destinationNodeToken+" tid "+
 							destinationThreadToken+", size "+messageSize+", tag "+messageTag);
@@ -418,19 +473,22 @@ public class InputLog implements base.drawable.InputAPI
 					return 0;
 				}
 			}
-			msgstack[sourceNodeToken][sourceThreadToken].push(new PrimEvent(time,messageTag));
+			((EZStack)msgstack.get(sourceGlob)).push(new PrimEvent(time,messageTag));
 			return 0;
 		}
 		
 		public int recvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
-			if(msgstack[sourceNodeToken][sourceThreadToken]==null)msgstack[sourceNodeToken][sourceThreadToken]=new Stack();
+			
+			Integer sourceGlob = new Integer(GlobalID(sourceNodeToken,sourceThreadToken));
+			
+			if(!msgstack.containsKey(sourceGlob))msgstack.put(sourceGlob, new EZStack());//[sourceNodeToken][sourceThreadToken]=new Stack();
 			PrimEvent leave;
-			if(msgstack[sourceNodeToken][sourceThreadToken].size()>0)
+			if(((EZStack)msgstack.get(sourceGlob)).size()>0)
 			{
-				if(((PrimEvent)(msgstack[sourceNodeToken][sourceThreadToken].peek())).stateToken==messageTag)
+				if(((PrimEvent)(((EZStack)msgstack.get(sourceGlob)).peek())).stateToken==messageTag)
 				{
-					leave = (PrimEvent)msgstack[sourceNodeToken][sourceThreadToken].pop();
+					leave = (PrimEvent)((EZStack)msgstack.get(sourceGlob)).pop();
 					prime = new base.drawable.Primitive(messageTag,leave.time*clockP,time*clockP,
 							new double[]{leave.time*clockP,time*clockP},
 							new int[]{
@@ -442,7 +500,7 @@ public class InputLog implements base.drawable.InputAPI
 					return 0;
 				}
 			}
-			msgstack[sourceNodeToken][sourceThreadToken].push(new PrimEvent(time,messageTag));
+			((EZStack)msgstack.get(sourceGlob)).push(new PrimEvent(time,messageTag));
 			
 			return 0;
 		}
@@ -453,20 +511,25 @@ public class InputLog implements base.drawable.InputAPI
 			if(noMonEvents.contains(new Integer(userEventToken)))
 			{
 				//System.out.println(noMonEventCycle[nodeToken][threadToken]);
-				if(noMonEventCycle[nodeToken][threadToken]==0)
+				
+				Integer glob = new Integer(GlobalID(nodeToken,threadToken));
+				
+				if(!noMonEventCycle.containsKey(glob))noMonEventCycle.put(glob, ZERO);
+				
+				if(noMonEventCycle.get(glob).equals(ZERO))
 				{
-					noMonEventCycle[nodeToken][threadToken]++;
+					noMonEventCycle.put(glob, ONE);
 					return 0;
 				}
 				else
-				if(noMonEventCycle[nodeToken][threadToken]==1)
+				if(noMonEventCycle.get(glob).equals(ONE))
 				{
-					noMonEventCycle[nodeToken][threadToken]++;
+					noMonEventCycle.put(glob, TWO);
 				}
 				else
-				if(noMonEventCycle[nodeToken][threadToken]==2)
+				if(noMonEventCycle.get(glob).equals(TWO))
 				{
-					noMonEventCycle[nodeToken][threadToken]=0;
+					noMonEventCycle.put(glob, ZERO);
 					return 0;
 				}
 			}
@@ -486,7 +549,12 @@ public class InputLog implements base.drawable.InputAPI
 
 		public int defStateGroup(Object userData, int stateGroupToken, String stateGroupName) {return 0;}
 
-		public int defThread(Object userData, int nodeToken, int threadToken, String threadName) {return 0;}
+		public int defThread(Object userData, int nodeToken, int threadToken, String threadName) {
+			
+			if(nodeToken>maxnode)maxnode=nodeToken;
+			if(threadToken>maxthread)maxthread=threadToken;
+			
+			return 0;}
 
 		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing) {return 0;}
 
