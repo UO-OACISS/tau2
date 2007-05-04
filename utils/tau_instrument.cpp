@@ -852,6 +852,75 @@ int processMemBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& i
 #endif /* PDT_NOFSTMTS */
 
 }
+
+
+/* Process Block to examine the routine */
+int processIOBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& itemvec,
+		int level, const pdbStmt *parentDO)
+{
+  pdbLoc start, stop; /* the location of start and stop timer statements */
+#ifndef PDT_NOFSTMTS
+/* statements are there */
+  
+#ifdef DEBUG
+  printf("Inside processIOBlock()\n");
+#endif /* DEBUG */
+  if (!s) return 1;
+  if (!ro) return 1; /* if null, do not instrument */
+
+  if (!instrumentEntity(ro->fullName())) return 1;  /* we shouldn't instrument it? */
+  
+  pdbStmt::stmt_t k = s->kind();
+
+#ifdef DEBUG
+    if (parentDO)
+    printf("Examining statement parentDo line=%d\n", parentDO->stmtEnd().line());
+#endif /* DEBUG */
+    /* NOTE: We currently do not support goto in C/C++ to close the timer.
+     * This needs to be added at some point -- similar to Fortran */
+    switch(k) {
+#ifdef PDB_FORTRAN_EXTENDED_STATEMENTS_LEVEL_2
+      case pdbStmt::ST_FEXIT:
+      case pdbStmt::ST_FCYCLE:
+      case pdbStmt::ST_FWHERE:
+        if (s->downStmt())
+          processMemBlock(s->downStmt(), ro, itemvec, level, parentDO);
+        break; /* don't go into extraStmt for Fortran EXIT to avoid looping */
+#endif /* PDB_FORTRAN_EXTENDED_STATEMENTS_LEVEL_1 */
+
+      case pdbStmt::ST_FGOTO:
+      case pdbStmt::ST_FALLOCATE:
+      case pdbStmt::ST_FDEALLOCATE:
+	break;
+      case pdbStmt::ST_FIO:
+	printf("IO statement: %s <%d,%d>\n",
+	s->stmtBegin().file()->name(), s->stmtBegin().line(), s->stmtBegin().col(), s->stmtBegin().file()->name());
+        itemvec.push_back( new itemRef((pdbItem *)NULL, IO_STMT, s->stmtBegin().line(), s->stmtBegin().col(), s->stmtBegin().file()->name(), BEFORE));
+	break;
+      default:
+        if (s->downStmt())
+          processIOBlock(s->downStmt(), ro, itemvec, level, parentDO);
+        if (s->extraStmt())
+          processIOBlock(s->extraStmt(), ro, itemvec, level, parentDO);
+	/* We only process down and extra statements for the default statements
+	   that are not loops. When a loop is encountered, its down is not
+	   processed. That way we retain outer loop level instrumentation */
+#ifdef DEBUG
+        printf("Other statement\n"); 
+#endif /* DEBUG */
+	break;
+    }
+  /* and then process the next statement */
+  if (s->nextStmt())
+    return processIOBlock(s->nextStmt(), ro, itemvec, level, parentDO);
+  else
+    return 1;
+
+#else /* PDT_FNOSTMTS */
+   return 0;
+#endif /* PDT_NOFSTMTS */
+
+}
 /* Process Block to examine the routine */
 int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& itemvec,
 		int level, const pdbStmt *parentDO)
@@ -1161,6 +1230,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       if ((*it)->getKind() == TAU_IO)
       { /* we need to instrument all io statements in this routine */
 	printf("process I/O statements in Fortran routine\n");
+	processIOBlock((*rit)->body(), (*rit), itemvec, 1, NULL); /* level = 1 */
       }
       if ((*it)->getKind() == TAU_MEMORY )
       { /* we need to instrument all memory statements in this routine */
@@ -1313,6 +1383,6 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.41 $   $Date: 2007/03/27 22:11:05 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.41 2007/03/27 22:11:05 sameer Exp $
+ * $Revision: 1.42 $   $Date: 2007/05/04 04:16:33 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.42 2007/05/04 04:16:33 sameer Exp $
  ***************************************************************************/

@@ -101,6 +101,13 @@ itemRef::itemRef(const pdbItem *i, bool isT, int l, int c)
     kind = ROUTINE; 
     attribute = NOT_APPLICABLE;
   }
+itemRef::itemRef(const pdbItem *i, itemKind_t k, pdbLoc start, pdbLoc stop)
+   : item(i), kind(k), begin(start), end(stop) 
+{
+  attribute = NOT_APPLICABLE;  
+  line = begin.line();
+  col = begin.col();
+}
 /* not needed anymore */
 #ifdef OLD
   const pdbItem *item;
@@ -3155,6 +3162,11 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 }
                 instrumented = true;
 		break;
+	    case IO_STMT:
+                cout <<"I/O statement line="<<(*it)->line<<endl;
+                instrumented = true;
+                ostr<<inbuf<<endl;
+                break;
 	    default:
 		cout <<"Unknown option in instrumentFFile:"<<(*it)->kind<<endl;
 		instrumented = true;
@@ -3550,8 +3562,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.162 $   $Date: 2007/04/13 01:20:05 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.162 2007/04/13 01:20:05 sameer Exp $
+ * $Revision: 1.163 $   $Date: 2007/05/04 04:16:32 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.163 2007/05/04 04:16:32 sameer Exp $
  ***************************************************************************/
 
 
