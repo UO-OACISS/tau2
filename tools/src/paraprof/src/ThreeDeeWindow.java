@@ -79,7 +79,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 1);
         settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 2);
         settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 3);
-        
+
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setSortType(SortType.NAME);
 
@@ -220,7 +220,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                     FunctionProfile functionProfile = thread.getFunctionProfile(scatterFunctions[f]);
 
                     if (functionProfile != null) {
-                        values[threadIndex][f] = (float) scatterValueTypes[f].getValue(functionProfile, scatterMetricIDs[f]);
+                        values[threadIndex][f] = (float) scatterValueTypes[f].getValue(functionProfile, scatterMetricIDs[f],
+                                ppTrial.getSelectedSnapshot());
                         maxScatterValues[f] = Math.max(maxScatterValues[f], values[threadIndex][f]);
                         minScatterValues[f] = Math.min(minScatterValues[f], values[threadIndex][f]);
                     }
@@ -323,9 +324,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
                 if (functionProfile != null) {
                     heightValues[funcIndex][threadIndex] = (float) settings.getHeightValue().getValue(functionProfile,
-                            settings.getHeightMetricID());
+                            settings.getHeightMetricID(), ppTrial.getSelectedSnapshot());
                     colorValues[funcIndex][threadIndex] = (float) settings.getColorValue().getValue(functionProfile,
-                            settings.getColorMetricID());
+                            settings.getColorMetricID(), ppTrial.getSelectedSnapshot());
 
                     maxHeightValue = Math.max(maxHeightValue, heightValues[funcIndex][threadIndex]);
                     maxColorValue = Math.max(maxColorValue, colorValues[funcIndex][threadIndex]);
@@ -468,7 +469,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         updateSettings(settings);
         visRenderer.redraw();
     }
-    
+
     public void resetSplitPane() {
         // We try to get the JSplitPane to reset the divider since the 
         // different plots have differing widths of controls 
@@ -876,7 +877,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
      * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
      */
     public void keyPressed(KeyEvent e) {
-        // TODO Auto-generated method stub
+    // TODO Auto-generated method stub
 
     }
 
@@ -884,7 +885,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
      * @see java.awt.event.KeyListener#keyReleased(java.awt.event.KeyEvent)
      */
     public void keyReleased(KeyEvent e) {
-        // TODO Auto-generated method stub
+    // TODO Auto-generated method stub
 
     }
 
