@@ -9,9 +9,9 @@ import edu.uoregon.tau.perfdmf.Metric;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: ValueType.java,v 1.8 2007/05/03 00:15:43 amorris Exp $</P>
+ * <P>CVS $Id: ValueType.java,v 1.9 2007/05/04 01:44:34 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 
 public abstract class ValueType {
@@ -175,7 +175,7 @@ public abstract class ValueType {
 
     public static final ValueType INCLUSIVE_PER_CALL = new ValueType("Inclusive per Call", "ValueType.INCLUSIVE_PER_CALL") {
         public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
-            return functionProfile.getInclusivePerCall(metric, snapshot);
+            return functionProfile.getInclusivePerCall(snapshot, metric);
         }
 
         public String getSuffix(int units, Metric metric) {
@@ -193,7 +193,7 @@ public abstract class ValueType {
 
     public static final ValueType EXCLUSIVE_PER_CALL = new ValueType("Exclusive per Call", "ValueType.EXCLUSIVE_PER_CALL") {
         public double getValue(FunctionProfile functionProfile, int metric, int snapshot) {
-            return functionProfile.getExclusivePerCall(metric, snapshot);
+            return functionProfile.getExclusivePerCall(snapshot, metric);
         }
 
         public String getSuffix(int units, Metric metric) {

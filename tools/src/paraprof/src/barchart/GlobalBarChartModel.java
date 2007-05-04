@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.10 2007/05/02 19:45:06 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.11 2007/05/04 01:44:34 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -109,7 +109,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         if (fp == null) {
             return -1;
         } else {
-            return dataSorter.getValueType().getValue(fp, dataSorter.getSelectedMetricID());
+            return dataSorter.getValueType().getValue(fp, dataSorter.getSelectedMetricID(), dataSorter.getSelectedSnapshot());
         }
     }
 

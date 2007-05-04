@@ -117,7 +117,7 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public double getInclusivePerCall() {
-        return functionProfile.getInclusivePerCall(dataSorter.getSelectedMetricID(), dataSorter.getSelectedSnapshot());
+        return functionProfile.getInclusivePerCall(dataSorter.getSelectedSnapshot(), dataSorter.getSelectedMetricID());
     }
 
     public Iterator getChildProfiles() {
@@ -210,17 +210,17 @@ public class PPFunctionProfile implements Comparable {
         String tmpString;
 
         DecimalFormat dF = new DecimalFormat("##0.0");
-        tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(metric)), 13);
+        tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(dataSorter.getSelectedSnapshot(),metric)), 13);
 
         if (functionProfile.getFunction().isPhase() && functionProfile.getFunction().isCallPathFunction()) {
-            tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 14);
+            tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(dataSorter.getSelectedSnapshot(),metric), 14);
         } else {
-            tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getExclusive(metric), 14);
+            tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getExclusive(dataSorter.getSelectedSnapshot(),metric), 14);
         }
-        tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 16);
-        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(), 12, true);
-        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(), 12, true);
-        tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(metric), 19);
+        tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(dataSorter.getSelectedSnapshot(),metric), 16);
+        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(dataSorter.getSelectedSnapshot()), 12, true);
+        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(dataSorter.getSelectedSnapshot()), 12, true);
+        tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(dataSorter.getSelectedSnapshot(),metric), 19);
 
         //Everything should be added now except the function name.
         return tmpString;

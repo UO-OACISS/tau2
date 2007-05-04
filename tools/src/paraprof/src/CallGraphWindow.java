@@ -31,9 +31,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.9 2007/05/03 00:15:42 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.10 2007/05/04 01:44:34 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener, ChangeListener, Observer, ImageExport,
         Printable, ParaProfWindow {
@@ -584,7 +584,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
     private double getMaxValue(CallGraphOption option, int metric) {
         double maxValue = 1;
         // temporary, use the last (final) snapshot
-        int snapshot = thread.getNumSnapshots() - 1;
+        int snapshot = ppTrial.getSelectedSnapshot();
         if (option == CallGraphOption.EXCLUSIVE) {
             maxValue = thread.getMaxExclusive(metric, snapshot);
         } else if (option == CallGraphOption.INCLUSIVE) {
@@ -608,21 +608,22 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
     }
 
     private double getValue(FunctionProfile fp, CallGraphOption option, double maxValue, int metric) {
+        int snapshot = ppTrial.getSelectedSnapshot();
         double value = 1;
         if (option == CallGraphOption.STATIC) {
             value = 1;
         } else if (option == CallGraphOption.EXCLUSIVE) {
-            value = fp.getExclusive(metric) / maxValue;
+            value = fp.getExclusive(snapshot,metric) / maxValue;
         } else if (option == CallGraphOption.INCLUSIVE) {
-            value = fp.getInclusive(metric) / maxValue;
+            value = fp.getInclusive(snapshot,metric) / maxValue;
         } else if (option == CallGraphOption.NUMCALLS) {
-            value = fp.getNumCalls() / maxValue;
+            value = fp.getNumCalls(snapshot) / maxValue;
         } else if (option == CallGraphOption.NUMSUBR) {
-            value = fp.getNumSubr() / maxValue;
+            value = fp.getNumSubr(snapshot) / maxValue;
         } else if (option == CallGraphOption.INCLUSIVE_PER_CALL) {
-            value = fp.getInclusivePerCall(metric) / maxValue;
+            value = fp.getInclusivePerCall(snapshot,metric) / maxValue;
         } else if (option == CallGraphOption.EXCLUSIVE_PER_CALL) {
-            value = fp.getExclusivePerCall(metric) / maxValue;
+            value = fp.getExclusivePerCall(snapshot,metric) / maxValue;
         } else if (option == CallGraphOption.STATIC) {
             value = 1;
         } else {

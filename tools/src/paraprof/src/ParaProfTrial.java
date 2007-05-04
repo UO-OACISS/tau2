@@ -49,6 +49,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     private String path = null;
     private String pathReverse = null;
     private int defaultMetricID = 0;
+    private int selectedSnapshot = -1; // -1 = final snapshot
 
     private Group selectedGroup;
     private Group groupInclude;
@@ -687,6 +688,15 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     public Group getGroupExclude() {
         return groupExclude;
+    }
+
+    public int getSelectedSnapshot() {
+        return selectedSnapshot;
+    }
+
+    public void setSelectedSnapshot(int selectedSnapshot) {
+        this.selectedSnapshot = selectedSnapshot;
+        updateRegisteredObjects("dataEvent");
     }
 
 }

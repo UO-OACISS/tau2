@@ -185,7 +185,7 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
         List functions = dataSorter.getBasicFunctionProfiles(thread);
 
         //long firstTime = ((Snapshot) snapshots.get(0)).getTimestamp();
-        long firstTime = Long.parseLong(((String) thread.getMetaData().get("Starting Timestamp")));
+        long firstTime = thread.getStartTime();
         long duration = 0;
 
         int max = functions.size();

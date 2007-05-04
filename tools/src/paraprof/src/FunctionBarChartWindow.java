@@ -24,9 +24,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.15 2007/02/06 02:12:15 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.16 2007/05/04 01:44:34 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -399,7 +399,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         } else if (tmpString.equals("dataEvent")) {
             dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
             setupMenus();
-            validate();
+            validate(); // must call validate or the new JMenuBar won't work
             sortLocalData();
             this.setHeader();
             panel.repaint();

@@ -22,9 +22,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.14 2007/05/02 19:45:05 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.15 2007/05/04 01:44:34 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {
@@ -33,7 +33,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private Function phase; // null for non-phase profiles
 
     private BarChartPanel panel;
-//    private GlobalBarChartModel model;
+    //    private GlobalBarChartModel model;
     private AbstractBarChartModel model;
     private DataSorter dataSorter;
 
@@ -54,79 +54,82 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private static int defaultWidth = 750;
     private static int defaultHeight = 410;
 
+    private SnapshotControlWindow snapshotControlWindow;
+    
     public BarChartPanel getPanel() {
         return panel;
     }
 
     public GlobalDataWindow(ParaProfTrial ppTrial, Function phase) {
-        try {
-            this.ppTrial = ppTrial;
-            this.phase = phase;
-            ppTrial.addObserver(this);
+        this.ppTrial = ppTrial;
+        this.phase = phase;
+        ppTrial.addObserver(this);
 
-            dataSorter = new DataSorter(ppTrial);
-            dataSorter.setPhase(phase);
+        dataSorter = new DataSorter(ppTrial);
+        dataSorter.setPhase(phase);
 
-            if (phase == null) {
-                setTitle("TAU: ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-            } else {
-                setTitle("TAU: ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
-                        + " Phase: " + phase.getName());
-            }
-            ParaProfUtils.setFrameIcon(this);
-
-            setSize(ParaProfUtils.checkSize(new java.awt.Dimension(defaultWidth, defaultHeight)));
-            setLocation(WindowPlacer.getGlobalDataWindowPosition(this));
-
-            addWindowListener(new java.awt.event.WindowAdapter() {
-                public void windowClosing(java.awt.event.WindowEvent evt) {
-                    thisWindowClosing(evt);
-                }
-            });
-
-            if (ParaProf.demoMode) { // for Scott's quicktime videos
-                barLengthSlider.setValue(500);
-            }
-
-            getContentPane().setLayout(new GridBagLayout());
-
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.insets = new Insets(2, 2, 2, 2);
-
-            model = new GlobalBarChartModel(this, dataSorter, ppTrial);
-            //model = new ThreadSnapshotBarChartModel(this, dataSorter, ppTrial);
-            panel = new BarChartPanel(model);
-            setupMenus();
-
-            panel.getBarChart().setLeftJustified(true);
-            panel.getBarChart().setAutoResize(true);
-            //panel.getBarChart().setBarLength(barLengthSlider.getValue());
-
-            // more sane scrollbar sensitivity
-            panel.getVerticalScrollBar().setUnitIncrement(35);
-
-            this.setHeader();
-
-            barLengthSlider.setPaintTicks(true);
-            barLengthSlider.setMajorTickSpacing(400);
-            barLengthSlider.setMinorTickSpacing(50);
-            barLengthSlider.setPaintLabels(true);
-            barLengthSlider.addChangeListener(this);
-
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 1;
-            gbc.weighty = 1;
-            ParaProfUtils.addCompItem(this, panel, gbc, 0, 0, 1, 1);
-
-            sortLocalData();
-
-            panel.repaint();
-
-            ParaProf.incrementNumWindows();
-        } catch (Error e) {
-            e.printStackTrace();
+        if (phase == null) {
+            setTitle("TAU: ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        } else {
+            setTitle("TAU: ParaProf: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())
+                    + " Phase: " + phase.getName());
         }
+        ParaProfUtils.setFrameIcon(this);
+
+        setSize(ParaProfUtils.checkSize(new java.awt.Dimension(defaultWidth, defaultHeight)));
+        setLocation(WindowPlacer.getGlobalDataWindowPosition(this));
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                thisWindowClosing(evt);
+            }
+        });
+
+        if (ParaProf.demoMode) { // for Scott's quicktime videos
+            barLengthSlider.setValue(500);
+        }
+
+        getContentPane().setLayout(new GridBagLayout());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(2, 2, 2, 2);
+
+        model = new GlobalBarChartModel(this, dataSorter, ppTrial);
+        //model = new ThreadSnapshotBarChartModel(this, dataSorter, ppTrial);
+        panel = new BarChartPanel(model);
+        setupMenus();
+
+        panel.getBarChart().setLeftJustified(true);
+        panel.getBarChart().setAutoResize(true);
+        //panel.getBarChart().setBarLength(barLengthSlider.getValue());
+
+        // more sane scrollbar sensitivity
+        panel.getVerticalScrollBar().setUnitIncrement(35);
+
+        this.setHeader();
+
+        barLengthSlider.setPaintTicks(true);
+        barLengthSlider.setMajorTickSpacing(400);
+        barLengthSlider.setMinorTickSpacing(50);
+        barLengthSlider.setPaintLabels(true);
+        barLengthSlider.addChangeListener(this);
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        ParaProfUtils.addCompItem(this, panel, gbc, 0, 0, 1, 1);
+
+        sortLocalData();
+
+        panel.repaint();
+
+        if (ppTrial.getDataSource().getWellBehavedSnapshots()) {
+            snapshotControlWindow = new SnapshotControlWindow(ppTrial);
+            snapshotControlWindow.setVisible(true);
+        }
+        
+        ParaProf.incrementNumWindows();
     }
 
     public AbstractBarChartModel getModel() {
@@ -154,8 +157,8 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         normalizeCheckBox.addActionListener(this);
         optionsMenu.add(normalizeCheckBox);
 
-//        orderByMeanCheckBox.addActionListener(this);
-//        optionsMenu.add(orderByMeanCheckBox);
+        //        orderByMeanCheckBox.addActionListener(this);
+        //        optionsMenu.add(orderByMeanCheckBox);
 
         orderCheckBox.addActionListener(this);
         optionsMenu.add(orderCheckBox);
@@ -163,8 +166,8 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         stackBarsCheckBox.addActionListener(this);
         optionsMenu.add(stackBarsCheckBox);
 
-        optionsMenu.add(ParaProfUtils.createMetricSelectionMenu(ppTrial,"Select Metric...", false, false, dataSorter, this, true));
-        optionsMenu.add(ParaProfUtils.createMetricSelectionMenu(ppTrial,"Sort by...", true, false, dataSorter, this, true));
+        optionsMenu.add(ParaProfUtils.createMetricSelectionMenu(ppTrial, "Select Metric...", false, false, dataSorter, this, true));
+        optionsMenu.add(ParaProfUtils.createMetricSelectionMenu(ppTrial, "Sort by...", true, false, dataSorter, this, true));
 
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         mainMenu.add(optionsMenu);
@@ -228,11 +231,9 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         return slidersCheckBox.isSelected();
     }
 
-    public void menuDeselected(MenuEvent evt) {
-    }
+    public void menuDeselected(MenuEvent evt) {}
 
-    public void menuCanceled(MenuEvent evt) {
-    }
+    public void menuCanceled(MenuEvent evt) {}
 
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
@@ -244,6 +245,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         } else if (tmpString.equals("dataEvent")) {
             dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
             setupMenus();
+            validate(); // must call validate or the new JMenuBar won't work
             sortLocalData();
             this.setHeader();
             panel.repaint();
@@ -336,15 +338,15 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         //dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
         //dataSorter.setValueType(ValueType.EXCLUSIVE);
 
-//        if (nameCheckBox.isSelected()) {
-//            dataSorter.setSortType(SortType.NAME);
-//        } else {
-//            if (orderByMeanCheckBox.isSelected()) {
-//                dataSorter.setSortType(SortType.MEAN_VALUE);
-//            } else {
-//                dataSorter.setSortType(SortType.MEAN_VALUE);
-//            }
-//        }
+        //        if (nameCheckBox.isSelected()) {
+        //            dataSorter.setSortType(SortType.NAME);
+        //        } else {
+        //            if (orderByMeanCheckBox.isSelected()) {
+        //                dataSorter.setSortType(SortType.MEAN_VALUE);
+        //            } else {
+        //                dataSorter.setSortType(SortType.MEAN_VALUE);
+        //            }
+        //        }
 
         if (dataSorter.getSortType() == SortType.VALUE) {
             dataSorter.setSortType(SortType.MEAN_VALUE);
