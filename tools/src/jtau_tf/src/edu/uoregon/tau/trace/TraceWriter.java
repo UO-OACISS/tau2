@@ -13,6 +13,7 @@ import java.io.DataOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 //import java.util.HashSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -43,27 +44,33 @@ public class TraceWriter extends TraceFile {
 	//int PCXX_UTIMER_START = 60300;
 	//int PCXX_UTIMER_STOP  = 60400;
 	
-	private static final int TAU_MAX_RECORDS = 64*1024;
+	//private static final int TAU_MAX_RECORDS = 64*1024;
 	
 	private HashSet checkInit = new HashSet();
+	private HashMap nidTidNames = new HashMap();
 	long lastTimestamp;
-	boolean needsEdfFlush;
+	//boolean needsEdfFlush;
 	
-	Event[] traceBuffer;
-	int tracePosition;
+	//Event[] traceBuffer;
+	//int tracePosition;
 	
 	TraceWriter(){}
 	
-	private String StringPair(int nod,int thd){
+	/*private String StringPair(int nod,int thd){
 		return nod+":"+thd;
+	}*/
+	
+	private int CharPair(int nid, int tid){
+		//System.out.println("n: "+nid+ " t: "+tid);
+		return (nid << 16)+tid;
 	}
 	
-	private void checkFlush() {
+	/*private void checkFlush() {
 		// Write the current trace buffer to file if necessary.
 		if (tracePosition >= TAU_MAX_RECORDS) {
 			flushTrace();
 		}
-	}
+	}*/
 
 	private int flushEdf() {
 		try {
@@ -87,7 +94,7 @@ public class TraceWriter extends TraceFile {
 			return -1;
 	    }
 
-		needsEdfFlush = false;
+		//needsEdfFlush = false;
 		return 0;
 	}
 /*
@@ -106,11 +113,13 @@ public class TraceWriter extends TraceFile {
 	}*/
 
 	public int defThread(int nodeToken, int threadToken,String threadName) {
-		char nid = (char)nodeToken;//Integer ..  new Integer(nodeToken);
-		char tid = (char)threadToken;
-		if(!NidTidMap.containsKey(StringPair(nid, tid)))
+		//char nid = (char)nodeToken;//Integer ..  new Integer(nodeToken);
+		//char tid = (char)threadToken;
+		Integer nidtid=new Integer(CharPair(nodeToken,threadToken));
+		//TODO: Use the thread name somehow?!
+		if(!nidTidNames.containsKey(nidtid))
 		{
-			NidTidMap.put(StringPair(nid, tid), threadName);
+			nidTidNames.put(nidtid, threadName);
 		}
 	    return 0;
 	  }
@@ -137,17 +146,44 @@ public class TraceWriter extends TraceFile {
 
 		EventIdMap.put(new Integer(stateToken),newEventDesc);
 
-		needsEdfFlush = true;
+		//needsEdfFlush = true;
 
 		return 0;
 	}
 
-	public int flushTrace(){
+	public int writeEvent(int eventID, char nodeID, char threadID, long parameter, long time){
+		
+		try {
+			//nidtid=CharPair(subject.getNodeID(),subject.getThreadID());
+			if(checkInit.add(new Integer(CharPair(nodeID,threadID))))
+			{
+				//checkInit.add(nidtid);
+				Foid.writeInt(PCXX_EV_INIT);
+				Foid.writeChar(nodeID);
+				Foid.writeChar(threadID);
+				Foid.writeLong(3);
+				Foid.writeLong(time);
+			}
+
+    		//evt=tFile.traceBuffer[i];
+			Foid.writeInt(eventID);
+			Foid.writeChar(nodeID);
+			Foid.writeChar(threadID);
+			Foid.writeLong(parameter);
+			Foid.writeLong(time);
+    	} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	
+    	return 0;
+	}
+	
+	/*public int flushTrace(){
 		int events = tracePosition;
-		/*if(events>1)
-			checkInitialized(traceBuffer[1].getNodeID(),traceBuffer[1].getThreadID(), traceBuffer[1].getTime());
-		else
-			checkInitialized(0,0,0);*/
+		//if(events>1)
+		//	checkInitialized(traceBuffer[1].getNodeID(),traceBuffer[1].getThreadID(), traceBuffer[1].getTime());
+		//else
+		//	checkInitialized(0,0,0);
 		// reset trace position
 		tracePosition = 0;
 		// must write out edf file first
@@ -161,13 +197,13 @@ public class TraceWriter extends TraceFile {
 		Event subject=null;
 		//boolean needInit = false;
 		//CharPair 
-		String nidtid=null;
+		//String nidtid=null;
 		for(int i=0; i<events;i++)
 		{
 			subject=traceBuffer[i];
 			try {
-				nidtid=StringPair(subject.getNodeID(),subject.getThreadID());
-				if(checkInit.add(nidtid))
+				//nidtid=CharPair(subject.getNodeID(),subject.getThreadID());
+				if(checkInit.add(new Integer(CharPair(subject.getNodeID(),subject.getThreadID()))))
 				{
 					//checkInit.add(nidtid);
 					Foid.writeInt(PCXX_EV_INIT);
@@ -188,42 +224,43 @@ public class TraceWriter extends TraceFile {
 			}
 	    }
 	    return 0;
-	  }
+	  }*/
 
 	public int closeTrace(){
-		Set keyset = NidTidMap.keySet();// .iterator();
+		Set keyset = nidTidNames.keySet();// .iterator();
 		Iterator it=keyset.iterator();
-		String nidtid;
+		int nidtid;
 		char first;
 		char second;
 		while(it.hasNext())
 		{
-			nidtid=(String)it.next();
+			nidtid=((Integer)it.next()).intValue();
 			//System.out.println(nidtid.first().getClass().getSimpleName());
-			first=(char)Integer.parseInt(nidtid.substring(0, nidtid.indexOf(':'))); //first();//(((Integer)nidtid.first()).intValue());
-			second=(char)Integer.parseInt(nidtid.substring(nidtid.indexOf(':')+1));//nidtid.second();//(((Integer)nidtid.second()).intValue());
-			checkFlush();
-			int pos = tracePosition;
-			Event evt = new Event(PCXX_EV_CLOSE, first, second, 0, lastTimestamp);//char
+			first=(char)(nidtid>>>16);//  (char)Integer.parseInt(nidtid.substring(0, nidtid.indexOf(':'))); //first();//(((Integer)nidtid.first()).intValue());
+			second=(char)nidtid;//(char)Integer.parseInt(nidtid.substring(nidtid.indexOf(':')+1));//nidtid.second();//(((Integer)nidtid.second()).intValue());
+			//checkFlush();
+			//int pos = tracePosition;
+			writeEvent(PCXX_EV_CLOSE, first, second, 0, lastTimestamp);//char
 			/*evt.ev = PCXX_EV_CLOSE;
 			evt.nid = (char)first;
 			evt.tid = (char)second;
 			evt.ti = lastTimestamp;
 			evt.par = 0;*/
-			traceBuffer[pos]=(evt);//pos,
-			tracePosition++;
+			//traceBuffer[pos]=(evt);//pos,
+			//tracePosition++;
 	      
-			pos = tracePosition;
-			evt = new Event(PCXX_EV_WALL_CLOCK, first, second, 0, lastTimestamp);//char
+			//pos = tracePosition;
+			writeEvent(PCXX_EV_WALL_CLOCK, first, second, 0, lastTimestamp);//char
 			/*evt.ev = PCXX_EV_WALL_CLOCK;
 			evt.nid = (char)first;
 			evt.tid = (char)second;
 			evt.ti = lastTimestamp;
 			evt.par = 0;*/
-			traceBuffer[pos]=evt;//pos,
-			tracePosition++;
+			//traceBuffer[pos]=evt;//pos,
+			//tracePosition++;
 		}
-		flushTrace();
+		//flushTrace();
+		flushEdf();
 		try {
 			Foid.close();
 		} catch (IOException e) {
@@ -237,17 +274,17 @@ public class TraceWriter extends TraceFile {
 			int stateToken, int parameter) {//time formerly (x_uint64)
 		//Ttf_fileT *tFile = (Ttf_fileT*)file;
 
-		checkFlush();
-		int pos = tracePosition;
+		//checkFlush();
+		//int pos = tracePosition;
 		//System.out.println(pos);
-		Event evt = new Event(stateToken,(char)nodeToken,(char)threadToken,parameter,time);
+		writeEvent(stateToken,(char)nodeToken,(char)threadToken,parameter,time);
 		/*evt.ev = stateToken;
 		evt.nid = (char)nodeToken;
 		evt.tid = (char)threadToken;
 		evt.ti = time;
 		evt.par = parameter;*/
-		traceBuffer[pos]=evt;//pos,
-		tracePosition++;
+		//traceBuffer[pos]=evt;//pos,
+		//tracePosition++;
 		lastTimestamp = time;
 		return 0;
 	}
@@ -289,16 +326,16 @@ public class TraceWriter extends TraceFile {
 		((xother & 0xFF) << 24) |
 		(xcomm << 58 >> 16);
 
-		checkFlush();
-		int pos = tracePosition;
-		Event evt = new Event(eventId,(char)sourceNodeToken,(char)sourceThreadToken,parameter,time);
+		//checkFlush();
+		//int pos = tracePosition;
+		writeEvent(eventId,(char)sourceNodeToken,(char)sourceThreadToken,parameter,time);
 		/*evt.ev = eventId;
 		evt.nid = (char)sourceNodeToken;
 		evt.tid = (char)sourceThreadToken;
 		evt.ti = time;
 		evt.par = parameter;*/
-		traceBuffer[pos]=evt;//pos,
-		tracePosition++;
+		//traceBuffer[pos]=evt;//pos,
+		//tracePosition++;
 		lastTimestamp = time;
 
 		return 0;
@@ -339,7 +376,7 @@ public class TraceWriter extends TraceFile {
 
 		EventIdMap.put(new Integer(userEventToken),newEventDesc);
 
-		needsEdfFlush = true;
+		//needsEdfFlush = true;
 		return 0;
 	}
 
@@ -348,16 +385,16 @@ public class TraceWriter extends TraceFile {
 			int threadToken,
 			int userEventToken,
 			long userEventValue) {
-		checkFlush();
-		int pos = tracePosition;
-		Event evt = new Event(userEventToken,(char)nodeToken,(char)threadToken,userEventValue,time);
+		//checkFlush();
+		//int pos = tracePosition;
+		writeEvent(userEventToken,(char)nodeToken,(char)threadToken,userEventValue,time);
 		/*evt.ev = userEventToken;
 		evt.nid = (char)nodeToken;
 		evt.tid = (char)threadToken;
 		evt.ti = time;
 		evt.par = userEventValue;*/
-		traceBuffer[pos]=evt;//pos,
-		tracePosition++;
+		//traceBuffer[pos]=evt;//pos,
+		//tracePosition++;
 		lastTimestamp = time;
 		return 0;
 	}

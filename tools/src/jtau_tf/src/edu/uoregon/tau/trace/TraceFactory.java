@@ -23,7 +23,7 @@ public class TraceFactory {
 	private final static int TAU_MESSAGE_SEND	= 60007;
 	private final static int TAU_MESSAGE_RECV	= 60008;
 	
-	private static final int TAU_MAX_RECORDS = 64*1024;
+	//private static final int TAU_MAX_RECORDS = 64*1024;
 	
 	
 	/* open a trace file for reading */
@@ -33,6 +33,11 @@ public class TraceFactory {
 			tFile.subtractFirstTimestamp = true;
 			tFile.nonBlocking = false;
 
+			//tFile.intBB = ByteBuffer.allocate(4);
+			//tFile.charBB = ByteBuffer.allocate(2);
+			//tFile.longBB = ByteBuffer.allocate(8);
+			//tFile.longBB.order( ByteOrder.LITTLE_ENDIAN );
+			
 			/* Open the trace file */
 			FileInputStream istream;
 			istream = new FileInputStream(name);
@@ -45,7 +50,7 @@ public class TraceFactory {
 			/* make a copy of the EDF file name */
 			tFile.EdfFile = edf;
 			/* Allocate space for nodeid, thread id map */
-			tFile.NidTidMap=new HashMap();
+			//tFile.NidTidMap=new HashMap();
 			/* Allocate space for event id map */
 			tFile.EventIdMap = new HashMap();
 			/* Allocate space for group id map */
@@ -53,11 +58,11 @@ public class TraceFactory {
 			/* initialize clock */
 			tFile.ClkInitialized = false;
 			/* initialize the first timestamp for the trace */
-			tFile.FirstTimestamp = 0;
+			//tFile.FirstTimestamp = 0;
 			/* determine the format */
 			//determineFormat (tFile);
 			/* return file handle */
-			tFile.determineFormat();
+			tFile.format=TraceReader.determineFormat(tFile.Fiid);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -76,9 +81,9 @@ public class TraceFactory {
 		DataOutputStream p = new DataOutputStream(bw);
 
 		TraceWriter tFile = new TraceWriter();
-		tFile.traceBuffer = new Event[TAU_MAX_RECORDS];
+		//tFile.traceBuffer = new Event[TAU_MAX_RECORDS];
 		//tFile.traceBuffer[0]=new Event();
-		tFile.tracePosition = 0; // 0 will be the EV_INIT record
+		//tFile.tracePosition = 0; // 0 will be the EV_INIT record
 		//tFile.initialized = false;
 
 		tFile.Foid=p;
@@ -90,7 +95,7 @@ public class TraceFactory {
 		/* make a copy of the EDF file name */
 		tFile.EdfFile = edf;
 
-		tFile.NidTidMap = new HashMap();
+		//tFile.NidTidMap = new HashMap();
 
 		/* Allocate space for maps */
 		tFile.EventIdMap = new TreeMap();//Tree map for output ordered by id.
@@ -99,7 +104,7 @@ public class TraceFactory {
 
 		//tFile.groupNameMap = new HashMap();
 
-		tFile.needsEdfFlush = true;
+		//tFile.needsEdfFlush = true;
 
 		/* initialize clock */
 		//tFile.ClkInitialized = false;

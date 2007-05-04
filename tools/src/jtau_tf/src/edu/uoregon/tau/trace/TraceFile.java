@@ -64,6 +64,9 @@ class Event {
 	public void setThreadID(char tid) {
 		this.tid = tid;
 	}
+	public int getNidTid(){
+		return (nid<<16)+tid;
+	}
 }
 
 /* As event, but for 64 bit platforms */
@@ -174,7 +177,7 @@ class CharPair implements Comparable{
 /*This holds all of the structures and data relevant to input/output of a trace file*/
 public class TraceFile {
 	String EdfFile;//Name of the edf file being read or written
-	Map NidTidMap;//=new HashMap();
+	//Map NidTidMap;//=new HashMap();
 	Map EventIdMap;//=new HashMap();;
 	Map GroupIdMap;//=new HashMap();
 	//long FirstTimestamp;
