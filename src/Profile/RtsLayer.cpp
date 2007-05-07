@@ -591,10 +591,10 @@ double RtsLayer::getUSecD (int tid) {
   return 0;
 #endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
 
-
 #ifdef TAU_PCL
   return PCL_Layer::getCounters(tid);
-#else  // TAU_PCL
+#endif  // TAU_PCL
+
 #ifdef TAU_PAPI
   static const char *papi_env = getenv("PAPI_EVENT");
   if (papi_env != NULL)
@@ -608,13 +608,16 @@ double RtsLayer::getUSecD (int tid) {
   return PapiLayer::getSingleCounter(tid);
 #endif /* TAU_PAPI_VIRTUAL */
 #endif /* TAU_PAPI_WALLCLOCKTIME */
-#else  // TAU_PAPI
+#endif  // TAU_PAPI
+
 #ifdef CPU_TIME
   return getUserTimeInSec();
-#else // CPU_TIME
+#endif // CPU_TIME
+
 #ifdef JAVA_CPU_TIME
   return JavaThreadLayer::getCurrentThreadCpuTime();
-#else // JAVA_CPU_TIME
+#endif // JAVA_CPU_TIME
+
 #ifdef TAUKTAU_MERGE
   struct timeval tp;
   static double last_timestamp = 0.0;
@@ -628,7 +631,8 @@ double RtsLayer::getUSecD (int tid) {
   }
   last_timestamp = timestamp;
   return timestamp;
-#else // TAUKTAU_MERGE
+#endif // TAUKTAU_MERGE
+
 #ifdef BGL_TIMERS
   static double bgl_clockspeed = 0.0;
 
@@ -639,17 +643,18 @@ double RtsLayer::getUSecD (int tid) {
     bgl_clockspeed = 1.0e6/(double)BGLPersonality_clockHz(&mybgl);
   }
   return (rts_get_timebase() * bgl_clockspeed);
-#else // BGL_TIMERS
+#endif // BGL_TIMERS
+
 #ifdef SGI_HW_COUNTERS
   return RtsLayer::GetEventCounter();
-#else  //SGI_HW_COUNTERS
+#endif  //SGI_HW_COUNTERS
 
 #ifdef SGI_TIMERS
   struct timespec tp;
   clock_gettime(CLOCK_SGI_CYCLE,&tp);
   return (tp.tv_sec * 1e6 + (tp.tv_nsec * 1e-3)) ;
+#endif  // SGI_TIMERS
 
-#else  // SGI_TIMERS
 #ifdef CRAY_TIMERS
 #ifdef TAU_CATAMOUNT /* for Cray XT3 */
   return dclock()*1.0e6; 
@@ -658,76 +663,37 @@ double RtsLayer::getUSecD (int tid) {
   return (double) tick/HZ;
 #endif /* TAU_CATAMOUNT */
 #endif // CRAY_TIMERS
+
 #ifdef TAU_ALPHA_TIMERS
   struct timespec currenttime;
   clock_gettime(CLOCK_REALTIME, &currenttime);
   return (currenttime.tv_sec * 1e6 + (currenttime.tv_nsec * 1e-3));
 #endif /* TAU_ALPHA_TIMERS */
+
 #ifdef TAU_LINUX_TIMERS
   return (double) getLinuxHighResolutionTscCounter()/TauGetMHz();
-#else /* TAU_LINUX_TIMERS */
-#if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS)) 
-#if (defined(TAU_WINDOWS))
-  return TauWindowsUsecD();
-#else // TAU_WINDOWS 
-#ifdef TAU_MUSE
-#ifdef DEBUG_PROF
-  // TO CHECK IF THE VALUE IS MONOTONICALLY INCREASING
-  double queryValue = 0.0;
-  static double lastQueryValue = 0.0;
-  queryValue = TauMuseQuery();
-  char msg[200];
-  if(queryValue < lastQueryValue){
-        if(queryValue < 0){
-		DEBUGPROFMSG("TauMuseQuery() came out negative!!!!!."<<endl;);
-        }else{
-		DEBUGPROFMSG("TauMuseQuery() less than lastQueryValue.!!!!!"<<endl;);
-		sprintf(msg,"TauMuseQuery() lastQueryValue=%f\n",lastQueryValue);
-		DEBUGPROFMSG(msg);
-		sprintf(msg,"TauMuseQuery() queryValue=%f\n",queryValue);
-		DEBUGPROFMSG(msg);
-        }
-        queryValue = lastQueryValue;
-  }
-  lastQueryValue = queryValue;
-  return queryValue;
-#else //DEBUG_PROF
-  
-  return TauMuseQuery();
+#endif /* TAU_LINUX_TIMERS */
 
-#endif //DEBUG_PROF
-#else /* TAU_MUSE */
+#ifdef TAU_WINDOWS
+  return TauWindowsUsecD();
+#endif // TAU_WINDOWS 
+
+#ifdef TULIP_TIMERS
+  return pcxx_GetUSecD();
+#endif
+
+#ifdef TAU_MUSE
+  return TauMuseQuery();
+#endif /* TAU_MUSE */
+
 #ifdef TAU_MUSE_MULTIPLE
-#ifdef DEBUG_PROF
-  // TO CHECK IF THE VALUE IS MONOTONICALLY INCREASING
-  double queryValue = 0.0;
-  static double lastQueryValue = 0.0;
-  char msg[200];
-  double data[10];
-  int size = 10;
-  queryValue = TauMuseMultipleQuery(data,size);
-  if(queryValue < lastQueryValue){
-        if(queryValue < 0){
-		DEBUGPROFMSG("TauMuseQuery() came out negative!!!!!."<<endl;);
-        }else{
-		DEBUGPROFMSG("TauMuseQuery() less than lastQueryValue.!!!!!"<<endl;);
-		sprintf(msg,"TauMuseQuery() lastQueryValue=%f\n",lastQueryValue);
-		DEBUGPROFMSG(msg);
-		sprintf(msg,"TauMuseQuery() queryValue=%f\n",queryValue);
-		DEBUGPROFMSG(msg);
-        }
-        queryValue = lastQueryValue;
-  }
-  lastQueryValue = queryValue;
-  return queryValue;
-#else //DEBUG_PROF
- 
   double data[10];
   int size=10; 
   return TauMuseMultipleQuery(data,size);
+#endif
 
-#endif //DEBUG_PROF
-#else //TAU_MUSE_MULTIPLE
+  // if none of those were defined (the default), we use gettimeofday
+
   struct timeval tp;
   static double last_timestamp = 0.0;
   double timestamp;
@@ -740,22 +706,6 @@ double RtsLayer::getUSecD (int tid) {
   }
   last_timestamp = timestamp;
   return timestamp;
-#endif // TAU_MUSE_EVENT
-#endif // TAU_MUSE 
-#endif // TAU_WINDOWS
-#else  // TULIP_TIMERS by default.  
-  return pcxx_GetUSecD();
-#endif // POOMA_TFLOP
-#endif // TAU_LINUX_TIMERS
-#endif // SGI_TIMERS
-
-#endif // SGI_HW_COUNTERS
-#endif // BGL_TIMERS
-#endif // TAUKTAU_MERGE
-#endif // JAVA_CPU_TIME
-#endif // CPU_TIME
-#endif // TAU_PAPI
-#endif // TAU_PCL
 }
 #endif //TAU_MULTIPLE_COUNTERS
 
@@ -1400,7 +1350,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: anataraj $
- * $Revision: 1.85 $   $Date: 2007/04/19 03:21:45 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.85 2007/04/19 03:21:45 anataraj Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.86 $   $Date: 2007/05/07 23:13:49 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.86 2007/05/07 23:13:49 amorris Exp $ 
  ***************************************************************************/
