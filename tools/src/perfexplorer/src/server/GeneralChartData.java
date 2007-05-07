@@ -46,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.17 2007/05/01 20:35:31 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.18 2007/05/07 23:51:10 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -637,8 +637,9 @@ public class GeneralChartData extends RMIGeneralChartData {
 		StringBuffer buf = null;
 		PreparedStatement statement = null;
 		HashSet set = new HashSet();
+		DB db = null;
 		try {
-			DB db = PerfExplorerServer.getServer().getDB();
+			db = PerfExplorerServer.getServer().getDB();
 
 			Object object = model.getCurrentSelection();
 
@@ -819,22 +820,29 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 			} 
 
-			statement = db.prepareStatement("truncate table temp_trial");
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
-
-			statement = db.prepareStatement("drop table temp_trial");
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
 		} catch (Exception e) {
+		// the user may have gotten here because they don't have XML data.
+		/*
 			if (statement != null)
 				PerfExplorerOutput.println(statement.toString());
 			PerfExplorerOutput.println(buf.toString());
 			System.err.println(e.getMessage());
 			e.printStackTrace();
+			*/
+		} finally {
+			try {
+				statement = db.prepareStatement("truncate table temp_trial");
+				//System.out.println(statement.toString());
+				statement.execute();
+				statement.close();
+	
+				statement = db.prepareStatement("drop table temp_trial");
+				//System.out.println(statement.toString());
+				statement.execute();
+				statement.close();
+			} catch (Exception e2) {}
 		}
+
 		List list = new ArrayList(set);
 		Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
 		return list;
