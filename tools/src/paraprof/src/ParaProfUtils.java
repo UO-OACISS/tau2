@@ -27,6 +27,7 @@ import edu.uoregon.tau.paraprof.script.ParaProfFunctionScript;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
+import edu.uoregon.tau.paraprof.util.MapViewer;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
 
@@ -34,11 +35,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.30 2007/05/03 22:53:54 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.31 2007/05/07 17:15:10 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.30 $
+ * @version $Revision: 1.31 $
  */
 public class ParaProfUtils {
 
@@ -787,6 +788,22 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
+    public static JMenuItem createThreadMetaDataMenuItem(String text, final ParaProfTrial ppTrial, final Thread thread,
+            final Component owner) {
+        JMenuItem jMenuItem = new JMenuItem(text);
+        jMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Map map = new TreeMap();
+                map.putAll(thread.getMetaData());
+                map.putAll(ppTrial.getDataSource().getMetaData());
+                Frame w = new MapViewer("Metadata for " + thread, map);
+                w.setVisible(true);
+            }
+
+        });
+        return jMenuItem;
+    }
+
     public static JMenuItem createUserEventBarChartMenuItem(String text, final ParaProfTrial ppTrial, final Thread thread,
             final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
@@ -876,14 +893,17 @@ public class ParaProfUtils {
             threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
         }
 
-        // snapshots are disabled for this release
         if (thread.getNumSnapshots() > 1) {
             threadPopup.add(createSnapShotMenuItem("Show Snapshots for " + ident, ppTrial, thread, owner));
         }
 
-        threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
-        threadPopup.show(owner, evt.getX(), evt.getY());
+        if (thread.getMetaData() != null) {
+            threadPopup.add(createThreadMetaDataMenuItem("Show Metadata for " + ident, ppTrial, thread, owner));
+        }
 
+        threadPopup.add(createComparisonMenuItem("Add " + ident + " to Comparison Window", ppTrial, thread, owner));
+
+        threadPopup.show(owner, evt.getX(), evt.getY());
     }
 
     public static void handleSnapshotClick(final ParaProfTrial ppTrial, final Thread thread, final Snapshot snapshot,
