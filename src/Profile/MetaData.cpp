@@ -498,7 +498,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 #ifndef TAU_MULTIPLE_COUNTERS
      fprintf (fp, "<metric id=\"0\">\n");
-     writeTagXML(fp, "name", TauGetCounterString(), true);
+     writeTagXML(fp, "name", RtsLayer::getSingleCounterName(), true);
      writeTagXML(fp, "units", "unknown", true);
      fprintf (fp, "</metric>\n");
 #else

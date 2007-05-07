@@ -709,6 +709,87 @@ double RtsLayer::getUSecD (int tid) {
 }
 #endif //TAU_MULTIPLE_COUNTERS
 
+char *RtsLayer::getSingleCounterName() {
+  char name[512];
+
+#if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
+  return "none";
+#endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
+
+  char *tau_env = NULL;
+
+#ifdef TAU_PCL
+  return getenv("PCL_EVENT");
+#endif // TAU_PCL
+
+#ifdef TAU_PAPI
+#ifdef TAU_PAPI_WALLCLOCKTIME
+  return "P_WALL_CLOCK_TIME";
+#else /* TAU_PAPI_WALLCLOCKTIME */
+#ifdef TAU_PAPI_VIRTUAL
+  return "P_VIRTUAL_TIME";
+#else  /* TAU_PAPI_VIRTUAL */
+  return getenv("PAPI_EVENT");
+#endif /* TAU_PAPI_VIRTUAL */
+#endif /* TAU_PAPI_WALLCLOCKTIME */
+#endif  // TAU_PAPI
+
+#ifdef CPU_TIME
+  return "CPU Time";
+#endif // CPU_TIME
+
+#ifdef JAVA_CPU_TIME
+  return "Java CPU Time";
+#endif // JAVA_CPU_TIME
+
+#ifdef TAUKTAU_MERGE
+  return "KTAU_TIME";
+#endif // TAUKTAU_MERGE
+
+#ifdef BGL_TIMERS
+  return "BGL Timers";
+#endif // BGL_TIMERS
+
+#ifdef SGI_HW_COUNTERS
+  return "SGI_HW_COUNTERS";
+#endif  //SGI_HW_COUNTERS
+
+#ifdef SGI_TIMERS
+  return "SGI Timers";
+#endif  // SGI_TIMERS
+
+#ifdef CRAY_TIMERS
+  return "Cray Timers";
+#endif // CRAY_TIMERS
+
+#ifdef TAU_ALPHA_TIMERS
+  return "Alpha Timers";
+#endif /* TAU_ALPHA_TIMERS */
+
+#ifdef TAU_LINUX_TIMERS
+  return "Linux Timers";
+#endif /* TAU_LINUX_TIMERS */
+
+#ifdef TAU_WINDOWS
+  return "Time";
+#endif // TAU_WINDOWS 
+
+#ifdef TULIP_TIMERS
+  return "Tulip Timers";
+#endif
+
+#ifdef TAU_MUSE
+  return "MUSE_TIME";
+#endif /* TAU_MUSE */
+
+#ifdef TAU_MUSE_MULTIPLE
+  return "MUSE_MULTIPLE_TIME";
+#endif
+
+  // if none of those were defined (the default), we use gettimeofday
+  return "Time";
+}
+
 ///////////////////////////////////////////////////////////////////////////
 //Note: This is similar to Tulip event classes during tracing
 ///////////////////////////////////////////////////////////////////////////
@@ -1351,6 +1432,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.86 $   $Date: 2007/05/07 23:13:49 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.86 2007/05/07 23:13:49 amorris Exp $ 
+ * $Revision: 1.87 $   $Date: 2007/05/07 23:28:20 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.87 2007/05/07 23:28:20 amorris Exp $ 
  ***************************************************************************/

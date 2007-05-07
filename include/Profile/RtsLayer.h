@@ -115,6 +115,8 @@ class RtsLayer
 
 	static int 	setMyContext(int ContextId);
 
+	static char*    getSingleCounterName(); 
+
 	// For tracing 
 	static int 	DumpEDF(int tid); 
 
@@ -148,6 +150,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: amorris $
- * $Revision: 1.22 $   $Date: 2005/11/11 03:46:47 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.22 2005/11/11 03:46:47 amorris Exp $ 
+ * $Revision: 1.23 $   $Date: 2007/05/07 23:28:20 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.23 2007/05/07 23:28:20 amorris Exp $ 
  ***************************************************************************/
