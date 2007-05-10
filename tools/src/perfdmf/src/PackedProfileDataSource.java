@@ -11,9 +11,9 @@ import java.util.zip.GZIPInputStream;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.13 2007/05/02 19:43:28 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.14 2007/05/10 22:27:16 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -62,7 +62,7 @@ public class PackedProfileDataSource extends DataSource {
         long time = System.currentTimeMillis();
 
         InputStream istream;
-        if (file.toString().toLowerCase().startsWith("http:/")) {
+        if (file.toString().toLowerCase().startsWith("http:")) {
             // When it gets converted from a String to a File http:// turns into http:/
             URL url = new URL("http://" + file.toString().substring(6).replace('\\', '/'));
             istream = url.openStream();
