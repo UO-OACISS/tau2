@@ -58,7 +58,7 @@ public class CreateExperiment {
     public static void main(java.lang.String[] args) {
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
-        CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+        CmdLineParser.Option configfileOpt = parser.addStringOption('c', "config");
         CmdLineParser.Option nameOpt = parser.addStringOption('n', "name");
         CmdLineParser.Option appidOpt = parser.addIntegerOption('a', "applicationid");
 
@@ -101,6 +101,7 @@ public class CreateExperiment {
         }
 
         // create a new CreateExperiment object, pass in the configuration file name
+        configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configFile;
         CreateExperiment create = new CreateExperiment(configFile);
 
         int exitval = 0;

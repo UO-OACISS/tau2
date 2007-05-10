@@ -9,7 +9,7 @@ public class LoadSchema {
     private DB db = null;
     
     private static String SCHEMA_USAGE = 
-        "usage: perfdmf_loadschema [{-h,--help}] {-s,--schemafile} filename\n";
+        "usage: perfdmf_loadschema [{-h,--help}] {-s,--schemafile} -c configuration filename\n";
 
     private ConnectionManager connector;
 
@@ -27,7 +27,7 @@ public class LoadSchema {
     public static void main(java.lang.String[] args) {
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
-        CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+        CmdLineParser.Option configfileOpt = parser.addStringOption('c', "config");
         CmdLineParser.Option schemafileOpt = parser.addStringOption('s', "schemafile");
 
         try {
@@ -62,6 +62,7 @@ public class LoadSchema {
 	}
 
 	// create a new LoadSchema object, pass in the configuration file name
+	configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configFile;
 	LoadSchema loadSchema = new LoadSchema(configFile);
 	try {
 	    loadSchema.getConnector().connect();

@@ -9,7 +9,7 @@ public class LoadApplication {
     private DB db = null;
     
     private static String APP_USAGE = 
-        "usage: perfdmf_loadapp [{-h,--help}] {-x,--xmlfile} filename\n";
+        "usage: perfdmf_loadapp [{-h,--help}] {-x,--xmlfile} -c configure filename\n";
 
     private ConnectionManager connector;
 

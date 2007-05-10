@@ -42,7 +42,7 @@ public class CreateApplication {
 
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
-        CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+        CmdLineParser.Option configfileOpt = parser.addStringOption('c', "config");
         CmdLineParser.Option nameOpt = parser.addStringOption('n', "name");
 
         try {
@@ -76,6 +76,8 @@ public class CreateApplication {
         }
 
         // create a new CreateApplication object, pass in the configuration file name
+        configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configFile;
+        
         CreateApplication create = new CreateApplication(configFile);
 
         int exitval = 0;

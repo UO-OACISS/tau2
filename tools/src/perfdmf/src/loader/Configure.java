@@ -18,6 +18,7 @@ public class Configure {
 
     // todo - remove these defaults
     // todo - consider using a hash table!
+    private String configuration_name = "unnamed";
     private String perfdmf_home = "";
     private String tau_root = "";
     private String arch = "";
@@ -135,7 +136,15 @@ public class Configure {
                 + "The current or default\nvalues for each prompt are shown "
                 + "in parenthesis.\nTo accept the current/default value, " + "just press Enter/Return.\n");
         try {
-            System.out.print("Please enter the TAU root directory.\n(" + tau_root + "):");
+            System.out.print("Please enter the name of this configuration.\n(\"unnamed\"):");
+            tmpString = reader.readLine();
+            if (tmpString.length() > 0) {
+            	configuration_name = tmpString;
+            }
+            else
+            	configuration_name = "unnamed";
+        	
+        	System.out.print("Please enter the TAU root directory.\n(" + tau_root + "):");
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
                 tau_root = tmpString;
@@ -517,7 +526,7 @@ public class Configure {
         System.out.println("\nWriting configuration file: " + configFileName + "...");
         try {
             // Check to see if the configuration file exists
-            File configFile = new File(configFileName);
+            File configFile = new File(configFileName + "." + configuration_name);
             if (!configFile.exists()) {
                 configFile.createNewFile();
             }

@@ -9,7 +9,7 @@ public class LoadExperiment {
     private DB db = null;
     
     private static String EXP_USAGE = 
-        "USAGE: LoadExperiment [{-h,--help}] {-a,--applicationid} applicationID {-x,--xmlfile} filename\n";
+        "USAGE: LoadExperiment [{-h,--help}] -c configure {-a,--applicationid} applicationID {-x,--xmlfile} filename\n";
 
     private ConnectionManager connector;
 
