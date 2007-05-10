@@ -23,19 +23,18 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.62 2007/05/02 19:45:05 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.63 2007/05/10 22:53:03 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.62 $
+ * @version $Revision: 1.63 $
  */
 public class ParaProf implements ActionListener {
 
     // This class handles uncaught throwables on the AWT-EventQueue thread
     static public class XThrowableHandler {
 
-        public XThrowableHandler() {
-        }
+        public XThrowableHandler() {}
 
         public void handle(Throwable t) throws Throwable {
             if (t instanceof Exception) {
@@ -76,11 +75,11 @@ public class ParaProf implements ActionListener {
     public static boolean JNLP = false;
     public static List scripts = new ArrayList();
     public static String scriptFile;
-    
+
     public static boolean insideEclipse;
     public static EclipseHandler eclipseHandler;
     public static SourceManager directoryManager;
-    
+
     // static initializer block
     static {
         ParaProf.runtime = Runtime.getRuntime();
@@ -92,20 +91,19 @@ public class ParaProf implements ActionListener {
         }
         return helpWindow;
     }
-    
+
     public static SourceManager getDirectoryManager() {
-    	if (directoryManager == null) {
-    		directoryManager = new SourceManager(ParaProf.preferences.getSourceLocations());
-    	}
-    	return directoryManager;
+        if (directoryManager == null) {
+            directoryManager = new SourceManager(ParaProf.preferences.getSourceLocations());
+        }
+        return directoryManager;
     }
-    
+
     public static void registerScript(ParaProfScript pps) {
         scripts.add(pps);
     }
 
-    public ParaProf() {
-    }
+    public ParaProf() {}
 
     private static void usage() {
         System.err.println("Usage: paraprof [--pack <file>] [--dump] [-p] [-m] [-i] [-f <filetype>] <files/directory>\n\n"
@@ -232,9 +230,9 @@ public class ParaProf implements ActionListener {
             //URL url = ParaProf.class.getResource("/perfdmf.cfg");
             //throw new ParaProfException("URL = " + url);
 
-            URL url = ParaProf.class.getResource("/perfdmf.cfg");
-            String path = URLDecoder.decode(url.getPath());
-            ParaProf.preferences.setDatabaseConfigurationFile(path);
+//            URL url = ParaProf.class.getResource("/perfdmf.cfg");
+//            String path = URLDecoder.decode(url.getPath());
+//            ParaProf.preferences.setDatabaseConfigurationFile(path);
         }
 
         if (colorChooser == null) {
@@ -254,19 +252,20 @@ public class ParaProf implements ActionListener {
             // running as Java Web Start without permission
         }
 
-
         // Initialize, but do not show the manager window
         ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
     }
 
     public static void loadScripts() {
-        ParaProf.scripts.clear();
-        ParaProf.scriptFile = System.getProperty("user.home") + "/.ParaProf/ParaProf.py";
-        if (new File(scriptFile).exists()) {
-            try {
-                TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
-            } catch (Exception e) {
-                new ParaProfErrorDialog("Exception while executing script: ", e);
+        if (ParaProf.JNLP == false) {
+            ParaProf.scripts.clear();
+            ParaProf.scriptFile = System.getProperty("user.home") + "/.ParaProf/ParaProf.py";
+            if (new File(scriptFile).exists()) {
+                try {
+                    TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
+                } catch (Exception e) {
+                    new ParaProfErrorDialog("Exception while executing script: ", e);
+                }
             }
         }
     }
@@ -283,7 +282,8 @@ public class ParaProf implements ActionListener {
     public static String getInfoString() {
         long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
 
-        return new String("ParaProf\n" + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\n" + "http://www.cs.uoregon.edu/research/tau\n");
+        return new String("ParaProf\n" + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\n"
+                + "http://www.cs.uoregon.edu/research/tau\n");
     }
 
     public static String getVersionString() {
