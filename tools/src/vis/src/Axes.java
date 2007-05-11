@@ -6,10 +6,7 @@
  */
 package edu.uoregon.tau.vis;
 
-import java.awt.Color;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -18,22 +15,16 @@ import java.util.StringTokenizer;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
-import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
+import javax.swing.*;
 
 import com.sun.opengl.util.GLUT;
 
 /**
  * Draws axes with labels.
  *
- * <P>CVS $Id: Axes.java,v 1.6 2007/02/01 03:43:10 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.7 2007/05/11 00:34:35 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class Axes implements Shape {
 
@@ -69,18 +60,17 @@ public class Axes implements Shape {
 
     private Color textColor = Color.white;
     private Color majorColor = Color.white;
-    private Color minorColor = new Color(0.5f,0.5f,0.5f);
-
+    private Color minorColor = new Color(0.5f, 0.5f, 0.5f);
 
     // until I add a proper event interface, each component will just keep track of the old values
     // and check on each render if it needs to recreate it's display lists
-    
+
     // this is to keep track of the old reverseVideo value
     // I need to come up with a better way of tracking the settings
     // we have to know whether to recreate the display list or not
     private boolean oldReverseVideo;
     private boolean oldAntiAlias;
-    
+
     /**
      * Typesafe enum for axes orientation
      */
@@ -115,7 +105,6 @@ public class Axes implements Shape {
 
     }
 
-
     /**
      * Returns whether or not this <tt>Axes</tt> instance is visible.
      * @return whether or not this <tt>Axes</tt> instance is visible.
@@ -142,8 +131,7 @@ public class Axes implements Shape {
      * @param yStrings List of strings for the y axis
      * @param zStrings List of strings for the z axis
      */
-    public void setStrings(String xlabel, String ylabel, String zlabel, List xStrings, List yStrings,
-            List zStrings) {
+    public void setStrings(String xlabel, String ylabel, String zlabel, List xStrings, List yStrings, List zStrings) {
         this.xlabel = xlabel;
         this.ylabel = ylabel;
         this.zlabel = zlabel;
@@ -366,19 +354,21 @@ public class Axes implements Shape {
             dirty = true;
         }
         oldReverseVideo = visRenderer.getReverseVideo();
-        
+
         if (oldAntiAlias != visRenderer.getAntiAliasedLines()) {
             dirty = true;
         }
         oldAntiAlias = visRenderer.getAntiAliasedLines();
-        
+
         if (!enabled)
             return;
 
         GL gl = glDrawable.getGL();
 
         if (dirty || displayList == 0) {
-            displayList = gl.glGenLists(1);
+            if (displayList == 0) {
+                displayList = gl.glGenLists(1);
+            }
             gl.glNewList(displayList, GL.GL_COMPILE);
             privateRender(visRenderer);
             gl.glEndList();
@@ -387,8 +377,7 @@ public class Axes implements Shape {
         gl.glCallList(displayList);
     }
 
-    private void setTickSkipping(int xTicSkip, int yTicSkip, int zTicSkip, int xLabelSkip, int yLabelSkip,
-            int zLabelSkip) {
+    private void setTickSkipping(int xTicSkip, int yTicSkip, int zTicSkip, int xLabelSkip, int yLabelSkip, int zLabelSkip) {
 
         this.xTickSkip = xTicSkip;
         this.yTickSkip = yTicSkip;
@@ -423,7 +412,6 @@ public class Axes implements Shape {
         }
 
     }
-    
 
     private void applyMajorColor(VisRenderer visRenderer) {
         //gl.glColor3f(0.9f, 0.9f, 0.9f);
@@ -514,17 +502,17 @@ public class Axes implements Shape {
         int zOffset = 0;
 
         gl.glDisable(GL.GL_LIGHTING);
-        
+
         if (visRenderer.getAntiAliasedLines()) {
             gl.glEnable(GL.GL_LINE_SMOOTH);
-            gl.glEnable(GL.GL_BLEND);   
+            gl.glEnable(GL.GL_BLEND);
             gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
             gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
         } else {
             gl.glDisable(GL.GL_LINE_SMOOTH);
-            gl.glDisable(GL.GL_BLEND);   
-        }                
-                
+            gl.glDisable(GL.GL_BLEND);
+        }
+
         gl.glLineWidth(1.0f);
 
         // grid for x-y plane
@@ -686,7 +674,7 @@ public class Axes implements Shape {
                     gl.glScalef(stringSize / 1000, stringSize / 1000, stringSize / 1000);
                     gl.glTranslated(-width, 0.0, 0.0);
                 }
-                
+
                 // keep track of the widest width to determine where to draw the label for this axis
                 maxPoint = Math.max(maxPoint, width);
 
@@ -773,9 +761,6 @@ public class Axes implements Shape {
         gl.glPopMatrix();
 
     }
-    
-    
-    
 
     private void renderStrokeString(GL gl, int font, String string) {
         // Center Our Text On The Screen
