@@ -596,7 +596,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         generate3dModel(false, settings);
-        visRenderer.redraw();
         controlPanel.dataChanged();
     }
 
