@@ -31,9 +31,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.10 2007/05/04 01:44:34 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.11 2007/05/11 21:43:53 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener, ChangeListener, Observer, ImageExport,
         Printable, ParaProfWindow {
@@ -585,6 +585,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         double maxValue = 1;
         // temporary, use the last (final) snapshot
         int snapshot = ppTrial.getSelectedSnapshot();
+        if (snapshot == -1) {
+            snapshot = thread.getNumSnapshots() - 1;
+        }
         if (option == CallGraphOption.EXCLUSIVE) {
             maxValue = thread.getMaxExclusive(metric, snapshot);
         } else if (option == CallGraphOption.INCLUSIVE) {
