@@ -6,19 +6,8 @@
  */
 package edu.uoregon.tau.vis;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -28,13 +17,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -43,9 +26,9 @@ import com.sun.opengl.util.BufferUtil;
 /**
  * This object manages the JOGL interface.
  *    
- * <P>CVS $Id: VisRenderer.java,v 1.7 2006/11/16 17:50:36 amorris Exp $</P>
+ * <P>CVS $Id: VisRenderer.java,v 1.8 2007/05/11 01:54:17 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
@@ -133,8 +116,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private float DTOR = 0.0174532925f;
     private float RTOD = 57.2957795f;
 
-    public VisRenderer() {
-    }
+    public VisRenderer() {}
 
     /**
      * Add a shape to the list of shapes to be drawn
@@ -168,10 +150,10 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         //      float mat_shininess[] = { 50.0f };
         //    float mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, lightPosition,0);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, whiteLight,0);
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, lightPosition, 0);
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, whiteLight, 0);
         //        gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, whiteLight);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambientLight,0);
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambientLight, 0);
 
         //        gl.glMaterialfv(GL.GL_FRONT, GL.GL_SHININESS, mat_shininess);
         //        gl.glMaterialfv(GL.GL_FRONT, GL.GL_SPECULAR, mat_specular);
@@ -181,7 +163,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         //gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, whiteLight);
         //   gl.glLightfv(GL.GL_LIGHT1, GL.GL_AMBIENT, ambientLight);
 
-        gl.glLightModelfv(GL.GL_LIGHT_MODEL_AMBIENT, ambientLight,0);
+        gl.glLightModelfv(GL.GL_LIGHT_MODEL_AMBIENT, ambientLight, 0);
         gl.glEnable(GL.GL_COLOR_MATERIAL);
         gl.glShadeModel(GL.GL_FLAT);
         gl.glEnable(GL.GL_LIGHTING);
@@ -213,7 +195,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         glInfo_Version = gl.glGetString(GL.GL_VERSION);
 
         byte[] bytes = new byte[1];
-        gl.glGetBooleanv(GL.GL_STEREO, bytes,0);
+        gl.glGetBooleanv(GL.GL_STEREO, bytes, 0);
         if (bytes[0] != 0) {
             stereo_available = true;
             VisTools.verr(this, "OpenGL Stereo is available");
@@ -358,7 +340,9 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
      * Redraws the shapes
      */
     public void redraw() {
-        glDrawable.display();
+        if (glDrawable != null) {
+            glDrawable.display();
+        }
     }
 
     /**
@@ -516,9 +500,9 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         }
 
     }
-    
+
     private void makeScreenShot(GLAutoDrawable drawable) {
-    	
+
         int width = drawable.getWidth();
         int height = drawable.getHeight();
 
@@ -564,15 +548,12 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         screenShot.setRGB(0, 0, width, height, pixelInts, 0, width);
     }
 
-    public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {
-    }
+    public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {}
 
     // Methods required for the implementation of MouseListener
-    public void mouseEntered(MouseEvent e) {
-    }
+    public void mouseEntered(MouseEvent e) {}
 
-    public void mouseExited(MouseEvent e) {
-    }
+    public void mouseExited(MouseEvent e) {}
 
     public void mousePressed(MouseEvent e) {
         prevMouseX = e.getX();
@@ -588,8 +569,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         }
     }
 
-    public void mouseClicked(MouseEvent e) {
-    }
+    public void mouseClicked(MouseEvent e) {}
 
     // Methods required for the implementation of MouseMotionListener
     public void mouseDragged(MouseEvent e) {
@@ -614,8 +594,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         prevMouseY = y;
     }
 
-    public void mouseMoved(MouseEvent e) {
-    }
+    public void mouseMoved(MouseEvent e) {}
 
     // Zoom in and out with the mouse wheel
     public void mouseWheelMoved(MouseWheelEvent e) {
@@ -848,7 +827,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         VisTools.addCompItem(panel, new JLabel("Aperture"), gbc, 0, 6, 1, 1);
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 0.9;
-        
+
         gbc.anchor = GridBagConstraints.CENTER;
         VisTools.addCompItem(panel, focalLengthSlider, gbc, 1, 5, 2, 1);
         VisTools.addCompItem(panel, apertureSlider, gbc, 1, 6, 2, 1);
