@@ -1,28 +1,49 @@
+/*
+ * DB.java
+ *
+ * Copyright 2005-2007                                
+ * Performance Research Laboratory, University of Oregon
+ */
 package edu.uoregon.tau.perfdmf.database;
 
 import java.sql.*;
 
-/*** Interface to access a DBMS ***/
-
+/**
+ * Low level API wrapper around a JDBC connection
+ *
+ * <P>CVS $Id: DB.java,v 1.4 2007/05/11 21:42:48 amorris Exp $</P>
+ * @version $Revision: 1.4 $
+ */
 public interface DB {
-    void close();
-    ResultSet executeQuery(String statement) throws SQLException;
-    int executeUpdate(String statement) throws SQLException;
-    boolean execute(String statement) throws SQLException;
-    String getDataItem(String query) throws SQLException;
+    public void close();
+
+    public ResultSet executeQuery(String statement) throws SQLException;
+
+    public int executeUpdate(String statement) throws SQLException;
+
+    public boolean execute(String statement) throws SQLException;
+
+    public String getDataItem(String query) throws SQLException;
+
     public boolean isClosed();
+
     public String getDBType();
+
     public Connection getConnection();
+
     public PreparedStatement prepareStatement(String statement) throws SQLException;
+
     public String getSchemaPrefix();
+
     public DatabaseMetaData getMetaData() throws SQLException;
 
     public int checkSchema() throws SQLException;
 
-
     public void setAutoCommit(boolean auto) throws SQLException;
-    public void commit() throws SQLException;
-    public void rollback() throws SQLException;
-    public String getConnectString();
 
+    public void commit() throws SQLException;
+
+    public void rollback() throws SQLException;
+
+    public String getConnectString();
 }
