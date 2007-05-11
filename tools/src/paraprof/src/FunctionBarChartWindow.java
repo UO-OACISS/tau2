@@ -24,9 +24,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.16 2007/05/04 01:44:34 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.17 2007/05/11 21:44:41 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -66,6 +66,11 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     private boolean comparisonChart;
 
     private boolean defaultPercentValue;
+
+    // we keep these around to speed things up
+    private JTextArea jTextArea;
+    private Component headerView;
+
 
     private FunctionBarChartWindow() {
     // disable default constructor
@@ -401,7 +406,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             setupMenus();
             validate(); // must call validate or the new JMenuBar won't work
             sortLocalData();
-            this.setHeader();
             panel.repaint();
         } else if (tmpString.equals("subWindowCloseEvent")) {
             closeThisWindow();
@@ -509,16 +513,21 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     // This process is separated into two functions to provide the option of obtaining the current 
     // header string being used for the panel without resetting the actual header. 
     // Printing and image generation use this functionality.
+
+
     public void setHeader() {
         if (showMetaData.isSelected()) {
-            JTextArea jTextArea = new JTextArea();
-            jTextArea.setLineWrap(true);
-            jTextArea.setWrapStyleWord(true);
-            jTextArea.setEditable(false);
-            jTextArea.setFont(ParaProf.preferencesWindow.getFont());
-            jTextArea.append(this.getHeaderString());
-            jTextArea.addKeyListener(this);
-            jTextArea.setMargin(new Insets(3, 3, 3, 3));
+
+            if (jTextArea == null) {
+                jTextArea = new JTextArea();
+                jTextArea.setLineWrap(true);
+                jTextArea.setWrapStyleWord(true);
+                jTextArea.setEditable(false);
+                jTextArea.setFont(ParaProf.preferencesWindow.getFont());
+                jTextArea.addKeyListener(this);
+                jTextArea.setMargin(new Insets(3, 3, 3, 3));
+            }
+            jTextArea.setText(this.getHeaderString());
 
             if (comparisonChart) {
                 jTextArea.setSize(new Dimension(250, 200));
@@ -537,11 +546,16 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 ParaProfUtils.addCompItem(holder, legendPanel, gbc, 1, 0, 1, 1);
 
                 panel.setColumnHeaderView(holder);
+                headerView = holder;
             } else {
-                panel.setColumnHeaderView(jTextArea);
+                if (headerView != jTextArea) {
+                    panel.setColumnHeaderView(jTextArea);
+                    headerView = jTextArea;
+                }
             }
         } else {
             panel.setColumnHeaderView(null);
+            headerView = null;
         }
     }
 

@@ -22,9 +22,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.15 2007/05/04 01:44:34 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.16 2007/05/11 21:44:41 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {
@@ -54,8 +54,12 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private static int defaultWidth = 750;
     private static int defaultHeight = 410;
 
-    private SnapshotControlWindow snapshotControlWindow;
     
+    // we keep these around to speed things up
+    private JTextArea jTextArea;
+    private Component headerView;
+
+
     public BarChartPanel getPanel() {
         return panel;
     }
@@ -124,10 +128,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
         panel.repaint();
 
-        if (ppTrial.getDataSource().getWellBehavedSnapshots()) {
-            snapshotControlWindow = new SnapshotControlWindow(ppTrial);
-            snapshotControlWindow.setVisible(true);
-        }
+      
         
         ParaProf.incrementNumWindows();
     }
@@ -266,16 +267,22 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
     public void setHeader() {
         if (metaDataCheckBox.isSelected()) {
-            JTextArea jTextArea = new JTextArea();
-            jTextArea.setLineWrap(true);
-            jTextArea.setWrapStyleWord(true);
-            jTextArea.setEditable(false);
-            jTextArea.setMargin(new Insets(3, 3, 3, 3));
-            jTextArea.setFont(ParaProf.preferencesWindow.getFont());
-            jTextArea.append(this.getHeaderString());
-            panel.setColumnHeaderView(jTextArea);
+            if (jTextArea == null) {
+                jTextArea = new JTextArea();
+                jTextArea.setLineWrap(true);
+                jTextArea.setWrapStyleWord(true);
+                jTextArea.setEditable(false);
+                jTextArea.setMargin(new Insets(3, 3, 3, 3));
+                jTextArea.setFont(ParaProf.preferencesWindow.getFont());
+            }
+            jTextArea.setText(getHeaderString());
+            if (headerView != jTextArea) {
+                panel.setColumnHeaderView(jTextArea);
+                headerView = jTextArea;
+            }
         } else {
             panel.setColumnHeaderView(null);
+            headerView = jTextArea;
         }
     }
 
