@@ -35,11 +35,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.31 2007/05/07 17:15:10 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.32 2007/05/11 21:45:53 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.31 $
+ * @version $Revision: 1.32 $
  */
 public class ParaProfUtils {
 
@@ -369,6 +369,8 @@ public class ParaProfUtils {
                         (new LedgerWindow(ppTrial, 2, owner)).setVisible(true);
                     } else if (arg.equals("Phase Legend")) {
                         (new LedgerWindow(ppTrial, 3, owner)).setVisible(true);
+                    } else if (arg.equals("Snapshot Controller")) {
+                        ppTrial.showSnapshotController();
                     } else if (arg.equals("3D Visualization")) {
 
                         if (JVMDependent.version.equals("1.3")) {
@@ -421,6 +423,12 @@ public class ParaProfUtils {
         menuItem.addActionListener(actionListener);
         windowsMenu.add(menuItem);
 
+        if (ppTrial.getDataSource().getWellBehavedSnapshots()) {
+            menuItem = new JMenuItem("Snapshot Controller");
+            menuItem.addActionListener(actionListener);
+            windowsMenu.add(menuItem);
+        }
+        
         //menuItem = new JMenuItem("Call Path Relations");
         //menuItem.addActionListener(actionListener);
         //windowsMenu.add(menuItem);

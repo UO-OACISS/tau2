@@ -66,6 +66,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private FileMonitorListener fileMonitorListener;
 
+    private SnapshotControlWindow snapshotControlWindow;
+
     public ParaProfTrial() {
         trial = new Trial();
         trial.setID(-1);
@@ -233,10 +235,17 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         if (fullDataWindow == null) {
             fullDataWindow = new GlobalDataWindow(this, trial.getDataSource().getTopLevelPhase());
             fullDataWindow.setVisible(true);
-
+            showSnapshotController();
         } else {
             ParaProf.incrementNumWindows();
             fullDataWindow.setVisible(true);
+        }
+    }
+
+    public void showSnapshotController() {
+        if (getDataSource().getWellBehavedSnapshots()) {
+            snapshotControlWindow = new SnapshotControlWindow(this);
+            snapshotControlWindow.setVisible(true);
         }
     }
 
@@ -465,7 +474,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
         // assign the metadata from the datasource to the trial
         trial.setMetaData(trial.getDataSource().getMetaData());
-        
+
         // The dataSource has accumulated metrics.
         // Inside ParaProf, these need to be ParaProfMetrics.
 
