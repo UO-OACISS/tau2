@@ -2424,7 +2424,7 @@ MPI_Request * request;
 
 
 #ifdef TAU_TRACK_MSG
-  // fix up the request since MPI_Start may (will) change it
+  /* fix up the request since MPI_Start may (will) change it */
   rq->request = *request;
 #endif /* TAU_TRACK_MSG */
 
