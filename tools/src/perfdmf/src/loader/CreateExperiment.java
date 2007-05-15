@@ -7,7 +7,7 @@ import edu.uoregon.tau.perfdmf.Experiment;
 
 public class CreateExperiment {
 
-    private static String APP_USAGE = "USAGE: perfdmf_loadapp [{-h,--help}] {-a,--applicationid} applicationID {-n,--name} name\n";
+    private static String APP_USAGE = "USAGE: perfdmf_loadapp [{-g, --configFile} configFile] [{-c, --config} configuration_name] [{-h,--help}] {-a,--applicationid} applicationID {-n,--name} name\n";
 
     private DatabaseAPI session;
 
@@ -58,7 +58,8 @@ public class CreateExperiment {
     public static void main(java.lang.String[] args) {
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
-        CmdLineParser.Option configfileOpt = parser.addStringOption('c', "config");
+        CmdLineParser.Option configOpt = parser.addStringOption('c', "config");
+        CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configFile");
         CmdLineParser.Option nameOpt = parser.addStringOption('n', "name");
         CmdLineParser.Option appidOpt = parser.addIntegerOption('a', "applicationid");
 
@@ -71,7 +72,8 @@ public class CreateExperiment {
         }
 
         Boolean help = (Boolean) parser.getOptionValue(helpOpt);
-        String configFile = (String) parser.getOptionValue(configfileOpt);
+        String configName = (String) parser.getOptionValue(configOpt);
+        String configFile =  (String) parser.getOptionValue(configfileOpt);
         String name = (String) parser.getOptionValue(nameOpt);
         Integer app = (Integer) parser.getOptionValue(appidOpt);
 
@@ -80,11 +82,6 @@ public class CreateExperiment {
             System.exit(-1);
         }
 
-        if (configFile == null) {
-            System.err.println("Please enter a valid config file.");
-            System.err.println(APP_USAGE);
-            System.exit(-1);
-        }
 
         if (app == null) {
             System.err.println("Please enter a valid application id.");
@@ -101,7 +98,12 @@ public class CreateExperiment {
         }
 
         // create a new CreateExperiment object, pass in the configuration file name
-        configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configFile;
+        if (configFile == null) {
+        	if (configName == null)
+        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
+        	else
+        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configName;
+        }
         CreateExperiment create = new CreateExperiment(configFile);
 
         int exitval = 0;

@@ -11,7 +11,7 @@ import edu.uoregon.tau.common.tar.Tar;
 import edu.uoregon.tau.perfdmf.database.*;
 
 public class Configure {
-    private static String Usage = "Usage: configure [{-h,--help}] [{-g,--configfile} filename] [{-t,--tauroot} path]";
+    private static String Usage = "Usage: configure [{-h,--help}] [{-g,--configfile} filename] [{-c --config} configuration_name] [{-t,--tauroot} path]";
     private static String Greeting = "\nWelcome to the configuration program for PerfDMF.\n"
             + "This program will prompt you for some information necessary to ensure\n"
             + "the desired behavior for the PerfDMF tools.\n";
@@ -617,8 +617,8 @@ public class Configure {
         return jdbc_db_driver;
     }
 
-    public void setJDBCType(String inString) {
-        jdbc_db_type = inString;
+    public void setJDBCType(Object object) {
+        jdbc_db_type = (String) object;
     }
 
     public String getJDBCType() {
@@ -682,11 +682,11 @@ public class Configure {
     }
 
     public void setConfigFileName(String inString) {
-        configFileName = inString;
+        configuration_name = inString;
     }
 
     public String getConfigFileName() {
-        return configFileName;
+        return configuration_name;
     }
 
     /* Test that the database exists, and if it doesn't, create it! */
@@ -724,6 +724,7 @@ public class Configure {
 
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+        CmdLineParser.Option configOpt = parser.addStringOption('c', "config");
         CmdLineParser.Option homeOpt = parser.addStringOption('t', "tauroot");
         CmdLineParser.Option archOpt = parser.addStringOption('a', "arch");
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
@@ -736,6 +737,7 @@ public class Configure {
         }
 
         String configFile = (String) parser.getOptionValue(configfileOpt);
+        String configName = (String) parser.getOptionValue(configOpt);
         String tauroot = (String) parser.getOptionValue(homeOpt);
         String arch = (String) parser.getOptionValue(archOpt);
         Boolean help = (Boolean) parser.getOptionValue(helpOpt);
@@ -746,7 +748,11 @@ public class Configure {
         }
 
         if (configFile == null) {
-            configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
+        	if (configName == null)
+        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
+        	else
+        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configName;
+        	
         }
         if (tauroot == null) {
             tauroot = new String("");

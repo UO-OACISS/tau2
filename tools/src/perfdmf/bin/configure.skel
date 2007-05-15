@@ -7,7 +7,7 @@ PERFDMF_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/perfdmf.jar
 XMLSAX_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
 JARGS_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
 COMMON_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/tau-common.jar
-CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
+#CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
 
 if [ "x$TAUROOT" = "x" ] 
     then
@@ -45,18 +45,18 @@ if [ ! -r ${HOME}/.ParaProf ]
     mkdir ${HOME}/.ParaProf
 fi
 
-java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${COMMON_JAR} edu.uoregon.tau.perfdmf.loader.Configure -t ${TAUROOT} -a ${CONFIG_ARCH} -g ${CONFIG_FILE}
+java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${COMMON_JAR} edu.uoregon.tau.perfdmf.loader.Configure -t ${TAUROOT} -a ${CONFIG_ARCH}
 
+#The JDBC JAR will be loaded from the JAVA Class loader.
+#JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} | sed s/jdbc_db_jarfile://`
+#JDBC_TYPE=`grep jdbc_db_type ${CONFIG_FILE} | sed s/jdbc_db_type://`
 
-JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} | sed s/jdbc_db_jarfile://`
-JDBC_TYPE=`grep jdbc_db_type ${CONFIG_FILE} | sed s/jdbc_db_type://`
+#if [ ! "${JDBC_TYPE}" = "db2" ]; then
+#	if [ ! -r ${JDBC_JAR} ]; then
+#    	echo ""
+#    	echo "$JDBC_JAR not found."
+#    	echo ""
+#	fi
+#fi
 
-if [ ! "${JDBC_TYPE}" = "db2" ]; then
-	if [ ! -r ${JDBC_JAR} ]; then
-    	echo ""
-    	echo "$JDBC_JAR not found."
-    	echo ""
-	fi
-fi
-
-java -Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${JDBC_JAR}:${COMMON_JAR} edu.uoregon.tau.perfdmf.loader.ConfigureTest -t ${TAUROOT} -a ${CONFIG_ARCH} -g ${CONFIG_FILE}
+java -Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${COMMON_JAR} edu.uoregon.tau.perfdmf.loader.ConfigureTest -t ${TAUROOT} -a ${CONFIG_ARCH}

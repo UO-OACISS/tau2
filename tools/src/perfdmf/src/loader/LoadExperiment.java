@@ -57,6 +57,7 @@ public class LoadExperiment {
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
         CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+        CmdLineParser.Option configOpt = parser.addStringOption('g', "configfile");
         CmdLineParser.Option xmlfileOpt = parser.addStringOption('x', "xmlfile");
         CmdLineParser.Option applicationidOpt = parser.addStringOption('a', "applicationid");
 
@@ -71,6 +72,7 @@ public class LoadExperiment {
 
         Boolean help = (Boolean)parser.getOptionValue(helpOpt);
         String configFile = (String)parser.getOptionValue(configfileOpt);
+        String configName = (String) parser.getOptionValue(configOpt);
         String xmlFile = (String)parser.getOptionValue(xmlfileOpt);
         String applicationID = (String)parser.getOptionValue(applicationidOpt);
 
@@ -79,11 +81,12 @@ public class LoadExperiment {
 	    System.exit(-1);
     	}
 
-	if (configFile == null) {
-            System.err.println("Please enter a valid config file.");
-	    System.err.println(EXP_USAGE);
-	    System.exit(-1);
-	}
+    	if (configFile == null) {
+        	if (configName == null)
+        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
+        	else
+        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configName;
+        }
 
 	// validate the command line options...
 	if (applicationID == null) {

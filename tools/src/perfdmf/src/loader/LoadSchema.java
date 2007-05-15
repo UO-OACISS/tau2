@@ -9,7 +9,7 @@ public class LoadSchema {
     private DB db = null;
     
     private static String SCHEMA_USAGE = 
-        "usage: perfdmf_loadschema [{-h,--help}] {-s,--schemafile} -c configuration filename\n";
+        "usage: perfdmf_loadschema [{-h,--help}] {-s,--schemafile} [{-g, --configfile} configFile] -c configuration filename\n";
 
     private ConnectionManager connector;
 
@@ -27,7 +27,8 @@ public class LoadSchema {
     public static void main(java.lang.String[] args) {
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
-        CmdLineParser.Option configfileOpt = parser.addStringOption('c', "config");
+        CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configFile");
+        CmdLineParser.Option configOpt = parser.addStringOption('c', "config");
         CmdLineParser.Option schemafileOpt = parser.addStringOption('s', "schemafile");
 
         try {
@@ -41,18 +42,19 @@ public class LoadSchema {
 
         Boolean help = (Boolean)parser.getOptionValue(helpOpt);
         String configFile = (String)parser.getOptionValue(configfileOpt);
+        String configName = (String)parser.getOptionValue(configOpt);
         String schemaFile = (String)parser.getOptionValue(schemafileOpt);
-
-    	if (help != null && help.booleanValue()) {
+            	if (help != null && help.booleanValue()) {
 	    System.err.println(SCHEMA_USAGE);
 	    System.exit(-1);
     	}
 
-	if (configFile == null) {
-            System.err.println("Please enter a valid config file.");
-	    System.err.println(SCHEMA_USAGE);
-	    System.exit(-1);
-	}
+        if (configFile == null) {
+        	if (configName == null)
+        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
+            else
+              	configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configName;
+        }
 
 	// validate the command line options...
 	if (schemaFile == null) {

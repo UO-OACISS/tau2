@@ -7,7 +7,7 @@ PERFDMF_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/perfdmf.jar
 XMLSAX_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
 JARGS_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
 COMMON_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/tau-common.jar
-CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
+#CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
 
 if [ "x$TAUROOT" = "x" ] 
 then
@@ -40,21 +40,22 @@ then
 	exit
 fi
 
+#let java load the JDBC driver.
 # get the jdbc jar file from the configuration file
-JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} 2>/dev/null | sed s/jdbc_db_jarfile://`
-JDBC_TYPE=`grep jdbc_db_type ${CONFIG_FILE} | sed s/jdbc_db_type://`
+#JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} 2>/dev/null | sed s/jdbc_db_jarfile://`
+#JDBC_TYPE=`grep jdbc_db_type ${CONFIG_FILE} | sed s/jdbc_db_type://`
 
-if [ ! "${JDBC_TYPE}" = "db2" ]; then
-	if [ ! -r ${JDBC_JAR} ]; then
-    	echo ""
-    	echo "Error: JDBC driver '$JDBC_JAR' not found."
-    	echo ""
-    	exit
-	fi
-fi
+#if [ ! "${JDBC_TYPE}" = "db2" ]; then
+#	if [ ! -r ${JDBC_JAR} ]; then
+#    	echo ""
+#    	echo "Error: JDBC driver '$JDBC_JAR' not found."
+#    	echo ""
+#    	exit
+#	fi
+#fi
 
 java -Xmx500m \
 -Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
--cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR}:${COMMON_JAR} \
+-cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${COMMON_JAR} \
 edu.uoregon.tau.perfdmf.loader.LoadTrial \
--g ${CONFIG_FILE} "$@"
+"$@"

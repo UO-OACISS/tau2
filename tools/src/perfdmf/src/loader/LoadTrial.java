@@ -26,7 +26,7 @@ public class LoadTrial {
     public String configuration;
     
     public static void usage() {
-        System.err.println("Usage: perfdmf_loadtrial -c <config name> -e <experiment id> -n <name> [options] <files>\n\n"
+        System.err.println("Usage: perfdmf_loadtrial -c <config name> -g <config file> -e <experiment id> -n <name> [options] <files>\n\n"
                 + "try `perfdmf_loadtrial --help' for more information");
     }
 
@@ -34,7 +34,8 @@ public class LoadTrial {
 
         System.err.println("Usage: perfdmf_loadtrial -c <config name> -e <experiment id> -n <name> [options] <files>\n\n"
                 + "Required Arguments:\n\n"
-                + "  -c, --config <file>             Specify the name of the configuration to use\n"
+                + "  -c, --config <name>             Specify the name of the configuration to use\n"
+                + "  -g, --configFile <file>         Specify the configuration file to use (overrides -c)\n"
                 + "  -n, --name <text>               Specify the name of the trial\n"
                 + "  -e, --experimentid <number>     Specify associated experiment ID\n"
 				+ "                                    for this trial\n"
@@ -268,6 +269,7 @@ public class LoadTrial {
         // "problemfile");
         //CmdLineParser.Option gopt = parser.addStringOption('g', "g");
         CmdLineParser.Option configOpt = parser.addStringOption('c', "config");
+        CmdLineParser.Option configFileOpt = parser.addStringOption('g', "configFile");
         CmdLineParser.Option trialOpt = parser.addStringOption('t', "trialid");
         CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
         CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
@@ -285,7 +287,8 @@ public class LoadTrial {
 
         Boolean help = (Boolean) parser.getOptionValue(helpOpt);
         //String sourceFile = (String)parser.getOptionValue(sourcefileOpt);
-        String configFile = (String) parser.getOptionValue(configOpt);
+        String configName = (String) parser.getOptionValue(configOpt);
+        String configFile = (String) parser.getOptionValue(configFileOpt);
         String experimentID = (String) parser.getOptionValue(experimentidOpt);
         String trialName = (String) parser.getOptionValue(nameOpt);
         String appName = (String) parser.getOptionValue(appNameOpt);
@@ -303,10 +306,14 @@ public class LoadTrial {
         }
         
         if (configFile == null) {
-            System.err.println("Error: Missing config file (perfdmf_loadtrial should supply it)\n");
-            LoadTrial.usage();
-            System.exit(-1);
-        } else if (trialName == null) {
+        	if (configName == null)
+        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
+        	else
+        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configName;
+        }
+        
+        
+    	 if (trialName == null) {
             System.err.println("Error: Missing trial name\n");
             LoadTrial.usage();
             System.exit(-1);
@@ -378,7 +385,6 @@ public class LoadTrial {
         if (fixNames == null) {
             fixNames = new Boolean(false);
         }
-        configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configFile;
         //System.out.println(System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configFile);
         LoadTrial trans = new LoadTrial(configFile, sourceFiles);
         trans.checkForExp(experimentID, appName, expName);
