@@ -2405,7 +2405,9 @@ MPI_Request * request;
 int  MPI_Start( request )
 MPI_Request * request;
 {
+#ifdef TAU_TRACK_MSG
   request_list *rq;
+#endif /* TAU_TRACK_MSG */
   int  returnVal;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Start()",  " ", TAU_MESSAGE);
