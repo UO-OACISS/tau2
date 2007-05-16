@@ -9,9 +9,9 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.11 2007/05/02 19:39:09 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.12 2007/05/16 23:34:00 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
@@ -37,19 +37,16 @@ public class SnapshotXMLHandler extends DefaultHandler {
         public Thread thread;
         public Map metricMap = new HashMap();
         public Map eventMap = new HashMap();
+        public Map userEventMap = new HashMap();
     }
 
     public SnapshotXMLHandler(SnapshotDataSource source) {
         this.dataSource = source;
     }
 
-    public void startDocument() throws SAXException {
-    //System.out.println("startDocument");
-    }
+    public void startDocument() throws SAXException {}
 
-    public void endDocument() throws SAXException {
-    //System.out.println("endDocument");
-    }
+    public void endDocument() throws SAXException {}
 
     private void handleMetric(String name) {
         Metric metric = dataSource.addMetric(name);
@@ -62,6 +59,12 @@ public class SnapshotXMLHandler extends DefaultHandler {
         Function function = dataSource.addFunction(name);
         dataSource.addGroups(groups, function);
         currentThread.eventMap.put(new Integer(id), function);
+    }
+
+    private void handleUserEvent(String name) {
+        int id = currentId;
+        UserEvent userEvent = dataSource.addUserEvent(name);
+        currentThread.userEventMap.put(new Integer(id), userEvent);
     }
 
     private void handleThread(Attributes attributes) {
@@ -100,6 +103,34 @@ public class SnapshotXMLHandler extends DefaultHandler {
         }
     }
 
+    private void handleAtomicDataEnd() {
+        String data = accumulator.toString();
+
+        StringTokenizer tokenizer = new StringTokenizer(data, " \t\n\r");
+
+        while (tokenizer.hasMoreTokens()) {
+            int eventID = Integer.parseInt(tokenizer.nextToken());
+            UserEvent userEvent = (UserEvent) currentThread.userEventMap.get(new Integer(eventID));
+
+            UserEventProfile uep = currentThread.thread.getUserEventProfile(userEvent);
+            if (uep == null) {
+                uep = new UserEventProfile(userEvent, currentThread.thread.getSnapshots().size());
+                currentThread.thread.addUserEventProfile(uep);
+            }
+
+            double numSamples = Double.parseDouble(tokenizer.nextToken());
+            double max = Double.parseDouble(tokenizer.nextToken());
+            double min = Double.parseDouble(tokenizer.nextToken());
+            double mean = Double.parseDouble(tokenizer.nextToken());
+            double sumSqr = Double.parseDouble(tokenizer.nextToken());
+            uep.setNumSamples(numSamples);
+            uep.setMaxValue(max);
+            uep.setMinValue(min);
+            uep.setMeanValue(mean);
+            uep.setSumSquared(sumSqr);
+        }
+    }
+
     private void handleIntervalDataEnd() {
         String data = accumulator.toString();
 
@@ -130,10 +161,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
             fp.setNumCalls(numcalls);
             fp.setNumSubr(numsubr);
-
-            //System.out.println("item = "+ item);
         }
-
     }
 
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
@@ -157,10 +185,14 @@ public class SnapshotXMLHandler extends DefaultHandler {
             currentId = Integer.parseInt(attributes.getValue("id"));
         } else if (localName.equals("event")) {
             currentId = Integer.parseInt(attributes.getValue("id"));
+        } else if (localName.equals("userevent")) {
+            currentId = Integer.parseInt(attributes.getValue("id"));
         } else if (localName.equals("profile")) {
             handleProfile(attributes);
         } else if (localName.equals("interval_data")) {
             handleIntervalData(attributes);
+            accumulator = new StringBuffer();
+        } else if (localName.equals("atomic_data")) {
             accumulator = new StringBuffer();
         }
 
@@ -189,10 +221,14 @@ public class SnapshotXMLHandler extends DefaultHandler {
             handleMetric(currentName);
         } else if (localName.equals("event")) {
             handleEvent(currentName, currentGroup);
+        } else if (localName.equals("userevent")) {
+            handleUserEvent(currentName);
         } else if (localName.equals("attribute")) {
             currentThread.thread.getMetaData().put(currentName, currentValue);
         } else if (localName.equals("interval_data")) {
             handleIntervalDataEnd();
+        } else if (localName.equals("atomic_data")) {
+            handleAtomicDataEnd();
         }
 
     }

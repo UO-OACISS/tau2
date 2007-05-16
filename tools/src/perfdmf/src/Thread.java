@@ -7,9 +7,9 @@ import java.util.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.10 2007/05/04 01:38:43 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.11 2007/05/16 23:34:00 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -123,6 +123,12 @@ public class Thread implements Comparable {
                 FunctionProfile fp = (FunctionProfile) e6.next();
                 if (fp != null) { // fp == null would mean this thread didn't call this function
                     fp.addSnapshot();
+                }
+            }
+            for (Iterator it = userEventProfiles.iterator(); it.hasNext();) {
+                UserEventProfile uep = (UserEventProfile) it.next();
+                if (uep != null) {
+                    uep.addSnapshot();
                 }
             }
         }
