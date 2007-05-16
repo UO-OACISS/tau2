@@ -707,5 +707,13 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         this.selectedSnapshot = selectedSnapshot;
         updateRegisteredObjects("dataEvent");
     }
+    
+    public Database getDatabase() {
+        if (experiment == null) {
+            return null;
+        }
+        return experiment.getDatabase();
+    }
+
 
 }

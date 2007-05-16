@@ -114,7 +114,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
         progressBar.setValue(0);
         setDBUpload(true);
 
-        DatabaseAPI dbAPI = ParaProf.paraProfManagerWindow.getDatabaseAPI();
+        DatabaseAPI dbAPI = ParaProf.paraProfManagerWindow.getDatabaseAPI(ppTrial.getDatabase());
         ppTrial.setDatabaseAPI(dbAPI);
         if (dbAPI != null) {
             // this call will block until the entire thing is uploaded (could be a while)

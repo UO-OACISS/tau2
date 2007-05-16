@@ -83,16 +83,6 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
         experiments.remove(experiment);
     }
 
-    public boolean isExperimentPresent(String name) {
-        for (Enumeration e = experiments.elements(); e.hasMoreElements();) {
-            ParaProfExperiment exp = (ParaProfExperiment) e.nextElement();
-            if (name.equals(exp.getName()))
-                return true;
-        }
-        //If we make it here, the experiment run name is not present.  Return false.
-        return false;
-    }
-
     public String getIDString() {
         return Integer.toString(this.getID());
     }

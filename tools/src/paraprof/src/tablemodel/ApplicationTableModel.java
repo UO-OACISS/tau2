@@ -87,7 +87,7 @@ public class ApplicationTableModel extends AbstractTableModel {
 
     private void updateDB() {
         if (application.dBApplication()) {
-            DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
+            DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI(application.getDatabase());
             if (databaseAPI != null) {
                 databaseAPI.saveApplication(application);
                 databaseAPI.terminate();

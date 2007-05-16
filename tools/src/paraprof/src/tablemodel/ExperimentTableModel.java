@@ -90,7 +90,7 @@ public class ExperimentTableModel extends AbstractTableModel {
 
     private void updateDB() {
         if (experiment.dBExperiment()) {
-            DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
+            DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI(experiment.getDatabase());
             if (databaseAPI != null) {
                 databaseAPI.saveExperiment(experiment);
                 databaseAPI.terminate();

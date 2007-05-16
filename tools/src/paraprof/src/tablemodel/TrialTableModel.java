@@ -124,7 +124,7 @@ public class TrialTableModel extends AbstractTableModel {
 
     private void updateDB() {
         if (ppTrial.dBTrial()) {
-            DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
+            DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI(ppTrial.getDatabase());
             if (databaseAPI != null) {
                 databaseAPI.saveTrial(ppTrial.getTrial());
                 databaseAPI.terminate();

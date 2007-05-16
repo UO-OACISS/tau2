@@ -15,6 +15,7 @@ import java.util.Vector;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -44,6 +45,10 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
         super(experiment);
     }
 
+    public Database getDatabase() {
+        return application.getDatabase();
+    }
+    
     public void setApplication(ParaProfApplication application) {
         this.application = application;
     }

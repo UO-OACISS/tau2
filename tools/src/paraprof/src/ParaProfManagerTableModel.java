@@ -4,9 +4,9 @@
  * It allows the user to change the meta data associated with a trial.
  *  
  * 
- * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.12 2007/05/02 19:45:05 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.13 2007/05/16 20:07:54 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		ParaProfManagerWindow
  */
 
@@ -297,7 +297,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
             ParaProfApplication application = (ParaProfApplication) obj;
             if (application.dBApplication()) {
 
-                DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
+                DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI(application.getDatabase());
                 if (databaseAPI != null) {
                     databaseAPI.saveApplication(application);
                     databaseAPI.terminate();
@@ -307,7 +307,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
         } else if (obj instanceof ParaProfExperiment) {
             ParaProfExperiment experiment = (ParaProfExperiment) obj;
             if (experiment.dBExperiment()) {
-                DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
+                DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI(experiment.getDatabase());
                 if (databaseAPI != null) {
                     databaseAPI.saveExperiment(experiment);
                     databaseAPI.terminate();
@@ -316,7 +316,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
         } else if (obj instanceof ParaProfTrial) {
             ParaProfTrial ppTrial = (ParaProfTrial) obj;
             if (ppTrial.dBTrial()) {
-                DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI();
+                DatabaseAPI databaseAPI = paraProfManager.getDatabaseAPI(ppTrial.getDatabase());
                 if (databaseAPI != null) {
                     databaseAPI.saveTrial(ppTrial.getTrial());
                     databaseAPI.terminate();
