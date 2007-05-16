@@ -526,10 +526,18 @@ public class Configure {
         System.out.println("\nWriting configuration file: " + configFileName + "...");
         try {
             // Check to see if the configuration file exists
-            File configFile = new File(configFileName + "." + configuration_name);
+            
+        	File configFile;
+        	System.out.println("config name: " + configuration_name);
+        	if (configuration_name.compareTo("unnamed") == 0)
+            	configFile = new File(System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg");
+            else
+        		configFile = new File(configFileName + "." + configuration_name);
+            
             if (!configFile.exists()) {
                 configFile.createNewFile();
             }
+            System.out.println("config file: " + configFile.getAbsolutePath());
             BufferedWriter configWriter = new BufferedWriter(new FileWriter(configFile));
             configWriter.write("# This is the configuration file for the PerfDMF tools & API\n");
             configWriter.write("# Items are listed as name:value, one per line.\n");
