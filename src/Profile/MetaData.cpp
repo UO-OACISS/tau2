@@ -85,6 +85,12 @@ static int *TauGetSnapshotEventCounts() {
   return eventCounts;
 }
 
+// Static holder for snapshot user event counts
+static int *TauGetSnapshotUserEventCounts() {
+  static int userEventCounts[TAU_MAX_THREADS];
+  return userEventCounts;
+}
+
 // Static holder for metadata name/value pairs
 // These come from TAU_METADATA calls
 static vector<pair<char*,char*> >& TheMetaData() {
@@ -295,6 +301,13 @@ static void writeEventXML(FILE *f, int id, FunctionInfo *fi) {
   return;
 }
 
+static void writeUserEventXML(FILE *f, int id, TauUserEvent *ue) {
+  fprintf (f, "<userevent id=\"%d\"><name>", id);
+  writeXMLString(f, ue->GetEventName());
+  fprintf (f, "</name></userevent>\n");
+  return;
+}
+
 static int writeMetaData(FILE *fp, bool newline) {
   char *endl = "";
   if (newline) {
@@ -439,8 +452,6 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
    }
 
 
-   int numFunc, numEvents;
-
    //  printf ("Writing Snapshot [node %d:%d]\n",  RtsLayer::myNode(), tid);
 
 
@@ -462,7 +473,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 #endif
 
    RtsLayer::LockDB();
-   numFunc = TheFunctionDB().size();
+   int numFunc = TheFunctionDB().size();
+   int numEvents = TheEventDB().size();
 
    if (!fp) {
      // create file 
@@ -523,6 +535,16 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
      // remember the number of events we've written to the snapshot file
      TauGetSnapshotEventCounts()[tid] = numFunc;
 
+     // write out user events seen (so far)
+     for (int i=0; i < numEvents; i++) {
+       TauUserEvent *ue = TheEventDB()[i];
+       writeUserEventXML(fp, i, ue);
+     }
+
+     // remember the number of userevents we've written to the snapshot file
+     TauGetSnapshotUserEventCounts()[tid] = numEvents;
+
+
      fprintf (fp, "</definitions>\n");
    } else {
      fprintf (fp, "<profile_xml>\n");
@@ -540,6 +562,19 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
      fprintf (fp, "</definitions>\n");
      TauGetSnapshotEventCounts()[tid] = numFunc;
    }
+
+   // write out new user events since the last snapshot
+   if (TauGetSnapshotUserEventCounts()[tid] != numEvents) {
+     fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
+     for (int i=TauGetSnapshotUserEventCounts()[tid]; i < numEvents; i++) {
+       TauUserEvent *ue = TheEventDB()[i];
+       writeUserEventXML(fp, i, ue);
+     }
+     fprintf (fp, "</definitions>\n");
+     TauGetSnapshotUserEventCounts()[tid] = numEvents;
+   }
+
+
 
 
    // now write the actual profile data for this snapshot
@@ -652,9 +687,20 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 #endif
      
    }
-
-
    fprintf (fp, "</interval_data>\n");
+
+
+   // now write the user events
+   fprintf (fp, "<atomic_data>\n");
+   for (int i=0; i < numEvents; i++) {
+     TauUserEvent *ue = TheEventDB()[i];
+           fprintf(fp, "%d %ld %.16G %.16G %.16G %.16G\n", 
+	     i, ue->GetNumEvents(tid), ue->GetMax(tid),
+	     ue->GetMin(tid), ue->GetMean(tid), ue->GetSumSqr(tid));
+   }
+   fprintf (fp, "</atomic_data>\n");
+
+
 
    fprintf (fp, "</profile>\n");
 
