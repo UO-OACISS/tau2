@@ -352,7 +352,11 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public boolean displayFunction(Function function) {
-        return functionMask[function.getID()];
+        if (functionMask == null) {
+            return true;
+        } else {
+            return functionMask[function.getID()];
+        }
     }
 
     public void showGroup(Group group) {

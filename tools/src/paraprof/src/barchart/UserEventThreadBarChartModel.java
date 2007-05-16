@@ -37,13 +37,13 @@ public class UserEventThreadBarChartModel extends AbstractBarChartModel {
 
     public String getValueLabel(int row, int subIndex) {
         PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
-        double value = window.getValueType().getValue(ppUserEventProfile.getUserEventProfile());
+        double value = window.getValueType().getValue(ppUserEventProfile.getUserEventProfile(),dataSorter.getSelectedSnapshot());
         return UtilFncs.getOutputString(0, value, ParaProf.defaultNumberPrecision);
     }
 
     public double getValue(int row, int subIndex) {
         PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
-        return window.getValueType().getValue(ppUserEventProfile.getUserEventProfile());
+        return window.getValueType().getValue(ppUserEventProfile.getUserEventProfile(),dataSorter.getSelectedSnapshot());
     }
 
     public Color getValueColor(int row, int subIndex) {
