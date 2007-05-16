@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.6 2007/05/02 19:43:28 amorris Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.7 2007/05/16 20:06:53 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -58,8 +58,6 @@ public class Experiment implements Serializable {
         }
     }
 
-    
-    
     public String[] getFields() {
         return fields;
     }

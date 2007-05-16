@@ -14,7 +14,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.9 2007/05/02 19:43:28 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.10 2007/05/16 20:06:53 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -30,7 +30,17 @@ public class Application implements Serializable {
     private String name;
     private String fields[];
 
-    // numFields, the number of optional fields found in the DB
+
+    private Database database;
+    
+    public Database getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(Database database) {
+        this.database = database;
+    }
+
     public Application() {
         if (Application.fieldNames == null) {
             fields = new String[0];
@@ -44,6 +54,7 @@ public class Application implements Serializable {
         this.name = app.getName();
         this.applicationID = app.getID();
         this.fields = (String[]) app.fields.clone();
+        this.database = app.database;
     }
 
     public void reallocMetaData() {
@@ -234,7 +245,7 @@ public class Application implements Serializable {
         this.name = name;
     }
 
-    public static Vector getApplicationList(DB db, String whereClause) {
+    public static Vector getApplicationList(DB db, String whereClause, Database database) {
         StringBuffer buf = null;
         try {
             Application.getMetaData(db);
@@ -265,6 +276,7 @@ public class Application implements Serializable {
             resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
                 Application application = new Application();
+                application.setDatabase(database);
 
                 application.setID(resultSet.getInt(1));
                 application.setName(resultSet.getString(2));

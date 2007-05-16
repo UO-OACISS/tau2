@@ -1,5 +1,6 @@
 package edu.uoregon.tau.perfdmf.database;
 
+import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.*;
@@ -250,13 +251,25 @@ public class DBConnector implements DB {
         try {
             // We now load the jar file dynamically based on the filename
             // in the perfdmf configuration
+            
+            File file = new File(JDBCjarFileName);
+            
+            if (!file.exists()) {
+                System.err.println("Warning: file '"+JDBCjarFileName +"' does not exist!");
+            }
+              
             URL[] urls = new URL[1];
             urls[0] = new URL("file://" + JDBCjarFileName);
-            URLClassLoader cl = new URLClassLoader(urls);
-            Class drvCls = Class.forName(driverName, true, cl);
-            Driver driver = (Driver) drvCls.newInstance();
-            DriverManager.registerDriver(new DriverShim(driver));
             
+            URLClassLoader cl = new URLClassLoader(urls);
+            try {
+                Class drvCls = Class.forName(driverName, true, cl);
+                Driver driver = (Driver) drvCls.newInstance();
+                DriverManager.registerDriver(new DriverShim(driver));
+            } catch (ClassNotFoundException cnfe) {
+                System.err.println("Unable to load driver '" + driverName + "' from " + JDBCjarFileName);
+            }
+
             // old method
             // Class.forName(driverName).newInstance();
         } catch (Exception ex) {
@@ -339,30 +352,23 @@ public class DBConnector implements DB {
     //     }
 
     public static boolean isReadAbleType(int type) {
-        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB 
-				|| type == java.sql.Types.INTEGER || type == java.sql.Types.DECIMAL 
-				|| type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
-                || type == java.sql.Types.LONGVARCHAR || type == java.sql.Types.TIME 
-				|| type == java.sql.Types.TIMESTAMP 
-				// added binary types for XML_METADATA_GZ processing
-				|| type == java.sql.Types.BINARY 
-				|| type == java.sql.Types.VARBINARY 
-				|| type == java.sql.Types.LONGVARBINARY 
-				|| type == java.sql.Types.BLOB)
+        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB || type == java.sql.Types.INTEGER
+                || type == java.sql.Types.DECIMAL || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
+                || type == java.sql.Types.LONGVARCHAR || type == java.sql.Types.TIME || type == java.sql.Types.TIMESTAMP
+                // added binary types for XML_METADATA_GZ processing
+                || type == java.sql.Types.BINARY || type == java.sql.Types.VARBINARY || type == java.sql.Types.LONGVARBINARY
+                || type == java.sql.Types.BLOB)
             return true;
         return false;
     }
 
     public static boolean isWritableType(int type) {
-        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB 
-				|| type == java.sql.Types.INTEGER || type == java.sql.Types.DECIMAL 
-				|| type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT 
-				|| type == java.sql.Types.LONGVARCHAR 
-				// added binary types for XML_METADATA_GZ processing
-				|| type == java.sql.Types.BINARY 
-				|| type == java.sql.Types.VARBINARY 
-				|| type == java.sql.Types.LONGVARBINARY 
-				|| type == java.sql.Types.BLOB)
+        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB || type == java.sql.Types.INTEGER
+                || type == java.sql.Types.DECIMAL || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
+                || type == java.sql.Types.LONGVARCHAR
+                // added binary types for XML_METADATA_GZ processing
+                || type == java.sql.Types.BINARY || type == java.sql.Types.VARBINARY || type == java.sql.Types.LONGVARBINARY
+                || type == java.sql.Types.BLOB)
             return true;
         return false;
     }
@@ -464,11 +470,9 @@ public class DBConnector implements DB {
 
         if (this.getDBType().compareTo("oracle") == 0) {
             ilpColumns[8] = "excl";
-        }
-        else if (this.getDBType().compareTo("derby") == 0) {
+        } else if (this.getDBType().compareTo("derby") == 0) {
             ilpColumns[9] = "num_calls";
-        }
-        else if (this.getDBType().compareTo("mysql") == 0) {
+        } else if (this.getDBType().compareTo("mysql") == 0) {
             ilpColumns[9] = "call";
         }
 

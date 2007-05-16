@@ -49,6 +49,11 @@ public class ConnectionManager {
         parser = new ParseConfig(configFileName);
         initialize(this.getPassword(prompt));
     }
+    
+    public ConnectionManager(ParseConfig config) {
+        parser = config;
+        initialize(this.getPassword(false));
+    }
 
     public void initialize(String password) {
         perfdmfUser = parser.getDBUserName();

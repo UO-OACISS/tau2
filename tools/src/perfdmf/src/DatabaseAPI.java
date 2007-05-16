@@ -13,11 +13,11 @@ import edu.uoregon.tau.perfdmf.database.ParseConfig;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.13 2007/05/02 19:43:28 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.14 2007/05/16 20:06:53 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class DatabaseAPI {
 
@@ -42,6 +42,8 @@ public class DatabaseAPI {
 
     private boolean cancelUpload = false;
 
+    private Database database;
+    
     public void cancelUpload() {
         this.cancelUpload = true;
     }
@@ -115,6 +117,16 @@ public class DatabaseAPI {
         Trial.getMetaData(db);
     }
 
+    public void initialize(Database database) throws SQLException {
+        this.database = database;
+        connector = new ConnectionManager(database.getConfig());
+        connector.connect();
+        db = connector.getDB();
+        Application.getMetaData(db);
+        Experiment.getMetaData(db);
+        Trial.getMetaData(db);
+    }
+
     public void terminate() {
         connector.dbclose();
     }
@@ -126,7 +138,7 @@ public class DatabaseAPI {
     // returns Vector of ALL Application objects
     public List getApplicationList() throws DatabaseException {
         String whereClause = "";
-        return Application.getApplicationList(db, whereClause);
+        return Application.getApplicationList(db, whereClause, database);
     }
 
     // returns Vector of Experiment objects
@@ -159,7 +171,7 @@ public class DatabaseAPI {
         this.atomicEventHash = null;
         // create a string to hit the database
         String whereClause = " WHERE id = " + id;
-        Vector applications = Application.getApplicationList(db, whereClause);
+        Vector applications = Application.getApplicationList(db, whereClause, database);
         if (applications.size() == 1) {
             this.application = (Application) applications.elementAt(0);
         } // else exception?
@@ -179,7 +191,7 @@ public class DatabaseAPI {
         if (version != null) {
             whereClause.append(" AND version = " + version);
         }
-        Vector applications = Application.getApplicationList(db, whereClause.toString());
+        Vector applications = Application.getApplicationList(db, whereClause.toString(), database);
         if (applications.size() == 1) {
             this.application = (Application) applications.elementAt(0);
             return this.application;
@@ -1075,21 +1087,21 @@ public class DatabaseAPI {
         this.itemsDone++;
 
         //stmt.addBatch();
-//        try {
-            stmt.executeUpdate();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            System.out.println(e);
-//            System.out.println(stmt.toString());
-//            System.out.println("exclusive: " + fp.getExclusive(metricID));
-//            System.out.println("exclusive percent: " + fp.getExclusivePercent(metricID));
-//            System.out.println("inclusive: " + fp.getInclusive(metricID));
-//            System.out.println("inclusive percent: " + fp.getExclusivePercent(metricID));
-//            System.out.println("numThreads: " + numThreads);
-//            System.out.println("numcalls: " + fp.getNumCalls());
-//            System.out.println("numsubr: " + fp.getNumSubr());
-//            System.out.println("inclusivepercall: " + fp.getInclusivePerCall(metricID));
-//        }
+        //        try {
+        stmt.executeUpdate();
+        //        } catch (Exception e) {
+        //            e.printStackTrace();
+        //            System.out.println(e);
+        //            System.out.println(stmt.toString());
+        //            System.out.println("exclusive: " + fp.getExclusive(metricID));
+        //            System.out.println("exclusive percent: " + fp.getExclusivePercent(metricID));
+        //            System.out.println("inclusive: " + fp.getInclusive(metricID));
+        //            System.out.println("inclusive percent: " + fp.getExclusivePercent(metricID));
+        //            System.out.println("numThreads: " + numThreads);
+        //            System.out.println("numcalls: " + fp.getNumCalls());
+        //            System.out.println("numsubr: " + fp.getNumSubr());
+        //            System.out.println("inclusivepercall: " + fp.getInclusivePerCall(metricID));
+        //        }
     }
 
     private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map functionMap, Map metricMap) throws SQLException {
@@ -1480,6 +1492,7 @@ public class DatabaseAPI {
         // didn't find one with that name
         if (create) {
             Application newApp = new Application();
+            newApp.setDatabase(database);
             newApp.setName(name);
             setApplication(newApp);
             int appId = saveApplication();
