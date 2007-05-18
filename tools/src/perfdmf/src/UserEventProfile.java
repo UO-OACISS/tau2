@@ -123,7 +123,7 @@ public class UserEventProfile {
         data[MAX + (snapshot * SNAPSHOT_SIZE)] = max;
     }
     public void setMaxValue(double max) {
-        setMinValue(max, -1);
+        setMaxValue(max, -1);
     }
 
     public double getMaxValue() {
