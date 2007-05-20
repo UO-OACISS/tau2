@@ -631,37 +631,101 @@ void tau_trace_recvmsg_(int *type, int *source, int *length)
   Tau_trace_recvmsg(*type, *source, *length);
 }
 
-void tau_register_event_(void **ptr, char *event_name, int flen)
+void tau_register_event_(void **ptr, char *name, int slen)
 {
-
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
-    char * ename = (char *) malloc((size_t)flen+1);
-    strncpy(ename, event_name, flen);
-    ename[flen] = '\0';
+    char *localname = (char *) malloc((size_t)slen+1);
+    char *modname = (char *) malloc((size_t)slen+1);
+    char *tmp = localname;
+    char *tmp2 = modname;
+    int skipwhite = 1;
+    int idx = 0;
+    strncpy(localname, name, slen);
+    localname[slen] = '\0';
+
+    // check for unprintable characters
+    for(int i=0; i<strlen(localname); i++) {
+      if (!VALID_NAME_CHAR(localname[i])) {
+        localname[i] = '\0';
+        break;
+      }
+    }
+
+    // fix continuation lines
+    for(int j=0; j<strlen(localname); j++) {
+      if (localname[j] == '&') {
+        skipwhite = 1;
+      } else {
+        if (skipwhite && localname[j] == ' ') {
+          // nothing, skip over it
+        } else {
+          modname[idx++] = localname[j];
+          skipwhite = 0;
+        }
+      }
+    }
+    modname[idx] = 0;
+    localname = modname;
+
+
+
 #ifdef DEBUG_PROF
-    printf("Tau_get_userevent() \n");
+    printf("Tau_get_userevent(%s) \n", localname);
 #endif /* DEBUG_PROF */
-    *ptr = Tau_get_userevent(ename);
-    free(ename);
+    *ptr = Tau_get_userevent(localname);
+     free(tmp);
+     free(tmp2);
   }
   return;
 
 }
 
-void tau_register_context_event_(void **ptr, char *event_name, int flen)
+void tau_register_context_event_(void **ptr, char *name, int slen)
 {
 
-  if (*ptr == 0)
+  if (*ptr == 0) 
   {  // remove garbage characters from the end of name
-    char * ename = (char *) malloc((size_t)flen+1);
-    strncpy(ename, event_name, flen);
-    ename[flen] = '\0';
+    char *localname = (char *) malloc((size_t)slen+1);
+    char *modname = (char *) malloc((size_t)slen+1);
+    char *tmp = localname;
+    char *tmp2 = modname;
+    int skipwhite = 1;
+    int idx = 0;
+    strncpy(localname, name, slen);
+    localname[slen] = '\0';
+
+    // check for unprintable characters
+    for(int i=0; i<strlen(localname); i++) {
+      if (!VALID_NAME_CHAR(localname[i])) {
+        localname[i] = '\0';
+        break;
+      }
+    }
+
+    // fix continuation lines
+    for(int j=0; j<strlen(localname); j++) {
+      if (localname[j] == '&') {
+        skipwhite = 1;
+      } else {
+        if (skipwhite && localname[j] == ' ') {
+          // nothing, skip over it
+        } else {
+          modname[idx++] = localname[j];
+          skipwhite = 0;
+        }
+      }
+    }
+    modname[idx] = 0;
+    localname = modname;
+
+
 #ifdef DEBUG_PROF
-    printf("Tau_get_context_userevent() \n");
+    printf("Tau_get_context_userevent(%s) \n", localname);
 #endif /* DEBUG_PROF */
-    *ptr = Tau_get_context_userevent(ename);
-    free(ename);
+    *ptr = Tau_get_context_userevent(localname);
+    free(tmp);
+    free(tmp2);
   }
   return;
 
@@ -1663,6 +1727,6 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.60 $   $Date: 2007/03/30 22:43:12 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.60 2007/03/30 22:43:12 sameer Exp $ 
+ * $Revision: 1.61 $   $Date: 2007/05/20 20:33:20 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.61 2007/05/20 20:33:20 sameer Exp $ 
  ***************************************************************************/
