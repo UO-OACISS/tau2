@@ -29,7 +29,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
 	     DataSorterWrapper.java FunctionFilterDialog.java SnapshotBreakdownWindow.java SnapshotControlWindow.java
 
 VIS_SOURCES = ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java  
-OTHER_SRC = $(wildcard src/enums/*.java) $(wildcard src/interfaces/*.java) $(wildcard src/treetable/*.java) $(wildcard src/barchart/*.java) $(wildcard src/util/*.java) $(wildcard src/script/*.java) $(wildcard src/sourceview/*.java) $(wildcard src/tablemodel/*.java)
+OTHER_SRC = $(wildcard src/enums/*.java) $(wildcard src/interfaces/*.java) $(wildcard src/treetable/*.java) $(wildcard src/barchart/*.java) $(wildcard src/util/*.java) $(wildcard src/script/*.java) $(wildcard src/sourceview/*.java) $(wildcard src/tablemodel/*.java) $(wildcard src/graph/*.java)
 
 BASE_SRC=$(addprefix src/, $(BASE_SOURCES))
 VIS_SRC=$(addprefix src/, $(VIS_SOURCES))
