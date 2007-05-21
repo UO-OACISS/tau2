@@ -108,7 +108,6 @@ rm -f .last_config
 
 # This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
 for arg in "$@"; do
-    echo "arg = " $arg
     # Thanks to Bernd Mohr for the following that handles quotes and spaces
     # -e 's/^x//'          removes the x at the start
     # -e 's/"/\\\"/g'      replaces " with \"
