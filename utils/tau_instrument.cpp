@@ -1327,7 +1327,9 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       }
       if ((*it)->getKind() == TAU_IO)
       { /* we need to instrument all io statements in this routine */
+#ifdef DEBUG
 	printf("process I/O statements in Fortran routine\n");
+#endif /* DEBUG */
 	processIOBlock((*rit)->body(), (*rit), itemvec, 1, NULL); /* level = 1 */
       }
       if ((*it)->getKind() == TAU_MEMORY )
@@ -1481,6 +1483,6 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.43 $   $Date: 2007/05/21 00:49:24 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.43 2007/05/21 00:49:24 sameer Exp $
+ * $Revision: 1.44 $   $Date: 2007/05/21 20:59:02 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.44 2007/05/21 20:59:02 sameer Exp $
  ***************************************************************************/

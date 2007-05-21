@@ -2123,7 +2123,7 @@ bool getNextToken(char * &line, char * & varname)
   printf("varname retrieved = %s, line = %s\n", varname, line);
 #endif /* DEBUG */
   len = strlen(line);
-  printf("length remaining = %d\n", len);
+  // printf("length remaining = %d\n", len);
   if (len == 0) return true; /* done = true! no more to retrieve */
   else return false; /* there are more strings to process... */
 
@@ -2492,7 +2492,7 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
 /* -------------------------------------------------------------------------- */
 int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it, bool writetab, char *& laststatement)
 {
-  int i, len;
+  int i, len, origlen, sizeoflen;
   char string_containing_sizeof[64*1024];
   int openparens, linesread=0; /* how many additional lines (cont) did we read? */
   char *iostmt = new char[INBUF_SIZE];
@@ -2610,6 +2610,13 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
       while (p && *p == ' ') p++; /* eat up leading space */
 
       sprintf(string_containing_sizeof, "+sizeof(%s)", p); 
+      origlen = strlen(iostmt);
+      sizeoflen = strlen(string_containing_sizeof);
+
+      if (origlen+sizeoflen >= 72) { /* exceeds 72 columns -- break it up! */
+        sprintf(string_containing_sizeof, "\n      tio_%d_sz = tio_%d_sz+sizeof(%s)",
+		lineno, lineno, p);
+      }
       strcat(iostmt, string_containing_sizeof);
     }
   }
@@ -3761,8 +3768,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.164 $   $Date: 2007/05/21 00:49:24 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.164 2007/05/21 00:49:24 sameer Exp $
+ * $Revision: 1.165 $   $Date: 2007/05/21 20:59:02 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.165 2007/05/21 20:59:02 sameer Exp $
  ***************************************************************************/
 
 
