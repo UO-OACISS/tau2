@@ -853,6 +853,101 @@ int processMemBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& i
 
 }
 
+/* construct the timer name e.g., tio_22; */
+void getTauEntityName(char *prefix, string& varname, int line)
+{ /* pass in tio as the prefix */
+  char var[256];
+  sprintf(var, "%d", line);
+  varname = string(prefix)+var;
+  return;
+}
+
+/* Add request for instrumentation for Fortran loops */
+void addFortranIOInstrumentation(const pdbRoutine *ro, const pdbLoc& start, const pdbLoc &stop, vector<itemRef *>& itemvec)
+{
+  char lines[256];
+
+  /* first we construct a string with the line numbers */
+  sprintf(lines, "%d", start.line());
+
+  /* we use the line numbers in building the name of the timer */
+  const pdbFile *f = start.file();
+  const char *filename = f->name().c_str();
+  while (strchr(filename,TAU_DIR_CHARACTER)) { // remove path
+    filename = strchr(filename,TAU_DIR_CHARACTER)+1;
+  }
+
+  string timername (string("IO <file=") + string(filename) + ", line=" + lines+">");
+
+  /* we embed the line from_to in the name of the timer. e.g., t */
+  string varname;
+  getTauEntityName("tio_", varname, start.line());
+
+  string declaration1(string("      real*8 ")+varname+"_sz");
+  string declaration2(string("      integer ")+varname+"(2) / 0, 0 /");
+  string declaration3(string("      save ")+varname);
+
+  /* now we create the call to create the timer */
+  string createtimer(string("      call TAU_REGISTER_CONTEXT_EVENT(")+varname+", '"+timername+"')");
+
+  if (createtimer.length() > 72) {
+    /* We will always start the quote on the first line, then skip to the next
+       inserting an & at column 73, then at column 6.  TAU_PROFILE_TIMER will
+       clean up any mess made by -qfixed=132, etc */
+    string s1 = string("      call TAU_REGISTER_CONTEXT_EVENT(")+varname+", '";
+    string s2 = "";
+    int length = s1.length();
+    for (int i=length; i < 72; i++) {
+      s2 = s2 + " ";
+    }
+
+    createtimer = s1 + s2 + "&\n";
+
+    // continue to break lines in the correct spot
+    while (timername.length() > 64) {
+      string first = timername.substr(0,64);
+      timername.erase(0,64);
+      createtimer = createtimer + "     &"+first+"&\n";
+    }
+
+    createtimer = createtimer + "     &"+timername+"')";
+  }
+  
+
+
+#ifdef DEBUG
+  printf("Adding instrumentation at %s, var: %s\n", timername.c_str(), varname.c_str());
+  printf("%s\n", declaration1.c_str());
+  printf("%s\n", declaration2.c_str());
+  printf("%s\n", declaration3.c_str());
+  printf("%s\n", createtimer.c_str());
+  printf("Routine id = %d, name = %s\n", ro->id(), ro->fullName().c_str());
+#endif /* DEBUG */
+  list<string> decls;
+  decls.push_back(declaration1);
+  decls.push_back(declaration2);
+  decls.push_back(declaration3);
+
+  additionalDeclarations.push_back(pair<int, list<string> >(ro->id(), decls)); /* assign the list of strings to the list */
+
+  list<string> calls;
+  calls.push_back(createtimer);
+  /* now we create the list that has additional TAU calls for creating the timer */
+
+  additionalInvocations.push_back(pair<int, list<string> >(ro->id(), calls)); /* assign the list of strings to the list */
+
+  itemvec.push_back( new itemRef((pdbItem *)NULL, IO_STMT, start, stop));
+#ifdef DEBUG
+  printf("instrumenting IO for routine %s\n", ro->fullName().c_str());
+  /* we are losing the stop location for this statement -- needed to determine 
+     continuation of line! */
+#endif /* DEBUG */
+
+#ifdef DEBUG 
+  printf("IO in routine: %s, at line,col = <%d,%d> \n", 
+	ro->fullName().c_str(), start.line(), start.col());
+#endif /* DEBUG */
+}
 
 /* Process Block to examine the routine */
 int processIOBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& itemvec,
@@ -893,9 +988,12 @@ int processIOBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& it
       case pdbStmt::ST_FDEALLOCATE:
 	break;
       case pdbStmt::ST_FIO:
+#ifdef DEBUG
 	printf("IO statement: %s <%d,%d>\n",
 	s->stmtBegin().file()->name(), s->stmtBegin().line(), s->stmtBegin().col(), s->stmtBegin().file()->name());
-        itemvec.push_back( new itemRef((pdbItem *)NULL, IO_STMT, s->stmtBegin().line(), s->stmtBegin().col(), s->stmtBegin().file()->name(), BEFORE));
+#endif /* DEBUG */
+	/* write the IO tracking statement at this location */
+        addFortranIOInstrumentation(ro, s->stmtBegin(), s->stmtEnd(), itemvec);
 	break;
       default:
         if (s->downStmt())
@@ -1383,6 +1481,6 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.42 $   $Date: 2007/05/04 04:16:33 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.42 2007/05/04 04:16:33 sameer Exp $
+ * $Revision: 1.43 $   $Date: 2007/05/21 00:49:24 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.43 2007/05/21 00:49:24 sameer Exp $
  ***************************************************************************/

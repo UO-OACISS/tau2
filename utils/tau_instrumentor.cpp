@@ -1872,6 +1872,7 @@ bool continuedFromLine(char *line)
 {
   int length = strlen(line);
 
+  if (length == 0) return false; /* no it is not continued -- the prev. line is null */
   int i = length - 1;
 #ifdef DEBUG 
   cout <<"CONTINUEDFROMLINE: Line = "<<line<<":Starting check from "<<line[i]<<endl;
@@ -1941,7 +1942,7 @@ bool isContinuationLine(char *currentline, char *previousline, int columnToCheck
   /* we haven't checked the previous line yet... */
 #ifdef DEBUG
   cout <<"Reached here: currentline= "<<currentline<<endl;
-  cout <<"Reached here: previousline= "<<currentline<<endl;
+  cout <<"Reached here: previousline= "<<previousline<<endl;
 #endif /* DEBUG */
   if (continuedFromLine(previousline))
     return true; /* put in a then/endif clause as there is continuation */
@@ -2040,7 +2041,8 @@ const char * stripModuleFromName(const string functionname)
 /* -- does it continue onto the next line? ---------------------------------- */
 /* -------------------------------------------------------------------------- */
 int doesStmtContinueOntoNextLine(char * & inbuf, int openparens)
-{
+{ /* This checks for ( and ) -- so it works for alloc/dealloc but not IO where
+     a statement can also continue using , instead of ( ). */
   char *line = inbuf;
   int i, len;
     
@@ -2072,6 +2074,62 @@ bool isFreeFormat(char inbuf[])
   }  
   else return false;
 }
+/* -------------------------------------------------------------------------- */
+/* -- getNextToken returns true if it is done, and has no more variables ---- */
+/* -- to process in the same line. Extracts variable name from line.        - */
+/* -------------------------------------------------------------------------- */
+bool getNextToken(char * &line, char * & varname)
+{ /* if I pass it 
+     "hi ", Ary(x,y)%b(2), B(2) 
+     it should return successively "hi "
+	then			   Ary(x,y)%b(2)
+	then			   B(2)
+     In contrast, getVariableName returns "hi ", Ary, B for alloc/dealloc */
+  /* We need to traverse the string till we reach a comma and return it. If
+     we instead see a (, we should continue processing till the closing parens ) */
+
+  int openparens = 0;
+  int i = 0;
+  int len = 0;
+
+  len = strlen(line);
+#ifdef DEBUG
+    printf("ENTERING getNextToken: *line = %s, len = %d\n", line, len);
+#endif /* DEBUG */
+  while (i < len)
+  {
+#ifdef DEBUG
+    printf("Loop: getNextToken: *line = %c\n", *line);
+#endif /* DEBUG */
+    if (*line == ',' && openparens == 0) {
+        line ++; break; /* print *, ... */
+    }
+
+    varname[i] = *line;
+    i++;
+
+    if (*line == '(' ) /* first open paren. Search for close parenthesis */
+      openparens++;
+    if (*line == ')' )
+    {
+      openparens --;
+    }
+    line ++; /* increment and go on */
+  }
+
+  varname[i] = '\0';
+  if (line && *line == ',') line++;  /* get rid of comma */ 
+#ifdef DEBUG
+  printf("varname retrieved = %s, line = %s\n", varname, line);
+#endif /* DEBUG */
+  len = strlen(line);
+  printf("length remaining = %d\n", len);
+  if (len == 0) return true; /* done = true! no more to retrieve */
+  else return false; /* there are more strings to process... */
+
+
+}
+
 
 /* -------------------------------------------------------------------------- */
 /* -- getVariableName returns true if it is done, and has no more variables - */
@@ -2428,89 +2486,171 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
   return linesread;
 
 }
-int printTauDeallocStmtOrig(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it, bool writetab)
+
+/* -------------------------------------------------------------------------- */
+/* -- Write TAU's IO tracking calls and the statement ----------------------- */
+/* -------------------------------------------------------------------------- */
+int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef *>::iterator& it, bool writetab, char *& laststatement)
 {
   int i, len;
-  char suffixstmt[64*1024];
+  char string_containing_sizeof[64*1024];
   int openparens, linesread=0; /* how many additional lines (cont) did we read? */
-  char *deallocstmt = new char[INBUF_SIZE];
+  char *iostmt = new char[INBUF_SIZE];
   int isfree;
+  bool done = false; 
+  char *varname = new char [INBUF_SIZE]; 
   char *start;
+  char *line;
+  int lineno, numlines;
   list<string> statements;
 
   ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
   statements.push_back(inbuf); /* initialize the list of statements to inbuf */
-#ifdef DEBUG 
-  cout <<"Deallocate Stmt: line ="<<(*it)->line<<endl;
-  printf("Deallocate Stmt: line = %d... \n",(*it)->line);
+  lineno = (*it)->line;
+  numlines = (*it)->end.line() - (*it)->begin.line();
+/* Now there are two points -- begin and end that are available for this IO statement.
+   By checking if the line numbers differ, we can tell if it has a continuation line */
+#ifdef DEBUG
+  printf("INSIDE printTauIOStmt: inbuf=%s  --> line= %d, spanning %d lines \n", 
+	inbuf, lineno, numlines);
+  cout <<"IO Stmt: line ="<<lineno<<endl;
   cout <<"inbuf ="<<*inbuf<<endl;
 #endif /* DEBUG */
 
   removeCommentFromLine(inbuf);
-  string nextline(inbuf); 
+  string nextline(inbuf);
+  line = inbuf;
 
-  /* first we need to figure out if this line is a continuation line */
-  if (openparens=doesStmtContinueOntoNextLine(inbuf, 0))
+  /* first we need to figure out if this statement spills over multiple lines */
+  for (i =0; i < numlines; i++)
   { /* yes it does! */
 #ifdef DEBUG
     printf("Contination line: %s\n", inbuf);
 #endif /* DEBUG */
     isfree = isFreeFormat(inbuf);
-    do {
-       if (istr.getline(deallocstmt, INBUF_SIZE) == NULL)
-       { 
-         perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
-         exit(1);
-       }
-       removeCommentFromLine(deallocstmt);
-       statements.push_back(deallocstmt);
-       /* if the file is in free format, start the next line by getting rid of the
-          first six columns */
-       if (!isfree) start = &deallocstmt[6];
-       else start = deallocstmt; 
-       while (start && *start == ' ') start ++; /* eat up leading spaces */
-       len = strlen(start); 
-       nextline.append(start, len);
-       //nextline.append(string("\n", 1));
+    if (istr.getline(iostmt, INBUF_SIZE) == NULL)
+    {
+      perror("ERROR in reading file: looking for continuation line instrumentation of io");
+      exit(1);
+    }
+    strcpy(laststatement, iostmt); /* copy it in */
 #ifdef DEBUG
-       printf("nextline=%s\n", nextline.c_str()); 
+    printf("LASTSTATEMENT = %s, isfree = %d\n", laststatement, isfree);
 #endif /* DEBUG */
-       linesread ++; /* the number of lines processed. We need to return this */
-    } while (openparens = doesStmtContinueOntoNextLine(deallocstmt, openparens)); 
+    removeCommentFromLine(iostmt);
+    statements.push_back(iostmt);
+    /* if the file is in free format, start the next line by getting rid of the
+       first six columns */
+    if (!isfree) start = &iostmt[6];
+    else start = iostmt;
+    while (start && *start == ' ') start ++; /* eat up leading spaces */
+    len = strlen(start);
+    nextline.append(start, len);
+#ifdef DEBUG
+    printf("nextline=%s\n", nextline.c_str());
+#endif /* DEBUG */
+    linesread ++; /* the number of lines processed. We need to return this */
+  } /* for loop */
+
+  line = (char *) nextline.c_str();     
+
+  /* Now we have the statement in the line */
+
+#ifdef DEBUG 
+  printf ("AFTER merging lines: line = %s\n", line);
+  printf("NEXT!\n");
+#endif /* DEBUG */
+
+/* THIS needs to be changed */
+  /* Consider two types of IO statements:
+     print *, "string = ", value
+     write (6,*, ERR=24) ary(2,4), b, c
+     Either a , can appear or a ( can appear. If ( appears, we need to reach 
+     the corresponding ) before reading in the variables and strings from the 
+     next stage */
+  openparens = 0; 
+  while (line) 
+  {
+#ifdef DEBUG
+    printf("Loop: (2.3) *line = %c\n", *line);
+#endif /* DEBUG */
+
+    if (*line == ',' && openparens == 0) {
+	line ++; break; /* print *, ... */
+    }
+    if (*line == '(' ) /* first open paren. Search for close parenthesis */
+      openparens++;
+    if (*line == ')' )
+    {
+      openparens --; 
+      if (openparens == 0) { 
+	line++;  /* increment ( before bailing out */
+        break; 
+      }
+    }
+    line ++; /* increment and go on */
   }
 
-  char *tok = strtok(strdup(nextline.c_str()), "()");
-  while (tok != NULL)
-  {
-    tok = strtok(NULL, ",)");
-    if (tok && *tok != ' ' && !strstr(tok, "=")) /* it doesn't contain a = */
-    {
-      len = strlen(tok);
-      while (*tok == ' ' || *tok == '&') tok++; /* get rid of spaces or leading & */
 #ifdef DEBUG
-      cout <<"use token = "<<tok<<endl;
+  printf ("After checking format string: line = %s\n", line);
 #endif /* DEBUG */
-/*
-      ostr<<"\t call TAU_DEALLOC("<<tok<<", "<<(*it)->line<< ", '"<< (*it)->snippet<< ", var="<<tok<<"')"<<endl;
+  
+  sprintf(iostmt, "      tio_%d_sz = 0",lineno);
+  while (!done)
+  {
+    done = getNextToken(line, varname);
 
-*/
-     sprintf(deallocstmt, "       call TAU_DEALLOC(%s, %d, '",
-        tok, (*it)->line);
-     sprintf(suffixstmt, "%s, variable=%s", (*it)->snippet.c_str(), tok);
-     string prefix=string(deallocstmt);
-     string suffix=string(suffixstmt);
-     writeLongFortranStatement(ostr, prefix, suffix);
+    /* what about ! comment */
+    if (!strstr(varname, "="))
+    {
+    /* we don't want stat=ierr argument */
+    /* We need to break up this into a continuation line if it exceeds 72 chars */
+
+      char *p = varname;
+      while (p && *p == ' ') p++; /* eat up leading space */
+
+      sprintf(string_containing_sizeof, "+sizeof(%s)", p); 
+      strcat(iostmt, string_containing_sizeof);
     }
   }
+  ostr <<iostmt<<endl;
+  ostr <<"      call TAU_CONTEXT_EVENT(tio_"<<lineno<<", tio_"<<lineno<<"_sz)"<<endl;
+     // writeLongFortranStatement(ostr, prefix, suffix);
 
-//  ostr<<"\t call TAU_DEALLOC(A, "<<(*it)->line<< ", '"<< (*it)->snippet<< ", var=A')"<<endl;
+#ifdef DEBUG
+      printf("Putting in file: varname=%s, line = %s\n", varname, line);
+#endif /* DEBUG */
   if (writetab) ostr<<"\t";
   for (list<string>::iterator it = statements.begin(); it != statements.end();
 	it++)
     ostr <<(*it)<<endl;
-  delete [] deallocstmt;
+  delete [] iostmt;
+  delete[] varname;
   return linesread;
+
 }
+
+/* -------------------------------------------------------------------------- */
+/* -- Get column number of read/write/print statement. 0 if none are present- */
+/* -------------------------------------------------------------------------- */
+int getIOColumnNumber(const char *inbuf)
+{
+  int col = 0;
+
+  col = CPDB_GetSubstringCol(inbuf, "print");
+  if (!col)
+  {
+    col = CPDB_GetSubstringCol(inbuf, "write");
+    if (!col)
+      col = CPDB_GetSubstringCol(inbuf, "read");
+  }
+ 
+#ifdef DEBUG
+  printf("getIOColumnNumber %s: returning %d\n", inbuf, col);
+#endif /* DEBUG */
+  return col;
+}
+
 /* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
@@ -2524,7 +2664,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
   int space, i, j, k, c, additionalLinesRead;
-  int docol, ifcol, thencol, gotocol, alloccol, dealloccol, startcol;
+  int docol, ifcol, thencol, gotocol, alloccol, dealloccol, startcol, iocol;
   if (!ostr) {
     cerr << "Error: Cannot open '" << outfile << "'" << endl;
     return false;
@@ -3118,16 +3258,6 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  if (additionalLinesRead)
 		    strcpy(inbuf, previousline); /* update last line read */
 		  /* now the deallocate stmt */
-#ifdef DONT
-		  ostr<<"\t";
-                  for(i=dealloccol-1; i< strlen(inbuf); i++) {
-#ifdef DEBUG
-                    printf("Writing (1.8):: %c\n",inbuf[i]);
-#endif /* DEBUG */
-                    ostr <<inbuf[i];
-                  }
-                  ostr<<endl;
-#endif /* DONT */
                   ostr<<"\t endif"<<endl;
                 }
                 else
@@ -3163,9 +3293,78 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                 instrumented = true;
 		break;
 	    case IO_STMT:
-                cout <<"I/O statement line="<<(*it)->line<<endl;
+#ifdef DEBUG
+                printf("I/O statement line= %d\n",(*it)->line);
+#endif /* DEBUG */
+		iocol = getIOColumnNumber(inbuf);
+		/* This logic differs from dealloc because there may be some IO
+		requests that have a column of 0 (open/close). In this case where
+		we do not match read/write/print, we need to just write out the 
+		original statement as it is */
+                if (iocol)  { /* found read/write/print */
+
+                if (addThenEndifClauses(inbuf, previousline, iocol - 1))
+                { 
+                /* only write till the io column. This assumes statement
+                begins on col 1? even if it is "20 if (x.gt.2) write (3) A" */
+		  //if ((*it)->col-1) ostr<<"\t"; /* bump it up if it is col 1 */
+		  startcol = (iocol == (*it)->col ? (*it)->col: 1);
+		  if(!isRequestOnSameLineAsPreviousRequest(it, itemvec))
+		    startcol = 1;
+		  /* the previous instrumentation request does not write upto our current column number */
+#ifdef DEBUG
+		  printf("TAB:: iocol = %d, it->col = %d, startcol=%d\n", iocol, (*it)->col, startcol);
+#endif /* DEBUG */
+		  for(i=startcol - 1; i< iocol - 1; i++) {
+#ifdef DEBUG
+                    printf("Writing (1.9):: inbuf[%d] = %c\n",i, inbuf[i]);
+#endif /* DEBUG */
+                    ostr <<inbuf[i];
+                  }
+                  ostr<<"\t then \n";
+		  /* first write TAU's IO statement, then the IO stmt */
+                  additionalLinesRead=printTauIOStmt(istr, ostr, &inbuf[iocol-1], it, true, previousline);
+		  inputLineNo+=additionalLinesRead;
+		  if (additionalLinesRead)
+		    strcpy(inbuf, previousline); /* update last line read */
+		  /* now the IO stmt */
+                  ostr<<"\t endif"<<endl;
+                }
+                else
+                { /* there is no if clause, write TAU's IO statement, then stmt */
+                  /* If the PDB file puts the continued if statement on the
+                     same line as IO, we need to take care of it. e.g.,
+     6         if ( value .gt. 3) &
+     7           write (4) A
+                  */
+
+                  is_if_stmt = addThenEndifClauses(inbuf, previousline, iocol - 1);
+#ifdef DEBUG
+                  printf("IS IT IF STMT??? %d iocol = %d\n", is_if_stmt, iocol);
+#endif /* DEBUG */
+                  if (is_if_stmt && (iocol == 0)) {
+                        /* handle this separately. write the current statement */
+                     printf("TAU ERROR: <file=%s,line=%d>: Currently we cannot handle IO statements in this version of PDT that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the IO statement and re-try, or upgrade your PDT package.\n", f->name(), inputLineNo);
+                       ostr<<inbuf<<endl;
+                  }
+                  else {
+
+                    additionalLinesRead=printTauIOStmt(istr, ostr, inbuf, it, false, previousline);
+		    inputLineNo+=additionalLinesRead;
+		    if (additionalLinesRead)
+		      strcpy(inbuf, previousline); /* update last line read */
+                  }
+                }
+#ifdef DEBUG
+                  printf("I/O statement at col %d: %s\n",iocol, inbuf);
+#endif /* DEBUG */
+                }
+		else { /* just write out the statement (open/close) as it is */
+  		  ostr<<endl; 
+		/* start with a new line. Clears up residue from TAU_PROFILE_START*/
+                  ostr<<inbuf<<endl;
+                }
                 instrumented = true;
-                ostr<<inbuf<<endl;
                 break;
 	    default:
 		cout <<"Unknown option in instrumentFFile:"<<(*it)->kind<<endl;
@@ -3562,8 +3761,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.163 $   $Date: 2007/05/04 04:16:32 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.163 2007/05/04 04:16:32 sameer Exp $
+ * $Revision: 1.164 $   $Date: 2007/05/21 00:49:24 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.164 2007/05/21 00:49:24 sameer Exp $
  ***************************************************************************/
 
 
