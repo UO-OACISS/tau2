@@ -2089,6 +2089,7 @@ bool getNextToken(char * &line, char * & varname)
      we instead see a (, we should continue processing till the closing parens ) */
 
   int openparens = 0;
+  int opensinglequotes, openquotes=0;
   int i = 0;
   int len = 0;
 
@@ -2101,13 +2102,24 @@ bool getNextToken(char * &line, char * & varname)
 #ifdef DEBUG
     printf("Loop: getNextToken: *line = %c\n", *line);
 #endif /* DEBUG */
-    if (*line == ',' && openparens == 0) {
+    if (*line == ',' && openparens == 0 && openquotes == 0) {
         line ++; break; /* print *, ... */
     }
 
     varname[i] = *line;
     i++;
 
+    bool isquotechar = false;
+    if ((*line == '"') || (*line == '\'')) isquotechar = true;
+    if ((openquotes > 0) && isquotechar)  {
+	openquotes--;
+	line++;
+	break;
+    }
+
+
+    if (openquotes == 0 && isquotechar) openquotes++;
+      
     if (*line == '(' ) /* first open paren. Search for close parenthesis */
       openparens++;
     if (*line == ')' )
@@ -2608,6 +2620,7 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
 
       char *p = varname;
       while (p && *p == ' ') p++; /* eat up leading space */
+      if (strlen(p) == 0) continue ; /* don't put sizeof() */
 
       sprintf(string_containing_sizeof, "+sizeof(%s)", p); 
       origlen = strlen(iostmt);
@@ -3768,8 +3781,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.165 $   $Date: 2007/05/21 20:59:02 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.165 2007/05/21 20:59:02 sameer Exp $
+ * $Revision: 1.166 $   $Date: 2007/05/21 21:39:50 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.166 2007/05/21 21:39:50 sameer Exp $
  ***************************************************************************/
 
 
