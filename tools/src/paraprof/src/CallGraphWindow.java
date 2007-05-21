@@ -19,6 +19,9 @@ import org.jgraph.graph.*;
 
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.paraprof.enums.CallGraphOption;
+import edu.uoregon.tau.paraprof.graph.Layout;
+import edu.uoregon.tau.paraprof.graph.Vertex;
+import edu.uoregon.tau.paraprof.graph.Vertex.BackEdge;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
@@ -31,9 +34,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.12 2007/05/17 17:18:42 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.13 2007/05/21 22:18:54 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener, ChangeListener, Observer, ImageExport,
         Printable, ParaProfWindow {
@@ -112,15 +115,15 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     }
 
-    private class GraphCell extends DefaultGraphCell {
+    public class GraphCell extends DefaultGraphCell {
 
         private final Function function;
         private final FunctionProfile functionProfile;
         private final Vertex vertex;
 
         public GraphCell(Vertex v) {
-            super(((FunctionProfile)v.getUserObject()).getFunction());
-            functionProfile = (FunctionProfile)v.getUserObject();
+            super(((FunctionProfile) v.getUserObject()).getFunction());
+            functionProfile = (FunctionProfile) v.getUserObject();
             function = functionProfile.getFunction();
             vertex = v;
         }
@@ -221,81 +224,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         }
 
         private CallGraphWindow callGraphWindow;
-    }
-
-    // A simple structure to hold pairs of vertices
-    private static class BackEdge {
-        public BackEdge(Vertex a, Vertex b) {
-            this.a = a;
-            this.b = b;
-        }
-
-        private Vertex a, b;
-    }
-
-    // Warning: this class violates lots of OO principles, I'm using it as a struct.
-    private static class Vertex implements Comparable {
-        private List children = new ArrayList();
-        private List parents = new ArrayList();
-        private Object userObject;
-        private boolean visited;
-
-        private int downPriority;
-        private int upPriority;
-
-        private int level = -1; // which level this vertex resides on
-        private int levelIndex; // the index within the level
-
-        private double baryCenter;
-        private double gridBaryCenter;
-
-        private GraphCell graphCell;
-        private int position = -1;
-        private int width;
-        private int height;
-        private float colorRatio;
-
-        private boolean pathHighlight = false;
-
-        public Object getUserObject() {
-            return userObject;
-        }
-
-        public Vertex(Object userObject, int width, int height) {
-            this.userObject = userObject;
-
-            this.width = width;
-            this.height = height;
-
-            if (userObject != null && width < 5) {
-                this.width = 5;
-            }
-        }
-
-        public int compareTo(Object compare) {
-            if (this.baryCenter < ((Vertex) compare).baryCenter)
-                return -1;
-            if (this.baryCenter > ((Vertex) compare).baryCenter)
-                return 1;
-            return 0;
-        }
-
-        private int getPriority(boolean down) {
-            if (down) {
-                return downPriority;
-            } else {
-                return upPriority;
-            }
-        }
-
-        public void setPathHighlight(boolean pathHighlight) {
-            this.pathHighlight = pathHighlight;
-        }
-
-        public boolean getPathHighlight() {
-            return pathHighlight;
-        }
-
     }
 
     public CallGraphWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
@@ -657,7 +585,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         return width;
     }
 
-    private void createGraph() {
+    
+    
+    private List constructGraph() {
 
         vertexMap = new HashMap();
         backEdges = new ArrayList();
@@ -673,7 +603,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             if (!fp.isCallPathFunction()) { // skip callpath functions (we only want the actual functions)
 
                 Vertex v = new Vertex(fp, getWidth(fp, maxWidthValue), boxHeight);
-                v.colorRatio = (float) getValue(fp, this.colorOption, maxColorValue, colorMetricID);
+                v.setColorRatio((float) getValue(fp, this.colorOption, maxColorValue, colorMetricID));
                 vertexMap.put(fp, v);
             }
         }
@@ -692,7 +622,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 // get the vertex for this FunctionProfile 
                 Vertex root = (Vertex) vertexMap.get(fp);
 
-                if (!root.visited) {
+                if (!root.getVisited()) {
 
                     currentPath.add(fp);
                     toVisit.add(null); // null in the toVisit stack marks the end of a set of children (they must get pushed into the stack prior to the children)
@@ -732,24 +662,24 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                         } else {
 
                             boolean found = false;
-                            for (int j = 0; j < parent.children.size(); j++) {
-                                if (parent.children.get(j) == child)
+                            for (int j = 0; j < parent.getChildren().size(); j++) {
+                                if (parent.getChildren().get(j) == child)
                                     found = true;
                             }
                             if (!found)
-                                parent.children.add(child);
+                                parent.getChildren().add(child);
 
                             found = false;
-                            for (int j = 0; j < child.parents.size(); j++) {
-                                if (child.parents.get(j) == parent)
+                            for (int j = 0; j < child.getParents().size(); j++) {
+                                if (child.getParents().get(j) == parent)
                                     found = true;
                             }
                             if (!found)
-                                child.parents.add(parent);
+                                child.getParents().add(parent);
 
-                            if (child.visited == false) {
+                            if (child.getVisited() == false) {
 
-                                child.visited = true;
+                                child.setVisited(true);
 
                                 currentPath.add(childFp);
 
@@ -757,8 +687,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                                 for (Iterator it = childFp.getChildProfiles(); it.hasNext();) {
                                     FunctionProfile grandChildFunction = (FunctionProfile) it.next();
 
-                                    Vertex grandChild = (Vertex) vertexMap.get(grandChildFunction);
-                                    //  if (grandChild.visited == false)
                                     toVisit.add(grandChildFunction);
                                 }
                             }
@@ -768,11 +696,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 }
             }
         }
-
         // now we should have a DAG, now find the roots
 
         // Find Roots
-        List roots = findRoots(vertexMap);
+        List roots = Layout.findRoots(vertexMap);
 
         // Assigning Levels
         for (int i = 0; i < functionProfileList.size(); i++) {
@@ -781,11 +708,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 continue;
 
             if (!fp.isCallPathFunction()) {
-
                 Vertex vertex = (Vertex) vertexMap.get(fp);
 
-                if (vertex.level == -1) {
-                    assignLevel(vertex);
+                if (vertex.getLevel() == -1) {
+                    Layout.assignLevel(vertex);
                 }
             }
 
@@ -798,10 +724,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 continue;
 
             if (!fp.isCallPathFunction()) {
-
                 Vertex vertex = (Vertex) vertexMap.get(fp);
-
-                insertDummies(vertex);
+                Layout.insertDummies(vertex);
             }
 
         }
@@ -813,27 +737,30 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 continue;
 
             if (!fp.isCallPathFunction()) {
-
                 Vertex vertex = (Vertex) vertexMap.get(fp);
-                vertex.visited = false;
+                vertex.setVisited(false);
             }
 
         }
-        levels = new ArrayList();
+        
+        List levels = new ArrayList();
 
         // Fill Levels
-
         for (int i = 0; i < roots.size(); i++) {
             Vertex root = (Vertex) roots.get(i);
-            fillLevels(root, levels, 0);
+            Layout.fillLevels(root, levels, 0);
         }
 
         // Order Levels
+        Layout.runSugiyama(levels);
+        Layout.assignPositions(levels);
+        return levels;
+    }
+    
+    private void createGraph() {
+        
+        levels = constructGraph();
 
-        runSugiyama(levels);
-        assignPositions(levels);
-
-        // Draw Graph
 
         // Construct Model and Graph
         model = new DefaultGraphModel();
@@ -867,10 +794,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         model.remove(cells);
 
         reassignWidths(levels);
-        assignPositions(levels);
+        Layout.assignPositions(levels);
 
         createCustomGraph(levels, backEdges);
-
     }
 
     void reassignWidths(List levels) {
@@ -887,15 +813,15 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 if (v.getUserObject() != null) {
                     FunctionProfile fp = (FunctionProfile) v.getUserObject();
 
-                    v.width = getWidth(fp, maxWidthValue);
+                    v.setWidth(getWidth(fp, maxWidthValue));
 
                     // we have to do this check here since we're treating it like a struct
-                    if (v.width < 5)
-                        v.width = 5;
+                    if (v.getWidth() < 5)
+                        v.setWidth(5);
 
-                    v.colorRatio = (float) getValue(fp, this.colorOption, maxColorValue, colorMetricID);
+                    v.setColorRatio((float) getValue(fp, this.colorOption, maxColorValue, colorMetricID));
 
-                    v.height = boxHeight;
+                    v.setHeight(boxHeight);
                 }
             }
         }
@@ -917,10 +843,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 GraphCell dgc = null;
 
                 if (v.getUserObject() != null) {
-                    dgc = createGraphCell(v, v.position - (v.width / 2), MARGIN + i * VERTICAL_SPACING, v.height, v.width,
-                            v.colorRatio, attributes);
+                    dgc = createGraphCell(v, v.getPosition() - (v.getWidth() / 2), MARGIN + i * VERTICAL_SPACING, v.getHeight(),
+                            v.getWidth(), v.getColorRatio(), attributes);
 
-                    v.graphCell = dgc;
+                    v.setGraphCell(dgc);
                     cellList.add(dgc);
                     graphCellList.add(dgc);
                 } else {
@@ -940,14 +866,14 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 Vertex v = (Vertex) level.get(j);
 
                 if (v.getUserObject() != null) {
-                    GraphCell dgcParent = v.graphCell;
+                    GraphCell dgcParent = v.getGraphCell();
 
-                    for (Iterator it = v.children.iterator(); it.hasNext();) {
+                    for (Iterator it = v.getChildren().iterator(); it.hasNext();) {
                         Vertex child = (Vertex) it.next();
 
                         if (child.getUserObject() != null) {
                             // simply connect the GraphCells
-                            GraphCell dgcChild = child.graphCell;
+                            GraphCell dgcChild = child.getGraphCell();
 
                             DefaultEdge e = createEdge(dgcParent, dgcChild, attributes, cs, null);
                             cellList.add(e);
@@ -961,15 +887,15 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                             points.add(new Point(3000, 3000)); // this point's position doesn't matter because of the connect call
 
                             while (child.getUserObject() == null) {
-                                points.add(new Point(child.position, MARGIN + ((i + l) * VERTICAL_SPACING) + (boxHeight / 2)));
+                                points.add(new Point(child.getPosition(), MARGIN + ((i + l) * VERTICAL_SPACING) + (boxHeight / 2)));
                                 // find the end of the dummy chain
-                                child = (Vertex) child.children.get(0); // there can only be exactly one child
+                                child = (Vertex) child.getChildren().get(0); // there can only be exactly one child
                                 l++;
                             }
 
                             points.add(new Point(3000, 3000)); // this point's position doesn't matter because of the connect call
 
-                            DefaultEdge e = createEdge(dgcParent, child.graphCell, attributes, cs, points);
+                            DefaultEdge e = createEdge(dgcParent, child.getGraphCell(), attributes, cs, points);
                             cellList.add(e);
                             edgeList.add(e);
                         }
@@ -987,18 +913,17 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             // this point's position doesn't matter because of the connect call
             points.add(new Point(3000, 3000));
 
-            points.add(new Point(backEdge.a.position + backEdge.a.width / 2 + 50, (backEdge.a.level) * VERTICAL_SPACING + MARGIN
-                    + (boxHeight / 2)));
+            points.add(new Point(backEdge.a.getPosition() + backEdge.a.getWidth() / 2 + 50, (backEdge.a.getLevel())
+                    * VERTICAL_SPACING + MARGIN + (boxHeight / 2)));
 
-            points.add(new Point(backEdge.b.position + 25, (backEdge.b.level) * VERTICAL_SPACING - 25 + MARGIN));
+            points.add(new Point(backEdge.b.getPosition() + 25, (backEdge.b.getLevel()) * VERTICAL_SPACING - 25 + MARGIN));
 
             // this point's position doesn't matter because of the connect call
             points.add(new Point(3000, 3000));
 
-            DefaultEdge edge = createEdge(backEdge.a.graphCell, backEdge.b.graphCell, attributes, cs, points);
+            DefaultEdge edge = createEdge(backEdge.a.getGraphCell(), backEdge.b.getGraphCell(), attributes, cs, points);
             cellList.add(edge);
             edgeList.add(edge);
-
         }
 
         cells = cellList.toArray();
@@ -1063,433 +988,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 GraphConstants.setPoints(map, points);
             }
         }
-    }
-
-    void runPhaseOne(List levels) {
-
-        int numIterations = 100;
-
-        while (numIterations > 0) {
-            for (int i = 0; i < levels.size() - 1; i++) {
-                assignBaryCenters((List) levels.get(i), (List) levels.get(i + 1), true);
-                Collections.sort((List) levels.get(i));
-            }
-
-            for (int i = levels.size() - 1; i > 0; i--) {
-                assignBaryCenters((List) levels.get(i), (List) levels.get(i - 1), false);
-                Collections.sort((List) levels.get(i));
-            }
-
-            numIterations--;
-        }
-
-        //Vertex.BaryCenter = Vertex.BARYCENTER_DOWN;
-
-    }
-
-    void assignBaryCenters(List level, List level2, boolean down) {
-
-        for (int j = 0; j < level2.size(); j++) {
-            Vertex v = (Vertex) level2.get(j);
-            v.levelIndex = j;
-        }
-
-        for (int i = 0; i < level.size(); i++) {
-            Vertex v = (Vertex) level.get(i);
-            if (down) {
-                int sum = 0;
-                for (int j = 0; j < v.children.size(); j++) {
-                    sum += ((Vertex) v.children.get(j)).levelIndex;
-                }
-
-                // don't re-assign baryCenter if no children (keep old value, based on parents)
-                if (v.children.size() != 0) {
-                    v.baryCenter = sum / v.children.size();
-                }
-
-            } else {
-                int sum = 0;
-                for (int j = 0; j < v.parents.size(); j++) {
-                    sum += ((Vertex) v.parents.get(j)).levelIndex;
-                }
-
-                // don't re-assign baryCenter if no parents (keep old value, based on children)
-                if (v.parents.size() != 0) {
-                    v.baryCenter = sum / v.parents.size();
-                }
-
-            }
-        }
-
-    }
-
-    void assignGridBaryCenters(List level, boolean down, boolean finalPass) {
-
-        //        boolean combined = false;
-        //
-        //        if (!combined) {
-        for (int i = 0; i < level.size(); i++) {
-            Vertex v = (Vertex) level.get(i);
-
-            //if (finalPass && v.children.size() == 0)
-            //    down = false;
-
-            if (down) {
-                // don't re-assign baryCenter if no children (keep old value, based on parent)
-                if (v.children.size() == 0)
-                    continue;
-
-                float sum = 0;
-                for (int j = 0; j < v.children.size(); j++) {
-                    sum += ((Vertex) v.children.get(j)).position;
-                }
-
-                v.gridBaryCenter = sum / v.children.size();
-
-            } else {
-                // don't re-assign baryCenter if no parents (keep old value, based on children)
-                if (v.parents.size() == 0)
-                    continue;
-
-                float sum = 0;
-                for (int j = 0; j < v.parents.size(); j++) {
-                    sum += ((Vertex) v.parents.get(j)).position;
-                }
-
-                v.gridBaryCenter = sum / v.parents.size();
-
-            }
-        }
-        //        } else {
-        //            for (int i = 0; i < level.size(); i++) {
-        //                Vertex v = (Vertex) level.get(i);
-        //
-        //                float sum = 0;
-        //                for (int j = 0; j < v.children.size(); j++) {
-        //                    sum += ((Vertex) v.children.get(j)).position;
-        //                }
-        //
-        //                for (int j = 0; j < v.parents.size(); j++) {
-        //                    sum += ((Vertex) v.parents.get(j)).position;
-        //                }
-        //
-        //                v.gridBaryCenter = sum / (v.parents.size() + v.children.size());
-        //
-        //            }
-        //        }
-    }
-
-    void runSugiyama(List levels) {
-
-        runPhaseOne(levels);
-
-        //runPhaseTwo(levels);
-
-    }
-
-    private void assignPositions(List levels) {
-
-        // assign initial positions
-        for (int i = 0; i < levels.size(); i++) {
-            List level = (List) levels.get(i);
-
-            int lastPosition = 0;
-            ((Vertex) level.get(0)).position = 0;
-            for (int j = 1; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
-                v.position = lastPosition + HORIZONTAL_SPACING + (((Vertex) level.get(j - 1)).width + v.width) / 2;
-                lastPosition = v.position;
-
-                v.downPriority = v.children.size();
-                if (v.getUserObject() == null) {
-                    //v.downPriority = Integer.MAX_VALUE;
-                    v.downPriority = 2;
-                }
-
-                v.upPriority = v.parents.size();
-                if (v.getUserObject() == null) {
-                    //v.upPriority = Integer.MAX_VALUE;
-                    v.upPriority = 2;
-                }
-            }
-
-            // now center everything around zero
-            int middle;
-
-            if (level.size() % 2 == 0) {
-                int left = ((Vertex) level.get((level.size() - 2) / 2)).position;
-                int right = ((Vertex) level.get(level.size() / 2)).position;
-                middle = (left + right) / 2;
-            } else {
-                middle = ((Vertex) level.get((level.size() - 1) / 2)).position;
-            }
-
-            for (int j = 0; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
-                v.position = v.position - middle;
-            }
-
-        }
-
-        for (int i = 1; i < levels.size(); i++) {
-            improvePositions(levels, i, false, false);
-        }
-
-        for (int i = levels.size() - 2; i >= 0; i--) {
-            improvePositions(levels, i, true, false);
-        }
-
-        for (int i = 1; i < levels.size(); i++) {
-            improvePositions(levels, i, false, false);
-        }
-
-        for (int i = levels.size() - 2; i >= 0; i--) {
-            improvePositions(levels, i, true, true);
-        }
-
-        for (int i = levels.size() - 2; i >= 0; i--) {
-            improvePositions(levels, i, true, false);
-        }
-
-        // move everything right (since some of our numbers are negative)
-
-        int minValue = 0;
-        for (int i = 0; i < levels.size(); i++) {
-            List level = (List) levels.get(i);
-
-            for (int j = 0; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
-                if (v.position - (v.width / 2) < minValue) {
-                    minValue = v.position - (v.width / 2);
-                }
-            }
-        }
-
-        for (int i = 0; i < levels.size(); i++) {
-            List level = (List) levels.get(i);
-
-            for (int j = 0; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
-                v.position += -minValue + MARGIN;
-            }
-        }
-
-    }
-
-    private int moveRight(List level, int index, int amount, boolean down, int priority) {
-
-        Vertex v = (Vertex) level.get(index);
-
-        int j = index + 1;
-
-        if (j >= level.size()) {
-            v.position = v.position + amount;
-            return amount;
-        }
-
-        Vertex u = (Vertex) level.get(j);
-
-        int myRightSide = v.position + (v.width / 2);
-        int neighborLeftSide = u.position - (u.width / 2);
-
-        if (myRightSide + amount + HORIZONTAL_SPACING < neighborLeftSide) {
-            v.position = v.position + amount;
-            return amount;
-        }
-
-        // not enough room between this box and the one to the right
-
-        if (u.getPriority(down) > priority) {
-            // we're lower priority, can't move him, place ourselves as far right as possible
-            int newPosition = u.position - ((v.width + u.width) / 2) - HORIZONTAL_SPACING;
-            int amountMoved = newPosition - v.position;
-            v.position = v.position + amountMoved;
-            return amountMoved;
-        }
-
-        int positionNeighborNeedsToBeAt = (v.position + amount) + ((u.width + v.width) / 2) + HORIZONTAL_SPACING;
-
-        // we can move him, so ask to move '' and add whatever he can (he could be blocked by higher priority)
-        moveRight(level, j, positionNeighborNeedsToBeAt - u.position, down, priority);
-
-        int newPosition = u.position - ((v.width + u.width) / 2) - HORIZONTAL_SPACING;
-        int amountMoved = newPosition - v.position;
-        v.position = v.position + amountMoved;
-        return amountMoved;
-
-        //v.position = v.position + amountMoved;
-        //return amountMoved;
-    }
-
-    private int moveLeft(List level, int index, int amount, boolean down, int priority) {
-        //System.out.println("index " + index + ", asked to move " + amount + ", priority = "
-        //        + priority);
-        Vertex v = (Vertex) level.get(index);
-
-        int j = index - 1;
-
-        if (j < 0) {
-            v.position = v.position - amount;
-            // System.out.println("index " + index + ", moved " + amount + ", to position "
-            //         + v.position);
-            return amount;
-        }
-
-        Vertex u = (Vertex) level.get(j);
-
-        int myLeftSide = v.position - (v.width / 2);
-        int neighborRightSide = u.position + (u.width / 2);
-
-        if (myLeftSide - amount - HORIZONTAL_SPACING > neighborRightSide) {
-            v.position = v.position - amount;
-            //System.out.println("index " + index + ", moved " + amount + ", to position "
-            //       + v.position);
-            return amount;
-        }
-
-        if (u.getPriority(down) > priority) {
-            int newPosition = u.position + ((u.width + v.width) / 2) + HORIZONTAL_SPACING;
-            int amountMoved = v.position - newPosition;
-            v.position = v.position - amountMoved;
-            //System.out.println("index " + index + ", moved " + amountMoved + ", to position "
-            //        + v.position);
-            return amountMoved;
-        }
-
-        int positionNeighborNeedsToBeAt = (v.position - amount) - (v.width / 2) - HORIZONTAL_SPACING - (u.width / 2);
-
-        // we can move him, so ask to move '' and add whatever he can (he could be blocked by higher priority)
-
-        moveLeft(level, j, u.position - positionNeighborNeedsToBeAt, down, priority);
-
-        int newPosition = u.position + ((u.width + v.width) / 2) + HORIZONTAL_SPACING;
-        int amountMoved = v.position - newPosition;
-        v.position = v.position - amountMoved;
-        //System.out.println("index " + index + ", moved " + amountMoved + ", to position "
-        //        + v.position);
-        return amountMoved;
-
-        //        v.position = v.position - amountMoved;
-        //        System.out.println ("index " + index + ", moved " + amountMoved + ", to position " + v.position);
-        //        return amountMoved;
-    }
-
-    private void improvePositions(List levels, int index, boolean down, boolean finalPass) {
-        List level = (List) levels.get(index);
-
-        assignGridBaryCenters(level, down, finalPass);
-
-        for (int i = 0; i < level.size(); i++) {
-            Vertex v = (Vertex) level.get(i);
-
-            int wantedPosition = (int) v.gridBaryCenter;
-            //System.out.println("--at position: " + v.position + ", want Position = "
-            //        + wantedPosition);
-
-            if (down && v.children.size() == 0) {
-                continue;
-            }
-
-            if (wantedPosition > v.position) {
-                int amountMoved = moveRight(level, i, wantedPosition - v.position, down, v.getPriority(down));
-                for (int j = i - 1; j >= 0 && finalPass; j--) {
-                    moveRight(level, j, amountMoved, down, v.getPriority(down));
-                }
-
-            } else {
-                int amountMoved = moveLeft(level, i, v.position - wantedPosition, down, v.getPriority(down));
-                for (int j = i + 1; j < level.size() && finalPass; j++) {
-                    moveLeft(level, j, amountMoved, down, v.getPriority(down));
-                }
-            }
-
-            //System.out.println("--got position = " + v.position + "\n");
-
-        }
-
-    }
-
-    private void fillLevels(Vertex v, List levels, int level) {
-
-        if (v.visited == true)
-            return;
-
-        v.visited = true;
-
-        if (levels.size() == level) {
-            levels.add(new ArrayList());
-        }
-
-        v.level = level;
-
-        List currentLevel = (List) levels.get(level);
-        currentLevel.add(v);
-
-        for (int i = 0; i < v.children.size(); i++) {
-            Vertex child = (Vertex) v.children.get(i);
-            fillLevels(child, levels, level + 1);
-        }
-    }
-
-    private void insertDummies(Vertex v) {
-
-        for (int i = 0; i < v.children.size(); i++) {
-            Vertex child = (Vertex) v.children.get(i);
-            if (child.level - v.level > 1) {
-
-                // break both edges
-                v.children.remove(i);
-                child.parents.remove(v);
-
-                // create dummy and connect to child
-                Vertex dummy = new Vertex(null, 1, boxHeight);
-                dummy.level = v.level + 1;
-                dummy.children.add(child);
-                child.parents.add(dummy);
-
-                // connect dummy to parrent
-                v.children.add(i, dummy);
-                dummy.parents.add(v);
-                insertDummies(dummy);
-            }
-        }
-    }
-
-    private void assignLevel(Vertex v) {
-
-        int maxLevel = 0;
-        for (int i = 0; i < v.parents.size(); i++) {
-            Vertex parent = (Vertex) v.parents.get(i);
-            if (parent.level == -1)
-                assignLevel(parent);
-            if (parent.level > maxLevel)
-                maxLevel = parent.level;
-        }
-        v.level = maxLevel + 1;
-    }
-
-    private List findRoots(Map vertexMap) {
-        List roots = new ArrayList();
-
-        for (Iterator it = vertexMap.values().iterator(); it.hasNext();) {
-            Vertex v = (Vertex) it.next();
-            v.visited = false;
-        }
-
-        for (Iterator it = vertexMap.values().iterator(); it.hasNext();) {
-            Vertex v = (Vertex) it.next();
-            for (int i = 0; i < v.children.size(); i++) {
-                Vertex child = (Vertex) v.children.get(i);
-                child.visited = true;
-            }
-        }
-
-        for (Iterator it = vertexMap.values().iterator(); it.hasNext();) {
-            Vertex v = (Vertex) it.next();
-            if (v.visited == false)
-                roots.add(v);
-        }
-        return roots;
     }
 
     public GraphCell createGraphCell(Vertex v, int x, int y, int height, int width, float color, Map attributes) {
@@ -1620,9 +1118,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         Vertex parent = (Vertex) vertexMap.get(p);
         Vertex child = (Vertex) vertexMap.get(c);
 
-        int portCount = child.graphCell.getChildCount();
+        int portCount = child.getGraphCell().getChildCount();
         for (int j = 0; j < portCount; j++) {
-            Port port = (Port) child.graphCell.getChildAt(j);
+            Port port = (Port) child.getGraphCell().getChildAt(j);
 
             for (Iterator itrEdges = port.edges(); itrEdges.hasNext();) {
                 Edge edge = (Edge) itrEdges.next();
