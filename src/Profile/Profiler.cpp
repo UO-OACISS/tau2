@@ -1848,7 +1848,7 @@ int Profiler::StoreData(int tid)
 // This is ::DumpData for only a single metric
 int Profiler::DumpData(bool increment, int tid, char *prefix)
 {
-  	TAU_PROFILE("TAU_DUMP_DB()", " ", TAU_IO);
+  	TAU_PROFILE("TAU_DB_DUMP()", " ", TAU_IO);
 #ifdef PROFILING_ON
 	vector<FunctionInfo*>::iterator it;
   	vector<TauUserEvent*>::iterator eit;
@@ -3409,9 +3409,9 @@ double& Profiler::TheTauThrottlePerCall(void)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: anataraj $
- * $Revision: 1.165 $   $Date: 2007/04/19 03:21:44 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.165 2007/04/19 03:21:44 anataraj Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.166 $   $Date: 2007/05/21 23:33:42 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.166 2007/05/21 23:33:42 amorris Exp $ 
  ***************************************************************************/
 
 	
