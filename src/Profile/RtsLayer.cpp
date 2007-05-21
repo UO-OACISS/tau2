@@ -674,10 +674,6 @@ double RtsLayer::getUSecD (int tid) {
   return (double) getLinuxHighResolutionTscCounter()/TauGetMHz();
 #endif /* TAU_LINUX_TIMERS */
 
-#ifdef TAU_WINDOWS
-  return TauWindowsUsecD();
-#endif // TAU_WINDOWS 
-
 #ifdef TULIP_TIMERS
   return pcxx_GetUSecD();
 #endif
@@ -692,6 +688,11 @@ double RtsLayer::getUSecD (int tid) {
   return TauMuseMultipleQuery(data,size);
 #endif
 
+
+#ifdef TAU_WINDOWS
+  return TauWindowsUsecD();
+
+#else /* TAU_WINDOWS */
   // if none of those were defined (the default), we use gettimeofday
 
   struct timeval tp;
@@ -699,13 +700,15 @@ double RtsLayer::getUSecD (int tid) {
   double timestamp;
   gettimeofday (&tp, 0);
   timestamp = (double) tp.tv_sec * 1e6 + tp.tv_usec;
-  if (timestamp < last_timestamp)
-  {
-     DEBUGPROFMSG("RtsLayer::getUSecD(): gettimeofday() goes back in time. Fixing ...."<<endl;);
-     timestamp = last_timestamp;
+  if (timestamp < last_timestamp) {
+    DEBUGPROFMSG("RtsLayer::getUSecD(): gettimeofday() goes back in time. Fixing ...."<<endl;);
+    timestamp = last_timestamp;
   }
   last_timestamp = timestamp;
   return timestamp;
+
+#endif /* TAU_WINDOWS */
+
 }
 #endif //TAU_MULTIPLE_COUNTERS
 
@@ -1432,6 +1435,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.87 $   $Date: 2007/05/07 23:28:20 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.87 2007/05/07 23:28:20 amorris Exp $ 
+ * $Revision: 1.88 $   $Date: 2007/05/21 22:41:51 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.88 2007/05/21 22:41:51 amorris Exp $ 
  ***************************************************************************/
