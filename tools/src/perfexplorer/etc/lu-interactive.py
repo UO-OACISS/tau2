@@ -229,10 +229,14 @@ def showSignificantEventsDerived(diffs, type, significant, baseEvents, x, m):
 
 def DoAnalysis(pe):
 	# set the application, experiment, trial
-	pe.setApplication("NPB2.3")
-	pe.setExperiment("garuda")
-	baseTrialName = "results.8"
-	otherTrialName = "results.16"
+	# pe.setApplication("NPB2.3")
+	# pe.setExperiment("garuda")
+	# baseTrialName = "results.8"
+	# otherTrialName = "results.16"
+	pe.setApplication("mm2")
+	pe.setExperiment("problem size")
+	baseTrialName = "1000"
+	otherTrialName = "2000"
 	baseTrial = pe.setTrial(baseTrialName)
 
 	# baseMetrics is a List

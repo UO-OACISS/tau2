@@ -382,6 +382,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		return (this.chartPanel);
 	}
 
+	public JPanel getChartPanel() {
+		return (this.chartPanel);
+	}
+
 	private void updateChart () {
 		// the user has selected the application, experiment, trial 
 		// from the navigation tree.  Now set the other parameters.

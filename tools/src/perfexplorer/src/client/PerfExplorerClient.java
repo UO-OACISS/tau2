@@ -3,13 +3,14 @@ package client;
 import common.EngineType;
 import common.PerfExplorerOutput;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.common.ImageExport;
 import jargs.gnu.CmdLineParser;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
 
-public class PerfExplorerClient extends JFrame {
+public class PerfExplorerClient extends JFrame implements ImageExport {
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
 
 	private ActionListener listener = null;
@@ -106,6 +107,16 @@ public class PerfExplorerClient extends JFrame {
 			e.printStackTrace();
 		} 
 	}
+
+    public Dimension getImageSize(boolean fullScreen, boolean header) {
+        return ChartPane.getPane().getChartPanel().getSize();
+    }
+
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+        ChartPane.getPane().getChartPanel().setDoubleBuffered(false);
+        ChartPane.getPane().getChartPanel().paintAll(g2D);
+        ChartPane.getPane().getChartPanel().setDoubleBuffered(true);
+    }
 
 	public static void main (String[] args) {
 

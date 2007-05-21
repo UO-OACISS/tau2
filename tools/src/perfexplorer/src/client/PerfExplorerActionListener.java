@@ -18,11 +18,13 @@ import common.RMIPerfExplorerModel;
 import common.TransformationType;
 import common.PerfExplorerOutput;
 import java.io.File;
+import edu.uoregon.tau.common.VectorExport;
 
 public class PerfExplorerActionListener implements ActionListener {
 
 	public final static String LOADSCRIPT = "Load Analysis Script";
 	public final static String RERUNSCRIPT = "Re-run Analysis Script";
+	public final static String SAVE = "Save As Vector Image";
 	public final static String QUIT = "Quit PerfExplorer";
 	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
 	public final static String LOOK_AND_FEEL = "Set Look and Feel: ";
@@ -111,6 +113,8 @@ public class PerfExplorerActionListener implements ActionListener {
 					loadScript();
 				} else if (arg.equals(RERUNSCRIPT)) {
 					runScript();
+				} else if (arg.equals(SAVE)) {
+					saveThyself();
 			// help menu items
 				} else if (arg.equals(ABOUT)) {
 					createAboutWindow();
@@ -703,4 +707,15 @@ public class PerfExplorerActionListener implements ActionListener {
 			return true;
 		}
 	}
+
+    public void saveThyself() {
+        //System.out.println("Daemon come out!");
+        try {
+            VectorExport.promptForVectorExport (mainFrame, "PerfExplorer");
+        } catch (Exception e) {
+            System.out.println("File Export Failed!");
+        }
+        return;
+    }
+
 }

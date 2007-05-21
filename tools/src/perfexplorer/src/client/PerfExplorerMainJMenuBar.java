@@ -34,6 +34,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		fileMenu.add(rerunItem);
 
 		//Add a menu item.
+		JMenuItem saveItem = new JMenuItem(
+				PerfExplorerActionListener.SAVE);
+		saveItem.addActionListener(listener);
+		fileMenu.add(saveItem);
+
+		//Add a menu item.
 		JMenuItem quitItem = new JMenuItem(
 				PerfExplorerActionListener.QUIT);
 		quitItem.setAccelerator(KeyStroke.getKeyStroke(
