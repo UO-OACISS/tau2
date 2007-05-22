@@ -190,6 +190,7 @@ inteltflop=no
 intelcxxlibicc=no
 intelifort=no
 intel=no
+gnu=no
 profile=no
 monitor=no
 profilecounters=no
@@ -1854,6 +1855,7 @@ case $cxx_compiler in
    *g++)
       echo "Default C++ compiler will be " \
          `gcc -v 2>&1 | tail -1 | sed 's/gcc/g++/g'`
+      gnu=yes
       # No fixmakeargs needed because it is the default
       ;;
 
@@ -4245,9 +4247,16 @@ if [ $intel = yes ]
     then
       fixmakeargs="$fixmakeargs INTELOPENMP"
     fi
-    
 fi 
 
+
+if [ $gnu = yes ]
+  then
+    if [ $openmp = yes ]
+    then
+      fixmakeargs="$fixmakeargs GNUOPENMP"
+    fi
+fi 
 
 
 
