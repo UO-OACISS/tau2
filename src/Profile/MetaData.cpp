@@ -184,7 +184,7 @@ static void writeTagXML(FILE *f, const char *tag, const char *s, bool newline) {
 
 
 static void writeXMLAttribute(FILE *f, const char *name, const char *value, bool newline) {
-  char *endl = "";
+  const char *endl = "";
   if (newline) {
     endl = "\n";
   }
@@ -220,7 +220,7 @@ static int writeXMLTime(FILE *fp, bool newline) {
 //    sprintf(newStringTime,"%s-%s-%s-%s-%s",day,month,dayInt,time,year);
 //    fprintf (fp, "<date>%s</date>\n", newStringTime);
 
-   char *endl = "";
+   const char *endl = "";
    if (newline) {
      endl = "\n";
    }
@@ -309,7 +309,7 @@ static void writeUserEventXML(FILE *f, int id, TauUserEvent *ue) {
 }
 
 static int writeMetaData(FILE *fp, bool newline) {
-  char *endl = "";
+  const char *endl = "";
   if (newline) {
     endl = "\n";
   }
@@ -478,8 +478,8 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
    if (!fp) {
      // create file 
-     char *dirname;
-     char *currentDirectory = ".";
+     const char *dirname;
+     const char *currentDirectory = ".";
      if ((dirname = getenv("PROFILEDIR")) == NULL) {
        dirname = currentDirectory;
      }
