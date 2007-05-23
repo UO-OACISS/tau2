@@ -1338,11 +1338,11 @@ ALPHATIMERS)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LAHEY_FORTRAN)
-	echo "NOTE: Leahy lf95 compiler specific options used"
+	echo "NOTE: Lahey lf95 compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LAHEY64_FORTRAN)
-	echo "NOTE: Leahy lf95 64 bit compiler specific options used"
+	echo "NOTE: Lahey lf95 64 bit compiler specific options used"
 	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      NAGWARE_FORTRAN)

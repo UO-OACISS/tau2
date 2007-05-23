@@ -2200,7 +2200,7 @@ case $fortran_compiler in
       ;;
 
    lahey)
-      echo "Default Fortran compiler will be Leahy lf95"
+      echo "Default Fortran compiler will be Lahey lf95"
       extradir=`which lf95 | sed s/lf95/../`
       if [ -d $extradir/lib64 ]
       then
