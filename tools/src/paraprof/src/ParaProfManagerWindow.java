@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.15 2007/05/16 20:07:54 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.16 2007/05/23 01:41:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -1946,17 +1946,19 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             databaseAPI.initialize(database);
 
             if (!metaDataRetrieved) {
+                DatabaseAPI defaultDatabaseAPI = new DatabaseAPI();
+                defaultDatabaseAPI.initialize(getDefaultDatabase());
                 metaDataRetrieved = true;
                 for (Iterator it = ParaProf.applicationManager.getApplications().iterator(); it.hasNext();) {
                     ParaProfApplication ppApp = (ParaProfApplication) it.next();
                     if (!ppApp.dBApplication()) {
-                        ppApp.reallocMetaData();
+                        ppApp.setDatabase(getDefaultDatabase());
                         for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
                             ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
-                            ppExp.reallocMetaData();
+                            ppExp.setDatabase(getDefaultDatabase());
                             for (Iterator it3 = ppExp.getTrialList(); it3.hasNext();) {
                                 ParaProfTrial ppTrial = (ParaProfTrial) it3.next();
-                                ppTrial.getTrial().reallocMetaData();
+                                ppTrial.getTrial().setDatabase(getDefaultDatabase());
                             }
                         }
                     }
