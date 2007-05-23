@@ -2941,7 +2941,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	       correct location */
 	    /* Also check to see if lit is the same as it or in other 
 	       words, has the body begin written the statement? */
-	    printf("Return: row = %d col = %d\n", (*it)->line, col);
+	    /* printf("Return: row = %d col = %d\n", (*it)->line, col); */
 	    if (col && col > (*it)->col && lit!=it)
 	    {
 	      for(i=(*it)->col-1; i < col-1; i++)
@@ -3787,8 +3787,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.168 $   $Date: 2007/05/23 21:48:24 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.168 2007/05/23 21:48:24 sameer Exp $
+ * $Revision: 1.169 $   $Date: 2007/05/23 21:49:56 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.169 2007/05/23 21:49:56 sameer Exp $
  ***************************************************************************/
 
 
