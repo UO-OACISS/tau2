@@ -1504,6 +1504,7 @@ int *provided;
 
  
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
+  Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
  
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
