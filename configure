@@ -2883,6 +2883,7 @@ then
       if [ $epilog = yes -a -f $epiloglibdir/libfmpi.a ]
       then
         mpiflibargs="$wrapperlib -lfmpi"
+        wrapperlib="$wrapperlib -lfmpi"
       fi 
  
 
