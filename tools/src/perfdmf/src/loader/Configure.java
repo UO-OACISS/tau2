@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import edu.uoregon.tau.common.Common;
 import edu.uoregon.tau.common.Wget;
 import edu.uoregon.tau.common.tar.Tar;
+import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.database.*;
 
 public class Configure {
@@ -702,7 +703,7 @@ public class Configure {
         ConnectionManager connector = null;
         DB db = null;
         try {
-            connector = new ConnectionManager(configFileName);
+            connector = new ConnectionManager(new Database(configFileName));
             connector.connect();
             db = connector.getDB();
         } catch (Exception e) {

@@ -20,7 +20,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.18 2007/04/14 01:07:08 khuck Exp $
+ * CVS $Id: Trial.java,v 1.19 2007/05/23 01:40:18 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -34,10 +34,8 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * @see AtomicEvent
  */
 public class Trial implements Serializable {
-    private static String fieldNames[];
-    private static int fieldTypes[];
-    public static final String XML_METADATA = new String("XML_METADATA");
-    public static final String XML_METADATA_GZ = new String("XML_METADATA_GZ");
+    public static final String XML_METADATA = "XML_METADATA";
+    public static final String XML_METADATA_GZ = "XML_METADATA_GZ";
 
     private int trialID;
     private int experimentID;
@@ -48,14 +46,11 @@ public class Trial implements Serializable {
 
     protected DataSource dataSource = null;
 
+    private Database database;
     private Map metaData = null;
 
     public Trial() {
-        if (Trial.fieldNames == null) {
-            this.fields = new String[0];
-        } else {
-            this.fields = new String[Trial.fieldNames.length];
-        }
+        this.fields = new String[0];
     }
 
     // copy constructor
@@ -66,14 +61,7 @@ public class Trial implements Serializable {
         this.trialID = trial.getID();
         this.fields = (String[]) trial.fields.clone();
         this.metaData = trial.metaData;
-    }
-
-    public void reallocMetaData() {
-        if (Trial.fieldNames == null) {
-            this.fields = new String[0];
-        } else {
-            this.fields = new String[Trial.fieldNames.length];
-        }
+        this.database = trial.database;
     }
 
     ///////////////////////////////////////////////////////
@@ -83,11 +71,11 @@ public class Trial implements Serializable {
     }
 
     public String getFieldName(int idx) {
-        return Trial.fieldNames[idx];
+        return database.getTrialFieldNames()[idx];
     }
 
     public int getFieldType(int idx) {
-        return Trial.fieldTypes[idx];
+        return database.getTrialFieldTypes()[idx];
     }
 
     public String getField(int idx) {
@@ -95,10 +83,10 @@ public class Trial implements Serializable {
     }
 
     public String getField(String name) {
-        if (Trial.fieldNames == null)
+        if (database.getTrialFieldNames() == null)
             return null;
-        for (int i = 0; i < Trial.fieldNames.length; i++) {
-            if (name.toUpperCase().equals(Trial.fieldNames[i].toUpperCase())) {
+        for (int i = 0; i < database.getTrialFieldNames().length; i++) {
+            if (name.toUpperCase().equals(database.getTrialFieldNames()[i].toUpperCase())) {
                 if (i < fields.length)
                     return fields[i];
             }
@@ -107,10 +95,10 @@ public class Trial implements Serializable {
     }
 
     public void setField(String field, String value) {
-        for (int i = 0; i < Trial.fieldNames.length; i++) {
-            if (field.toUpperCase().equals(Trial.fieldNames[i].toUpperCase())) {
+        for (int i = 0; i < database.getTrialFieldNames().length; i++) {
+            if (field.toUpperCase().equals(database.getTrialFieldNames()[i].toUpperCase())) {
 
-                if (DBConnector.isIntegerType(fieldTypes[i]) && value != null) {
+                if (DBConnector.isIntegerType(database.getTrialFieldTypes()[i]) && value != null) {
                     try {
                         int test = Integer.parseInt(value);
                     } catch (java.lang.NumberFormatException e) {
@@ -118,7 +106,7 @@ public class Trial implements Serializable {
                     }
                 }
 
-                if (DBConnector.isFloatingPointType(fieldTypes[i]) && value != null) {
+                if (DBConnector.isFloatingPointType(database.getTrialFieldTypes()[i]) && value != null) {
                     try {
                         double test = Double.parseDouble(value);
                     } catch (java.lang.NumberFormatException e) {
@@ -127,7 +115,7 @@ public class Trial implements Serializable {
                 }
 
                 if (fields.length <= i) {
-                    fields = new String[Trial.fieldNames.length];
+                    fields = new String[database.getTrialFieldTypes().length];
                 }
                 fields[i] = value;
             }
@@ -135,7 +123,7 @@ public class Trial implements Serializable {
     }
 
     public void setField(int idx, String value) {
-        if (DBConnector.isIntegerType(fieldTypes[idx]) && value != null) {
+        if (DBConnector.isIntegerType(database.getTrialFieldTypes()[idx]) && value != null) {
             try {
                 int test = Integer.parseInt(value);
             } catch (java.lang.NumberFormatException e) {
@@ -143,7 +131,7 @@ public class Trial implements Serializable {
             }
         }
 
-        if (DBConnector.isFloatingPointType(fieldTypes[idx]) && value != null) {
+        if (DBConnector.isFloatingPointType(database.getTrialFieldTypes()[idx]) && value != null) {
             try {
                 double test = Double.parseDouble(value);
             } catch (java.lang.NumberFormatException e) {
@@ -353,7 +341,7 @@ public class Trial implements Serializable {
      */
     public static String[] getFieldNames(DB db) {
         getMetaData(db);
-        return fieldNames;
+        return db.getDatabase().getExpFieldNames();
     }
 
     public static void getMetaData(DB db) {
@@ -408,12 +396,15 @@ public class Trial implements Serializable {
             }
             resultSet.close();
 
-            Trial.fieldNames = new String[nameList.size()];
-            Trial.fieldTypes = new int[typeList.size()];
+            String[] fieldNames = new String[nameList.size()];
+            int[] fieldTypes = new int[typeList.size()];
             for (int i = 0; i < typeList.size(); i++) {
-                Trial.fieldNames[i] = (String) nameList.get(i);
-                Trial.fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
+                fieldNames[i] = (String) nameList.get(i);
+                fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
             }
+
+            db.getDatabase().setTrialFieldNames(fieldNames);
+            db.getDatabase().setTrialFieldTypes(fieldTypes);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -424,14 +415,15 @@ public class Trial implements Serializable {
         try {
 
             Trial.getMetaData(db);
+            Database database = db.getDatabase();
 
             // create a string to hit the database
             StringBuffer buf = new StringBuffer();
             buf.append("select t.id, t.experiment, e.application, ");
             buf.append("t.name");
 
-            for (int i = 0; i < Trial.fieldNames.length; i++) {
-                buf.append(", t." + Trial.fieldNames[i]);
+            for (int i = 0; i < database.getTrialFieldNames().length; i++) {
+                buf.append(", t." + database.getTrialFieldNames()[i]);
             }
 
             buf.append(" from " + db.getSchemaPrefix() + "trial t inner join " + db.getSchemaPrefix() + "experiment e ");
@@ -444,23 +436,23 @@ public class Trial implements Serializable {
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
                 Trial trial = new Trial();
-
+                trial.setDatabase(db.getDatabase());
                 int pos = 1;
                 trial.setID(resultSet.getInt(pos++));
                 trial.setExperimentID(resultSet.getInt(pos++));
                 trial.setApplicationID(resultSet.getInt(pos++));
                 trial.setName(resultSet.getString(pos++));
 
-                for (int i = 0; i < Trial.fieldNames.length; i++) {
-					if (Trial.fieldNames[i].equalsIgnoreCase(XML_METADATA_GZ)) {
-						InputStream compressedStream = resultSet.getBinaryStream(pos++);
-						String tmp = Gzip.decompress(compressedStream);
-						//trial.setField(i, tmp);
-						if (tmp != null && tmp.length() > 0)
-							trial.setField(XML_METADATA, tmp);
-					} else {
-						trial.setField(i, resultSet.getString(pos++));
-					}
+                for (int i = 0; i < database.getTrialFieldNames().length; i++) {
+                    if (database.getTrialFieldNames()[i].equalsIgnoreCase(XML_METADATA_GZ)) {
+                        InputStream compressedStream = resultSet.getBinaryStream(pos++);
+                        String tmp = Gzip.decompress(compressedStream);
+                        //trial.setField(i, tmp);
+                        if (tmp != null && tmp.length() > 0)
+                            trial.setField(XML_METADATA, tmp);
+                    } else {
+                        trial.setField(i, resultSet.getString(pos++));
+                    }
                 }
 
                 trials.addElement(trial);
@@ -521,7 +513,7 @@ public class Trial implements Serializable {
             // get the fields since this is an insert
             if (!itExists) {
                 Trial.getMetaData(db);
-                this.fields = new String[Trial.fieldNames.length];
+                this.fields = new String[database.getTrialFieldNames().length];
             }
 
             if (this.getDataSource() != null) {
@@ -597,16 +589,16 @@ public class Trial implements Serializable {
             statement.setInt(pos++, experimentID);
             for (int i = 0; i < this.getNumFields(); i++) {
                 if (DBConnector.isWritableType(this.getFieldType(i))) {
-					if (this.getFieldName(i).equalsIgnoreCase(XML_METADATA_GZ)) {
-						if (this.getField(i) == null) {
-							statement.setNull(pos++, this.getFieldType(i));
-						} else {
-							byte[] compressed = Gzip.compress(this.getField(i));
-							ByteArrayInputStream in = new ByteArrayInputStream(compressed);
-							statement.setBinaryStream(pos++, in, compressed.length);
-						}
-					} else
-                    	statement.setString(pos++, this.getField(i));
+                    if (this.getFieldName(i).equalsIgnoreCase(XML_METADATA_GZ)) {
+                        if (this.getField(i) == null) {
+                            statement.setNull(pos++, this.getFieldType(i));
+                        } else {
+                            byte[] compressed = Gzip.compress(this.getField(i));
+                            ByteArrayInputStream in = new ByteArrayInputStream(compressed);
+                            statement.setBinaryStream(pos++, in, compressed.length);
+                        }
+                    } else
+                        statement.setString(pos++, this.getField(i));
                 }
             }
 
@@ -818,27 +810,26 @@ public class Trial implements Serializable {
     private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
         // always perform the default de-serialization first
         aInputStream.defaultReadObject();
-        if (fieldNames == null)
-            fieldNames = (String[]) aInputStream.readObject();
-        if (fieldTypes == null)
-            fieldTypes = (int[]) aInputStream.readObject();
+        //        if (fieldNames == null)
+        //            fieldNames = (String[]) aInputStream.readObject();
+        //        if (fieldTypes == null)
+        //            fieldTypes = (int[]) aInputStream.readObject();
     }
 
     private void writeObject(ObjectOutputStream aOutputStream) throws IOException {
         // always perform the default serialization first
         aOutputStream.defaultWriteObject();
-        aOutputStream.writeObject(fieldNames);
-        aOutputStream.writeObject(fieldTypes);
+        //        aOutputStream.writeObject(fieldNames);
+        //        aOutputStream.writeObject(fieldTypes);
     }
 
     /**
      *  hack - needed to delete meta so that it is reloaded each time a new database is created.
      */
-    public void removeMetaData() {
-        fieldNames = null;
-        fieldTypes = null;
-    }
-
+    //    public void removeMetaData() {
+    //        fieldNames = null;
+    //        fieldTypes = null;
+    //    }
     public void checkForMetadataColumn(DB db) {
         String[] columns = Trial.getFieldNames(db);
         boolean found = false;
@@ -863,7 +854,7 @@ public class Trial implements Serializable {
             } else if (db.getDBType().equalsIgnoreCase("mysql")) {
                 sql.append(" TEXT"); // defaults to 64 KB max
             } else if (db.getDBType().equalsIgnoreCase("postgresql")) {
-                sql.append(" TEXT");  // defaults to 4 GB max
+                sql.append(" TEXT"); // defaults to 4 GB max
             }
 
             try {
@@ -899,7 +890,7 @@ public class Trial implements Serializable {
             } else if (db.getDBType().equalsIgnoreCase("mysql")) {
                 sql.append(" BLOB"); // defaults to 64 KB max
             } else if (db.getDBType().equalsIgnoreCase("postgresql")) {
-                sql.append(" BYTEA");  // defaults to 4 GB max
+                sql.append(" BYTEA"); // defaults to 4 GB max
             }
 
             try {
@@ -917,6 +908,16 @@ public class Trial implements Serializable {
 
     public void setMetaData(Map metaDataMap) {
         this.metaData = metaDataMap;
+    }
+
+    public Database getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(Database database) {
+        this.database = database;
+        fields = new String[database.getTrialFieldNames().length];
+
     }
 
 }

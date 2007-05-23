@@ -13,11 +13,11 @@ import edu.uoregon.tau.perfdmf.database.ParseConfig;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.14 2007/05/16 20:06:53 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.15 2007/05/23 01:40:18 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  */
 public class DatabaseAPI {
 
@@ -84,11 +84,12 @@ public class DatabaseAPI {
 
     // Initialization / termination routines
 
-    public void initialize(Object obj, boolean prompt) throws SQLException {
-        configFileName = new String((String) (obj));
-        //Initialize the connection to the database,
-        //using the configuration settings.
-        connector = new ConnectionManager(configFileName, prompt);
+    public void initialize(String configFile, boolean prompt) throws SQLException {
+        initialize(new Database(configFile), prompt);
+    }
+    
+    public void initialize(Database database, boolean prompt) throws SQLException {
+        connector = new ConnectionManager(database, prompt);
         connector.connect();
         db = connector.getDB();
         Application.getMetaData(db);
@@ -96,20 +97,8 @@ public class DatabaseAPI {
         Trial.getMetaData(db);
     }
 
-    public void initialize(ParseConfig parser, String password) throws SQLException {
-        connector = new ConnectionManager(parser, password);
-        connector.connect();
-        db = connector.getDB();
-        Application.getMetaData(db);
-        Experiment.getMetaData(db);
-        Trial.getMetaData(db);
-    }
-
-    public void initialize(Object obj, String password) throws SQLException {
-        String configFileName = (String) (obj);
-        //Initialize the connection to the database,
-        //using the configuration settings.
-        connector = new ConnectionManager(configFileName, password);
+    public void initialize(Database database, String password) throws SQLException {
+        connector = new ConnectionManager(database, password);
         connector.connect();
         db = connector.getDB();
         Application.getMetaData(db);
@@ -119,7 +108,7 @@ public class DatabaseAPI {
 
     public void initialize(Database database) throws SQLException {
         this.database = database;
-        connector = new ConnectionManager(database.getConfig());
+        connector = new ConnectionManager(database);
         connector.connect();
         db = connector.getDB();
         Application.getMetaData(db);
@@ -138,7 +127,7 @@ public class DatabaseAPI {
     // returns Vector of ALL Application objects
     public List getApplicationList() throws DatabaseException {
         String whereClause = "";
-        return Application.getApplicationList(db, whereClause, database);
+        return Application.getApplicationList(db, whereClause);
     }
 
     // returns Vector of Experiment objects
@@ -171,7 +160,7 @@ public class DatabaseAPI {
         this.atomicEventHash = null;
         // create a string to hit the database
         String whereClause = " WHERE id = " + id;
-        Vector applications = Application.getApplicationList(db, whereClause, database);
+        Vector applications = Application.getApplicationList(db, whereClause);
         if (applications.size() == 1) {
             this.application = (Application) applications.elementAt(0);
         } // else exception?
@@ -191,7 +180,7 @@ public class DatabaseAPI {
         if (version != null) {
             whereClause.append(" AND version = " + version);
         }
-        Vector applications = Application.getApplicationList(db, whereClause.toString(), database);
+        Vector applications = Application.getApplicationList(db, whereClause.toString());
         if (applications.size() == 1) {
             this.application = (Application) applications.elementAt(0);
             return this.application;

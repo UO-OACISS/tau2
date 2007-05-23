@@ -8,11 +8,13 @@ package edu.uoregon.tau.perfdmf.database;
 
 import java.sql.*;
 
+import edu.uoregon.tau.perfdmf.Database;
+
 /**
  * Low level API wrapper around a JDBC connection
  *
- * <P>CVS $Id: DB.java,v 1.4 2007/05/11 21:42:48 amorris Exp $</P>
- * @version $Revision: 1.4 $
+ * <P>CVS $Id: DB.java,v 1.5 2007/05/23 01:40:18 amorris Exp $</P>
+ * @version $Revision: 1.5 $
  */
 public interface DB {
     public void close();
@@ -46,4 +48,7 @@ public interface DB {
     public void rollback() throws SQLException;
 
     public String getConnectString();
+    
+    
+    public Database getDatabase();
 }

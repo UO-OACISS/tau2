@@ -14,7 +14,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.10 2007/05/16 20:06:53 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.11 2007/05/23 01:40:18 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -23,30 +23,24 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * @see		Experiment
  */
 public class Application implements Serializable {
-    public static String fieldNames[];
-    public static int fieldTypes[];
 
     private int applicationID;
     private String name;
     private String fields[];
 
-
     private Database database;
-    
+
     public Database getDatabase() {
         return database;
     }
 
     public void setDatabase(Database database) {
         this.database = database;
+        fields = new String[database.getAppFieldNames().length];
     }
 
     public Application() {
-        if (Application.fieldNames == null) {
-            fields = new String[0];
-        } else {
-            this.fields = new String[Application.fieldNames.length];
-        }
+        fields = new String[0];
     }
 
     // copy constructor
@@ -55,14 +49,6 @@ public class Application implements Serializable {
         this.applicationID = app.getID();
         this.fields = (String[]) app.fields.clone();
         this.database = app.database;
-    }
-
-    public void reallocMetaData() {
-        if (Application.fieldNames == null) {
-            this.fields = new String[0];
-        } else {
-            this.fields = new String[Application.fieldNames.length];
-        }
     }
 
     public String[] getFields() {
@@ -79,9 +65,8 @@ public class Application implements Serializable {
      * @param	db	the database connection
      * @return	String[] an array of String objects
      */
-    public static String[] getFieldNames(DB db) throws DatabaseException {
-        getMetaData(db);
-        return fieldNames;
+    public String[] getFieldNames(DB db) throws DatabaseException {
+        return database.getAppFieldNames();
     }
 
     public static void getMetaData(DB db) {
@@ -90,6 +75,7 @@ public class Application implements Serializable {
         //            return;
 
         try {
+            Database database = db.getDatabase();
             ResultSet resultSet = null;
 
             String appFieldNames[] = null;
@@ -133,13 +119,17 @@ public class Application implements Serializable {
             }
             resultSet.close();
 
-            Application.fieldNames = new String[nameList.size()];
-            Application.fieldTypes = new int[typeList.size()];
+            String[] fieldNames = new String[nameList.size()];
+            int[] fieldTypes = new int[typeList.size()];
 
             for (int i = 0; i < typeList.size(); i++) {
-                Application.fieldNames[i] = (String) nameList.get(i);
-                Application.fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
+                fieldNames[i] = (String) nameList.get(i);
+                fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
             }
+
+            database.setAppFieldNames(fieldNames);
+            database.setAppFieldTypes(fieldTypes);
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -150,20 +140,20 @@ public class Application implements Serializable {
     }
 
     public String getFieldName(int idx) {
-        return fieldNames[idx];
+        return database.getAppFieldNames()[idx];
     }
 
     public int getFieldType(int idx) {
-        return Application.fieldTypes[idx];
+        return database.getAppFieldTypes()[idx];
     }
 
     // These two are here to handle the copy constructor for making ParaProfApplications
     public String[] getFieldNames() {
-        return fieldNames;
+        return database.getAppFieldNames();
     }
 
     public int[] getFieldTypes() {
-        return fieldTypes;
+        return database.getAppFieldTypes();
     }
 
     /**
@@ -193,10 +183,10 @@ public class Application implements Serializable {
     }
 
     public String getField(String name) {
-        if (Application.fieldNames == null)
+        if (database.getAppFieldNames() == null)
             return null;
-        for (int i = 0; i < Application.fieldNames.length; i++) {
-            if (name.toUpperCase().equals(Application.fieldNames[i].toUpperCase())) {
+        for (int i = 0; i < database.getAppFieldNames().length; i++) {
+            if (name.toUpperCase().equals(database.getAppFieldNames()[i].toUpperCase())) {
                 if (i < fields.length)
                     return fields[i];
             }
@@ -205,7 +195,7 @@ public class Application implements Serializable {
     }
 
     public void setField(int idx, String field) {
-        if (DBConnector.isIntegerType(fieldTypes[idx]) && field != null) {
+        if (DBConnector.isIntegerType(database.getAppFieldTypes()[idx]) && field != null) {
             try {
                 int test = Integer.parseInt(field);
             } catch (java.lang.NumberFormatException e) {
@@ -213,7 +203,7 @@ public class Application implements Serializable {
             }
         }
 
-        if (DBConnector.isFloatingPointType(fieldTypes[idx]) && field != null) {
+        if (DBConnector.isFloatingPointType(database.getAppFieldTypes()[idx]) && field != null) {
             try {
                 double test = Double.parseDouble(field);
             } catch (java.lang.NumberFormatException e) {
@@ -245,9 +235,10 @@ public class Application implements Serializable {
         this.name = name;
     }
 
-    public static Vector getApplicationList(DB db, String whereClause, Database database) {
+    public static Vector getApplicationList(DB db, String whereClause) {
         StringBuffer buf = null;
         try {
+            Database database = db.getDatabase();
             Application.getMetaData(db);
 
             ResultSet resultSet = null;
@@ -255,8 +246,8 @@ public class Application implements Serializable {
 
             buf = new StringBuffer("select id, name");
 
-            for (int i = 0; i < Application.fieldNames.length; i++) {
-                buf.append(", " + Application.fieldNames[i]);
+            for (int i = 0; i < database.getAppFieldNames().length; i++) {
+                buf.append(", " + database.getAppFieldNames()[i]);
             }
 
             buf.append(" from " + db.getSchemaPrefix() + "application");
@@ -283,7 +274,7 @@ public class Application implements Serializable {
 
                 String tmp = resultSet.getString(3);
 
-                for (int i = 0; i < Application.fieldNames.length; i++) {
+                for (int i = 0; i < database.getAppFieldNames().length; i++) {
                     application.setField(i, resultSet.getString(i + 3));
                 }
 
@@ -412,25 +403,25 @@ public class Application implements Serializable {
     private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
         // always perform the default de-serialization first
         aInputStream.defaultReadObject();
-        if (fieldNames == null)
-            fieldNames = (String[]) aInputStream.readObject();
-        if (fieldTypes == null)
-            fieldTypes = (int[]) aInputStream.readObject();
+        //        if (fieldNames == null)
+        //            fieldNames = (String[]) aInputStream.readObject();
+        //        if (fieldTypes == null)
+        //            fieldTypes = (int[]) aInputStream.readObject();
     }
 
     private void writeObject(ObjectOutputStream aOutputStream) throws IOException {
         // always perform the default serialization first
         aOutputStream.defaultWriteObject();
-        aOutputStream.writeObject(fieldNames);
-        aOutputStream.writeObject(fieldTypes);
+        //        aOutputStream.writeObject(fieldNames);
+        //        aOutputStream.writeObject(fieldTypes);
     }
 
-    /**
-     *  hack - needed to delete meta so that it is reloaded each time a new database is created.
-     */
-    public void removeMetaData() {
-        fieldNames = null;
-        fieldTypes = null;
-    }
+    //    /**
+    //     *  hack - needed to delete meta so that it is reloaded each time a new database is created.
+    //     */
+    //    public void removeMetaData() {
+    //        fieldNames = null;
+    //        fieldTypes = null;
+    //    }
 
 }

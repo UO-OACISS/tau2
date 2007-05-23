@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.7 2007/05/16 20:06:53 amorris Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.8 2007/05/23 01:40:18 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -25,21 +25,15 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * @see		Trial
  */
 public class Experiment implements Serializable {
-    private static String fieldNames[];
-    private static int fieldTypes[];
 
     private int experimentID;
     private int applicationID;
     private String name;
     private String fields[];
-
+    private Database database;
 
     public Experiment() {
-        if (Experiment.fieldNames == null) {
-            this.fields = new String[0];
-        } else {
-            this.fields = new String[Experiment.fieldNames.length];
-        }
+        this.fields = new String[0];
     }
 
     // copy constructor
@@ -48,27 +42,22 @@ public class Experiment implements Serializable {
         this.applicationID = exp.getApplicationID();
         this.experimentID = exp.getID();
         this.fields = (String[]) exp.fields.clone();
-    }
-
-    public void reallocMetaData() {
-        if (Experiment.fieldNames == null) {
-            this.fields = new String[0];
-        } else {
-            this.fields = new String[Experiment.fieldNames.length];
-        }
+        this.database = exp.database;
     }
 
     public String[] getFields() {
         return fields;
     }
-    
+
     public void setFields(String[] fields) {
         this.fields = fields;
     }
-    
+
     public static void getMetaData(DB db) {
-        // see if we've already have them
-        if (Experiment.fieldNames != null)
+        Database database = db.getDatabase();
+
+        //see if we've already have them
+        if (database.getExpFieldNames() != null)
             return;
 
         try {
@@ -79,9 +68,8 @@ public class Experiment implements Serializable {
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
-            if ((db.getDBType().compareTo("oracle") == 0) || 
-				(db.getDBType().compareTo("derby") == 0) || 
-				(db.getDBType().compareTo("db2") == 0)) {
+            if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)
+                    || (db.getDBType().compareTo("db2") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "EXPERIMENT", "%");
             } else {
                 resultSet = dbMeta.getColumns(null, null, "experiment", "%");
@@ -89,7 +77,7 @@ public class Experiment implements Serializable {
 
             Vector nameList = new Vector();
             Vector typeList = new Vector();
-			boolean seenID = false;
+            boolean seenID = false;
 
             while (resultSet.next() != false) {
 
@@ -101,17 +89,16 @@ public class Experiment implements Serializable {
                 // only integer and string types (for now)
                 // don't do name and id, we already know about them
 
-				// this code is because of a bug in derby...
-				if (cname.equals("ID")) {
-					if (!seenID)
-						seenID = true;
-					else
-						break;
-				}
+                // this code is because of a bug in derby...
+                if (cname.equals("ID")) {
+                    if (!seenID)
+                        seenID = true;
+                    else
+                        break;
+                }
 
                 if (DBConnector.isReadAbleType(ctype) && cname.toUpperCase().compareTo("ID") != 0
-                        && cname.toUpperCase().compareTo("NAME") != 0
-                        && cname.toUpperCase().compareTo("APPLICATION") != 0) {
+                        && cname.toUpperCase().compareTo("NAME") != 0 && cname.toUpperCase().compareTo("APPLICATION") != 0) {
 
                     nameList.add(resultSet.getString("COLUMN_NAME"));
                     typeList.add(new Integer(ctype));
@@ -120,20 +107,23 @@ public class Experiment implements Serializable {
             }
             resultSet.close();
 
-            Experiment.fieldNames = new String[nameList.size()];
-            Experiment.fieldTypes = new int[typeList.size()];
+            String[] fieldNames = new String[nameList.size()];
+            int[] fieldTypes = new int[typeList.size()];
 
             for (int i = 0; i < typeList.size(); i++) {
-                Experiment.fieldNames[i] = (String) nameList.get(i);
-                Experiment.fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
+                fieldNames[i] = (String) nameList.get(i);
+                fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
             }
+
+            database.setExpFieldNames(fieldNames);
+            database.setExpFieldTypes(fieldTypes);
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-//        } catch (SQLException e) {
-//            throw new DatabaseException("Error retrieving Experiment metadata", e);
-//        }
+        //        } catch (SQLException e) {
+        //            throw new DatabaseException("Error retrieving Experiment metadata", e);
+        //        }
     }
 
     public int getNumFields() {
@@ -141,7 +131,7 @@ public class Experiment implements Serializable {
     }
 
     public String getFieldName(int idx) {
-        return Experiment.fieldNames[idx];
+        return database.getExpFieldNames()[idx];
     }
 
     public String getField(int idx) {
@@ -149,12 +139,12 @@ public class Experiment implements Serializable {
     }
 
     public int getFieldType(int idx) {
-        return Experiment.fieldTypes[idx];
+        return database.getExpFieldTypes()[idx];
     }
 
     public void setField(int idx, String field) {
 
-        if (DBConnector.isIntegerType(fieldTypes[idx]) && field != null) {
+        if (DBConnector.isIntegerType(database.getExpFieldTypes()[idx]) && field != null) {
             try {
                 int test = Integer.parseInt(field);
             } catch (java.lang.NumberFormatException e) {
@@ -162,7 +152,7 @@ public class Experiment implements Serializable {
             }
         }
 
-        if (DBConnector.isFloatingPointType(fieldTypes[idx]) && field != null) {
+        if (DBConnector.isFloatingPointType(database.getExpFieldTypes()[idx]) && field != null) {
             try {
                 double test = Double.parseDouble(field);
             } catch (java.lang.NumberFormatException e) {
@@ -245,19 +235,19 @@ public class Experiment implements Serializable {
      */
     public static String[] getFieldNames(DB db) throws DatabaseException {
         getMetaData(db);
-        return fieldNames;
+        return db.getDatabase().getExpFieldNames();
     }
 
     public static Vector getExperimentList(DB db, String whereClause) throws DatabaseException {
         try {
             Experiment.getMetaData(db);
-
+            Database database = db.getDatabase();
             // create a string to hit the database
             StringBuffer buf = new StringBuffer();
             buf.append("select id, application, name");
 
-            for (int i = 0; i < Experiment.fieldNames.length; i++) {
-                buf.append(", " + Experiment.fieldNames[i]);
+            for (int i = 0; i < database.getExpFieldNames().length; i++) {
+                buf.append(", " + database.getExpFieldNames()[i]);
             }
 
             buf.append(" from ");
@@ -282,11 +272,12 @@ public class Experiment implements Serializable {
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
                 Experiment exp = new Experiment();
+                exp.setDatabase(db.getDatabase());
                 exp.setID(resultSet.getInt(1));
                 exp.setApplicationID(resultSet.getInt(2));
                 exp.setName(resultSet.getString(3));
 
-                for (int i = 0; i < Experiment.fieldNames.length; i++) {
+                for (int i = 0; i < database.getExpFieldNames().length; i++) {
                     exp.setField(i, resultSet.getString(i + 4));
                 }
 
@@ -393,24 +384,32 @@ public class Experiment implements Serializable {
     private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
         // always perform the default de-serialization first
         aInputStream.defaultReadObject();
-        if (fieldNames == null)
-            fieldNames = (String[]) aInputStream.readObject();
-        if (fieldTypes == null)
-            fieldTypes = (int[]) aInputStream.readObject();
+        //        if (fieldNames == null)
+        //            fieldNames = (String[]) aInputStream.readObject();
+        //        if (fieldTypes == null)
+        //            fieldTypes = (int[]) aInputStream.readObject();
     }
 
     private void writeObject(ObjectOutputStream aOutputStream) throws IOException {
         // always perform the default serialization first
         aOutputStream.defaultWriteObject();
-        aOutputStream.writeObject(fieldNames);
-        aOutputStream.writeObject(fieldTypes);
+        //        aOutputStream.writeObject(fieldNames);
+        //        aOutputStream.writeObject(fieldTypes);
     }
+
     /**
      *  hack - needed to delete meta so that it is reloaded each time a new database is created.
      */
-    public void removeMetaData()
-    {
-    	fieldNames = null;
-    	fieldTypes = null;
+    //    public void removeMetaData() {
+    //        fieldNames = null;
+    //        fieldTypes = null;
+    //    }
+    public Database getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(Database database) {
+        this.database = database;
+        fields = new String[database.getExpFieldNames().length];
     }
 }

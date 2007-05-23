@@ -6,6 +6,8 @@ import java.net.URLClassLoader;
 import java.sql.*;
 import java.util.Properties;
 
+import edu.uoregon.tau.perfdmf.Database;
+
 /*******************************************************
  * Implements access to a database
  * Be sure to specify JDBC Driver in the class path.
@@ -17,8 +19,8 @@ import java.util.Properties;
 public class DBConnector implements DB {
 
     private Statement statement;
-    private Connection conn = null;
-    private ParseConfig parseConfig = null;
+    private Connection conn;
+    private ParseConfig config;
 
     private String dbaddress;
     // it looks like "jdbc:postgresql://zeta:5432/perfdmf;" in PostgreSQL.
@@ -28,6 +30,8 @@ public class DBConnector implements DB {
     private String driverName;
     private String JDBCjarFileName;
 
+    private Database database;
+    
     /*
      * This class is here because the DriverManager refuses to use a driver that is not loaded
      * by the system ClassLoader.  So we wrap it with this.
@@ -67,24 +71,25 @@ public class DBConnector implements DB {
 
     // it should be "org.postgresql.Driver" in PostgreSQL.
 
-    public DBConnector(ParseConfig parser) throws SQLException {
-        super();
-        parseConfig = parser;
-        setJDBC(parser);
-        register();
-    }
+//    public DBConnector(ParseConfig parser) throws SQLException {
+//        super();
+//        parseConfig = parser;
+//        setJDBC(parser);
+//        register();
+//    }
 
-    public DBConnector(String user, String password, ParseConfig parser) throws SQLException {
-        super();
-        parseConfig = parser;
-        setJDBC(parser);
+    public DBConnector(String user, String password, Database database) throws SQLException {
+        this.database = database;
+        config = database.getConfig();
+        setJDBC(config);
         register();
         connect(user, password);
     }
 
-    public DBConnector(String user, String password, ParseConfig parser, boolean createDatabase) throws SQLException {
-        parseConfig = parser;
-        setJDBC(parser);
+    public DBConnector(String user, String password, Database database, boolean createDatabase) throws SQLException {
+        this.database = database;
+        config = database.getConfig();
+        setJDBC(config);
         register();
         if (createDatabase) {
             connectAndCreate(user, password);
@@ -286,20 +291,20 @@ public class DBConnector implements DB {
     }
 
     public String getDBType() {
-        return new String(this.parseConfig.getDBType());
+        return new String(this.config.getDBType());
     }
 
     public String getSchemaPrefix() {
         if (this.getDBType().compareTo("oracle") == 0) {
 
-            if (this.parseConfig.getDBSchemaPrefix() != null && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
-                return new String(this.parseConfig.getDBSchemaPrefix() + ".");
+            if (this.config.getDBSchemaPrefix() != null && this.config.getDBSchemaPrefix().compareTo("") != 0)
+                return new String(this.config.getDBSchemaPrefix() + ".");
             else
                 return "";
         } else if (this.getDBType().compareTo("db2") == 0) {
 
-            if (this.parseConfig.getDBSchemaPrefix() != null && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
-                return new String(this.parseConfig.getDBSchemaPrefix() + ".");
+            if (this.config.getDBSchemaPrefix() != null && this.config.getDBSchemaPrefix().compareTo("") != 0)
+                return new String(this.config.getDBSchemaPrefix() + ".");
             else
                 return "";
         } else {
@@ -502,5 +507,9 @@ public class DBConnector implements DB {
             return -1;
 
         return 0;
+    }
+
+    public Database getDatabase() {
+        return database;
     }
 }

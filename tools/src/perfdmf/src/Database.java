@@ -13,11 +13,74 @@ public class Database {
 
     private static int idCounter;
 
+    private String appFieldNames[];
+    private int appFieldTypes[];
+    private String expFieldNames[];
+    private int expFieldTypes[];
+    private String trialFieldNames[];
+    private int trialFieldTypes[];
+
+    public String[] getAppFieldNames() {
+        return appFieldNames;
+    }
+
+    public void setAppFieldNames(String[] appFieldNames) {
+        this.appFieldNames = appFieldNames;
+    }
+
+    public int[] getAppFieldTypes() {
+        return appFieldTypes;
+    }
+
+    public void setAppFieldTypes(int[] appFieldTypes) {
+        this.appFieldTypes = appFieldTypes;
+    }
+
+    public String[] getExpFieldNames() {
+        return expFieldNames;
+    }
+
+    public void setExpFieldNames(String[] expFieldNames) {
+        this.expFieldNames = expFieldNames;
+    }
+
+    public int[] getExpFieldTypes() {
+        return expFieldTypes;
+    }
+
+    public void setExpFieldTypes(int[] expFieldTypes) {
+        this.expFieldTypes = expFieldTypes;
+    }
+
+    public String[] getTrialFieldNames() {
+        return trialFieldNames;
+    }
+
+    public void setTrialFieldNames(String[] trialFieldNames) {
+        this.trialFieldNames = trialFieldNames;
+    }
+
+    public int[] getTrialFieldTypes() {
+        return trialFieldTypes;
+    }
+
+    public void setTrialFieldTypes(int[] trialFieldTypes) {
+        this.trialFieldTypes = trialFieldTypes;
+    }
+
     public Database(String name, ParseConfig config) {
         this.name = name;
         this.id = idCounter;
         idCounter++;
         this.config = config;
+    }
+
+    public Database(String name, String configFilename) {
+        this(name, new ParseConfig(configFilename));
+    }
+
+    public Database(String configFilename) {
+        this("???", new ParseConfig(configFilename));
     }
 
     public int getID() {
@@ -56,7 +119,7 @@ public class Database {
             dbDisplayName = "none";
         }
         //return "DB - " + name + " (" + dbDisplayName + ")"; 
-        return name + " (" + dbDisplayName + ")"; 
+        return name + " (" + dbDisplayName + ")";
     }
 
 }

@@ -15,6 +15,7 @@ import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
@@ -206,13 +207,14 @@ public class ConfigureTest {
         DB db = null;
         try {
 
+            Database database = new Database(configFileName);    
 			if (jdbc_db_type.equals("derby")) {
 				// check to see if the directory exists.  If not, create the database.
 		        if (!(new File(db_dbname).exists())) {
             		if (db_password != null) {
-						connector = new ConnectionManager(configFileName, db_password);
+						connector = new ConnectionManager(database, db_password);
             		} else {
-						connector = new ConnectionManager(configFileName);
+						connector = new ConnectionManager(database);
             		}
 					connector.connectAndCreate();
 					connector.dbclose();
@@ -220,9 +222,9 @@ public class ConfigureTest {
 				}
 			}
             if (db_password != null) {
-                connector = new ConnectionManager(configFileName, db_password);
+                connector = new ConnectionManager(database, db_password);
             } else {
-                connector = new ConnectionManager(configFileName);
+                connector = new ConnectionManager(database);
             }
             connector.connect();
             System.out.println();
