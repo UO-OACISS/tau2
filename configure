@@ -2202,7 +2202,12 @@ case $fortran_compiler in
    lahey)
       echo "Default Fortran compiler will be Leahy lf95"
       extradir=`which lf95 | sed s/lf95/../`
-      fixmakeargs="$fixmakeargs LAHEY_FORTRAN"
+      if [ -d $extradir/lib64 ]
+      then
+        fixmakeargs="$fixmakeargs LAHEY64_FORTRAN"
+      else
+        fixmakeargs="$fixmakeargs LAHEY_FORTRAN"
+      fi
       ;;
 
    nagware)
