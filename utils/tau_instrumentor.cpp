@@ -1,4 +1,4 @@
-//#define DEBUG 1
+#define DEBUG 1
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -1760,6 +1760,11 @@ int CPDB_GetSubstringCol(const char *haystack, const char *needle)
       continue; /* searching */
     }
     else {
+      if (local_haystack[col_found - 1 ] == '_') { /* corner case foo_return */
+	local_haystack[col_found] = '^';  /* set it to foo_^eturn */
+	continue;
+      }
+      
       check_before = true; /* its ok, proceed */
 #ifdef DEBUG
       printf("check_before = true, local_haystack[col_found+needle_length] = %c, isalnum(): %d, ispunct(): %d\n", local_haystack[col_found+needle_length],
@@ -2936,6 +2941,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	       correct location */
 	    /* Also check to see if lit is the same as it or in other 
 	       words, has the body begin written the statement? */
+	    printf("Return: row = %d col = %d\n", (*it)->line, col);
 	    if (col && col > (*it)->col && lit!=it)
 	    {
 	      for(i=(*it)->col-1; i < col-1; i++)
@@ -3781,8 +3787,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.166 $   $Date: 2007/05/21 21:39:50 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.166 2007/05/21 21:39:50 sameer Exp $
+ * $Revision: 1.167 $   $Date: 2007/05/23 21:46:54 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.167 2007/05/23 21:46:54 sameer Exp $
  ***************************************************************************/
 
 
