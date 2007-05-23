@@ -10,48 +10,45 @@ import edu.uoregon.tau.perfdmf.*;
 
 public class LoadTrial {
 
-    private File writeXml;
-    private String trialTime;
     private String sourceFiles[];
     private String metadataFile;
-    private Application app;
     private Experiment exp;
-    private boolean fixNames = false;
-    private int expID = 0;
-    public int trialID = 0;
-    private int fileType = 0;
-    private DataSource dataSource = null;
-    public String trialName = new String();
-    public String problemFile = new String();
+    private boolean fixNames;
+    private int expID;
+    public int trialID;
+    private DataSource dataSource;
+    public String trialName;
+    public String problemFile;
     public String configuration;
-    
+
+    private DatabaseAPI databaseAPI;
+    private Trial trial;
+
     public static void usage() {
-        System.err.println("Usage: perfdmf_loadtrial -c <config name> -g <config file> -e <experiment id> -n <name> [options] <files>\n\n"
+        System.err.println("Usage: perfdmf_loadtrial -a <appName> -x <expName> -n <name> [options] <files>\n\n"
                 + "try `perfdmf_loadtrial --help' for more information");
     }
 
     public static void outputHelp() {
 
-        System.err.println("Usage: perfdmf_loadtrial -c <config name> -e <experiment id> -n <name> [options] <files>\n\n"
-                + "Required Arguments:\n\n"
-                + "  -c, --config <name>             Specify the name of the configuration to use\n"
-                + "  -g, --configFile <file>         Specify the configuration file to use (overrides -c)\n"
+        System.err.println("Usage: perfdmf_loadtrial -a <appName> -x <expName> -n <name> [options] <files>\n\n"
+                + "Required Arguments:\n\n" + "  -n, --name <text>               Specify the name of the trial\n"
+                + "  -a, --applicationname <string>  Specify associated application name\n"
+                + "                                    for this trial\n"
+                + "  -x, --experimentname <string>   Specify associated experiment name\n"
+                + "                                    for this trial\n" + "               ...or...\n\n"
                 + "  -n, --name <text>               Specify the name of the trial\n"
                 + "  -e, --experimentid <number>     Specify associated experiment ID\n"
-				+ "                                    for this trial\n"
-				+ "               ...or...\n"
-                + "  -n, --name <text>               Specify the name of the trial\n"
-                + "  -a, --applicationname <string>  Specify associated application name\n"
-				+ "                                    for this trial\n"
-                + "  -x, --experimentname <string>   Specify associated experiment name\n"
-				+ "                                    for this trial\n"
-				+ "\n" + "Optional Arguments:\n\n"
+                + "                                    for this trial\n" + "\n" + "Optional Arguments:\n\n"
+                + "  -c, --config <name>             Specify the name of the configuration to use\n"
+                + "  -g, --configFile <file>         Specify the configuration file to use\n"
+                + "                                    (overrides -c)\n"
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                    gprof, psrun, hpm, packed, cube, hpc\n"
                 + "  -t, --trialid <number>          Specify trial ID\n"
-                + "  -i, --fixnames                  Use the fixnames option for gprof\n\n"
-                + "  -m, --metadata <filename>       XML metadata for the trial\n" + "Notes:\n"
+                + "  -i, --fixnames                  Use the fixnames option for gprof\n"
+                + "  -m, --metadata <filename>       XML metadata for the trial\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -61,31 +58,19 @@ public class LoadTrial {
                 + "    experiment 12 and give the trial the name \"Batch 001\"\n\n"
                 + "  perfdmf_loadtrial -e 12 -n \"HPM data 01\" -f hpm perfhpm*\n"
                 + "    This will load perfhpm* files of type HPMToolkit into experiment 12 and give\n"
-                + "    the trial the name \"HPM data 01\"\n"
-                + "  perfdmf_loadtrial -an \"NPB2.3\" -en \"parametric\" -n \"64\"\n"
-                + "    This will load profile.* (or multiple counters directories MULTI_*) into\n"
-				+ "    the experiment named \"parametric\" under the application named \"NPB2.3\" \n"
-				+ "    and give the trial the name \"64\"\n");
+                + "    the trial the name \"HPM data 01\"\n\n"
+                + "  perfdmf_loadtrial -a \"NPB2.3\" -x \"parametric\" -n \"64\" par64.ppk\n"
+                + "    This will load packed profile par64.ppk into the experiment named\n"
+                + "    \"parametric\" under the application named \"NPB2.3\" and give the trial\n"
+                + "    the name \"64\".  The application and experiment will be created if not found.\n");
     }
 
-    /*
-     * This variable connects translator to DB in order to check whether the
-     * app. and exp. associated with the trial data do exist there.
-     */
-    DatabaseAPI databaseAPI = null;
-    Trial trial = null;
-
-    //constructor
     public LoadTrial(String configFileName, String sourceFiles[]) {
         this.sourceFiles = sourceFiles;
 
-        // check for the existence of file
-        //readPprof = new File(sourcename);
-
         databaseAPI = new DatabaseAPI();
         try {
-            //System.out.println(configFileName + ", " + configuration);
-        	databaseAPI.initialize(configFileName, true);
+            databaseAPI.initialize(configFileName, true);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);
@@ -94,25 +79,24 @@ public class LoadTrial {
     }
 
     public boolean checkForExp(String expid, String appName, String expName) {
-		if (expid != null) {
-        	this.expID = Integer.parseInt(expid);
+        if (expid != null) {
+            this.expID = Integer.parseInt(expid);
 
-        	try {
-            	exp = databaseAPI.setExperiment(this.expID);
-        	} catch (Exception e) {
-        	}
-        	if (exp == null) {
-            	System.err.println("Experiment id " + expid + 
-						" not found,  please enter a valid experiment ID.");
-            	System.exit(-1);
-            	return false;
-        	} else
-            	return true;
-		} else {
-			Experiment exp = databaseAPI.getExperiment (appName, expName, true);
-			this.expID = exp.getID();
-			return true;
-		}
+            try {
+                exp = databaseAPI.setExperiment(this.expID);
+            } catch (Exception e) {}
+            if (exp == null) {
+                System.err.println("Experiment id " + expid + " not found,  please enter a valid experiment ID.");
+                System.exit(-1);
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            Experiment exp = databaseAPI.getExperiment(appName, expName, true);
+            this.expID = exp.getID();
+            return true;
+        }
     }
 
     public boolean checkForTrial(String trialid) {
@@ -139,15 +123,12 @@ public class LoadTrial {
             return;
         }
 
-        trial = null;
-        this.fileType = fileType;
-
         trial = new Trial();
         trial.setDataSource(dataSource);
 
-		// set the metadata file name before loading the data, because
-		// aggregateData() is called at the end of the dataSource.load()
-		// and this file has to be set before then.
+        // set the metadata file name before loading the data, because
+        // aggregateData() is called at the end of the dataSource.load()
+        // and this file has to be set before then.
         try {
             if (metadataFile != null) {
                 dataSource.setMetadataFile(metadataFile);
@@ -167,7 +148,7 @@ public class LoadTrial {
 
         // set the meta data from the datasource
         trial.setMetaData(dataSource.getMetaData());
-        
+
         if (trialID == 0) {
             saveTrial();
         } else {
@@ -176,25 +157,12 @@ public class LoadTrial {
 
     }
 
-    //    public void writeTrial() {
-    //        XMLSupport xmlWriter = new XMLSupport(trial);
-    //        xmlWriter.writeXmlFiles(0, writeXml);
-    //    }
-
     public void saveTrial() {
-        // if (fileType == 101) return;
-        // set some things in the trial
-        // 	int[] maxNCT = dataSession.getMaxNCTNumbers();
-        // 	trial.setNodeCount(maxNCT[0]+1);
-        // 	trial.setNumContextsPerNode(maxNCT[1]+1);
-        // 	trial.setNumThreadsPerContext(maxNCT[2]+1);
         trial.setName(trialName);
-        //trial.setProblemDefinition(getProblemString());
 
         System.out.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
         try {
-            //databaseAPI.saveTrial(trial, -1);
             databaseAPI.uploadTrial(trial);
         } catch (DatabaseException e) {
             e.printStackTrace();
@@ -267,7 +235,6 @@ public class LoadTrial {
         CmdLineParser.Option nameOpt = parser.addStringOption('n', "name");
         //CmdLineParser.Option problemOpt = parser.addStringOption('p',
         // "problemfile");
-        //CmdLineParser.Option gopt = parser.addStringOption('g', "g");
         CmdLineParser.Option configOpt = parser.addStringOption('c', "config");
         CmdLineParser.Option configFileOpt = parser.addStringOption('g', "configFile");
         CmdLineParser.Option trialOpt = parser.addStringOption('t', "trialid");
@@ -304,23 +271,18 @@ public class LoadTrial {
             LoadTrial.outputHelp();
             System.exit(-1);
         }
-        
+
         if (configFile == null) {
-        	if (configName == null)
-        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
-        	else
-        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configName;
+            if (configName == null)
+                configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
+            else
+                configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configName;
         }
-        
-        
-    	 if (trialName == null) {
+
+        if (trialName == null) {
             System.err.println("Error: Missing trial name\n");
             LoadTrial.usage();
             System.exit(-1);
-            //        } else if (sourceFiles == null) {
-            //            System.err.println("Please enter a valid source file.");
-            //            LoadTrial.usage();
-            //            System.exit(-1);
         } else if (experimentID == null && expName == null) {
             System.err.println("Error: Missing experiment id or name\n");
             LoadTrial.usage();
@@ -334,7 +296,6 @@ public class LoadTrial {
         String sourceFiles[] = parser.getRemainingArgs();
 
         int fileType = 0;
-        String filePrefix = null;
         if (fileTypeString != null) {
             if (fileTypeString.equals("profiles")) {
                 fileType = 0;
@@ -379,13 +340,12 @@ public class LoadTrial {
         }
 
         if (trialName == null) {
-            trialName = new String("");
+            trialName = "";
         }
 
         if (fixNames == null) {
             fixNames = new Boolean(false);
         }
-        //System.out.println(System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configFile);
         LoadTrial trans = new LoadTrial(configFile, sourceFiles);
         trans.checkForExp(experimentID, appName, expName);
         if (trialID != null) {

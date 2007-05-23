@@ -20,7 +20,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.19 2007/05/23 01:40:18 amorris Exp $
+ * CVS $Id: Trial.java,v 1.20 2007/05/23 17:45:21 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -341,7 +341,7 @@ public class Trial implements Serializable {
      */
     public static String[] getFieldNames(DB db) {
         getMetaData(db);
-        return db.getDatabase().getExpFieldNames();
+        return db.getDatabase().getTrialFieldNames();
     }
 
     public static void getMetaData(DB db) {
@@ -481,6 +481,7 @@ public class Trial implements Serializable {
         int newTrialID = 0;
 
         try {
+            database = db.getDatabase();
             // determine if we have a data meta-data item
             boolean haveDate = false;
             java.sql.Timestamp timestamp = null;

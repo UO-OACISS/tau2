@@ -13,11 +13,11 @@ import edu.uoregon.tau.perfdmf.database.ParseConfig;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.15 2007/05/23 01:40:18 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.16 2007/05/23 17:45:21 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  */
 public class DatabaseAPI {
 
@@ -71,7 +71,6 @@ public class DatabaseAPI {
     }
 
     public DatabaseAPI() {
-        super();
     }
 
     public DB db() {
@@ -89,6 +88,7 @@ public class DatabaseAPI {
     }
     
     public void initialize(Database database, boolean prompt) throws SQLException {
+        this.database = database;
         connector = new ConnectionManager(database, prompt);
         connector.connect();
         db = connector.getDB();
@@ -98,6 +98,7 @@ public class DatabaseAPI {
     }
 
     public void initialize(Database database, String password) throws SQLException {
+        this.database = database;
         connector = new ConnectionManager(database, password);
         connector.connect();
         db = connector.getDB();
