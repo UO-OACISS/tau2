@@ -2083,70 +2083,65 @@ bool isFreeFormat(char inbuf[])
 /* -- getNextToken returns true if it is done, and has no more variables ---- */
 /* -- to process in the same line. Extracts variable name from line.        - */
 /* -------------------------------------------------------------------------- */
+
 bool getNextToken(char * &line, char * & varname)
-{ /* if I pass it 
-     "hi ", Ary(x,y)%b(2), B(2) 
-     it should return successively "hi "
-	then			   Ary(x,y)%b(2)
-	then			   B(2)
-     In contrast, getVariableName returns "hi ", Ary, B for alloc/dealloc */
-  /* We need to traverse the string till we reach a comma and return it. If
-     we instead see a (, we should continue processing till the closing parens ) */
+{ /* if I pass it
+      "hi ", Ary(x,y)%b(2), B(2)
+      it should return successively "hi "
+         then                       Ary(x,y)%b(2)
+         then                       B(2)
+      In contrast, getVariableName returns "hi ", Ary, B for alloc/dealloc */
+   /* We need to traverse the string till we reach a comma and return it. If
+      we instead see a (, we should continue processing till the closing parens ) */
 
-  int openparens = 0;
-  int opensinglequotes, openquotes=0;
-  int i = 0;
-  int len = 0;
+   int openparens = 0;
+   int opensinglequotes, openquotes=0;
+   int i = 0;
+   int len = 0;
 
-  len = strlen(line);
+   len = strlen(line);
+
+   while (i < len) {
+
+     if (*line == ',' && openparens == 0) {
+         line++;
+ 	break; /* print *, ... */
+     }
+
+     varname[i] = *line;
+
+     if ((*line == '"') || (*line == '\'')) {
+       char quote = *line;
+       i++;
+       line++;
+       while (*line != quote) {
+ 	varname[i] = *line;
+ 	i++;
+ 	line++;
+       }
+       varname[i] = *line;
+     }
+
+
+     if (*line == '(' ) /* first open paren. Search for close parenthesis */
+       openparens++;
+     if (*line == ')' ) {
+       openparens --;
+     }
+     i++;
+     line++; /* increment and go on */
+   }
+
+   varname[i] = '\0';
+   if (line && *line == ',') line++;  /* get rid of comma */
 #ifdef DEBUG
-    printf("ENTERING getNextToken: *line = %s, len = %d\n", line, len);
+   printf("varname retrieved = %s, line = %s\n", varname, line);
 #endif /* DEBUG */
-  while (i < len)
-  {
-#ifdef DEBUG
-    printf("Loop: getNextToken: *line = %c\n", *line);
-#endif /* DEBUG */
-    if (*line == ',' && openparens == 0 && openquotes == 0) {
-        line ++; break; /* print *, ... */
-    }
-
-    varname[i] = *line;
-    i++;
-
-    bool isquotechar = false;
-    if ((*line == '"') || (*line == '\'')) isquotechar = true;
-    if ((openquotes > 0) && isquotechar)  {
-	openquotes--;
-	line++;
-	break;
-    }
-
-
-    if (openquotes == 0 && isquotechar) openquotes++;
-      
-    if (*line == '(' ) /* first open paren. Search for close parenthesis */
-      openparens++;
-    if (*line == ')' )
-    {
-      openparens --;
-    }
-    line ++; /* increment and go on */
-  }
-
-  varname[i] = '\0';
-  if (line && *line == ',') line++;  /* get rid of comma */ 
-#ifdef DEBUG
-  printf("varname retrieved = %s, line = %s\n", varname, line);
-#endif /* DEBUG */
-  len = strlen(line);
-  // printf("length remaining = %d\n", len);
-  if (len == 0) return true; /* done = true! no more to retrieve */
-  else return false; /* there are more strings to process... */
-
-
+   len = strlen(line);
+   // printf("length remaining = %d\n", len);
+   if (len == 0) return true; /* done = true! no more to retrieve */
+   else return false; /* there are more strings to process... */
 }
-
 
 /* -------------------------------------------------------------------------- */
 /* -- getVariableName returns true if it is done, and has no more variables - */
@@ -3787,8 +3782,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.169 $   $Date: 2007/05/23 21:49:56 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.169 2007/05/23 21:49:56 sameer Exp $
+ * $Revision: 1.170 $   $Date: 2007/05/23 23:11:33 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.170 2007/05/23 23:11:33 sameer Exp $
  ***************************************************************************/
 
 
