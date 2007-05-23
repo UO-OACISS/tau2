@@ -19,7 +19,7 @@ public class Configure {
 
     // todo - remove these defaults
     // todo - consider using a hash table!
-    private String configuration_name = "unnamed";
+    private String configuration_name = "";
     private String perfdmf_home = "";
     private String tau_root = "";
     private String arch = "";
@@ -137,15 +137,15 @@ public class Configure {
                 + "The current or default\nvalues for each prompt are shown "
                 + "in parenthesis.\nTo accept the current/default value, " + "just press Enter/Return.\n");
         try {
-            System.out.print("Please enter the name of this configuration.\n(\"unnamed\"):");
+            System.out.print("Please enter the name of this configuration.\n():");
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
-            	configuration_name = tmpString;
+                configuration_name = tmpString;
+            } else {
+                configuration_name = "";
             }
-            else
-            	configuration_name = "unnamed";
-        	
-        	System.out.print("Please enter the TAU root directory.\n(" + tau_root + "):");
+
+            System.out.print("Please enter the TAU root directory.\n(" + tau_root + "):");
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
                 tau_root = tmpString;
@@ -158,11 +158,11 @@ public class Configure {
             while (!valid) {
                 // Prompt for database type
                 System.out.println("Please enter the database vendor (oracle, postgresql, mysql, db2 or derby).");
-				System.out.println("(" + jdbc_db_type + "):");
+                System.out.println("(" + jdbc_db_type + "):");
                 tmpString = reader.readLine();
                 if (tmpString.compareTo("oracle") == 0 || tmpString.compareTo("postgresql") == 0
-                || tmpString.compareTo("mysql") == 0 || tmpString.compareTo("derby") == 0 
-                || tmpString.compareTo("db2") == 0 || tmpString.length() == 0) {
+                        || tmpString.compareTo("mysql") == 0 || tmpString.compareTo("derby") == 0
+                        || tmpString.compareTo("db2") == 0 || tmpString.length() == 0) {
                     if (tmpString.length() > 0)
                         jdbc_db_type = tmpString;
                     valid = true;
@@ -205,26 +205,26 @@ public class Configure {
                 } else if (jdbc_db_type.compareTo("db2") == 0 && old_jdbc_db_type.compareTo("db2") != 0) {
                     // if the user has chosen db2 and the config file is not already set for it
 
-                    jdbc_db_jarfile = "";  // there are 3 jar files...
+                    jdbc_db_jarfile = ""; // there are 3 jar files...
                     jdbc_db_driver = "com.ibm.db2.jcc.DB2Driver";
                     db_schemafile = perfdmf_home + "/etc/" + "dbschema.db2.txt";
                     db_dbname = "perfdmf";
-    				db_schemaprefix = "perfdmf";
+                    db_schemaprefix = "perfdmf";
                     db_hostname = "localhost";
                     db_portnum = "446";
                 } else if (jdbc_db_type.compareTo("db2") == 0 && old_jdbc_db_type.compareTo("db2") == 0) {
                     // if the user has chosen db2 and the config file is already set for it
-     				int endIndex = jdbc_db_jarfile.indexOf("java/db2java.zip:");
-					if (endIndex == -1) {
-     					endIndex = jdbc_db_jarfile.indexOf("java/db2jcc.jar:");
-						if (endIndex == -1) {
-							jdbc_db_jarfile = "";
-						} else {
-							jdbc_db_jarfile = jdbc_db_jarfile.substring(0,endIndex-1);
-						}
-					} else {
-						jdbc_db_jarfile = jdbc_db_jarfile.substring(0,endIndex-1);
-					}
+                    int endIndex = jdbc_db_jarfile.indexOf("java/db2java.zip:");
+                    if (endIndex == -1) {
+                        endIndex = jdbc_db_jarfile.indexOf("java/db2jcc.jar:");
+                        if (endIndex == -1) {
+                            jdbc_db_jarfile = "";
+                        } else {
+                            jdbc_db_jarfile = jdbc_db_jarfile.substring(0, endIndex - 1);
+                        }
+                    } else {
+                        jdbc_db_jarfile = jdbc_db_jarfile.substring(0, endIndex - 1);
+                    }
                 }
 
             } else {
@@ -259,14 +259,14 @@ public class Configure {
                     db_hostname = "";
                     db_portnum = "";
                 } else if (jdbc_db_type.compareTo("db2") == 0) {
-                    jdbc_db_jarfile = "";  // there are 3 jar files...
+                    jdbc_db_jarfile = ""; // there are 3 jar files...
                     jdbc_db_driver = "com.ibm.db2.jcc.DB2Driver";
                     db_schemafile = "dbschema.db2.txt";
                     db_dbname = "perfdmf";
-    				db_schemaprefix = "perfdmf";
+                    db_schemaprefix = "perfdmf";
                     db_hostname = "localhost";
                     db_portnum = "446";
-                 }
+                }
             }
 
             if (!configFileFound) {
@@ -275,12 +275,12 @@ public class Configure {
 
             // Prompt for JDBC jar file
             if (jdbc_db_type.compareTo("db2") == 0) {
-            	System.out.println("Please enter the path to the DB2 sqllib directory,");
-            	System.out.println("often something like /home/db2_srv/sqllib.");
-				System.out.print("(" + jdbc_db_jarfile + "):");
-			} else {
-            	System.out.print("Please enter the JDBC jar file.\n(" + jdbc_db_jarfile + "):");
-			}
+                System.out.println("Please enter the path to the DB2 sqllib directory,");
+                System.out.println("often something like /home/db2_srv/sqllib.");
+                System.out.print("(" + jdbc_db_jarfile + "):");
+            } else {
+                System.out.print("Please enter the JDBC jar file.\n(" + jdbc_db_jarfile + "):");
+            }
 
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
@@ -295,106 +295,102 @@ public class Configure {
                     System.out.println("\nSorry, can't automatically download drivers for db2");
                     System.out.println("Please acquire them manually\n");
                 } else {
-                	System.out.println("\n\nCouldn't find jarfile: " + jdbc_db_jarfile);
-                	System.out.println("\nJDBC drivers are not distributed with TAU.  You should acquire the JDBC driver");
-                	System.out.println("that corresponds to the database you are connecting to.  TAU can now attempt ");
-                	System.out.println("to download a JDBC driver that will *probably* work.");
+                    System.out.println("\n\nCouldn't find jarfile: " + jdbc_db_jarfile);
+                    System.out.println("\nJDBC drivers are not distributed with TAU.  You should acquire the JDBC driver");
+                    System.out.println("that corresponds to the database you are connecting to.  TAU can now attempt ");
+                    System.out.println("to download a JDBC driver that will *probably* work.");
 
-                	boolean responded = false;
-                	boolean response = false;
-                	while (!responded) {
-                    	System.out.print("\nWould you like to attempt to automatically download a JDBC driver? (y/n):");
-                    	tmpString = reader.readLine();
-                    	if (tmpString.compareToIgnoreCase("yes") == 0 || tmpString.compareToIgnoreCase("y") == 0) {
-                        	responded = true;
-                        	response = true;
-                    	}
-                    	if (tmpString.compareToIgnoreCase("no") == 0 || tmpString.compareToIgnoreCase("n") == 0) {
-                        	responded = true;
-                        	response = false;
-                    	}
-                	}
+                    boolean responded = false;
+                    boolean response = false;
+                    while (!responded) {
+                        System.out.print("\nWould you like to attempt to automatically download a JDBC driver? (y/n):");
+                        tmpString = reader.readLine();
+                        if (tmpString.compareToIgnoreCase("yes") == 0 || tmpString.compareToIgnoreCase("y") == 0) {
+                            responded = true;
+                            response = true;
+                        }
+                        if (tmpString.compareToIgnoreCase("no") == 0 || tmpString.compareToIgnoreCase("n") == 0) {
+                            responded = true;
+                            response = false;
+                        }
+                    }
 
-                	if (response) {
-                    	try {
+                    if (response) {
+                        try {
 
-                        	(new File(".perfdmf_tmp")).mkdirs();
-                        	System.setProperty("tar.location", ".perfdmf_tmp");
+                            (new File(".perfdmf_tmp")).mkdirs();
+                            System.setProperty("tar.location", ".perfdmf_tmp");
 
-                        	if (jdbc_db_type.compareToIgnoreCase("postgresql") == 0) {
-                            	Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/postgresql-redirect.html",
-                                    	".perfdmf_tmp/postgresql-redirect.html", false);
-                            	BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(new File(
-                                    	".perfdmf_tmp/postgresql-redirect.html"))));
-	
-                            	String URL = "";
-                            	String line = r.readLine();
-                            	while (line != null) {
-                                	if (line.startsWith("URL="))
-                                    	URL = line.substring(4);
-                                	line = r.readLine();
-                            	}
-                            	r.close();
-                            	
-	
-                            	System.out.println("\nDownloading... " + URL);
-                            	System.out.print("Please Wait...");
-                            	Wget.wget(URL, jdbc_db_jarfile, true);
-                            	System.out.println(" Done");
-                        	}
-                        	if (jdbc_db_type.compareToIgnoreCase("mysql") == 0) {
-                            	Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html",
-                                    	".perfdmf_tmp/mysql-redirect.html", false);
+                            if (jdbc_db_type.compareToIgnoreCase("postgresql") == 0) {
+                                Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/postgresql-redirect.html",
+                                        ".perfdmf_tmp/postgresql-redirect.html", false);
+                                BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(new File(
+                                        ".perfdmf_tmp/postgresql-redirect.html"))));
 
-                            	BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(new File(
-                                    	".perfdmf_tmp/mysql-redirect.html"))));
+                                String URL = "";
+                                String line = r.readLine();
+                                while (line != null) {
+                                    if (line.startsWith("URL="))
+                                        URL = line.substring(4);
+                                    line = r.readLine();
+                                }
+                                r.close();
 
-                            	String URL = "";
-                            	String FILE = "";
-                            	String JAR = "";
-                            	String line = r.readLine();
-                            	while (line != null) {
-                                	if (line.startsWith("URL="))
-                                    	URL = line.substring(4);
-                                	if (line.startsWith("FILE="))
-                                    	FILE = line.substring(5);
-                                	if (line.startsWith("JAR="))
-                                    	JAR = line.substring(4);
-                                	line = r.readLine();
-                            	}
-                            	r.close();
+                                System.out.println("\nDownloading... " + URL);
+                                System.out.print("Please Wait...");
+                                Wget.wget(URL, jdbc_db_jarfile, true);
+                                System.out.println(" Done");
+                            }
+                            if (jdbc_db_type.compareToIgnoreCase("mysql") == 0) {
+                                Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html",
+                                        ".perfdmf_tmp/mysql-redirect.html", false);
 
-                            	System.out.println("\nDownloading... " + URL);
-                            	System.out.print("Please Wait...");
-                            	Wget.wget(URL, ".perfdmf_tmp/" + FILE, true);
-                            	System.out.println(" Done");
-                            	System.out.println("\nUncompressing...");
-                            	Tar.guntar(".perfdmf_tmp/" + FILE);
-                            	Common.copy(".perfdmf_tmp/" + JAR, jdbc_db_jarfile);
-                        	}
+                                BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(new File(
+                                        ".perfdmf_tmp/mysql-redirect.html"))));
 
-                        	if (!new File(jdbc_db_jarfile).exists()) {
-                            	System.out.println("Unable to retrieve jarfile, please retrieve it manually");
-                        	}
+                                String URL = "";
+                                String FILE = "";
+                                String JAR = "";
+                                String line = r.readLine();
+                                while (line != null) {
+                                    if (line.startsWith("URL="))
+                                        URL = line.substring(4);
+                                    if (line.startsWith("FILE="))
+                                        FILE = line.substring(5);
+                                    if (line.startsWith("JAR="))
+                                        JAR = line.substring(4);
+                                    line = r.readLine();
+                                }
+                                r.close();
 
-                        	Common.deltree(new File(".perfdmf_tmp"));
+                                System.out.println("\nDownloading... " + URL);
+                                System.out.print("Please Wait...");
+                                Wget.wget(URL, ".perfdmf_tmp/" + FILE, true);
+                                System.out.println(" Done");
+                                System.out.println("\nUncompressing...");
+                                Tar.guntar(".perfdmf_tmp/" + FILE);
+                                Common.copy(".perfdmf_tmp/" + JAR, jdbc_db_jarfile);
+                            }
 
-                    	} catch (Exception e) {
-                        	System.out.println("Unable to retrieve jarfile:");
-                        	e.printStackTrace();
-                    	}
-                	}
+                            if (!new File(jdbc_db_jarfile).exists()) {
+                                System.out.println("Unable to retrieve jarfile, please retrieve it manually");
+                            }
+
+                            Common.deltree(new File(".perfdmf_tmp"));
+
+                        } catch (Exception e) {
+                            System.out.println("Unable to retrieve jarfile:");
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
 
             if (jdbc_db_type.compareTo("db2") == 0) {
-                tmpString = 
-				jdbc_db_jarfile + "/java/db2java.zip:" +
-				jdbc_db_jarfile + "/java/db2jcc.jar:" +
-				jdbc_db_jarfile + "/function:" +
-				jdbc_db_jarfile + "/java/db2jcc_license_cu.jar";
-				jdbc_db_jarfile = tmpString;
-			}
+                tmpString = jdbc_db_jarfile + "/java/db2java.zip:" + jdbc_db_jarfile + "/java/db2jcc.jar:" + jdbc_db_jarfile
+                        + "/function:" + jdbc_db_jarfile + "/java/db2jcc_license_cu.jar";
+                jdbc_db_jarfile = tmpString;
+            }
 
             // Prompt for JDBC driver name
             System.out.print("Please enter the JDBC Driver name.\n(" + jdbc_db_driver + "):");
@@ -505,8 +501,8 @@ public class Configure {
      **/
 
     public void testDBConnection() {
-        // perfdmf.ConnectionManager.connect();
-        // perfdmf.ConnectionManager.dbclose();
+    // perfdmf.ConnectionManager.connect();
+    // perfdmf.ConnectionManager.dbclose();
     }
 
     /** testDB method
@@ -515,30 +511,29 @@ public class Configure {
      *  to test the username, password, and database name.
      **/
 
-    public void testDBTransaction() {
-    }
+    public void testDBTransaction() {}
 
     /** writeConfigFile method
      *  this method writes the configuration file back to 
      *  perfdmf_home/bin/perfdmf.cfg.
      **/
 
-    public void writeConfigFile() {
-        System.out.println("\nWriting configuration file: " + configFileName + "...");
+    public String writeConfigFile() {
         try {
             // Check to see if the configuration file exists
-            
-        	File configFile;
-        	System.out.println("config name: " + configuration_name);
-        	if (configuration_name.compareTo("unnamed") == 0)
-            	configFile = new File(System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg");
-            else
-        		configFile = new File(configFileName + "." + configuration_name);
-            
+
+            File configFile;
+            if (configuration_name.length() == 0) {
+                configFile = new File(System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg");
+            } else {
+                configFile = new File(configFileName + "." + configuration_name);
+            }
+
+            System.out.println("\nWriting configuration file: " + configFile);
+
             if (!configFile.exists()) {
                 configFile.createNewFile();
             }
-            System.out.println("config file: " + configFile.getAbsolutePath());
             BufferedWriter configWriter = new BufferedWriter(new FileWriter(configFile));
             configWriter.write("# This is the configuration file for the PerfDMF tools & API\n");
             configWriter.write("# Items are listed as name:value, one per line.\n");
@@ -597,8 +592,9 @@ public class Configure {
             configWriter.newLine();
 
             configWriter.close();
-        } catch (IOException e) {
-        }
+            return configFile.toString();
+        } catch (IOException e) {}
+        return null;
     }
 
     //Standard access methods for some of the fields.
@@ -757,11 +753,11 @@ public class Configure {
         }
 
         if (configFile == null) {
-        	if (configName == null)
-        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
-        	else
-        		configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configName;
-        	
+            if (configName == null)
+                configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
+            else
+                configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configName;
+
         }
         if (tauroot == null) {
             tauroot = new String("");
@@ -785,7 +781,11 @@ public class Configure {
         //config.testDBTransaction();
 
         // Write the configuration file to ${PerfDMF_Home}/bin/perfdmf.cfg
-        config.writeConfigFile();
+        String configFilename = config.writeConfigFile();
+
+        ConfigureTest configTest = new ConfigureTest(tauroot);
+        configTest.initialize(configFilename);
+        configTest.createDB();
 
         // check to see if the database is there...
         //config.createDB();

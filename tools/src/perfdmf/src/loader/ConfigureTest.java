@@ -71,7 +71,7 @@ public class ConfigureTest {
                 // Parse the configuration file
                 parseConfigFile();
             } else {
-                System.out.println("Configuration file NOT found...");
+                System.out.println("Configuration file NOT found... (looking for " + configFile +")");
                 System.out.println("a new configuration file will be created.");
                 // If it doesn't exist, explain that the program looks for the 
                 // configuration file in ${PerfDMF_Home}/data/perfdmf.cfg
