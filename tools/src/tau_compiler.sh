@@ -45,7 +45,6 @@ declare -i optShared=$FALSE
 
 preprocessorOpts="-P  -traditional-cpp"
 
-
 printUsage () {
 	echo -e "Usage: tau_compiler.sh"
 	echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
@@ -191,10 +190,23 @@ optOpariOpts="-nosrc -table opari.tab.c"
 ####################################################################
 echoIfDebug "\nParsing all the arguments passed..."
 tempCounter=0
-for arg in "$@"
-    do
-		tempCounter=tempCounter+1
-		echoIfDebug "Token No: $tempCounter) is -- $arg"
+processingIncludeOrDefine=false
+processingIncludeOrDefineArg=""
+for arg in "$@" ; do
+    tempCounter=tempCounter+1
+    echoIfDebug "Token No: $tempCounter) is -- $arg"
+
+    if [ $processingIncludeOrDefine = true ] ; then
+	# If there is a "-I /home/amorris", we now process the 2nd arg
+	mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
+	mod_arg="$processingIncludeOrDefineArg $mod_arg"
+	optPdtCFlags="$mod_arg $optPdtCFlags"
+	optPdtCxxFlags="$mod_arg $optPdtCxxFlags"
+	optPdtF95="$mod_arg $optPdtF95"
+	optCompile="$mod_arg $optCompile"
+	optIncludeDefs="$mod_arg $optIncludeDefs"
+	processingIncludeOrDefine=false
+    else
 			
         case $arg in
 		--help|-h)
@@ -534,8 +546,12 @@ for arg in "$@"
 			optIncludeDefs="$theDefine $optIncludeDefs"
 			;;
 
-		-I*|-D*)
+		-I|-D)
+                        processingIncludeOrDefineArg=$arg
+              		processingIncludeOrDefine=true
+			;;
 
+		-I*|-D*)
 		        mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
 			optPdtCFlags="$mod_arg $optPdtCFlags"
 			optPdtCxxFlags="$mod_arg $optPdtCxxFlags"
@@ -632,6 +648,7 @@ for arg in "$@"
 				
 			;;
         esac
+	fi
     done
 
 echoIfDebug "Number of files: $numFiles; File Group is $groupType"
