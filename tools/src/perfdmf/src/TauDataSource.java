@@ -179,14 +179,8 @@ public class TauDataSource extends DataSource {
                                     + ": Couldn't read number of functions, bad TAU Profile?");
                         }
 
-                        if (metricNameProcessed == false) {
-                            //Set the metric name.
-                            String metricName = getMetricName(inputString);
-                            if (metricName == null)
-                                metricName = new String("Time");
-                            this.addMetric(metricName);
-                            metricNameProcessed = true;
-                        }
+                        // grab the (possible) metric name
+                        String metricName = getMetricName(inputString);
 
                         // Second Line (e.g. "# Name Calls Subrs Excl Incl ProfileCalls")
                         inputString = br.readLine();
@@ -194,14 +188,32 @@ public class TauDataSource extends DataSource {
                             throw new DataSourceException("Unexpected end of file: " + files[i].getName()
                                     + "\nLooking for '# Name Calls ...' line");
                         }
-                        
+
                         if (inputString.indexOf("<metadata>") != -1) {
                             int start = inputString.indexOf("<metadata>");
-                            int end = inputString.indexOf("</metadata>")+11;
-                            String metadata = inputString.substring(start,end);
+                            int end = inputString.indexOf("</metadata>") + 11;
+                            String metadata = inputString.substring(start, end);
                             MetaDataParser.parse(thread.getMetaData(), metadata);
                         }
+
+                        // there may or may not be a metric name in the metadata
+                        String metaDataMetricName = (String) thread.getMetaData().get("Metric Name");
                         
+                        // remove it if it was there
+                        thread.getMetaData().remove("Metric Name");
+                        
+                        if (metricNameProcessed == false) {
+                            if (metaDataMetricName != null) {
+                                metricName = metaDataMetricName;
+                            }
+                            //Set the metric name.
+                            if (metricName == null) {
+                                metricName = "Time";
+                            }
+                            this.addMetric(metricName);
+                            metricNameProcessed = true;
+                        }
+
                         if (i == 0) {
                             //Determine if profile stats or profile calls data is present.
                             if (inputString.indexOf("SumExclSqr") != -1)
@@ -455,11 +467,11 @@ public class TauDataSource extends DataSource {
         profileCalls = Integer.parseInt(st2.nextToken()); //ProfileCalls
 
         if (inclusive < 0) {
-            System.err.println("Warning, negative values found in profile, ignoring!");
+            System.err.println("Warning, negative values found in profile, ignoring! (routine: " + name + ")");
             inclusive = 0;
         }
         if (exclusive < 0) {
-            System.err.println("Warning, negative values found in profile, ignoring!");
+            System.err.println("Warning, negative values found in profile, ignoring! (routine: " + name + ")");
             exclusive = 0;
         }
 
