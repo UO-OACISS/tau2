@@ -2620,25 +2620,21 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
     done = getNextToken(line, varname);
 
     /* what about ! comment */
-    if (!strstr(varname, "="))
-    {
-    /* we don't want stat=ierr argument */
     /* We need to break up this into a continuation line if it exceeds 72 chars */
 
-      char *p = varname;
-      while (p && *p == ' ') p++; /* eat up leading space */
-      if (strlen(p) == 0) continue ; /* don't put sizeof() */
+    char *p = varname;
+    while (p && *p == ' ') p++; /* eat up leading space */
+    if (strlen(p) == 0) continue ; /* don't put sizeof() */
 
-      sprintf(string_containing_sizeof, "+sizeof(%s)", p); 
-      origlen = strlen(iostmt);
-      sizeoflen = strlen(string_containing_sizeof);
+    sprintf(string_containing_sizeof, "+sizeof(%s)", p); 
+    origlen = strlen(iostmt);
+    sizeoflen = strlen(string_containing_sizeof);
 
-      if (origlen+sizeoflen >= 72) { /* exceeds 72 columns -- break it up! */
-        sprintf(string_containing_sizeof, "\n      tio_%d_sz = tio_%d_sz+sizeof(%s)",
-		lineno, lineno, p);
-      }
-      strcat(iostmt, string_containing_sizeof);
+    if (origlen+sizeoflen >= 72) { /* exceeds 72 columns -- break it up! */
+      sprintf(string_containing_sizeof, "\n      tio_%d_sz = tio_%d_sz+sizeof(%s)",
+      lineno, lineno, p);
     }
+    strcat(iostmt, string_containing_sizeof);
   }
   ostr <<iostmt<<endl;
   ostr <<"      call TAU_CONTEXT_EVENT(tio_"<<lineno<<", tio_"<<lineno<<"_sz)"<<endl;
@@ -3788,9 +3784,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.171 $   $Date: 2007/05/24 01:37:09 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.171 2007/05/24 01:37:09 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.172 $   $Date: 2007/05/24 20:56:37 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.172 2007/05/24 20:56:37 sameer Exp $
  ***************************************************************************/
 
 
