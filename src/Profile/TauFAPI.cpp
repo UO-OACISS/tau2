@@ -952,22 +952,8 @@ void TAU_REGISTER_EVENT(void **ptr, char *event_name, int flen)
 void TAU_REGISTER_CONTEXT_EVENT(void **ptr, char *event_name, int flen)
 {
 
-  if (*ptr == 0)
-  {  // remove garbage characters from the end of name
-    if (flen < 1024) event_name[flen] = '\0';
-    else
-    for(int i=0; i<1024; i++)
-    {
-      if (!VALID_NAME_CHAR(event_name[i]))
-      {
-        event_name[i] = '\0';
-        break;
-      }
-    }
-#ifdef DEBUG_PROF
-    printf("Tau_get_context_userevent() \n");
-#endif /* DEBUG_PROF */
-    *ptr = Tau_get_context_userevent(event_name);
+  if (*ptr == 0) {
+    tau_register_context_event_(ptr, event_name, flen);
   }
   return;
 
@@ -1150,23 +1136,11 @@ void tau_register_event(int **ptr, char *event_name, int flen)
 
 }
 
-void tau_register_context_event(int **ptr, char *event_name, int flen)
+void tau_register_context_event(void **ptr, char *event_name, int flen)
 {
 
-  if (*ptr == 0)
-  {  // remove garbage characters from the end of name
-    for(int i=0; i<1024; i++)
-    {
-      if (!VALID_NAME_CHAR(event_name[i]))
-      {
-        event_name[i] = '\0';
-        break;
-      }
-    }
-#ifdef DEBUG_PROF
-    printf("Tau_get_context_userevent() \n");
-#endif /* DEBUG_PROF */
-    *ptr = (int *)Tau_get_context_userevent(event_name);
+  if (*ptr == 0) {
+    tau_register_context_event_(ptr, event_name, flen);
   }
   return;
 
@@ -1283,25 +1257,8 @@ void tau_register_event__(void **ptr, char *event_name, int flen)
 void tau_register_context_event__(void **ptr, char *event_name, int flen)
 {
 
-  if (*ptr == 0)
-  {  // remove garbage characters from the end of name
-    char * newname=new char[flen+1] ;
-    for (int j =0; j < flen; j++)
-      newname[j] = event_name[j];
-
-    newname[flen] = '\0';
-    for(int i=0; i<strlen(newname); i++)
-    {
-      if (!VALID_NAME_CHAR(newname[i]))
-      {
-        newname[i] = '\0';
-        break;
-      }
-    }
-#ifdef DEBUG_PROF
-    printf("tau_get_context_userevent() \n");
-#endif /* DEBUG_PROF */
-    *ptr = Tau_get_context_userevent(newname);
+  if (*ptr == 0) {
+    tau_register_context_event_(ptr, event_name, flen);
   }
   return;
 
@@ -1727,6 +1684,6 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.61 $   $Date: 2007/05/20 20:33:20 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.61 2007/05/20 20:33:20 sameer Exp $ 
+ * $Revision: 1.62 $   $Date: 2007/05/24 01:45:47 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.62 2007/05/24 01:45:47 sameer Exp $ 
  ***************************************************************************/
