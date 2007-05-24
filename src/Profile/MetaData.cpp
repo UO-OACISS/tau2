@@ -308,13 +308,23 @@ static void writeUserEventXML(FILE *f, int id, TauUserEvent *ue) {
   return;
 }
 
-static int writeMetaData(FILE *fp, bool newline) {
+static int writeMetaData(FILE *fp, bool newline, int counter) {
   const char *endl = "";
   if (newline) {
     endl = "\n";
   }
 
   fprintf (fp, "<metadata>%s", endl);
+
+
+  if (counter != -1) {
+#ifndef TAU_MULTIPLE_COUNTERS
+    writeXMLAttribute(fp, "Metric Name", RtsLayer::getSingleCounterName(), newline);
+#else
+    writeXMLAttribute(fp, "Metric Name", MultipleCounterLayer::getCounterNameAt(counter), newline);
+#endif
+  }
+
 
   char tmpstr[1024];
   sprintf (tmpstr, "%lld", firstTimeStamp);
@@ -503,7 +513,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
      fprintf (fp, "\n<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", threadid,
 	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
-     writeMetaData(fp, true);
+     writeMetaData(fp, true, -1);
      fprintf (fp, "</thread>\n");
 
      fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
@@ -730,11 +740,11 @@ extern "C" void Tau_metadata(char *name, char *value) {
 }
 
 
-int Tau_writeProfileMetaData(FILE *fp) {
+int Tau_writeProfileMetaData(FILE *fp, int counter) {
 #ifdef TAU_DISABLE_METADATA
   return 0;
 #endif
-  return writeMetaData(fp, false);
+  return writeMetaData(fp, false, counter);
 }
 
 

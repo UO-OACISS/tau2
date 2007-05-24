@@ -95,7 +95,7 @@ using namespace std;
 #endif // RENCI_STFF
 
 
-int Tau_writeProfileMetaData(FILE *fp);
+int Tau_writeProfileMetaData(FILE *fp, int counter);
 
 
 //#define PROFILE_CALLS // Generate Excl Incl data for each call 
@@ -1372,7 +1372,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	int sz = strlen(header);
 	int ret = fprintf(fp, "%s",header);	
 	fprintf(fp, " # ");	
-	Tau_writeProfileMetaData(fp);
+	Tau_writeProfileMetaData(fp,0);
 	fprintf(fp, "\n");	
 
 	ret = fflush(fp);
@@ -1649,7 +1649,7 @@ int Profiler::StoreData(int tid)
 	int sz = strlen(header);
 	int ret = fprintf(fp, "%s",header);	
 	fprintf(fp, " # ");	
-	Tau_writeProfileMetaData(fp);
+	Tau_writeProfileMetaData(fp,0);
 	fprintf(fp, "\n");	
 	ret = fflush(fp);
 
@@ -1658,7 +1658,7 @@ int Profiler::StoreData(int tid)
 	int ktau_sz = strlen(ktau_header);
 	int ktau_ret = fprintf(ktau_fp, "%s",ktau_header);	
 	fprintf(ktau_fp, " # ");	
-	Tau_writeProfileMetaData(ktau_fp);
+	Tau_writeProfileMetaData(ktau_fp,0);
 	fprintf(ktau_fp, "\n");	
 
 	ktau_ret = fflush(ktau_fp);
@@ -1935,7 +1935,7 @@ int Profiler::DumpData(bool increment, int tid, char *prefix)
 	int sz = strlen(header);
 	int ret = fprintf(fp, "%s",header);	
 	fprintf(fp, " # ");	
-	Tau_writeProfileMetaData(fp);
+	Tau_writeProfileMetaData(fp,0);
 	fprintf(fp, "\n");	
 
 	ret = fflush(fp);
@@ -2456,7 +2456,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
       int sz = strlen(header);
       int ret = fprintf(fp, "%s",header);
       fprintf(fp, " # ");	
-      Tau_writeProfileMetaData(fp);
+      Tau_writeProfileMetaData(fp,i);
       fprintf(fp, "\n");	
       ret = fflush(fp);
 
@@ -2722,7 +2722,7 @@ int Profiler::StoreData(int tid){
       int sz = strlen(header);
       int ret = fprintf(fp, "%s",header);
       fprintf(fp, " # ");	
-      Tau_writeProfileMetaData(fp);
+      Tau_writeProfileMetaData(fp,i);
       fprintf(fp, "\n");	
       ret = fflush(fp);
 
@@ -2894,7 +2894,7 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
       int sz = strlen(header);
       int ret = fprintf(fp, "%s",header);
       fprintf(fp, " # ");	
-      Tau_writeProfileMetaData(fp);
+      Tau_writeProfileMetaData(fp,i);
       fprintf(fp, "\n");	
       ret = fflush(fp);
 
@@ -3410,8 +3410,8 @@ double& Profiler::TheTauThrottlePerCall(void)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.166 $   $Date: 2007/05/21 23:33:42 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.166 2007/05/21 23:33:42 amorris Exp $ 
+ * $Revision: 1.167 $   $Date: 2007/05/24 18:58:40 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.167 2007/05/24 18:58:40 amorris Exp $ 
  ***************************************************************************/
 
 	
