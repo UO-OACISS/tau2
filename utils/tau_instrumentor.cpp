@@ -1856,8 +1856,15 @@ void removeCommentFromLine(char * & inbuf)
   int i, len;
     
   len = strlen(line);
-  for (i=0 ; i < len, *line; i++, line++)
-  {
+  for (i=0 ; i < len, *line; i++, line++) {
+    if ((*line == '"') || (*line == '\'')) {
+      char quote = *line;
+      line++;
+      while (*line != NULL && *line != quote) {
+	i++;
+	line++;
+      }
+    }
     if (*line == '!') {
       *line = '\0'; 
       break;
@@ -3781,9 +3788,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.170 $   $Date: 2007/05/23 23:11:33 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.170 2007/05/23 23:11:33 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.171 $   $Date: 2007/05/24 01:37:09 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.171 2007/05/24 01:37:09 amorris Exp $
  ***************************************************************************/
 
 
