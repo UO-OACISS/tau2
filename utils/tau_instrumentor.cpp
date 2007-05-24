@@ -2253,6 +2253,8 @@ void getImpliedToken(char* &str, char* &token) {
  * We insert DO loops to compute the size
  */
 void processImpliedDo(char *iostmt, char *element, int id) {
+  vector<string> keys;
+
   char tmp[4096];
   strcpy (tmp, element);
 
@@ -2273,22 +2275,22 @@ void processImpliedDo(char *iostmt, char *element, int id) {
     } else if (strlen(token) == 1 && token[0] == ')') {
       nest--;
     } else {
-      if (first) {
-	first = 0;
-	strcpy(key,token);
-      } else {
+      if (strchr(token,'=')) {
 	strcat(iostmt, "      DO ");
 	strcat(iostmt, token);
 	strcat(iostmt, "\n");
 	count++;
+      } else {
+	keys.push_back(token);
       }
-
     }
   }
 
-  char phrase[4096];
-  sprintf (phrase, "       tio_%d_sz = tio_%d_sz + sizeof(%s)\n", id, id, key);
-  strcat(iostmt, phrase);
+  for (int i=0; i<keys.size(); i++) {
+    char phrase[4096];
+    sprintf (phrase, "       tio_%d_sz = tio_%d_sz + sizeof(%s)\n", id, id, keys[i].c_str());
+    strcat(iostmt, phrase);
+  }
   for (int i=0; i<count; i++) {
     strcat(iostmt, "      END DO\n");
   }
@@ -3937,8 +3939,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.173 $   $Date: 2007/05/24 23:15:46 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.173 2007/05/24 23:15:46 amorris Exp $
+ * $Revision: 1.174 $   $Date: 2007/05/24 23:37:58 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.174 2007/05/24 23:37:58 amorris Exp $
  ***************************************************************************/
 
 
