@@ -55,6 +55,8 @@ extern bool addMoreInvocations(int routine_id, string& snippet);
 
 #include "tau_datatypes.h"
 
+const int INBUF_SIZE = 65536;
+
 
 #define EXIT_KEYWORD_SIZE 256
 /* For Pooma, add a -noinline flag */
@@ -533,7 +535,6 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 }
 
 
-const int INBUF_SIZE = 65536;
 
 /* -------------------------------------------------------------------------- */
 /* -- process exit or abort statement and generate a record for itemRef       */
@@ -2150,6 +2151,153 @@ bool getNextToken(char * &line, char * & varname)
    else return false; /* there are more strings to process... */
 }
 
+
+
+static void removeWhitespace(char *str) {
+  int w=0;
+  int len = strlen(str);
+  for (int r=0;r<len;r++) {
+    if (str[r] != ' ') {
+      str[w]=str[r];
+      w++;
+    }
+  }
+  str[w] = 0;
+}
+
+
+static void blankQuote(char *str) {
+  char *p = str;
+
+  while (*p) {
+    // blank everything in quotes
+    if (*p == '\'' || *p == '"') {
+      char quote = *p;
+      p++;
+      while (*p && *p != quote) {
+	*p = 'x';
+	p++;
+      }
+    }
+    p++;
+  }
+}
+
+/*
+ * Heuristic to determine if any element of an IO statement contains an implied-do statement
+ * The logic says that after you remove the whitespace, the first character must be a '(' and there
+ * must be an '=' somewhere in it.
+ *
+ * Some examples:
+ *     print *, "a","b","c",(A(1, I), I= 1,10), "d","e"
+ * Nested:
+ *     print *, "a","b","c",( (A(I,J), I=1, 10, 2), J= 1, 10), "d","e"
+ */
+bool isImpliedDo(char *str) {
+  char tmp[4096];
+  strcpy (tmp, str);
+
+  blankQuote(tmp);
+  removeWhitespace(tmp);
+
+  if (tmp[0] == '(' && strchr(tmp,'=')) {
+    return true;
+  }
+
+  return false;
+}
+
+
+
+void getImpliedToken(char* &str, char* &token) {
+  if (*str == ',') {
+    str++;
+  }
+
+  if (*str == '(' || *str == ')') {
+    token[0] = *str;
+    token[1] = 0;
+    str++;
+    return;
+  }
+
+  int eqSeen = 0;
+  int idx = 0;
+  int paren = 0;
+  while (*str != ',' || paren != 0) {
+    if (*str == '=') {
+      eqSeen = 1;
+    }
+    if (*str == '(') {
+      paren++;
+    }
+    if (*str == ')') {
+      paren--;
+    }
+    token[idx++] = *str;
+    str++;
+  }
+  if (eqSeen) {
+    while (*str != ')') {
+      token[idx++] = *str;
+      str++;
+    }
+  }
+
+
+  token[idx] = 0;
+}
+
+/*
+ * Process an implied-do construct, see above for definition and examples
+ * We insert DO loops to compute the size
+ */
+void processImpliedDo(char *iostmt, char *element, int id) {
+  char tmp[4096];
+  strcpy (tmp, element);
+
+  blankQuote(tmp);
+  removeWhitespace(tmp);
+  char *p = tmp;
+
+  char key[4096];
+  int nest = 0;
+  char *token = new char[4096];
+  int first = 1;
+  int count = 0;
+  strcat(iostmt,"\n");
+  while (*p) {
+    getImpliedToken(p,token);
+    if (strlen(token) == 1 && token[0] == '(') {
+      nest++;
+    } else if (strlen(token) == 1 && token[0] == ')') {
+      nest--;
+    } else {
+      if (first) {
+	first = 0;
+	strcpy(key,token);
+      } else {
+	strcat(iostmt, "      DO ");
+	strcat(iostmt, token);
+	strcat(iostmt, "\n");
+	count++;
+      }
+
+    }
+  }
+
+  char phrase[4096];
+  sprintf (phrase, "       tio_%d_sz = tio_%d_sz + sizeof(%s)\n", id, id, key);
+  strcat(iostmt, phrase);
+  for (int i=0; i<count; i++) {
+    strcat(iostmt, "      END DO\n");
+  }
+  delete[] token;
+}
+
+
+
+
 /* -------------------------------------------------------------------------- */
 /* -- getVariableName returns true if it is done, and has no more variables - */
 /* -- to process in the same line. Extracts variable name from line.        - */
@@ -2618,23 +2766,27 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
   while (!done)
   {
     done = getNextToken(line, varname);
-
-    /* what about ! comment */
-    /* We need to break up this into a continuation line if it exceeds 72 chars */
-
-    char *p = varname;
-    while (p && *p == ' ') p++; /* eat up leading space */
-    if (strlen(p) == 0) continue ; /* don't put sizeof() */
-
-    sprintf(string_containing_sizeof, "+sizeof(%s)", p); 
-    origlen = strlen(iostmt);
-    sizeoflen = strlen(string_containing_sizeof);
-
-    if (origlen+sizeoflen >= 72) { /* exceeds 72 columns -- break it up! */
-      sprintf(string_containing_sizeof, "\n      tio_%d_sz = tio_%d_sz+sizeof(%s)",
-      lineno, lineno, p);
+    
+    if (isImpliedDo(varname)) {
+      processImpliedDo(iostmt, varname, lineno);
+    } else {
+      /* what about ! comment */
+      /* We need to break up this into a continuation line if it exceeds 72 chars */
+      
+      char *p = varname;
+      while (p && *p == ' ') p++; /* eat up leading space */
+      if (strlen(p) == 0) continue ; /* don't put sizeof() */
+      
+      sprintf(string_containing_sizeof, "+sizeof(%s)", p); 
+      origlen = strlen(iostmt);
+      sizeoflen = strlen(string_containing_sizeof);
+      
+      if (origlen+sizeoflen >= 72) { /* exceeds 72 columns -- break it up! */
+	sprintf(string_containing_sizeof, "\n      tio_%d_sz = tio_%d_sz+sizeof(%s)",
+		lineno, lineno, p);
+      }
+      strcat(iostmt, string_containing_sizeof);
     }
-    strcat(iostmt, string_containing_sizeof);
   }
   ostr <<iostmt<<endl;
   ostr <<"      call TAU_CONTEXT_EVENT(tio_"<<lineno<<", tio_"<<lineno<<"_sz)"<<endl;
@@ -3784,9 +3936,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.172 $   $Date: 2007/05/24 20:56:37 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.172 2007/05/24 20:56:37 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.173 $   $Date: 2007/05/24 23:15:46 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.173 2007/05/24 23:15:46 amorris Exp $
  ***************************************************************************/
 
 
