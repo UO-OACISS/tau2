@@ -12,6 +12,7 @@
 # include <set.h>
 # include <algo.h>
 # include <sstream.h>
+# include <deque.h>
 #else
 # include <fstream>
 # include <algorithm>
@@ -19,9 +20,11 @@
 # include <list> 
 # include <string> 
 # include <sstream>
+# include <deque>
 using namespace std;
 #endif
 #include "pdbAll.h"
+
 
 /* defines */
 #ifdef TAU_WINDOWS
@@ -2224,7 +2227,8 @@ void getImpliedToken(char* &str, char* &token) {
   int eqSeen = 0;
   int idx = 0;
   int paren = 0;
-  while (*str != ',' || paren != 0) {
+  while (*str && (paren != 0 || (*str != ',' && *str != ')'))) {
+
     if (*str == '=') {
       eqSeen = 1;
     }
@@ -2237,6 +2241,7 @@ void getImpliedToken(char* &str, char* &token) {
     token[idx++] = *str;
     str++;
   }
+  
   if (eqSeen) {
     while (*str != ')') {
       token[idx++] = *str;
@@ -2244,8 +2249,95 @@ void getImpliedToken(char* &str, char* &token) {
     }
   }
 
-
   token[idx] = 0;
+}
+
+
+
+class treeElement {
+public:
+  //  virtual void f();
+  virtual ~treeElement() {}
+  virtual void print() { printf ("bork");}
+};
+
+class listTreeElement : public treeElement {
+public:
+  vector<treeElement*> list;
+  virtual void print() {
+    //printf ("size=%d(",list.size());
+    printf ("(");
+    for (int i=0; i<list.size()-1; i++) {
+      list[i]->print();
+      printf (",");
+    }
+    list[list.size()-1]->print();
+    printf (")");
+  }
+};
+
+class stringTreeElement : public treeElement {
+public:
+  string str;
+  virtual void print() {
+    printf ("'%s'", str.c_str());
+  }
+};
+
+
+
+void recurseCrap(char* &buf, listTreeElement *element) {
+  char *token = new char[4096];
+  while (*buf) {
+    getImpliedToken(buf,token);
+//     printf ("token = %s\n", token);
+    if (strlen(token) == 1 && token[0] == '(') {
+      listTreeElement *newElement = new listTreeElement();
+      recurseCrap(buf,newElement);
+      element->list.push_back(newElement);
+    } else if (strlen(token) == 1 && token[0] == ')') {
+      delete[] token;
+      return;
+    } else {
+      stringTreeElement *newElement = new stringTreeElement();
+      newElement->str = token;
+      element->list.push_back(newElement);
+    }
+  }
+  delete[] token;
+  return;
+}
+
+
+void outputTree(char* iostmt, int id, treeElement *element) {
+  stringTreeElement *strElement = dynamic_cast<stringTreeElement*>(element);
+  listTreeElement *listElement = dynamic_cast<listTreeElement*>(element);
+
+  if (strElement != NULL) {
+    char phrase[4096];
+    sprintf (phrase, "       tio_%d_sz = tio_%d_sz + sizeof(%s)\n", id, id, strElement->str.c_str());
+    strcat(iostmt, phrase);
+  } else {
+    if (listElement->list.size() == 0) {
+      printf ("hmm, element.list.size() == 0?\n");
+    } else if (listElement->list.size() == 1) {
+      outputTree(iostmt, id, listElement->list[0]);
+    } else {
+      stringTreeElement *iterElement = dynamic_cast<stringTreeElement*>(listElement->list[listElement->list.size()-1]);
+      if (iterElement == NULL) {
+	printf ("bork, last element wasn't a string element!\n");
+	exit (-1);
+      }
+      strcat(iostmt, "      DO ");
+      strcat(iostmt, iterElement->str.c_str());
+      strcat(iostmt, "\n");
+
+      for (int i=0; i<listElement->list.size()-1; i++) {
+	outputTree(iostmt, id, listElement->list[i]);
+      }
+      strcat(iostmt, "      END DO\n");
+   }
+  }
 }
 
 /*
@@ -2253,7 +2345,6 @@ void getImpliedToken(char* &str, char* &token) {
  * We insert DO loops to compute the size
  */
 void processImpliedDo(char *iostmt, char *element, int id) {
-  vector<string> keys;
 
   char tmp[4096];
   strcpy (tmp, element);
@@ -2264,37 +2355,18 @@ void processImpliedDo(char *iostmt, char *element, int id) {
 
   char key[4096];
   int nest = 0;
-  char *token = new char[4096];
   int first = 1;
   int count = 0;
-  strcat(iostmt,"\n");
-  while (*p) {
-    getImpliedToken(p,token);
-    if (strlen(token) == 1 && token[0] == '(') {
-      nest++;
-    } else if (strlen(token) == 1 && token[0] == ')') {
-      nest--;
-    } else {
-      if (strchr(token,'=')) {
-	strcat(iostmt, "      DO ");
-	strcat(iostmt, token);
-	strcat(iostmt, "\n");
-	count++;
-      } else {
-	keys.push_back(token);
-      }
-    }
-  }
 
-  for (int i=0; i<keys.size(); i++) {
-    char phrase[4096];
-    sprintf (phrase, "       tio_%d_sz = tio_%d_sz + sizeof(%s)\n", id, id, keys[i].c_str());
-    strcat(iostmt, phrase);
-  }
-  for (int i=0; i<count; i++) {
-    strcat(iostmt, "      END DO\n");
-  }
-  delete[] token;
+  listTreeElement elements;
+
+  recurseCrap(p, &elements);
+
+  strcat(iostmt,"\n");
+
+//   elements.print();
+//   printf ("\n");
+  outputTree(iostmt,id,&elements);
 }
 
 
@@ -3939,8 +4011,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.174 $   $Date: 2007/05/24 23:37:58 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.174 2007/05/24 23:37:58 amorris Exp $
+ * $Revision: 1.175 $   $Date: 2007/05/25 01:32:47 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.175 2007/05/25 01:32:47 amorris Exp $
  ***************************************************************************/
 
 
