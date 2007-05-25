@@ -1,8 +1,7 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
@@ -15,18 +14,19 @@ import edu.uoregon.tau.paraprof.barchart.*;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UserEvent;
 
 /**
  * The UserEventWindow shows one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventWindow.java,v 1.27 2007/05/02 19:45:06 amorris Exp $</P>
+ * <P>CVS $Id: UserEventWindow.java,v 1.28 2007/05/25 21:55:45 amorris Exp $</P>
  * @author  Alan Morris, Robert Bell
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  * @see GlobalBarChartModel
  */
-public class UserEventWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
+public class UserEventWindow extends JFrame implements ActionListener, KeyListener, Observer, ChangeListener, ParaProfWindow, SearchableOwner {
 
     private ParaProfTrial ppTrial;
     private DataSorter dataSorter;
@@ -40,6 +40,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     private JCheckBoxMenuItem sortByName;
     private JCheckBoxMenuItem showMetaData;
     private JCheckBoxMenuItem displayWidthSlider;
+    private JCheckBoxMenuItem showFindPanelBox;
 
     private JLabel barLengthLabel = new JLabel("Bar Width");
     private JSlider barLengthSlider = new JSlider(0, 2000, 400);
@@ -49,6 +50,8 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
     private BarChartPanel panel;
     private BarChartModel model;
+
+    private SearchPanel searchPanel;
 
     private List list = new ArrayList();
 
@@ -154,6 +157,8 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
         model = new UserEventBarChartModel(this, dataSorter, userEvent);
 
+        this.addKeyListener(this);
+
 
         panel = new BarChartPanel(model, null);
 
@@ -192,6 +197,8 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
+        mainMenu.addKeyListener(this);
+
         JMenu subMenu = null;
 
         optionsMenu = new JMenu("Options");
@@ -202,6 +209,10 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
         displayWidthSlider = new JCheckBoxMenuItem("Show Width Slider", false);
         displayWidthSlider.addActionListener(this);
         //optionsMenu.add(displayWidthSlider);
+
+        showFindPanelBox = new JCheckBoxMenuItem("Show Find Panel", false);
+        showFindPanelBox.addActionListener(this);
+        optionsMenu.add(showFindPanelBox);
 
         showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
         showMetaData.addActionListener(this);
@@ -311,6 +322,12 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
                     } else {
                         displaySiders(false);
                     }
+                } else if (arg.equals("Show Find Panel")) {
+                    if (showFindPanelBox.isSelected()) {
+                        showSearchPanel(true);
+                    } else {
+                        showSearchPanel(false);
+                    }
                 } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
                 }
@@ -418,6 +435,7 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
     public void setHeader() {
         if (showMetaData.isSelected()) {
             JTextArea jTextArea = new JTextArea();
+            jTextArea.addKeyListener(this);
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
             jTextArea.setMargin(new Insets(3, 3, 3, 3));
@@ -489,6 +507,45 @@ public class UserEventWindow extends JFrame implements ActionListener, Observer,
 
     public ParaProfTrial getPpTrial() {
         return ppTrial;
+    }
+
+    public void showSearchPanel(boolean show) {
+        System.out.println("showSearchPanel = " + show);
+        if (show) {
+            if (searchPanel == null) {
+                searchPanel = new SearchPanel(this, panel.getBarChart().getSearcher());
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.insets = new Insets(5, 5, 5, 5);
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                gbc.anchor = GridBagConstraints.CENTER;
+                gbc.weightx = 0.10;
+                gbc.weighty = 0.01;
+                addCompItem(searchPanel, gbc, 0, 3, 2, 1);
+                searchPanel.setFocus();
+            }
+        } else {
+            getContentPane().remove(searchPanel);
+            searchPanel = null;
+        }
+
+        showFindPanelBox.setSelected(show);
+        validate();
+    }
+    
+    public void keyPressed(KeyEvent e) {
+        if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F) {
+            showSearchPanel(true);
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void keyTyped(KeyEvent e) {
+        // TODO Auto-generated method stub
+        
     }
 
 }
