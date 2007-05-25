@@ -2258,7 +2258,9 @@ class treeElement {
 public:
   //  virtual void f();
   virtual ~treeElement() {}
-  virtual void print() { printf ("bork");}
+  virtual void print() = 0;
+  virtual void output(char *iostmt, int id) = 0;
+  virtual const char *getString() = 0;
 };
 
 class listTreeElement : public treeElement {
@@ -2274,6 +2276,33 @@ public:
     list[list.size()-1]->print();
     printf (")");
   }
+
+  virtual const char *getString() {
+    return 0;
+  }
+
+  virtual void output(char *iostmt, int id) {
+    if (list.size() == 0) {
+      printf ("WTF hmm, element.list.size() == 0?\n");
+    } else if (list.size() == 1) {
+      list[0]->output(iostmt,id);
+    } else {
+      treeElement *iterElement = list[list.size()-1];
+      if (iterElement == NULL) {
+	printf ("bork, last element wasn't a string element!\n");
+	exit (-1);
+      }
+      strcat(iostmt, "      DO ");
+      strcat(iostmt, iterElement->getString());
+      strcat(iostmt, "\n");
+
+      for (int i=0; i<list.size()-1; i++) {
+	list[i]->output(iostmt,id);
+      }
+      strcat(iostmt, "      END DO\n");
+   }
+
+  }
 };
 
 class stringTreeElement : public treeElement {
@@ -2282,6 +2311,17 @@ public:
   virtual void print() {
     printf ("'%s'", str.c_str());
   }
+
+  virtual const char *getString() {
+    return str.c_str();
+  }
+
+  virtual void output(char *iostmt, int id) {
+    char phrase[4096];
+    sprintf (phrase, "       tio_%d_sz = tio_%d_sz + sizeof(%s)\n", id, id, str.c_str());
+    strcat(iostmt, phrase);
+  }
+
 };
 
 
@@ -2358,15 +2398,16 @@ void processImpliedDo(char *iostmt, char *element, int id) {
   int first = 1;
   int count = 0;
 
-  listTreeElement elements;
+  listTreeElement *elements = new listTreeElement();
 
-  recurseCrap(p, &elements);
+  recurseCrap(p, elements);
 
   strcat(iostmt,"\n");
 
-//   elements.print();
-//   printf ("\n");
-  outputTree(iostmt,id,&elements);
+  //elements->print();
+  printf ("\n");
+  //outputTree(iostmt,id,&elements);
+  elements->output(iostmt,id);
 }
 
 
@@ -4011,8 +4052,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.175 $   $Date: 2007/05/25 01:32:47 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.175 2007/05/25 01:32:47 amorris Exp $
+ * $Revision: 1.176 $   $Date: 2007/05/25 18:08:03 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.176 2007/05/25 18:08:03 amorris Exp $
  ***************************************************************************/
 
 
