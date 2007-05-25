@@ -785,7 +785,7 @@ public class Configure {
 
         ConfigureTest configTest = new ConfigureTest(tauroot);
         configTest.initialize(configFilename);
-        configTest.createDB();
+        configTest.createDB(true);
 
         // check to see if the database is there...
         //config.createDB();

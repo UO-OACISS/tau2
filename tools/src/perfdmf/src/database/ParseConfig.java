@@ -20,10 +20,15 @@ public class ParseConfig {
     private String dbPasswd;
     private String dbSchema;
     private String xmlSAXParser;
+    private String path;
+    private String name;
 
     public ParseConfig(String configLoc) {
 
-        String inputString;
+        path = configLoc;
+        String[] split = configLoc.split("\\.");
+        name = split[split.length-1];
+    	String inputString;
         String name;
         String value;
 
@@ -162,6 +167,14 @@ public class ParseConfig {
 
     public String getXMLSAXParser() {
         return xmlSAXParser;
+    }
+    public String getName()
+    {
+    	return name;
+    }
+    public String getPath()
+    {
+    	return path;
     }
 
 }

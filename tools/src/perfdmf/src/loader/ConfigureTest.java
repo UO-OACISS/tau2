@@ -202,7 +202,7 @@ public class ConfigureTest {
     }
 
     /* Test that the database exists, and if it doesn't, create it! */
-    public void createDB() {
+    public void createDB(boolean prompt) {
         ConnectionManager connector = null;
         DB db = null;
         try {
@@ -241,28 +241,32 @@ public class ConfigureTest {
         } catch (SQLException e) {
             e.printStackTrace();
             // this is our method of determining that no 'application' table exists
-
-            System.out.print("Tables not found.  Would you like to upload the schema? [y/n]: ");
-
+            String input = "";
+            if (prompt)
+            {
+	            System.out.print("Tables not found.  Would you like to upload the schema? [y/n]: ");
+            
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-            String input = "";
+            
             try {
-                input = reader.readLine();
+            	input = reader.readLine();
             } catch (java.io.IOException ioe) {
-                ioe.printStackTrace();
-                System.exit(-1);
+            	ioe.printStackTrace();
+            	System.exit(-1);
             }
-            if (input.equals("y") || input.equals("Y")) {
+            }
+            if (input.equals("y") || input.equals("Y") || !prompt) {
 
-                System.out.println("Uploading Schema: " + db_schemafile);
-                if (connector.genParentSchema(db_schemafile) == 0) {
-                    System.out.println("Successfully uploaded schema\n");
-                } else {
-                    System.out.println("Error uploading schema\n");
-                    System.exit(-1);
-                }
+            	System.out.println("Uploading Schema: " + db_schemafile);
+            	if (connector.genParentSchema(db_schemafile) == 0) {
+            		System.out.println("Successfully uploaded schema\n");
+            	} else {
+            		System.out.println("Error uploading schema\n");
+            		System.exit(-1);
+            	}
             }
+            
         }
 
         try {
@@ -323,6 +327,6 @@ public class ConfigureTest {
         // the process of creating/editing a configuration file.
         ConfigureTest config = new ConfigureTest(tauroot);
         config.initialize(configFile);
-        config.createDB();
+        config.createDB(true);
     }
 }
