@@ -15,8 +15,6 @@ import java.util.Vector;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
-import com.apple.eawt.Application;
-
 import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
