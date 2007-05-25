@@ -93,7 +93,7 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
         experiment.setApplicationID(this.getID());
         experiment.setID((experiments.size()));
         experiments.add(experiment);
-		return null;
+		return experiment;
 	}
 
 }
