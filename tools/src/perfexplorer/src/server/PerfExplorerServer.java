@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Collections;
 import clustering.AnalysisFactory;
 import clustering.ClusterException;
+import java.util.StringTokenizer;
+import java.util.NoSuchElementException;
 
 /**
  * The main PerfExplorer Server class.  This class is defined as a singleton,
@@ -43,7 +45,7 @@ import clustering.ClusterException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.48 2007/04/20 17:06:47 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.49 2007/05/25 18:26:56 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -891,6 +893,20 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			e.printStackTrace();
 		}
 		return events;
+	}
+
+	private static String shortName(String longName) {
+		StringTokenizer st = new StringTokenizer(longName, "(");
+		String shorter = null;
+		try {
+			shorter = st.nextToken();
+			if (shorter.length() < longName.length()) {
+				shorter = shorter + "()";
+			}
+		} catch (NoSuchElementException e) {
+			shorter = longName;
+		}
+		return shorter;
 	}
 
 	/**

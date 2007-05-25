@@ -351,6 +351,7 @@ public class TestHarness {
 	}
 
 	public void testRules() throws Exception {
+		//RuleHarness rules = new RuleHarness();
 		//RuleHarness.processRules();
 	}
 

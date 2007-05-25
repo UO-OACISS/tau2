@@ -522,4 +522,8 @@ public class ScriptFacade {
 	public ListIterator getEventList(Trial trial, int metricIndex) {
 		return connection.getEventList(trial.getID(), metricIndex);
 	}
+	
+	public void runComparisonRules(Trial baseline, Trial comparison) {
+		//RuleHarness.processRules(baseline, comparison);
+	}
 }

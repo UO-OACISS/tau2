@@ -44,7 +44,8 @@ import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import java.text.DecimalFormat;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.VectorExport;
-
+import java.util.StringTokenizer;
+import java.util.NoSuchElementException;
 
 public class ChartPane extends JScrollPane implements ActionListener {
 
@@ -646,7 +647,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-					if (!row.series.equals(baseline.series)) {
+					if (!shortName(row.series).equals(shortName(baseline.series))) {
 						baseline = row;
 					}
 					if (model.getConstantProblem().booleanValue()) {
@@ -654,9 +655,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 						double ratio = baseline.categoryInteger.doubleValue() / 
 							row.categoryInteger.doubleValue();
 						double efficiency = baseline.value/row.value;
-        				dataset.addValue(efficiency / ratio, row.series, row.categoryInteger);
+        				dataset.addValue(efficiency / ratio, shortName(row.series), row.categoryInteger);
 					} else {
-        				dataset.addValue(baseline.value / row.value, row.series, row.categoryInteger);
+        				dataset.addValue(baseline.value / row.value, shortName(row.series), row.categoryInteger);
 					}
 				}
 
@@ -683,7 +684,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-					if (!row.series.equals(baseline.series)) {
+					if (!shortName(row.series).equals(shortName(baseline.series))) {
 						baseline = row;
 					}
 					if (model.getConstantProblem().booleanValue()) {
@@ -693,9 +694,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 						double efficiency = baseline.value/row.value;
         				dataset.addValue(efficiency / ratio, row.series, row.categoryInteger);
 						*/
-        				dataset.addValue(baseline.value / row.value, row.series, row.categoryInteger);
+        				dataset.addValue(baseline.value / row.value, shortName(row.series), row.categoryInteger);
 					} else {
-        				dataset.addValue((baseline.value * baseline.categoryInteger.doubleValue())/ (row.value * row.categoryInteger.doubleValue()), row.series, row.categoryInteger);
+        				dataset.addValue((baseline.value * baseline.categoryInteger.doubleValue())/ (row.value * row.categoryInteger.doubleValue()), shortName(row.series), row.categoryInteger);
 					}
 				}
 
@@ -710,14 +711,14 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        			dataset.addValue(row.value / conversion, row.series, row.categoryInteger);
+        			dataset.addValue(row.value / conversion, shortName(row.series), row.categoryInteger);
 				}
 			}
 		} else {
 			// iterate through the values
 			for (int i = 0 ; i < rawData.getRows() ; i++) {
 				common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        		dataset.addValue(row.value / conversion, row.series, row.categoryString);
+        		dataset.addValue(row.value / conversion, shortName(row.series), row.categoryString);
 			}
 		}
 
@@ -782,6 +783,20 @@ public class ChartPane extends JScrollPane implements ActionListener {
  		}
 
 		return chart;
+	}
+
+	private String shortName(String longName) {
+		StringTokenizer st = new StringTokenizer(longName, "(");
+		String shorter = null;
+		try {
+			shorter = st.nextToken();
+			if (shorter.length() < longName.length()) {
+				shorter = shorter + "()";
+			}
+		} catch (NoSuchElementException e) {
+			shorter = longName;
+		}
+		return shorter;
 	}
 
 	private class MyJTextField extends javax.swing.JTextField

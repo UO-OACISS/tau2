@@ -35,6 +35,8 @@ import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import java.text.DecimalFormat;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.VectorExport;
+import java.util.StringTokenizer;
+import java.util.NoSuchElementException;
 
 public class PerfExplorerChart extends PerfExplorerChartWindow {
 
@@ -54,7 +56,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		List rowLabels = rawData.getRowLabels();
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-			XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+			XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
 				s.add(values[0], values[1]);
@@ -152,7 +154,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		double ideal, ratio = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 				double[] baseline = (double[])(row.get(0));
 				for (int x = 0 ; x < row.size() ; x++) {
 					double[] values = (double[])(row.get(x));
@@ -211,8 +213,8 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-					if (!row.series.equals(baseline.series)) {
-						//System.out.println(row.series);
+					if (!shortName(row.series).equals(shortName(baseline.series))) {
+						//System.out.println(shortName(row.series));
 						baseline = row;
 					}
 					if (model.getConstantProblem().booleanValue()) {
@@ -222,9 +224,9 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 						//System.out.println("ratio: " + ratio);
 						double efficiency = baseline.value/row.value;
 						//System.out.println("efficiency: " + efficiency);
-        				dataset.addValue(efficiency / ratio, row.series, row.categoryInteger);
+        				dataset.addValue(efficiency / ratio, shortName(row.series), row.categoryInteger);
 					} else {
-        				dataset.addValue(baseline.value / row.value, row.series, row.categoryInteger);
+        				dataset.addValue(baseline.value / row.value, shortName(row.series), row.categoryInteger);
 					}
 				}
 
@@ -239,14 +241,14 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        			dataset.addValue(row.value / 1000000, row.series, row.categoryInteger);
+        			dataset.addValue(row.value / 1000000, shortName(row.series), row.categoryInteger);
 				}
 			}
 		} else {
 			// iterate through the values
 			for (int i = 0 ; i < rawData.getRows() ; i++) {
 				common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        		dataset.addValue(row.value / 1000000, row.series, row.categoryString);
+        		dataset.addValue(row.value / 1000000, shortName(row.series), row.categoryString);
 			}
 		}
 
@@ -324,7 +326,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		double ideal, ratio = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			double[] baseline = (double[])(row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
@@ -367,7 +369,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		double ideal, ratio = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			double[] baseline = (double[])(row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
@@ -412,7 +414,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		double ideal, ratio, efficiency = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			double[] baseline = (double[])(row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
@@ -466,7 +468,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		double ideal = 0, ratio = 0, efficiency = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			double[] baseline = (double[])(row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
@@ -519,7 +521,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		double ideal = 0, ratio = 0, efficiency = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			double[] baseline = (double[])(row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
@@ -572,7 +574,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		List rowLabels = rawData.getRowLabels();
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
         		s.add(values[0], timesteps/values[1]);
@@ -610,7 +612,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		List rowLabels = rawData.getRowLabels();
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			total = total + row.size();
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
@@ -667,7 +669,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		for (int y = 0 ; y < rawData1.getRows() ; y++) {
 			List row1 = rawData1.getRowData(y);
 			List row2 = rawData2.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			for (int x = 0 ; x < row1.size() ; x++) {
 				double[] values1 = (double[])(row1.get(x));
 				double[] values2 = (double[])(row2.get(x));
@@ -707,7 +709,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		double ideal, ratio = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			double[] baseline = (double[])(row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
@@ -748,7 +750,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		double ideal, ratio, efficiency = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			double[] baseline = (double[])(row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
@@ -797,7 +799,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		List rowLabels = rawData.getRowLabels();
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List row = rawData.getRowData(y);
-			XYSeries s = new XYSeries((String)rowLabels.get(y), true, false);
+			XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));
 				s.add(values[0], values[1]);
@@ -865,6 +867,20 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		// if the last line is the "ideal" line, make it black, with no points.
 		plot.setRenderer(renderer);
 
+	}
+
+	public static String shortName(String longName) {
+		StringTokenizer st = new StringTokenizer(longName, "(");
+		String shorter = null;
+		try {
+			shorter = st.nextToken();
+			if (shorter.length() < longName.length()) {
+				shorter = shorter + "()";
+			}
+		} catch (NoSuchElementException e) {
+			shorter = longName;
+		}
+		return shorter;
 	}
 
 }
