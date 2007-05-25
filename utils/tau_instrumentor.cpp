@@ -2217,7 +2217,33 @@ void getImpliedToken(char* &str, char* &token) {
     str++;
   }
 
-  if (*str == '(' || *str == ')') {
+  if (*str == '(') {
+    // see if we find an equals sign before the matching ')'
+    char *p = str+1;
+    int paren = 1;
+    int eqSeen = 0;
+    while (*p && paren != 0) {
+      if (*p == '=') {
+	eqSeen = 1;
+      }
+      if (*p == '(') {
+	paren++;
+      }
+      if (*p == ')') {
+	paren--;
+      }
+      p++;
+    }
+
+    if (eqSeen) {
+      token[0] = *str;
+      token[1] = 0;
+      str++;
+      return;
+    }
+  }
+
+  if (*str == ')') {
     token[0] = *str;
     token[1] = 0;
     str++;
@@ -2227,7 +2253,15 @@ void getImpliedToken(char* &str, char* &token) {
   int eqSeen = 0;
   int idx = 0;
   int paren = 0;
-  while (*str && (paren != 0 || (*str != ',' && *str != ')'))) {
+  while (*str) {
+
+    if (*str == ',' && paren == 0) {
+      break;
+    }
+
+    if (!(paren != 0 || (*str != ',' && *str != ')'))) {
+      break;
+    }
 
     if (*str == '=') {
       eqSeen = 1;
@@ -2241,7 +2275,7 @@ void getImpliedToken(char* &str, char* &token) {
     token[idx++] = *str;
     str++;
   }
-  
+
   if (eqSeen) {
     while (*str != ')') {
       token[idx++] = *str;
@@ -2268,13 +2302,13 @@ public:
   vector<treeElement*> list;
   virtual void print() {
     //printf ("size=%d(",list.size());
-    printf ("(");
+    printf ("( ");
     for (int i=0; i<list.size()-1; i++) {
       list[i]->print();
-      printf (",");
+      printf (", ");
     }
     list[list.size()-1]->print();
-    printf (")");
+    printf (" )");
   }
 
   virtual const char *getString() {
@@ -2330,7 +2364,7 @@ void recurseCrap(char* &buf, listTreeElement *element) {
   char *token = new char[4096];
   while (*buf) {
     getImpliedToken(buf,token);
-//     printf ("token = %s\n", token);
+//      printf ("token = %s\n", token);
     if (strlen(token) == 1 && token[0] == '(') {
       listTreeElement *newElement = new listTreeElement();
       recurseCrap(buf,newElement);
@@ -2348,37 +2382,6 @@ void recurseCrap(char* &buf, listTreeElement *element) {
   return;
 }
 
-
-void outputTree(char* iostmt, int id, treeElement *element) {
-  stringTreeElement *strElement = dynamic_cast<stringTreeElement*>(element);
-  listTreeElement *listElement = dynamic_cast<listTreeElement*>(element);
-
-  if (strElement != NULL) {
-    char phrase[4096];
-    sprintf (phrase, "       tio_%d_sz = tio_%d_sz + sizeof(%s)\n", id, id, strElement->str.c_str());
-    strcat(iostmt, phrase);
-  } else {
-    if (listElement->list.size() == 0) {
-      printf ("hmm, element.list.size() == 0?\n");
-    } else if (listElement->list.size() == 1) {
-      outputTree(iostmt, id, listElement->list[0]);
-    } else {
-      stringTreeElement *iterElement = dynamic_cast<stringTreeElement*>(listElement->list[listElement->list.size()-1]);
-      if (iterElement == NULL) {
-	printf ("bork, last element wasn't a string element!\n");
-	exit (-1);
-      }
-      strcat(iostmt, "      DO ");
-      strcat(iostmt, iterElement->str.c_str());
-      strcat(iostmt, "\n");
-
-      for (int i=0; i<listElement->list.size()-1; i++) {
-	outputTree(iostmt, id, listElement->list[i]);
-      }
-      strcat(iostmt, "      END DO\n");
-   }
-  }
-}
 
 /*
  * Process an implied-do construct, see above for definition and examples
@@ -2404,9 +2407,8 @@ void processImpliedDo(char *iostmt, char *element, int id) {
 
   strcat(iostmt,"\n");
 
-  //elements->print();
-  printf ("\n");
-  //outputTree(iostmt,id,&elements);
+//   elements->print();
+//   printf ("\n");
   elements->output(iostmt,id);
 }
 
@@ -4052,8 +4054,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.176 $   $Date: 2007/05/25 18:08:03 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.176 2007/05/25 18:08:03 amorris Exp $
+ * $Revision: 1.177 $   $Date: 2007/05/25 18:30:45 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.177 2007/05/25 18:30:45 amorris Exp $
  ***************************************************************************/
 
 
