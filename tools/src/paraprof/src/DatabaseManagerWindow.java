@@ -112,7 +112,10 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     {
     	mainWindow =  mw;
     	
-    	selectedConfig = (ParseConfig) (ConfigureFiles.getConfigurations().get(0));
+    	if (ConfigureFiles.getConfigurations().size() > 0)
+    		selectedConfig = (ParseConfig) (ConfigureFiles.getConfigurations().get(0));
+    	else
+    		selectedConfig = null;
     	
     	jarFileChooser.setText("Browse...");
     	jarFileChooser.addActionListener(this);
