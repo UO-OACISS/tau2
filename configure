@@ -3012,6 +3012,13 @@ then
           mpiflibargs="$mpiflibargs -lrt"
         fi
 
+        if [ -r $mpilib/libscdma.a -a -r $mpilib/libpmi.a ]
+        then
+	  # echo "add -lscdma -lpmi to the SiCortex link line"
+          mpilibargs="$mpilibargs -lscdma -lpmi"
+          mpiflibargs="$mpiflibargs -lscdma -lpmi"
+	fi
+
 
       fi
     fi
