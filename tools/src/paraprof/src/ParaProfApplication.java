@@ -71,15 +71,6 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
         return experiments.listIterator();
     }
 
-    public ParaProfExperiment addExperiment(Application app) {
-        ParaProfExperiment experiment = new ParaProfExperiment();
-        experiment.setApplication(this);
-        experiment.setApplicationID(this.getID());
-        experiment.setID((experiments.size()));
-        experiments.add(experiment);
-        return experiment;
-    }
-
     public void removeExperiment(ParaProfExperiment experiment) {
         experiments.remove(experiment);
     }
