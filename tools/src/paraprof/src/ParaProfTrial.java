@@ -69,14 +69,6 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private SnapshotControlWindow snapshotControlWindow;
 
-    public ParaProfTrial(Experiment exp) {
-    	trial = new Trial();
-        trial.setID(-1);
-        trial.setExperimentID(-1);
-        trial.setApplicationID(-1);
-        trial.setName("");
-    }
-
     public ParaProfTrial(Trial trial) {
         this.trial = new Trial(trial);
     }
