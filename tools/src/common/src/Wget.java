@@ -10,22 +10,46 @@ public class Wget {
 		wget(URL, file, false);
 	}
 
-    public static void wget(String URL, String file, boolean status) throws IOException {
+    public static void wget(String URL, String file, boolean status) throws IOException
+    {
+    	 wget(URL, file, status, new Progress() {
+
+    		 int size;
+    		 
+    		 public void reportFininshed(int bytes) {
+    			 System.out.println("\r" + bytes / 1000 + "k bytes... done.");
+			}
+
+			public void reportProgress(int bytes) {
+				System.out.print("\r" + bytes / 1000 + "k bytes... of " + size / 1000 + "k bytes" );
+			}
+			public void reportSize(int bytes) {
+				size = bytes;
+				
+			}});
+    }
+    
+    public static void wget(String URL, String file, boolean status, Progress prg) throws IOException {
         URLConnection url = new URL(URL).openConnection();
         DataInputStream in = new DataInputStream(url.getInputStream());
         OutputStream out = new FileOutputStream(file);
 		int i = 0;
+		
+		prg.reportSize(url.getContentLength());
+		
         try {
             while (true) {
                 out.write(in.readUnsignedByte());
 				i++;
 				if (status && i % 100000 == 0)
-					System.out.print("\r" + i / 1000 + "k bytes...");
+					//System.out.print("\r" + i / 1000 + "k bytes...");
+					prg.reportProgress(i);
             }
         } catch (EOFException e) {
             out.close();
 			if (status)
-				System.out.println("\r" + i / 1000 + "k bytes... done.");
+				//System.out.println("\r" + i / 1000 + "k bytes... done.");
+				prg.reportFininshed(i);
             return;
         }
     }
@@ -48,4 +72,10 @@ public class Wget {
 			System.out.println("Failed getting " + args[0]);
 		}
 	}
+	  public static interface Progress
+	  {
+	    public void reportProgress(int bytes);
+	    public void reportFininshed(int bytes);
+	    public void reportSize(int bytes);
+	  }
 }
