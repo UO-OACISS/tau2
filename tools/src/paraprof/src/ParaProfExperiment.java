@@ -15,6 +15,8 @@ import java.util.Vector;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import com.apple.eawt.Application;
+
 import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
@@ -51,10 +53,6 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
     
     public void setApplication(ParaProfApplication application) {
         this.application = application;
-    }
-
-    public ParaProfApplication getApplication() {
-        return application;
     }
 
     public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode) {
@@ -126,5 +124,9 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
     public void clearDefaultMutableTreeNode() {
         this.setDMTN(null);
     }
+
+	public ParaProfApplication getApplication() {
+		return application;
+	}
 
 }

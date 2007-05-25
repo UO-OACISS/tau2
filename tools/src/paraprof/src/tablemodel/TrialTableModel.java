@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
+import edu.uoregon.tau.paraprof.ParaProfExperiment;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;

@@ -31,6 +31,22 @@ public class ApplicationTableModel extends AbstractTableModel {
             fieldNames.add(application.getFieldName(i));
         }
     }
+    public void updateDatabaseFields(ParaProfApplication app)
+    {
+    	if (app != null)
+    	{
+    		fieldNames = new ArrayList();
+    		
+	        fieldNames.add("Name");
+	        fieldNames.add("Application ID");
+	        for (int i=0; i<application.getNumFields(); i++) {
+	            fieldNames.add(application.getFieldName(i));
+	        }
+	        for (int i=0; i<app.getNumFields(); i++) {
+	            fieldNames.add(app.getFieldName(i));
+	        }
+    	}
+    }
 
     public int getColumnCount() {
         return 2;
@@ -46,7 +62,7 @@ public class ApplicationTableModel extends AbstractTableModel {
 
     public Object getValueAt(int r, int c) {
         if (c == 0) {
-            return fieldNames.get(r);
+            return fieldNames.get(r); 
         } else {
             switch (r) {
             case (0):

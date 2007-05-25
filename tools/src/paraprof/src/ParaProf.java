@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.63 2007/05/10 22:53:03 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.64 2007/05/25 02:04:55 scottb Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.63 $
+ * @version $Revision: 1.64 $
  */
 public class ParaProf implements ActionListener {
 
@@ -149,7 +149,7 @@ public class ParaProf implements ActionListener {
         app.setName("Default App");
 
         // Create a default experiment.
-        ParaProfExperiment experiment = app.addExperiment();
+        ParaProfExperiment experiment = app.addExperiment(app);
         experiment.setName("Default Exp");
 
         ParaProf.paraProfManagerWindow.setVisible(true);
@@ -254,6 +254,7 @@ public class ParaProf implements ActionListener {
 
         // Initialize, but do not show the manager window
         ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
+        
     }
 
     public static void loadScripts() {

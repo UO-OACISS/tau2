@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
+import edu.uoregon.tau.paraprof.ParaProfApplication;
 import edu.uoregon.tau.paraprof.ParaProfExperiment;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
@@ -32,6 +33,23 @@ public class ExperimentTableModel extends AbstractTableModel {
             fieldNames.add(experiment.getFieldName(i));
         }
     }
+    public void updateDatabaseFields(ParaProfExperiment exp)
+    {
+    	if (exp != null)
+    	{
+    		fieldNames = new ArrayList();
+    		
+	        fieldNames.add("Name");
+	        fieldNames.add("Application ID");
+	        for (int i=0; i<experiment.getNumFields(); i++) {
+	            fieldNames.add(experiment.getFieldName(i));
+	        }
+	        for (int i=0; i<exp.getNumFields(); i++) {
+	            fieldNames.add(exp.getFieldName(i));
+	        }
+    	}
+    }
+
 
     public int getColumnCount() {
         return 2;

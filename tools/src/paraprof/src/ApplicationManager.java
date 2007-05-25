@@ -2,25 +2,29 @@ package edu.uoregon.tau.paraprof;
 
 import java.util.*;
 
+import edu.uoregon.tau.perfdmf.Database;
+
 /**
  * ApplicationManager
  * This controls the adding of applications to the system.
  *  
  * 
- * <P>CVS $Id: ApplicationManager.java,v 1.14 2007/05/02 19:45:05 amorris Exp $</P>
+ * <P>CVS $Id: ApplicationManager.java,v 1.15 2007/05/25 02:04:55 scottb Exp $</P>
  * @author	Robert Bell
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  */
 public class ApplicationManager extends Observable {
 
     private List applications = new ArrayList();
 
-    public ParaProfApplication addApplication() {
+	public ParaProfApplication addApplication() {
         ParaProfApplication application = new ParaProfApplication();
         application.setID((applications.size()));
         applications.add(application);
         return application;
-    }
+
+	}
+
 
     public void removeApplication(ParaProfApplication application) {
         applications.remove(application);
@@ -57,4 +61,6 @@ public class ApplicationManager extends Observable {
         }
         return false;
     }
+
+
 }

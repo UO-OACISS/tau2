@@ -27,6 +27,7 @@ import edu.uoregon.tau.paraprof.util.FileMonitor;
 import edu.uoregon.tau.paraprof.util.FileMonitorListener;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObject {
 
@@ -53,7 +54,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private Group selectedGroup;
     private Group groupInclude;
-    private Group groupExclude;
+    private Group groupExclude;    
 
     private Trial trial;
 
@@ -68,8 +69,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private SnapshotControlWindow snapshotControlWindow;
 
-    public ParaProfTrial() {
-        trial = new Trial();
+    public ParaProfTrial(Experiment exp) {
+    	trial = new Trial();
         trial.setID(-1);
         trial.setExperimentID(-1);
         trial.setApplicationID(-1);
@@ -80,7 +81,15 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         this.trial = new Trial(trial);
     }
 
-    public Iterator getFunctions() {
+    public ParaProfTrial() {
+        trial = new Trial();
+        trial.setID(-1);
+        trial.setExperimentID(-1);
+        trial.setApplicationID(-1);
+        trial.setName("");
+	}
+
+	public Iterator getFunctions() {
         return getDataSource().getFunctions();
     }
 
@@ -718,6 +727,4 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         }
         return experiment.getDatabase();
     }
-
-
 }

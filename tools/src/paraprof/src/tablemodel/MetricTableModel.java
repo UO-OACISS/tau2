@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
+import edu.uoregon.tau.paraprof.ParaProfApplication;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.paraprof.ParaProfMetric;
 
@@ -36,7 +37,7 @@ public class MetricTableModel extends AbstractTableModel {
         fieldValues.add(new Integer(metric.getID()));
     }
 
-    
+ 
     public boolean isCellEditable(int r, int c) {
         if (c == 1 && r == 0) {
             return true;
@@ -73,10 +74,17 @@ public class MetricTableModel extends AbstractTableModel {
     }
 
     public Object getValueAt(int r, int c) {
-        if (c == 0) {
-            return fieldNames.get(r);
-        } else {
-            return fieldValues.get(r);
-        }
+	    if (c == 0) {
+	        if (r < fieldNames.size())
+	        	return fieldNames.get(r);
+	        else
+	        	return "";
+	    } else {
+	        if (r < fieldValues.size())
+	        	return fieldValues.get(r);
+	        else
+	        	return "";
+	    }
+        
     }
 }
