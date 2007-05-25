@@ -2317,15 +2317,12 @@ public:
 
   virtual void output(char *iostmt, int id) {
     if (list.size() == 0) {
-      printf ("WTF hmm, element.list.size() == 0?\n");
+      fprintf (stderr, "Warning: list.size() == 0? (Failed to parse implied-do)\n");
     } else if (list.size() == 1) {
       list[0]->output(iostmt,id);
     } else {
       treeElement *iterElement = list[list.size()-1];
-      if (iterElement == NULL) {
-	printf ("bork, last element wasn't a string element!\n");
-	exit (-1);
-      }
+
       strcat(iostmt, "      DO ");
       strcat(iostmt, iterElement->getString());
       strcat(iostmt, "\n");
@@ -4054,8 +4051,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.177 $   $Date: 2007/05/25 18:30:45 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.177 2007/05/25 18:30:45 amorris Exp $
+ * $Revision: 1.178 $   $Date: 2007/05/25 18:33:23 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.178 2007/05/25 18:33:23 amorris Exp $
  ***************************************************************************/
 
 
