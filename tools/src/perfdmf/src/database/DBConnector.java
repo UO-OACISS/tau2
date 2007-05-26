@@ -31,7 +31,7 @@ public class DBConnector implements DB {
     private String JDBCjarFileName;
 
     private Database database;
-    
+
     /*
      * This class is here because the DriverManager refuses to use a driver that is not loaded
      * by the system ClassLoader.  So we wrap it with this.
@@ -71,12 +71,12 @@ public class DBConnector implements DB {
 
     // it should be "org.postgresql.Driver" in PostgreSQL.
 
-//    public DBConnector(ParseConfig parser) throws SQLException {
-//        super();
-//        parseConfig = parser;
-//        setJDBC(parser);
-//        register();
-//    }
+    //    public DBConnector(ParseConfig parser) throws SQLException {
+    //        super();
+    //        parseConfig = parser;
+    //        setJDBC(parser);
+    //        register();
+    //    }
 
     public DBConnector(String user, String password, Database database) throws SQLException {
         this.database = database;
@@ -256,16 +256,21 @@ public class DBConnector implements DB {
         try {
             // We now load the jar file dynamically based on the filename
             // in the perfdmf configuration
-            
+
             File file = new File(JDBCjarFileName);
-            
+
             if (!file.exists()) {
-                System.err.println("Warning: file '"+JDBCjarFileName +"' does not exist!");
+                System.err.println("Warning: file '" + JDBCjarFileName + "' does not exist!");
             }
-              
+
             URL[] urls = new URL[1];
-            urls[0] = new URL("file://" + JDBCjarFileName);
-            
+
+            if (System.getProperty("os.name").toLowerCase().trim().startsWith("windows")) {
+                urls[0] = new URL("file:\\" + JDBCjarFileName.replace('\\', '/'));
+            } else {
+                urls[0] = new URL("file://" + JDBCjarFileName);
+            }
+
             URLClassLoader cl = new URLClassLoader(urls);
             try {
                 Class drvCls = Class.forName(driverName, true, cl);
