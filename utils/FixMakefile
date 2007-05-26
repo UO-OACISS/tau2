@@ -819,6 +819,18 @@ fi
 	echo "NOTE: *** IBM pSeries Linux environment found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     MIPS32)
+	echo "NOTE: *** SiCortex MIPS32 environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MIPS32LINUX)
+	echo "NOTE: *** SiCortex MIPS32 Linux environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MIPS32PAPI)
+	echo "NOTE: *** SiCortex 32 bit PAPI options used. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      BGL)
 	echo "NOTE: *** IBM BlueGene/L development environment found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
