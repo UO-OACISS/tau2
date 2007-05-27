@@ -74,10 +74,12 @@ int PapiThreadLayer::GetThreadId(void) {
 // PapiThreadLayer class.
 ////////////////////////////////////////////////////////////////////////
 int PapiThreadLayer::InitializeThreadData(void) {
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////
 int PapiThreadLayer::InitializeDBMutexData(void) {
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -130,9 +132,9 @@ int PapiThreadLayer::UnLockEnv(void) {
 
 
 /***************************************************************************
- * $RCSfile: PapiThreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.1 $   $Date: 2007/03/16 23:49:41 $
- * POOMA_VERSION_ID: $Id: PapiThreadLayer.cpp,v 1.1 2007/03/16 23:49:41 amorris Exp $
+ * $RCSfile: PapiThreadLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.2 $   $Date: 2007/05/27 19:25:22 $
+ * POOMA_VERSION_ID: $Id: PapiThreadLayer.cpp,v 1.2 2007/05/27 19:25:22 sameer Exp $
  ***************************************************************************/
 
 
