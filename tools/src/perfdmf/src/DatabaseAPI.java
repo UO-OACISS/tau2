@@ -13,11 +13,11 @@ import edu.uoregon.tau.perfdmf.database.ParseConfig;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.16 2007/05/23 17:45:21 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.17 2007/05/29 20:10:34 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  */
 public class DatabaseAPI {
 
@@ -1506,6 +1506,7 @@ public class DatabaseAPI {
             Experiment newExp = new Experiment();
             newExp.setName(name);
             newExp.setApplicationID(app.getID());
+            newExp.setDatabase(database);
             setExperiment(newExp);
             int expId = saveExperiment();
             newExp.setID(expId);
