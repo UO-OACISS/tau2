@@ -28,6 +28,8 @@ public class ParseConfig {
         path = configLoc;
         String[] split = configLoc.split("\\.");
         name = split[split.length-1];
+        if (name.compareTo("cfg") == 0)
+        	name = "Default";
     	String inputString;
         String name;
         String value;
