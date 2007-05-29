@@ -239,11 +239,13 @@ public class ConfigureTest {
             String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "application");
             ResultSet resultSet = db.executeQuery(query);
         } catch (SQLException e) {
-            e.printStackTrace();
             // this is our method of determining that no 'application' table exists
             String input = "";
+
+            boolean upload = false;
+
             if (prompt) {
-                System.out.print("Tables not found.  Would you like to upload the schema? [y/n]: ");
+                System.out.print("This database has not been initalized with perfdmf.\n\nWould you like to upload the schema? [y/n]: ");
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
@@ -253,9 +255,20 @@ public class ConfigureTest {
                     ioe.printStackTrace();
                     System.exit(-1);
                 }
-            }
-            if (input.equals("y") || input.equals("Y") || !prompt) {
 
+                if (input.equals("y") || input.equals("Y")) {
+                    upload = true;
+                } else {
+                    System.exit(0);
+                }
+
+            } else {
+                upload = true;
+            }
+            
+            
+            
+            if (upload) {
                 System.out.println("Uploading Schema: " + db_schemafile);
                 if (connector.genParentSchema(db_schemafile) == 0) {
                     System.out.println("Successfully uploaded schema\n");
