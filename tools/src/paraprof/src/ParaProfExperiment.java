@@ -45,12 +45,12 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
         super(experiment);
     }
 
-    public Database getDatabase() {
-        return application.getDatabase();
-    }
-    
     public void setApplication(ParaProfApplication application) {
         this.application = application;
+    }
+
+    public ParaProfApplication getApplication() {
+        return application;
     }
 
     public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode) {
@@ -122,9 +122,5 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
     public void clearDefaultMutableTreeNode() {
         this.setDMTN(null);
     }
-
-	public ParaProfApplication getApplication() {
-		return application;
-	}
 
 }

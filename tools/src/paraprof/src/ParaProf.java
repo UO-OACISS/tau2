@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.65 2007/05/25 20:05:34 scottb Exp $
+ * CVS $Id: ParaProf.java,v 1.66 2007/05/29 20:27:20 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.65 $
+ * @version $Revision: 1.66 $
  */
 public class ParaProf implements ActionListener {
 
@@ -254,7 +254,6 @@ public class ParaProf implements ActionListener {
 
         // Initialize, but do not show the manager window
         ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
-        
     }
 
     public static void loadScripts() {

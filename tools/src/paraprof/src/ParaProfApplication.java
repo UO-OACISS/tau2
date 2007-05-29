@@ -16,7 +16,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.Database;
 
 public class ParaProfApplication extends Application implements ParaProfTreeNodeUserObject {
 
@@ -32,10 +31,10 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
     }
 
     public ParaProfApplication(Application application) {
-		super(application);
-	}
+        super(application);
+    }
 
-	public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode) {
+    public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode) {
         this.defaultMutableTreeNode = defaultMutableTreeNode;
     }
 
@@ -71,6 +70,15 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
         return experiments.listIterator();
     }
 
+    public ParaProfExperiment addExperiment() {
+        ParaProfExperiment experiment = new ParaProfExperiment();
+        experiment.setApplication(this);
+        experiment.setApplicationID(this.getID());
+        experiment.setID((experiments.size()));
+        experiments.add(experiment);
+        return experiment;
+    }
+
     public void removeExperiment(ParaProfExperiment experiment) {
         experiments.remove(experiment);
     }
@@ -86,14 +94,5 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
     public void clearDefaultMutableTreeNode() {
         this.setDMTN(null);
     }
-
-	public ParaProfExperiment addExperiment() {
-        ParaProfExperiment experiment = new ParaProfExperiment();
-        experiment.setApplication(this);
-        experiment.setApplicationID(this.getID());
-        experiment.setID((experiments.size()));
-        experiments.add(experiment);
-		return experiment;
-	}
 
 }

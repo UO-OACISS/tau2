@@ -26,6 +26,7 @@ import edu.uoregon.tau.paraprof.interfaces.*;
 import edu.uoregon.tau.paraprof.script.ParaProfFunctionScript;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
+import edu.uoregon.tau.paraprof.treetable.ContextEventWindow;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.paraprof.util.MapViewer;
 import edu.uoregon.tau.perfdmf.*;
@@ -35,11 +36,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.32 2007/05/11 21:45:53 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.33 2007/05/29 20:27:20 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.32 $
+ * @version $Revision: 1.33 $
  */
 public class ParaProfUtils {
 
@@ -428,7 +429,7 @@ public class ParaProfUtils {
             menuItem.addActionListener(actionListener);
             windowsMenu.add(menuItem);
         }
-        
+
         //menuItem = new JMenuItem("Call Path Relations");
         //menuItem.addActionListener(actionListener);
         //windowsMenu.add(menuItem);
@@ -825,6 +826,18 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
+    public static JMenuItem createContexEventMenuItem(String text, final ParaProfTrial ppTrial, final Thread thread,
+            final Component owner) {
+        JMenuItem jMenuItem = new JMenuItem(text);
+        jMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ContextEventWindow w = new ContextEventWindow(ppTrial, thread, owner);
+                w.setVisible(true);
+            }
+        });
+        return jMenuItem;
+    }
+
     public static void handleUserEventClick(final ParaProfTrial ppTrial, final UserEvent userEvent, final JComponent owner,
             MouseEvent evt) {
 
@@ -899,6 +912,7 @@ public class ParaProfUtils {
         if (ppTrial.userEventsPresent()) {
             threadPopup.add(createUserEventBarChartMenuItem("Show User Event Bar Chart", ppTrial, thread, owner));
             threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
+            //threadPopup.add(createContexEventMenuItem("Show Context Event Window", ppTrial, thread, owner));
         }
 
         if (thread.getNumSnapshots() > 1) {
@@ -1055,7 +1069,7 @@ public class ParaProfUtils {
             experiment.setName("New Experiment");
 
             ParaProf.paraProfManagerWindow.expandApplicationType(0, application.getID(), application);
-            ParaProf.paraProfManagerWindow.expandApplication(0, application.getID(), experiment.getID(), null, experiment);
+            ParaProf.paraProfManagerWindow.expandApplication(0, null, experiment);
 
             final ParaProfTrial ppTrial = new ParaProfTrial();
             ppTrial.getTrial().setDataSource(phaseDataSource);
