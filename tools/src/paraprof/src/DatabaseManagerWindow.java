@@ -27,6 +27,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
+import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListSelectionModel;
@@ -60,6 +61,7 @@ import edu.uoregon.tau.perfdmf.database.ConfigureFiles;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 import edu.uoregon.tau.perfdmf.loader.Configure;
 import edu.uoregon.tau.perfdmf.loader.ConfigureTest;
+import edu.uoregon.tau.perfdmf.loader.DatabaseConfigurationException;
 
 public class DatabaseManagerWindow extends JFrame implements ActionListener, Observer, ListSelectionListener, WindowFocusListener, ItemListener {
 
@@ -82,11 +84,13 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     private JTextField databaseName = new JTextField(15);
     private JTextField databaseUser = new JTextField(15);
     private JPasswordField databasePassword = new JPasswordField(15);
-    private JButton jarFileChooser = new JButton("Browse...");
+    private JButton jarfileChooser = new JButton("Browse...");
+    private JButton schemafileChooser = new JButton("Browse...");
     private JTextField jarfile = new JTextField(15);
     private JTextField port = new JTextField(4);
     private JButton download = new JButton("Downloading");
     private JProgressBar bar = new JProgressBar();
+    private JTextField schema = new JTextField(15);
 
     
     private JLabel labelAdapter = new JLabel("Database Adapter:");
@@ -100,8 +104,8 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     private JLabel labelConfig = new JLabel("Configurations:");
     private JLabel labelName = new JLabel("Name:");
     private JLabel labelBar = new JLabel("Downloading...");
-    
-    private JPanel window = new JPanel();
+    private JLabel warning = new JLabel("(Saved in cleartext)");
+    private JLabel labelSchema = new JLabel("Schema File:");
     
     private ParseConfig selectedConfig;
     
@@ -117,8 +121,12 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     	else
     		selectedConfig = null;
     	
-    	jarFileChooser.setText("Browse...");
-    	jarFileChooser.addActionListener(this);
+    	jarfileChooser.setText("Browse...");
+    	jarfileChooser.addActionListener(this);
+    	jarfileChooser.setActionCommand("jar");
+    	schemafileChooser.setText("Browse...");
+    	schemafileChooser.addActionListener(this);
+    	schemafileChooser.setActionCommand("schema");
     	saveConfig.setText("Save Configuration");
     	saveConfig.addActionListener(this);
     	removeConfig.setText("Remove Configuration");
@@ -143,6 +151,8 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     	labelPort.setLabelFor(port);
     	labelConfig.setLabelFor(configList);
     	labelName.setLabelFor(name);
+    	labelSchema.setLabelFor(schema);
+    	warning.setLabelFor(databasePassword);
     	
     	labelBar.setAlignmentY(JLabel.RIGHT_ALIGNMENT);
     	labelAdapter.setAlignmentY(JLabel.RIGHT_ALIGNMENT);
@@ -195,16 +205,20 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     	ParaProfUtils.addCompItem(editConfiguration, databaseUser, gbc,          1, 4, 1, 1);
     	ParaProfUtils.addCompItem(editConfiguration, labelDatabasePassword, gbc, 0, 5, 1, 1);
     	ParaProfUtils.addCompItem(editConfiguration, databasePassword, gbc,      1, 5, 1, 1);
+    	ParaProfUtils.addCompItem(editConfiguration, warning, gbc,               2, 5, 2, 1);
     	ParaProfUtils.addCompItem(editConfiguration, labelPort, gbc,             0, 6, 1, 1);
     	ParaProfUtils.addCompItem(editConfiguration, port, gbc,                  1, 6, 1, 1);
     	ParaProfUtils.addCompItem(editConfiguration, labelDriver, gbc,           0, 7, 1, 1);
     	ParaProfUtils.addCompItem(editConfiguration, driver, gbc,                1, 7, 1, 1);
     	ParaProfUtils.addCompItem(editConfiguration, labelJarFile, gbc,          0, 8, 1, 1);
     	ParaProfUtils.addCompItem(editConfiguration, jarfile, gbc,               1, 8, 1, 1);
-    	ParaProfUtils.addCompItem(editConfiguration, jarFileChooser, gbc,        2, 8, 1, 1);
+    	ParaProfUtils.addCompItem(editConfiguration, jarfileChooser, gbc,        2, 8, 1, 1);
     	ParaProfUtils.addCompItem(editConfiguration, download, gbc,              3, 8, 1, 1);
-    	ParaProfUtils.addCompItem(editConfiguration, labelBar, gbc,              0, 9, 1, 1);
-    	ParaProfUtils.addCompItem(editConfiguration, bar, gbc,                   1, 9, 2, 1);
+    	ParaProfUtils.addCompItem(editConfiguration, labelSchema, gbc,           0, 9, 1, 1);
+    	ParaProfUtils.addCompItem(editConfiguration, schema, gbc,                1, 9, 1, 1);
+    	ParaProfUtils.addCompItem(editConfiguration, schemafileChooser, gbc,     2, 9, 1, 1);
+    	ParaProfUtils.addCompItem(editConfiguration, labelBar, gbc,              0, 10, 1, 1);
+    	ParaProfUtils.addCompItem(editConfiguration, bar, gbc,                   1, 10, 2, 1);
 
     	
     	
@@ -226,7 +240,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     	
     	this.getContentPane().setLayout(new GridBagLayout());
     	
-    	this.setSize(new Dimension(750, 400));
+    	this.setSize(new Dimension(750, 425));
     	
         //configurations.setLayout(new GridBagLayout());
     	ParaProfUtils.addCompItem(this, configurations, gbc, 0,0,1,1);
@@ -246,6 +260,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     	port.setText(selectedConfig.getDBPort());
     	driver.setText(selectedConfig.getJDBCDriver());
     	jarfile.setText(selectedConfig.getJDBCJarFile());
+    	schema.setText(selectedConfig.getDBSchema());
     }
     public String writeConfig()
     {
@@ -263,15 +278,18 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     	config.setDBHostname(host.getText());
     	config.setDBName(databaseName.getText());
     	config.setDBUsername(databaseUser.getText());
+    	config.setDBPassword(databasePassword.getPassword().toString());
+    	config.savePassword();
     	config.setDBPortNum(port.getText());
     	config.setJDBCDriver(driver.getText());
     	config.setJDBCJarfile(jarfile.getText());
+    	config.setDBSchemaFile(schema.getText());
     	return config.writeConfigFile();	
     }    
     public void actionPerformed(ActionEvent e) {
     	 try {
              String arg = e.getActionCommand();
-             if (arg.equals("Browse...")) {
+             if (arg.equals("jar")) {
                  JFileChooser jFileChooser = new JFileChooser(lastDirectory);
                  jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                  jFileChooser.setMultiSelectionEnabled(false);
@@ -283,6 +301,18 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                  lastDirectory = jFileChooser.getSelectedFile().getParent();
                  jarfile.setText(jFileChooser.getSelectedFile().getAbsolutePath());
              }
+             else if (arg.equals("schema")) {
+                 JFileChooser jFileChooser = new JFileChooser(lastDirectory);
+                 jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                 jFileChooser.setMultiSelectionEnabled(false);
+                 jFileChooser.setDialogTitle("Select File");
+                 jFileChooser.setApproveButtonText("Select");
+                 if ((jFileChooser.showOpenDialog(this)) != JFileChooser.APPROVE_OPTION) {
+                     return;
+                 }
+                 lastDirectory = jFileChooser.getSelectedFile().getParent();
+                 schema.setText(jFileChooser.getSelectedFile().getAbsolutePath());
+             }
              else if (arg.equals("Save Configuration")) {
             	 String filename = writeConfig(name.getText());
             	 configList.clearSelection(); 
@@ -290,7 +320,14 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
             	 ConfigureTest config = new ConfigureTest("");
                  config.initialize(filename);
-                 config.createDB(false);
+                 //config.setDBSchemaFile("dbschema." + adapter.getSelectedItem().toString() + ".txt");
+                 try {
+					config.createDB(false);
+				} catch (DatabaseConfigurationException e1) {
+					throw new ParaProfException(e1.getMessage());
+				} catch (IOException e1) {
+					throw new ParaProfException("Fatal Error when creating database configuration.");
+				}
 
              }
              else if (arg.equals("Remove Configuration")) {
@@ -331,12 +368,12 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     		if (((String) adapter.getSelectedItem()).compareToIgnoreCase("postgresql") == 0) {
     			Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/postgresql-redirect.html",
     					".perfdmf_tmp/redirect.html", false);
-    			filename = "mysql.jar";
+    			filename = "postgresql.jar";
     		}
     		else if (((String) adapter.getSelectedItem()).compareToIgnoreCase("mysql") == 0) {
     			Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html",
     					".perfdmf_tmp/redirect.html", false);
-    			filename = "postgresql.jar";
+    			filename = "mysql.jar";
     		}
     		else
     		{
