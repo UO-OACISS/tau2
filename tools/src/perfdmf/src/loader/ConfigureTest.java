@@ -202,7 +202,7 @@ public class ConfigureTest {
     }
 
     /* Test that the database exists, and if it doesn't, create it! */
-    public void createDB(boolean prompt) {
+    public void createDB(boolean prompt) throws DatabaseConfigurationException, IOException {
         ConnectionManager connector = null;
         DB db = null;
         try {
@@ -232,7 +232,7 @@ public class ConfigureTest {
         } catch (Exception e) {
             System.out.println("\nPlease make sure that your DBMS is configured correctly, and");
             System.out.println("the database " + db_dbname + " has been created.");
-            System.exit(0);
+            throw new DatabaseConfigurationException("Error Connecting to Database.");
         }
 
         try {
@@ -253,7 +253,7 @@ public class ConfigureTest {
             	input = reader.readLine();
             } catch (java.io.IOException ioe) {
             	ioe.printStackTrace();
-            	System.exit(-1);
+            	throw new IOException();
             }
             }
             if (input.equals("y") || input.equals("Y") || !prompt) {
@@ -263,7 +263,7 @@ public class ConfigureTest {
             		System.out.println("Successfully uploaded schema\n");
             	} else {
             		System.out.println("Error uploading schema\n");
-            		System.exit(-1);
+            		throw new DatabaseConfigurationException("Error uploading schema.");
             	}
             }
             
@@ -272,12 +272,12 @@ public class ConfigureTest {
         try {
             if (db.checkSchema() != 0) {
                 System.out.println("\nIncompatible schema found.  Please contact us at tau-team@cs.uoregon.edu\nfor a conversion script.");
-                System.exit(0);
+                throw new DatabaseConfigurationException("Incompatible schema found.");
             }
         } catch (SQLException e) {
             System.out.println("\nError trying to confirm schema:");
             e.printStackTrace();
-            System.exit(0);
+            throw new DatabaseConfigurationException("Error trying to confirm schema.");
         }
 
         connector.dbclose();
@@ -327,6 +327,13 @@ public class ConfigureTest {
         // the process of creating/editing a configuration file.
         ConfigureTest config = new ConfigureTest(tauroot);
         config.initialize(configFile);
-        config.createDB(true);
+        try {
+			config.createDB(true);
+		} catch (DatabaseConfigurationException e) {
+			System.exit(0);
+		} catch (IOException e) {
+			System.exit(-1);
+			
+		}
     }
 }

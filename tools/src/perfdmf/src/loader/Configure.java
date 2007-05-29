@@ -693,9 +693,12 @@ public class Configure {
     public String getConfigFileName() {
         return configuration_name;
     }
+    public void savePassword() {
+    	this.store_db_password = true;
+    }
 
     /* Test that the database exists, and if it doesn't, create it! */
-    public void createDB() {
+    public void createDB() throws DatabaseConfigurationException {
         ConnectionManager connector = null;
         DB db = null;
         try {
@@ -705,7 +708,7 @@ public class Configure {
         } catch (Exception e) {
             System.out.println("\nPlease make sure that your DBMS is configured correctly, and");
             System.out.println("the database " + db_dbname + " has been created.");
-            System.exit(0);
+            throw new DatabaseConfigurationException("Error Connection to Database" + db_dbname);
         }
         try {
             String query = new String("select * from application;");
@@ -785,7 +788,13 @@ public class Configure {
 
         ConfigureTest configTest = new ConfigureTest(tauroot);
         configTest.initialize(configFilename);
-        configTest.createDB(true);
+        try {
+			configTest.createDB(true);
+		} catch (DatabaseConfigurationException e) {
+			System.exit(0);
+		} catch (IOException e) {
+			System.exit(1);
+		}
 
         // check to see if the database is there...
         //config.createDB();
