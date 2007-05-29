@@ -14,7 +14,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.12 2007/05/29 19:54:40 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.13 2007/05/29 19:55:37 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -66,6 +66,7 @@ public class Application implements Serializable {
      * @return	String[] an array of String objects
      */
     public static String[] getFieldNames(DB db) throws DatabaseException {
+        getMetaData(db);
         return db.getDatabase().getAppFieldNames();
     }
 
