@@ -20,7 +20,7 @@ import edu.uoregon.tau.perfdmf.loader.ConfigureTest;
 import edu.uoregon.tau.perfdmf.loader.DatabaseConfigurationException;
 
 public class DatabaseManagerWindow extends JFrame implements ActionListener, Observer, ListSelectionListener,
-        WindowFocusListener, ItemListener {
+        ItemListener {
 
     /**
      * 
@@ -48,6 +48,8 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     private JButton download = new JButton("Downloading");
     private JProgressBar bar = new JProgressBar();
     private JTextField schema = new JTextField(15);
+    private JButton newConfiguration = new JButton("New Configuration");
+    private JButton close = new JButton("Close");
 
     private JLabel labelAdapter = new JLabel("Database Adapter:");
     private JLabel labelDriver = new JLabel("Database Driver:");
@@ -66,31 +68,33 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     private ParseConfig selectedConfig;
 
     private ParaProfManagerWindow mainWindow;
-
-    public DatabaseManagerWindow(ParaProfManagerWindow mw) {
-        mainWindow = mw;
-
-        if (ConfigureFiles.getConfigurations().size() > 0)
-            selectedConfig = (ParseConfig) (ConfigureFiles.getConfigurations().get(0));
-        else
-            selectedConfig = null;
-
-        jarfileChooser.setText("Browse...");
-        jarfileChooser.addActionListener(this);
-        jarfileChooser.setActionCommand("jar");
-        schemafileChooser.setText("Browse...");
-        schemafileChooser.addActionListener(this);
-        schemafileChooser.setActionCommand("schema");
-        saveConfig.setText("Save Configuration");
-        saveConfig.addActionListener(this);
-        removeConfig.setText("Remove Configuration");
-        removeConfig.addActionListener(this);
-        download.setText("Download");
-        download.addActionListener(this);
-
-        adapter.addItemListener(this);
-
-        bar.setIndeterminate(false);
+ 
+    public DatabaseManagerWindow(ParaProfManagerWindow mw)
+    {
+    	mainWindow =  mw;
+    	
+    	if (ConfigureFiles.getConfigurations().size() > 0)
+    		selectedConfig = (ParseConfig) (ConfigureFiles.getConfigurations().get(0));
+    	else
+    		selectedConfig = null;
+    	
+    	jarfileChooser.setText("Browse...");
+    	jarfileChooser.addActionListener(this);
+    	jarfileChooser.setActionCommand("jar");
+    	schemafileChooser.setText("Browse...");
+    	schemafileChooser.addActionListener(this);
+    	schemafileChooser.setActionCommand("schema");
+    	saveConfig.setText("Save Configuration");
+    	saveConfig.addActionListener(this);
+    	removeConfig.setText("Remove Configuration");
+    	removeConfig.addActionListener(this);
+    	
+    	download.setText("Download");
+    	download.addActionListener(this);
+    	
+    	adapter.addItemListener(this);
+    	
+        //bar.setIndeterminate(false);
         bar.setVisible(false);
 
         labelBar.setVisible(false);
@@ -188,7 +192,6 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         ParaProfUtils.addCompItem(configurations, removeConfig, gbc, 0, 3, 1, 1);
 
         //this.addFocusListener(this);
-        this.addWindowFocusListener(this);
 
         this.getContentPane().setLayout(new GridBagLayout());
 
@@ -224,12 +227,15 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
         Configure config = new Configure("", "");
         config.initialize(System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg");
-        config.setConfigFileName(name);
+        if (name.compareTo("Default") == 0)
+        	config.setConfigFileName("");
+        else
+        	config.setConfigFileName(name);
         config.setJDBCType((String) (adapter.getSelectedItem()));
         config.setDBHostname(host.getText());
         config.setDBName(databaseName.getText());
         config.setDBUsername(databaseUser.getText());
-        config.setDBPassword(databasePassword.getPassword().toString());
+        config.setDBPassword(new String(databasePassword.getPassword()));
         config.savePassword();
         config.setDBPortNum(port.getText());
         config.setJDBCDriver(driver.getText());
@@ -267,17 +273,18 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 String filename = writeConfig(name.getText());
                 configList.clearSelection();
                 configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
-
                 ConfigureTest config = new ConfigureTest("");
-                config.initialize(filename);
+                config.initialize(filename); 
                 //config.setDBSchemaFile("dbschema." + adapter.getSelectedItem().toString() + ".txt");
                 config.createDB(false);
+                mainWindow.refreshDatabases();
             } else if (arg.equals("Remove Configuration")) {
                 String path = selectedConfig.getPath();
                 File removeFile = new File(path);
                 removeFile.delete();
                 configList.clearSelection();
                 configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
+                mainWindow.refreshDatabases();
             } else if (arg.equals("Download")) {
                 JFileChooser jFileChooser = new JFileChooser(lastDirectory);
                 jFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -288,7 +295,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                     return;
                 }
                 JProgressBar bar = new JProgressBar();
-                bar.setIndeterminate(true);
+                //bar.setIndeterminate(true);
 
                 this.bar.setVisible(true);
                 this.labelBar.setVisible(true);
@@ -392,7 +399,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         }
 
         public void reportSize(int bytes) {
-            bar.setIndeterminate(false);
+            //bar.setIndeterminate(false);
             bar.setMaximum(bytes);
             bar.setValue(0);
             bar.setVisible(true);
@@ -415,55 +422,33 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
     }
 
-    public void windowGainedFocus(WindowEvent arg0) {
-    // TODO Auto-generated method stub
-    }
-
-    public void windowLostFocus(WindowEvent arg0) {
-        //System.out.println("Focus Lost");
-        mainWindow.refreshDatabases();
-    }
 
     public void itemStateChanged(ItemEvent arg0) {
-        if (arg0.getStateChange() == ItemEvent.SELECTED) {
-            if (arg0.getItem() == "mysql") {
-                download.setEnabled(true);
-                if (this.driver.getText().compareTo("") == 0)
-                    this.driver.setText("org.gjt.mm.mysql.Driver");
-                if (this.port.getText().compareTo("") == 0)
-                    this.port.setText("3306");
-                if (this.host.getText().compareTo("") == 0)
-                    this.host.setText("localhost");
-            } else if (arg0.getItem() == "postgresql") {
-                download.setEnabled(true);
-                if (this.driver.getText().compareTo("") == 0)
-                    this.driver.setText("org.postgresql.Driver");
-                if (this.port.getText().compareTo("") == 0)
-                    this.port.setText("5432");
-                if (this.host.getText().compareTo("") == 0)
-                    this.host.setText("localhost");
-
-            } else if (arg0.getItem() == "oracle") {
-                download.setEnabled(false);
-                if (this.driver.getText().compareTo("") == 0)
-                    this.driver.setText("oracle.jdbc.OracleDriver");
-                if (this.port.getText().compareTo("") == 0)
-                    this.port.setText("1521");
-                if (this.host.getText().compareTo("") == 0)
-                    this.host.setText("localhost");
-            } else if (arg0.getItem() == "derby") {
-                download.setEnabled(false);
-                if (this.driver.getText().compareTo("") == 0)
-                    this.driver.setText("org.apache.derby.jdbc.EmbeddedDriver");
-            } else if (arg0.getItem() == "db2") {
-                download.setEnabled(false);
-                if (this.driver.getText().compareTo("") == 0)
-                    this.driver.setText("com.ibm.db2.jcc.DB2Driver");
-                if (this.port.getText().compareTo("") == 0)
-                    this.port.setText("446");
-                if (this.host.getText().compareTo("") == 0)
-                    this.host.setText("localhost");
-            }
-        }
+		if (arg0.getStateChange() == ItemEvent.SELECTED) {
+			if (arg0.getItem() == "mysql") {
+				download.setEnabled(true);
+				this.driver.setText("org.gjt.mm.mysql.Driver");
+				this.port.setText("3306");
+				this.host.setText("localhost");
+			} else if (arg0.getItem() == "postgresql") {
+				download.setEnabled(true);
+				this.driver.setText("org.postgresql.Driver");
+				this.port.setText("5432");
+				this.host.setText("localhost");
+			} else if (arg0.getItem() == "oracle") {
+				download.setEnabled(false);
+				this.driver.setText("oracle.jdbc.OracleDriver");
+				this.port.setText("1521");
+				this.host.setText("localhost");
+			} else if (arg0.getItem() == "derby") {
+				download.setEnabled(false);
+				this.driver.setText("org.apache.derby.jdbc.EmbeddedDriver");
+			} else if (arg0.getItem() == "db2") {
+				download.setEnabled(false);
+				this.driver.setText("com.ibm.db2.jcc.DB2Driver");
+				this.port.setText("446");
+				this.host.setText("localhost");
+			}
+		}
     }
 }
