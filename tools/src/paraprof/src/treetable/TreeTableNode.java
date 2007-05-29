@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.6 2007/05/02 19:45:07 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.7 2007/05/29 20:27:02 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
@@ -37,7 +37,6 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
         this.alternateName = alternateName;
 
         if (functionProfile != null) {
-
             if (model.getWindow().getTreeMode()) {
                 if (model.getReversedCallPaths()) {
                     displayName = ParaProfUtils.getReversedLeafDisplayName(functionProfile.getFunction());
@@ -51,7 +50,6 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
         } else {
             displayName = alternateName;
         }
-
     }
 
     public FunctionProfile getFunctionProfile() {
@@ -168,7 +166,6 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
                     children.add(node);
                 }
             }
-
         }
 
         Collections.sort(children);
@@ -191,7 +188,6 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
             return null;
         }
 
-        
         if (functionProfile != null && model.getMaxValues()[metricID] != 0) {
             double value;
             if (expanded) {

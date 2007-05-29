@@ -24,6 +24,7 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.treetable.ColumnChooser.CheckBoxListItem;
 import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
+import edu.uoregon.tau.perfdmf.Thread;
 
 /**
  * Displays callpath data in a Cube style tree/table.  Non-callpath data is also displayed as a flat tree.
@@ -32,33 +33,36 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.12 2007/05/02 19:45:07 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.13 2007/05/29 20:27:02 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
 
+    
+    private ParaProfTrial ppTrial;
+    private Thread thread;
+
     private CallPathModel model;
     private JTreeTable treeTable;
-    private ParaProfTrial ppTrial;
-    private JScrollPane scrollPane;
-    private edu.uoregon.tau.perfdmf.Thread thread;
     private int colorMetricID;
     private int units = ParaProf.preferences.getUnits();
-
-    private final JMenuItem showAsTreeMenuItem = new JCheckBoxMenuItem("Show as Call Tree");
-    private final JMenuItem reverseTreeMenuItem = new JCheckBoxMenuItem("Reverse Call Tree", false);
-    private final JMenuItem showInclExclMenuItem = new JCheckBoxMenuItem("Show Inclusive/Exclusive", true);
 
     private List columns;
     private ColumnChooser columnChooser;
 
-    public TreeTableWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread) {
+    private final JMenuItem showAsTreeMenuItem = new JCheckBoxMenuItem("Show as Call Tree");
+    private final JMenuItem reverseTreeMenuItem = new JCheckBoxMenuItem("Reverse Call Tree", false);
+    private final JMenuItem showInclExclMenuItem = new JCheckBoxMenuItem("Show Inclusive/Exclusive", true);
+    private JScrollPane scrollPane;
+
+
+    public TreeTableWindow(ParaProfTrial ppTrial, Thread thread) {
         this(ppTrial, thread, null);
     }
 
-    public TreeTableWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread, Component invoker) {
+    public TreeTableWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
 
         this.ppTrial = ppTrial;
         this.thread = thread;
@@ -248,7 +252,6 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     }
 
     private void setupData() {
-
         setColumns();
 
         //columns.add(new StdDevColumn(this, 0));
@@ -257,7 +260,6 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         model = new CallPathModel(this, ppTrial, thread, reverseTreeMenuItem.isSelected());
         createTreeTable(model);
         addComponents();
-
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
@@ -278,30 +280,23 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
             public void actionPerformed(ActionEvent evt) {
                 try {
                     Object EventSrc = evt.getSource();
-
                     if (EventSrc instanceof JMenuItem) {
-
                         String arg = evt.getActionCommand();
-
                         if (arg.equals("Show as Call Tree")) {
                             if (showAsTreeMenuItem.isSelected()) {
                                 showInclExclMenuItem.setSelected(false);
                             }
-
                             setupData();
                         } else if (arg.equals("Reverse Call Tree")) {
                             setupData();
                         } else if (arg.equals("Show Inclusive/Exclusive")) {
                             setupData();
                         }
-
                     }
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
-
             }
-
         };
 
         showAsTreeMenuItem.addActionListener(actionListener);
@@ -341,11 +336,9 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
-
     }
 
     private void createTreeTable(AbstractTreeTableModel model) {
-        //        treeTable = new JTreeTable(model, showAsTreeMenuItem.isSelected());
 
         treeTable = new JTreeTable(model, true, true);
 
@@ -428,10 +421,10 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     }
 
     public void help(boolean display) {
-        //Show the ParaProf help window.
         ParaProf.getHelpWindow().clearText();
-        if (display)
-            ParaProf.getHelpWindow().show();
+        if (display) {
+            ParaProf.getHelpWindow().setVisible(true);
+        }
         ParaProf.getHelpWindow().writeText("This is the Statistics Table.\n");
         ParaProf.getHelpWindow().writeText("This window shows you function data across a given thread (or mean/std.dev.)\n");
         ParaProf.getHelpWindow().writeText("If callpath data is present, it will be shown as a tree on the left.");
@@ -516,7 +509,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         }
     }
 
-    public edu.uoregon.tau.perfdmf.Thread getThread() {
+    public Thread getThread() {
         return thread;
     }
 

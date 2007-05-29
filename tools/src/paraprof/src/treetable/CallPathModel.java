@@ -8,20 +8,22 @@ import edu.uoregon.tau.paraprof.DataSorter;
 import edu.uoregon.tau.paraprof.PPFunctionProfile;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Thread;
+
 
 /**
  * Data model for treetable using callpaths
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.6 2007/03/02 20:10:54 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.7 2007/05/29 20:27:01 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
     private List roots;
-    private edu.uoregon.tau.perfdmf.Thread thread;
+    private Thread thread;
     private DataSource dataSource;
     private ParaProfTrial ppTrial;
     private double[] maxValues;
@@ -34,7 +36,7 @@ public class CallPathModel extends AbstractTreeTableModel {
 
     private TreeTableWindow window;
 
-    public CallPathModel(TreeTableWindow window, ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread,
+    public CallPathModel(TreeTableWindow window, ParaProfTrial ppTrial, Thread thread,
             boolean reversedCallPaths) {
         super(null);
         this.window = window;
