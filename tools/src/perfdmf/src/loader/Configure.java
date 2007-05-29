@@ -791,9 +791,8 @@ public class Configure {
         try {
 			configTest.createDB(true);
 		} catch (DatabaseConfigurationException e) {
-			System.exit(0);
-		} catch (IOException e) {
-			System.exit(1);
+		    e.printStackTrace();
+            System.exit(0);
 		}
 
         // check to see if the database is there...
