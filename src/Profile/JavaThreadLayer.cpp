@@ -60,7 +60,7 @@ int 	  JavaThreadLayer::tauThreadCount = 0;
 JVMPI_RawMonitor JavaThreadLayer::tauNumThreadsLock ;
 JVMPI_RawMonitor JavaThreadLayer::tauDBMutex ;
 JVMPI_RawMonitor JavaThreadLayer::tauEnvMutex ;
-JVMPI_Interface  * JavaThreadLayer::tau_jvmpi_interface;
+JVMPI_Interface  * JavaThreadLayer::tau_jvmpi_interface = NULL;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -216,6 +216,11 @@ int JavaThreadLayer::UnLockDB(void)
 ////////////////////////////////////////////////////////////////////////
 int JavaThreadLayer::InitializeEnvMutexData(void)
 {
+  if (tau_jvmpi_interface == NULL) {
+    fprintf (stderr,"Error, TAU's jvmpi interface was not initialized properly (java -XrunTAU ...)\n");
+    fprintf (stderr,"When TAU is configured with -jdk=<dir>, it can only profile Java Programs!\n");
+    exit(-1);
+  }
   // For locking functionDB 
   tauEnvMutex =  tau_jvmpi_interface->RawMonitorCreate("Env lock");
   
@@ -274,8 +279,8 @@ jlong JavaThreadLayer::getCurrentThreadCpuTime(void) {
 
 /***************************************************************************
  * $RCSfile: JavaThreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.5 $   $Date: 2005/11/11 03:46:48 $
- * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.5 2005/11/11 03:46:48 amorris Exp $
+ * $Revision: 1.6 $   $Date: 2007/05/29 17:27:19 $
+ * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.6 2007/05/29 17:27:19 amorris Exp $
  ***************************************************************************/
 
 
