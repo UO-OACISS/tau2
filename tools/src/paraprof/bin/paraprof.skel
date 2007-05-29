@@ -4,88 +4,64 @@ MACHINE=@ARCH@
 OLDJDK=@OLDJDK@
 
 LIBDIR=${TAUROOT}/${MACHINE}/lib
-CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
+JARDIR=${TAUROOT}/${MACHINE}/lib
 
 
 # If paraprof is invoked with the -p option, read and/or generate pprof.dat
-if [ "x$1" = "x-p" ]
-then
-  shift
-  echo "Using pprof to generate pprof.dat"
-  pprof_path=${TAUROOT}/${MACHINE}/bin/pprof
-  if [ "x$pprof_path" = "x" ]
-  then
-     echo "pprof not found ... will start ParaProf anyway."
-     echo "Unless you have a pprof.dat file already present,"
-     echo "you will have to load one manually."
-  else
-      echo "Found pprof in ${pprof_path}"
-      if [ -r pprof.dat ] 
-      then
-        echo "Found pprof.dat"
-        if [ profile.0.0.0 -nt pprof.dat ]
-        then
-          echo "Regenerating pprof.dat file ..." 
-  	${pprof_path} -d > pprof.dat
-        else 
-  	echo "pprof.dat is current"
-        fi
-      else
-        if [ -r profile.0.0.0 ]
-        then
-          echo "Please wait while I generate the pprof.dat file ..."
-          ${pprof_path} -d > pprof.dat
-        else
-  	for i in MULTI__*
-  	do
-          echo "Looking for pprof.dat file in $i directory ..."
-  	  if [ -r $i/pprof.dat ]
-  	  then
-  	    echo "Found $i/pprof.dat"
-  	    if [ $i/profile.0.0.0 -nt $i/pprof.dat ]
-  	    then
-  	      echo "Regenerating $i/pprof.dat file ..."
-  	      ${pprof_path} -d -f $i/profile > $i/pprof.dat
-  	    else
-  	      echo "$i/pprof.dat file is current"
-  	    fi
-  	  else
-  	    echo "Please wait while I generate the $i/pprof.dat file ..."
-  	    ${pprof_path} -d -f $i/profile > $i/pprof.dat
-            fi
-  	done   
-        fi
-  
-      fi
-     
+PPROFOPT=""
+if [ "x$1" = "x-p" ] ; then
+    shift
+    echo "Using pprof to generate pprof.dat"
+    pprof_path=${TAUROOT}/${MACHINE}/bin/pprof
+    if [ "x$pprof_path" = "x" ] ; then
+	echo "pprof not found ... will start ParaProf anyway."
+	echo "Unless you have a pprof.dat file already present,"
+	echo "you will have to load one manually."
+    else
+	echo "Found pprof in ${pprof_path}"
+	if [ -r pprof.dat ] ; then
+	    echo "Found pprof.dat"
+	    if [ profile.0.0.0 -nt pprof.dat ] ; then
+		echo "Regenerating pprof.dat file ..." 
+		${pprof_path} -d > pprof.dat
+	    else 
+		echo "pprof.dat is current"
+	    fi
+	else
+	    if [ -r profile.0.0.0 ] ; then
+		echo "Please wait while I generate the pprof.dat file ..."
+		${pprof_path} -d > pprof.dat
+	    else
+		for i in MULTI__* ; do
+		    echo "Looking for pprof.dat file in $i directory ..."
+		    if [ -r $i/pprof.dat ] ; then
+			echo "Found $i/pprof.dat"
+			if [ $i/profile.0.0.0 -nt $i/pprof.dat ] ; then
+			    echo "Regenerating $i/pprof.dat file ..."
+			    ${pprof_path} -d -f $i/profile > $i/pprof.dat
+			else
+			    echo "$i/pprof.dat file is current"
+			fi
+		    else
+			echo "Please wait while I generate the $i/pprof.dat file ..."
+			${pprof_path} -d -f $i/profile > $i/pprof.dat
+		    fi
+		done   
+	    fi
+	fi
       echo "Done ... now starting ParaProf ..."
-  fi
-  PPROFOPT="-f pprof pprof.dat"
+    fi
+    PPROFOPT="-f pprof pprof.dat"
 fi 
-#Searching for a preference file.
 
-if [ -f "${HOME}/.ParaProf/ParaProfPreferences.dat" ] ; then
-    echo "Found a global ParaProf pref." ; \
-    cp "${HOME}/.ParaProf/ParaProfPreferences.dat" . ; \
-fi
 
 if [ "$MACHINE" = "apple" ]; then
-	EXTRA_OPTIONS="-Xdock:name=ParaProf -Xdock:icon=${TAUROOT}/${MACHINE}/lib/tau-medium.png -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
+    APPLE_OPTIONS="-Xdock:name=ParaProf -Xdock:icon=${TAUROOT}/${MACHINE}/lib/tau-medium.png -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
 else
-	EXTRA_OPTIONS=""
+    APPLE_OPTIONS=""
 fi
 
-# get the jdbc jar file from the configuration file
-JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} 2>/dev/null | sed s/jdbc_db_jarfile://`
-
-if [ "x${JDBC_JAR}" != "x" ]; then
-    if [ ! -r ${JDBC_JAR} ]; then
-        echo ""
-        echo "Warning: JDBC driver '$JDBC_JAR' not found."
-        echo ""
-    fi
-fi
-
+# check for GNU GCJ, which ParaProf doesn't work with
 GCJ=`java -showversion 2>&1 | grep -i gcj`
 if [ "x$GCJ" = "x" ] ; then
     # ok
@@ -102,9 +78,11 @@ else
 fi
 
 # Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 1000m (1000MB). If you run out of memory, decrease this number.
-if [ "$OLDJDK" = "yes" ]
-then
-java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.verbose=error -cp ${LIBDIR}/paraprof-1.3.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/tau-common.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph-1.3.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar:{LIBDIR}/jfreechart-0.9.21.jar:${LIBDIR}/jcommon-0.9.6.jar:${LIBDIR}/jython.jar ${EXTRA_OPTIONS} edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
+if [ "$OLDJDK" = "yes" ] ; then
+    JARS=${JARDIR}/paraprof-1.3.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph-1.3.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:{JARDIR}/jfreechart-0.9.21.jar:${JARDIR}/jcommon-0.9.6.jar:${JARDIR}/jython.jar
 else
-java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${LIBDIR}/paraprof.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/tau-common.jar:${LIBDIR}/vis.jar:${LIBDIR}/jogl.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar:${LIBDIR}/batik-combined.jar:${LIBDIR}/jfreechart-0.9.21.jar:${LIBDIR}/jcommon-0.9.6.jar:${LIBDIR}/jython.jar ${EXTRA_OPTIONS} edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
+    JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-0.9.21.jar:${JARDIR}/jcommon-0.9.6.jar:${JARDIR}/jython.jar
 fi
+
+# Launch!
+java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*	
