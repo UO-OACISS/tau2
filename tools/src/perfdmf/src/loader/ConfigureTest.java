@@ -71,7 +71,7 @@ public class ConfigureTest {
                 // Parse the configuration file
                 parseConfigFile();
             } else {
-                System.out.println("Configuration file NOT found... (looking for " + configFile +")");
+                System.out.println("Configuration file NOT found... (looking for " + configFile + ")");
                 System.out.println("a new configuration file will be created.");
                 // If it doesn't exist, explain that the program looks for the 
                 // configuration file in ${PerfDMF_Home}/data/perfdmf.cfg
@@ -202,25 +202,25 @@ public class ConfigureTest {
     }
 
     /* Test that the database exists, and if it doesn't, create it! */
-    public void createDB(boolean prompt) throws DatabaseConfigurationException, IOException {
+    public void createDB(boolean prompt) {
         ConnectionManager connector = null;
         DB db = null;
         try {
 
-            Database database = new Database(configFileName);    
-			if (jdbc_db_type.equals("derby")) {
-				// check to see if the directory exists.  If not, create the database.
-		        if (!(new File(db_dbname).exists())) {
-            		if (db_password != null) {
-						connector = new ConnectionManager(database, db_password);
-            		} else {
-						connector = new ConnectionManager(database);
-            		}
-					connector.connectAndCreate();
-					connector.dbclose();
-					connector = null;
-				}
-			}
+            Database database = new Database(configFileName);
+            if (jdbc_db_type.equals("derby")) {
+                // check to see if the directory exists.  If not, create the database.
+                if (!(new File(db_dbname).exists())) {
+                    if (db_password != null) {
+                        connector = new ConnectionManager(database, db_password);
+                    } else {
+                        connector = new ConnectionManager(database);
+                    }
+                    connector.connectAndCreate();
+                    connector.dbclose();
+                    connector = null;
+                }
+            }
             if (db_password != null) {
                 connector = new ConnectionManager(database, db_password);
             } else {
@@ -242,31 +242,29 @@ public class ConfigureTest {
             e.printStackTrace();
             // this is our method of determining that no 'application' table exists
             String input = "";
-            if (prompt)
-            {
-	            System.out.print("Tables not found.  Would you like to upload the schema? [y/n]: ");
-            
-            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            if (prompt) {
+                System.out.print("Tables not found.  Would you like to upload the schema? [y/n]: ");
 
-            
-            try {
-            	input = reader.readLine();
-            } catch (java.io.IOException ioe) {
-            	ioe.printStackTrace();
-            	throw new IOException();
-            }
+                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+                try {
+                    input = reader.readLine();
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                    System.exit(-1);
+                }
             }
             if (input.equals("y") || input.equals("Y") || !prompt) {
 
-            	System.out.println("Uploading Schema: " + db_schemafile);
-            	if (connector.genParentSchema(db_schemafile) == 0) {
-            		System.out.println("Successfully uploaded schema\n");
-            	} else {
-            		System.out.println("Error uploading schema\n");
-            		throw new DatabaseConfigurationException("Error uploading schema.");
-            	}
+                System.out.println("Uploading Schema: " + db_schemafile);
+                if (connector.genParentSchema(db_schemafile) == 0) {
+                    System.out.println("Successfully uploaded schema\n");
+                } else {
+                    System.out.println("Error uploading schema\n");
+                    throw new DatabaseConfigurationException("Error uploading schema.");
+                }
             }
-            
+
         }
 
         try {
@@ -317,7 +315,6 @@ public class ConfigureTest {
             configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
         }
 
-        
         if (tauroot == null)
             tauroot = new String("");
         if (arch == null)
@@ -328,12 +325,10 @@ public class ConfigureTest {
         ConfigureTest config = new ConfigureTest(tauroot);
         config.initialize(configFile);
         try {
-			config.createDB(true);
-		} catch (DatabaseConfigurationException e) {
-			System.exit(0);
-		} catch (IOException e) {
-			System.exit(-1);
-			
-		}
+            config.createDB(true);
+        } catch (DatabaseConfigurationException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
     }
 }
