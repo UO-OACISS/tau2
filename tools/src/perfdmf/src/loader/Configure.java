@@ -4,11 +4,13 @@ import jargs.gnu.CmdLineParser;
 
 import java.io.*;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import edu.uoregon.tau.common.Common;
 import edu.uoregon.tau.common.Wget;
 import edu.uoregon.tau.common.tar.Tar;
 import edu.uoregon.tau.perfdmf.Database;
+import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.database.*;
 
 public class Configure {
@@ -705,10 +707,11 @@ public class Configure {
             connector = new ConnectionManager(new Database(configFileName));
             connector.connect();
             db = connector.getDB();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.out.println("\nPlease make sure that your DBMS is configured correctly, and");
             System.out.println("the database " + db_dbname + " has been created.");
-            throw new DatabaseConfigurationException("Error Connection to Database" + db_dbname);
+            //throw new DatabaseConfigurationException("Error Connection to Database" + db_dbname);
+            throw new DatabaseException("Error Connection to Database" + db_dbname, e);
         }
         try {
             String query = new String("select * from application;");

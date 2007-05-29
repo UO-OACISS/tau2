@@ -16,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import edu.uoregon.tau.perfdmf.Database;
+import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
@@ -229,10 +230,11 @@ public class ConfigureTest {
             connector.connect();
             System.out.println();
             db = connector.getDB();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.out.println("\nPlease make sure that your DBMS is configured correctly, and");
             System.out.println("the database " + db_dbname + " has been created.");
-            throw new DatabaseConfigurationException("Error Connecting to Database.");
+            //throw new DatabaseConfigurationException("Error Connecting to Database.");
+            throw new DatabaseException("Error Connecting to Database.", e);
         }
 
         try {
