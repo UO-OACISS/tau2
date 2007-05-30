@@ -8,6 +8,8 @@ import java.util.Observer;
 import java.util.Vector;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -20,7 +22,7 @@ import edu.uoregon.tau.perfdmf.loader.ConfigureTest;
 import edu.uoregon.tau.perfdmf.loader.DatabaseConfigurationException;
 
 public class DatabaseManagerWindow extends JFrame implements ActionListener, Observer, ListSelectionListener,
-        ItemListener {
+        ItemListener, ChangeListener {
 
     /**
      * 
@@ -51,6 +53,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     private JButton newConfig = new JButton("New Configuration");
     private JButton close = new JButton("Close");
     private JPanel buttons = new JPanel();
+    private JCheckBox savePassword = new JCheckBox();
 
     private JLabel labelAdapter = new JLabel("Database Adapter:");
     private JLabel labelDriver = new JLabel("Database Driver:");
@@ -63,7 +66,6 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     private JLabel labelConfig = new JLabel("Configurations:");
     private JLabel labelName = new JLabel("Name:");
     private JLabel labelBar = new JLabel("Downloading...");
-    private JLabel warning = new JLabel("(Saved in cleartext)");
     private JLabel labelSchema = new JLabel("Schema File:");
 
     private ParseConfig selectedConfig;
@@ -101,7 +103,12 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     	
         //bar.setIndeterminate(false);
         bar.setVisible(false);
+        savePassword.setText("Save in cleartext?");
 
+
+        savePassword.setSelected(true);
+        savePassword.addChangeListener(this);
+        
         labelBar.setVisible(false);
         labelBar.setLabelFor(bar);
         labelAdapter.setLabelFor(adapter);
@@ -115,8 +122,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         labelConfig.setLabelFor(configList);
         labelName.setLabelFor(name);
         labelSchema.setLabelFor(schema);
-        warning.setLabelFor(databasePassword);
-
+        
         labelBar.setAlignmentY(JLabel.RIGHT_ALIGNMENT);
         labelAdapter.setAlignmentY(JLabel.RIGHT_ALIGNMENT);
         labelDriver.setAlignmentY(JLabel.RIGHT_ALIGNMENT);
@@ -127,6 +133,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         labelJarFile.setAlignmentY(JLabel.RIGHT_ALIGNMENT);
         labelPort.setAlignmentY(JLabel.RIGHT_ALIGNMENT);
         labelName.setAlignmentY(JLabel.RIGHT_ALIGNMENT);
+        
 
         this.setTitle("Manage Database Configurations");
 
@@ -168,7 +175,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         ParaProfUtils.addCompItem(editConfiguration, databaseUser, gbc, 1, 4, 1, 1);
         ParaProfUtils.addCompItem(editConfiguration, labelDatabasePassword, gbc, 0, 5, 1, 1);
         ParaProfUtils.addCompItem(editConfiguration, databasePassword, gbc, 1, 5, 1, 1);
-        ParaProfUtils.addCompItem(editConfiguration, warning, gbc, 2, 5, 2, 1);
+        ParaProfUtils.addCompItem(editConfiguration, savePassword, gbc, 2, 5, 2, 1);
         ParaProfUtils.addCompItem(editConfiguration, labelPort, gbc, 0, 6, 1, 1);
         ParaProfUtils.addCompItem(editConfiguration, port, gbc, 1, 6, 1, 1);
         ParaProfUtils.addCompItem(editConfiguration, labelDriver, gbc, 0, 7, 1, 1);
@@ -245,8 +252,33 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         config.setDBHostname(host.getText());
         config.setDBName(databaseName.getText());
         config.setDBUsername(databaseUser.getText());
-        config.setDBPassword(new String(databasePassword.getPassword()));
-        config.savePassword();
+        if (savePassword.isSelected())
+        {
+        	config.setDBPassword(new String(databasePassword.getPassword()));
+        	config.savePassword();
+        }
+        else
+        {
+//        	JFrame passwordPrompt = new JFrame("Input Password");
+//        	//this.getContentPane().add(passwordPrompt);
+//        	passwordPrompt.setSize(500, 400);
+//        	
+//        	JButton ok = new JButton("OK");
+//        	JButton cancel = new JButton("Cancel");
+//        	passwordPrompt.getContentPane().add(new JLabel("Atempting to access database " + databaseName.getText() + "\n at " + host.getText() + ";\n Please provide the password. "), BorderLayout.NORTH);
+//        	passwordPrompt.getContentPane().add(password, BorderLayout.CENTER);
+//        	passwordPrompt.getContentPane().add(ok, BorderLayout.WEST);
+//        	passwordPrompt.getContentPane().add(cancel, BorderLayout.EAST);
+//        	passwordPrompt.show();
+        	JPanel promptPanel = new JPanel();
+        	JPasswordField password = new JPasswordField(15);
+        	promptPanel.add(new JLabel("Atempting to access database " + databaseName.getText() + "\n at " + host.getText() + ";\n Please provide the password. "));
+        	promptPanel.add(password);
+        	if (JOptionPane.showConfirmDialog(this, promptPanel, "Atempting to access database " + databaseName.getText() + "\n at " + host.getText() + ";\n Please provide the password. ", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION)
+        		config.setDBPassword(new String(password.getPassword()));
+        	else
+        		return null;
+        }
         config.setDBPortNum(port.getText());
         config.setJDBCDriver(driver.getText());
         config.setJDBCJarfile(jarfile.getText());
@@ -281,6 +313,8 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 schema.setText(jFileChooser.getSelectedFile().getAbsolutePath());
             } else if (arg.equals("Save Configuration")) {
                 String filename = writeConfig(name.getText());
+                if (filename == null)
+                	return;
                 configList.clearSelection();
                 configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
                 ConfigureTest config = new ConfigureTest("");
@@ -483,4 +517,11 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 			}
 		}
     }
+
+	public void stateChanged(ChangeEvent arg0) {
+		if (savePassword.isSelected())
+			databasePassword.setEnabled(true);
+		else
+			databasePassword.setEnabled(false);
+	}
 }
