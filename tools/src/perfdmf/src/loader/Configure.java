@@ -704,7 +704,7 @@ public class Configure {
         ConnectionManager connector = null;
         DB db = null;
         try {
-            connector = new ConnectionManager(new Database(configFileName));
+            connector = new ConnectionManager(new Database(configFileName), true);
             connector.connect();
             db = connector.getDB();
         } catch (SQLException e) {

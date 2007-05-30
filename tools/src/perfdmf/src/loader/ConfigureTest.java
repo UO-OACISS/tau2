@@ -261,7 +261,7 @@ public class ConfigureTest {
                     if (db_password != null) {
                         connector = new ConnectionManager(database, db_password);
                     } else {
-                        connector = new ConnectionManager(database);
+                        connector = new ConnectionManager(database, prompt);
                     }
                     connector.connectAndCreate();
                     connector.dbclose();
@@ -271,7 +271,7 @@ public class ConfigureTest {
             if (db_password != null) {
                 connector = new ConnectionManager(database, db_password);
             } else {
-                connector = new ConnectionManager(database);
+                connector = new ConnectionManager(database, prompt);
             }
             connector.connect();
             System.out.println();

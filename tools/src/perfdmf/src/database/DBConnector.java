@@ -4,6 +4,8 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import edu.uoregon.tau.perfdmf.Database;
@@ -32,6 +34,13 @@ public class DBConnector implements DB {
 
     private Database database;
 
+    
+    private static Map passwordMap = new HashMap();
+    
+    private static PasswordCallback passwordCallback;
+    
+    
+    
     /*
      * This class is here because the DriverManager refuses to use a driver that is not loaded
      * by the system ClassLoader.  So we wrap it with this.
@@ -127,6 +136,16 @@ public class DBConnector implements DB {
     public void rollback() throws SQLException {
         conn.rollback();
     }
+    
+    private static String findPassword(ParseConfig config) {
+
+        String password = (String) passwordMap.get(config.getPath());
+        if (password == null && passwordCallback != null) {
+            password = passwordCallback.getPassword(config);
+            passwordMap.put(config.getPath(), password);
+        }
+        return password;
+    }
 
     public boolean connect(String user, String password) throws SQLException {
         String cs = "";
@@ -135,6 +154,10 @@ public class DBConnector implements DB {
                 return true;
             }
             cs = getConnectString();
+
+            if (password == null) {
+                password = findPassword(config);
+            }
             conn = DriverManager.getConnection(cs, user, password);
             return true;
         } catch (SQLException ex) {
@@ -150,6 +173,10 @@ public class DBConnector implements DB {
         try {
             cs.append(getConnectString());
             cs.append(";create=true");
+            
+            if (password == null) {
+                password = findPassword(config);
+            }
             conn = DriverManager.getConnection(cs.toString(), user, password);
             conn.close();
             System.out.println("Database created, command: " + cs.toString());
@@ -517,4 +544,9 @@ public class DBConnector implements DB {
     public Database getDatabase() {
         return database;
     }
+    
+    public static void setPasswordCallback(PasswordCallback callback) {
+        passwordCallback = callback;
+    }
+
 }
