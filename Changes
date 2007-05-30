@@ -34,6 +34,21 @@ Version 2.16 changes (from 2.15):
 22. -optShared option added in tau_compiler.sh for linking in TAU's shared objs.23. Easy to use TAU API (TAU_START("string"), TAU_STOP("string")) introduced.
 24. Paraprof enhancements include support for Cube 3.
 25. PAPI threads (configure -papithreads) and PAPI Domains added for x86 linux.
+26. Clock synchronization in traces.
+27. Metadata fields in ppk files.
+28. Custom charts with XML metadata in PerfExplorer. 
+29. TAU portal scripts to upload data to perfdmf database.
+30. Added support for persistent communication events in traces. 
+31. Added support for KTAU OS level shared counter coupling.
+32. Eclipse/PTP updates for accessing TAU options and build configurations.
+33. Added support for tracking Fortran I/O. 
+34. Added support for accessing multiple databases, configuration of databases,
+    and context event displays in paraprof. 
+35. Added support for -arch=mips32 for SiCortex 32 bit compilation.
+36. Updates for Epilog on Cray XT3 support using TAU.
+37. Updates for Lahey 64 bit Fortran under Linux. 
+38. Added support for generating and viewing profile snapshots.
+
 
 
 
