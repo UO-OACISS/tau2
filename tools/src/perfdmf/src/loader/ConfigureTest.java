@@ -202,6 +202,52 @@ public class ConfigureTest {
         return configFileName;
     }
 
+    public boolean checkSchema() {
+        ConnectionManager connector = null;
+        DB db = null;
+        try {
+
+            Database database = new Database(configFileName);
+            if (jdbc_db_type.equals("derby")) {
+                // check to see if the directory exists.  If not, create the database.
+                if (!(new File(db_dbname).exists())) {
+                    if (db_password != null) {
+                        connector = new ConnectionManager(database, db_password);
+                    } else {
+                        connector = new ConnectionManager(database);
+                    }
+                    connector.connectAndCreate();
+                    connector.dbclose();
+                    connector = null;
+                }
+            }
+            if (db_password != null) {
+                connector = new ConnectionManager(database, db_password);
+            } else {
+                connector = new ConnectionManager(database);
+            }
+            connector.connect();
+            System.out.println();
+            db = connector.getDB();
+        } catch (Exception e) {
+            System.out.println("\nPlease make sure that your DBMS is configured correctly, and");
+            System.out.println("the database " + db_dbname + " has been created.");
+            throw new DatabaseConfigurationException("Error Connecting to Database.");
+        }
+
+        try {
+            String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "application");
+            ResultSet resultSet = db.executeQuery(query);
+        } catch (SQLException e) {
+            // this is our method of determining that no 'application' table exists
+            return false;
+        }
+
+        connector.dbclose();
+
+        return true;
+    }
+
     /* Test that the database exists, and if it doesn't, create it! */
     public void createDB(boolean prompt) {
         ConnectionManager connector = null;
@@ -267,9 +313,7 @@ public class ConfigureTest {
             } else {
                 upload = true;
             }
-            
-            
-            
+
             if (upload) {
                 System.out.println("Uploading Schema: " + db_schemafile);
                 if (connector.genParentSchema(db_schemafile) == 0) {
