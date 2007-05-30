@@ -16,9 +16,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.7 2007/05/29 20:27:01 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.8 2007/05/30 19:50:34 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -29,8 +29,8 @@ public class CallPathModel extends AbstractTreeTableModel {
     private double[] maxValues;
 
     private int sortColumn;
-    private int colorMetric;
     private boolean sortAscending;
+    private int colorMetric;
 
     private boolean reversedCallPaths = true;
 
@@ -196,7 +196,7 @@ public class CallPathModel extends AbstractTreeTableModel {
         return node.getChildren().get(index);
     }
 
-    public edu.uoregon.tau.perfdmf.Thread getThread() {
+    public Thread getThread() {
         return thread;
     }
 
@@ -219,8 +219,8 @@ public class CallPathModel extends AbstractTreeTableModel {
 
         Collections.sort(roots);
         for (Iterator it = roots.iterator(); it.hasNext();) {
-            TreeTableNode treeTableNode = (TreeTableNode) it.next();
-            treeTableNode.sortChildren();
+            ContextEventTreeNode node = (ContextEventTreeNode) it.next();
+            node.sortChildren();
         }
 
     }

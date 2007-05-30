@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 
  * This is starting to get messy and should be rethought
  *
- * <P>CVS $Id: TreeTableColumn.java,v 1.2 2007/05/04 01:44:35 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableColumn.java,v 1.3 2007/05/30 19:50:34 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 abstract public class TreeTableColumn {
     protected TreeTableWindow window;
@@ -623,7 +623,6 @@ abstract public class TreeTableColumn {
             return new MiniHistogram(window.getPPTrial(), f);
 
         }
-
     }
 
     public static class MiniHistogramColumn extends TreeTableColumn {

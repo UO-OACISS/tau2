@@ -36,11 +36,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.33 2007/05/29 20:27:20 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.34 2007/05/30 19:50:34 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.33 $
+ * @version $Revision: 1.34 $
  */
 public class ParaProfUtils {
 
@@ -912,7 +912,7 @@ public class ParaProfUtils {
         if (ppTrial.userEventsPresent()) {
             threadPopup.add(createUserEventBarChartMenuItem("Show User Event Bar Chart", ppTrial, thread, owner));
             threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
-            //threadPopup.add(createContexEventMenuItem("Show Context Event Window", ppTrial, thread, owner));
+            threadPopup.add(createContexEventMenuItem("Show Context Event Window", ppTrial, thread, owner));
         }
 
         if (thread.getNumSnapshots() > 1) {

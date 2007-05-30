@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.21 2007/05/30 00:41:38 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.22 2007/05/30 19:50:33 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.21 $
+ * @version	$Revision: 1.22 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -35,8 +35,7 @@ import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.tablemodel.*;
 import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfdmf.database.ConfigureFiles;
-import edu.uoregon.tau.perfdmf.database.ParseConfig;
+import edu.uoregon.tau.perfdmf.database.*;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener, TreeSelectionListener, TreeWillExpandListener {
 
@@ -261,6 +260,36 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         this.getContentPane().add(jSplitInnerPane, "Center");
 
         jSplitInnerPane.setDividerLocation(0.5);
+
+        DBConnector.setPasswordCallback(new PasswordCallback() {
+
+            public String getPassword(ParseConfig config) {
+                JPanel promptPanel = new JPanel();
+
+                promptPanel.setLayout(new GridBagLayout());
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.insets = new Insets(5, 5, 5, 5);
+
+                JLabel label = new JLabel("<html>Enter password for user '" + config.getDBUserName() + "'<br> Database: '"
+                        + config.getDBName() + "' (" + config.getDBHost() + ":" + config.getDBPort() + ")</html>");
+
+                JPasswordField password = new JPasswordField(15);
+
+                gbc.fill = GridBagConstraints.BOTH;
+                gbc.anchor = GridBagConstraints.CENTER;
+                gbc.weightx = 1;
+                gbc.weighty = 1;
+                ParaProfUtils.addCompItem(promptPanel, label, gbc, 0, 0, 1, 1);
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                ParaProfUtils.addCompItem(promptPanel, password, gbc, 1, 0, 1, 1);
+
+                if (JOptionPane.showConfirmDialog(null, promptPanel, "Enter Password", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+                    return new String(password.getPassword());
+                } else {
+                    return null;
+                }
+            }
+        });
 
         ParaProf.incrementNumWindows();
     }

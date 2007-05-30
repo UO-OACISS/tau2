@@ -33,9 +33,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.13 2007/05/29 20:27:02 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.14 2007/05/30 19:50:34 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -242,10 +242,10 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
             treeTable.setDefaultRenderer(columns.get(i).getClass(), ((TreeTableColumn) columns.get(i)).getCellRenderer());
         }
 
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.anchor = GridBagConstraints.SOUTH;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.SOUTH;
+            gbc.weightx = 1.0;
+            gbc.weighty = 1.0;
         addCompItem(scrollPane, gbc, 0, 1, GridBagConstraints.REMAINDER, GridBagConstraints.REMAINDER);
 
         validate();
