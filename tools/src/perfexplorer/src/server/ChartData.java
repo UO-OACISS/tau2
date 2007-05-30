@@ -28,7 +28,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.42 2007/02/28 03:36:44 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.43 2007/05/30 03:23:18 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -898,8 +898,8 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append(" and m.name = ? ");
 			}
-			buf.append("and ims.exclusive_percentage > ");
-			buf.append(model.getXPercent());
+			//buf.append("and ims.exclusive_percentage > ");
+			//buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')");

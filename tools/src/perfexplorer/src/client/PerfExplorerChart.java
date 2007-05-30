@@ -93,7 +93,9 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         XYDataset dataset = new CorrelationPlotDataset(rawData, false);
         //JFreeChart chart = ChartFactory.createScatterPlot(
         JFreeChart chart = ChartFactory.createXYLineChart(
-            "Correlation Results",  // chart title
+            "Correlation Results: " +  // chart title
+			PerfExplorerModel.getModel().toString() + ": " +
+			PerfExplorerModel.getModel().getMetricName(),
             //"Inclusive Time for " + (String)rawData.getRowLabels().get(0), //domain axis
             "Processors", //domain axis
             "Exclusive Time for Event",  // range axis

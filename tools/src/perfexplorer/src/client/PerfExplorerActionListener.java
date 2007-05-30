@@ -24,6 +24,7 @@ public class PerfExplorerActionListener implements ActionListener {
 
 	public final static String LOADSCRIPT = "Load Analysis Script";
 	public final static String RERUNSCRIPT = "Re-run Analysis Script";
+	public final static String SAVE_MAIN = "Save Main Window As Vector Image";
 	public final static String SAVE = "Save As Vector Image";
 	public final static String QUIT = "Quit PerfExplorer";
 	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
@@ -113,6 +114,8 @@ public class PerfExplorerActionListener implements ActionListener {
 					loadScript();
 				} else if (arg.equals(RERUNSCRIPT)) {
 					runScript();
+				} else if (arg.equals(SAVE_MAIN)) {
+					saveMain();
 				} else if (arg.equals(SAVE)) {
 					saveThyself();
 			// help menu items
@@ -709,6 +712,17 @@ public class PerfExplorerActionListener implements ActionListener {
 	}
 
     public void saveThyself() {
+        //System.out.println("Daemon come out!");
+        try {
+            VectorExport.promptForVectorExport (ChartPane.getPane(), "PerfExplorer");
+        } catch (Exception e) {
+            System.out.println("File Export Failed!");
+        }
+        return;
+    }
+
+
+    public void saveMain() {
         //System.out.println("Daemon come out!");
         try {
             VectorExport.promptForVectorExport (mainFrame, "PerfExplorer");

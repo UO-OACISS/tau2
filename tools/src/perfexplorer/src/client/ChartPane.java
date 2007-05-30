@@ -47,7 +47,7 @@ import edu.uoregon.tau.common.VectorExport;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
 
-public class ChartPane extends JScrollPane implements ActionListener {
+public class ChartPane extends JScrollPane implements ActionListener, ImageExport {
 
 	private static ChartPane thePane = null;
 	private PerfExplorerConnection server = null;
@@ -784,6 +784,16 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		return chart;
 	}
+
+    public Dimension getImageSize(boolean fullScreen, boolean header) {
+        return this.getChartPanel().getSize();
+    }
+
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+        this.getChartPanel().setDoubleBuffered(false);
+        this.getChartPanel().paintAll(g2D);
+        this.getChartPanel().setDoubleBuffered(true);
+    }
 
 	private String shortName(String longName) {
 		StringTokenizer st = new StringTokenizer(longName, "(");

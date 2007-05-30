@@ -15,6 +15,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 
 	private ActionListener listener = null;
 	private static PerfExplorerClient mainFrame = null;
+	private JComponent mainComponent = null;
 
 	public static PerfExplorerClient getMainFrame() {
 		return mainFrame;
@@ -45,6 +46,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		splitPane.setLeftComponent(treeView);
 		splitPane.setRightComponent(tabbedPane);
+		mainComponent = splitPane;
 		// add the split pane to the main frame
 		getContentPane().add(splitPane, BorderLayout.CENTER);
 		setJMenuBar(new PerfExplorerMainJMenuBar(listener));
@@ -109,13 +111,13 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 	}
 
     public Dimension getImageSize(boolean fullScreen, boolean header) {
-        return ChartPane.getPane().getChartPanel().getSize();
+        return this.mainComponent.getSize();
     }
 
     public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-        ChartPane.getPane().getChartPanel().setDoubleBuffered(false);
-        ChartPane.getPane().getChartPanel().paintAll(g2D);
-        ChartPane.getPane().getChartPanel().setDoubleBuffered(true);
+        this.mainComponent.setDoubleBuffered(false);
+        this.mainComponent.paintAll(g2D);
+        this.mainComponent.setDoubleBuffered(true);
     }
 
 	public static void main (String[] args) {

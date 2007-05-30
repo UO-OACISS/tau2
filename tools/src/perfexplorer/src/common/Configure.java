@@ -1,6 +1,7 @@
 package common;
 
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
+import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
@@ -18,7 +19,7 @@ import java.sql.SQLException;
 /**
  * This class is used as a main class for configuring PerfExplorer.
  *
- * <P>CVS $Id: Configure.java,v 1.7 2007/01/04 21:20:03 khuck Exp $</P>
+ * <P>CVS $Id: Configure.java,v 1.8 2007/05/30 03:23:18 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -102,9 +103,9 @@ public class Configure {
         DB db = null;
         try {
             if (db_password != null) {
-                connector = new ConnectionManager(configFileName, db_password);
+                connector = new ConnectionManager(new Database(configFileName), db_password);
             } else {
-                connector = new ConnectionManager(configFileName);
+                connector = new ConnectionManager(new Database(configFileName));
             }
             connector.connect();
             PerfExplorerOutput.println();
