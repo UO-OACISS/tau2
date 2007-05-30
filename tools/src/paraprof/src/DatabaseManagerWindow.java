@@ -276,6 +276,14 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 ConfigureTest config = new ConfigureTest("");
                 config.initialize(filename); 
                 //config.setDBSchemaFile("dbschema." + adapter.getSelectedItem().toString() + ".txt");
+                if (!config.checkSchema()) {
+                    int response = JOptionPane.showConfirmDialog(this,
+                            "This database has not been initalized with PerfDMF.  Would you like to upload the schema?",
+                            "Initialize with PerfDMF", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    if (response == JOptionPane.NO_OPTION) {
+                        return;
+                    }
+                }
                 config.createDB(false);
                 mainWindow.refreshDatabases();
             } else if (arg.equals("Remove Configuration")) {
