@@ -46,6 +46,10 @@ public class UserEventProfile {
         }
         numSnapshots++;
     }
+    
+    public String getName() {
+        return userEvent.getName();
+    }
 
     public void updateMax() {
         return;

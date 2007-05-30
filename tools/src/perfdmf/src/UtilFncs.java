@@ -402,6 +402,16 @@ public class UtilFncs {
     }
 
     
+    public static String getContextEventRoot(String str) {
+        int colon = str.indexOf(":");
+        int location = str.indexOf("=>");
+        if (colon < 0 || location < 0) {
+            return str;
+        }
+        return str.substring(colon + 1, location).trim();
+    }
+
+    
     public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames)
             throws DataSourceException {
         DataSource dataSource = null;
