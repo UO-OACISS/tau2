@@ -48,8 +48,9 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     private JButton download = new JButton("Downloading");
     private JProgressBar bar = new JProgressBar();
     private JTextField schema = new JTextField(15);
-    private JButton newConfiguration = new JButton("New Configuration");
+    private JButton newConfig = new JButton("New Configuration");
     private JButton close = new JButton("Close");
+    private JPanel buttons = new JPanel();
 
     private JLabel labelAdapter = new JLabel("Database Adapter:");
     private JLabel labelDriver = new JLabel("Database Driver:");
@@ -88,6 +89,10 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     	saveConfig.addActionListener(this);
     	removeConfig.setText("Remove Configuration");
     	removeConfig.addActionListener(this);
+    	newConfig.setText("New Configuration");
+    	newConfig.addActionListener(this); 
+    	close.setText("Close");
+    	close.addActionListener(this);
     	
     	download.setText("Download");
     	download.addActionListener(this);
@@ -188,20 +193,25 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
         ParaProfUtils.addCompItem(configurations, labelConfig, gbc, 0, 0, 1, 1);
         ParaProfUtils.addCompItem(configurations, configList, gbc, 0, 1, 1, 1);
-        ParaProfUtils.addCompItem(configurations, saveConfig, gbc, 0, 2, 1, 1);
-        ParaProfUtils.addCompItem(configurations, removeConfig, gbc, 0, 3, 1, 1);
+        //ParaProfUtils.addCompItem(configurations, saveConfig, gbc, 0, 2, 1, 1);
+        //ParaProfUtils.addCompItem(configurations, removeConfig, gbc, 0, 3, 1, 1);
 
+        buttons.setLayout(new GridBagLayout());
+        ParaProfUtils.addCompItem(buttons, newConfig, gbc, 0, 0, 1, 1);
+        ParaProfUtils.addCompItem(buttons, saveConfig, gbc, 1, 0, 1, 1);
+        ParaProfUtils.addCompItem(buttons, removeConfig, gbc, 2, 0, 1, 1);
+        ParaProfUtils.addCompItem(buttons, close, gbc, 3, 0, 1, 1);
         //this.addFocusListener(this);
 
         this.getContentPane().setLayout(new GridBagLayout());
 
-        this.setSize(new Dimension(750, 425));
+        this.setSize(new Dimension(750, 450));
 
         //configurations.setLayout(new GridBagLayout());
         ParaProfUtils.addCompItem(this, configurations, gbc, 0, 0, 1, 1);
         //editConfiguration.setLayout(new GridBagLayout());
         ParaProfUtils.addCompItem(this, editConfiguration, gbc, 1, 0, 1, 1);
-
+        ParaProfUtils.addCompItem(this, buttons, gbc, 0, 1, 2, 1);
     }
 
     public void updateFields() {
@@ -310,7 +320,21 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
                 String filename = this.download_jar(jFileChooser.getSelectedFile());
                 this.jarfile.setText(filename);
-            }
+            } else if (arg.equals("New Configuration"))
+            {
+            	name.setText("");
+            	adapter.setSelectedItem("mysql");
+            	host.setText("");
+            	databaseName.setText("");
+            	databaseUser.setText("");
+            	databasePassword.setText("");
+            	port.setText("");
+            	driver.setText("");
+            	jarfile.setText("");
+            	schema.setText("");
+            } else if (arg.equals("Close"))
+            	this.setVisible(false);
+            
         } finally {}
     }
 
