@@ -45,7 +45,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.49 2007/05/25 18:26:56 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.50 2007/05/30 20:34:48 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -880,6 +880,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					}
 				}
 			}
+			buf.append(" and group_name not like '%TAU_CALLPATH%' ");
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
