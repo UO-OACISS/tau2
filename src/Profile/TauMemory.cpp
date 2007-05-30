@@ -95,6 +95,19 @@ map<TAU_MEMORY_LEAK_MAP_TYPE >& TheTauMemoryLeakMap(void)
 // This routine
 //////////////////////////////////////////////////////////////////////
 
+#ifdef TAU_USE_SDBM_HASH
+unsigned long
+Tau_hash(unsigned char *str)
+{
+  unsigned long hash = 0;
+  int c;
+
+  while (c = *str++)
+    hash = c + (hash << 6) + (hash << 16) - hash;
+
+  return hash;
+}
+#else
 //////////////////////////////////////////////////////////////////////
 unsigned long Tau_hash(unsigned char *str)
 {
@@ -105,6 +118,10 @@ unsigned long Tau_hash(unsigned char *str)
     hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
   return hash;
 }
+#endif
+
+
+
 
 
 //////////////////////////////////////////////////////////////////////
@@ -466,6 +483,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.25 $   $Date: 2007/04/01 01:25:43 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.25 2007/04/01 01:25:43 sameer Exp $ 
+ * $Revision: 1.26 $   $Date: 2007/05/30 19:08:38 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.26 2007/05/30 19:08:38 sameer Exp $ 
  ***************************************************************************/
