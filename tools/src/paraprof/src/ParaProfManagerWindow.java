@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.24 2007/05/31 00:46:14 scottb Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.25 2007/05/31 01:17:02 scottb Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.24 $
+ * @version	$Revision: 1.25 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -565,7 +565,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         this.expandApplicationType(0, application.getID(), application);
                         ParaProfExperiment experiment = addExperiment(false, application);
                         if (experiment != null) {
-                            this.expandApplication(0, null, experiment);
+                            this.expandApplication(0, application, experiment);
                             (new LoadTrialWindow(this, application, experiment, true, true)).setVisible(true);
                         }
                     }
@@ -2015,18 +2015,18 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
             if (!metaDataRetrieved) {
                 DatabaseAPI defaultDatabaseAPI = new DatabaseAPI();
-                defaultDatabaseAPI.initialize(database);
+                defaultDatabaseAPI.initialize(getDefaultDatabase());
                 metaDataRetrieved = true;
                 for (Iterator it = ParaProf.applicationManager.getApplications().iterator(); it.hasNext();) {
                     ParaProfApplication ppApp = (ParaProfApplication) it.next();
                     if (!ppApp.dBApplication()) {
-                        ppApp.setDatabase(database);
+                        ppApp.setDatabase(getDefaultDatabase());
                         for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
                             ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
-                            ppExp.setDatabase(database);
+                            ppExp.setDatabase(getDefaultDatabase());
                             for (Iterator it3 = ppExp.getTrialList(); it3.hasNext();) {
                                 ParaProfTrial ppTrial = (ParaProfTrial) it3.next();
-                                ppTrial.getTrial().setDatabase(database);
+                                ppTrial.getTrial().setDatabase(getDefaultDatabase());
                             }
                         }
                     }
