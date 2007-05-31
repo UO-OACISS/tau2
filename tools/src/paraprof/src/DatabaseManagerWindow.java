@@ -72,6 +72,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
     private ParaProfManagerWindow mainWindow;
 
+    
     public DatabaseManagerWindow(ParaProfManagerWindow mw) {
         mainWindow = mw;
 
@@ -106,6 +107,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
         savePassword.setSelected(true);
         savePassword.addChangeListener(this);
+
         
         adapter.setSelectedItem("derby");
         host.setEnabled(false);
@@ -256,7 +258,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             name = "";
 
         Configure config = new Configure("", "");
-        config.initialize(System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg");
+        config.initialize(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg");
         if (name.compareTo("Default") == 0)
             config.setConfigFileName("");
         else
@@ -321,7 +323,9 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 mainWindow.refreshDatabases();
             } else if (arg.equals("Remove Configuration")) {
                 String path = selectedConfig.getPath();
-                File removeFile = new File(path);
+                System.out.println("deleating config, path: " + path);
+                File removeFile = new File(path); 
+                System.out.println(removeFile.exists() + "File path: " + removeFile.getAbsolutePath());
                 removeFile.delete();
                 configList.clearSelection();
                 configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
@@ -379,10 +383,10 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             String filename = "";
             if (((String) adapter.getSelectedItem()).compareToIgnoreCase("postgresql") == 0) {
                 Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/postgresql-redirect.html",
-                        ".perfdmf_tmp/redirect.html", false);
+                        ".perfdmf_tmp" + File.separator + "redirect.html", false);
                 filename = "postgresql.jar";
             } else if (((String) adapter.getSelectedItem()).compareToIgnoreCase("mysql") == 0) {
-                Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html", ".perfdmf_tmp/redirect.html",
+                Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html", ".perfdmf_tmp" + File.separator + "redirect.html",
                         false);
                 filename = "mysql.jar";
             } else {
@@ -390,7 +394,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             }
 
             BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(
-                    new File(".perfdmf_tmp/redirect.html"))));
+                    new File(".perfdmf_tmp" + File.separator + "redirect.html"))));
 
             String URL = "";
             String line = r.readLine();
@@ -400,8 +404,8 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 line = r.readLine();
             }
             r.close();
-            dest = selectedFile.getAbsolutePath() + "/" + filename;
-
+            dest = selectedFile.getAbsolutePath() + File.separator + filename;
+            
             DownloadThread downloadJar = new DownloadThread(bar, labelBar, URL, dest);
 
             downloadJar.start();

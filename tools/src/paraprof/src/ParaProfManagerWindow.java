@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.26 2007/05/31 19:22:53 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.27 2007/05/31 20:04:36 scottb Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.26 $
+ * @version	$Revision: 1.27 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -102,7 +102,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             treeNode.removeFromParent();
         }
         treeModel.reload();
-
+        this.databases = Database.getDatabases();
     }
 
     public ParaProfManagerWindow() {
@@ -623,7 +623,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     ParaProf.getHelpWindow().writeText("");
 
                     ParaProf.getHelpWindow().writeText(
-                            "1) Navigation:" + " The window is split into two halves, the left side gives a tree representation"
+                            "1) Navigation:" + " The window is split into two17 halves, the left side gives a tree representation"
                                     + " of all data. The right side gives information about items clicked on in the left"
                                     + " half. You can also update information in the right half by double clicking in"
                                     + " the fields, and entering new data.  This automatically updates the left half."
@@ -652,6 +652,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     ParaProf.getHelpWindow().writeText("");
                 } else if (arg.equals("Delete")) {
                     handleDelete(clickedOnObject);
+                    
 
                 } else if (arg.equals("Add Application")) {
                     if (clickedOnObject == standard) {
@@ -767,7 +768,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         for (Iterator it = databaseAPI.getExperimentList().iterator(); it.hasNext();) {
                             ParaProfExperiment dbExp = new ParaProfExperiment((Experiment) it.next());
 
-                            String expname = appname + "/" + dbExp.getName().replace('/', '%');
+                            String expname = appname + File.separator + dbExp.getName().replace('/', '%');
                             success = (new File(expname).mkdir());
 
                             databaseAPI.setExperiment(dbExp);
@@ -778,7 +779,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                                 DBDataSource dbDataSource = new DBDataSource(databaseAPI);
                                 dbDataSource.load();
 
-                                String filename = expname + "/" + trial.getName().replace('/', '%') + ".ppk";
+                                String filename = expname + File.separator + trial.getName().replace('/', '%') + ".ppk";
 
                                 DataSourceExport.writePacked(dbDataSource, new File(filename));
 
@@ -1785,7 +1786,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             Database db = null;
             for (int i = 0; i < root.getChildCount(); i++) {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) root.getChildAt(i);
-                if (node.getUserObject() == application.getDatabase()) {
+                if ((node.getUserObject() instanceof Database) && 
+                		(((Database) node.getUserObject()).getConfig().getPath()).compareTo((application.getDatabase()).getConfig().getPath()) == 0) {
                     dbNode = node;
                     db = (Database) node.getUserObject();
                 }
