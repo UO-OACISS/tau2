@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.25 2007/05/31 01:17:02 scottb Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.26 2007/05/31 19:22:53 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.25 $
+ * @version	$Revision: 1.26 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -890,7 +890,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private ParaProfApplication uploadApplication(ParaProfApplication ppApp, boolean allowOverwrite, boolean uploadChildren)
             throws SQLException, DatabaseException {
 
-        DatabaseAPI databaseAPI = this.getDatabaseAPI_OLD();
+        DatabaseAPI databaseAPI = this.getDatabaseAPI(null);
         if (databaseAPI != null) {
 
             boolean found = false;
@@ -956,7 +956,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     private ParaProfExperiment uploadExperiment(ParaProfApplication dbApp, ParaProfExperiment ppExp, boolean allowOverwrite,
             boolean uploadChildren) throws SQLException, DatabaseException {
-        DatabaseAPI databaseAPI = this.getDatabaseAPI_OLD();
+        DatabaseAPI databaseAPI = this.getDatabaseAPI(null);
         if (databaseAPI == null)
             return null;
 
@@ -1027,7 +1027,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     }
 
     private ParaProfTrial uploadTrial(ParaProfExperiment dbExp, ParaProfTrial ppTrial) throws SQLException, DatabaseException {
-        DatabaseAPI databaseAPI = this.getDatabaseAPI_OLD();
+        DatabaseAPI databaseAPI = this.getDatabaseAPI(null);
         if (databaseAPI == null)
             return null;
 
@@ -1550,6 +1550,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 try {
                     experiment = new ParaProfExperiment(databaseAPI.db());
                     experiment.setDBExperiment(true);
+                    experiment.setApplication(application);
                     experiment.setApplicationID(application.getID());
                     experiment.setName("New Experiment");
                     experiment.setID(databaseAPI.saveExperiment(experiment));
@@ -1996,10 +1997,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         return (Database) databases.get(0);
         //ParseConfig config = new ParseConfig(ParaProf.preferences.getDatabaseConfigurationFile());
         //return new Database("default", config);
-    }
-
-    public DatabaseAPI getDatabaseAPI_OLD() {
-        return getDatabaseAPI(null);
     }
 
     public DatabaseAPI getDatabaseAPI(Database database) {
