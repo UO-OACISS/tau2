@@ -325,7 +325,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 String path = selectedConfig.getPath();
                 System.out.println("deleating config, path: " + path);
                 File removeFile = new File(path); 
-                System.out.println(removeFile.exists() + "File path: " + removeFile.getAbsolutePath());
+                //System.out.println(removeFile.exists() + "File path: " + removeFile.getAbsolutePath());
                 removeFile.delete();
                 configList.clearSelection();
                 configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
