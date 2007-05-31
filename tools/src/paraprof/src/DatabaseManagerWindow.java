@@ -106,6 +106,18 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
         savePassword.setSelected(true);
         savePassword.addChangeListener(this);
+        
+        adapter.setSelectedItem("derby");
+        host.setEnabled(false);
+        host.setText("");
+        databasePassword.setEditable(false);
+        databasePassword.setEnabled(true);
+        databasePassword.setText("");
+        savePassword.setEnabled(false);
+        port.setEnabled(false);
+        port.setText("");
+    	download.setEnabled(false);
+        
 
         labelBar.setVisible(false);
         labelBar.setLabelFor(bar);
@@ -225,6 +237,10 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         databaseName.setText(selectedConfig.getDBName());
         databaseUser.setText(selectedConfig.getDBUserName());
         databasePassword.setText(selectedConfig.getDBPasswd());
+        if (selectedConfig.getDBPasswd() == null)
+        	savePassword.setSelected(false);
+        else
+        	savePassword.setSelected(true);
         port.setText(selectedConfig.getDBPort());
         driver.setText(selectedConfig.getJDBCDriver());
         jarfile.setText(selectedConfig.getJDBCJarFile());
@@ -288,8 +304,6 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 schema.setText(jFileChooser.getSelectedFile().getAbsolutePath());
             } else if (arg.equals("Save Configuration")) {
                 String filename = writeConfig(name.getText());
-                if (filename == null)
-                    return;
                 configList.clearSelection();
                 configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
                 ConfigureTest config = new ConfigureTest("");
@@ -340,6 +354,16 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 driver.setText("");
                 jarfile.setText("");
                 schema.setText("");
+                adapter.setSelectedItem("derby");
+                host.setEnabled(false);
+                host.setText("");
+                databasePassword.setEditable(false);
+                databasePassword.setEnabled(true);
+                databasePassword.setText("");
+                savePassword.setEnabled(false);
+                port.setEnabled(false);
+                port.setText("");
+            	download.setEnabled(false);
             } else if (arg.equals("Close"))
                 this.setVisible(false);
 
@@ -458,43 +482,81 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         //configList.clearSelection();
         if (configList.getSelectedIndex() != -1)
             selectedConfig = (ParseConfig) ConfigureFiles.getConfigurations().get(configList.getSelectedIndex());
+        switchAdapter((String) adapter.getSelectedItem());
         this.updateFields();
 
     }
 
+    private void switchAdapter(String newAdapter)
+    {
+    	if (newAdapter.compareTo("mysql") == 0) {
+            download.setEnabled(true);
+            host.setEnabled(true);
+            databasePassword.setEditable(true);
+            savePassword.setEnabled(true);
+            databasePassword.setEnabled(true);
+            savePassword.setSelected(true);
+            port.setEnabled(true);
+            this.driver.setText("org.gjt.mm.mysql.Driver");
+            this.port.setText("3306");
+            this.host.setText("localhost");
+        } else if (newAdapter.compareTo("postgresql") == 0 ) {
+            download.setEnabled(true);
+            host.setEnabled(true);
+            databasePassword.setEditable(true);
+            databasePassword.setEnabled(true);
+            savePassword.setEnabled(true);
+            savePassword.setSelected(true);
+            port.setEnabled(true);
+            this.driver.setText("org.postgresql.Driver");
+            this.port.setText("5432");
+            this.host.setText("localhost");
+        } else if (newAdapter.compareTo("oracle") == 0) {
+            download.setEnabled(false);
+            host.setEnabled(true);
+            databasePassword.setEditable(true);
+            databasePassword.setEnabled(true);
+            savePassword.setEnabled(true);
+            savePassword.setSelected(true);
+            port.setEnabled(true);
+            this.driver.setText("oracle.jdbc.OracleDriver");
+            this.port.setText("1521");
+            this.host.setText("localhost");
+        } else if (newAdapter.compareTo("derby") == 0) {
+            host.setEnabled(false);
+            host.setText("");
+            databasePassword.setEditable(false);
+            databasePassword.setEnabled(false);
+            databasePassword.setText("");
+            savePassword.setEnabled(false);
+            port.setEnabled(false);
+            port.setText("");
+        	download.setEnabled(false);
+            this.driver.setText("org.apache.derby.jdbc.EmbeddedDriver");
+        } else if (newAdapter.compareTo("db2") == 0) {
+            download.setEnabled(false);
+            host.setEnabled(true);
+            databasePassword.setEditable(true);
+            databasePassword.setEnabled(true);
+            savePassword.setEnabled(true);
+            savePassword.setSelected(true);
+            port.setEnabled(true);
+            this.driver.setText("com.ibm.db2.jcc.DB2Driver");
+            this.port.setText("446");
+            this.host.setText("localhost");
+        }
+    }
+
     public void itemStateChanged(ItemEvent arg0) {
         if (arg0.getStateChange() == ItemEvent.SELECTED) {
-            if (arg0.getItem() == "mysql") {
-                download.setEnabled(true);
-                this.driver.setText("org.gjt.mm.mysql.Driver");
-                this.port.setText("3306");
-                this.host.setText("localhost");
-            } else if (arg0.getItem() == "postgresql") {
-                download.setEnabled(true);
-                this.driver.setText("org.postgresql.Driver");
-                this.port.setText("5432");
-                this.host.setText("localhost");
-            } else if (arg0.getItem() == "oracle") {
-                download.setEnabled(false);
-                this.driver.setText("oracle.jdbc.OracleDriver");
-                this.port.setText("1521");
-                this.host.setText("localhost");
-            } else if (arg0.getItem() == "derby") {
-                download.setEnabled(false);
-                this.driver.setText("org.apache.derby.jdbc.EmbeddedDriver");
-            } else if (arg0.getItem() == "db2") {
-                download.setEnabled(false);
-                this.driver.setText("com.ibm.db2.jcc.DB2Driver");
-                this.port.setText("446");
-                this.host.setText("localhost");
-            }
+        	switchAdapter((String) arg0.getItem());
         }
     }
 
     public void stateChanged(ChangeEvent arg0) {
         if (savePassword.isSelected())
-            databasePassword.setEnabled(true);
+            databasePassword.setEditable(true);
         else
-            databasePassword.setEnabled(false);
+            databasePassword.setEditable(false);
     }
 }
