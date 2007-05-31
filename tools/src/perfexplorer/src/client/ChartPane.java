@@ -165,55 +165,82 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	public void refreshDynamicControls(boolean getMetrics, boolean getEvents, boolean getXML) {
 		PerfExplorerModel theModel = PerfExplorerModel.getModel();
 		Object selection = theModel.getCurrentSelection();
-		if (getMetrics)
+		String oldMetric = "";
+		String oldEvent = "";
+		String oldXML = "";
+		Object obj = null;
+		if (getMetrics) {
+			obj = this.metric.getSelectedItem();
+			if (obj != null)
+				oldMetric = (String)obj;
 			this.metric.removeAllItems();
-		if (getEvents)
+		}
+		if (getEvents) {
+			obj = this.event.getSelectedItem();
+			if (obj != null)
+				oldEvent = (String)obj;
 			this.event.removeAllItems();
-		if (getXML)
+		}
+		if (getXML) {
+			obj = this.xmlName.getSelectedItem();
+			if (obj != null)
+				oldXML = (String)obj;
 			this.xmlName.removeAllItems();
+		}
 		if ((selection instanceof Application) ||
 		    (selection instanceof Experiment) ||
 		    (selection instanceof Trial)) {
 			if (getMetrics) {
 				List metrics = server.getPotentialMetrics(theModel);
+				//this.metric.setSelectedIndex(0);
 				for (Iterator itr = metrics.iterator() ; itr.hasNext() ; ) {
-					this.metric.addItem(itr.next());
+					String next = (String)itr.next();
+					this.metric.addItem(next);
+					if (oldMetric.equals(next))
+						this.metric.setSelectedItem(next);
 				}
-				this.metric.setSelectedIndex(0);
 			} 
 			if (getEvents && !this.mainOnly.isSelected()) {
-				Object obj = series.getSelectedItem();
-				String tmp = (String)obj;
+				Object obj2 = series.getSelectedItem();
+				String tmp = (String)obj2;
 				if (tmp.equalsIgnoreCase("interval_event.group_name")) {
 					List events = server.getPotentialGroups(theModel);
 					this.event.addItem("All Groups");
 					this.eventLabel.setText("Group:");
-					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
-						this.event.addItem(itr.next());
-					}
 					this.event.setSelectedIndex(0);
+					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
+						String next = (String)itr.next();
+						this.event.addItem(next);
+						if (oldEvent.equals(next))
+							this.event.setSelectedItem(next);
+					}
 				} else {
 					List events = server.getPotentialEvents(theModel);
 					this.event.addItem("All Events");
 					this.eventLabel.setText("Event:");
-					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
-						this.event.addItem(itr.next());
-					}
 					this.event.setSelectedIndex(0);
+					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
+						String next = (String)itr.next();
+						this.event.addItem(next);
+						if (oldEvent.equals(next))
+							this.event.setSelectedItem(next);
+					}
 				}
 			} 
 			if (getXML) {
-				Object obj = series.getSelectedItem();
-				String tmp = (String)obj;
-				Object obj2 = xaxisValue.getSelectedItem();
-				String tmp2 = (String)obj2;
+				Object obj2 = series.getSelectedItem();
+				String tmp = (String)obj2;
+				Object obj3 = xaxisValue.getSelectedItem();
+				String tmp2 = (String)obj3;
 				if (tmp.equalsIgnoreCase("trial.xml_metadata") ||
 					tmp2.equalsIgnoreCase("trial.xml_metadata")) {
 					List xmlEvents = server.getXMLFields(theModel);
 					for (Iterator itr = xmlEvents.iterator(); itr.hasNext();) {
 						String next = (String)itr.next();
 						this.xmlName.addItem(next);
-						if (next.equalsIgnoreCase("UTC Time"))
+						if (oldXML.equals("") && next.equalsIgnoreCase("UTC Time"))
+							this.xmlName.setSelectedItem(next);
+						else if (oldXML.equals(next))
 							this.xmlName.setSelectedItem(next);
 					}
 					//this.xmlName.setSelectedIndex(0);
