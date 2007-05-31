@@ -682,8 +682,10 @@ public class PerfExplorerActionListener implements ActionListener {
 				"Please select the problem scaling:",
 				"Problem Scaling", JOptionPane.PLAIN_MESSAGE,
 				null, options, options[0]);
-			theModel.setConstantProblem(response.startsWith("The problem size remains") ? true : false);
-			constantProblem = theModel.getConstantProblem();
+			if (response != null) {
+				theModel.setConstantProblem(response.startsWith("The problem size remains") ? true : false);
+				constantProblem = theModel.getConstantProblem();
+			}
 		}
 		return (!forceIt && constantProblem == null) ? false : true;
 	}
