@@ -308,8 +308,11 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
 #else
   char *p1 = p;
 #endif
-  multimap<TAU_POINTER_SIZE_MAP_TYPE >::iterator it = TheTauPointerSizeMap().find((long)p1);
-  multimap<TAU_POINTER_SIZE_MAP_TYPE >::iterator it2, found_it;
+
+  typedef multimap<TAU_POINTER_SIZE_MAP_TYPE >::iterator I;
+
+  I it = TheTauPointerSizeMap().find((long)p1);
+  I it2, found_it;
   TAU_USER_EVENT_TYPE *e;
 
   if (it == TheTauPointerSizeMap().end())
@@ -322,18 +325,15 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
 #ifdef DEBUG
       printf("Found more than one occurence of p1 in TauGetMemoryAllocatedSize\n");
 #endif /* DEBUG */
-      /* We need to delete this entry in the free map */
-      for (it2 = TheTauPointerSizeMap().begin(); it2 != TheTauPointerSizeMap().end(); it2++)
-      {
-        if ((*it2).first == (long) p1)
-        {
-          found_it = it2;
+
+      pair<I,I> range = TheTauPointerSizeMap().equal_range((long)p1);
+
+      for (I it = range.first; it != range.second; ++it) {
+	found_it = it;
 #ifdef DEBUG
-          printf("TAUGETMEMORYALLOCATEDSIZE: found <%d,%lx> \n", (*it2).second.first, (*it2).second.second);
+	printf("TAUGETMEMORYALLOCATEDSIZE: found <%d,%lx> \n", (*it2).second.first, (*it2).second.second);
 #endif /* DEBUG */
-	  
-        }
-      } // iterate over all pairs 
+      }
     } // if count > 1
     //TheTauPointerSizeMap().erase(it);
 // Erase the last pointer you find in the list. Sometimes the same address
@@ -558,7 +558,7 @@ int TauGetFreeMemory(void)
 #endif /* TAU_CATAMOUNT */
 
 /***************************************************************************
- * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2007/05/31 17:17:46 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.27 2007/05/31 17:17:46 sameer Exp $ 
+ * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
+ * $Revision: 1.28 $   $Date: 2007/05/31 18:41:03 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.28 2007/05/31 18:41:03 amorris Exp $ 
  ***************************************************************************/
