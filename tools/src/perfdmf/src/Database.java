@@ -98,15 +98,15 @@ public class Database {
     }
 
     public static List getDatabases() {
-        File paraprofDirectory = new File(System.getProperty("user.home") + "/.ParaProf");
+        File paraprofDirectory = new File(System.getProperty("user.home") + File.separator + ".ParaProf");
         String[] fileNames = paraprofDirectory.list();
         List perfdmfConfigs = new ArrayList();
         for (int i = 0; i < fileNames.length; i++) {
             if (fileNames[i].compareTo("perfdmf.cfg") == 0) {
-                perfdmfConfigs.add(createDatabase("Default", paraprofDirectory + "/" + fileNames[i]));
+                perfdmfConfigs.add(createDatabase("Default", paraprofDirectory + File.separator + fileNames[i]));
             } else if (fileNames[i].startsWith("perfdmf.cfg") && !fileNames[i].endsWith("~")) {
                 String name = fileNames[i].substring(12);
-                perfdmfConfigs.add(createDatabase(name, paraprofDirectory + "/" + fileNames[i]));
+                perfdmfConfigs.add(createDatabase(name, paraprofDirectory + File.separator + fileNames[i]));
             }
         }
         return perfdmfConfigs;

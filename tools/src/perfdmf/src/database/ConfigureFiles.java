@@ -34,16 +34,16 @@ abstract public class ConfigureFiles {
 		for (int i=0; i<names.size(); i++)
 		{
 			if (((String) names.get(i)).compareTo("Default") == 0)
-				files.add(new File(System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg"));
+				files.add(new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg"));
 			else
-				files.add(new File(System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + (String) names.get(i)));
+				files.add(new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg." + (String) names.get(i)));
 		}
 		return files;
 	}
 	/* Returns a List of Strings. */
 	public static List getConfigurationNames()
 	{
-		File paraprofDirectory = new File(System.getProperty("user.home") + "/.ParaProf");
+		File paraprofDirectory = new File(System.getProperty("user.home") + File.separator + ".ParaProf");
 		String[] fileNames = paraprofDirectory.list();
 		List perfdmfConfigs  = new Vector();
 		for (int i = 0; i<fileNames.length; i++)

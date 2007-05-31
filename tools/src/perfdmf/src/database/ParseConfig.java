@@ -178,5 +178,4 @@ public class ParseConfig {
     {
     	return path;
     }
-
 }
