@@ -139,7 +139,7 @@ public class DBConnector implements DB {
     
     private static String findPassword(ParseConfig config) {
 
-        System.out.println("finding password, path: " + config.getPath());
+        //System.out.println("finding password, path: " + config.getPath());
     	String password = (String) passwordMap.get(config.getPath());
         if (password == null && passwordCallback != null) {
             password = passwordCallback.getPassword(config);
