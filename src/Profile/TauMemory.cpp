@@ -33,6 +33,7 @@
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
+#include <map>
 using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
@@ -44,6 +45,7 @@ using namespace std;
 #endif /* TAU_CATAMOUNT */
 #include <catamount/catmalloc.h>
 #endif /* __QK_USER__ || __LIBCATAMOUNT__ */
+
 
 //////////////////////////////////////////////////////////////////////
 // Class for building the map
@@ -108,6 +110,45 @@ Tau_hash(unsigned char *str)
   return hash;
 }
 #else
+#ifdef TAU_USE_MAP_BASED_HASH
+struct TauLtStr{
+  bool operator()(unsigned char* s1, unsigned char* s2) const{
+    printf("comparing s1 %s:%p and s2 %s:%p\n", s1,s1, s2, s2);
+    return strcmp((const char *)s1, (const char *) s2) < 0;
+  }//operator()
+};
+
+
+//////////////////////////////////////////////////////////////////////
+unsigned long Tau_hash(const char *str)
+{
+  static map<string, unsigned long, less<string> > fileDB;
+  static unsigned long counter = 0;
+  unsigned long myid;
+  map<string, unsigned long, less<string> >::iterator it;
+
+  if ((it = fileDB.find(string(str))) != fileDB.end()) {
+    myid = (*it).second;
+
+#ifdef DEBUG
+    printf("Tau_hash: found name %s: %p: %ld\n", str, str, myid);
+#endif /* DEBUG */
+ 
+  }
+  else {
+    RtsLayer::LockDB();
+    myid = ++counter; /* increment the id */
+    RtsLayer::UnLockDB();
+#ifdef DEBUG
+    printf("Tau_hash: Not found name %s: %p: %ld\n", str, str, myid);
+#endif /* DEBUG */
+
+    fileDB[string(str)] = myid;
+  }
+  return myid;
+
+}
+#else
 //////////////////////////////////////////////////////////////////////
 unsigned long Tau_hash(unsigned char *str)
 {
@@ -118,6 +159,7 @@ unsigned long Tau_hash(unsigned char *str)
     hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
   return hash;
 }
+#endif /* map hash */
 #endif
 
 
@@ -145,7 +187,12 @@ multimap<TAU_POINTER_SIZE_MAP_TYPE >& TheTauPointerSizeMap(void)
 TAU_USER_EVENT_TYPE* Tau_malloc_before(const char *file, int line, size_t size)
 {
 /* we use pair<long,long> (line, file) as the key to index the mallocmap */
+#ifdef TAU_USE_MAP_BASED_HASH
+  unsigned long file_hash = Tau_hash(file);
+#else
   unsigned long file_hash = Tau_hash((unsigned char *)file);
+#endif 
+
 #ifdef DEBUGPROF
   printf("C++: Tau_malloc_before: file = %s, ptr=%lx,  long file = %uld\n", file, file, file_hash);
 #endif /* DEBUGPROF */
@@ -262,13 +309,37 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
   char *p1 = p;
 #endif
   multimap<TAU_POINTER_SIZE_MAP_TYPE >::iterator it = TheTauPointerSizeMap().find((long)p1);
+  multimap<TAU_POINTER_SIZE_MAP_TYPE >::iterator it2, found_it;
+  TAU_USER_EVENT_TYPE *e;
+
   if (it == TheTauPointerSizeMap().end())
     return 0; // don't know the size 
   else
   {
-    result = (*it).second;
-    /* We need to delete this entry in the free map */
-    TheTauPointerSizeMap().erase(it);
+    found_it = it;  /* initialize */
+    if (TheTauPointerSizeMap().count((long)p1) > 1)
+    { /* Intel compiler reuses addresses that have leaks */
+#ifdef DEBUG
+      printf("Found more than one occurence of p1 in TauGetMemoryAllocatedSize\n");
+#endif /* DEBUG */
+      /* We need to delete this entry in the free map */
+      for (it2 = TheTauPointerSizeMap().begin(); it2 != TheTauPointerSizeMap().end(); it2++)
+      {
+        if ((*it2).first == (long) p1)
+        {
+          found_it = it2;
+#ifdef DEBUG
+          printf("TAUGETMEMORYALLOCATEDSIZE: found <%d,%lx> \n", (*it2).second.first, (*it2).second.second);
+#endif /* DEBUG */
+	  
+        }
+      } // iterate over all pairs 
+    } // if count > 1
+    //TheTauPointerSizeMap().erase(it);
+// Erase the last pointer you find in the list. Sometimes the same address
+// can appear twice. 
+    TheTauPointerSizeMap().erase(found_it);
+    result = (*found_it).second;
     return result.first; /* or size_t, the first entry of the pair */
   }
 }
@@ -279,7 +350,12 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
 void Tau_free_before(const char *file, int line, TauVoidPointer p)
 {
   /* We've set the key */
+#ifdef TAU_USE_MAP_BASED_HASH
+  unsigned long file_hash = Tau_hash(file);
+#else
   unsigned long file_hash = Tau_hash((unsigned char *)file);
+#endif /* TAU_USE_MAP_BASED_HASH */
+
 #ifdef DEBUGPROF
   printf("C++: Tau_free_before: file = %s, ptr=%lx,  long file = %uld\n", file, file, file_hash);
 #endif /* DEBUGPROF */
@@ -483,6 +559,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 2007/05/30 19:08:38 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.26 2007/05/30 19:08:38 sameer Exp $ 
+ * $Revision: 1.27 $   $Date: 2007/05/31 17:17:46 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.27 2007/05/31 17:17:46 sameer Exp $ 
  ***************************************************************************/
