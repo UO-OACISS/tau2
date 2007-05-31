@@ -1500,22 +1500,22 @@ static char *getFortranName(char *name, int slen) {
     return fname;
 }
 
-void tau_profile_snapshot_1l_(int *number, char *name, int slen) {
+void tau_profile_snapshot_1l_(char *name, int *number, int slen) {
   char *fname = getFortranName(name, slen);
   Tau_profile_snapshot_1l(fname, *number);
   free (fname);
 }
 
-void tau_profile_snapshot_1l(int *number, char *name, int slen) {
-  tau_profile_snapshot_1l_(number, name, slen);
+void tau_profile_snapshot_1l(char *name, int *number, int slen) {
+  tau_profile_snapshot_1l_(name, number, slen);
 }
 
-void tau_profile_snapshot_1l__(int *number, char *name, int slen) {
-  tau_profile_snapshot_1l_(number, name, slen);
+void tau_profile_snapshot_1l__(char *name, int *number, int slen) {
+  tau_profile_snapshot_1l_(name, number, slen);
 }
 
-void TAU_PROFILE_SNAPSHOT_1L(int *number, char *name, int slen) {
-  tau_profile_snapshot_1l_(number, name, slen);
+void TAU_PROFILE_SNAPSHOT_1L(char *name, int *number, int slen) {
+  tau_profile_snapshot_1l_(name, number, slen);
 }
 
 void tau_profile_snapshot_(char *name, int slen) {
@@ -1683,7 +1683,7 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.62 $   $Date: 2007/05/24 01:45:47 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.62 2007/05/24 01:45:47 sameer Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.63 $   $Date: 2007/05/31 22:52:55 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.63 2007/05/31 22:52:55 amorris Exp $ 
  ***************************************************************************/
