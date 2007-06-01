@@ -45,7 +45,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.50 2007/05/30 20:34:48 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.51 2007/06/01 20:23:38 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -723,20 +723,20 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public List getPotentialMetrics(RMIPerfExplorerModel modelData) {
 		//PerfExplorerOutput.println("getPotentialMetrics()...");
 		List metrics = new ArrayList();
+		StringBuffer buf = new StringBuffer();
 		try {
 			DB db = this.getDB();
-			StringBuffer buf = new StringBuffer();
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select distinct count(cast (m.name as VARCHAR(256))), cast (m.name as VARCHAR(256)) ");
 			} else {
 				buf.append("select distinct count(m.name), m.name ");
 			}
 			buf.append(" from metric m inner join trial t on m.trial = t.id ");
-			buf.append(" inner join experiment e on t.experiment = e.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
+				buf.append(" inner join experiment e on t.experiment = e.id ");
 				List selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
@@ -804,6 +804,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select the metrics from the database!";
 			System.err.println(error);
+			System.err.println(buf.toString());
 			e.printStackTrace();
 		}
 		return metrics;
