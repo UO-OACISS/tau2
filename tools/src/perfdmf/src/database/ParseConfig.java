@@ -82,7 +82,7 @@ public class ParseConfig {
                     }
                 }
             }
-
+            reader.close();
         } catch (Exception e) {
             // wrap it up in a runtime exception
             throw new TauRuntimeException("Unable to parse \"" + configLoc + "\"", e);
