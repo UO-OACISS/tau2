@@ -36,11 +36,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.34 2007/05/30 19:50:34 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.35 2007/06/01 00:06:48 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.34 $
+ * @version $Revision: 1.35 $
  */
 public class ParaProfUtils {
 
@@ -489,6 +489,8 @@ public class ParaProfUtils {
                         (new CallGraphWindow(ppTrial, selectedThread, owner)).setVisible(true);
                     } else if (arg.equals("Call Path Relations")) {
                         (new CallPathTextWindow(ppTrial, selectedThread, owner)).setVisible(true);
+                    } else if (arg.equals("Context Event Window")) {
+                        (new ContextEventWindow(ppTrial, selectedThread, owner)).setVisible(true);
                     } else if (arg.equals("User Event Bar Chart")) {
                         (new UserEventWindow(ppTrial, selectedThread, owner)).setVisible(true);
                     } else if (arg.equals("User Event Statistics")) {
@@ -505,6 +507,7 @@ public class ParaProfUtils {
         threadWindows.add(createMenuItem("Statistics Table", tActionListener, true));
         threadWindows.add(createMenuItem("Call Graph", tActionListener, ppTrial.callPathDataPresent()));
         threadWindows.add(createMenuItem("Call Path Relations", tActionListener, ppTrial.callPathDataPresent()));
+        threadWindows.add(createMenuItem("Context Event Window", tActionListener, ppTrial.userEventsPresent()));
         threadWindows.add(createMenuItem("User Event Bar Chart", tActionListener, ppTrial.userEventsPresent()));
         threadWindows.add(createMenuItem("User Event Statistics", tActionListener, ppTrial.userEventsPresent()));
 
@@ -826,7 +829,7 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
-    public static JMenuItem createContexEventMenuItem(String text, final ParaProfTrial ppTrial, final Thread thread,
+    public static JMenuItem createContextEventMenuItem(String text, final ParaProfTrial ppTrial, final Thread thread,
             final Component owner) {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
@@ -912,7 +915,7 @@ public class ParaProfUtils {
         if (ppTrial.userEventsPresent()) {
             threadPopup.add(createUserEventBarChartMenuItem("Show User Event Bar Chart", ppTrial, thread, owner));
             threadPopup.add(createStatisticsMenuItem("Show User Event Statistics Window", ppTrial, null, thread, true, owner));
-            threadPopup.add(createContexEventMenuItem("Show Context Event Window", ppTrial, thread, owner));
+            threadPopup.add(createContextEventMenuItem("Show Context Event Window", ppTrial, thread, owner));
         }
 
         if (thread.getNumSnapshots() > 1) {
