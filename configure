@@ -4815,7 +4815,7 @@ cp ${tauroot}/tools/src/TauIL/bin/*.jar ${targetdir}/${architecture}/lib
 echo "TAU: installed TauIL and supporting jars in ${targetdir}/${architecture}/lib"
 
 cp ${tauroot}/tools/src/tau_throttle.sh ${targetdir}/${architecture}/bin
-echo "TAU: installed tau_trottle script"
+echo "TAU: installed tau_throttle script"
 
 # -- determine Tcl/Tk version
 #cat << EOF > /tmp/tau$$
