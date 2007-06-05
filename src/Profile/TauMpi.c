@@ -1423,16 +1423,19 @@ int  MPI_Finalize(  )
 {
   int  returnVal;
   int size;
+  char procname[MPI_MAX_PROCESSOR_NAME];
+  int  procnamelength;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
 #ifdef TAU_SYNCHRONIZE_CLOCKS
-
   PMPI_Comm_size( MPI_COMM_WORLD, &size );
-
   TauSyncFinalClocks(procid_0, size);
 #endif
+
+  PMPI_Get_processor_name(procname, &procnamelength);
+  TAU_METADATA("MPI Processor Name", procname);
 
   returnVal = PMPI_Finalize(  );
 
