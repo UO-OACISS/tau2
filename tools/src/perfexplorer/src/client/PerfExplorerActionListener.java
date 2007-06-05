@@ -264,9 +264,26 @@ public class PerfExplorerActionListener implements ActionListener {
 		long memUsage = (Runtime.getRuntime().totalMemory() -
 			Runtime.getRuntime().freeMemory()) / 1024;
 
+		StringBuffer buf = new StringBuffer();
+		//for (java.util.Enumeration e = System.getProperties().propertyNames(); e.hasMoreElements() ;) {
+		    //System.out.println(e.nextElement());
+		//}
+		buf.append("\njava.home : " + System.getProperty("java.home"));
+		buf.append("\njava.vendor : " + System.getProperty("java.vendor"));
+		buf.append("\njava.vendor.url : " + System.getProperty("java.vendor.url"));
+		buf.append("\njava.version : " + System.getProperty("java.version"));
+		buf.append("\nos.arch : " + System.getProperty("os.arch"));
+		buf.append("\nos.name : " + System.getProperty("os.name"));
+		buf.append("\nos.version : " + System.getProperty("os.version"));
+		buf.append("\nuser.dir : " + System.getProperty("user.dir"));
+		buf.append("\nuser.home : " + System.getProperty("user.home"));
+		buf.append("\nuser.name : " + System.getProperty("user.name"));
+		buf.append("\nuser.country : " + System.getProperty("user.country"));
+		buf.append("\nuser.timezone : " + System.getProperty("user.timezone"));
+		buf.append("\nuser.language : " + System.getProperty("user.language"));
 		String message = new String("PerfExplorer 1.0\n" +
 					getVersionString() + "\nJVM Heap Size: " + memUsage
-					+ "kb\n");
+					+ "kb\n" + buf.toString());
 		ImageIcon icon = createImageIcon(Utility.getResource("tau-large.png"));
 		JOptionPane.showMessageDialog(mainFrame, message, 
 			"About PerfExplorer", JOptionPane.INFORMATION_MESSAGE, icon);
