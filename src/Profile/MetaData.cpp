@@ -93,8 +93,8 @@ static int *TauGetSnapshotUserEventCounts() {
 
 // Static holder for metadata name/value pairs
 // These come from TAU_METADATA calls
-static vector<pair<char*,char*> >& TheMetaData() {
-  static vector<pair<char*,char*> > metadata;
+static map<string,string> &TheMetaData() {
+  static map<string,string> metadata;
   return metadata;
 }
 
@@ -430,10 +430,11 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
     writeXMLAttribute(fp, "username", user, newline);
   }
 
+
   // write out the user-specified (some from TAU) attributes
-  for (int i=0; i < TheMetaData().size(); i++) {
-    char *name = TheMetaData()[i].first;
-    char *value = TheMetaData()[i].second;
+  for (map<string,string>::iterator it = TheMetaData().begin(); it != TheMetaData().end(); ++it) {
+    const char *name = it->first.c_str();
+    const char *value = it->second.c_str();
     writeXMLAttribute(fp, name, value, newline);
   }
 
@@ -736,7 +737,7 @@ extern "C" void Tau_metadata(char *name, char *value) {
   // make copies
   char *myName = strdup(name);
   char *myValue = strdup(value);
-  TheMetaData().push_back(pair<char*,char*>(myName,myValue));
+  TheMetaData()[myName] = myValue;
 }
 
 
