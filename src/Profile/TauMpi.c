@@ -111,7 +111,7 @@ static int translateRankToWorld(MPI_Comm comm, int rank) {
   if (comm != MPI_COMM_WORLD) {
 
     int result;
-    MPI_Comm_compare(comm, MPI_COMM_WORLD, &result);
+    PMPI_Comm_compare(comm, MPI_COMM_WORLD, &result);
     if (result == MPI_IDENT || result == MPI_CONGRUENT) {
       return rank;
     } else {
@@ -1464,7 +1464,8 @@ char *** argv;
 {
   int  returnVal;
   int  size;
-
+  char procname[MPI_MAX_PROCESSOR_NAME];
+  int  procnamelength;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
   Tau_create_top_level_timer_if_necessary();
@@ -1479,6 +1480,9 @@ char *** argv;
 
   PMPI_Comm_size( MPI_COMM_WORLD, &size );
   tau_totalnodes(1, size); /* Set the totalnodes */
+
+  PMPI_Get_processor_name(procname, &procnamelength);
+  TAU_METADATA("MPI Processor Name", procname);
 
 #ifdef TAU_SYNCHRONIZE_CLOCKS
   TauSyncClocks(procid_0, size);
@@ -1501,6 +1505,8 @@ int *provided;
 {
   int  returnVal;
   int  size;
+  char procname[MPI_MAX_PROCESSOR_NAME];
+  int  procnamelength;
 
  
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
@@ -1516,6 +1522,9 @@ int *provided;
 
   PMPI_Comm_size( MPI_COMM_WORLD, &size );
   tau_totalnodes(1, size); /* Set the totalnodes */
+
+  PMPI_Get_processor_name(procname, &procnamelength);
+  TAU_METADATA("MPI Processor Name", procname);
 
 #ifdef TAU_SYNCHRONIZE_CLOCKS
   TauSyncClocks(procid_0, size);
