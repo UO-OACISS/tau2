@@ -1074,6 +1074,7 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
   EVDESCR *curr_ev;
   int curr_tag, curr_len, curr_nid, dummy, comm;
   struct trcrecv rcvdes;
+  struct trcrecv *ted; 
 
   rcvdes.buffer    = tmpbuffer;
   rcvdes.erec	   = trcdes.erec;
@@ -1105,8 +1106,7 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
      changes the state of intrc remains the same. We need to do an lseek
      with the original position, of course. */
 
-
-  struct trcrecv *ted = &rcvdes;
+  ted = &rcvdes;
 
 
 
