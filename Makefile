@@ -14,12 +14,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=x86_64
+CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=
-TAUROOT=/home/amorris/tau2
+USER_OPT=-g
+TAUROOT=
 #######################################################################
  
 include include/Makefile
@@ -64,6 +64,7 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 
 # Trace Reader Library
 #TRACE#TRACEINPUT=src/TraceInput#ENDIF#
+#TRACE#TRACE2PROFILE=utils/trace2profile#ENDIF#
 
 #PERFLIB#BASIC=utils #ENDIF#
 
@@ -76,7 +77,7 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 
 
 # Subdirectories to make resursively
-SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) $(SLOGCONVERTER) $(ELGCONVERTER)
+SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) $(SLOGCONVERTER) $(ELGCONVERTER) $(TRACE2PROFILE)
 
 all:
 	@echo "At the installation root, use \"make install\" "
