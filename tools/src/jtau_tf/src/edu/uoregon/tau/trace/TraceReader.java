@@ -311,7 +311,7 @@ public class TraceReader extends TraceFile{
 				{
 					/* couldn't locate the event id */
 					/* fill an event description object */
-					EventDescr eventDescr = new EventDescr(localEventId, new String(eventname), new String(group),tag,new String(param));
+					EventDescr eventDescr = new EventDescr(localEventId, new String(group), new String(eventname),tag,new String(param));
 					/*eventDescr.Eid = localEventId;
 					eventDescr.EventName = new String(eventname);
 					eventDescr.Group = new String(group);
