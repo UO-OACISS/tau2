@@ -245,7 +245,11 @@ static int writeXMLTime(FILE *fp, bool newline) {
    fprintf (fp, "<attribute><name>Local Time</name><value>%s%s</value></attribute>%s", buf, tzone, endl);
 
    // write out the timestamp (number of microseconds since epoch (unsigned long long)
+#ifdef TAU_WINDOWS
+   fprintf (fp, "<attribute><name>Timestamp</name><value>%I64d</value></attribute>%s", getTimeStamp(), endl);
+#else
    fprintf (fp, "<attribute><name>Timestamp</name><value>%lld</value></attribute>%s", getTimeStamp(), endl);
+#endif
 
    return 0;
 }
@@ -327,7 +331,11 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
 
 
   char tmpstr[1024];
+#ifdef TAU_WINDOWS
+  sprintf (tmpstr, "%I64d", firstTimeStamp);
+#else
   sprintf (tmpstr, "%lld", firstTimeStamp);
+#endif
   writeXMLAttribute(fp, "Starting Timestamp", tmpstr, newline);
 
   writeXMLTime(fp, newline);
@@ -586,19 +594,17 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
    }
 
 
-
-
    // now write the actual profile data for this snapshot
    fprintf (fp, "\n<profile thread=\"%s\">\n", threadid);
    fprintf (fp, "<name>");
    writeXMLString(fp, name);
    fprintf (fp, "</name>\n");
 
-
-   //writeXMLTime(fp, true);
-
+#ifdef TAU_WINDOWS
+   fprintf (fp, "<timestamp>%I64d</timestamp>\n", getTimeStamp());
+#else
    fprintf (fp, "<timestamp>%lld</timestamp>\n", getTimeStamp());
-
+#endif
 
 
 #ifndef TAU_MULTIPLE_COUNTERS
