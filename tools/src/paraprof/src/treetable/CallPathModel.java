@@ -16,9 +16,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.8 2007/05/30 19:50:34 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.9 2007/06/07 17:21:56 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -219,7 +219,7 @@ public class CallPathModel extends AbstractTreeTableModel {
 
         Collections.sort(roots);
         for (Iterator it = roots.iterator(); it.hasNext();) {
-            ContextEventTreeNode node = (ContextEventTreeNode) it.next();
+            TreeTableNode node = (TreeTableNode) it.next();
             node.sortChildren();
         }
 
