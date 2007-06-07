@@ -76,7 +76,7 @@ Name "Tau"
 !ifdef OUTFILE
   OutFile "${OUTFILE}"
 !else
-  OutFile "C:\zip\${NAME}.exe"
+  OutFile "C:\tau\zip\${NAME}.exe"
 !endif
 
 ; The default installation directory
@@ -100,8 +100,7 @@ Section "" ;No components page, name is not important
   SetOutPath $INSTDIR
   
   ; Put files there
-  File /r c:\tau-windows\*.*
-  
+  File /r c:\tau\tau-windows\*.*
   
   !insertmacro SED_REPLACE $INSTDIR\bin\paraprof.bat
   !insertmacro SED_REPLACE $INSTDIR\bin\jumpshot.bat
