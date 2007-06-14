@@ -35,6 +35,8 @@ CONFIG_CXX=g++
 TAU_CC_FE=$(CONFIG_CC)
 #BGL#TAU_CC_FE=xlc #ENDIF#
 #CATAMOUNT#TAU_CC_FE=gcc #ENDIF#
+#SC_GFORTRAN#TAU_CC_FE=gcc #ENDIF#
+#SC_PATHSCALE#TAU_CC_FE=gcc #ENDIF#
 PCXX_OPT=-g
 USER_OPT=-g
 EXTRADIR=
@@ -185,6 +187,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 ############# Fortran Compiler #############
 #GNU_FORTRAN#TAU_F90         = g77              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #GNU_GFORTRAN#TAU_F90         = gfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#SC_GFORTRAN#TAU_F90         = scgfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SGI_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM_FORTRAN#TAU_F90         = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGL#TAU_F90         = blrts_xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -209,6 +212,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #INTEL32_FORTRAN#TAU_F90     = ifc 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #INTELIFORT#TAU_F90     = ifort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #PATHSCALE_FORTRAN#TAU_F90     = pathf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#SC_PATHSCALE#TAU_F90     = scpathf95         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #OPEN64ORC_FORTRAN#TAU_F90     = orf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #NEC_FORTRAN#TAU_F90         = f90 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 

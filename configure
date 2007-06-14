@@ -2140,7 +2140,12 @@ case $fortran_compiler in
 
    gfortran)
       echo "Default Fortran compiler will be GNU gfortran"
-      fixmakeargs="$fixmakeargs GNU_GFORTRAN"
+      if [ $cxx_compiler = scg++ ] 
+      then
+        fixmakeargs="$fixmakeargs SC_GFORTRAN"
+      else
+        fixmakeargs="$fixmakeargs GNU_GFORTRAN"
+      fi
       ;;
 
    sgi)
@@ -2219,12 +2224,14 @@ case $fortran_compiler in
 
    pathscale)
       echo "Default Fortran compiler will be Pathscale pathf90"
-      extradir=`which pathf90 | sed s@\/pathf90@\/..@`
       if [ $cxx_compiler = scpathCC ] 
       then
         extradir=`which scpathf90 | sed s@\/scpathf90@\/..@`
+        fixmakeargs="$fixmakeargs SC_PATHSCALE"
+      else
+        extradir=`which pathf90 | sed s@\/pathf90@\/..@`
+        fixmakeargs="$fixmakeargs PATHSCALE_FORTRAN"
       fi
-      fixmakeargs="$fixmakeargs PATHSCALE_FORTRAN"
       ;;
 
    sun)

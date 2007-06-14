@@ -600,6 +600,10 @@ fi
 	echo NOTE: Using the Pathscale Fortran 90 compiler options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SC_PATHSCALE)
+	echo NOTE: Using the SiCortex Pathscale Cross compiler options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      HITACHI_OPENMP)
 	echo NOTE: Using HITACHI OpenMP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1299,6 +1303,10 @@ ALPHATIMERS)
 	;;
      GNU_FORTRAN)
 	echo "NOTE: GNU f77 Fortran compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SC_GFORTRAN)
+	echo "NOTE: SiCortex scgfortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      GNU_GFORTRAN)
