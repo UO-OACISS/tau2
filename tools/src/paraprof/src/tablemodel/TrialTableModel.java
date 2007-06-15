@@ -1,13 +1,16 @@
 package edu.uoregon.tau.paraprof.tablemodel;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.*;
 
+import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
@@ -20,6 +23,8 @@ public class TrialTableModel extends AbstractTableModel {
     private ParaProfManagerWindow paraProfManager;
     private DefaultTreeModel defaultTreeModel;
     private List fieldNames;
+
+    private Map metaData = new TreeMap();
 
     public TrialTableModel(ParaProfManagerWindow paraProfManager, ParaProfTrial ppTrial, DefaultTreeModel defaultTreeModel) {
         this.ppTrial = ppTrial;
@@ -36,14 +41,13 @@ public class TrialTableModel extends AbstractTableModel {
             fieldNames.add(ppTrial.getTrial().getFieldName(i));
         }
 
-//        Map metaData = ppTrial.getTrial().getMetaData();
-//        if (metaData != null) {
-//            for (Iterator it = metaData.keySet().iterator(); it.hasNext();) {
-//                String string = (String) it.next();
-//                fieldNames.add(string);
-//            }
-//        }
+        metaData.putAll(ppTrial.getTrial().getMetaData());
+        metaData.putAll(ppTrial.getTrial().getUncommonMetaData());
 
+        for (Iterator it = metaData.keySet().iterator(); it.hasNext();) {
+            String string = (String) it.next();
+            fieldNames.add(string);
+        }
     }
 
     public int getColumnCount() {
@@ -76,7 +80,7 @@ public class TrialTableModel extends AbstractTableModel {
             if (field < trial.getNumFields()) {
                 return ppTrial.getTrial().getField(field);
             }
-            return trial.getMetaData().get(fieldNames.get(r));
+            return metaData.get(fieldNames.get(r));
         }
     }
 
@@ -114,6 +118,7 @@ public class TrialTableModel extends AbstractTableModel {
             if (field < trial.getNumFields()) {
                 ppTrial.getTrial().setField(r - 4, string);
             } else {
+                metaData.put(fieldNames.get(r), string);
                 trial.getMetaData().put(fieldNames.get(r), string);
             }
         }
@@ -131,4 +136,31 @@ public class TrialTableModel extends AbstractTableModel {
             }
         }
     }
+
+    public MouseListener getMouseListener(final JTable table) {
+        return new MouseListener() {
+
+            public void mouseClicked(MouseEvent e) {
+                if (ParaProfUtils.rightClick(e)) {
+                    int row = table.rowAtPoint(e.getPoint());
+                    int column = table.columnAtPoint(e.getPoint());
+                    //System.out.println("you clicked on (" + column + "," + row + ") = " + getValueAt(row, column));
+                }
+            }
+
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            public void mouseExited(MouseEvent e) {
+            }
+
+            public void mousePressed(MouseEvent e) {
+            }
+
+            public void mouseReleased(MouseEvent e) {
+            }
+        };
+    }
+
 }

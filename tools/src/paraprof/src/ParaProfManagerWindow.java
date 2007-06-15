@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.27 2007/05/31 20:04:36 scottb Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.28 2007/06/15 22:56:56 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.27 $
+ * @version	$Revision: 1.28 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -1515,7 +1515,14 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         } else if (obj instanceof ParaProfExperiment) {
             return (new JScrollPane(new JTable(new ExperimentTableModel(this, (ParaProfExperiment) obj, treeModel))));
         } else if (obj instanceof ParaProfTrial) {
-            return (new JScrollPane(new JTable(new TrialTableModel(this, (ParaProfTrial) obj, treeModel))));
+            ParaProfTrial ppTrial = (ParaProfTrial) obj;
+            TrialTableModel model = new TrialTableModel(this, ppTrial, treeModel);
+            final JTable table = new JTable(model);
+            
+            table.addMouseListener(model.getMouseListener(table));
+            
+            table.setDefaultRenderer(Object.class, new TrialCellRenderer(ppTrial.getTrial().getMetaData(),ppTrial.getTrial().getUncommonMetaData()));
+            return (new JScrollPane(table));
         } else {
             return (new JScrollPane(new JTable(new MetricTableModel(this, (ParaProfMetric) obj, treeModel))));
         }

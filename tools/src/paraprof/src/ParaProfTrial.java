@@ -478,6 +478,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
         // assign the metadata from the datasource to the trial
         trial.setMetaData(trial.getDataSource().getMetaData());
+        trial.setUncommonMetaData(trial.getDataSource().getUncommonMetaData());
 
         // The dataSource has accumulated metrics.
         // Inside ParaProf, these need to be ParaProfMetrics.
