@@ -24,7 +24,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.21 2007/06/15 22:55:11 amorris Exp $
+ * CVS $Id: Trial.java,v 1.22 2007/06/15 23:16:56 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -100,9 +100,9 @@ public class Trial implements Serializable {
             xmlreader.parse(new InputSource(input));
 
         } catch (SAXException e) {
-            e.printStackTrace();
+            // oh well, no metadata
         } catch (IOException e) {
-            e.printStackTrace();
+            // oh well, no metadata
         }
     }
 

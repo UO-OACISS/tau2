@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.database.DB;
 /**
  * Reads a single trial from the database
  *  
- * <P>CVS $Id: DBDataSource.java,v 1.7 2007/06/15 22:55:11 amorris Exp $</P>
+ * <P>CVS $Id: DBDataSource.java,v 1.8 2007/06/15 23:16:56 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class DBDataSource extends DataSource {
 
@@ -203,13 +203,10 @@ public class DBDataSource extends DataSource {
             xmlreader.parse(new InputSource(input));
         } catch (IOException e) {
             // oh well, no metadata
-            e.printStackTrace();
         } catch (SAXException e) {
             // oh well, no metadata
-            e.printStackTrace();
         } catch (SQLException e) {
             // oh well, no metadata
-            e.printStackTrace();
         }
     }
 
