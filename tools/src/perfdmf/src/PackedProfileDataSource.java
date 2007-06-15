@@ -3,6 +3,7 @@ package edu.uoregon.tau.perfdmf;
 import java.io.*;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 
@@ -11,9 +12,9 @@ import java.util.zip.GZIPInputStream;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.14 2007/05/10 22:27:16 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.15 2007/06/15 22:55:11 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -125,6 +126,7 @@ public class PackedProfileDataSource extends DataSource {
                     String name = p.readUTF();
                     String value = p.readUTF();
                     thread.getMetaData().put(name, value);
+                    uncommonMetaData.put(name, value);
                 }
             }
         } else {
@@ -182,6 +184,7 @@ public class PackedProfileDataSource extends DataSource {
             int threadID = p.readInt();
 
             Thread thread = addThread(nodeID, contextID, threadID);
+            //((ArrayList)thread.getFunctionProfiles()).ensureCapacity(numFunctions);
 
             // get function profiles
             int numFunctionProfiles = p.readInt();
@@ -226,8 +229,8 @@ public class PackedProfileDataSource extends DataSource {
         this.generateDerivedData(); // mean, percentages, etc.
         this.buildXMLMetaData();
 
-        //time = (System.currentTimeMillis()) - time;
-        //System.out.println("Time to process (in milliseconds): " + time);
+        time = (System.currentTimeMillis()) - time;
+        System.out.println("Time to process (in milliseconds): " + time);
 
     }
 

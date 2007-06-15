@@ -5,6 +5,10 @@ import java.sql.*;
 import java.util.*;
 import java.util.Date;
 
+import org.xml.sax.*;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
+
 import edu.uoregon.tau.common.Gzip;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
@@ -20,7 +24,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.20 2007/05/23 17:45:21 amorris Exp $
+ * CVS $Id: Trial.java,v 1.21 2007/06/15 22:55:11 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -47,7 +51,60 @@ public class Trial implements Serializable {
     protected DataSource dataSource = null;
 
     private Database database;
-    private Map metaData = null;
+    private Map metaData = new TreeMap();
+    private Map uncommonMetaData = new TreeMap();
+
+    private static class XMLParser extends DefaultHandler {
+        private StringBuffer accumulator = new StringBuffer();
+        private String currentName = "";
+
+        private Map common, other, current;
+
+        public XMLParser(Map common, Map other) {
+            this.common = common;
+            this.other = other;
+            current = common;
+        }
+
+        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+            accumulator = new StringBuffer();
+            if (localName.equals("CommonProfileAttributes")) {
+                current = common;
+            } else if (localName.equals("ProfileAttributes")) {
+                current = other;
+            }
+        }
+
+        public void endElement(String uri, String localName, String qName) throws SAXException {
+            if (localName.equals("name")) {
+                currentName = accumulator.toString().trim();
+            } else if (localName.equals("value")) {
+                String currentValue = accumulator.toString().trim();
+                current.put(currentName, currentValue);
+            }
+        }
+
+        public void characters(char[] ch, int start, int length) throws SAXException {
+            accumulator.append(ch, start, length);
+        }
+    }
+
+    private void parseMetaData(String string) {
+        try {
+            metaData = new TreeMap();
+            XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
+            XMLParser parser = new XMLParser(metaData, uncommonMetaData);
+            xmlreader.setContentHandler(parser);
+            xmlreader.setErrorHandler(parser);
+            ByteArrayInputStream input = new ByteArrayInputStream(string.getBytes());
+            xmlreader.parse(new InputSource(input));
+
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public Trial() {
         this.fields = new String[0];
@@ -61,6 +118,7 @@ public class Trial implements Serializable {
         this.trialID = trial.getID();
         this.fields = (String[]) trial.fields.clone();
         this.metaData = trial.metaData;
+        this.uncommonMetaData = trial.uncommonMetaData;
         this.database = trial.database;
     }
 
@@ -448,8 +506,11 @@ public class Trial implements Serializable {
                         InputStream compressedStream = resultSet.getBinaryStream(pos++);
                         String tmp = Gzip.decompress(compressedStream);
                         //trial.setField(i, tmp);
-                        if (tmp != null && tmp.length() > 0)
+                        if (tmp != null && tmp.length() > 0) {
                             trial.setField(XML_METADATA, tmp);
+                            trial.parseMetaData(tmp);
+                        }
+
                     } else {
                         trial.setField(i, resultSet.getString(pos++));
                     }
@@ -921,4 +982,14 @@ public class Trial implements Serializable {
 
     }
 
+    public Map getUncommonMetaData() {
+        return uncommonMetaData;
+    }
+
+    public void setUncommonMetaData(Map uncommonMetaData) {
+        this.uncommonMetaData = uncommonMetaData;
+    }
+
+    
+    
 }

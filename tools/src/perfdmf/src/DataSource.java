@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.24 2007/06/15 18:25:50 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.25 2007/06/15 22:55:11 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  */
 public abstract class DataSource {
 
@@ -76,8 +76,9 @@ public abstract class DataSource {
     protected volatile boolean reloading;
 
     protected Map metaData = new TreeMap();
+    protected Map uncommonMetaData = new TreeMap();
+
     private File metadataFile;
-    private Map masterMetaData = new TreeMap();
     private StringBuffer metadataString = new StringBuffer();
 
     private boolean wellBehavedSnapshots;
@@ -1342,6 +1343,7 @@ public abstract class DataSource {
                 String trialValue = (String) metaData.get(name);
                 if (trialValue == null || !value.equals(trialValue)) {
                     metaData.remove(name);
+                    uncommonMetaData.put(name,value);
                 }
             }
         }
@@ -1380,6 +1382,10 @@ public abstract class DataSource {
 
     public boolean getWellBehavedSnapshots() {
         return wellBehavedSnapshots;
+    }
+
+    public Map getUncommonMetaData() {
+        return uncommonMetaData;
     }
 
 }

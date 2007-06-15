@@ -1,17 +1,25 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+import org.xml.sax.*;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
+
+import edu.uoregon.tau.common.Gzip;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 /**
  * Reads a single trial from the database
  *  
- * <P>CVS $Id: DBDataSource.java,v 1.6 2007/05/02 17:18:04 amorris Exp $</P>
+ * <P>CVS $Id: DBDataSource.java,v 1.7 2007/06/15 22:55:11 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class DBDataSource extends DataSource {
 
@@ -19,6 +27,41 @@ public class DBDataSource extends DataSource {
     private volatile boolean abort = false;
     private volatile int totalItems = 0;
     private volatile int itemsDone = 0;
+
+    private class XMLParser extends DefaultHandler {
+        private StringBuffer accumulator = new StringBuffer();
+        private String currentName = "";
+        private Thread currentThread;
+
+        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+            accumulator = new StringBuffer();
+            if (localName.equals("CommonProfileAttributes")) {
+                currentThread = null;
+            } else if (localName.equals("ProfileAttributes")) {
+                int node = Integer.parseInt(attributes.getValue("node"));
+                int context = Integer.parseInt(attributes.getValue("context"));
+                int threadID = Integer.parseInt(attributes.getValue("thread"));
+                currentThread = getThread(node, context, threadID);
+            }
+        }
+
+        public void endElement(String uri, String localName, String qName) throws SAXException {
+            if (localName.equals("name")) {
+                currentName = accumulator.toString().trim();
+            } else if (localName.equals("value")) {
+                String currentValue = accumulator.toString().trim();
+                if (currentThread == null) {
+                    getMetaData().put(currentName, currentValue);
+                } else {
+                    currentThread.getMetaData().put(currentName, currentValue);
+                }
+            }
+        }
+
+        public void characters(char[] ch, int start, int length) throws SAXException {
+            accumulator.append(ch, start, length);
+        }
+    }
 
     public DBDataSource(DatabaseAPI dbAPI) {
         super();
@@ -36,41 +79,10 @@ public class DBDataSource extends DataSource {
         return;
     }
 
-    private void getIntervalEventData(Map ieMap) throws SQLException {
-        int numMetrics = getNumberOfMetrics();
-        // get all the interval event data for all thread
-        ListIterator l = databaseAPI.getIntervalEventData().listIterator();
-        while (l.hasNext()) {
-            IntervalLocationProfile ilp = (IntervalLocationProfile) l.next();
-            Thread thread = addThread(ilp.getNode(), ilp.getContext(), ilp.getThread());
-
-            //Function function = this.getFunction(databaseAPI.getIntervalEvent(fdo.getIntervalEventID()).getName());
-            Function function = (Function) ieMap.get(new Integer(ilp.getIntervalEventID()));
-            FunctionProfile functionProfile = thread.getFunctionProfile(function);
-
-            if (functionProfile == null) {
-                functionProfile = new FunctionProfile(function, numMetrics);
-                thread.addFunctionProfile(functionProfile);
-            }
-
-            for (int i = 0; i < numMetrics; i++) {
-                functionProfile.setExclusive(i, ilp.getExclusive(i));
-                functionProfile.setInclusive(i, ilp.getInclusive(i));
-                //functionProfile.setExclusivePercent(i, ilp.getExclusivePercentage(i));
-                //functionProfile.setInclusivePercent(i, ilp.getInclusivePercentage(i));
-                // we don't store this as a value, it is derived
-                //functionProfile.setInclusivePerCall(i, fdo.getInclusivePerCall(i));
-                functionProfile.setNumCalls(ilp.getNumCalls());
-                functionProfile.setNumSubr(ilp.getNumSubroutines());
-            }
-        }
-    }
-
     private void fastGetIntervalEventData(Map ieMap, Map metricMap) throws SQLException {
         int numMetrics = getNumberOfMetrics();
         DB db = databaseAPI.getDb();
 
-        
         StringBuffer where = new StringBuffer();
 
         where.append(" WHERE p.metric in (");
@@ -83,18 +95,18 @@ public class DBDataSource extends DataSource {
                 where.append(") ");
             }
         }
-        
+
         // the much slower way
-//        where.append(" WHERE p.interval_event in (");
-//        for (Iterator it = ieMap.keySet().iterator(); it.hasNext();) {
-//            int id = ((Integer) it.next()).intValue();
-//            where.append(id);
-//            if (it.hasNext()) {
-//                where.append(", ");
-//            } else {
-//                where.append(") ");
-//            }
-//        }
+        //        where.append(" WHERE p.interval_event in (");
+        //        for (Iterator it = ieMap.keySet().iterator(); it.hasNext();) {
+        //            int id = ((Integer) it.next()).intValue();
+        //            where.append(id);
+        //            if (it.hasNext()) {
+        //                where.append(", ");
+        //            } else {
+        //                where.append(") ");
+        //            }
+        //        }
 
         StringBuffer buf = new StringBuffer();
         buf.append("select p.interval_event, p.metric, p.node, p.context, p.thread, ");
@@ -126,7 +138,7 @@ public class DBDataSource extends DataSource {
          8 - num_calls
          9 - num_subrs
          */
-        
+
         // get the results
         long time = System.currentTimeMillis();
         ResultSet resultSet = db.executeQuery(buf.toString());
@@ -151,7 +163,7 @@ public class DBDataSource extends DataSource {
                 thread.addFunctionProfile(functionProfile);
             }
 
-            int metricIndex = ((Metric)metricMap.get(new Integer(resultSet.getInt(2)))).getID();
+            int metricIndex = ((Metric) metricMap.get(new Integer(resultSet.getInt(2)))).getID();
             double inclusive, exclusive;
 
             inclusive = resultSet.getDouble(6);
@@ -170,12 +182,42 @@ public class DBDataSource extends DataSource {
         resultSet.close();
     }
 
+    private void downloadMetaData() {
+        try {
+            DB db = databaseAPI.getDb();
+            StringBuffer joe = new StringBuffer();
+            joe.append(" SELECT " + Trial.XML_METADATA_GZ);
+            joe.append(" FROM TRIAL WHERE id = ");
+            joe.append(databaseAPI.getTrial().getID());
+            ResultSet resultSet = db.executeQuery(joe.toString());
+            resultSet.next();
+            InputStream compressedStream = resultSet.getBinaryStream(1);
+            String metaDataString = Gzip.decompress(compressedStream);
+            //System.out.println("metadata = " + metaDataString);
+
+            XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
+            XMLParser parser = new XMLParser();
+            xmlreader.setContentHandler(parser);
+            xmlreader.setErrorHandler(parser);
+            ByteArrayInputStream input = new ByteArrayInputStream(metaDataString.getBytes());
+            xmlreader.parse(new InputSource(input));
+        } catch (IOException e) {
+            // oh well, no metadata
+            e.printStackTrace();
+        } catch (SAXException e) {
+            // oh well, no metadata
+            e.printStackTrace();
+        } catch (SQLException e) {
+            // oh well, no metadata
+            e.printStackTrace();
+        }
+    }
+
     public void load() throws SQLException {
 
         // System.out.println("Processing data, please wait ......");
         long time = System.currentTimeMillis();
 
-       
         DB db = databaseAPI.getDb();
         StringBuffer joe = new StringBuffer();
         joe.append("SELECT id, name ");
@@ -185,7 +227,7 @@ public class DBDataSource extends DataSource {
         joe.append(" ORDER BY id ");
 
         Map metricMap = new HashMap();
-        
+
         ResultSet resultSet = db.executeQuery(joe.toString());
         int numberOfMetrics = 0;
         while (resultSet.next() != false) {
@@ -242,6 +284,8 @@ public class DBDataSource extends DataSource {
             userEventProfile.setSumSquared(alp.getSumSquared());
             userEventProfile.updateMax();
         }
+
+        downloadMetaData();
 
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to download file (in milliseconds): " + time);
