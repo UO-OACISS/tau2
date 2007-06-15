@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.23 2007/05/16 23:34:00 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.24 2007/06/15 18:25:50 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  */
 public abstract class DataSource {
 
@@ -75,7 +75,7 @@ public abstract class DataSource {
 
     protected volatile boolean reloading;
 
-    protected Map metaData;
+    protected Map metaData = new TreeMap();
     private File metadataFile;
     private Map masterMetaData = new TreeMap();
     private StringBuffer metadataString = new StringBuffer();
