@@ -3425,7 +3425,7 @@ if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-li
     then
       tauoptions="${tauoptions}-gnu"
     fi
-    taugcclibdir=`gcc -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
+    taugcclibdir=`$c_compiler -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
     echo "Using GNU lib dir as $taugcclibdir"
     fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir" 
 fi
