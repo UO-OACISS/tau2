@@ -3550,6 +3550,15 @@ case $machine in
 	fi
 	;;
 
+     mips)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine $fixmakeargs MIPS64 MIPS64LINUX"
+	if [ $papi = yes ]
+ 	  then
+	    fixmakeargs="$fixmakeargs MIPS64PAPI"
+	fi
+	;;
+
      rs6000)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs SP1"
@@ -3948,12 +3957,16 @@ if [ $papi = yes ]
       then
         fixmakeargs="$fixmakeargs papisubdir=lib/cnos64"
       else
-		if [ -f $papidir/lib64/libpapi.so ]
-		then 
-          fixmakeargs="$fixmakeargs papisubdir=lib64"
-	    else
-          fixmakeargs="$fixmakeargs papisubdir=src"
-		fi
+	  if [ $machine = "mips32" ] ; then
+	      fixmakeargs="$fixmakeargs papisubdir=lib32"
+	  else
+	      if [ -f $papidir/lib64/libpapi.so ]
+		  then 
+		  fixmakeargs="$fixmakeargs papisubdir=lib64"
+	      else
+		  fixmakeargs="$fixmakeargs papisubdir=src"
+	      fi
+	  fi
       fi
     fi
 fi

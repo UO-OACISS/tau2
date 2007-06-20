@@ -94,11 +94,14 @@ TAU_PREFIX_INSTALL_DIR=
 #IBM64LINUX#IBM_GNU_ABI	     = -m64 		  #ENDIF#
 #SUNX86_64#SUN_GNU_ABI       = -m64		  #ENDIF#
 #SUNX86_64#SUN_CC_ABI        = -xarch=amd64       #ENDIF#
-#MIPS32LINUX#SC_GNU_ABI	     = -mabi=32 	  #ENDIF#
+#MIPS32LINUX#SC_GNU_ABI	     = -mabi=n32 	  #ENDIF#
 #MIPS32LINUX#SC_PATH_ABI     = -m32               #ENDIF#
+#MIPS64LINUX#SC_GNU_ABI	     = -mabi=64 	  #ENDIF#
+#MIPS64LINUX#SC_PATH_ABI     = -m64               #ENDIF#
 #GNU#SC_ABI     	     = $(SC_GNU_ABI) 	  #ENDIF#
 #USE_PATHCC#SC_ABI     	     = $(SC_PATH_ABI) 	  #ENDIF#
 #MIPS32#ABI                  = $(SC_ABI) 	  #ENDIF#
+#MIPS64#ABI                  = $(SC_ABI) 	  #ENDIF#
 
 #USE_IBMXLC#IBM_ABI    	     = $(IBM_XLC_ABI) 	  #ENDIF#
 #GNU#IBM_ABI	     	     = $(IBM_GNU_ABI) 	  #ENDIF#
