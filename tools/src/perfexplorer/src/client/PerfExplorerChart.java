@@ -64,11 +64,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			dataset.addSeries(s);
 		}
         JFreeChart chart = ChartFactory.createStackedXYAreaChart(
-            "Total Runtime Breakdown for " +   // chart title
-			PerfExplorerModel.getModel().toString() + ":" +
-			PerfExplorerModel.getModel().getMetricName(),
+            "Total " + PerfExplorerModel.getModel().getMetricName() + " Breakdown for " +   // chart title
+			PerfExplorerModel.getModel().toString(),
             "Number of Processors",          // domain axis label
-            "Percentage of Total Runtime",     // range axis label
+            "Percentage of Total " + PerfExplorerModel.getModel().getMetricName(),     // range axis label
             dataset,                         // data
             PlotOrientation.VERTICAL,        // the plot orientation
             true,                            // legend
@@ -76,11 +75,11 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
             false                            // urls
         );
         XYPlot plot = chart.getXYPlot();
-		NumberAxis axis = new NumberAxis("Percentage of Total Runtime");
+		NumberAxis axis = new NumberAxis("Percentage of Total " + PerfExplorerModel.getModel().getMetricName());
         axis.setRange(new Range(0,100));
         plot.setRangeAxis(0, axis);
 
-		return new PerfExplorerChart(chart, "Total Runtime Breakdown");
+		return new PerfExplorerChart(chart, "Total " + PerfExplorerModel.getModel().getMetricName() + " Breakdown");
 	}
 
 	public static PerfExplorerChart doCorrelationChart () {
@@ -98,7 +97,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			PerfExplorerModel.getModel().getMetricName(),
             //"Inclusive Time for " + (String)rawData.getRowLabels().get(0), //domain axis
             "Processors", //domain axis
-            "Exclusive Time for Event",  // range axis
+            "Exclusive " + PerfExplorerModel.getModel().getMetricName() + " for Event",  // range axis
             dataset,					// data
             PlotOrientation.VERTICAL,		// the orientation
             true,						// legend
@@ -111,14 +110,14 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
 		if (PerfExplorerModel.getModel().getConstantProblem().booleanValue()) {
 			// log axis, to make the chart more readable
-        	LogarithmicAxis axis = new LogarithmicAxis("Exclusive Time for Event");
+        	LogarithmicAxis axis = new LogarithmicAxis("Exclusive " + PerfExplorerModel.getModel().getMetricName() + " for Event");
         	axis.setAutoRangeIncludesZero(true);
         	axis.setAllowNegativesFlag(true);
         	axis.setLog10TickLabelsFlag(true);
         	plot.setRangeAxis(0, axis);
  		}else {
 			// otherwise, give the inclusive time its own axis
-        	NumberAxis axis2 = new NumberAxis("Inclusive Time for " + (String)rawData.getRowLabels().get(0));
+        	NumberAxis axis2 = new NumberAxis("Inclusive " + PerfExplorerModel.getModel().getMetricName() + " for " + (String)rawData.getRowLabels().get(0));
         	axis2.setAutoRangeIncludesZero(false);
         	plot.setRangeAxis(1, axis2);
 		}
@@ -140,7 +139,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			new DecimalFormat("value: #,##0.00")));
 
         plot.setRenderer(1, renderer2);
-		return new PerfExplorerChart(chart, "Total Runtime Breakdown");
+		return new PerfExplorerChart(chart, "Total " + PerfExplorerModel.getModel().getMetricName() + " Breakdown");
 	}
 
 	public static PerfExplorerChart doEfficiencyChart () {
@@ -651,7 +650,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         	plot.setRangeAxis(0, axis);
  		}
 
-		return new PerfExplorerChart(chart, "Total Execution Time");
+		return new PerfExplorerChart(chart, "Total Execution " + PerfExplorerModel.getModel().getMetricName() + "");
 	}
 
 	public static PerfExplorerChart doCommunicationChart () {
@@ -682,9 +681,8 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
         JFreeChart chart = ChartFactory.createXYLineChart(
             PerfExplorerModel.getModel().getGroupName() + 
-			" Time / Total Runtime - " +   // chart title
-			PerfExplorerModel.getModel().toString() + ":" +
-			PerfExplorerModel.getModel().getMetricName(),
+			" " + PerfExplorerModel.getModel().getMetricName() + " / Total " + PerfExplorerModel.getModel().getMetricName() + " - " +   // chart title
+			PerfExplorerModel.getModel().toString(),
             "Number of Processors",          // domain axis label
             "Fraction",     // range axis label
             dataset,                         // data
@@ -695,7 +693,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         );
 
 		customizeChart(chart, rawData1.getRows(), false);
-		return new PerfExplorerChart(chart, PerfExplorerModel.getModel().getGroupName() + " Time / Total Runtime");
+		return new PerfExplorerChart(chart, PerfExplorerModel.getModel().getGroupName() + " " + PerfExplorerModel.getModel().getMetricName() + " / Total " + PerfExplorerModel.getModel().getMetricName());
 	}
 
 	public static PerfExplorerChart doEfficiencyPhasesChart () {
@@ -810,18 +808,17 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		}
 
 		JFreeChart chart = ChartFactory.createStackedXYAreaChart(
-            "Total Runtime Breakdown for " + 
-			PerfExplorerModel.getModel().toString() + ":" +
-			PerfExplorerModel.getModel().getMetricName(),  // chart title
+            "Total " + PerfExplorerModel.getModel().getMetricName() + " Breakdown for " + 
+			PerfExplorerModel.getModel().toString(),
             "Number of Processors",          // domain axis label
-            "Percentage of Total Runtime",     // range axis label
+            "Percentage of Total " + PerfExplorerModel.getModel().getMetricName(),     // range axis label
             dataset,                         // data
             PlotOrientation.VERTICAL,        // the plot orientation
             true,                            // legend
             true,                            // tooltips
             false                            // urls
         );
-		return new PerfExplorerChart(chart, "Total Runtime Breakdown");
+		return new PerfExplorerChart(chart, "Total " + PerfExplorerModel.getModel().getMetricName() + " Breakdown");
 	}
 
 
