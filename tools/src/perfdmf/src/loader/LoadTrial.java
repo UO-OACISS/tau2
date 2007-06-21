@@ -298,25 +298,25 @@ public class LoadTrial {
         int fileType = 0;
         if (fileTypeString != null) {
             if (fileTypeString.equals("profiles")) {
-                fileType = 0;
+                fileType = DataSource.TAUPROFILE;
             } else if (fileTypeString.equals("pprof")) {
-                fileType = 1;
+                fileType = DataSource.PPROF;
             } else if (fileTypeString.equals("dynaprof")) {
-                fileType = 2;
+                fileType = DataSource.DYNAPROF;
             } else if (fileTypeString.equals("mpip")) {
-                fileType = 3;
+                fileType = DataSource.MPIP;
             } else if (fileTypeString.equals("hpm")) {
-                fileType = 4;
+                fileType = DataSource.HPM;
             } else if (fileTypeString.equals("gprof")) {
-                fileType = 5;
+                fileType = DataSource.GPROF;
             } else if (fileTypeString.equals("psrun")) {
-                fileType = 6;
+                fileType = DataSource.PSRUN;
             } else if (fileTypeString.equals("packed")) {
-                fileType = 7;
+                fileType = DataSource.PPK;
             } else if (fileTypeString.equals("cube")) {
-                fileType = 8;
+                fileType = DataSource.CUBE;
             } else if (fileTypeString.equals("hpc")) {
-                fileType = 9;
+                fileType = DataSource.HPCTOOLKIT;
             } else if (fileTypeString.equals("gyro")) {
                 fileType = 100;
             } else {
@@ -328,13 +328,13 @@ public class LoadTrial {
             if (sourceFiles.length == 1) {
                 String filename = sourceFiles[0];
                 if (filename.toLowerCase().endsWith(".ppk")) {
-                    fileType = 7;
+                    fileType = DataSource.PPK;
                 }
                 if (filename.toLowerCase().endsWith(".cube")) {
-                    fileType = 8;
+                    fileType = DataSource.CUBE;
                 }
                 if (filename.toLowerCase().endsWith(".mpip")) {
-                    fileType = 3;
+                    fileType = DataSource.MPIP;
                 }
             }
         }

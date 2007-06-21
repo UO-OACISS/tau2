@@ -1,6 +1,6 @@
 # settings set automatically by the configure script.
-CONFIG_ARCH=x86_64
-TAUROOT=/home/amorris/tau2
+CONFIG_ARCH=apple
+TAUROOT=/Users/khuck/tau2
 
 
 # these are classpaths for the build.  The second classpath is for the 
