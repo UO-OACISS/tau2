@@ -13,11 +13,11 @@ import edu.uoregon.tau.perfdmf.database.ParseConfig;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.17 2007/05/29 20:10:34 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.18 2007/06/25 23:03:17 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  */
 public class DatabaseAPI {
 
@@ -1094,7 +1094,7 @@ public class DatabaseAPI {
         //        }
     }
 
-    private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map functionMap, Map metricMap) throws SQLException {
+    private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map functionMap, Map metricMap, boolean summaryOnly) throws SQLException {
 
         PreparedStatement totalInsertStatement = null;
         PreparedStatement meanInsertStatement = null;
@@ -1166,7 +1166,7 @@ public class DatabaseAPI {
                 addBatchFunctionProfile(meanInsertStatement, totalData, metric.getID(), dbMetricID.intValue(),
                         function.getTotalProfile(), intervalEventID.intValue(), true, dataSource.getAllThreads().size());
 
-                for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
+                for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext() && summaryOnly == false;) {
                     edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
 
                     FunctionProfile fp = thread.getFunctionProfile(function);
@@ -1261,6 +1261,10 @@ public class DatabaseAPI {
     }
 
     public synchronized int uploadTrial(Trial trial) throws DatabaseException {
+		return uploadTrial(trial, false);
+	}
+
+    public synchronized int uploadTrial(Trial trial, boolean summaryOnly) throws DatabaseException {
         long start = System.currentTimeMillis();
 
         DataSource dataSource = trial.getDataSource();
@@ -1283,7 +1287,7 @@ public class DatabaseAPI {
             Map metricMap = uploadMetrics(newTrialID, dataSource);
             Map functionMap = uploadFunctions(newTrialID, dataSource);
 
-            uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap);
+            uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap, summaryOnly);
 
             Map userEventMap = uploadUserEvents(newTrialID, dataSource);
 
@@ -1511,6 +1515,26 @@ public class DatabaseAPI {
             int expId = saveExperiment();
             newExp.setID(expId);
             return newExp;
+        }
+
+        return null;
+    }
+
+    public Trial getTrial(Application app, Experiment exp, String name) {
+        setApplication(app);
+        List exps = getExperimentList();
+        for (Iterator it = exps.iterator(); it.hasNext();) {
+            Experiment tmp = (Experiment) it.next();
+            if (tmp.getName().equals(name)) {
+				setExperiment(tmp);
+        		List trials = getTrialList();
+        		for (Iterator it2 = trials.iterator(); it2.hasNext();) {
+            		Trial trial = (Trial) it2.next();
+            		if (exp.getName().equals(name)) {
+						return trial;
+            		}
+        		}
+            }
         }
 
         return null;

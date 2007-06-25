@@ -14,6 +14,7 @@ public class LoadTrial {
     private String metadataFile;
     private Experiment exp;
     private boolean fixNames;
+    private boolean summaryOnly;
     private int expID;
     public int trialID;
     private DataSource dataSource;
@@ -163,7 +164,7 @@ public class LoadTrial {
         System.out.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
         try {
-            databaseAPI.uploadTrial(trial);
+            databaseAPI.uploadTrial(trial, summaryOnly);
         } catch (DatabaseException e) {
             e.printStackTrace();
             Exception e2 = e.getException();
@@ -243,6 +244,7 @@ public class LoadTrial {
         CmdLineParser.Option metadataOpt = parser.addStringOption('m', "metadata");
         CmdLineParser.Option appNameOpt = parser.addStringOption('a', "applicationname");
         CmdLineParser.Option expNameOpt = parser.addStringOption('x', "experimentname");
+        CmdLineParser.Option summaryOpt = parser.addBooleanOption('s', "summaryonly");
 
         try {
             parser.parse(args);
@@ -266,6 +268,7 @@ public class LoadTrial {
         String fileTypeString = (String) parser.getOptionValue(typeOpt);
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
         String metadataFile = (String) parser.getOptionValue(metadataOpt);
+        Boolean summaryOnly = (Boolean) parser.getOptionValue(summaryOpt);
 
         if (help != null && help.booleanValue()) {
             LoadTrial.outputHelp();
@@ -346,6 +349,9 @@ public class LoadTrial {
         if (fixNames == null) {
             fixNames = new Boolean(false);
         }
+        if (summaryOnly == null) {
+            summaryOnly = new Boolean(false);
+        }
         LoadTrial trans = new LoadTrial(configFile, sourceFiles);
         trans.checkForExp(experimentID, appName, expName);
         if (trialID != null) {
@@ -356,6 +362,7 @@ public class LoadTrial {
         //trans.problemFile = problemFile;
         trans.fixNames = fixNames.booleanValue();
         trans.metadataFile = metadataFile;
+        trans.summaryOnly = summaryOnly.booleanValue();
         trans.loadTrial(fileType);
         // the trial will be saved when the load is finished (update is called)
     }
