@@ -46,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.19 2007/06/26 03:35:12 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.20 2007/06/26 23:53:30 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -210,96 +210,119 @@ public class GeneralChartData extends RMIGeneralChartData {
 				model.getChartXAxisName().toUpperCase().indexOf("XML") > 0) {
 				gotXMLData = true;
 
-			// create and populate the temporary XML_METADATA table
-			buf = buildCreateTableStatement("xml_metadata", "temp_xml_metadata", db, false);
-			if (db.getDBType().compareTo("derby") == 0) {
-				buf.append(" (trial int, metadata_name varchar(4000), metadata_value varchar(4000))");
-			} else {
-				buf.append(" (trial int, metadata_name text, metadata_value text)");
+			Trial.getMetaData(db, true);
+			String[] fieldNames = db.getDatabase().getTrialFieldNames();
+			boolean foundXML = false;
+			boolean foundXMLGZ = false;
+			for (int i = 0 ; i < java.lang.reflect.Array.getLength(fieldNames) ; i++) {
+				if (fieldNames[i].equalsIgnoreCase("XML_METADATA")) {
+					foundXML = true;
+				} else if (fieldNames[i].equalsIgnoreCase("XML_METADATA_GZ")) {
+					foundXMLGZ = true;
+				}
 			}
-			statement = db.prepareStatement(buf.toString());
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
-
-			statement = db.prepareStatement("select id, XML_METADATA, XML_METADATA_GZ from temp_trial ");
-			//System.out.println(statement.toString());
-			ResultSet xmlResults = statement.executeQuery();
-
-			// build a factory
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			// ask the factory for the document builder
-			DocumentBuilder builder = factory.newDocumentBuilder();
-
-			db.setAutoCommit(false);
-
-			while (xmlResults.next() != false) {
-				// get the uncompressed string first...
-				String tmp = xmlResults.getString(2);
-				if (tmp == null || tmp.length() == 0) {
-					InputStream compressedStream = xmlResults.getBinaryStream(3);
-					tmp = Gzip.decompress(compressedStream);
-				}
-				// by adding these, we ensure only the main event
-				// will be selected in the next temporary table creation!
-				Reader reader = new StringReader(tmp);
-				InputSource source = new InputSource(reader);
-				Document metadata = builder.parse(source);
-
-				NodeList names = null;
-				NodeList values = null;
-
-				try {
-					/* this is the 1.3 through 1.4 way */
-					names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-						"/metadata/CommonProfileAttributes/attribute/name");
-					values = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-						"/metadata/CommonProfileAttributes/attribute/value");
-				} catch (NoClassDefFoundError e) {
-
-					/* this is the 1.5 way */
-					// build the xpath object to jump around in that document
-					javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
-					xpath.setNamespaceContext(new TauNamespaceContext());
-	
-					// get the common profile attributes from the metadata
-					names = (NodeList) 
-						xpath.evaluate("/metadata/CommonProfileAttributes/attribute/name", 
-						metadata, javax.xml.xpath.XPathConstants.NODESET);
-
-					values = (NodeList) 
-						xpath.evaluate("/metadata/CommonProfileAttributes/attribute/value", 
-						metadata, javax.xml.xpath.XPathConstants.NODESET);
-				}
 			
-				for (int i = 0 ; i < names.getLength() ; i++) {
-					Node name = (Node)names.item(i).getFirstChild();
-					Node value = (Node)values.item(i).getFirstChild();
-					//System.out.println(name.getNodeValue()+" =? "+model.getChartMetadataFieldName());
-					if ((model.getChartMetadataFieldName() == null ||
-					     model.getChartMetadataFieldName().equals(name.getNodeValue())) &&
-						(model.getChartMetadataFieldValue() == null ||
-					     model.getChartMetadataFieldValue().equals(value.getNodeValue()))) {
-						buf = new StringBuffer();
-						buf.append("insert into temp_xml_metadata VALUES (?,?,?)");
-						PreparedStatement statement2 = db.prepareStatement(buf.toString());
-						statement2.setInt(1, xmlResults.getInt(1));
-						statement2.setString(2, name.getNodeValue());
-						if (value == null) {
-							statement2.setString(3, "");
-						} else {
-							statement2.setString(3, value.getNodeValue());
-						}
-						//System.out.println(statement2.toString());
-						statement2.executeUpdate();
-						statement2.close();
-					}
+			if (foundXML) {
+				// create and populate the temporary XML_METADATA table
+				buf = buildCreateTableStatement("xml_metadata",
+						"temp_xml_metadata", db, false);
+				if (db.getDBType().compareTo("derby") == 0) {
+					buf.append(" (trial int, metadata_name varchar(4000), metadata_value varchar(4000))");
+				} else {
+					buf.append(" (trial int, metadata_name text, metadata_value text)");
 				}
-			} 
-			db.commit();
-			db.setAutoCommit(true);
-			xmlResults.close();
-			statement.close();
+				statement = db.prepareStatement(buf.toString());
+				//System.out.println(statement.toString());
+				statement.execute();
+				statement.close();
+
+				if (foundXMLGZ) {
+					statement = db.prepareStatement("select id, XML_METADATA, XML_METADATA_GZ from temp_trial ");
+				} else {
+					statement = db.prepareStatement("select id, XML_METADATA from temp_trial ");
+				}
+
+				//System.out.println(statement.toString());
+				ResultSet xmlResults = statement.executeQuery();
+	
+				// build a factory
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				// ask the factory for the document builder
+				DocumentBuilder builder = factory.newDocumentBuilder();
+	
+				db.setAutoCommit(false);
+	
+				while (xmlResults.next() != false) {
+					// get the uncompressed string first...
+					String tmp = xmlResults.getString(2);
+					if (foundXMLGZ && (tmp == null || tmp.length() == 0)) {
+						InputStream compressedStream = xmlResults.getBinaryStream(3);
+						tmp = Gzip.decompress(compressedStream);
+					}
+					// by adding these, we ensure only the main event
+					// will be selected in the next temporary table creation!
+					if (tmp == null || tmp.length() == 0) {
+						continue;
+					}
+					Reader reader = new StringReader(tmp);
+					InputSource source = new InputSource(reader);
+					Document metadata = builder.parse(source);
+	
+					NodeList names = null;
+					NodeList values = null;
+	
+					try {
+						/* this is the 1.3 through 1.4 way */
+						names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+							"/metadata/CommonProfileAttributes/attribute/name");
+						values = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+							"/metadata/CommonProfileAttributes/attribute/value");
+					} catch (NoClassDefFoundError e) {
+	
+						/* this is the 1.5 way */
+						// build the xpath object to jump around in that document
+						javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
+						xpath.setNamespaceContext(new TauNamespaceContext());
+		
+						// get the common profile attributes from the metadata
+						names = (NodeList) 
+							xpath.evaluate("/metadata/CommonProfileAttributes/attribute/name", 
+							metadata, javax.xml.xpath.XPathConstants.NODESET);
+	
+						values = (NodeList) 
+							xpath.evaluate("/metadata/CommonProfileAttributes/attribute/value", 
+							metadata, javax.xml.xpath.XPathConstants.NODESET);
+					}
+			
+					for (int i = 0 ; i < names.getLength() ; i++) {
+						Node name = (Node)names.item(i).getFirstChild();
+						Node value = (Node)values.item(i).getFirstChild();
+						//System.out.println(name.getNodeValue()+" =? "+model.getChartMetadataFieldName());
+						if ((model.getChartMetadataFieldName() == null ||
+					     	model.getChartMetadataFieldName().equals(name.getNodeValue())) &&
+							(model.getChartMetadataFieldValue() == null ||
+					     	model.getChartMetadataFieldValue().equals(value.getNodeValue()))) {
+							buf = new StringBuffer();
+							buf.append("insert into temp_xml_metadata VALUES (?,?,?)");
+							PreparedStatement statement2 = db.prepareStatement(buf.toString());
+							statement2.setInt(1, xmlResults.getInt(1));
+							statement2.setString(2, name.getNodeValue());
+							if (value == null) {
+								statement2.setString(3, "");
+							} else {
+								statement2.setString(3, value.getNodeValue());
+							}
+							//System.out.println(statement2.toString());
+							statement2.executeUpdate();
+							statement2.close();
+						}
+					}
+				} 
+				db.commit();
+				db.setAutoCommit(true);
+				xmlResults.close();
+				statement.close();
+				}
 			}
 
 /////////////////////////
@@ -738,7 +761,23 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 			Object object = model.getCurrentSelection();
 
-////////////////////////////////
+			// check to make sure the database has XML data
+			Trial.getMetaData(db, true);
+			String[] fieldNames = db.getDatabase().getTrialFieldNames();
+			boolean foundXML = false;
+			boolean foundXMLGZ = false;
+			for (int i = 0 ; i < java.lang.reflect.Array.getLength(fieldNames) ; i++) {
+				if (fieldNames[i].equalsIgnoreCase("XML_METADATA")) {
+					foundXML = true;
+				} else if (fieldNames[i].equalsIgnoreCase("XML_METADATA_GZ")) {
+					foundXMLGZ = true;
+				}
+			}
+			if (!foundXML) {
+				// return an empty list
+				return new ArrayList();
+			}
+	////////////////////////////////
 
 			// create and populate the temporary trial table
 			buf = buildCreateTableStatement("trial", "temp_trial", db, true);
@@ -830,7 +869,11 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 /////////////////////////
 
-			statement = db.prepareStatement("select id, XML_METADATA, XML_METADATA_GZ from temp_trial ");
+			if (foundXMLGZ) {
+				statement = db.prepareStatement("select id, XML_METADATA, XML_METADATA_GZ from temp_trial ");
+			} else {
+				statement = db.prepareStatement("select id, XML_METADATA from temp_trial ");
+			}
 			//System.out.println(statement.toString());
 			ResultSet xmlResults = statement.executeQuery();
 
@@ -844,7 +887,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			while (xmlResults.next() != false) {
 				// get the uncompressed string first...
 				String tmp = xmlResults.getString(2);
-				if (tmp == null || tmp.length() == 0) {
+				if (foundXMLGZ && (tmp == null || tmp.length() == 0)) {
 					InputStream compressedStream = xmlResults.getBinaryStream(3);
 					tmp = Gzip.decompress(compressedStream);
 				}
