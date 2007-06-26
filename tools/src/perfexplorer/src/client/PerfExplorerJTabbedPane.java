@@ -73,11 +73,9 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 		panel3.setPreferredSize(new Dimension(600, 500));
 		this.addTab("Correlation Results", icon, panel3, "View Correlation Results");
 
-		if (PerfExplorerConnection.getConnection().getConnectionString().indexOf("derby") < 0) {
-			this.panel4 = ChartPane.getPane();
-			panel4.setPreferredSize(new Dimension(600, 500));
-			this.addTab("Custom Charts", icon, panel4, "Custom Performance Charts");
-		}
+		this.panel4 = ChartPane.getPane();
+		panel4.setPreferredSize(new Dimension(600, 500));
+		this.addTab("Custom Charts", icon, panel4, "Custom Performance Charts");
 	}
 
     /** Returns an ImageIcon, or null if the path was invalid. */
