@@ -140,7 +140,7 @@ public class DataUtils {
 			sql.append("select max(node), max(context), max(thread) ");
 			sql.append("from interval_location_profile ");
 			sql.append("inner join interval_event ");
-			sql.append("on id = interval_event where trial = ? ");
+			sql.append("on interval_event.id = interval_event where trial = ? ");
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				sql.append(" and metric = ? ");
 			}

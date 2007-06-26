@@ -9,6 +9,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import edu.uoregon.tau.perfdmf.database.DBConnector;
+import edu.uoregon.tau.perfdmf.database.PasswordCallback;
 
 public class PerfExplorerClient extends JFrame implements ImageExport {
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
@@ -27,7 +29,11 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 
 	PerfExplorerClient (boolean standalone, String configFile,
 	EngineType analysisEngine, boolean quiet) {
+		
 		super("TAU: PerfExplorer Client");
+		
+		DBConnector.setPasswordCallback(PasswordCallback.guiPasswordCallback);
+		
 		PerfExplorerOutput.setQuiet(quiet);
 		PerfExplorerConnection.setStandalone(standalone);
 		PerfExplorerConnection.setConfigFile(configFile);
@@ -93,6 +99,9 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
     	if (url != null)
     		setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 		mainFrame = this;
+		
+
+
 	}
 
 	public void actionPerformed (ActionEvent event) {
