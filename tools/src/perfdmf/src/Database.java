@@ -19,6 +19,11 @@ public class Database {
     private int expFieldTypes[];
     private String trialFieldNames[];
     private int trialFieldTypes[];
+    private String trialFieldTypeNames[];
+    private String metricFieldNames[];
+    private String metricFieldTypeNames[];
+    private String intervalEventFieldNames[];
+    private String intervalEventFieldTypeNames[];
 
     public String[] getAppFieldNames() {
         return appFieldNames;
@@ -121,5 +126,75 @@ public class Database {
         //return "DB - " + name + " (" + dbDisplayName + ")"; 
         return name + " (" + dbDisplayName + ")";
     }
+
+	/**
+	 * @return the trialFieldTypeNames
+	 */
+	public String[] getTrialFieldTypeNames() {
+		return trialFieldTypeNames;
+	}
+
+	/**
+	 * @param trialFieldTypeNames the trialFieldTypeNames to set
+	 */
+	public void setTrialFieldTypeNames(String[] trialFieldTypesStrings) {
+		this.trialFieldTypeNames = trialFieldTypesStrings;
+	}
+
+	/**
+	 * @return the metricFieldTypeNames
+	 */
+	public String[] getMetricFieldTypeNames() {
+		return metricFieldTypeNames;
+	}
+
+	/**
+	 * @param metricFieldTypeNames the metricFieldTypeNames to set
+	 */
+	public void setMetricFieldTypeNames(String[] metricFieldTypeNames) {
+		this.metricFieldTypeNames = metricFieldTypeNames;
+	}
+
+	/**
+	 * @return the metricFieldNames
+	 */
+	public String[] getMetricFieldNames() {
+		return metricFieldNames;
+	}
+
+	/**
+	 * @param metricFieldNames the metricFieldNames to set
+	 */
+	public void setMetricFieldNames(String[] metricFieldNames) {
+		this.metricFieldNames = metricFieldNames;
+	}
+
+	/**
+	 * @return the intervalEventFieldNames
+	 */
+	public String[] getIntervalEventFieldNames() {
+		return intervalEventFieldNames;
+	}
+
+	/**
+	 * @param intervalEventFieldNames the intervalEventFieldNames to set
+	 */
+	public void setIntervalEventFieldNames(String[] intervalEventFieldNames) {
+		this.intervalEventFieldNames = intervalEventFieldNames;
+	}
+
+	/**
+	 * @return the intervalEventFieldTypeNames
+	 */
+	public String[] getIntervalEventFieldTypeNames() {
+		return intervalEventFieldTypeNames;
+	}
+
+	/**
+	 * @param intervalEventFieldTypeNames the intervalEventFieldTypeNames to set
+	 */
+	public void setIntervalEventFieldTypeNames(String[] intervalEventFieldTypeNames) {
+		this.intervalEventFieldTypeNames = intervalEventFieldTypeNames;
+	}
 
 }

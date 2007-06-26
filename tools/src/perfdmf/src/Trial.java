@@ -24,7 +24,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.22 2007/06/15 23:16:56 amorris Exp $
+ * CVS $Id: Trial.java,v 1.23 2007/06/26 03:28:05 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -403,6 +403,10 @@ public class Trial implements Serializable {
     }
 
     public static void getMetaData(DB db) {
+    	getMetaData(db, false);
+    }
+    
+    public static void getMetaData(DB db, boolean allColumns) {
         // see if we've already have them
         // need to load each time in case we are working with a new database. 
         //        if (Trial.fieldNames != null)
@@ -425,13 +429,21 @@ public class Trial implements Serializable {
 
             Vector nameList = new Vector();
             Vector typeList = new Vector();
+            List typeNames = new ArrayList();
+            List columnSizes = new ArrayList();
             boolean seenID = false;
+
+            ResultSetMetaData md = resultSet.getMetaData();
+            for (int i = 0 ; i < md.getColumnCount() ; i++) {
+            	//System.out.println(md.getColumnName(i));
+            }
 
             while (resultSet.next() != false) {
 
                 int ctype = resultSet.getInt("DATA_TYPE");
                 String cname = resultSet.getString("COLUMN_NAME");
                 String typename = resultSet.getString("TYPE_NAME");
+                Integer size = new Integer(resultSet.getInt("COLUMN_SIZE"));
 
                 // this code is because of a bug in derby...
                 if (cname.equals("ID")) {
@@ -444,25 +456,34 @@ public class Trial implements Serializable {
                 // only integer and string types (for now)
                 // don't do name and id, we already know about them
 
-                if (DBConnector.isReadAbleType(ctype) && cname.toUpperCase().compareTo("ID") != 0
+                if (allColumns || (DBConnector.isReadAbleType(ctype) && cname.toUpperCase().compareTo("ID") != 0
                         && cname.toUpperCase().compareTo("NAME") != 0 && cname.toUpperCase().compareTo("APPLICATION") != 0
-                        && cname.toUpperCase().compareTo("EXPERIMENT") != 0) {
+                        && cname.toUpperCase().compareTo("EXPERIMENT") != 0)) {
 
                     nameList.add(resultSet.getString("COLUMN_NAME"));
                     typeList.add(new Integer(ctype));
+                    typeNames.add(typename);
+                    columnSizes.add(size);
                 }
             }
             resultSet.close();
 
             String[] fieldNames = new String[nameList.size()];
             int[] fieldTypes = new int[typeList.size()];
+            String[] fieldTypeNames = new String[typeList.size()];
             for (int i = 0; i < typeList.size(); i++) {
                 fieldNames[i] = (String) nameList.get(i);
                 fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
+                if (((Integer)columnSizes.get(i)).intValue() > 255) {
+                    fieldTypeNames[i] = (String) typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
+                } else {
+                    fieldTypeNames[i] = (String) typeNames.get(i);
+                }
             }
 
             db.getDatabase().setTrialFieldNames(fieldNames);
             db.getDatabase().setTrialFieldTypes(fieldTypes);
+            db.getDatabase().setTrialFieldTypeNames(fieldTypeNames);
         } catch (SQLException e) {
             e.printStackTrace();
         }
