@@ -14,6 +14,7 @@ public class PerfExplorerConnection {
     private static boolean standalone = false;
     private static String configFile = null;
     private static EngineType analysisEngine = EngineType.WEKA;
+    private int connectionIndex = 0;
 
     private PerfExplorerConnection () {
 		makeConnection();
@@ -95,6 +96,7 @@ public class PerfExplorerConnection {
 	return tmpStr;
     }
 
+    
     public ListIterator getApplicationList() {
 	ListIterator tmpIterator = null;
 	try {
@@ -303,6 +305,16 @@ public class PerfExplorerConnection {
 		return conn;
 	}
 
+	public List getConnectionStrings() {
+		List conns = null;
+		try {
+	    	conns = server.getConnectionStrings();
+		} catch (RemoteException e) {
+	    	handleError(e, "getConnectionStrings()");
+		}
+		return conns;
+	}
+
     public ListIterator getEventList(int trialID, int metricIndex) {
 	ListIterator tmpIterator = null;
 	try {
@@ -342,5 +354,25 @@ public class PerfExplorerConnection {
 		}
 		return results;
     }
+
+	/**
+	 * @return the connectionIndex
+	 */
+	public int getConnectionIndex() {
+		return connectionIndex;
+	}
+
+	/**
+	 * @param connectionIndex the connectionIndex to set
+	 */
+	public void setConnectionIndex(int connectionIndex) {
+		this.connectionIndex = connectionIndex;
+		try {
+			server.setConnectionIndex(connectionIndex);
+			PerfExplorerModel.getModel().setConnectionIndex(connectionIndex);
+		} catch (RemoteException e) {
+	    	handleError(e, "setConnectionIndex(" + connectionIndex + ")");
+		}
+	}
 
 }

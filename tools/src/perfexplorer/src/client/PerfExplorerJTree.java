@@ -36,7 +36,7 @@ public class PerfExplorerJTree extends JTree {
 			DefaultTreeModel model = new DefaultTreeModel(createNodes());
 			model.setAsksAllowsChildren(true);
 			theTree = new PerfExplorerJTree(model);
-			addTrialsForViews();
+			//addTrialsForViews();
 		}
 		return theTree;
 	}
@@ -44,18 +44,27 @@ public class PerfExplorerJTree extends JTree {
 	private static DefaultMutableTreeNode createNodes () {
 		DefaultMutableTreeNode root = new PerfExplorerTreeNode("Performance Data");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-		DefaultMutableTreeNode top = new PerfExplorerTreeNode(server.getConnectionString());
+		List strings = server.getConnectionStrings();
+		for (int i = 0 ; i < strings.size() ; i++ ) {
+			String tmp = (String)strings.get(i);
+			DefaultMutableTreeNode top = new PerfExplorerTreeNode(new ConnectionNodeObject(tmp, i));
+			root.add(top);
+		}
+/*
+*/
+		return root;
+	}
+	
+	public void addViewNode(DefaultMutableTreeNode node) {
 		DefaultMutableTreeNode viewTop = new PerfExplorerTreeNode("Views");
 		//addApplicationNodes(top, true);
 		leafViews = new ArrayList();
 		//addViewNodes(viewTop, "0");
-		root.add(top);
-		root.add(viewTop);
-
-		return root;
+		node.add(viewTop);	
 	}
 
 	public static void addViewNodes (DefaultMutableTreeNode parentNode, String parent) {
+		setConnectionIndex(parentNode);
 		// get the top level views
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		List viewVector = server.getViews(Integer.parseInt(parent));
@@ -73,6 +82,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addApplicationNodes (DefaultMutableTreeNode parent, boolean getExperiments) {
+		setConnectionIndex(parent);
 		//System.out.println("application nodes...");
 		DefaultMutableTreeNode node = null;
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
@@ -96,6 +106,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addExperimentNodes (DefaultMutableTreeNode node, Application app, boolean getTrials) {
+		setConnectionIndex(node);
 		//System.out.println("experiment nodes...");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the experiments
@@ -113,6 +124,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addTrialNodes (DefaultMutableTreeNode node, Experiment exp) {
+		setConnectionIndex(node);
 		//System.out.println("trial nodes...");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the trials
@@ -138,6 +150,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addTrialsForView (DefaultMutableTreeNode node) {
+		setConnectionIndex(node);
 		//System.out.println("trial nodes...");
 		Object[] objects = node.getUserObjectPath();
 		List views = new ArrayList();
@@ -165,6 +178,7 @@ public class PerfExplorerJTree extends JTree {
 
 
 	public static void addMetricNodes (DefaultMutableTreeNode node, Trial trial) {
+		setConnectionIndex(node);
 		//System.out.println("metric nodes...");
 		// get the metrics
 		List metricVector = trial.getMetrics();
@@ -185,6 +199,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addEventNodes (DefaultMutableTreeNode node, Trial trial, int metricIndex) {
+		setConnectionIndex(node);
 		//System.out.println("event nodes...");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the events
@@ -198,5 +213,27 @@ public class PerfExplorerJTree extends JTree {
 			eventNode = new PerfExplorerTreeNode (event, false);
 			node.add(eventNode);
 		}
+	}
+	
+	public static int getConnectionIndex(DefaultMutableTreeNode node) {
+		int index = 0;
+		// find the connection node for this subtree
+		DefaultMutableTreeNode parent = node;
+		Object obj = parent.getUserObject();
+		while (parent != null && !(obj instanceof ConnectionNodeObject)) {
+			parent = (DefaultMutableTreeNode)parent.getParent();
+			obj = parent.getUserObject();
+		}
+		
+		if (obj != null && obj instanceof ConnectionNodeObject) {
+			ConnectionNodeObject conn = (ConnectionNodeObject)obj;
+			index = conn.index;
+		}
+		return index;
+	}
+	
+	public static void setConnectionIndex(DefaultMutableTreeNode node) {
+		int index = getConnectionIndex(node);
+		PerfExplorerConnection.getConnection().setConnectionIndex(index);
 	}
 }

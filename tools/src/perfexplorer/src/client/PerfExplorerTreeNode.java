@@ -29,5 +29,6 @@ public class PerfExplorerTreeNode extends DefaultMutableTreeNode {
     public boolean getAllowsChildren() {
         return this._allowsChildren;
     }
+    
 }
 

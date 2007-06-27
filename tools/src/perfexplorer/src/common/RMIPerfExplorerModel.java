@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.29 2007/05/01 22:43:09 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.30 2007/06/27 23:48:48 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -65,6 +65,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected IntervalEvent event = null;
 	protected int analysisID = 0;
 	protected Object[] fullPath = null;
+	protected int connectionIndex = 0;
 
 	/**
 	 * Default Constructor.
@@ -1098,6 +1099,20 @@ public class RMIPerfExplorerModel implements Serializable {
      */
 	public boolean getChartHorizontal() {
 		return this.chartHorizontal;
+	}
+
+	/**
+	 * @return the connectionIndex
+	 */
+	public int getConnectionIndex() {
+		return connectionIndex;
+	}
+
+	/**
+	 * @param connectionIndex the connectionIndex to set
+	 */
+	public void setConnectionIndex(int connectionIndex) {
+		this.connectionIndex = connectionIndex;
 	}
 
 }

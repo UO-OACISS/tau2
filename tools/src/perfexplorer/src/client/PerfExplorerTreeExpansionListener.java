@@ -37,14 +37,15 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
             }
 		}
 
+		Object object = node.getUserObject();
 		if (node.isRoot()) {
 			// do nothing
 		} else if (node.toString() != null && node.toString().startsWith("jdbc:")) {
 			PerfExplorerJTree.addApplicationNodes(node, false);
+			PerfExplorerJTree.getTree().addViewNode(node);
 		} else if (node.toString() != null && node.toString().equals("Views")) {
 			PerfExplorerJTree.addViewNodes(node, "0");
 		} else {
-			Object object = node.getUserObject();
 			if (object instanceof Application) {
 				Application app = (Application)object;
 				PerfExplorerJTree.addExperimentNodes (node, app, true);

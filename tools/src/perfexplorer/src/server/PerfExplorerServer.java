@@ -14,6 +14,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
 import jargs.gnu.CmdLineParser;
 
 import java.io.InputStream;
+import java.io.File;
 
 import java.rmi.ConnectException;
 import java.rmi.Naming;
@@ -45,7 +46,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.51 2007/06/01 20:23:38 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.52 2007/06/27 23:48:48 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -53,6 +54,8 @@ import java.util.NoSuchElementException;
 public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfExplorer {
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>] [{-p,--port}=<port_number>]\n  where analysis_engine = R or Weka";
 	private DatabaseAPI session = null;
+	private List sessions = new ArrayList();
+	private List sessionStrings = new ArrayList();
 	private Queue requestQueue = null;
 	private java.lang.Thread timerThread = null;
 	private TimerThread timer = null;
@@ -105,11 +108,19 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		this.requestQueue = new Queue();
 		DatabaseAPI workerSession = null;
 		try {
-			this.session = new DatabaseAPI();
-			this.session.initialize(configFile, false);
+			List configFiles = ConfigureFiles.getConfigurationFiles();
+			DatabaseAPI api = null;
+			for (Iterator iter = configFiles.iterator() ; iter.hasNext() ; ) {
+				String tmpFile = ((File)iter.next()).getAbsolutePath();
+				api = new DatabaseAPI();
+				api.initialize(tmpFile, false);
+				this.sessions.add(api);
+				this.sessionStrings.add(api.db().getConnectString());
+				PerfExplorerOutput.println("Connected to " + api.db().getConnectString() + ".");
+			}
+			this.session = api;
 			workerSession = new DatabaseAPI();
 			workerSession.initialize(configFile, false);
-			PerfExplorerOutput.println("Connected to database.");
 		} catch (Exception e) {
 			System.err.println("Error connecting to Database!");
 			System.err.println(e.getMessage());
@@ -1455,6 +1466,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return session.db().getConnectString();
 	}
 	
+	public List getConnectionStrings() {
+		return this.sessionStrings;
+	}
+	
 	/**
 	 * Requests an EventList object from the PerfDMF database,
 	 * based on the trial id which is passed in.
@@ -1645,6 +1660,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 							   e.getMessage());
 			e.printStackTrace();
 		}
+	}
+
+	public void setConnectionIndex(int connectionIndex) throws RemoteException {
+		this.session = (DatabaseAPI)this.sessions.get(connectionIndex);		
+		PerfExplorerOutput.println("Switching to " + this.session.db().getConnectString() + ".");
 	}
 }
 

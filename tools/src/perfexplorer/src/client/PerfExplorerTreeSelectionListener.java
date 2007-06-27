@@ -3,8 +3,11 @@ package client;
 import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.event.*;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 
 public class PerfExplorerTreeSelectionListener implements TreeSelectionListener {
 
@@ -23,6 +26,7 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 			DefaultMutableTreeNode node = (DefaultMutableTreeNode)
 					   		tree.getLastSelectedPathComponent();
 			if (node == null) return;
+			PerfExplorerJTree.setConnectionIndex(node);
 	
 			Object currentSelection = node.getUserObject();
 			Object[] objectPath = node.getUserObjectPath();
@@ -32,12 +36,24 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 		}
 		else {
         	List multiSelection = new ArrayList();
+        	Set connections = new HashSet();
         	for (int i = 0 ; i < paths.length ; i++) {
             	DefaultMutableTreeNode node = (DefaultMutableTreeNode)(paths[i].getLastPathComponent());
             	multiSelection.add(node.getUserObject());
+            	connections.add(new Integer(PerfExplorerJTree.getConnectionIndex(node)));
+        	}
+        	if (connections.size() > 1) {
+				JOptionPane.showMessageDialog(null, 
+						"Please select only one type (Application, Experiment, Trial, Metric, Event) of level from one database.",
+						"Selection Error", JOptionPane.ERROR_MESSAGE);
+					// un-select the new ones
+					tree.clearSelection();
+					// select the old ones
+					if (oldPaths != null)
+						tree.setSelectionPaths(oldPaths);
         	}
 			// don't allow heterogeneous selections
-			if (!PerfExplorerModel.getModel().setMultiSelection(multiSelection)) {
+        	else if (!PerfExplorerModel.getModel().setMultiSelection(multiSelection)) {
 				JOptionPane.showMessageDialog(null, 
 					"Please select only one type (Application, Experiment, Trial, Metric, Event) of level.",
 					"Selection Error", JOptionPane.ERROR_MESSAGE);
