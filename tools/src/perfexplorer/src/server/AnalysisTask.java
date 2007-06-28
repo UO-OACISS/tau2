@@ -66,7 +66,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.6 2007/01/23 22:57:02 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.7 2007/06/28 06:20:44 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -85,6 +85,7 @@ public class AnalysisTask extends TimerTask {
     private List eventIDs = null;
     private double rCorrelation = 0.0;
     private boolean correlateToMain = false;
+    private int connectionIndex = 0;
 
     /**
     * Constructor.  The engine parameter passed in specifies which analysis
@@ -93,10 +94,11 @@ public class AnalysisTask extends TimerTask {
     * @param server
     * @param engine
     */
-    public AnalysisTask (PerfExplorerServer server, DatabaseAPI session) {
+    public AnalysisTask (PerfExplorerServer server, DatabaseAPI session, int connectionIndex) {
         super();
         this.server = server;
         this.session = session;
+        this.connectionIndex = connectionIndex;
         this.factory = server.getAnalysisFactory();
     }
 
@@ -240,7 +242,7 @@ public class AnalysisTask extends TimerTask {
 	 * @see java.lang.Runnable#run()
 	 */
 	public void run() {
-		modelData = server.getNextRequest();
+		modelData = server.getNextRequest(connectionIndex);
 		if (modelData != null) {
 			analysisID = modelData.getAnalysisID();
 			try {
@@ -351,7 +353,7 @@ public class AnalysisTask extends TimerTask {
 				ce.printStackTrace();
 			}
 			// let the server (main thread) know we are done
-			server.taskFinished();
+			server.taskFinished(connectionIndex);
 			modelData = null;
 		} // else 
 			//PerfExplorerOutput.println("nothing to do... ");

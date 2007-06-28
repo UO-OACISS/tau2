@@ -46,7 +46,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.52 2007/06/27 23:48:48 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.53 2007/06/28 06:20:44 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -56,11 +56,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private DatabaseAPI session = null;
 	private List sessions = new ArrayList();
 	private List sessionStrings = new ArrayList();
-	private Queue requestQueue = null;
-	private java.lang.Thread timerThread = null;
-	private TimerThread timer = null;
+	private List requestQueues = new ArrayList();
+	private List timerThreads = new ArrayList();
+	private List timers = new ArrayList();
 	private static PerfExplorerServer theServer = null;
 	private AnalysisFactory factory = null;
+	private EngineType engineType;
 
 	/**
 	 * Static method to get the server instance reference.
@@ -105,22 +106,31 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		super(port);
 		PerfExplorerOutput.setQuiet(quiet);
 		theServer = this;
-		this.requestQueue = new Queue();
 		DatabaseAPI workerSession = null;
+		this.engineType = analysisEngine;
 		try {
 			List configFiles = ConfigureFiles.getConfigurationFiles();
 			DatabaseAPI api = null;
+			int i = 0;
 			for (Iterator iter = configFiles.iterator() ; iter.hasNext() ; ) {
 				String tmpFile = ((File)iter.next()).getAbsolutePath();
+				PerfExplorerOutput.print("Connecting to " + tmpFile + "...");
 				api = new DatabaseAPI();
 				api.initialize(tmpFile, false);
 				this.sessions.add(api);
 				this.sessionStrings.add(api.db().getConnectString());
-				PerfExplorerOutput.println("Connected to " + api.db().getConnectString() + ".");
+				PerfExplorerOutput.println("done.\nConnected to " + api.db().getConnectString() + ".");
+				workerSession = new DatabaseAPI();
+				workerSession.initialize(tmpFile, false);
+				Queue requestQueue = new Queue();
+				this.requestQueues.add(requestQueue);
+				TimerThread timer = new TimerThread(this, workerSession, i++);
+				this.timers.add(timer);
+				java.lang.Thread timerThread = new java.lang.Thread(timer);
+				this.timerThreads.add(timerThread);
+				timerThread.start();
 			}
 			this.session = api;
-			workerSession = new DatabaseAPI();
-			workerSession.initialize(configFile, false);
 		} catch (Exception e) {
 			System.err.println("Error connecting to Database!");
 			System.err.println(e.getMessage());
@@ -132,16 +142,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
             buf.append("configuration utilities for details.\n");
             System.err.println(buf.toString());
 			System.exit(1);
-		}
-        try {
-            factory = clustering.AnalysisFactory.buildFactory(analysisEngine);
-        } catch (ClusterException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
         }
-		timer = new TimerThread(this, workerSession);
-		timerThread = new java.lang.Thread(timer);
-		this.timerThread.start();
 	}
 
 	/**
@@ -149,6 +150,16 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return
 	 */
 	public AnalysisFactory getAnalysisFactory() {
+		System.out.println("getting factory");
+		if (factory == null) {
+			try {
+        		factory = clustering.AnalysisFactory.buildFactory(this.engineType);
+        	} catch (ClusterException e) {
+            	System.err.println(e.getMessage());
+				System.err.println(this.engineType);
+            	System.exit(1);
+			}
+		}
 		return factory;
 	}
 	
@@ -209,7 +220,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 	public void stopServer() {
 		PerfExplorerOutput.println("stopServer()...");
-		timer.cancel();
+		for (int i = 0 ; i < timers.size(); i++ ) {
+			TimerThread timer = (TimerThread)timers.get(i);
+			timer.cancel();
+		}
 		try{
 			java.lang.Thread.sleep(1000);
 		} catch (Exception e) {/* nothing to do */}
@@ -239,6 +253,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			status.append("Request " + analysisID + " queued.");
 			model.setAnalysisID(analysisID);
 			status.append("\nRequest accepted.");
+			Queue requestQueue = (Queue)requestQueues.get(model.getConnectionIndex());
 			requestQueue.enqueue(model);
 		} catch (PerfExplorerException e) {
 			String tmp = e.getMessage();
@@ -495,7 +510,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * of the front of the queue.
 	 * 
 	 */
-	public void taskFinished () {
+	public void taskFinished (int connectionIndex) {
+		Queue requestQueue = (Queue)requestQueues.get(connectionIndex);
 		RMIPerfExplorerModel model = requestQueue.dequeue();
 		//PerfExplorerOutput.println(model.toString() + " finished!");
 		// endRSession();
@@ -507,7 +523,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * request (NOT YET IMPLEMENTED - TODO).
 	 * @return
 	 */
-	public RMIPerfExplorerModel getNextRequest () {
+	public RMIPerfExplorerModel getNextRequest (int connectionIndex) {
+		Queue requestQueue = (Queue)requestQueues.get(connectionIndex);
 		RMIPerfExplorerModel model = requestQueue.peekNext();
 		return model;
 	}
@@ -1664,7 +1681,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 	public void setConnectionIndex(int connectionIndex) throws RemoteException {
 		this.session = (DatabaseAPI)this.sessions.get(connectionIndex);		
-		PerfExplorerOutput.println("Switching to " + this.session.db().getConnectString() + ".");
+		//PerfExplorerOutput.println("Switching to " + this.session.db().getConnectString() + ".");
 	}
 }
 

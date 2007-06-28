@@ -222,7 +222,9 @@ public class PerfExplorerJTree extends JTree {
 		Object obj = parent.getUserObject();
 		while (parent != null && !(obj instanceof ConnectionNodeObject)) {
 			parent = (DefaultMutableTreeNode)parent.getParent();
-			obj = parent.getUserObject();
+			if (parent != null) {
+				obj = parent.getUserObject();
+			}
 		}
 		
 		if (obj != null && obj instanceof ConnectionNodeObject) {
