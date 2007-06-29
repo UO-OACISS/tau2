@@ -37,8 +37,9 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 		else {
         	List multiSelection = new ArrayList();
         	Set connections = new HashSet();
+        	DefaultMutableTreeNode node = null;
         	for (int i = 0 ; i < paths.length ; i++) {
-            	DefaultMutableTreeNode node = (DefaultMutableTreeNode)(paths[i].getLastPathComponent());
+            	node = (DefaultMutableTreeNode)(paths[i].getLastPathComponent());
             	multiSelection.add(node.getUserObject());
             	connections.add(new Integer(PerfExplorerJTree.getConnectionIndex(node)));
         	}
@@ -63,6 +64,7 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 				if (oldPaths != null)
 					tree.setSelectionPaths(oldPaths);
 			} else {
+				PerfExplorerJTree.setConnectionIndex(node);
 				oldPaths = paths;
 			}
 		}

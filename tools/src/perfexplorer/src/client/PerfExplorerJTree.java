@@ -236,6 +236,7 @@ public class PerfExplorerJTree extends JTree {
 	
 	public static void setConnectionIndex(DefaultMutableTreeNode node) {
 		int index = getConnectionIndex(node);
+		PerfExplorerModel.getModel().setConnectionIndex(index);
 		PerfExplorerConnection.getConnection().setConnectionIndex(index);
 	}
 }

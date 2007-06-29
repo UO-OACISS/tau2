@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.30 2007/06/27 23:48:48 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.31 2007/06/29 19:39:50 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -86,6 +86,23 @@ public class RMIPerfExplorerModel implements Serializable {
 		this.metricNames = source.metricNames;
 		this.eventNames = source.eventNames;
 		this.totalTimesteps = source.totalTimesteps;
+		this.constantProblem = source.constantProblem;
+		this.eventNoCallpath = source.eventNoCallpath;
+		this.mainEventOnly = source.mainEventOnly;
+		this.eventExclusive100 = source.eventExclusive100;
+		this.chartSeriesName = source.chartSeriesName;
+		this.chartMetadataFieldName = source.chartMetadataFieldName;
+		this.chartMetadataFieldValue = source.chartMetadataFieldValue;
+		this.chartXAxisName = source.chartXAxisName;
+		this.chartYAxisName = source.chartYAxisName;
+		this.chartXAxisLabel = source.chartXAxisLabel;
+		this.chartYAxisLabel = source.chartYAxisLabel;
+		this.chartTitle = source.chartTitle;
+		this.chartLogYAxis = source.chartLogYAxis;
+		this.chartScalability = source.chartScalability;
+		this.chartEfficiency = source.chartEfficiency;
+		this.chartHorizontal = source.chartHorizontal;
+		this.chartUnits = source.chartUnits;
 		this.clusterMethod = source.clusterMethod;
 		this.dimensionReduction = source.dimensionReduction;
 		this.normalization = source.normalization;
@@ -100,6 +117,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		this.event = source.event;
 		this.analysisID = source.analysisID;
 		this.fullPath = source.fullPath;
+		this.connectionIndex = source.connectionIndex;
 	}
 
 	/**

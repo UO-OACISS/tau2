@@ -46,7 +46,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.53 2007/06/28 06:20:44 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.54 2007/06/29 19:39:50 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -108,20 +108,20 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		theServer = this;
 		DatabaseAPI workerSession = null;
 		this.engineType = analysisEngine;
-		try {
-			List configFiles = ConfigureFiles.getConfigurationFiles();
+		int i = 0;
+		List configFiles = ConfigureFiles.getConfigurationFiles();
+		for (Iterator iter = configFiles.iterator() ; iter.hasNext() ; ) {
 			DatabaseAPI api = null;
-			int i = 0;
-			for (Iterator iter = configFiles.iterator() ; iter.hasNext() ; ) {
-				String tmpFile = ((File)iter.next()).getAbsolutePath();
-				PerfExplorerOutput.print("Connecting to " + tmpFile + "...");
+			String tmpFile = ((File)iter.next()).getAbsolutePath();
+			PerfExplorerOutput.print("Connecting...");
+			try {
 				api = new DatabaseAPI();
 				api.initialize(tmpFile, false);
-				this.sessions.add(api);
-				this.sessionStrings.add(api.db().getConnectString());
-				PerfExplorerOutput.println("done.\nConnected to " + api.db().getConnectString() + ".");
 				workerSession = new DatabaseAPI();
 				workerSession.initialize(tmpFile, false);
+				PerfExplorerOutput.println("done.\tConnected to " + api.db().getConnectString() + ".");
+				this.sessions.add(api);
+				this.sessionStrings.add(api.db().getConnectString());
 				Queue requestQueue = new Queue();
 				this.requestQueues.add(requestQueue);
 				TimerThread timer = new TimerThread(this, workerSession, i++);
@@ -129,20 +129,20 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				java.lang.Thread timerThread = new java.lang.Thread(timer);
 				this.timerThreads.add(timerThread);
 				timerThread.start();
-			}
-			this.session = api;
-		} catch (Exception e) {
-			System.err.println("Error connecting to Database!");
-			System.err.println(e.getMessage());
-            StringBuffer buf = new StringBuffer();
-            buf.append("\nPlease make sure that your DBMS is ");
-            buf.append("configured correctly, and the database ");
-            buf.append("has been created.");
-            buf.append("\nSee the PerfExplorer and/or PerfDMF");
-            buf.append("configuration utilities for details.\n");
-            System.err.println(buf.toString());
-			System.exit(1);
-        }
+				this.session = api;
+			} catch (Exception e) {
+				System.err.println("Error connecting to " + tmpFile + "!");
+				System.err.println(e.getMessage());
+            	StringBuffer buf = new StringBuffer();
+            	buf.append("\nPlease make sure that your DBMS is ");
+            	buf.append("configured correctly, and the database ");
+            	buf.append("has been created.");
+            	buf.append("\nSee the PerfExplorer and/or PerfDMF");
+            	buf.append("configuration utilities for details.\n");
+            	System.err.println(buf.toString());
+				//System.exit(1);
+        	}
+		}
 	}
 
 	/**
@@ -150,7 +150,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return
 	 */
 	public AnalysisFactory getAnalysisFactory() {
-		System.out.println("getting factory");
+		//System.out.println("getting factory");
 		if (factory == null) {
 			try {
         		factory = clustering.AnalysisFactory.buildFactory(this.engineType);
@@ -399,7 +399,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return RMIPerformanceResults
 	 */
 	public RMIPerformanceResults getPerformanceResults(RMIPerfExplorerModel model) {
-		PerfExplorerOutput.print("getPerformanceResults(" + model.toString() + ")... ");
+		//PerfExplorerOutput.print("getPerformanceResults(" + model.toString() + ")... ");
 		RMIPerformanceResults analysisResults = new RMIPerformanceResults();
 		try {
 			DB db = this.getDB();
@@ -1174,7 +1174,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				whereClause.append ("' ");
 
 			}
-			PerfExplorerOutput.println(whereClause.toString());
+			//PerfExplorerOutput.println(whereClause.toString());
 			trials = Trial.getTrialList(db, whereClause.toString());
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select views from the database!";
