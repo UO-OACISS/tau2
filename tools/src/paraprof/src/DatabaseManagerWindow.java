@@ -493,6 +493,11 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
     private void switchAdapter(String newAdapter)
     {
+    	String etc = ParaProf.tauHome + File.separator + "tools"
+    	+ File.separator + "src" + File.separator + "perfdmf"
+    	+ File.separator + "etc" + File.separator;
+    	this.schema.setText(etc + "dbschema." + newAdapter + ".txt");
+    	
     	if (newAdapter.compareTo("mysql") == 0) {
             download.setEnabled(true);
             host.setEnabled(true);
@@ -504,6 +509,16 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             this.driver.setText("org.gjt.mm.mysql.Driver");
             this.port.setText("3306");
             this.host.setText("localhost");
+            String jarlocation = ParaProf.tauHome + File.separator + ParaProf.tauArch + File.separator + "lib" + File.separator + "mysql.jar";
+            File jar = new File(jarlocation);
+            if (jar.exists())
+            {
+            	this.jarfile.setText(jarlocation);
+            }
+            else
+            {
+            	this.jarfile.setText("(Please Download >>)");
+            }
         } else if (newAdapter.compareTo("postgresql") == 0 ) {
             download.setEnabled(true);
             host.setEnabled(true);
@@ -515,6 +530,17 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             this.driver.setText("org.postgresql.Driver");
             this.port.setText("5432");
             this.host.setText("localhost");
+            String jarlocation = ParaProf.tauHome + File.separator + ParaProf.tauArch + File.separator + "lib" + File.separator + "postgresql.jar";
+            File jar = new File(jarlocation);
+            if (jar.exists())
+            {
+            	this.jarfile.setText(jarlocation);
+            }
+            else
+            {
+            	this.jarfile.setText("(Please Download >>)");
+            }
+            this.schema.setText(etc + "dbschema.txt");
         } else if (newAdapter.compareTo("oracle") == 0) {
             download.setEnabled(false);
             host.setEnabled(true);
@@ -526,6 +552,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             this.driver.setText("oracle.jdbc.OracleDriver");
             this.port.setText("1521");
             this.host.setText("localhost");
+            this.jarfile.setText("(Please Acquire oracle's JDBC driver)");
         } else if (newAdapter.compareTo("derby") == 0) {
             host.setEnabled(false);
             host.setText("");
@@ -537,6 +564,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             port.setText("");
         	download.setEnabled(false);
             this.driver.setText("org.apache.derby.jdbc.EmbeddedDriver");
+            this.jarfile.setText(ParaProf.tauHome + File.separator + "tools" + File.separator + "src" + File.separator + "contrib" + File.separator + "derby.jar");
         } else if (newAdapter.compareTo("db2") == 0) {
             download.setEnabled(false);
             host.setEnabled(true);
@@ -548,6 +576,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             this.driver.setText("com.ibm.db2.jcc.DB2Driver");
             this.port.setText("446");
             this.host.setText("localhost");
+            this.jarfile.setText("(Please Acquire db2's JDBC driver)");
         }
     }
 

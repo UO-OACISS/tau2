@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.66 2007/05/29 20:27:20 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.67 2007/07/02 19:51:37 scottb Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.66 $
+ * @version $Revision: 1.67 $
  */
 public class ParaProf implements ActionListener {
 
@@ -79,7 +79,9 @@ public class ParaProf implements ActionListener {
     public static boolean insideEclipse;
     public static EclipseHandler eclipseHandler;
     public static SourceManager directoryManager;
-
+    public static String tauHome;
+    public static String tauArch;
+    
     // static initializer block
     static {
         ParaProf.runtime = Runtime.getRuntime();
@@ -123,6 +125,8 @@ public class ParaProf implements ActionListener {
                 + "  --dump                          Dump profile data to TAU profile format\n"
                 + "                                    (does not launch ParaProf GUI)\n" + "\n" + "Notes:\n"
                 + "  -m, --monitor                   Perform runtime monitoring of profile data\n" + "\n"
+                + "  -t, --tauhome                   Specify the tau home directory."
+                + "  -a, --tauarch                   Specify the tau architecture directory."
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -362,6 +366,8 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
         CmdLineParser.Option monitorOpt = parser.addBooleanOption('m', "monitor");
         CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
+        CmdLineParser.Option tauHomeOpt = parser.addStringOption('t', "tauhome");
+        CmdLineParser.Option tauArchOpt = parser.addStringOption('a', "tauarch");
 
         try {
             parser.parse(args);
@@ -378,6 +384,8 @@ public class ParaProf implements ActionListener {
         Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
         Boolean monitor = (Boolean) parser.getOptionValue(monitorOpt);
         Boolean demo = (Boolean) parser.getOptionValue(demoOpt);
+        ParaProf.tauHome = (String) parser.getOptionValue(tauHomeOpt);
+        ParaProf.tauArch = (String) parser.getOptionValue(tauArchOpt);
 
         demoMode = demo != null && demo.booleanValue();
 
