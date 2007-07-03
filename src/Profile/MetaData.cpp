@@ -38,6 +38,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include "tauarch.h"
 #include "Profile/tau_types.h"
 
+#ifdef TAU_BGL
+#include <rts.h>
+#include <bglpersonality.h>
+#endif
 
 char * TauGetCounterString(void);
 
@@ -361,6 +365,64 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
 
   writeXMLAttribute(fp, "pid", getpid(), newline);
 #endif
+
+
+#ifdef TAU_BGL
+  char buffer[4096];
+  char location[BGLPERSONALITY_MAX_LOCATION];
+  BGLPersonality personality;
+
+  rts_get_personality(&personality, sizeof(personality));
+  BGLPersonality_getLocationString(&personality, location);
+
+  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xCoord(&personality),
+	   BGLPersonality_yCoord(&personality),
+	   BGLPersonality_zCoord(&personality));
+  writeXMLAttribute(fp, "BGL Coords", buffer, newline);
+
+  writeXMLAttribute(fp, "BGL Processor ID", rts_get_processor_id(), newline);
+
+  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xSize(&personality),
+	   BGLPersonality_ySize(&personality),
+	   BGLPersonality_zSize(&personality));
+  writeXMLAttribute(fp, "BGL Size", buffer, newline);
+
+
+  if (BGLPersonality_virtualNodeMode(&personality)) {
+    writeXMLAttribute(fp, "BGL Node Mode", "Virtual", newline);
+  } else {
+    writeXMLAttribute(fp, "BGL Node Mode", "Coprocessor", newline);
+  }
+
+  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_isTorusX(&personality),
+	   BGLPersonality_isTorusY(&personality),
+	   BGLPersonality_isTorusZ(&personality));
+  writeXMLAttribute(fp, "BGL isTorus", buffer, newline);
+
+  writeXMLAttribute(fp, "BGL DDRSize", BGLPersonality_DDRSize(&personality), newline);
+  writeXMLAttribute(fp, "BGL DDRModuleType", personality.DDRModuleType, newline);
+  writeXMLAttribute(fp, "BGL Location", location, newline);
+
+  writeXMLAttribute(fp, "BGL rankInPset", BGLPersonality_rankInPset(&personality), newline);
+  writeXMLAttribute(fp, "BGL numNodesInPset", BGLPersonality_numNodesInPset(&personality), newline);
+  writeXMLAttribute(fp, "BGL psetNum", BGLPersonality_psetNum(&personality), newline);
+  writeXMLAttribute(fp, "BGL numPsets", BGLPersonality_numPsets(&personality), newline);
+
+  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xPsetSize(&personality),
+	   BGLPersonality_yPsetSize(&personality),
+	   BGLPersonality_zPsetSize(&personality));
+  writeXMLAttribute(fp, "BGL PsetSize", buffer, newline);
+
+  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xPsetOrigin(&personality),
+	   BGLPersonality_yPsetOrigin(&personality),
+	   BGLPersonality_zPsetOrigin(&personality));
+  writeXMLAttribute(fp, "BGL PsetOrigin", buffer, newline);
+
+  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xPsetCoord(&personality),
+	   BGLPersonality_yPsetCoord(&personality),
+	   BGLPersonality_zPsetCoord(&personality));
+  writeXMLAttribute(fp, "BGL PsetCoord", buffer, newline);
+#endif /* TAU_BGL */
 
 
 #ifdef __linux__
