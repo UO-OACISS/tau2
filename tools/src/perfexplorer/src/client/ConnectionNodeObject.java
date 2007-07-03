@@ -1,6 +1,8 @@
 package client;
 
-public class ConnectionNodeObject {
+import java.io.Serializable;
+
+public class ConnectionNodeObject implements Serializable {
 	public String string = null;
 	public int index = 0;
 	

@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * This class is used as a typesafe enumeration.
  *
- * <P>CVS $Id: TransformationType.java,v 1.2 2007/04/17 22:31:11 khuck Exp $</P>
+ * <P>CVS $Id: TransformationType.java,v 1.3 2007/07/03 00:18:33 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -62,7 +62,7 @@ public final class TransformationType implements Serializable {
     private static int nextOrdinal = 0;
     private final int ordinal = nextOrdinal++;
     private static final TransformationType[] VALUES = 
-        {LINEAR_PROJECTION, OVER_X_PERCENT, REGRESSION, NONE};
+        {LINEAR_PROJECTION, OVER_X_PERCENT, REGRESSION, PERCENTAGE_OF_TOTAL, RANGE_OF_TOTAL, NONE};
     
     /**
      * This method is necessary, because we are serializing the object.

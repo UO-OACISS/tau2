@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * This class is used as a typesafe enumeration.
  *
- * <P>CVS $Id: SelectionType.java,v 1.1 2006/09/13 23:28:20 khuck Exp $</P>
+ * <P>CVS $Id: SelectionType.java,v 1.2 2007/07/03 00:18:33 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -46,7 +46,7 @@ public final class SelectionType implements Serializable {
     private static int nextOrdinal = 0;
     private final int ordinal = nextOrdinal++;
     private static final SelectionType[] VALUES = 
-        {NO_MULTI, APPLICATION, EXPERIMENT, TRIAL, METRIC, VIEW};
+        {NO_MULTI, APPLICATION, EXPERIMENT, TRIAL, METRIC, VIEW, EVENT};
     
     /**
      * This method is necessary, because we are serializing the object.
