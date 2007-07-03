@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.database.DB;
 /**
  * Reads a single trial from the database
  *  
- * <P>CVS $Id: DBDataSource.java,v 1.8 2007/06/15 23:16:56 amorris Exp $</P>
+ * <P>CVS $Id: DBDataSource.java,v 1.9 2007/07/03 09:43:29 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class DBDataSource extends DataSource {
 
@@ -193,14 +193,14 @@ public class DBDataSource extends DataSource {
             resultSet.next();
             InputStream compressedStream = resultSet.getBinaryStream(1);
             String metaDataString = Gzip.decompress(compressedStream);
-            //System.out.println("metadata = " + metaDataString);
-
-            XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-            XMLParser parser = new XMLParser();
-            xmlreader.setContentHandler(parser);
-            xmlreader.setErrorHandler(parser);
-            ByteArrayInputStream input = new ByteArrayInputStream(metaDataString.getBytes());
-            xmlreader.parse(new InputSource(input));
+	    if (metaDataString != null) {
+		XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
+		XMLParser parser = new XMLParser();
+		xmlreader.setContentHandler(parser);
+		xmlreader.setErrorHandler(parser);
+		ByteArrayInputStream input = new ByteArrayInputStream(metaDataString.getBytes());
+		xmlreader.parse(new InputSource(input));
+	    }
         } catch (IOException e) {
             // oh well, no metadata
         } catch (SAXException e) {
