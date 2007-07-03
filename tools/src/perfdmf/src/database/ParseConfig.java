@@ -2,12 +2,13 @@ package edu.uoregon.tau.perfdmf.database;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.Serializable;
 
 import edu.uoregon.tau.common.TauRuntimeException;
 
 /* This class is intended to read in config.txt file and parse the parameters. */
 
-public class ParseConfig {
+public class ParseConfig implements Serializable {
     private String perfdmfHome;
     private String jdbcJarFile;
     private String jdbcDriver;

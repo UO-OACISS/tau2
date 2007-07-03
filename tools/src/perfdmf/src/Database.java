@@ -1,12 +1,13 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
-public class Database {
+public class Database implements Serializable {
     private String name;
     private int id;
     private ParseConfig config;
