@@ -1,7 +1,10 @@
 grant {
     permission java.net.SocketPermission "*:1024-65535", "connect,accept";
     permission java.net.SocketPermission "*:80", "connect";
-	permission java.io.FilePermission "@CONFIGFILE@", "read";
+	permission java.io.FilePermission "@CONFIGDIR@", "read";
+	permission java.io.FilePermission "@CONFIGDIR2@/-", "read";
+	permission java.io.FilePermission "@TAULIBDIR@", "read";
+	permission java.io.FilePermission "@TAULIBDIR@/-", "read";
 	permission java.io.FilePermission "@TMPDIR@/*", "read,write,delete";
 	permission java.lang.RuntimePermission "loadLibrary.SJava";
 	permission java.lang.RuntimePermission "loadLibrary.RInterpreter";

@@ -5,7 +5,7 @@ from common import EngineType
 
 print "--------------- JPython test script start ------------"
 
-pe = ScriptFacade("/home/khuck/.ParaProf/perfdmf.cfg", EngineType.WEKA)
+pe = ScriptFacade("/Users/khuck/.ParaProf/perfdmf.cfg", EngineType.WEKA)
 pe.doSomething()
 
 # let's do something interesting...

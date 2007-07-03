@@ -1,6 +1,6 @@
 #!/bin/@SHELL@
 
-# $Id: perfexplorer_configure.skel,v 1.5 2006/12/28 18:51:22 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.6 2007/07/03 01:09:01 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -22,6 +22,7 @@ serverhostname=localhost
 objectport=9999
 registryport=1099
 configfile=$HOME/.ParaProf/perfdmf.cfg
+configdir=$HOME/.ParaProf
 tmpdir=/tmp
 
 
@@ -174,7 +175,10 @@ chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer
 
 cat ${targetdir}/etc/java.policy | 
 sed -e 's,@TMPDIR@,'$tmpdir',' \
--e 's,@CONFIGFILE@,'$configfile',' \
+-e 's,@CONFIGDIR@,'$configdir',' \
+-e 's,@CONFIGDIR2@,'$configdir',' \
+-e 's,@TAULIBDIR@,'$LIBDIR',' \
+-e 's,@TAULIBDIR2@,'$LIBDIR',' \
  > ${targetdir}/${architecture}/lib/java.policy
 
 WEKA_JAR=${targetdir}/${architecture}/lib/weka.jar
