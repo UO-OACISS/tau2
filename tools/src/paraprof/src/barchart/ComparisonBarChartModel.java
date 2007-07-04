@@ -8,6 +8,7 @@ import java.util.*;
 import javax.swing.JComponent;
 
 import edu.uoregon.tau.paraprof.*;
+import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UtilFncs;
@@ -15,9 +16,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.8 2007/05/03 22:03:56 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.9 2007/07/04 14:19:43 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -66,14 +67,25 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             for (int i = 0; i < ppTrials.size(); i++) {
                 PPFunctionProfile ppFp = (PPFunctionProfile) this.get(i);
                 if (ppFp != null) {
-                    max = Math.max(max, ppFp.getValue());
+                    max = Math.max(max, ppFp.getSortValue());
                 }
             }
             return max;
         }
 
+        private int privateCompare(RowBlob other) {
+            if (dataSorter.getSortType() == SortType.NAME) {
+                return this.functionName.compareTo(other.getFunctionName());
+            }
+            return (int) (other.getMax() - getMax());
+        }
+        
         public int compareTo(Object arg0) {
-            return (int) (((RowBlob) arg0).getMax() - getMax());
+            if (dataSorter.getDescendingOrder()) {
+                return privateCompare((RowBlob)arg0);
+            } else {
+                return -privateCompare((RowBlob)arg0);
+            }
         }
 
     }
@@ -114,6 +126,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     }
 
     public void reloadData() {
+
         rows.clear();
         rowMap.clear();
 

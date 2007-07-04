@@ -136,6 +136,10 @@ public class PPFunctionProfile implements Comparable {
         return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), dataSorter.getSelectedSnapshot());
     }
 
+    public double getSortValue() {
+        return dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot());
+    }
+
     private int checkDescending(int value) {
         if (dataSorter.getDescendingOrder()) {
             return -value;
