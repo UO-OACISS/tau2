@@ -1,0 +1,46 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "PERFDMF_LOADTRIAL" "1" "06/29/2007" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+perfdmf_loadtrial \- Command line tool to loada a trial into the perfdmf database.
+.SH "SYNOPSIS"
+.HP 18
+\fBperfdmf_loadtrial\fR [\-h,\ \-\-help] [\-g,\ \-\-configFile\ \fIconfigFile\fR] [\-c,\ \-\-config\ \fIconfiguration_name\fR] {\-e,\ \-\-experimentid\ \fIexperimentID\fR} {\-t,\ \-\-trialid\ \fItrialID\fR} {\-x,\ \-\-experimentname\ \fIexperimentName\fR} {\-m,\ \-\-metadata\ \fIfilename\fR} {\-f,\ \-\-fixnames} {\-n,\ \-\-name\ \fIname\fR}
+.SH "DESCRIPTION"
+.PP
+This script will create a new experiment in the perfdmf database.
+.SH "OPTIONS"
+.PP
+\-g, \-\-configFile
+\fIconfigFile \fR
+specify the path to the file that defines the perfdmf configuration.
+.PP
+\-c, \-\-config
+\fIconfiguration_name \fR
+specify the name of the perfdmf configuration \-c foo is equalivent to \-g <.
+.PP
+\-e, \-\-experimentid
+\fIexperimentID \fR
+specify the id number of the experiment to associate with the new trial.
+.PP
+\-t, \-\-trialid
+\fIexperimentID \fR
+specify the id number of the newly uploaded trial.
+.PP
+\-x, \-\-experimentname
+\fIexperimentName \fR
+specify the name of the experiment to associate with newly uploaded trial.
+.PP
+\-m, \-\-metadata
+\fIfilename \fR
+specify the filename of the XML metadata for this trial.
+.PP
+\-n, \-\-name
+\fIname \fR
+the name of the application.

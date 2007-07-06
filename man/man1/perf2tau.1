@@ -1,0 +1,40 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "PERF2TAU" "1" "06/29/2007" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+perf2tau \- converts PerfLib profiles to TAU profile files
+.SH "SYNOPSIS"
+.HP 9
+\fBperf2tau\fR {\fIdata_directory\fR} [\fB\-h\fR] [\fB\-flat\fR]
+.SH "DESCRIPTION"
+.PP
+Converts perflib data to TAU format.
+.PP
+If an argument is not specified, it checks the perf_data_directory environment variable. Then opens perf_data.timing directory to read perflib data If no args are specified, it tries to read perf_data.<current_date> file.
+.SH "OPTIONS"
+.PP
+\fB\-h\fR
+Display the help information.
+.PP
+\fB\-flat\fR
+Suppresses callpath profiles, each callpath profile will be flattened to show only the function profile.
+.SH "EXAMPLES"
+.PP
+.nf
+%> perf2tau timing
+      
+.fi
+.sp
+.SH "SEE ALSO"
+.PP
+vtf2profile(1),
+tau2vtf(1),
+tau2otf(1),
+tau_merge(1),
+tau_convert(1)

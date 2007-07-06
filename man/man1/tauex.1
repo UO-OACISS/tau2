@@ -2,7 +2,7 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "TAUEX" "1" "06/25/2007" "" "Tools"
+.TH "TAUEX" "1" "06/29/2007" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -14,11 +14,8 @@ tauex \- Allows you to choose a tau/papi configuration at runtime.
 \fBtauex\fR [\-v] [\-u\ \fIUser\ mode\ counts\fR] [\-k\ \fIKernel\ mode\ counts\fR] [\-S\ \fISupervisor\ mode\ counts\fR] [\-I\ \fIInterrupt\ mode\ counts\fR] [\-a] [\-m] [\-e\ \fIPAPI\ event\fR] [\-T\ \fITAU\ option\fR] [\-XrunTAU\ \fITAU\ options\fR] {\-\-} {\fIApplication\ executable\fR} [\fIApplication\ options\fR]
 .SH "DESCRIPTION"
 .PP
-Replace this script by the execuable during runtime to dynamically load a TAU profiling/tracing option or to select which papi events/domain to use during execuation of the application. If we compile TAU with the \-optShared option and link in the libTAU.so, we can at runtime set the LD_LIBRARY_PATH and pass other parameters (papi events) to the executable and choose a different TAU measurement option using tauex.
+Replace this script by the execuable during runtime to dynamically load a TAU profiling/tracing option or to select which papi events/domain to use during execuation of the application. If we compile TAU with the \-optShared option and link in the libTAU.so, At runtime tauex will set the LD_LIBRARY_PATH and pass any other parameters (or papi events) to the program and execute it with the specified TAU measurement option.
 .SH "OPTIONS"
-.TP
-User mode counts
-Instructs PAPI to only count user events.
 .TP
 \-v
 Verbose mode.
@@ -29,19 +26,22 @@ Count all native events (implies \-m).
 \-m
 Multiple runs (enough runs to gather all events).
 .TP
-Kernel mode counts
+\-u User mode counts
+Instructs PAPI to only count user events.
+.TP
+\-k Kernel mode counts
 Instructs PAPI to only count kernel events.
 .TP
-Supervisor mode counts
+\-S Supervisor mode counts
 Instructs PAPI to only count Supervisor/Hypervisor events.
 .TP
-Interrupt mode counts
+\-I Interrupt mode counts
 Instructs PAPI to only count Interrupt events.
 .TP
-PAPI event
+\-e PAPI event
 set the PAPI to profile this native or local event.
 .TP
-TAU option
+\-T TAU option
 Profiles the application with this TAU option (requires TAU to be built with this option).
 .TP
 Application executable
@@ -49,3 +49,6 @@ The Application you want TAU or PAPI to profile.
 .TP
 Application option
 Any Application options you need to specify.
+.SH "EXAMPLE"
+.PP
+mpirun \-np 2 tauex \-e PAPI_TOT_CYC \-e PAPI_FP_OPS \-T MPI,PROFILE \-\- ./ring

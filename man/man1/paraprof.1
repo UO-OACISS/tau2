@@ -1,0 +1,33 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "PARAPROF" "1" "06/29/2007" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+paraprof \- Opens TAU's performance data viewer.
+.SH "SYNOPSIS"
+.HP 9
+\fBparaprof\fR [\-h,\ \-\-help] [\-p] [\-f,\ \-\-filetype\ \fIfiletype\fR] [\-i,\ \-\-fixnames] [\-\-pack\ \fIfile\fR] [\-\-dump] [\-m,\ \-\-monitor]
+.SH "DESCRIPTION"
+.PP
+For the TAU profiles type, you can specify either a specific set of profile files on the commandline, or you can specify a directory (by default the current directory). The specified directory will be searched for profile.*.*.* files, or, in the case of multiple counters, directories named MULTI_* containing profile data.
+.SH "OPTION"
+.PP
+\-p Use `pprof` to compute derived data.
+.PP
+\-f, \-\-filetype
+\fIfiletype \fR
+Specify type of performance data, options are: profiles (default), pprof, dynaprof, mpip, gprof, psrun, hpm, packed, cube, hpc
+.PP
+\-i, \-\-fixnames Use the fixnames option for gprof.
+.PP
+\-\-pack
+\fIfile \fRPack the data into packed (.ppk) format (does not launch ParaProf GUI)
+.PP
+\-\-dump Dump profile data to TAU profile format (does not launch ParaProf GUI).
+.PP
+\-m, \-\-monitor Perform runtime monitoring of profile data

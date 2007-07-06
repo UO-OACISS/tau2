@@ -1,0 +1,34 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "PERFDMF_CREATEAPP" "1" "06/29/2007" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+perfdmf_createapp \- Command line tool to create a application in the perfdmf database.
+.SH "SYNOPSIS"
+.HP 18
+\fBperfdmf_createapp\fR [\-h,\ \-\-help] [\-g,\ \-\-configFile\ \fIconfigFile\fR] [\-c,\ \-\-config\ \fIconfiguration_name\fR] [\-a,\ \-\-applicationid\ \fIapplicationID\fR] {\-n,\ \-\-name\ \fIname\fR}
+.SH "DESCRIPTION"
+.PP
+This script will create a new application in the perfdmf database.
+.SH "OPTIONS"
+.PP
+\-g, \-\-configFile
+\fIconfigFile \fR
+specify the path to the file that defines the perfdmf configuration.
+.PP
+\-c, \-\-config
+\fIconfiguration_name \fR
+specify the name of the perfdmf configuration \-c foo is equalivent to \-g <.
+.PP
+\-a, \-\-applicationid
+\fIapplicationID \fR
+specify the id number of the newly added application (default uses autoincerment).
+.PP
+\-n, \-\-name
+\fIname \fR
+the name of the application.
