@@ -131,11 +131,12 @@ cleangood:
 	   -exec /bin/rm {} \; -print
 	@find . \( -name \*.a -o -name \*.sl -o -name \*.o -o -name \*.dep \) \
 	   -exec /bin/rm {} \; -print
-	@if [ ! -d bin/$(CONFIG_ARCH) ] ; then true; \
-	      else /bin/rm -r bin/$(CONFIG_ARCH) ; fi
-	@if [ ! -d lib/$(CONFIG_ARCH) ] ; then true; \
-	      else /bin/rm -r lib/$(CONFIG_ARCH) ; fi
+	@if [ ! -d $(CONFIG_ARCH)/bin ] ; then true; \
+	      else /bin/rm -r $(CONFIG_ARCH)/bin ; fi
+	@if [ ! -d $(CONFIG_ARCH)/lib ] ; then true; \
+	      else /bin/rm -r $(CONFIG_ARCH)/lib ; fi
 	@grep "^#" ./build/Config.info > ./build/Config.info~~0; \
+	/bin/rm -f include/tauarch.h include/tau_config.h; \
 	/bin/mv ./build/Config.info~~0 ./build/Config.info
 
 .RECURSIVE: ${SUBDIR}
