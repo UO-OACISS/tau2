@@ -1,0 +1,47 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "PPROF" "1" "07/06/2007" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+pprof \- Quickly diplays profile data.
+.SH "SYNOPSIS"
+.HP 6
+\fBpprof\fR [\-a] [\-c] [\-b] [\-m] [\-t] [\-e] [\-i] [\-v] [\-r] [\-s] [\-n\ \fInum\fR] [\-f\ \fIfilename\fR] [\-p] [\-l] [\-d]
+.SH "DESCRIPTION"
+.PP
+.SH "OPTIONS"
+.PP
+\-a Show all location information available
+.PP
+\-c Sort according to number of Calls
+.PP
+\-b Sort according to number of suBroutines called by a function
+.PP
+\-m Sort according to Milliseconds (exclusive time total)
+.PP
+\-t Sort according to Total milliseconds (inclusive time total) (default)
+.PP
+\-e Sort according to Exclusive time per call (msec/call)
+.PP
+\-i Sort according to Inclusive time per call (total msec/call)
+.PP
+\-v Sort according to Standard Deviation (excl usec)
+.PP
+\-r Reverse sorting order
+.PP
+\-s print only Summary profile information
+.PP
+\-n num print only first num number of functions
+.PP
+\-f filename specify full path and Filename without node ids
+.PP
+\-p suPpress conversion to hhmmssmmm format
+.PP
+\-l List all functions and exit
+.PP
+\-d Dump output format (for tau_reduce) [node numbers] prints only info about all contexts/threads of given node numbers
