@@ -29,7 +29,13 @@ class XMLNode extends DefaultMutableTreeNode {
 	}
 	
 	public void setValue(String value) {
-		this.value = value;
+		//something funny is happening in the SAX parser... so append the
+		// text onto the existing text if it is already there.
+		if (this.value == null) {
+			this.value = value;
+		} else {
+			this.value = this.value + value;
+		}
 	}
 	
 	public List getChildren() {
