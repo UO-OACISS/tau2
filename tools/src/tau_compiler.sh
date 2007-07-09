@@ -55,7 +55,7 @@ printUsage () {
 	echo -e "  -optPdtCOpts=\"\"\t\tOptions for C parser in PDT (cparse). Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
 	echo -e "  -optPdtCReset=\"\"\t\tReset options to the C parser to the given list"
 	echo -e "  -optPdtCxxOpts=\"\"\t\tOptions for C++ parser in PDT (cxxparse). Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
-	echo -e "  -optPdtCReset=\"\"\t\tReset options to the C++ parser to the given list"
+	echo -e "  -optPdtCxxReset=\"\"\t\tReset options to the C++ parser to the given list"
 	echo -e "  -optPdtF90Parser=\"\"\t\tSpecify a different Fortran parser. For e.g., f90parse instead of f95parse"
 	echo -e "  -optPdtGnuFortranParser\tSpecify the GNU gfortran PDT parser gfparse instead of f95parse"
 	echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
