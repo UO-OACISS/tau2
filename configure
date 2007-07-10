@@ -4022,12 +4022,16 @@ then
       fi
   fi
   fixmakeargs="$fixmakeargs SLOG2 slog2dir=$slog2dir"
-  jdkdir=`which javac | sed s/javac/../`
   if [ "x$jdkdir" = "x" ]
   then
-    echo "You need javac in your path while using SLOG2. Please re-configure TAU."
+    jdkdir=$JAVA_HOME 
+    #`which javac | sed s/javac/../`
+    if [ "x$jdkdir" = "x" ]
+    then
+      echo "You must set the JAVA_HOME environment variable to compile the jni version of tau2slog2. Please re-configure TAU."
+    fi
+    fixmakeargs="$fixmakeargs jdkdir=$jdkdir"
   fi
-  fixmakeargs="$fixmakeargs jdkdir=$jdkdir"
 fi
 
 if [ $pdt = yes ]
