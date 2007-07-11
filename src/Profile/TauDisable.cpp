@@ -653,13 +653,44 @@ void Tau_reducescatter_data(int data)
 {
 }
 
+/* alloc/dealloc */
+void TAU_ALLOC(void ** ptr, int* line, int *size, char *name, int slen)
+{
+}
 
+void tau_alloc(void ** ptr, int* line, int *size, char *name, int slen)
+{
+}
+
+void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen)
+{
+}
+
+void tau_alloc__(void ** ptr, int* line, int *size, char *name, int slen)
+{
+}
+
+void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen) 
+{
+}
+
+void tau_dealloc(void ** ptr, int* line, char *name, int slen) 
+{
+}
+
+void tau_dealloc_(void ** ptr, int* line, char *name, int slen) 
+{
+}
+
+void tau_dealloc__(void ** ptr, int* line, char *name, int slen) 
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauDisable.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 2007/03/26 21:53:05 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.8 2007/03/26 21:53:05 sameer Exp $ 
+ * $Revision: 1.9 $   $Date: 2007/07/11 20:21:34 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.9 2007/07/11 20:21:34 sameer Exp $ 
  ***************************************************************************/
