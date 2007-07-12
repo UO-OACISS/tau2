@@ -20,24 +20,26 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.25 2007/06/15 22:55:11 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.26 2007/07/12 20:06:10 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  */
 public abstract class DataSource {
 
     public static final SimpleDateFormat dateTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-    public static int TAUPROFILE = 0;
-    public static int PPROF = 1;
-    public static int DYNAPROF = 2;
-    public static int MPIP = 3;
-    public static int HPM = 4;
-    public static int GPROF = 5;
-    public static int PSRUN = 6;
-    public static int PPK = 7;
-    public static int CUBE = 8;
-    public static int HPCTOOLKIT = 9;
+    public static final int TAUPROFILE = 0;
+    public static final int PPROF = 1;
+    public static final int DYNAPROF = 2;
+    public static final int MPIP = 3;
+    public static final int HPM = 4;
+    public static final int GPROF = 5;
+    public static final int PSRUN = 6;
+    public static final int PPK = 7;
+    public static final int CUBE = 8;
+    public static final int HPCTOOLKIT = 9;
+    public static final int SNAP = 10;
+    public static final int OMPP = 11;
 
     public static String formatTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
             "PSRun", "ParaProf Packed Profile", "Cube", "HPCToolkit" };
@@ -667,23 +669,24 @@ public abstract class DataSource {
                     numThreads = numProfiles;
                 }
 
-                totalProfile.setNumSamples(numSampSum,snapshot);
-                totalProfile.setMaxValue(maxSum,snapshot);
-                totalProfile.setMinValue(minSum,snapshot);
-                totalProfile.setMeanValue(maxSum,snapshot);
-                totalProfile.setStdDev(stdDevSum,snapshot);
+                totalProfile.setNumSamples(numSampSum, snapshot);
+                totalProfile.setMaxValue(maxSum, snapshot);
+                totalProfile.setMinValue(minSum, snapshot);
+                totalProfile.setMeanValue(maxSum, snapshot);
+                totalProfile.setStdDev(stdDevSum, snapshot);
 
-                meanProfile.setNumSamples((numSampSum / numThreads),snapshot);
-                meanProfile.setMaxValue(maxSum / numThreads,snapshot);
-                meanProfile.setMinValue(minSum / numThreads,snapshot);
-                meanProfile.setMeanValue(meanSum / numThreads,snapshot);
-                meanProfile.setStdDev(stdDevSum / numThreads,snapshot);
+                meanProfile.setNumSamples((numSampSum / numThreads), snapshot);
+                meanProfile.setMaxValue(maxSum / numThreads, snapshot);
+                meanProfile.setMinValue(minSum / numThreads, snapshot);
+                meanProfile.setMeanValue(meanSum / numThreads, snapshot);
+                meanProfile.setStdDev(stdDevSum / numThreads, snapshot);
 
-                stddevProfile.setNumSamples(computeStdDev(numSampSumSqr, meanProfile.getNumSamples(snapshot), numThreads),snapshot);
-                stddevProfile.setMaxValue(computeStdDev(maxSumSqr, meanProfile.getMaxValue(snapshot), numThreads),snapshot);
-                stddevProfile.setMinValue(computeStdDev(minSumSqr, meanProfile.getMinValue(snapshot), numThreads),snapshot);
-                stddevProfile.setMeanValue(computeStdDev(meanSumSqr, meanProfile.getMeanValue(snapshot), numThreads),snapshot);
-                stddevProfile.setStdDev(computeStdDev(stdDevSumSqr, meanProfile.getStdDev(snapshot), numThreads),snapshot);
+                stddevProfile.setNumSamples(computeStdDev(numSampSumSqr, meanProfile.getNumSamples(snapshot), numThreads),
+                        snapshot);
+                stddevProfile.setMaxValue(computeStdDev(maxSumSqr, meanProfile.getMaxValue(snapshot), numThreads), snapshot);
+                stddevProfile.setMinValue(computeStdDev(minSumSqr, meanProfile.getMinValue(snapshot), numThreads), snapshot);
+                stddevProfile.setMeanValue(computeStdDev(meanSumSqr, meanProfile.getMeanValue(snapshot), numThreads), snapshot);
+                stddevProfile.setStdDev(computeStdDev(stdDevSumSqr, meanProfile.getStdDev(snapshot), numThreads), snapshot);
             }
         }
 
@@ -1317,8 +1320,6 @@ public abstract class DataSource {
     }
 
     public void aggregateMetaData() {
-
-        metaData = new TreeMap();
         Thread node0 = (Thread) getAllThreads().get(0);
 
         // must have at least one thread
@@ -1343,7 +1344,7 @@ public abstract class DataSource {
                 String trialValue = (String) metaData.get(name);
                 if (trialValue == null || !value.equals(trialValue)) {
                     metaData.remove(name);
-                    uncommonMetaData.put(name,value);
+                    uncommonMetaData.put(name, value);
                 }
             }
         }

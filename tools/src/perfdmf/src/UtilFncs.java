@@ -503,7 +503,7 @@ public class UtilFncs {
 
             dataSource = new CubeDataSource(sourceFiles[0]);
             break;
-        case 9:
+        case DataSource.HPCTOOLKIT:
             if (sourceFiles.length != 1) {
                 throw new DataSourceException("HPCToolkit type: you must specify exactly one file");
             }
@@ -523,10 +523,14 @@ public class UtilFncs {
 
         
         
-        case 10:
+        case DataSource.SNAP:
             //dataSource = new TimeSeriesDataSource(sourceFiles[0]);
             //dataSource = new SnapshotDataSource(sourceFiles[0]);
             dataSource = new SnapshotDataSource(sourceFiles);
+            break;
+
+        case DataSource.OMPP:
+            dataSource = new OmppDataSource(sourceFiles[0]);
             break;
 
         
