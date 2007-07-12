@@ -67,8 +67,26 @@ public class MpiPDataSource extends DataSource {
 
         // find the start and stop time
         while ((inputString = br.readLine()) != null) {
-            if (inputString.startsWith("@ Start time")) {
+            int colon = inputString.indexOf(":");
+            
+            if (inputString.startsWith("@") && (colon != -1)) {
+                String key = inputString.substring(0,colon).substring(1).trim();
+                String value = inputString.substring(colon+1);
 
+                if (key.equals("MPI Task Assignment")) {
+                    StringTokenizer st = new StringTokenizer(value," ");
+                    String idToken = st.nextToken();
+                    String machineToken = st.nextToken();
+                    int id = Integer.parseInt(idToken);
+                    Thread thread = addThread(id,0,0);
+                    thread.getMetaData().put(key,machineToken);
+                } else {
+                    getMetaData().put(key,value);
+                }
+            }
+                    
+            
+            if (inputString.startsWith("@ Start time")) {
                 String remainder = inputString.substring(inputString.indexOf(':') + 1);
 
                 try {
@@ -76,8 +94,10 @@ public class MpiPDataSource extends DataSource {
                 } catch (java.text.ParseException except) {
                     System.out.println("Warning, couldn't parse date \"" + remainder + "\"");
                 }
-
-                // exit this while loop
+            }
+            
+            if (!inputString.startsWith("@")) {
+                // headers over
                 break;
             }
         }
@@ -340,6 +360,8 @@ public class MpiPDataSource extends DataSource {
         //                System.out.println("Time to process file (in milliseconds): " + time);
 
         this.generateDerivedData();
+        this.aggregateMetaData();
+
     }
 
     private void getCallsiteData(String string) {
