@@ -1480,7 +1480,9 @@ case $machine in
      if [ $cxx_compiler = default ]
        then
          cxx_compiler=g++
-	 fortran_compiler=gfortran
+         if [ $fortran_compiler = no ] ; then
+             fortran_compiler=gfortran
+         fi
      fi
 
      if [ $c_compiler = default ]
