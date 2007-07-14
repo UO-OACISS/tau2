@@ -22,9 +22,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.16 2007/05/11 21:44:41 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.17 2007/07/14 02:14:05 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {
@@ -291,7 +291,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             return "Phase: " + phase + "\nMetric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\nValue: "
                     + "Exclusive" + "\n";
         } else {
-            return "Metric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\nValue: " + "Exclusive" + "\n";
+            return "Metric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\nValue: " + dataSorter.getValueType() + "\n";
         }
     }
 
@@ -400,7 +400,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     }
 
     public void help(boolean display) {
-        ParaProf.getHelpWindow().show();
+        ParaProf.getHelpWindow().setVisible(true);
     }
 
     public Function getPhase() {
@@ -486,6 +486,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
     public void resort() {
         sortLocalData();
+        setHeader();
         panel.repaint();
     }
 
