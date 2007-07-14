@@ -22,9 +22,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.17 2007/07/14 02:14:05 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.18 2007/07/14 02:18:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {
@@ -291,7 +291,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             return "Phase: " + phase + "\nMetric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\nValue: "
                     + "Exclusive" + "\n";
         } else {
-            return "Metric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\nValue: " + dataSorter.getValueType() + "\n";
+            return "Metric: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\nValue: " + dataSorter.getValueType() + "\n";
         }
     }
 
