@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.7 2007/05/29 20:27:02 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.8 2007/07/14 23:33:16 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
@@ -183,9 +183,22 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
         this.expanded = expanded;
     }
 
-    public Color getColor(int metricID) {
+    public double getColorValue(int metricID, boolean expanded) {
         if (!model.getWindow().getTreeMode()) {
-            return null;
+            return -1;
+        }
+
+        if (functionProfile == null) {
+            double value = 0;
+            if (expanded) {
+                value = 0;
+            } else {
+                for (Iterator it = getChildren().iterator(); it.hasNext();) {
+                    TreeTableNode child = (TreeTableNode) it.next();
+                    value += child.getColorValue(metricID, false);
+                }
+            }
+            return value;
         }
 
         if (functionProfile != null && model.getMaxValues()[metricID] != 0) {
@@ -196,10 +209,20 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
                 value = functionProfile.getInclusive(metricID);
             }
 
+            return value;
+        }
+        return 0;
+    }
+
+    
+    public Color getColor(int metricID) {
+        double value = getColorValue(metricID, expanded);
+        if (value == -1) {
+            return null;
+        } else {
             Color color = ColorBar.getColor((float) (value / model.getMaxValues()[metricID]));
             return color;
         }
-        return ColorBar.getColor(0);
     }
 
     public void sortChildren() {
