@@ -7,9 +7,9 @@ import java.util.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.12 2007/07/12 20:06:10 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.13 2007/07/14 23:31:59 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -319,6 +319,9 @@ public class Thread implements Comparable {
     }
 
     public double getMaxInclusive(int metric, int snapshot) {
+        if (snapshot == -1) {
+            snapshot = getNumSnapshots() - 1;
+        }
         return threadData[snapshot][metric].maxInclusive;
     }
 
