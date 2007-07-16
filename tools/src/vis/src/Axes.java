@@ -16,15 +16,17 @@ import java.util.StringTokenizer;
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import com.sun.opengl.util.GLUT;
 
 /**
  * Draws axes with labels.
  *
- * <P>CVS $Id: Axes.java,v 1.7 2007/05/11 00:34:35 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.8 2007/07/16 17:12:50 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class Axes implements Shape {
 
@@ -49,6 +51,7 @@ public class Axes implements Shape {
 
     private float stringSize = 3;
     private float labelSize = 8;
+    private float fontScale = 1200;
 
     private boolean enabled = true;
     private Color highlightColor = new Color(1, 0, 0);
@@ -270,6 +273,22 @@ public class Axes implements Shape {
             }
         };
 
+        
+        final JSlider fontScaleSlider = new JSlider(0,4000,4600-(int)getFontScale());
+        fontScaleSlider.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent event) {
+                try {
+                    Axes.this.setFontScale(4600-(float)(fontScaleSlider.getValue()));
+                    visRenderer.redraw();
+                } catch (Exception e) {
+                    VisTools.handleException(e);
+                }
+            }
+        });    
+
+        
+
+        
         ButtonGroup group = new ButtonGroup();
 
         JRadioButton nw = new JRadioButton("NW", orientation == Orientation.NW);
@@ -294,21 +313,27 @@ public class Axes implements Shape {
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0.2;
         gbc.weighty = 0.2;
-        VisTools.addCompItem(axesPanel, enabledCheckBox, gbc, 0, 0, 1, 3);
+        VisTools.addCompItem(axesPanel, enabledCheckBox, gbc, 0, 0, 2, 2);
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.fill = GridBagConstraints.NONE;
-        VisTools.addCompItem(axesPanel, new JLabel("Orientation"), gbc, 1, 0, 2, 1);
+        VisTools.addCompItem(axesPanel, new JLabel("Orientation"), gbc, 2, 0, 2, 1);
 
         gbc.anchor = GridBagConstraints.EAST;
         gbc.fill = GridBagConstraints.NONE;
 
-        VisTools.addCompItem(axesPanel, nw, gbc, 1, 1, 1, 1);
-        VisTools.addCompItem(axesPanel, sw, gbc, 1, 2, 1, 1);
+        VisTools.addCompItem(axesPanel, nw, gbc, 2, 1, 1, 1);
+        VisTools.addCompItem(axesPanel, sw, gbc, 2, 2, 1, 1);
 
         gbc.anchor = GridBagConstraints.WEST;
-        VisTools.addCompItem(axesPanel, ne, gbc, 2, 1, 1, 1);
-        VisTools.addCompItem(axesPanel, se, gbc, 2, 2, 1, 1);
+        VisTools.addCompItem(axesPanel, ne, gbc, 3, 1, 1, 1);
+        VisTools.addCompItem(axesPanel, se, gbc, 3, 2, 1, 1);
 
+        
+        gbc.anchor = GridBagConstraints.CENTER;
+        VisTools.addCompItem(axesPanel, new JLabel("Font Size"),gbc,0,2,1,1);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        VisTools.addCompItem(axesPanel, fontScaleSlider,gbc,0,3,1,1);
+        
         return axesPanel;
     }
 
@@ -666,12 +691,14 @@ public class Axes implements Shape {
                 }
                 gl.glEnd();
 
+
+                
                 if (leftJustified) {
                     gl.glTranslatef(1.5f, 0.0f, 0.0f);
-                    gl.glScalef(stringSize / 1000, stringSize / 1000, stringSize / 1000);
+                    gl.glScalef(stringSize / fontScale, stringSize / fontScale, stringSize / fontScale);
                 } else {
                     gl.glTranslatef(-1.5f, 0.0f, 0.0f);
-                    gl.glScalef(stringSize / 1000, stringSize / 1000, stringSize / 1000);
+                    gl.glScalef(stringSize / fontScale, stringSize / fontScale, stringSize / fontScale);
                     gl.glTranslated(-width, 0.0, 0.0);
                 }
 
@@ -716,7 +743,8 @@ public class Axes implements Shape {
         if (leftJustified) {
             gl.glTranslated(maxPoint + 3.0f, -increment * (strings.size() + 1) / 2, 0);
             gl.glRotatef(90, 0, 0, 1);
-            gl.glScalef(labelSize / 1000, labelSize / 1000, labelSize / 1000);
+            gl.glScalef(labelSize / fontScale, labelSize / fontScale, labelSize / fontScale);
+
 
             StringTokenizer st = new StringTokenizer(label, "\n");
             while (st.hasMoreTokens()) {
@@ -737,8 +765,8 @@ public class Axes implements Shape {
         } else {
             gl.glTranslated(-(maxPoint + 3.0f), -increment * (strings.size() + 1) / 2, 0);
             gl.glRotatef(-90, 0, 0, 1);
-
-            gl.glScalef(labelSize / 1000, labelSize / 1000, labelSize / 1000);
+            gl.glScalef(labelSize / fontScale, labelSize / fontScale, labelSize / fontScale);
+           
 
             StringTokenizer st = new StringTokenizer(label, "\n");
             while (st.hasMoreTokens()) {
@@ -842,6 +870,15 @@ public class Axes implements Shape {
      */
     public void setTextColor(Color textColor) {
         this.textColor = textColor;
+        this.dirty = true;
+    }
+
+    public float getFontScale() {
+        return fontScale;
+    }
+
+    public void setFontScale(float fontScale) {
+        this.fontScale = fontScale;
         this.dirty = true;
     }
 }
