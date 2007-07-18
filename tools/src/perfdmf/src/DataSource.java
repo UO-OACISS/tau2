@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.26 2007/07/12 20:06:10 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.27 2007/07/18 15:12:41 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  */
 public abstract class DataSource {
 
@@ -40,6 +40,7 @@ public abstract class DataSource {
     public static final int HPCTOOLKIT = 9;
     public static final int SNAP = 10;
     public static final int OMPP = 11;
+    public static final int GYRO = 100;
 
     public static String formatTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
             "PSRun", "ParaProf Packed Profile", "Cube", "HPCToolkit" };

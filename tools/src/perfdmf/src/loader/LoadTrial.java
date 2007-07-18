@@ -321,7 +321,7 @@ public class LoadTrial {
             } else if (fileTypeString.equals("hpc")) {
                 fileType = DataSource.HPCTOOLKIT;
             } else if (fileTypeString.equals("gyro")) {
-                fileType = 100;
+                fileType = DataSource.GYRO;
             } else {
                 System.err.println("Please enter a valid file type.");
                 LoadTrial.usage();

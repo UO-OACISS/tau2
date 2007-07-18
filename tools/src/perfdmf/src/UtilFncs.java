@@ -419,7 +419,7 @@ public class UtilFncs {
         List v = new ArrayList();
         File filelist[];
         switch (fileType) {
-        case 0: // TAU Profiles
+        case DataSource.TAUPROFILE: // TAU Profiles
             FileList fl = new FileList();
 
             if (sourceFiles.length < 1) {
@@ -444,7 +444,7 @@ public class UtilFncs {
 
             dataSource = new TauDataSource(v);
             break;
-        case 1:
+        case DataSource.PPROF:
             if (sourceFiles.length != 1) {
                 throw new DataSourceException("pprof type: you must specify exactly one file");
             }
@@ -454,10 +454,10 @@ public class UtilFncs {
             v.add(sourceFiles);
             dataSource = new TauPprofDataSource(v);
             break;
-        case 2:
+        case DataSource.DYNAPROF:
             dataSource = new DynaprofDataSource(sourceFiles);
             break;
-        case 3:
+        case DataSource.MPIP:
 
             if (sourceFiles.length != 1) {
                 throw new DataSourceException("MpiP type: you must specify exactly one file");
@@ -467,18 +467,18 @@ public class UtilFncs {
             }
             dataSource = new MpiPDataSource(sourceFiles[0]);
             break;
-        case 4:
+        case DataSource.HPM:
             v.add(sourceFiles);
             dataSource = new HPMToolkitDataSource(v);
             break;
-        case 5:
+        case DataSource.GPROF:
             dataSource = new GprofDataSource(sourceFiles, fixGprofNames);
             break;
-        case 6:
+        case DataSource.PSRUN:
             v.add(sourceFiles);
             dataSource = new PSRunDataSource(v);
             break;
-        case 7:
+        case DataSource.PPK:
             if (sourceFiles.length != 1) {
                 throw new DataSourceException("Packed Profile type: you must specify exactly one file");
             }
@@ -487,7 +487,7 @@ public class UtilFncs {
             }
             dataSource = new PackedProfileDataSource(sourceFiles[0]);
             break;
-        case 8:
+        case DataSource.CUBE:
             if (sourceFiles.length != 1) {
                 throw new DataSourceException("Cube type: you must specify exactly one file");
             }
@@ -534,7 +534,7 @@ public class UtilFncs {
             break;
 
         
-        case 100:
+        case DataSource.GYRO:
             v.add(sourceFiles);
             dataSource = new GyroDataSource(v);
             break;
