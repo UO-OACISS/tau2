@@ -1,8 +1,13 @@
 package edu.uoregon.tau.perfdmf.database;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.net.URL;
 
 import edu.uoregon.tau.common.TauRuntimeException;
 
@@ -26,7 +31,7 @@ public class ParseConfig implements Serializable {
 
     public ParseConfig(String configLoc) {
 
-        path = configLoc;
+    	path = configLoc;
         String[] split = configLoc.split("\\.");
         name = split[split.length-1];
         if (name.compareTo("cfg") == 0)
@@ -36,8 +41,21 @@ public class ParseConfig implements Serializable {
         String value;
 
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(configLoc));
-
+            BufferedReader reader;
+            if (configLoc.toLowerCase().startsWith("http:")) {
+                // When it gets converted from a String to a File http:// turns into http:/
+            	String url_string = "http://" + configLoc.toString().substring(7).replace('\\', '/');
+            	//URL url = new URL("http://" + configLoc.toString().substring(6).replace('\\', '/'));
+                
+            	//URL url = new URL("http://localhost:3003/workspace/create_perfdmf_config?user=1&amp;workspace=2");
+            	URL url = new URL(url_string);
+            	InputStream iostream = url.openStream();
+                InputStreamReader ireader = new InputStreamReader(iostream);
+                reader = new BufferedReader(ireader);
+            }  else {
+                reader = new BufferedReader(new FileReader(new File(configLoc)));
+            }
+            
             // The following is for reading perfdmf.cfg out of the jar file for Java Web Start
             //        URL url = ParseConfig.class.getResource("/perfdmf.cfg");
             //        
@@ -86,6 +104,7 @@ public class ParseConfig implements Serializable {
             reader.close();
         } catch (Exception e) {
             // wrap it up in a runtime exception
+        	e.printStackTrace();
             throw new TauRuntimeException("Unable to parse \"" + configLoc + "\"", e);
         }
     }
