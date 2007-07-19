@@ -161,18 +161,18 @@ public class LoadTrial {
     public void saveTrial() {
         trial.setName(trialName);
 
-        System.out.println("TrialName: " + trialName);
+        System.err.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
         try {
             databaseAPI.uploadTrial(trial, summaryOnly);
         } catch (DatabaseException e) {
             e.printStackTrace();
             Exception e2 = e.getException();
-            System.out.println("from: ");
+            System.err.println("from: ");
             e2.printStackTrace();
             System.exit(-1);
         }
-        System.out.println("Done saving trial!");
+        System.err.println("Done saving trial!");
     }
 
     public void appendToTrial() {
@@ -184,7 +184,7 @@ public class LoadTrial {
             e.printStackTrace();
             System.exit(-1);
         }
-        System.out.println("Done adding metric to trial!");
+        System.err.println("Done adding metric to trial!");
     }
 
     public String getProblemString() {
@@ -197,7 +197,7 @@ public class LoadTrial {
         try {
             reader = new BufferedReader(new FileReader(problemFile));
         } catch (Exception e) {
-            System.out.println("Problem file not found!  Exiting...");
+            System.err.println("Problem file not found!  Exiting...");
             System.exit(0);
         }
         // read the file, one line at a time, and do some string
