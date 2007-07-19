@@ -17,7 +17,9 @@ def main():
   arg = sys.argv[1:] 
   
   if (arg[0] == 'download'):
-    if (len(arg) > 2):
+    if (len(arg) > 5):
+      downloaddb(arg[3], arg[4], arg[1], arg[2], arg[5])
+    elif (len(arg) > 2):
       downloaddb(arg[3], "", arg[1], arg[2])
     else:  
       downloaddb(arg[1]) 
@@ -37,9 +39,9 @@ def main():
     for l in list:
       print l
 
-def downloaddb(trial, filename = "", appName = 'Portal', expName = 'Portal'):
+def downloaddb(trial, filename = "", appName = 'Portal', expName = 'Portal',
+ perfdmf = java.lang.System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg"):
 
-  perfdmf = java.lang.System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
   dbApi = DatabaseAPI()
   dbApi.initialize(perfdmf, 0)
 
