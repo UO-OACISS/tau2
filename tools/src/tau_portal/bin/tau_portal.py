@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
 import httplib, urllib, fileinput, sys, getpass, platform
 from optparse import OptionParser
 #import perfdmf and portal modules

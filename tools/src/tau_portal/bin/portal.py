@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
 """TAU Portal Python Module 
    the main defintation is for command line usage.
    the download method is used for importation (like in JPython)
