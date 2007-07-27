@@ -46,7 +46,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.56 2007/07/10 23:54:03 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.57 2007/07/27 18:01:32 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -817,7 +817,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append(" group by cast (m.name as VARCHAR(256)) order by 1 desc");
 			} else if (db.getDBType().compareTo("mysql") == 0) {
-				buf.append(" group by m.name order by 1 desc");
+				buf.append(" group by 2 order by 1 desc");
 			} else {
 				buf.append(" group by m.name order by count(m.name) desc");
 			}
