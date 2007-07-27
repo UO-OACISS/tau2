@@ -120,8 +120,24 @@ done
 echo "$modargs" >> .all_configs
 echo "$modargs" > .last_config
 
+# test if we're using the retarded 'dash' shell
+usingdash=no
+readlink=`which readlink`
+if [ "x$readlink" != "x" ] ; then
+    if [ -x "$readlink" ] ; then
+	symlink=`readlink /bin/sh`
+	if [ "x$symlink" = "xdash" ] ; then
+	    usingdash=yes
+	fi
+    fi
+fi
+
 # write tau_config.h that's used as meta-data containing the TAU configuration
-modmodargs=`echo "x$modargs" | sed -e 's/^x//' -e 's#\\\#\\\\\\\\#g'`
+if [ "$usingdash" = "yes" ] ; then 
+    modmodargs=`echo "x$modargs" | sed -e 's/^x//' -e 's#\\\#\\\\\\\\\\\#g'`
+else 
+    modmodargs=`echo "x$modargs" | sed -e 's/^x//' -e 's#\\\#\\\\\\\\#g'`
+fi
 echo "#define TAU_CONFIG \"$modmodargs\"" > include/tau_config.h
 
 START_DIR=`pwd`
