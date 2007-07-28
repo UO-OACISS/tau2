@@ -470,7 +470,7 @@ TAU_GCCLIB	= -lgcc_s
 
 #CRAY_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
 #CRAY_X1_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
-#PGI_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902 -lpgftnrtl #ENDIF#
+#PGI_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902 -lpgftnrtl -lrt #ENDIF#
 #HP_FORTRAN#TAU_FORTRANLIBS	       = -L$(EXTRADIR)/lib/pa2.0 -lF90 -lcl        #ENDIF#
 #INTEL_FORTRAN#TAU_FORTRANLIBS         = -lcprts -lPEPCF90   #ENDIF#
 #INTEL32_FORTRAN#TAU_FORTRANLIBS       = -lcprts -lCEPCF90 -lF90 #ENDIF#
