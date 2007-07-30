@@ -305,11 +305,14 @@ public class DBConnector implements DB {
                 Driver driver = (Driver) drvCls.newInstance();
                 DriverManager.registerDriver(new DriverShim(driver));
             } catch (ClassNotFoundException cnfe) {
-                System.err.println("Unable to load driver '" + driverName + "' from " + JDBCjarFileName);
+                try {
+                    Class.forName(driverName).newInstance();
+                } catch (ClassNotFoundException cnfe2) {
+                    System.err.println("Unable to load driver '" + driverName + "' from " + JDBCjarFileName);
+                }
             }
 
             // old method
-            // Class.forName(driverName).newInstance();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
