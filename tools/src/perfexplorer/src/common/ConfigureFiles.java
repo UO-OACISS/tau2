@@ -48,10 +48,12 @@ abstract public class ConfigureFiles {
 		File paraprofDirectory = new File(home + slash + ppDir);
 		String[] fileNames = paraprofDirectory.list();
 		List perfdmfConfigs  = new ArrayList();
-		for (int i = 0; i<fileNames.length; i++)
-		{
-			if (fileNames[i].startsWith(cfg) && !fileNames[i].endsWith("~"))
-				perfdmfConfigs.add(fileNames[i]);
+		if (fileNames != null) {
+			for (int i = 0; i<fileNames.length; i++)
+			{
+				if (fileNames[i].startsWith(cfg) && !fileNames[i].endsWith("~"))
+					perfdmfConfigs.add(fileNames[i]);
+			}
 		}
 		return perfdmfConfigs;
 	}
