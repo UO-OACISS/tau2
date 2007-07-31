@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.68 2007/07/12 20:06:50 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.69 2007/07/31 22:28:46 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.68 $
+ * @version $Revision: 1.69 $
  */
 public class ParaProf implements ActionListener {
 
@@ -123,7 +123,13 @@ public class ParaProf implements ActionListener {
                 + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
                 + "                                    (does not launch ParaProf GUI)\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
-                + "                                    (does not launch ParaProf GUI)\n" + "\n" + "Notes:\n"
+                + "                                    (does not launch ParaProf GUI)\n" 
+                + "  -o,--oss                        Print profile data in OSS style text output\n"
+                + "                                    (does not launch ParaProf GUI)\n" 
+                + "  -s,--summary                    Print only summary statistics\n" 
+                + "                                    (only applies to OSS output)\n" 
+                + "\n" 
+                + "Notes:\n"
                 + "  -m, --monitor                   Perform runtime monitoring of profile data\n" + "\n"
                 + "  -t, --tauhome                   Specify the tau home directory."
                 + "  -a, --tauarch                   Specify the tau architecture directory."
@@ -364,6 +370,8 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
         CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
         CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
+        CmdLineParser.Option ossOpt = parser.addBooleanOption('o', "oss");
+        CmdLineParser.Option summaryOpt = parser.addBooleanOption('s', "summary");
         CmdLineParser.Option monitorOpt = parser.addBooleanOption('m', "monitor");
         CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
         CmdLineParser.Option tauHomeOpt = parser.addStringOption('t', "tauhome");
@@ -382,6 +390,8 @@ public class ParaProf implements ActionListener {
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
         String pack = (String) parser.getOptionValue(packOpt);
         Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
+        Boolean oss = (Boolean) parser.getOptionValue(ossOpt);
+        Boolean summary = (Boolean) parser.getOptionValue(summaryOpt);
         Boolean monitor = (Boolean) parser.getOptionValue(monitorOpt);
         Boolean demo = (Boolean) parser.getOptionValue(demoOpt);
         ParaProf.tauHome = (String) parser.getOptionValue(tauHomeOpt);
@@ -414,25 +424,25 @@ public class ParaProf implements ActionListener {
 
         if (fileTypeString != null) {
             if (fileTypeString.equals("profiles")) {
-                ParaProf.fileType = 0;
+                ParaProf.fileType = DataSource.TAUPROFILE;
             } else if (fileTypeString.equals("pprof")) {
-                ParaProf.fileType = 1;
+                ParaProf.fileType = DataSource.PPROF;
             } else if (fileTypeString.equals("dynaprof")) {
-                ParaProf.fileType = 2;
+                ParaProf.fileType = DataSource.DYNAPROF;
             } else if (fileTypeString.equals("mpip")) {
-                ParaProf.fileType = 3;
+                ParaProf.fileType = DataSource.MPIP;
             } else if (fileTypeString.equals("hpm")) {
-                ParaProf.fileType = 4;
+                ParaProf.fileType = DataSource.HPM;
             } else if (fileTypeString.equals("gprof")) {
-                ParaProf.fileType = 5;
+                ParaProf.fileType = DataSource.GPROF;
             } else if (fileTypeString.equals("psrun")) {
-                ParaProf.fileType = 6;
+                ParaProf.fileType = DataSource.PSRUN;
             } else if (fileTypeString.equals("packed")) {
-                ParaProf.fileType = 7;
+                ParaProf.fileType = DataSource.PPK;
             } else if (fileTypeString.equals("cube")) {
-                ParaProf.fileType = 8;
+                ParaProf.fileType = DataSource.CUBE;
             } else if (fileTypeString.equals("hpc")) {
-                ParaProf.fileType = 9;
+                ParaProf.fileType = DataSource.HPCTOOLKIT;
             } else if (fileTypeString.equals("snap")) {
                 ParaProf.fileType = DataSource.SNAP;
             } else if (fileTypeString.equals("ompp")) {
@@ -457,6 +467,25 @@ public class ParaProf implements ActionListener {
             }
         }
 
+        
+        if (oss != null) {
+            try {
+                
+                boolean doSummary = false;
+                if (summary != null) {
+                    doSummary = true;
+                }
+                
+                DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
+                dataSource.load();
+                OSSWriter.writeOSS(dataSource, doSummary);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            System.exit(0);
+        }
+        
         if (pack != null) {
             try {
 
