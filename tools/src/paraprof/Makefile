@@ -5,10 +5,10 @@
 ##########################
 
 CONFIG_ARCH=x86_64
-TAUROOT=/home/users/scottb/tau2
+TAUROOT=/home/amorris/tau2
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java \
-             ParaProfTreeCellRenderer.java \
+             ParaProfTreeCellRenderer.java OSSWriter.java \
              HistogramWindow.java ParaProfTrial.java \
              ParaProfApplication.java SystemEvents.java \
              CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java PrefSpacingPanel.java \
