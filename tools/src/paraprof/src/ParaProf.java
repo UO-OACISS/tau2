@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.69 2007/07/31 22:28:46 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.70 2007/07/31 22:36:23 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.69 $
+ * @version $Revision: 1.70 $
  */
 public class ParaProf implements ActionListener {
 
@@ -120,19 +120,17 @@ public class ParaProf implements ActionListener {
                 + "  -h, --help                      Display this help message\n"
                 + "  -p                              Use `pprof` to compute derived data\n"
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n" + "\n"
+                + "  -m, --monitor                   Perform runtime monitoring of profile data\n" 
+                + "\n"
+                + "The following options will run only from the console (no GUI will launch):\n"
+                + "\n"
                 + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
-                + "                                    (does not launch ParaProf GUI)\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
-                + "                                    (does not launch ParaProf GUI)\n" 
-                + "  -o,--oss                        Print profile data in OSS style text output\n"
-                + "                                    (does not launch ParaProf GUI)\n" 
-                + "  -s,--summary                    Print only summary statistics\n" 
+                + "  -o, --oss                       Print profile data in OSS style text output\n"
+                + "  -s, --summary                   Print only summary statistics\n" 
                 + "                                    (only applies to OSS output)\n" 
                 + "\n" 
                 + "Notes:\n"
-                + "  -m, --monitor                   Perform runtime monitoring of profile data\n" + "\n"
-                + "  -t, --tauhome                   Specify the tau home directory."
-                + "  -a, --tauarch                   Specify the tau architecture directory."
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
