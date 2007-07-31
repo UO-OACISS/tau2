@@ -12,9 +12,9 @@ import java.util.zip.GZIPInputStream;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.15 2007/06/15 22:55:11 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.16 2007/07/31 21:20:09 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -230,8 +230,7 @@ public class PackedProfileDataSource extends DataSource {
         this.buildXMLMetaData();
 
         time = (System.currentTimeMillis()) - time;
-        System.out.println("Time to process (in milliseconds): " + time);
-
+        //System.out.println("Time to process (in milliseconds): " + time);
     }
 
     /**
