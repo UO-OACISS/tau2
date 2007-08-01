@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.71 2007/07/31 23:09:10 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.72 2007/08/01 02:45:10 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.71 $
+ * @version $Revision: 1.72 $
  */
 public class ParaProf implements ActionListener {
 
@@ -116,10 +116,10 @@ public class ParaProf implements ActionListener {
         System.err.println("Usage: paraprof [options] <files/directory> \n\n" + "Options:\n\n"
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
-                + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n" + "\n"
+                + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
                 + "  -h, --help                      Display this help message\n"
                 + "  -p                              Use `pprof` to compute derived data\n"
-                + "  -i, --fixnames                  Use the fixnames option for gprof\n" + "\n"
+                + "  -i, --fixnames                  Use the fixnames option for gprof\n"
                 + "  -m, --monitor                   Perform runtime monitoring of profile data\n" 
                 + "\n"
                 + "The following options will run only from the console (no GUI will launch):\n"
