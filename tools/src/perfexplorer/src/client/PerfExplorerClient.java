@@ -32,7 +32,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		
 		super("TAU: PerfExplorer Client");
 		
-		//DBConnector.setPasswordCallback(PasswordCallback.guiPasswordCallback);
+		DBConnector.setPasswordCallback(PasswordCallback.guiPasswordCallback);
 		
 		PerfExplorerOutput.setQuiet(quiet);
 		PerfExplorerConnection.setStandalone(standalone);
