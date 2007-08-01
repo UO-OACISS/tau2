@@ -2956,98 +2956,87 @@ then
   
     #echo "mpilibargs = $mpilibargs"
     # Cases
-    if [ -r $mpilib/libmpi.a -o -r $mpilib/libmpi.so ]
-    then
+    if [ -r $mpilib/libmpi.a -o -r $mpilib/libmpi.so ] ; then
       #echo "libmpi.* found!!"
-      if [ $mpilibrary = no ]
-      then 
-	mpilibrary=-lmpi
-	if [ -r $mpilib/libmpi++.so ]
-	then
-	  mpilibrary='-lmpi -lmpi++'
-	# SGI MPT
-	fi
+	if [ $mpilibrary = no ] ; then 
+	    mpilibrary=-lmpi
+	    if [ -r $mpilib/libmpi++.so ] ; then
+		mpilibrary='-lmpi -lmpi++'
+	        # SGI MPT
+	    fi
 
 	# OpenMPI
-	if [ -r $mpilib/libmpi_cxx.so ] 
-	then
-	  mpilibrary='-lmpi -lmpi_cxx'
+	if [ -r $mpilib/libmpi_cxx.so ] ; then 
+	    mpilibrary='-lmpi -lmpi_cxx'
 	fi
-
+	
         # See if threaded MPI should be used on AIX
-        if [ $ibmxlc_r = yes -a -r $mpilib/libmpi_r.a ]
-        then 
-          mpilibrary="-lmpi_r $additional_mpilibs"
-	 # echo "mpilibrary=$mpilibrary"
+        if [ $ibmxlc_r = yes -a -r $mpilib/libmpi_r.a ] ; then
+	    mpilibrary="-lmpi_r $additional_mpilibs"
         fi
       fi
-      if [ -r $mpilib/libpmpi.a -o -r $mpilib/libpmpi.so ] 
-      then 
-        #echo "libpmpi.* found "
-        mpilibargs="$mpilibargs -lpmpi $mpilibrary"
-        mpiflibargs="$mpiflibargs -lpmpi $mpilibrary"
+      if [ -r $mpilib/libpmpi.a -o -r $mpilib/libpmpi.so ] ; then
+          #echo "libpmpi.* found "
+	  mpilibargs="$mpilibargs -lpmpi $mpilibrary"
+	  mpiflibargs="$mpiflibargs -lpmpi $mpilibrary"
       else
-        #echo "libpmpi.* not found -lmpi probably contains PMPI routines"
-        mpilibargs="$mpilibargs $mpilibrary" 
-        mpiflibargs="$mpiflibargs $mpilibrary" 
+          #echo "libpmpi.* not found -lmpi probably contains PMPI routines"
+	  mpilibargs="$mpilibargs $mpilibrary" 
+	  mpiflibargs="$mpiflibargs $mpilibrary" 
       fi
     else
       #echo "libmpi.* not found!! Checking for mpich.*..."
-      if [ -r $mpilib/libmpich.*a -o -r $mpilib/libpmpich.so ]
-      then 
-        fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
-        #echo "MPICH found "
-        if [ "x$mpilibrary" = "xno" ]
-        then 
-	  if [ -r $mpilib/libmpich.rts.a ]
-	  then
-	  # For BG/L 
-	    mpilibrary="-lmpich.rts $additional_mpilibs"
-          else
-  	    mpilibrary=-lmpich
-          fi
+      if [ -r $mpilib/libmpich.*a -o -r $mpilib/libpmpich.so ] ; then 
+	  fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
+          #echo "MPICH found "
+	  if [ "x$mpilibrary" = "xno" ] ; then 
+	      if [ -r $mpilib/libmpich.rts.a ] ; then
+         	  # For BG/L 
+		  mpilibrary="-lmpich.rts $additional_mpilibs"
+	      else
+		  mpilibrary=-lmpich
+	      fi
+	  fi
+
+	  if [ -r $mpilib/libpmpich++.a -o -r $mpilib/libpmpich++.so ] ; then 
+              #echo "pmpich++ found"
+	      mpilibrary="-lpmpich++ $mpilibrary"
+	  fi
+	  
+	  if [ -r $mpilib/libmpichcxx.a -o -r $mpilib/libmpichcxx.so ] ; then 
+              #echo "mpichcxx found"
+	      mpilibrary="-lmpichcxx $mpilibrary"
+	  fi
+	  
+	  if [ -r $mpilib/libpmpich.a -o -r $mpilib/libpmpich.so ] ; then 
+              #echo "pmpich found"
+	      mpilibargs="$mpilibargs -lpmpich $mpilibrary"
+	      mpiflibargs="$mpiflibargs -lpmpich $mpilibrary"
+	  else
+              #echo "pmpich not found"
+	      mpilibargs="$mpilibargs $mpilibrary"
+	      mpiflibargs="$mpiflibargs $mpilibrary"
+	  fi
+	  
+        if [ -r /usr/lib/librt.a -o -r /usr/lib/librt.so ] ; then 
+            #echo "librt found"
+	    mpilibargs="$mpilibargs -lrt"
+	    mpiflibargs="$mpiflibargs -lrt"
         fi
 
-        if [ -r $mpilib/libpmpich++.a -o -r $mpilib/libpmpich++.so ] 
-        then 
-          #echo "pmpich++ found"
-          mpilibrary="-lpmpich++ $mpilibrary"
-        fi
-
-        if [ -r $mpilib/libmpichcxx.a -o -r $mpilib/libmpichcxx.so ] 
-        then 
-          #echo "mpichcxx found"
-          mpilibrary="-lmpichcxx $mpilibrary"
-        fi
-      
-        if [ -r $mpilib/libpmpich.a -o -r $mpilib/libpmpich.so ] 
-        then 
-          #echo "pmpich found"
-          mpilibargs="$mpilibargs -lpmpich $mpilibrary"
-          mpiflibargs="$mpiflibargs -lpmpich $mpilibrary"
-        else
-          #echo "pmpich not found"
-          mpilibargs="$mpilibargs $mpilibrary"
-          mpiflibargs="$mpiflibargs $mpilibrary"
-        fi
-
-        if [ -r /usr/lib/librt.a -o -r /usr/lib/librt.so ] 
-        then 
-          #echo "librt found"
-          mpilibargs="$mpilibargs -lrt"
-          mpiflibargs="$mpiflibargs -lrt"
-        fi
-
-        if [ -r $mpilib/libscdma.a -a -r $mpilib/libpmi.a ]
-        then
+        if [ -r $mpilib/libscdma.a -a -r $mpilib/libpmi.a ] ; then
 	  # echo "add -lscdma -lpmi to the SiCortex link line"
-          mpilibargs="$mpilibargs -lscdma -lpmi"
-          mpiflibargs="$mpiflibargs -lscdma -lpmi"
+	    mpilibargs="$mpilibargs -lscdma -lpmi"
+	    mpiflibargs="$mpiflibargs -lscdma -lpmi"
 	fi
-
-
+      else
+	  if [ "x$mpilibrary" != "xno" ] ; then 
+	      mpilibargs="$mpilibargs $mpilibrary"
+	      mpiflibargs="$mpiflibargs $mpilibrary"
+	  fi
       fi
     fi
+
     # libmpi.* found. But libpmpi* not found. 
     # both found.
     # libmpi.* not found - look for libmpich.*
@@ -3962,30 +3951,26 @@ if [ $pcl = yes ]
     tauoptions="${tauoptions}-pcl"
 fi
 
-if [ $papi = yes ]
-  then
+if [ $papi = yes ] ; then
     fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
     tauoptions="${tauoptions}-papi"
     p=$papidir/lib
-    if [ -f $p/libpapi.so -o -f $p/libpapi.a -o -f $p/libpapi64.so -o -f $p/libpapi64.a -o -f $p/libpapi.rts.a ]
-    then
-	fixmakeargs="$fixmakeargs papisubdir=lib"
+    if [ $machine = "mips32" ] ; then
+	fixmakeargs="$fixmakeargs papisubdir=lib32"
     else
-      if [ -f $p/cnos64/libpapi.so ]
-      then
-        fixmakeargs="$fixmakeargs papisubdir=lib/cnos64"
-      else
-	  if [ $machine = "mips32" ] ; then
-	      fixmakeargs="$fixmakeargs papisubdir=lib32"
-	  else
-	      if [ -f $papidir/lib64/libpapi.so ]
-		  then 
-		  fixmakeargs="$fixmakeargs papisubdir=lib64"
-	      else
-		  fixmakeargs="$fixmakeargs papisubdir=src"
-	      fi
-	  fi
-      fi
+	if [ -f $p/libpapi.so -o -f $p/libpapi.a -o -f $p/libpapi64.so -o -f $p/libpapi64.a -o -f $p/libpapi.rts.a ] ; then
+	    fixmakeargs="$fixmakeargs papisubdir=lib"
+	else
+	    if [ -f $p/cnos64/libpapi.so ] ; then
+		fixmakeargs="$fixmakeargs papisubdir=lib/cnos64"
+	    else
+		if [ -f $papidir/lib64/libpapi.so ] ; then 
+		    fixmakeargs="$fixmakeargs papisubdir=lib64"
+		else
+		    fixmakeargs="$fixmakeargs papisubdir=src"
+		fi
+	    fi
+	fi
     fi
 fi
 
