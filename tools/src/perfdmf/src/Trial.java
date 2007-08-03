@@ -24,7 +24,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.23 2007/06/26 03:28:05 khuck Exp $
+ * CVS $Id: Trial.java,v 1.24 2007/08/03 22:38:14 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -677,6 +677,7 @@ public class Trial implements Serializable {
                             statement.setNull(pos++, this.getFieldType(i));
                         } else {
                             byte[] compressed = Gzip.compress(this.getField(i));
+                            //System.out.println("gzip data is " + compressed.length + " bytes in size");
                             ByteArrayInputStream in = new ByteArrayInputStream(compressed);
                             statement.setBinaryStream(pos++, in, compressed.length);
                         }
@@ -971,7 +972,7 @@ public class Trial implements Serializable {
             } else if (db.getDBType().equalsIgnoreCase("db2")) {
                 sql.append(" BLOB"); // defaults to 1 GB max
             } else if (db.getDBType().equalsIgnoreCase("mysql")) {
-                sql.append(" BLOB"); // defaults to 64 KB max
+                sql.append(" LONGBLOB"); // defaults to 64 KB max
             } else if (db.getDBType().equalsIgnoreCase("postgresql")) {
                 sql.append(" BYTEA"); // defaults to 4 GB max
             }
