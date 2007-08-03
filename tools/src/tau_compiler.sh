@@ -162,7 +162,8 @@ for arg in "$@"; do
 		fi
 
                 # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
-		modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+		modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
+		#modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
 		THEARGS="$THEARGS $modarg"
 
 		if [ $foundFirstArg == 0 ]; then
@@ -198,7 +199,9 @@ for arg in "$@" ; do
 
     if [ $processingIncludeOrDefine = true ] ; then
 	# If there is a "-I /home/amorris", we now process the 2nd arg
-	mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
+#	mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
+	mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
+
 	mod_arg="$processingIncludeOrDefineArg $mod_arg"
 	optPdtCFlags="$mod_arg $optPdtCFlags"
 	optPdtCxxFlags="$mod_arg $optPdtCxxFlags"
@@ -552,7 +555,8 @@ for arg in "$@" ; do
 			;;
 
 		-I*|-D*)
-		        mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
+		        mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
+#			mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
 			optPdtCFlags="$mod_arg $optPdtCFlags"
 			optPdtCxxFlags="$mod_arg $optPdtCxxFlags"
 			optPdtF95="$mod_arg $optPdtF95"
