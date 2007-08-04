@@ -6,6 +6,8 @@ TAUARCH=@ARCH@
 BASEDIR=$TAUROOT/$TAUARCH
 
 SICORTEX=no
+PREFIX=no
+
 
 usage()
 {
@@ -172,7 +174,7 @@ if [ "x$binding_specified" = "x" ] ; then
     fi
     
     if [ "$SICORTEX" = "yes" ] ; then
-	bindings=`ls /usr/lib64 | grep TAU-shared`
+	bindings=`ls $PREFIX/lib64 | grep TAU-shared`
     else
 	bindings=`ls $BASEDIR/lib | grep shared`
     fi
@@ -226,10 +228,10 @@ done
 
 
 if [ "$SICORTEX" = "yes" ] ; then
-    export LD_LIBRARY_PATH=/usr/lib32/$theBinding:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH=/usr/lib64/$theBinding:$LD_LIBRARY_PATH
-    export LD_PRELOAD=/usr/lib32/$theBinding/libTAU.so:$LD_PRELOAD
-    export LD_PRELOAD=/usr/lib64/$theBinding/libTAU.so:$LD_PRELOAD
+    export LD_LIBRARY_PATH=/$PREFIX/lib32/$theBinding:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/$PREFIX/lib64/$theBinding:$LD_LIBRARY_PATH
+    export LD_PRELOAD=/$PREFIX/lib32/$theBinding/libTAU.so:$LD_PRELOAD
+    export LD_PRELOAD=/$PREFIX/lib64/$theBinding/libTAU.so:$LD_PRELOAD
 else 
     export LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$LD_LIBRARY_PATH
     export LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU.so
