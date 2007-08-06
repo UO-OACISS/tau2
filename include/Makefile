@@ -190,6 +190,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 ############# Fortran Compiler #############
 #GNU_FORTRAN#TAU_F90         = g77              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #GNU_GFORTRAN#TAU_F90         = gfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#G95_FORTRAN#TAU_F90         = g95              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SC_GFORTRAN#TAU_F90         = scgfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SGI_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM_FORTRAN#TAU_F90         = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -447,6 +448,7 @@ TAU_GCCLIB	= -lgcc_s
 #PATHSCALE_FORTRAN#TAU_FORTRANLIBS       = -lpathfstart -lpathfortran #ENDIF#
 #SC_PATHSCALE#TAU_FORTRANLIBS       = -lpathfstart -lpathfortran #ENDIF#
 #NAGWARE_FORTRAN#TAU_FORTRANLIBS		= $(EXTRADIR)/lib/quickfit.o -L$(EXTRADIR)/lib -lf96 #ENDIF#
+#G95_FORTRAN#TAU_FORTRANLIBS	       = -L$(EXTRADIR) -lf95 #ENDIF#
 #GNU_FORTRAN#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
 #GNU_GFORTRAN#TAU_FORTRANLIBS	       = -lgfortran -lgfortranbegin       #ENDIF#
 #SC_GFORTRAN#TAU_FORTRANLIBS	       = -lgfortran -lgfortranbegin       #ENDIF#

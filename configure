@@ -358,11 +358,11 @@ do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = pathscale -o $myarg = gfortran -o $myarg = open64 ] 
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = pathscale -o $myarg = gfortran -o $myarg = g95 -o $myarg = open64 ] 
     then
       fortran_compiler=$myarg
     else
-      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nagware', 'pathscale', 'gfortran', and 'open64'"
+      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nagware', 'pathscale', 'gfortran', 'g95', and 'open64'"
       exit 1
     fi
     shift
@@ -1088,6 +1088,103 @@ do
     echo "***********************************************************************"
     echo "Usage: configure [OPTIONS]"
     echo "  where [OPTIONS] are:"
+    echo ""
+    echo "Compiler Options:"
+    echo "-c++=<compiler>  ............................ specify the C++ compiler."
+    echo "          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
+    echo "                                      icpc|scgcc|scpathCC|pathCC|orCC]."
+    echo "-cc=<compiler> ................................ specify the C compiler."
+    echo "          options [cc|gcc|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
+    echo "-fortran=<compiler> ..................... specify the Fortran compiler."
+    echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
+    echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]"
+    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
+    echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
+    echo "          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
+    echo "                                               icpc|scgcc|pathCC|orCC]."
+    echo "-useropt='<parameters>' ... optional arguments to compilers (e.g. -O3)."
+    echo ""
+    echo "Installation Options:"
+    echo "-prefix=<dir> ................ Specify a target installation directory."
+    echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
+    echo "-arch=<architecture> ................... Specify a target architecture."
+    echo "       options                      [xt3|bgl|ibm64|ibm64linux|sunx86_64"
+    echo "                               |solaris2-64|mips32|sgin32|sgi64|sgio32]"
+    echo ""
+    echo "MPI Options:"
+    echo "-mpi .......................... Specify use of TAU MPI wrapper library."
+    echo "-mpiinc=<dir> ............. Specify location of MPI include dir and use"
+    echo "                           the TAU MPI Profiling and Tracing Interface."
+    echo "-mpilib=<dir> ............. Specify location of MPI library dir and use"
+    echo "                           the TAU MPI Profiling and Tracing Interface."
+    echo "-mpilibrary=<library> ................ Specify a different MPI library."
+    echo "            e.g., -mpilibrary=-lmpi_r                                  "
+    echo ""
+    echo "OpenMP Options:"
+    echo "-openmp ........................................... Use OpenMP threads."
+    echo "-opari=<dir>... Specify location of Opari OpenMP tool (use with above)."
+    echo "-opari_region ......... Report performance data for all OpenMP regions."
+    echo "-opari_construct ... Report performance data for all OpenMP constructs."
+    echo ""
+    echo "SHMEM Options:"
+    echo "-shmem ...................... Specify use of TAU SHMEM wrapper library."
+    echo "-shmeminc=<dir> ......... Specify location of SHMEM include dir and use"
+    echo "                         the TAU SHMEM Profiling and Tracing Interface."
+    echo "-shmemlib=<dir> ......... Specify location of SHMEM library dir and use"
+    echo "                           the TAU MPI Profiling and Tracing Interface."
+    echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
+    echo "            e.g., -shmemlibrary=-lsmac                                 "
+    echo ""
+    echo "Other Options:"
+    echo "-pthread .................................. Use pthread thread package."
+    echo "-papithread .................................. Use PAPI thread package."
+    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
+    echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
+    echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
+    echo "-slog2 ........ Specify use of TAU internal SLOG2 SDK/Jumpshot Package."
+    echo "-nocomm  ........ Disable tracking communication events in MPI library."
+    echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
+    echo "-epiloglib=<dir> ........... Specify full path to EPILOG lib directory."
+    echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
+    echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
+    echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
+    echo "-pythoninc=<dir> ........ Specify location of Python include directory."
+    echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
+    echo "-tag=<unique name> ........ Specify a tag to identify the installation."
+    echo "-TRACE ..................................... Generate TAU event traces."
+    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
+    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
+    echo "-PROFILECALLPATH ......................... Generate call path profiles."
+    echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+    echo "-PROFILEPHASE .......................... Generate phase based profiles."
+    echo "-PROFILESTATS .................. Enable standard deviation calculation."
+    echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
+    echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
+    echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
+    echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
+    echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
+    echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
+    echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
+    echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
+    echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
+    echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
+    echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
+    echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
+    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
+    echo "-noex .................. Use no exceptions while compiling the library."
+    echo "-help ...................................... display this help message."
+    echo "-fullhelp .............................. display the full help message."
+    echo ""
+    echo "More advanced options are available, use -fullhelp to see them."
+    exit
+    ;;
+
+  -fullhelp)
+    echo "TAU Configuration Utility "
+    echo "***********************************************************************"
+    echo "Usage: configure [OPTIONS]"
+    echo "  where [OPTIONS] are:"
     echo "-c++=<compiler>  ............................ specify the C++ compiler."
     echo "          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
     echo "                                      icpc|scgcc|scpathCC|pathCC|orCC]."
@@ -1100,13 +1197,13 @@ do
     echo "-pdtarchdir=<archdir> . specify a different PDT architecture directory."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
-    echo "           open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]"
+    echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]"
     echo "-useropt='<parameters>' ............... list of commandline parameters."
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
-    echo "       options         [xt3|bgl|ibm64|ibm64linux|sunx86_64             "
-    echo "                        |solaris2-64|mips32|sgin32|sgi64|sgio32]       "
+    echo "       options                      [xt3|bgl|ibm64|ibm64linux|sunx86_64"
+    echo "                               |solaris2-64|mips32|sgin32|sgi64|sgio32]"
     echo "-pthread .................................. Use pthread thread package."
     echo "-papithread .................................. Use PAPI thread package."
     echo "-charm=<dir> .............................. Use charm++ thread package."
@@ -1120,12 +1217,12 @@ do
     echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
-    echo "-jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+)."
+    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-slog2=<dir> .......... Specify location of SLOG2 SDK/Jumpshot Package."
-    echo "-slog2 ......... Specify use of TAU internal SLOG2 SDK/Jumpshot Package"
+    echo "-slog2 ........ Specify use of TAU internal SLOG2 SDK/Jumpshot Package."
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
     echo "-mpiinc=<dir> ............. Specify location of MPI include dir and use"
     echo "                           the TAU MPI Profiling and Tracing Interface."
@@ -1191,6 +1288,7 @@ do
     echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
     echo "-noex .................. Use no exceptions while compiling the library."
     echo "-help ...................................... display this help message."
+    echo "-fullhelp .............................. display the full help message."
     exit
     ;;
 
@@ -1231,6 +1329,7 @@ do
     ;;
   *)
     echo "ERROR: Command line switch \`$arg' not recognized" 1>&2
+    echo "Run configure with -help to see a list of options" 1>&2
     exit 1
     ;;
   esac
@@ -2164,6 +2263,13 @@ case $fortran_compiler in
       else
         fixmakeargs="$fixmakeargs GNU_GFORTRAN"
       fi
+      ;;
+
+   g95)
+      echo "Default Fortran compiler will be G95"
+      fixmakeargs="$fixmakeargs G95_FORTRAN"
+      extradir=`g95 -print-libgcc-file-name | sed s/libgcc.a//`
+      echo extra=$extradir
       ;;
 
    sgi)
@@ -5385,6 +5491,8 @@ fi
 echo '   Type "make install" to begin compilation'
 
 exit 0
+
+
 
 
 
