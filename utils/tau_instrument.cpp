@@ -633,7 +633,11 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
   string varname;
   getLoopTimerVariableName(varname, start.line());
 
+#ifdef TAU_ALT_FORTRAN_INSTRUMENTATION
+  string declaration1(string("      integer, dimension(2) ::  ")+varname+"= (/ 0, 0 /)");
+#else
   string declaration1(string("      integer ")+varname+"(2) / 0, 0 /");
+#endif /*TAU_ALT_FORTRAN_INSTRUMENTATION*/
   string declaration2(string("      save ")+varname);
 
   /* now we create the call to create the timer */
@@ -1482,7 +1486,7 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.44 $   $Date: 2007/05/21 20:59:02 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.44 2007/05/21 20:59:02 sameer Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
+ * $Revision: 1.45 $   $Date: 2007/08/08 03:00:23 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.45 2007/08/08 03:00:23 amorris Exp $
  ***************************************************************************/

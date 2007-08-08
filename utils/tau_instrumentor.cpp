@@ -3124,8 +3124,13 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		// a possible alternative
 		//ostr << "      integer*8 profiler / 0 /"<<endl;
 #else
+#ifdef TAU_ALT_FORTRAN_INSTRUMENTATION
+		// nagware and g95 require this
+		ostr << "      integer, dimension(2) :: profiler = (/ 0, 0 /)"<<endl;
+#else
 		ostr << "      integer profiler(2) / 0, 0 /"<<endl;
-#endif
+#endif /*TAU_ALT_FORTRAN_INSTRUMENTATION*/
+#endif /*TAU_ALIGN_FORTRAN_INSTRUMENTATION*/ 
 		ostr << "      save profiler"<<endl<<endl;
 	      }
 	      
@@ -4051,8 +4056,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.178 $   $Date: 2007/05/25 18:33:23 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.178 2007/05/25 18:33:23 amorris Exp $
+ * $Revision: 1.179 $   $Date: 2007/08/08 03:00:23 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.179 2007/08/08 03:00:23 amorris Exp $
  ***************************************************************************/
 
 
