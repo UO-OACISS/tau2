@@ -51,6 +51,7 @@ KtauCtrThread KtauCounters::ThreadList[TAU_MAX_THREADS];
 int KtauCounters::numCounters = 0;
 unsigned long KtauCounters::counterList[MAX_KTAU_COUNTERS];
 char KtauCounters::counterSyms[MAX_TAU_COUNTERS][KTAU_CTRSYM_MAXSZ];
+int KtauCounters::counterType[MAX_KTAU_COUNTERS];
 
 #ifdef TAU_KTAUCTR_DEBUG
 #include <stdarg.h>
@@ -101,7 +102,8 @@ KtauCtrThread::~KtauCtrThread() {
 
 
 /////////////////////////////////////////////////
-int KtauCounters::addCounter(char *name) {
+int KtauCounters::addCounter(char *name, int cType) {
+  int counter = 0, nOffset = 0;
 #ifdef TAU_KTAUCTR_DEBUG
   dmesg(1, "KTAU: Adding counter %s\n", name);
 #endif
@@ -109,6 +111,17 @@ int KtauCounters::addCounter(char *name) {
   strncpy(counterSyms[numCounters], name, KTAU_CTRSYM_MAXSZ);
   counterSyms[numCounters][KTAU_CTRSYM_MAXSZ-1] = '\0';
   
+  if(cType == KTAU_SHCTR_TYPE_INCL) {
+    nOffset = 5;
+  } else if(cType == KTAU_SHCTR_TYPE_NUM) {
+    nOffset = 4;
+  }
+  while (counterSyms[numCounters][nOffset+counter]!='\0') {
+    counterSyms[numCounters][counter]=counterSyms[numCounters][nOffset+counter];
+    counter++;
+  }
+  counterSyms[numCounters][counter] = '\0';
+
   //get the address of this name
   unsigned long addr = KtauProfiler::getKtauSym().MapRevSym(string(counterSyms[numCounters]));
   //for now assume we are able to get the address
@@ -116,11 +129,13 @@ int KtauCounters::addCounter(char *name) {
   
   if(!addr) {
     //if it fails - maybe they gave the address directly instead of symbol name?
-    fprintf(stderr, "KTAU CTR: getKtauSym FAILED for:%s. Assume they provided address instead of symbol-name in ENV variable.", counterSyms[numCounters]);
+    fprintf(stderr, "KTAU CTR: getKtauSym FAILED for:%s. Assume they provided address instead of symbol-name in ENV variable.\n", counterSyms[numCounters]);
     counterList[numCounters] = strtoul(counterSyms[numCounters], NULL, 16);  
   } else {
     counterList[numCounters] = addr;
   }
+  //remember the type - incl, excl or num
+  counterType[numCounters] = cType;
 
   int counterID = numCounters++;
   return counterID;
@@ -220,7 +235,8 @@ long long KtauCounters::getSingleCounter(int tid) {
 #endif  
 
   //for now KTAU counters in TAU look at excl time. Must have a way to choose incl/excl/ev-count
-  rc = ktau_copy_counter_excl(ThreadList[tid].shctr, ThreadList[tid].CounterValues, 1 /*Single Counter*/);
+  //rc = ktau_copy_counter_excl(ThreadList[tid].shctr, ThreadList[tid].CounterValues, 1 /*Single Counter*/);
+  rc = ktau_copy_counter_type(ThreadList[tid].shctr, ThreadList[tid].CounterValues, 1 /*Single Counter*/, counterType);
   if(rc) { //failed for some reason...
     fprintf (stderr, "KTAU CTR: Error reading KTAU counters.\n");
     return -1;
@@ -278,7 +294,8 @@ long long* KtauCounters::getAllCounters(int tid, int *numValues) {
 #endif
 
   //for now KTAU counters in TAU look at excl time. Must have a way to choose incl/excl/ev-count
-  rc = ktau_copy_counter_excl(ThreadList[tid].shctr, ThreadList[tid].CounterValues, numCounters);
+  //rc = ktau_copy_counter_excl(ThreadList[tid].shctr, ThreadList[tid].CounterValues, numCounters);
+  rc = ktau_copy_counter_type(ThreadList[tid].shctr, ThreadList[tid].CounterValues, numCounters, counterType);
   if(rc) { //failed for some reason...
     fprintf (stderr, "KTAU CTR: Error reading KTAU counters.\n");
     return NULL;
@@ -344,7 +361,7 @@ int KtauCounters::initializeSingleCounter() {
     return -1;
   }
 
-  int counterID = addCounter(ktau_event);
+  int counterID = addCounter(ktau_event, KTAU_SHCTR_TYPE_EXCL);
   if (counterID < 0) {
     return -1;
   }
@@ -353,10 +370,17 @@ int KtauCounters::initializeSingleCounter() {
 }
 
 // note, this only works on linux
+// the below seems to not compile on certain distros...?
+//======================================================
+//#include <sys/types.h>
+//#include <linux/unistd.h>
+//_syscall0(pid_t,gettid)
+//pid_t gettid(void);
+//======================================================
+//so replacing with this.........
 #include <sys/types.h>
-#include <linux/unistd.h>
-_syscall0(pid_t,gettid)
-pid_t gettid(void);
+#include <sys/syscall.h>
+#define gettid() syscall(SYS_gettid)
 
 unsigned long ktau_thread_gettid(void) {
 #ifdef SYS_gettid  

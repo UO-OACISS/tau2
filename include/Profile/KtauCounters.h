@@ -21,6 +21,7 @@
 #ifdef TAUKTAU_SHCTR
 extern "C" {
 #include <linux/ktau/ktau_cont_data.h>
+#include <ktau_proc_interface.h>
 }
 
 /* This wraps the shared-ctr *
@@ -62,8 +63,9 @@ public:
   static long long *getAllCounters(int tid, int *numValues);
   static long long getSingleCounter(int tid);
   static int reinitializeKtauCtr(void);
-  static int addCounter(char *name);
+  static int addCounter(char *name, int cType);
   static int RegisterFork(int type);
+  static int counterType[MAX_TAU_COUNTERS]; //hackaway - to let MultipleCounters.cpp have access place in public.
 private:
   static int initializeThread(int tid);
   static int initializeKtauCtr(void);

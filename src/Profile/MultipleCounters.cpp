@@ -754,20 +754,34 @@ bool MultipleCounterLayer::ktauMCLInit(int functionPosition){
   bool returnValue = false;
   for (int i=0; i<MAX_TAU_COUNTERS; i++) {
     int counterID = -1;
+    int cType = 0, nOffset = 0;
     if (MultipleCounterLayer::names[i] != NULL) {
       if (strstr(MultipleCounterLayer::names[i],"KTAU_") != NULL) {
+        if (strstr(MultipleCounterLayer::names[i],"KTAU_INCL_") != NULL) {
+          //remember type as INCL and set OFFSET as 10
+          cType = KTAU_SHCTR_TYPE_INCL;
+          nOffset = 5;
+        } else if (strstr(MultipleCounterLayer::names[i],"KTAU_NUM_") != NULL) {
+          //remember type as NUM and set OFFSET as 9
+          cType = KTAU_SHCTR_TYPE_NUM;
+          nOffset = 5;
+        } else {
+          //remember type as EXCL and set OFFSET as 5
+          cType = KTAU_SHCTR_TYPE_EXCL;
+          nOffset = 5;
+        }
 	//Reset the name  to get symbol name
 	//Shift the string down.
 	int counter = 0;
-	while (names[i][5+counter]!='\0') {
-	  MultipleCounterLayer::names[i][counter]=MultipleCounterLayer::names[i][5+counter];
+	while (names[i][nOffset+counter]!='\0') {
+	  MultipleCounterLayer::names[i][counter]=MultipleCounterLayer::names[i][nOffset+counter];
 	  counter++;
 	}
         MultipleCounterLayer::names[i][counter]='\0';
 #ifdef DEBUG_PROF
         cout << "Adjusted counter name is: " << names[i] << endl;
 #endif /* DEBUG_PROF */
-        counterID = KtauCounters::addCounter(MultipleCounterLayer::names[i]);
+        counterID = KtauCounters::addCounter(MultipleCounterLayer::names[i], cType);
       }
 	
       if (counterID >= 0) {
@@ -1001,7 +1015,11 @@ void MultipleCounterLayer::ktauMCL(int tid, double values[]){
       //times. Currently there is no fix implemented for this.
       //The thing to do maybe is to add a check in Profiler.cpp
       //to make sure no negative values are set.
-      values[ktauMCL_CP[i]] = ktauValues[i]/KTauGetMHz();
+      if(KtauCounters::counterType[i] != KTAU_SHCTR_TYPE_NUM) {
+        values[ktauMCL_CP[i]] = ktauValues[i]/KTauGetMHz();
+      } else {
+        values[ktauMCL_CP[i]] = ktauValues[i];
+      }
     }
   }
 
