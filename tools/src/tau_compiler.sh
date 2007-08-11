@@ -196,13 +196,12 @@ processingIncludeOrDefineArg=""
 for arg in "$@" ; do
     tempCounter=tempCounter+1
     echoIfDebug "Token No: $tempCounter) is -- $arg"
-
     if [ $processingIncludeOrDefine = true ] ; then
 	# If there is a "-I /home/amorris", we now process the 2nd arg
 #	mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
 	mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
 
-	mod_arg="$processingIncludeOrDefineArg $mod_arg"
+	mod_arg="$processingIncludeOrDefineArg$mod_arg"
 	optPdtCFlags="$mod_arg $optPdtCFlags"
 	optPdtCxxFlags="$mod_arg $optPdtCxxFlags"
 	optPdtF95="$mod_arg $optPdtF95"
