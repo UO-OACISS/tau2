@@ -52,7 +52,7 @@ abstract public class ConfigureFiles {
 			for (int i = 0; i<fileNames.length; i++)
 			{
 				if (fileNames[i].startsWith(cfg) && !fileNames[i].endsWith("~"))
-					perfdmfConfigs.add(fileNames[i]);
+					perfdmfConfigs.add(home + slash + ppDir + slash + fileNames[i]);
 			}
 		}
 		return perfdmfConfigs;
