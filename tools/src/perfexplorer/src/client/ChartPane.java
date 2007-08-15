@@ -94,6 +94,18 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
    	private JComboBox xmlName = new MyJComboBox();
 	//private JLabel xmlValueLabel = new JLabel("XML Value:");
    	//private JComboBox xmlValue = new MyJComboBox();
+	private String[] unitOptions = {
+				"microseconds", 
+				"milliseconds", 
+				"seconds",
+				"minutes",
+				"hours",
+				"units",
+				"thousands (x 1.0E3)",
+				"millions (x 1.0E6)",
+				"billions (x 1.0E9)",
+				"trillions (x 1.0E12)"
+				};
 	
 
 	private JButton apply = null;
@@ -362,13 +374,6 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		left.add(metric);
 
 		// units of interest
-		String[] unitOptions = {
-					"microseconds", 
-					"milliseconds", 
-					"seconds",
-					"minutes",
-					"hours"
-					};
 		left.add(unitsLabel);
 		units = new MyJComboBox(unitOptions);
 		this.units.addActionListener(this);
@@ -422,7 +427,11 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		facade.resetChartDefaults();
 
 		// title
-    	facade.setChartTitle(chartTitle.getText());
+		String title = chartTitle.getText();
+		if (title.length() == 0) { 
+			title = (String)metric.getSelectedItem();
+		}
+    	facade.setChartTitle(title);
 
 		// series name
 		Object obj = series.getSelectedItem();
@@ -475,8 +484,17 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		}
 		tmp = operation + "(" + tmp + ")";
 		label = yaxisName.getText();
-		if (label == null || label.length() == 0)
-			label = tmp;
+		if (label == null || label.length() == 0) {
+			// build something intelligible
+			//label = tmp;
+			if (tmp.indexOf("mean") >= 0) {
+				label = "Mean " + (String)this.metric.getSelectedItem();
+			} else if (tmp.indexOf("total") >= 0) {
+				label = "Total " + (String)this.metric.getSelectedItem();
+			} else {
+				label = (String)this.metric.getSelectedItem();
+			}
+		}
 		label += " - "  + (String)this.units.getSelectedItem();
 		facade.setChartYAxisName(tmp, label);
 
@@ -658,6 +676,16 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			conversion = 60000000.0;
 		} else if (units.equals("hours")) {
 			conversion = 3600000000.0;
+		} else if (units.equals("units")) {
+			conversion = 1.0;
+		} else if (units.equals("thousands (x 1.0E3)")) {
+			conversion = 1000.0;
+		} else if (units.equals("millions (x 1.0E6)")) {
+			conversion = 1000000.0;
+		} else if (units.equals("billions (x 1.0E9)")) {
+			conversion = 1000000000.0;
+		} else if (units.equals("billions (x 1.0E12)")) {
+			conversion = 1000000000000.0;
 		} 
 
 		if (rawData.getCategoryType() == Integer.class) {
@@ -788,7 +816,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
         // change the auto tick unit selection to integer units only...
         NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-		rangeAxis.setAutoRangeIncludesZero(true);
+		rangeAxis.setAutoRangeIncludesZero(false);
 
 /*
 		if (rawData.getCategoryType() == Integer.class) {

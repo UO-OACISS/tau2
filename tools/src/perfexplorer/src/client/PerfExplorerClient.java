@@ -48,6 +48,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		treeView.setPreferredSize(new Dimension(300, 400));
 		// Create a tabbed pane
 		PerfExplorerJTabbedPane tabbedPane = PerfExplorerJTabbedPane.getPane();
+		tabbedPane.setPreferredSize(new Dimension(890, 570));
 		// Create a split pane for the tree view and tabbed pane
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		splitPane.setLeftComponent(treeView);
@@ -65,8 +66,9 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		});
 
 		// window stuff
-		int windowWidth = 1000;
-		int windowHeight = 515;
+		//this.setPreferredSize(new Dimension(1190, 620));    // only works in java 5+
+		int windowWidth = 1190;
+		int windowHeight = 620;
 
         //Grab the screen size.
         Toolkit tk = Toolkit.getDefaultToolkit();

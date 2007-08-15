@@ -14,6 +14,8 @@ import edu.uoregon.tau.perfdmf.database.DB;
 import jargs.gnu.CmdLineParser;
 
 import java.io.InputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.File;
 
 import java.rmi.ConnectException;
@@ -46,7 +48,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.58 2007/07/30 20:41:29 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.59 2007/08/15 17:20:10 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -135,16 +137,20 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				timerThread.start();
 				this.session = api;
 			} catch (Exception e) {
-				System.err.println("Error connecting to " + tmpFile + "!");
-				System.err.println(e.getMessage());
-            	StringBuffer buf = new StringBuffer();
-            	buf.append("\nPlease make sure that your DBMS is ");
-            	buf.append("configured correctly, and the database ");
-            	buf.append("has been created.");
-            	buf.append("\nSee the PerfExplorer and/or PerfDMF");
-            	buf.append("configuration utilities for details.\n");
-            	System.err.println(buf.toString());
-				//System.exit(1);
+				if (e instanceof FileNotFoundException) {
+					System.err.println(e.getMessage());
+				} else {
+					System.err.println("Error connecting to " + tmpFile + "!");
+					System.err.println(e.getMessage());
+            		StringBuffer buf = new StringBuffer();
+            		buf.append("\nPlease make sure that your DBMS is ");
+            		buf.append("configured correctly, and the database ");
+            		buf.append("has been created.");
+            		buf.append("\nSee the PerfExplorer and/or PerfDMF");
+            		buf.append("configuration utilities for details.\n");
+            		System.err.println(buf.toString());
+					//System.exit(1);
+				}
         	}
 		}
 	}
