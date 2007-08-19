@@ -1429,8 +1429,11 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 #endif /* DEBUG */
 		    for (k = (*it)->col+strlen(use_return_nonvoid)-1; (inbuf[k] != ';') && (k<inbufLength) ; k++)
 		    {
-		      ret_expression.append(&inbuf[k], 1);
-                      if (inbuf[k] == '\\' ) ret_expression.append(&newline, 1);
+                      char current_char = inbuf[k];
+		      ret_expression.append(&current_char, 1);
+                      if ((inbuf[k] == '\\' ) && (inbuf[k+1] == '\0')) {
+			ret_expression.append(&newline, 1);
+                      }
 		    }
 #ifdef DEBUG
 		    cout <<"k = "<<k<<" inbuf = "<<inbuf[k]<<endl;
@@ -4055,9 +4058,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.179 $   $Date: 2007/08/08 03:00:23 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.179 2007/08/08 03:00:23 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.180 $   $Date: 2007/08/19 04:53:30 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.180 2007/08/19 04:53:30 sameer Exp $
  ***************************************************************************/
 
 
