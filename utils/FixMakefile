@@ -209,6 +209,16 @@ fi
 	echo "s,^PDT_CXX=.*$,PDT_CXX=$pdtcxx,g" >> $sedout
 	;;
 
+     fullcxx=*)
+        fullcxx=`echo $1 | sed -e 's/^fullcxx=//'`
+	echo "s,^FULL_CXX=.*$,FULL_CXX=$fullcxx,g" >> $sedout
+	;;
+
+     fullcc=*)
+        fullcc=`echo $1 | sed -e 's/^fullcc=//'`
+	echo "s,^FULL_CC=.*$,FULL_CC=$fullcc,g" >> $sedout
+	;;
+
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout

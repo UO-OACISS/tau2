@@ -78,6 +78,8 @@ TAU_MPI_INC=
 TAU_MPI_LIB=
 TAU_MPI_FLIB=
 TAU_MPILIB_DIR=
+FULL_CXX=
+FULL_CC=
 TAU_PREFIX_INSTALL_DIR=
 #######################################################################
  

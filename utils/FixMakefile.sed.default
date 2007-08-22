@@ -51,3 +51,5 @@ s@^FORCEIA32=\(.*\)@FORCEIA32=@g
 s@^KTAU_INCDIR=\(.*\)@KTAU_INCDIR=@g
 s@^KTAU_INCUSERDIR=\(.*\)@KTAU_INCUSERDIR=@g
 s@^KTAU_LIB=\(.*\)@KTAU_LIB=@g
+s@^FULL_CXX=\(.*\)@FULL_CXX=@g
+s@^FULL_CC=\(.*\)@FULL_CC=@g

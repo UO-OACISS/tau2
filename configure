@@ -2409,6 +2409,14 @@ case $fortran_compiler in
 
 esac
 
+# Encode the full path of the C++/C compiler in the stub Makefile
+full_cxx_compiler=`which $cxx_compiler`
+full_cc_compiler=`which $c_compiler`
+fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
+
+
+
+
 
 ######################################################################
 # Set MPI options. First set the include dir if it is not specified

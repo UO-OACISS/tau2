@@ -42,6 +42,12 @@ for arg in "$@" ; do
 	      TAUCOMPILER_OPTIONS=`echo $arg | sed -e 's/-tau_options=//'`
 	      options_specified=yes
 	      ;;
+	  -show)
+	      invoke_without_tau=yes
+	      invoke_with_tau=no
+	      NON_TAUARGS="$NON_TAUARGS $modarg"
+              SHOW=show
+	      ;;
 	  -E)
 	      invoke_without_tau=yes
 	      invoke_with_tau=no
@@ -102,8 +108,10 @@ cat <<EOF > /tmp/makefile.tau.$USER.$$
   include $MAKEFILE
   all:
 	@\$(TAU_CC) $NON_TAUARGS
+  show:
+	@echo \$(FULL_CC) \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_LDFLAGS) \$(TAU_CXXLIBS)
 EOF
-make -s -f /tmp/makefile.tau.$USER.$$
+make -s -f /tmp/makefile.tau.$USER.$$ $SHOW
 /bin/rm -f /tmp/makefile.tau.$USER.$$
 fi
 
@@ -115,7 +123,7 @@ all:
 	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_CC) $TAUARGS
 
 EOF
-make -s -f /tmp/makefile.tau.$USER.$$
+make -s -f /tmp/makefile.tau.$USER.$$ 
 /bin/rm -f /tmp/makefile.tau.$USER.$$
 fi
 
