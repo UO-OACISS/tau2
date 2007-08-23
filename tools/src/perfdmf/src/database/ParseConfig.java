@@ -44,10 +44,13 @@ public class ParseConfig implements Serializable {
             BufferedReader reader;
             if (configLoc.toLowerCase().startsWith("http:")) {
                 // When it gets converted from a String to a File http:// turns into http:/
-            	String url_string = "http://" + configLoc.toString().substring(7).replace('\\', '/');
-            	//URL url = new URL("http://" + configLoc.toString().substring(6).replace('\\', '/'));
-                
-            	//URL url = new URL("http://localhost:3003/workspace/create_perfdmf_config?user=1&amp;workspace=2");
+            	String url_string = "";
+              if (configLoc.toLowerCase().startsWith("http://")) {
+                url_string = "http://" + configLoc.toString().substring(7).replace('\\', '/');
+            	}
+              else if (configLoc.toLowerCase().startsWith("http:/")) {
+                url_string = "http://" + configLoc.toString().substring(6).replace('\\', '/');
+              }
             	URL url = new URL(url_string);
             	InputStream iostream = url.openStream();
                 InputStreamReader ireader = new InputStreamReader(iostream);
@@ -104,8 +107,9 @@ public class ParseConfig implements Serializable {
             reader.close();
         } catch (Exception e) {
             // wrap it up in a runtime exception
-        	e.printStackTrace();
-            throw new TauRuntimeException("Unable to parse \"" + configLoc + "\"", e);
+        	
+          e.printStackTrace();
+            //throw new TauRuntimeException("Unable to parse \"" + configLoc + "\"", e);
         }
     }
 
