@@ -43,8 +43,14 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <bglpersonality.h>
 #endif
 
+#include <signal.h>
+
 char * TauGetCounterString(void);
 
+void tauSignalHandler(int sig) {
+  fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
+  TAU_DB_DUMP_PREFIX("profile");
+}
 
 static x_uint64 getTimeStamp() {
   x_uint64 timestamp;
@@ -66,6 +72,11 @@ static x_uint64 getTimeStamp() {
 // at the earliest point.
 static x_uint64 firstTimeStamp;
 bool Tau_snapshot_initialization() {
+  /* register SIGUSR1 handler */
+  if (signal(SIGUSR1, tauSignalHandler) == SIG_ERR) {
+    perror("failed to register TAU signal handler");
+  }
+
   firstTimeStamp = getTimeStamp();
   return true;
 }
