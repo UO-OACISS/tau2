@@ -120,7 +120,7 @@ if [ $invoke_with_tau = yes ] ; then
 cat <<EOF > /tmp/makefile.tau.$USER.$$
 include $MAKEFILE
 all:
-	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_CC) $TAUARGS
+	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(FULL_CC) $TAUARGS
 
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$ 
