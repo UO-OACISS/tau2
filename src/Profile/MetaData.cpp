@@ -83,6 +83,8 @@ static x_uint64 getTimeStamp() {
 // at the earliest point.
 static x_uint64 firstTimeStamp;
 bool Tau_snapshot_initialization() {
+
+#ifndef TAU_DISABLE_SIGUSR
   /* register SIGUSR1 handler */
   if (signal(SIGUSR1, tauSignalHandler) == SIG_ERR) {
     perror("failed to register TAU profile dump signal handler");
@@ -91,6 +93,7 @@ bool Tau_snapshot_initialization() {
   if (signal(SIGUSR2, tauToggleInstrumentationHandler) == SIG_ERR) {
     perror("failed to register TAU instrumentation toggle signal handler");
   }
+#endif
 
   firstTimeStamp = getTimeStamp();
   return true;
