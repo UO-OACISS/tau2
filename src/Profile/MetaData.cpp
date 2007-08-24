@@ -52,6 +52,17 @@ void tauSignalHandler(int sig) {
   TAU_DB_DUMP_PREFIX("profile");
 }
 
+void tauToggleInstrumentationHandler(int sig) {
+  fprintf (stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
+  if (RtsLayer::TheEnableInstrumentation())
+  {
+    RtsLayer::TheEnableInstrumentation() = false;
+  }
+  else 
+  {
+    RtsLayer::TheEnableInstrumentation() = true;
+  }
+}
 static x_uint64 getTimeStamp() {
   x_uint64 timestamp;
 #ifdef TAU_WINDOWS
@@ -74,7 +85,11 @@ static x_uint64 firstTimeStamp;
 bool Tau_snapshot_initialization() {
   /* register SIGUSR1 handler */
   if (signal(SIGUSR1, tauSignalHandler) == SIG_ERR) {
-    perror("failed to register TAU signal handler");
+    perror("failed to register TAU profile dump signal handler");
+  }
+
+  if (signal(SIGUSR2, tauToggleInstrumentationHandler) == SIG_ERR) {
+    perror("failed to register TAU instrumentation toggle signal handler");
   }
 
   firstTimeStamp = getTimeStamp();
