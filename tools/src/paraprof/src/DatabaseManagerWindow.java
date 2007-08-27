@@ -506,7 +506,8 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             databasePassword.setEnabled(true);
             savePassword.setSelected(true);
             port.setEnabled(true);
-            this.driver.setText("org.gjt.mm.mysql.Driver");
+        	labelDatabaseName.setText("Database Name:");
+        	this.driver.setText("org.gjt.mm.mysql.Driver");
             this.port.setText("3306");
             this.host.setText("localhost");
             String jarlocation = ParaProf.tauHome + File.separator + ParaProf.tauArch + File.separator + "lib" + File.separator + "mysql.jar";
@@ -527,6 +528,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             savePassword.setEnabled(true);
             savePassword.setSelected(true);
             port.setEnabled(true);
+        	labelDatabaseName.setText("Database Name:");
             this.driver.setText("org.postgresql.Driver");
             this.port.setText("5432");
             this.host.setText("localhost");
@@ -549,6 +551,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             savePassword.setEnabled(true);
             savePassword.setSelected(true);
             port.setEnabled(true);
+        	labelDatabaseName.setText("Database Name:");
             this.driver.setText("oracle.jdbc.OracleDriver");
             this.port.setText("1521");
             this.host.setText("localhost");
@@ -563,6 +566,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             port.setEnabled(false);
             port.setText("");
         	download.setEnabled(false);
+        	labelDatabaseName.setText("Path to Database:");
             this.driver.setText("org.apache.derby.jdbc.EmbeddedDriver");
             this.jarfile.setText(ParaProf.tauHome + File.separator + "tools" + File.separator + "src" + File.separator + "contrib" + File.separator + "derby.jar");
         } else if (newAdapter.compareTo("db2") == 0) {
@@ -573,6 +577,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             savePassword.setEnabled(true);
             savePassword.setSelected(true);
             port.setEnabled(true);
+        	labelDatabaseName.setText("Database Name:");
             this.driver.setText("com.ibm.db2.jcc.DB2Driver");
             this.port.setText("446");
             this.host.setText("localhost");
