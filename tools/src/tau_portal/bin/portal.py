@@ -212,7 +212,6 @@ def upload(username, password, workspace, iostreams):
   #'password': 'e548fdb1dded95c50e59b08106a5fe01397b4053', 'workspace': 'working database'})
 
   #form http request 
-  print ("%d" % len(encoded_params)) 
   connection = httplib.HTTPConnection("tau.nic.uoregon.edu:80")
   header = {"Content-type": "application/x-www-form-urlencoded",
   'Accept': 'text/plain', 'Host':
