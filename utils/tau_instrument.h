@@ -55,6 +55,11 @@ class tauInstrument
     /* loops file = "f1.cpp" routine = "foo" */
     tauInstrument(string f, string r, instrumentKind_t k ) ;
 
+    /* [static/dynamic] [phase/timer] routine="name" */
+    tauInstrument(itemQualifier_t q, instrumentKind_t k, string r);
+
+    /* [static/dynamic] [phase/timer] file="fname" line=start to line=stop*/
+    tauInstrument(itemQualifier_t q, instrumentKind_t k, string n, string f, int linestart, int linestop );
     /* Destructor */
     ~tauInstrument() ;
     
@@ -71,6 +76,11 @@ class tauInstrument
     bool getCodeSpecified(void) ;
     string& getCode(void) ;
     instrumentKind_t getKind(void) ;
+    bool getRegionSpecified(void);
+    int getRegionStart(void);
+    int getRegionStop(void);
+    itemQualifier_t getQualifier(void);
+    bool getQualifierSpecified(void);
 
     /* private data members */
   private:
@@ -83,6 +93,11 @@ class tauInstrument
     string code; 
     bool codeSpecified;
     instrumentKind_t kind; 
+    itemQualifier_t qualifier; 
+    bool qualifierSpecified; 
+    int regionStart;
+    int regionStop;
+    bool regionSpecified; 
 };
 
 extern vector<tauInstrument *> instrumentList; 
@@ -97,7 +112,7 @@ extern bool isInstrumentListEmpty(void);
 
 #endif /* _TAU_INSTRUMENT_H_ */
 /***************************************************************************
- * $RCSfile: tau_instrument.h,v $   $Author: amorris $
- * $Revision: 1.2 $   $Date: 2006/11/09 00:08:57 $
- * VERSION_ID: $Id: tau_instrument.h,v 1.2 2006/11/09 00:08:57 amorris Exp $
+ * $RCSfile: tau_instrument.h,v $   $Author: sameer $
+ * $Revision: 1.3 $   $Date: 2007/09/04 19:28:54 $
+ * VERSION_ID: $Id: tau_instrument.h,v 1.3 2007/09/04 19:28:54 sameer Exp $
  ***************************************************************************/

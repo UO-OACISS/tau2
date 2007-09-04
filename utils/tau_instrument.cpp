@@ -54,7 +54,8 @@ the first element of the pair (the second is the list of strings). */
 ///////////////////////////////////////////////////////////////////////////
 tauInstrument::tauInstrument(string f, string r, int l, string c, 
 	instrumentKind_t k): filename(f), fileSpecified(true), routineName(r),
-	lineno(l), lineSpecified (true), code(c), codeSpecified(true), kind (k) 
+	lineno(l), lineSpecified (true), code(c), codeSpecified(true), kind (k),
+        regionSpecified(false), qualifierSpecified(false) 
 {}
 
 
@@ -64,7 +65,8 @@ tauInstrument::tauInstrument(string f, string r, int l, string c,
 ///////////////////////////////////////////////////////////////////////////
 tauInstrument::tauInstrument(string f, int l, string c, instrumentKind_t k) : 
       	filename(f), fileSpecified(true), lineno(l), lineSpecified(true), 
-      	routineSpecified(false), code(c), codeSpecified(true), kind(k) 
+      	routineSpecified(false), code(c), codeSpecified(true), kind(k), 
+        regionSpecified(false), qualifierSpecified(false) 
 {}
 
 ///////////////////////////////////////////////////////////////////////////
@@ -74,7 +76,8 @@ tauInstrument::tauInstrument(string f, int l, string c, instrumentKind_t k) :
 ///////////////////////////////////////////////////////////////////////////
 tauInstrument::tauInstrument(string r, string c, bool cs, instrumentKind_t k) :
       	routineName(r), routineSpecified(true), code(c), codeSpecified(cs), 
-  	kind(k), fileSpecified(false), lineSpecified(false)
+  	kind(k), fileSpecified(false), lineSpecified(false),
+        regionSpecified(false), qualifierSpecified(false)  
 {}
 
 ///////////////////////////////////////////////////////////////////////////
@@ -84,7 +87,8 @@ tauInstrument::tauInstrument(string r, string c, bool cs, instrumentKind_t k) :
 tauInstrument::tauInstrument(string f, string r, string c, instrumentKind_t k) 
 	: filename(f), fileSpecified(true), routineName(r), 
 	routineSpecified(true), code (c), codeSpecified(true), 
-	lineSpecified(false), kind (k) 
+	lineSpecified(false), kind (k), 
+        regionSpecified(false), qualifierSpecified(false)  
 {} 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -93,7 +97,8 @@ tauInstrument::tauInstrument(string f, string r, string c, instrumentKind_t k)
 ///////////////////////////////////////////////////////////////////////////
 tauInstrument::tauInstrument(string r, instrumentKind_t k ) : 
 	routineName(r), routineSpecified (true), kind (k), 
-	lineSpecified(false), fileSpecified(false), codeSpecified(false) 
+	lineSpecified(false), fileSpecified(false), codeSpecified(false),
+        regionSpecified(false), qualifierSpecified(false)  
 {} 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -103,7 +108,28 @@ tauInstrument::tauInstrument(string r, instrumentKind_t k ) :
 tauInstrument::tauInstrument(string f, string r, instrumentKind_t k ) : 
 	filename (f), fileSpecified(true), routineName(r), 
 	routineSpecified (true), kind (k), lineSpecified(false), 
-	codeSpecified(false) 
+	codeSpecified(false), regionSpecified(false), qualifierSpecified(false) 
+{} 
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument() ctor
+// [static/dynamic] [phase/timer] routine = "name"
+///////////////////////////////////////////////////////////////////////////
+tauInstrument::tauInstrument(itemQualifier_t q, instrumentKind_t k, string r) :
+	qualifier(q), kind(k), routineName(r), routineSpecified(true), 
+	codeSpecified(false), lineSpecified(false), fileSpecified(false), 
+        regionSpecified(false), qualifierSpecified(true)  
+{} 
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument() ctor
+// [static/dynamic] [phase/timer] name = "name" file= "fname" line=a to line=b
+///////////////////////////////////////////////////////////////////////////
+tauInstrument::tauInstrument(itemQualifier_t q, instrumentKind_t k, string n, 
+        string f, int linestart, int linestop) :
+	qualifier(q), kind(k), code(n), codeSpecified(true), 
+        filename(f), fileSpecified(true), regionStart(linestart), 
+        regionStop(linestop), regionSpecified(true), qualifierSpecified(true)
 {} 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -120,6 +146,22 @@ ostream& tauInstrument::print(ostream& ostr) const
        if (routineSpecified) ostr <<"routine: "<<routineName<< " " ;
        if (lineSpecified) ostr<<"line no: "<<lineno<< "  " ;
        if (codeSpecified) ostr<<"code: "<<code<<" " ;
+       if (qualifierSpecified) 
+       {
+         switch(qualifier)
+         { 
+           case STATIC:
+		ostr <<"static: ";
+                break;
+           case DYNAMIC:
+                ostr <<"dynamic: ";
+                break;
+           case NOT_SPECIFIED:
+                ostr <<"ERROR: qualifier (static/dynamic) not specified: ";
+                break;
+         }
+       }
+       
        switch (kind) 
        {
 	 case TAU_LOOPS:
@@ -140,6 +182,12 @@ ostream& tauInstrument::print(ostream& ostr) const
 	 case TAU_ROUTINE_EXIT:
 		 ostr<<"exit: ";
 		 break;
+	 case TAU_PHASE:
+		 ostr<<"phase: ";
+		 break;
+	 case TAU_TIMER:
+		 ostr<<"timer: ";
+		 break;
 	 case TAU_NOT_SPECIFIED:
 		 ostr<<"ERROR: NOT SPECIFIED KIND";
 		 break;
@@ -147,6 +195,7 @@ ostream& tauInstrument::print(ostream& ostr) const
 		 ostr<<"default: ???";
 		 break;
        }
+       if (regionSpecified) ostr <<"line (start) = "<<regionStart << " to line (stop) = "<<regionStop<<endl;
        ostr<<endl;
        return ostr;
 }
@@ -195,6 +244,31 @@ string& tauInstrument::getCode(void) { return code; }
 // tauInstrument::getKind() accesses private data member
 ///////////////////////////////////////////////////////////////////////////
 instrumentKind_t tauInstrument::getKind(void) { return kind; }
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument::getRegionSpecified() accesses private data member
+///////////////////////////////////////////////////////////////////////////
+bool tauInstrument::getRegionSpecified(void) { return regionSpecified; }
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument::getRegionStart() accesses private data member
+///////////////////////////////////////////////////////////////////////////
+int tauInstrument::getRegionStart(void) { return regionStart; }
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument::getRegionStop() accesses private data member
+///////////////////////////////////////////////////////////////////////////
+int tauInstrument::getRegionStop(void) { return regionStop; }
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument::getQualifier() accesses private data member
+///////////////////////////////////////////////////////////////////////////
+itemQualifier_t tauInstrument::getQualifier(void) { return qualifier; }
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument::getQualifierSpecified() accesses private data member
+///////////////////////////////////////////////////////////////////////////
+bool tauInstrument::getQualifierSpecified(void) { return qualifierSpecified; }
 
 
 /* Instrumentation section */
@@ -245,6 +319,12 @@ void parseError(char *message, char *line, int lineno, int column)
   pname[i] = '\0';  \
   line++; /* found closing " */
 
+#define RETRIEVENUMBERATEOL(pname, line) i = 0; \
+  while (line[0] != '\0' && line[0] != ' ' && line[0] != '\t' ) { \
+    pname[i++] = line[0]; line++; \
+  } \
+  pname[i] = '\0';  \
+
 ///////////////////////////////////////////////////////////////////////////
 // parseInstrumentationCommand
 // input: line -  character string containing a line of text from the selective 
@@ -257,13 +337,21 @@ void parseInstrumentationCommand(char *line, int lineno)
   char  *original;
   int i, ret, value; 
   bool filespecified = false; 
+  bool phasespecified = false; 
+  bool timerspecified = false; 
+  itemQualifier_t qualifier = STATIC;
+  bool staticspecified = false; 
+  bool dynamicspecified = false; 
   char pname[INBUF_SIZE]; /* parsed name */
   char pfile[INBUF_SIZE]; /* parsed filename */
   char plineno[INBUF_SIZE]; /* parsed lineno */
   char pcode[INBUF_SIZE]; /* parsed code */
-  int m1, m2, m3; 
+  int m1, m2, m3, m4; 
+  int startlineno, stoplineno;
+  startlineno = stoplineno = 0;
   instrumentKind_t kind = TAU_NOT_SPECIFIED;
-  m1 = m2 = m3 = 1; /* does not match by default -- for matching loops/io/mem */
+ 
+  m1 = m2 = m3 = m4 = 1; /* does not match by default -- for matching loops/io/mem */
 
 #ifdef DEBUG
   printf("Inside parseInstrumentationCommand: line %s lineno: %d\n",
@@ -297,7 +385,7 @@ void parseInstrumentationCommand(char *line, int lineno)
       RETRIEVENUMBER(plineno, line);
       ret = sscanf(plineno, "%d", &value); 
 #ifdef DEBUG
-      printf("got line no = %d\n", value);
+      printf("got line no = %d, line = %s\n", value, line);
 #endif /* DEBUG */
     }
     else parseError("<line> token not found", line, lineno, line - original);
@@ -504,10 +592,180 @@ void parseInstrumentationCommand(char *line, int lineno)
 	  }
 	  else parseError("<routine> token not found", line, lineno, line - original);
 	}
+        else 
+        { /* check for static/dynamic phase ... */
+	  m1 = strncmp(line, "static", 6);
+	  m2 = strncmp(line, "dynamic", 7);
+	  m3 = strncmp(line, "phase", 5);
+	  m4 = strncmp(line, "timer", 5);
+          if ((m1 == 0) || (m2 == 0) || (m3 == 0) || (m4 == 0)) {
+	    if (m1 == 0) { /* static */
+              staticspecified = true;
+	      qualifier = STATIC; 
+	      line += 6; /* move the pointer 6 spaces (static) for next token */
+#ifdef DEBUG
+	printf("GOT static lineno = %d\n", lineno);
+#endif /* DEBUG */
+	    }
+            else {
+	      if (m2 == 0) { /* dynamic */
+                dynamicspecified = true;
+		qualifier = DYNAMIC;
+	        line += 7; /* move the pointer 7 spaces (dynamic) for next token */
+#ifdef DEBUG
+	printf("GOT dynamic lineno = %d\n", lineno);
+#endif /* DEBUG */
+	      }
+              else {
+	        if (m3 == 0) { /* phase */
+                  phasespecified = true;
+	          kind = TAU_PHASE;
+	          line += 5; /* move the pointer 5 spaces (static) for next token */
+#ifdef DEBUG
+	printf("GOT phase lineno = %d\n", lineno);
+#endif /* DEBUG */
+	        }
+                else {
+                  if (m4 == 0) { /* timer */
+                    timerspecified = true;
+                    kind = TAU_TIMER;
+                    line += 5;  /* move the pointer 5 spaces (timer) for next token */
+#ifdef DEBUG
+	printf("GOT timer lineno = %d\n", lineno);
+#endif /* DEBUG */
+                  }
+                }
+              } 
+            }
+            /* we have either static/dynamic phase/timer ... */
+            if (staticspecified || dynamicspecified) {
+              /* proceed to the next keyword */
+              WSPACE(line); 
+              /* go to phase/timer */
+              if (strncmp(line, "phase", 5) == 0)
+              { 
+                phasespecified = true;
+                kind = TAU_PHASE;
+#ifdef DEBUG
+	printf("GOT phase command lineno = %d\n", lineno);
+#endif /* DEBUG */
+              } else {
+                if (strncmp(line, "timer", 5) == 0)
+                { 
+                  timerspecified = true;
+                  kind = TAU_TIMER;
+#ifdef DEBUG
+	printf("GOT timer command lineno = %d\n", lineno);
+#endif /* DEBUG */
+                }
+                else parseError("<phase/timer> token not found", line, lineno, line - original);      
+              } /* at this stage we have static/dynamic phase/timer definition */
+              line += 5;  /* move the pointer 5 spaces (timer) for next token */
+            } /* static || dynamic specified */
+            
+            WSPACE(line); /* it can be routine or name */
+            if (strncmp(line, "routine", 7) == 0) 
+            { /* static/dynamic phase/timer routine = "..." */
+	      line+=7;
+	      /* found routine */ 
+	      WSPACE(line);
+	      TOKEN('=');
+	      WSPACE(line);
+	      TOKEN('"');
+	      RETRIEVESTRING(pname, line);
+#ifdef DEBUG
+	      printf("s/d p/t got routine = %s\n", pname);
+#endif /* DEBUG */
+            } else {
+              if (strncmp(line, "name", 4) == 0) 
+              { /* static/dynamic phase/timer name = "..." file=<name> line = <no> to line = <no> */
+	        line+=4;
+	        /* found name */ 
+	        WSPACE(line);
+	        TOKEN('=');
+	        WSPACE(line);
+	        TOKEN('"');
+	        RETRIEVESTRING(pname, line);
+                WSPACE(line);
+#ifdef DEBUG
+	        printf("s/d p/t got name = %s\n", pname);
+#endif /* DEBUG */
+              }
+              else { /* name or routine not specified */
+                parseError("<routine/name> token not found", line, lineno, line - original);      
+              }
+              /* name was parsed. Look for line = <no> to line = <no> next */
+              if (strncmp(line, "file", 4) == 0)
+              { /* got line token, get line no. */
+                line += 4; 
+                WSPACE(line);
+                TOKEN('=');
+                WSPACE(line);
+	    	TOKEN('"');
+	    	RETRIEVESTRING(pfile, line);
+	    	filespecified = true; 
+                WSPACE(line);
+#ifdef DEBUG
+                printf("got file = %s\n", pfile);
+#endif /* DEBUG */
+              }
+              else {
+                parseError("<file> token not found", line, lineno, line - original); 
+              }
+              if (strncmp(line, "line", 4) == 0)
+              { /* got line token, get line no. */
+                line += 4; 
+                WSPACE(line);
+                TOKEN('=');
+                WSPACE(line);
+                RETRIEVENUMBER(plineno, line);
+                ret = sscanf(plineno, "%d", &startlineno); 
+#ifdef DEBUG
+                printf("got start line no = %d, line = %s\n", startlineno, line);
+#endif /* DEBUG */
+		WSPACE(line);
+                if (strncmp (line, "to", 2) == 0)
+                {
+                  line += 2; 
+                  WSPACE(line); /* look for line=<no> next */
+                  if (strncmp (line, "line", 4) == 0)
+                  {
+                    line += 4; 
+                    WSPACE(line); 
+                    TOKEN('=');
+                    WSPACE(line);
+                    RETRIEVENUMBERATEOL(pcode, line);
+                    ret = sscanf(pcode, "%d", &stoplineno); 
+#ifdef DEBUG
+                    printf("got stop line no = %d\n", stoplineno);
+#endif /* DEBUG */
+                  } else { /* we got line=<no> to , but there was no line */
+                    parseError("<line> token not found in the stop declaration", line, lineno, line - original);
+                  } /* parsed to clause */
+                }
+                else { /* hey, line = <no> is there, but there is no "to" */
+                  parseError("<to> token not found", line, lineno, line - original);
+                } /* we have parsed all the tokens now. Let us see what was specified phase/timer routine = <name> or phase/timer name =<name> line = <no> to line = <no> */
+
+              }  else { 
+                parseError("<line> token not found in the start declaration", line, lineno, line - original); 
+              } /* line specified */ 
+            } /* end of routine/name processing */
+            /* create instrumentation requests here */
+	    if (filespecified) 
+            { /* [static/dynamic] <phase/timer> name = "<name>" file="<name>" line=a to line=b */
+              instrumentList.push_back(new tauInstrument(qualifier, kind, pname, pfile, startlineno, stoplineno));
+            }
+            else 
+            { /* [static/dynamic] <phase/timer> routine = "<name>" */
+              instrumentList.push_back(new tauInstrument(qualifier, kind, pname));
+            }
+
+          } /* end of if static/dynamic/phase/timer */
+        } /* check for phase/timer */
       } /* end of loops directive */
     }
-  }
-
+  } /* entry */
 
 }
 
@@ -1459,6 +1717,9 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
     }
 
   }
+#ifdef DEBUG
+  printInstrumentList();
+#endif /* DEBUG */
   return retval;
 }
 
@@ -1486,7 +1747,7 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.45 $   $Date: 2007/08/08 03:00:23 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.45 2007/08/08 03:00:23 amorris Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
+ * $Revision: 1.46 $   $Date: 2007/09/04 19:28:54 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.46 2007/09/04 19:28:54 sameer Exp $
  ***************************************************************************/
