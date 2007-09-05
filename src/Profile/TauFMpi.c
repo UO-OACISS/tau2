@@ -167,9 +167,9 @@ MPI_Fint *ierr;
 /******************************************************/
 /******************************************************/
 
-#ifdef MPICH_IGNORE_CXX_SEEK
+#ifdef TAU_MPICH2_MPI_IN_PLACE
 extern int MPIR_F_MPI_IN_PLACE; 
-#endif /* MPICH_IGNORE_CXX_SEEK */
+#endif /* TAU_MPICH2_MPI_IN_PLACE */
 
 void   mpi_allreduce_( sendbuf, recvbuf, count, datatype, op, comm , ierr)
 void * sendbuf;
@@ -180,14 +180,14 @@ MPI_Fint *op;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
-#ifdef MPICH_IGNORE_CXX_SEEK
+#ifdef TAU_MPICH2_MPI_IN_PLACE
     if (sendbuf == (void *) MPIR_F_MPI_IN_PLACE)
     {
       *ierr = MPI_Allreduce( MPI_IN_PLACE, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
 
     }
     else
-#endif /* MPICH_IGNORE_CXX_SEEK */
+#endif /* TAU_MPICH2_MPI_IN_PLACE */
       *ierr = MPI_Allreduce( sendbuf, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
 
 }

@@ -382,6 +382,11 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 
+     MPICH2_MPI_INPLACE)
+	echo "NOTE: Using the -DMPICH2_MPI_INPLACE flag"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+
      MPIGREQUEST)
         echo "NOTE: Using TAU's MPI-2 Grequest extensions"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

@@ -3102,6 +3102,9 @@ then
       #echo "libmpi.* not found!! Checking for mpich.*..."
       if [ -r $mpilib/libmpich.*a -o -r $mpilib/libpmpich.so ] ; then 
 	  fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
+          if [ $mpi2 = yes ] ; then
+	    fixmakeargs="$fixmakeargs MPICH2_MPI_INPLACE"
+          fi
           #echo "MPICH found "
 	  if [ "x$mpilibrary" = "xno" ] ; then 
 	      if [ -r $mpilib/libmpich.rts.a ] ; then
