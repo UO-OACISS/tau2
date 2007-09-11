@@ -19,13 +19,18 @@ import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
 public class VectorExport {
+	private static String workingDirectory = null;
 
     public static void promptForVectorExport(ImageExport ie, String applicationName) throws Exception {
         //Ask the user for a filename and location.
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Save Vector Graphics File");
         //Set the directory.
-        fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		if (workingDirectory == null) {
+        	fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		} else {
+        	fileChooser.setCurrentDirectory(new File(workingDirectory));
+		}
         //Get the current file filters.
         javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
         for (int i = 0; i < fileFilters.length; i++)
@@ -44,7 +49,8 @@ public class VectorExport {
 
         File file = fileChooser.getSelectedFile();
         String path = file.getCanonicalPath();
-
+		// save where we were
+		VectorExport.workingDirectory = file.getParent();
 
         String extension = ImageFormatFileFilter.getExtension(file);
         if (extension == null || ((extension.toUpperCase().compareTo("SVG")!=0) && (extension.toUpperCase().compareTo("EPS")!=0)) ) {
