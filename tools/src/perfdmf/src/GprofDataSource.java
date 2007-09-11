@@ -13,6 +13,8 @@ public class GprofDataSource extends DataSource {
     private int calledStart = 0;
     private int nameStart = 0;
     private boolean fixNames = false;
+	private int linenumber = 0;
+	private boolean fixLengths = true;
     
     public GprofDataSource(File[] files, boolean fixNames) {
         super();
@@ -77,6 +79,7 @@ public class GprofDataSource extends DataSource {
                 LineData self = null;
                 Vector children = new Vector();
 
+				linenumber = 1;
                 while ((inputString = br.readLine()) != null) {
                     int length = inputString.length();
                     if (length != 0) {
@@ -183,6 +186,7 @@ public class GprofDataSource extends DataSource {
                             // System.out.println(getSummaryLineData(inputString).s0);
                         }
                     }
+					linenumber++;
                 } // while lines in file
         } // for elements in vector v
 
@@ -209,6 +213,7 @@ public class GprofDataSource extends DataSource {
          * name index [xxxx] 100.0 xxxx.xx xxxxxxxx.xx xxxxxxx+xxxxxxx ssssss...
          */
         StringTokenizer st = new StringTokenizer(string, " \t\n\r");
+		System.out.println(string);
         String index = st.nextToken();
         String percent = st.nextToken();
         if (percent.compareTo("%") == 0)
@@ -271,7 +276,26 @@ public class GprofDataSource extends DataSource {
         // be equal to the sum of all the self and children
         // entries of the children listed directly below this
         // function.
-        lineData.d2 = 1000000.0 * Double.parseDouble(st.nextToken());
+		String fixer = st.nextToken();
+        lineData.d2 = 1000000.0 * Double.parseDouble(fixer);
+		if (fixLengths) {
+			/* sometimes, the data doesn't get aligned just right.
+			   We need to adjust the "called" column so that it starts
+			   just after the end of the children value.  Otherwise, the
+			   called column will start two columns too late, as in
+			   this example:
+index % time    self  children    called     name
+                0.33  264.75      32/32          _start_blrts [2]
+[1]     58.4    0.33  264.75      32         main [1]
+OK:             0.00  131.96      32/32          HYPRE_StructSMGSetup [5]
+...
+BAD:          103.71    4.01  151328/151328      hypre_CyclicReduction [8]
+ALSO BAD:       0.27    0.00 1135396/4373228     hypre_BoxGetStrideSize [56]
+
+			*/
+        	calledStart = string.indexOf(fixer) + fixer.length() + 1;
+			fixLengths = false;
+		}
 
         // This is the number of times the function was called.
         // If the function called itself recursively, there are
@@ -349,11 +373,21 @@ index  % time    self  children called     name
         else
             lineData.d0 = 0.0;
 
+		try{
         tmpStr = string.substring(descendantsStart, calledStart).trim();
         if (tmpStr.length() > 0)
             lineData.d1 = 1000000.0 * Double.parseDouble(tmpStr);
         else
             lineData.d1 = 0.0;
+		} catch (Exception e) {
+			System.err.println("Error parsing file, line: " + linenumber);
+			System.err.println("selfStart: " + selfStart);
+			System.err.println("descendantsStart: " + descendantsStart);
+			System.err.println("calledStart: " + calledStart);
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+			System.exit(0);
+		}
 
         // check if the counts 'spill' into the name field.
         String spillTest = string.substring(calledStart, string.length()).trim();
