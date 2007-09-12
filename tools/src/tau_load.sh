@@ -1,6 +1,6 @@
 #!/bin/sh
-TAU_INSTALLATION_DIR=/home/amorris/fresh/tau2
-TAU_ARCHITECTURE_DIR=x86_64
+TAU_INSTALLATION_DIR=@TAUROOTDIR@
+TAU_ARCHITECTURE_DIR=@ARCH@
 TAU_LIB=libTAU.so
 
 for arg in "$@"; do
