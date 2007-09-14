@@ -19,7 +19,8 @@ else:
 
   return a string stating either a success or the cause of any errors.
 """
-def sync(username, password, workspace, application, experiment, transfer_to_perfdmf, transfer_to_portal):
+def sync(username, password, workspace, application, experiment,
+transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
   #global variables for thread communication.
 
   global threads_running, threads_running_lock
@@ -32,11 +33,12 @@ def sync(username, password, workspace, application, experiment, transfer_to_per
         diff.append(l)
     return diff
   
-  portal_trials = get_trials(username, password, workspace)
+  portal_trials = get_trials(username, password, workspace, host)
   if (portal_trials is None ):
     return "Error authenticating with TAU Portal, check username, password, and workspace."
   perfdmf_trials = []
-  for trial in os.popen("perfdmfdb.py list " + application + " " + experiment).readlines():
+  for trial in os.popen("perfdmfdb.py list '" + application + "' '" + experiment
+  + "'").readlines():
     perfdmf_trials.append(trial.strip())
   #print perfdmf_trials
   #print "Portal:   ", portal_trials
@@ -49,15 +51,17 @@ def sync(username, password, workspace, application, experiment, transfer_to_per
 
   #move files from database to portal
   if (transfer_to_portal):
-    def db2portal(username, password, workspace, application, experiment, to_portal):
+    def db2portal(username, password, workspace, application, experiment,
+    to_portal, host):
       global threads_running, threads_running_lock
       #print "after: ", to_portal
       print len(to_portal), "trial(s) to be upload to the TAU Portal."
       to_portal_list = []
       for trial in to_portal:
-        os.popen("perfdmfdb.py download " + application + " " + experiment + " " + trial)
+        os.popen("perfdmfdb.py download '" + application + "' '" + experiment +
+        "' " + trial)
         to_portal_list.append(open("/tmp/" + trial, 'r')) 
-      upload(username, password, workspace, to_portal_list)
+      upload(username, password, workspace, to_portal_list, host)
 
       threads_running_lock.acquire()
       threads_running = False
@@ -69,7 +73,8 @@ def sync(username, password, workspace, application, experiment, transfer_to_per
     threads_running_lock.acquire()
     threads_running = True
     threads_running_lock.release()
-    thread.start_new_thread(db2portal, (username, password, workspace, application, experiment, to_portal))
+    thread.start_new_thread(db2portal, (username, password, workspace,
+    application, experiment, to_portal, host))
     #db2portal(username, password, workspace, application, experiment, to_portal)
     
  
@@ -78,7 +83,7 @@ def sync(username, password, workspace, application, experiment, transfer_to_per
     print len(to_perfdmf), "trial(s) to be upload to the PerfDMF Database."
     to_perfdmf_list = ""
     for trial in to_perfdmf:
-      file = download(username, password, workspace, trial)
+      file = download(username, password, workspace, trial, host)
       #print file
       name = "/tmp/" + trial
       filewriter = open(name, 'w')
@@ -88,12 +93,12 @@ def sync(username, password, workspace, application, experiment, transfer_to_per
 
     #print to_perfdmf_list
     #print "perfdmfdb.py upload " + application + " " + experiment + " " + to_perfdmf_list 
-    os.popen("perfdmfdb.py upload " + application + " " + experiment + " " + to_perfdmf_list) 
+    os.popen("perfdmfdb.py upload '" + application + "' '" + experiment + "' " + to_perfdmf_list) 
 
   #wait for threads to finnish
   while threads_running: pass
 
-def get_trials(username, password, workspace):
+def get_trials(username, password, workspace, host = "tau.nic.uoregon.edu"):
 
   params = {}
   #find all trials
@@ -121,10 +126,13 @@ def get_trials(username, password, workspace):
   #'password': 'e548fdb1dded95c50e59b08106a5fe01397b4053', 'workspace': 'working database'})
 
   #form http request 
-  connection = httplib.HTTPSConnection("tau.nic.uoregon.edu")
+  if (host == "tau.nic.uoregon.edu"):
+    connection = httplib.HTTPSConnection("tau.nic.uoregon.edu")
+  else:
+    connection = httplib.HTTPConnection(host)
   header = {"Content-type": "application/x-www-form-urlencoded", "Content-length":
   ("%d" % len(encoded_params)), 'Accept': 'text/plain', 'Host':
-  'tau.nic.uoregon.edu'}
+  host}
   connection.request("POST", "/trial/list_trials", encoded_params, header)
   response = connection.getresponse()
   #filewriter = open(trial + ".ppk", "w")
@@ -142,7 +150,7 @@ def get_trials(username, password, workspace):
   #filewriter.close()
   return final_list
 
-def get_workspaces(username, password):
+def get_workspaces(username, password, host = "tau.nic.uoregon.edu"):
 
   params = {}
   #find all trials
@@ -166,10 +174,13 @@ def get_workspaces(username, password):
   #'password': 'e548fdb1dded95c50e59b08106a5fe01397b4053', 'workspace': 'working database'})
 
   #form http request 
-  connection = httplib.HTTPSConnection("tau.nic.uoregon.edu")
+  if (host == "tau.nic.uoregon.edu"):
+    connection = httplib.HTTPSConnection("tau.nic.uoregon.edu")
+  else:
+    connection = httplib.HTTPConnection(host)
   header = {"Content-type": "application/x-www-form-urlencoded", "Content-length":
   ("%d" % len(encoded_params)), 'Accept': 'text/plain', 'Host':
-  'tau.nic.uoregon.edu'}
+  host}
   connection.request("POST", "/trial/list_workspaces", encoded_params, header)
   response = connection.getresponse()
   #filewriter = open(trial + ".ppk", "w")
@@ -184,7 +195,8 @@ def get_workspaces(username, password):
   #filewriter.close()
   return final_list
 
-def upload(username, password, workspace, iostreams):
+def upload(username, password, workspace, iostreams, host =
+"tau.nic.uoregon.edu"):
 
   params = {}
   for io in iostreams:
@@ -212,10 +224,10 @@ def upload(username, password, workspace, iostreams):
   #'password': 'e548fdb1dded95c50e59b08106a5fe01397b4053', 'workspace': 'working database'})
 
   #form http request 
-  connection = httplib.HTTPConnection("tau.nic.uoregon.edu:80")
+  connection = httplib.HTTPConnection(host)
   header = {"Content-type": "application/x-www-form-urlencoded",
   'Accept': 'text/plain', 'Host':
-  'tau.nic.uoregon.edu'}
+  host}
   connection.request("POST", "/trial/batch_upload", encoded_params, header)
   response = connection.getresponse()
   return response.read()
@@ -226,7 +238,7 @@ def upload(username, password, workspace, iostreams):
 
   return a string stating either a success or the cause of any errors.
 """
-def download(username, password, workspace, trial):
+def download(username, password, workspace, trial, host = "tau.nic.uoregon.edu"):
   params = {}
   
   #files will form basis for the http parameters
@@ -255,10 +267,13 @@ def download(username, password, workspace, trial):
   #'password': 'e548fdb1dded95c50e59b08106a5fe01397b4053', 'workspace': 'working database'})
 
   #form http request 
-  connection = httplib.HTTPSConnection("tau.nic.uoregon.edu")
+  if (host == "tau.nic.uoregon.edu"):
+    connection = httplib.HTTPSConnection("tau.nic.uoregon.edu")
+  else:
+    connection = httplib.HTTPConnection(host)
   header = {"Content-type": "application/x-www-form-urlencoded", "Content-length":
   ("%d" % len(encoded_params)), 'Accept': 'text/plain', 'Host':
-  'tau.nic.uoregon.edu'}
+  host}
   connection.request("POST", "/trial/batch_download", encoded_params, header)
   response = connection.getresponse()
   filewriter = open(trial + ".ppk", "w")
