@@ -34,6 +34,10 @@ extern void Tau_stop(char *name);
 #define TAU_STOP(name)
 #endif /* TAU_DISABLE_API */
 
+/* for consistency, we provide the long form */
+#define TAU_STATIC_TIMER_START TAU_START
+#define TAU_STATIC_TIMER_STOP TAU_STOP
+
 #if (defined(PROFILING_ON) || defined(TRACING_ON))
 #include <Profile/Profiler.h>
 #else
@@ -146,6 +150,18 @@ extern void Tau_stop(char *name);
 #define TAU_PROFILE_SNAPSHOT(name)
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)
 #define TAU_METADATA(name, value)
+
+/* extensions to the PHASE/TIMER API */
+#define TAU_DYNAMIC_PHASE(name, type, group)
+#define TAU_DYNAMIC_PROFILE(name, type, group)
+#define TAU_STATIC_PHASE_START(name)
+#define TAU_STATIC_PHASE_STOP(name)
+#define TAU_DYNAMIC_PHASE_START(name)
+#define TAU_DYNAMIC_PHASE_STOP(name)
+#define TAU_DYNAMIC_TIMER_START(name)
+#define TAU_DYNAMIC_TIMER_STOP(name)
+#define TAU_PROFILE_CREATE_DYNAMIC(var, name, type, group) 
+
 #endif /* PROFILING_ON || TRACING_ON */
 
 #endif /* _TAU_H_ */

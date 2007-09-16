@@ -42,6 +42,7 @@ extern "C" {
 
 
 #define TAU_PROFILE(name, type, group) 
+#define TAU_DYNAMIC_PROFILE(name, type, group) 
 /* OLD CODE. Not thread-safe  */
 /*
 #define TAU_PROFILE_TIMER(var,name, type, group) static int taufirst##var = 1;\
@@ -83,8 +84,8 @@ extern "C" {
 
 /*
 #define TAU_REGISTER_EVENT(event, name)	static int tauuser##event = 1;\
-				        static void *event; \ 
-					if (tauuser##event == 1) { \ 
+				        static void *event; \
+					if (tauuser##event == 1) { \
 					  event = Tau_get_userevent(name); \
 					  tauuser##event = 0; }
 */
@@ -151,8 +152,45 @@ extern "C" {
 #define TAU_PHASE_CREATE_STATIC(var, name, type, group) static void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, Tau_phase_enable_once(#group, &var##finfo))
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, Tau_phase_enable_once(#group, &var##finfo))
 #define TAU_PROFILE_TIMER_DYNAMIC(var, name, type, group) void *var = NULL; Tau_profile_c_timer(&var, name, type, group, #group)
+
+/* TAU_PHASE_CREATE_DYNAMIC_AUTO embeds the counter in the name. isPhase = 1 */
+#define TAU_PHASE_CREATE_DYNAMIC_AUTO(var, name, type, group)  \
+        void *var##finfo = NULL;\
+    { static int tau_dy_phase_counter = 1; \
+  Tau_profile_dynamic_auto(tau_dy_phase_counter++, &var##finfo, name, type, group, #group, 1); \
+    }  
+
+/* TAU_PROFILE_CREATE_DYNAMIC_AUTO embeds the counter in the name. isPhase = 0 implies a timer */
+#define TAU_PROFILE_CREATE_DYNAMIC_AUTO(var, name, type, group)  \
+        void *var = NULL;\
+    { static int tau_dy_timer_counter = 1; \
+  Tau_profile_dynamic_auto(tau_dy_timer_counter++, &var, name, type, group, #group, 0); \
+    }
+
 #define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1)
 #define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo)
+#define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
+#define TAU_STATIC_PHASE_STOP(name)  Tau_static_phase_stop(name)
+#define TAU_DYNAMIC_PHASE_START(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_start(name, tau_counter++, 1); \
+}
+
+#define TAU_DYNAMIC_PHASE_STOP(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_stop(name, tau_counter++, 1); \
+}
+
+#define TAU_DYNAMIC_TIMER_START(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_start(name, tau_counter++, 0); \
+}
+
+#define TAU_DYNAMIC_TIMER_STOP(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_stop(name, tau_counter++, 0); \
+}
+
 #define TAU_GLOBAL_PHASE(timer, name, type, group) void * TauGlobalPhase##timer(void) \
 { static void *ptr = NULL; \
   Tau_profile_c_timer(&ptr, name, type, group, #group); \
@@ -264,6 +302,13 @@ extern void Tau_profile_snapshot(char *name);
 extern void Tau_profile_snapshot_1l(char *name, int number);
 extern void Tau_metadata(char *name, char *value);
 
+extern void Tau_dynamic_start(char *name, int tau_counter, int isPhase); 
+extern void Tau_dynamic_stop(char *name, int tau_counter, int isPhase); 
+extern void Tau_static_phase_start(char *name);
+extern void Tau_static_phase_stop(char *name);
+extern void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, char *type, TauGroup_t group, char *group_name, int isPhase);
+
+
 
 
 #else /* PROFILING_ON */
@@ -336,6 +381,10 @@ extern void Tau_metadata(char *name, char *value);
 #define TAU_PROFILE_TIMER_DYNAMIC(var, name, type, group) 
 #define TAU_PHASE_START(var) 
 #define TAU_PHASE_STOP(var) 
+#define TAU_STATIC_PHASE_START(name) 
+#define TAU_STATIC_PHASE_STOP(name) 
+#define TAU_DYNAMIC_PHASE_START(name)
+#define TAU_DYNAMIC_PHASE_STOP(name) 
 #define TAU_GLOBAL_PHASE(timer, name, type, group) 
 #define TAU_GLOBAL_PHASE_START(timer) 
 #define TAU_GLOBAL_PHASE_STOP(timer)  
@@ -345,6 +394,16 @@ extern void Tau_metadata(char *name, char *value);
 #define TAU_GLOBAL_TIMER_START(timer)
 #define TAU_GLOBAL_TIMER_STOP()
 #define TAU_PROFILE_PARAM1L(b,c)  	
+
+/* extensions to the PHASE/TIMER API */
+#define TAU_DYNAMIC_PHASE(name, type, group)
+#define TAU_STATIC_PHASE_START(name)
+#define TAU_STATIC_PHASE_STOP(name)
+#define TAU_DYNAMIC_PHASE_START(name)
+#define TAU_DYNAMIC_PHASE_STOP(name)
+#define TAU_DYNAMIC_TIMER_START(name)
+#define TAU_DYNAMIC_TIMER_STOP(name)
+#define TAU_PROFILE_CREATE_DYNAMIC_AUTO(var, name, type, group)
 
 
 
@@ -368,12 +427,16 @@ extern void Tau_metadata(char *name, char *value);
 }
 #endif /* TAU_USE_C_API */
 
+/* for consistency, we provide the long form */
+#define TAU_STATIC_TIMER_START TAU_START
+#define TAU_STATIC_TIMER_STOP TAU_STOP
+
 #endif /* ! __cplusplus || TAU_C_API */
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.47 $   $Date: 2007/06/05 19:04:51 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.47 2007/06/05 19:04:51 amorris Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: sameer $
+ * $Revision: 1.48 $   $Date: 2007/09/16 21:59:38 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.48 2007/09/16 21:59:38 sameer Exp $
  ***************************************************************************/
 

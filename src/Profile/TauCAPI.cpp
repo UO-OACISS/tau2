@@ -566,6 +566,9 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
   return;
 }
 
+///////////////////////////////////////////////////////////////////////////
+
+
 /* We need a routine that will create a top level parent profiler and give
  * it a dummy name for the application, if just the MPI wrapper interposition
  * library is used without any instrumentation in main */
@@ -708,6 +711,36 @@ extern "C" void Tau_mark_group_as_phase(void **ptr)
   fptr->SetPrimaryGroupName(newgroup); 
 
 }
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" char * Tau_append_iteration_to_name(int iteration, char *name)
+{
+  char tau_iteration_number[128];
+  sprintf(tau_iteration_number, " [%d]", iteration);
+  string iterationName = string(name)+string(tau_iteration_number);
+  char *newName = strdup(iterationName.c_str());
+  return newName;
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+extern "C" void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, char *type, TauGroup_t group, char *group_name, int isPhase)
+{ /* This routine creates dynamic timers and phases by embedding the
+     iteration number in the name. isPhase argument tells whether we
+     choose phases or timers. */
+
+  char *newName = Tau_append_iteration_to_name(iteration, fname);
+
+  /* create the pointer. */
+  Tau_profile_c_timer(ptr, newName, type, group, group_name);
+
+  /* annotate it as a phase if it is */
+  if (isPhase)
+    Tau_mark_group_as_phase(ptr);
+  free(newName);
+
+}
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_profile_param1l(long data, const char * dataname)
 {
@@ -747,6 +780,72 @@ extern "C" void Tau_pure_stop(char *name) {
   }
 }
 
+extern "C" void Tau_static_phase_start(char *name) {
+  FunctionInfo *fi = 0;
+  string n = string(name);
+  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
+  if (it == pureMap.end()) {
+    tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER | TAU_PHASE");
+    pureMap[n] = fi;
+  } else {
+    fi = (*it).second;
+  }   Tau_start_timer(fi,1);
+}
+
+extern "C" void Tau_static_phase_stop(char *name) {
+  FunctionInfo *fi;
+  string n = string(name);
+  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
+  if (it == pureMap.end()) {
+    fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
+  } else {
+    fi = (*it).second;
+    Tau_stop_timer(fi);
+  }
+}
+
+/* isPhase argument is 1 for phase and 0 for timer */
+extern "C" void Tau_dynamic_start(char *name, int iteration, int isPhase)
+{
+  FunctionInfo *fi = 0;
+  char *newName = Tau_append_iteration_to_name(iteration, name);
+  string n (newName);
+  free(newName);
+#ifdef DEBUG_PROF
+  printf("Checking for %s: iteration = %d\n", n.c_str(), iteration);
+#endif /* DEBUG_PROF */
+
+  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
+  if (it == pureMap.end()) {
+    if (isPhase)
+      tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER | TAU_PHASE");
+    else
+      tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
+    pureMap[n] = fi;
+  } else {
+    fi = (*it).second;
+  }   
+  Tau_start_timer(fi,isPhase);
+}
+
+
+/* isPhase argument is ignored in Tau_dynamic_stop. For consistency with
+   Tau_dynamic_start. */
+extern "C" void Tau_dynamic_stop(char *name, int iteration, int isPhase) {
+  FunctionInfo *fi;   
+  char *newName = Tau_append_iteration_to_name(iteration, name);
+  string n (newName);
+  free(newName);
+  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
+  if (it == pureMap.end()) {
+    fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
+  } else {
+    fi = (*it).second;
+    Tau_stop_timer(fi);
+  }
+}
+
+
 #if (!defined(TAU_WINDOWS))
 extern "C" pid_t tau_fork() {
   pid_t pid;
@@ -784,8 +883,8 @@ extern "C" void Tau_profile_snapshot(char *name) {
 
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.62 $   $Date: 2007/03/28 02:55:22 $
- * VERSION: $Id: TauCAPI.cpp,v 1.62 2007/03/28 02:55:22 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.63 $   $Date: 2007/09/16 21:59:38 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.63 2007/09/16 21:59:38 sameer Exp $
  ***************************************************************************/
 

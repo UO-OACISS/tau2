@@ -91,8 +91,11 @@ void Tau_profile_callstack(void );
 void Tau_profile_snapshot(char *name);
 void Tau_profile_snapshot_1l(char *name, int number);
 void Tau_metadata(char *name, char *value);
-
-
+void Tau_static_phase_start(char *name);
+void Tau_static_phase_stop(char *name);
+void Tau_dynamic_start(char *name, int iteration, int isPhase);
+void Tau_dynamic_stop(char *name, int iteration, int isPhase);
+char * Tau_append_iteration_to_name(int iteration, char *name);
   
 
 
@@ -225,6 +228,237 @@ void tau_pure_stop_(char *fname, int flen) {
 }
 void tau_pure_stop__(char *fname, int flen) {
   tau_pure_stop(fname, flen);
+}
+
+void tau_static_phase_start(char *fname, int flen) {
+  // make a copy so that we can null terminate it
+  char *localname = (char *) malloc((size_t)flen+1);
+  strncpy(localname, fname, flen);
+  localname[flen] = '\0';
+
+  // check for unprintable characters
+  for(int i=0; i<strlen(localname); i++) {
+    if (!VALID_NAME_CHAR(localname[i])) {
+      localname[i] = '\0';
+      break;
+    }
+  }
+
+#ifdef DEBUG_PROF
+  printf("tau_static_phase_start: %s\n", localname);
+#endif /* DEBUG_PROF */
+  Tau_static_phase_start(localname);
+  free(localname);
+}
+
+void tau_static_phase_start_(char *fname, int flen) {
+  tau_static_phase_start(fname, flen);
+}
+
+void tau_static_phase_start__(char *fname, int flen) {
+  tau_static_phase_start(fname, flen);
+}
+
+void TAU_STATIC_PHASE_START(char *fname, int flen) {
+  tau_static_phase_start(fname, flen);
+}
+
+void tau_static_phase_stop(char *fname, int flen) {
+  // make a copy so that we can null terminate it
+  char *localname = (char *) malloc((size_t)flen+1);
+  strncpy(localname, fname, flen);
+  localname[flen] = '\0';
+
+  // check for unprintable characters
+  for(int i=0; i<strlen(localname); i++) {
+    if (!VALID_NAME_CHAR(localname[i])) {
+      localname[i] = '\0';
+      break;
+    }
+  }
+
+  printf("tau_static_phase_stop: %s\n", localname);
+  Tau_static_phase_stop(localname);
+  free(localname);
+}
+
+void tau_static_phase_stop_(char *fname, int flen) {
+  tau_static_phase_stop(fname, flen);
+}
+
+void tau_static_phase_stop__(char *fname, int flen) {
+  tau_static_phase_stop(fname, flen);
+}
+
+void TAU_STATIC_PHASE_STOP(char *fname, int flen) {
+  tau_static_phase_stop(fname, flen);
+}
+
+void tau_dynamic_phase_start(int *iteration, char *fname, int flen) {
+  // make a copy so that we can null terminate it
+  char *localname = (char *) malloc((size_t)flen+1);
+  strncpy(localname, fname, flen);
+  localname[flen] = '\0';
+
+  // check for unprintable characters
+  for(int i=0; i<strlen(localname); i++) {
+    if (!VALID_NAME_CHAR(localname[i])) {
+      localname[i] = '\0';
+      break;
+    }
+  }
+
+  Tau_dynamic_start(localname, *iteration, 1); /* 1 is isPhase */
+  free(localname);
+}
+
+void tau_dynamic_phase_start_(int *iteration, char *fname, int flen) {
+  tau_dynamic_phase_start(iteration, fname, flen);
+}
+
+void tau_dynamic_phase_start__(int *iteration, char *fname, int flen) {
+  tau_dynamic_phase_start(iteration, fname, flen);
+}
+
+void TAU_DYNAMIC_PHASE_START(int *iteration, char *fname, int flen) {
+  tau_dynamic_phase_start(iteration, fname, flen);
+}
+
+void tau_dynamic_phase_stop(int *iteration, char *fname, int flen) {
+  // make a copy so that we can null terminate it
+  char *localname = (char *) malloc((size_t)flen+1);
+  strncpy(localname, fname, flen);
+  localname[flen] = '\0';
+
+  // check for unprintable characters
+  for(int i=0; i<strlen(localname); i++) {
+    if (!VALID_NAME_CHAR(localname[i])) {
+      localname[i] = '\0';
+      break;
+    }
+  }
+
+  Tau_dynamic_stop(localname, *iteration, 1); /* 1 is isPhase */
+  free(localname);
+}
+
+void tau_dynamic_phase_stop_(int *iteration, char *fname, int flen) {
+  tau_dynamic_phase_stop(iteration, fname, flen);
+}
+  
+void tau_dynamic_phase_stop__(int *iteration, char *fname, int flen) {
+  tau_dynamic_phase_stop(iteration, fname, flen);
+}
+
+void TAU_DYNAMIC_PHASE_STOP(int *iteration, char *fname, int flen) {
+  tau_dynamic_phase_stop(iteration, fname, flen);
+}
+
+/* TAU_DYNAMIC_TIMER_START/STOP are similar to TAU_DYNAMIC_PHASE_START/STOP */
+void tau_dynamic_timer_start(int *iteration, char *fname, int flen) {
+  // make a copy so that we can null terminate it
+  char *localname = (char *) malloc((size_t)flen+1);
+  strncpy(localname, fname, flen);
+  localname[flen] = '\0';
+
+  // check for unprintable characters
+  for(int i=0; i<strlen(localname); i++) {
+    if (!VALID_NAME_CHAR(localname[i])) {
+      localname[i] = '\0';
+      break;
+    }
+  }
+
+  Tau_dynamic_start(localname, *iteration, 0); /* isPhase=0 implies a timer */
+  free(localname);
+}
+
+void tau_dynamic_timer_start_(int *iteration, char *fname, int flen) {
+  tau_dynamic_timer_start(iteration, fname, flen);
+}
+
+void tau_dynamic_timer_start__(int *iteration, char *fname, int flen) {
+  tau_dynamic_timer_start(iteration, fname, flen);
+}
+
+void TAU_DYNAMIC_TIMER_START(int *iteration, char *fname, int flen) {
+  tau_dynamic_timer_start(iteration, fname, flen);
+}
+
+
+/* TAU_STATIC_TIMER_START is the same as TAU_START */
+void tau_static_timer_start_(char *fname, int flen)
+{
+  tau_pure_start(fname, flen);
+}
+
+void tau_static_timer_start__(char *fname, int flen)
+{
+  tau_static_timer_start_(fname, flen);
+}
+
+void tau_static_timer_start(char *fname, int flen)
+{
+  tau_static_timer_start_(fname, flen);
+}
+
+void TAU_STATIC_TIMER_START(char *fname, int flen)
+{
+  tau_static_timer_start_(fname, flen);
+}
+
+
+/* TAU_DYNAMIC_TIMER_STOP */
+void tau_dynamic_timer_stop(int *iteration, char *fname, int flen) {
+  // make a copy so that we can null terminate it
+  char *localname = (char *) malloc((size_t)flen+1);
+  strncpy(localname, fname, flen);
+  localname[flen] = '\0';
+
+  // check for unprintable characters
+  for(int i=0; i<strlen(localname); i++) {
+    if (!VALID_NAME_CHAR(localname[i])) {
+      localname[i] = '\0';
+      break;
+    }
+  }
+
+  Tau_dynamic_stop(localname, *iteration, 0); /* isPhase = 0 implies timer */
+  free(localname);
+}
+
+void tau_dynamic_timer_stop_(int *iteration, char *fname, int flen) {
+  tau_dynamic_timer_stop(iteration, fname, flen);
+}
+
+void tau_dynamic_timer_stop__(int *iteration, char *fname, int flen) {
+  tau_dynamic_timer_stop(iteration, fname, flen);
+}
+
+void TAU_DYNAMIC_TIMER_STOP(int *iteration, char *fname, int flen) {
+  tau_dynamic_timer_stop(iteration, fname, flen);
+}
+
+
+/* TAU_STATIC_TIMER_STOP is the same as TAU_STOP */
+void tau_static_timer_stop_(char *fname, int flen)
+{
+  tau_pure_stop(fname, flen);
+}
+
+void tau_static_timer_stop__(char *fname, int flen)
+{
+  tau_static_timer_stop_(fname, flen);
+}
+
+void tau_static_timer_stop(char *fname, int flen)
+{
+  tau_static_timer_stop_(fname, flen);
+}
+
+void TAU_STATIC_TIMER_STOP(char *fname, int flen)
+{
+  tau_static_timer_stop_(fname, flen);
 }
 
 /* C API */
@@ -405,6 +639,65 @@ void tau_phase_stop_(void **profiler)
 {
   Tau_stop_timer(*profiler);
   return;
+}
+
+void tau_dynamic_iter(int *iteration, void **ptr, char *infname, int slen, int isPhase)
+{
+  /* we append the iteration number to the name and then call the 
+     appropriate routine for creating dynamic phases or timers */  
+
+  /* This routine creates dynamic timers and phases by embedding the
+     iteration number in the name. isPhase argument tells whether we
+     choose phases or timers. */
+
+  char *newName = Tau_append_iteration_to_name(*iteration, infname);
+  int newLength = strlen(newName);
+  if (isPhase) 
+    tau_phase_create_dynamic_(ptr, newName, newLength);
+  else
+    tau_profile_timer_dynamic_(ptr, newName, newLength);
+
+}
+
+void tau_phase_dynamic_iter_(int *iteration, void **ptr, char *infname, int slen)
+{ 
+  tau_dynamic_iter(iteration, ptr, infname, slen, 1); /* 1 is for isPhase */
+}
+
+void tau_profile_dynamic_iter_(int *iteration, void **ptr, char *infname, int slen)
+{ 
+  tau_dynamic_iter(iteration, ptr, infname, slen, 0); 
+  /* isPhase=0 is for specifying a timer */
+}
+
+void tau_phase_dynamic_iter__(int *iteration, void **ptr, char *infname, int slen)
+{
+  tau_phase_dynamic_iter_(iteration, ptr, infname, slen);
+}
+
+void tau_phase_dynamic_iter(int *iteration, void **ptr, char *infname, int slen)
+{
+  tau_phase_dynamic_iter_(iteration, ptr, infname, slen);
+}
+
+void TAU_PHASE_DYNAMIC_ITER(int *iteration, void **ptr, char *infname, int slen)
+{
+  tau_phase_dynamic_iter_(iteration, ptr, infname, slen);
+}
+
+void tau_profile_dynamic_iter__(int *iteration, void **ptr, char *infname, int slen)
+{
+  tau_profile_dynamic_iter_(iteration, ptr, infname, slen);
+}
+
+void tau_profile_dynamic_iter(int *iteration, void **ptr, char *infname, int slen)
+{
+  tau_profile_dynamic_iter_(iteration, ptr, infname, slen);
+}
+
+void TAU_PROFILE_DYNAMIC_ITER(int *iteration, void **ptr, char *infname, int slen)
+{
+  tau_profile_dynamic_iter_(iteration, ptr, infname, slen);
 }
 
 void tau_profile_exit_(char *msg)
@@ -1683,7 +1976,7 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.63 $   $Date: 2007/05/31 22:52:55 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.63 2007/05/31 22:52:55 amorris Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.64 $   $Date: 2007/09/16 21:59:38 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.64 2007/09/16 21:59:38 sameer Exp $ 
  ***************************************************************************/

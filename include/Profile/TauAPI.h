@@ -47,6 +47,10 @@ extern "C" char * Tau_phase_enable(const char *group);
 extern "C" void Tau_profile_snapshot(char *name);
 extern "C" void Tau_metadata(char *name, char *value);
 extern "C" void Tau_profile_snapshot_1l(char *name, int number);
+extern "C" void Tau_dynamic_start(char *name, int tau_counter, int isPhase); 
+extern "C" void Tau_dynamic_stop(char *name, int tau_counter, int isPhase); 
+extern "C" void Tau_static_phase_start(char *name);
+extern "C" void Tau_static_phase_stop(char *name);
 
 
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
@@ -70,6 +74,57 @@ extern "C" void Tau_profile_snapshot_1l(char *name, int number);
 #define TAU_PHASE TAU_PROFILE
 #endif /* TAU_PROFILEPHASE */
 
+#define TAU_DYNAMIC_PROFILE(name, type, group) \
+	static TauGroup_t tau_dy_group = group; \
+        static int tau_timer_counter = 0; \
+	FunctionInfo *tauFInfo = NULL; \
+        char tau_timer_iteration_number[128]; \
+        sprintf(tau_timer_iteration_number, " [%d]", ++tau_timer_counter); \
+        tauCreateFI(&tauFInfo, string(name)+string(tau_timer_iteration_number), type, tau_dy_group, #group); \
+	tau::Profiler tauFProf(tauFInfo, tau_dy_group); 
+
+#ifdef TAU_PROFILEPHASE
+#define TAU_DYNAMIC_PHASE(name, type, group) \
+	static TauGroup_t tau_group = group; \
+        static int tau_phase_counter = 0; \
+	FunctionInfo *tauFInfo = NULL; \
+	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
+        char tau_iteration_number[128]; \
+        sprintf(tau_iteration_number, " [%d]", ++tau_phase_counter); \
+        tauCreateFI(&tauFInfo, string(name)+string(tau_iteration_number), type, tau_group, TauGroupNameUsed); \
+	tau::Profiler tauFProf(tauFInfo, tau_group); \
+	tauFProf.SetPhase(1);
+
+
+#define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
+#define TAU_STATIC_PHASE_STOP(name)  Tau_static_phase_stop(name)
+#define TAU_DYNAMIC_PHASE_START(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_start(name, tau_counter++, 1); \
+}
+
+#define TAU_DYNAMIC_PHASE_STOP(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_stop(name, tau_counter++, 1); \
+}
+#else
+#define TAU_DYNAMIC_PHASE TAU_PROFILE
+#define TAU_STATIC_PHASE_START TAU_STATIC_TIMER_START
+#define TAU_STATIC_PHASE_STOP TAU_STATIC_TIMER_STOP
+#define TAU_DYNAMIC_PHASE_START TAU_DYNAMIC_TIMER_START
+#define TAU_DYNAMIC_PHASE_STOP TAU_DYNAMIC_TIMER_STOP
+#endif /* TAU_PROFILEPHASE */
+
+#define TAU_DYNAMIC_TIMER_START(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_start(name, tau_counter++, 0); \
+}
+
+#define TAU_DYNAMIC_TIMER_STOP(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_stop(name, tau_counter++, 0); \
+}
+
 #define TAU_PROFILE_TIMER(var, name, type, group) \
         static TauGroup_t var##tau_gr = group; \
         static FunctionInfo *var##fi = new FunctionInfo(name, type, var##tau_gr, #group);
@@ -77,6 +132,14 @@ extern "C" void Tau_profile_snapshot_1l(char *name, int number);
 #define TAU_PROFILE_TIMER_DYNAMIC(var, name, type, group) \
         TauGroup_t var##tau_gr = group; \
         FunctionInfo *var##fi = new FunctionInfo(name, type, var##tau_gr, #group);
+
+/* TAU_PROFILE_CREATE_DYNAMIC_AUTO embeds the counter in the name. */
+#define TAU_PROFILE_CREATE_DYNAMIC_AUTO(var, name, type, group) \
+        TauGroup_t var##tau_gr = group; \
+        static int tau_timer_dy_counter = 0; \
+        char tau_timer_iteration_number[128]; \
+        sprintf(tau_timer_iteration_number,  " [%d]", ++tau_timer_dy_counter); \
+        FunctionInfo *var##fi = new FunctionInfo(string(name)+string(tau_timer_iteration_number), type, var##tau_gr, #group);
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE_CREATE_STATIC(var, name, type, group) \
@@ -89,6 +152,15 @@ extern "C" void Tau_profile_snapshot_1l(char *name, int number);
 	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
 	FunctionInfo *var##finfo = new FunctionInfo(name, type, var##tau_group,  TauGroupNameUsed##var); 
 
+/* TAU_PHASE_CREATE_DYNAMIC_AUTO creates and embeds a unique id in the name */
+#define TAU_PHASE_CREATE_DYNAMIC_AUTO(var, name, type, group) \
+        TauGroup_t var##tau_group = group; \
+        static int tau_phase_dy_counter = 0; \
+        char tau_phase_iteration_number[128]; \
+        sprintf(tau_phase_iteration_number, " [%d]", ++tau_phase_dy_counter); \
+	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
+	FunctionInfo *var##finfo = new FunctionInfo(string(name)+string(tau_phase_iteration_number), type, var##tau_group,  TauGroupNameUsed##var); 
+
 #define TAU_PHASE_START(var) if (var##tau_group & RtsLayer::TheProfileMask()) \
                                 Tau_start_timer(var##finfo, 1);
 
@@ -97,6 +169,7 @@ extern "C" void Tau_profile_snapshot_1l(char *name, int number);
 #else /* TAU_PROFILEPHASE */
 #define TAU_PHASE_CREATE_STATIC TAU_PROFILE_TIMER
 #define TAU_PHASE_CREATE_DYNAMIC TAU_PROFILE_TIMER_DYNAMIC
+#define TAU_PHASE_CREATE_DYNAMIC_AUTO TAU_PROFILE_CREATE_DYNAMIC_AUTO
 #define TAU_PHASE_START TAU_PROFILE_START
 #define TAU_PHASE_STOP  TAU_PROFILE_STOP
 #endif /* TAU_PROFILEPHASE */
@@ -136,6 +209,57 @@ or tauFI->method();
 #define TAU_PHASE TAU_PROFILE
 #endif /* TAU_PROFILEPHASE */
 
+#define TAU_DYNAMIC_PROFILE(name, type, group) \
+	static TauGroup_t tau_dy_group = group; \
+        static int tau_timer_counter = 0; \
+	FunctionInfo *tauFInfo = NULL; \
+        char tau_timer_iteration_number[128]; \
+        sprintf(tau_timer_iteration_number, " [%d]", ++tau_timer_counter); \
+        tauCreateFI(&tauFInfo, string(name)+string(tau_timer_iteration_number), type, tau_dy_group, #group); \
+	tau::Profiler tauFProf(tauFInfo, tau_dy_group); 
+
+#ifdef TAU_PROFILEPHASE
+#define TAU_DYNAMIC_PHASE(name, type, group) \
+	static TauGroup_t tau_group = group; \
+        static int tau_phase_counter = 0; \
+	FunctionInfo *tauFInfo = NULL; \
+	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
+        char tau_iteration_number[128]; \
+        sprintf(tau_iteration_number, " [%d]", ++tau_phase_counter); \
+        tauCreateFI(&tauFInfo, string(name)+string(tau_iteration_number), type, tau_group, TauGroupNameUsed); \
+	tau::Profiler tauFProf(tauFInfo, tau_group); \
+	tauFProf.SetPhase(1);
+
+
+#define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
+#define TAU_STATIC_PHASE_STOP(name)  Tau_static_phase_stop(name)
+#define TAU_DYNAMIC_PHASE_START(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_start(name, tau_counter++, 1); \
+}
+
+#define TAU_DYNAMIC_PHASE_STOP(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_stop(name, tau_counter++, 1); \
+}
+#else
+#define TAU_DYNAMIC_PHASE TAU_PROFILE
+#define TAU_STATIC_PHASE_START TAU_STATIC_TIMER_START
+#define TAU_STATIC_PHASE_STOP TAU_STATIC_TIMER_STOP
+#define TAU_DYNAMIC_PHASE_START TAU_DYNAMIC_TIMER_START
+#define TAU_DYNAMIC_PHASE_STOP TAU_DYNAMIC_TIMER_STOP
+#endif /* TAU_PROFILEPHASE */
+
+#define TAU_DYNAMIC_TIMER_START(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_start(name, tau_counter++, 0); \
+}
+
+#define TAU_DYNAMIC_TIMER_STOP(name) \
+{ static int tau_counter=1; \
+  Tau_dynamic_stop(name, tau_counter++, 0); \
+}
+
 #define TAU_PROFILE_TIMER(var, name, type, group) \
 	static TauGroup_t var##tau_gr = group; \
 	static FunctionInfo *var##fi = NULL; \
@@ -145,6 +269,13 @@ or tauFI->method();
 #define TAU_PROFILE_TIMER_DYNAMIC(var, name, type, group) \
         TauGroup_t var##tau_gr = group; \
         FunctionInfo *var##fi = new FunctionInfo(name, type, var##tau_gr, #group);
+
+/* TAU_PROFILE_CREATE_DYNAMIC_AUTO embeds the counter in the name. */
+#define TAU_PROFILE_CREATE_DYNAMIC_AUTO(var, name, type, group) \
+        TauGroup_t var##tau_gr = group; \
+        static int tau_timer_dy_counter = 0; \
+        char tau_timer_iteration_number[128]; \
+        sprintf(tau_timer_iteration_number,  " [%d]", ++tau_timer_dy_counter); \        FunctionInfo *var##fi = new FunctionInfo(string(name)+string(tau_timer_iteration_number), type, var##tau_gr, #group);
 
 
 #ifdef TAU_PROFILEPHASE
@@ -160,29 +291,31 @@ or tauFI->method();
 	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
         tauCreateFI(&var##finfo, name, type, var##tau_group, TauGroupNameUsed##var); 
 
-#else
+/* TAU_PHASE_CREATE_DYNAMIC_AUTO creates and embeds a unique id in the name */
+#define TAU_PHASE_CREATE_DYNAMIC_AUTO(var, name, type, group) \
+        TauGroup_t var##tau_group = group; \
+        static int tau_phase_dy_counter = 0; \
+        char tau_phase_iteration_number[128]; \
+        sprintf(tau_phase_iteration_number, " [%d]", ++tau_phase_dy_counter); \
+	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
+	FunctionInfo *var##finfo = new FunctionInfo(string(name)+string(tau_phase_iteration_number), type, var##tau_group,  TauGroupNameUsed##var); 
+
+#define TAU_PHASE_START(var) if (var##tau_group & RtsLayer::TheProfileMask()) \
+ 				Tau_start_timer(var##finfo, 1);
+#define TAU_PHASE_STOP(var)  if (var##tau_group & RtsLayer::TheProfileMask()) \
+				Tau_stop_timer(var##finfo);
+#else /* TAU_PROFILEPHASE */
 #define TAU_PHASE_CREATE_STATIC TAU_PROFILE_TIMER
 #define TAU_PHASE_CREATE_DYNAMIC TAU_PROFILE_TIMER_DYNAMIC
+#define TAU_PHASE_CREATE_DYNAMIC_AUTO TAU_PROFILE_CREATE_DYNAMIC_AUTO
+#define TAU_PHASE_START TAU_PROFILE_START
+#define TAU_PHASE_STOP  TAU_PROFILE_STOP
 #endif /* TAU_PROFILEPHASE */
 
 // Construct a tau::Profiler obj and a FunctionInfo obj with an extended name
 // e.g., FunctionInfo loop1fi(); tau::Profiler loop1(); 
 #define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
  				Tau_start_timer(var##fi, 0);
-
-#ifdef TAU_PROFILEPHASE
-#define TAU_PHASE_START(var) if (var##tau_group & RtsLayer::TheProfileMask()) \
- 				Tau_start_timer(var##finfo, 1);
-#else
-#define TAU_PHASE_START TAU_PROFILE_START
-#endif /* TAU_PROFILEPHASE */
-
-#ifdef TAU_PROFILEPHASE
-#define TAU_PHASE_STOP(var)  if (var##tau_group & RtsLayer::TheProfileMask()) \
-				Tau_stop_timer(var##finfo);
-#else
-#define TAU_PHASE_STOP TAU_PROFILE_STOP
-#endif /* TAU_PROFILEPHASE */
 
 /* The macros below refer to TAU's FunctionInfo object. This object is created with
 a new call for multi-threaded applications and with a static constructor when 
@@ -432,6 +565,17 @@ or tauFI->method();
 #define TAU_PROFILE_SNAPSHOT(name)
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)
 
+/* extensions to the PHASE/TIMER API */
+#define TAU_DYNAMIC_PHASE(name, type, group)
+#define TAU_DYNAMIC_PROFILE(name, type, group)
+#define TAU_STATIC_PHASE_START(name)
+#define TAU_STATIC_PHASE_STOP(name) 
+#define TAU_DYNAMIC_PHASE_START(name) 
+#define TAU_DYNAMIC_PHASE_STOP(name) 
+#define TAU_DYNAMIC_TIMER_START(name)
+#define TAU_DYNAMIC_TIMER_STOP(name)
+#define TAU_PROFILE_CREATE_DYNAMIC(var, name, type, group) 
+
 #define CT(obj)
 
 #endif /* PROFILING_ON */
@@ -447,6 +591,10 @@ or tauFI->method();
 #define TAU_TRACE_RECVMSG(type, source, length)
 #endif /* TRACING_ON */
 
+/* for consistency, we provide the long form */
+#define TAU_STATIC_TIMER_START TAU_START
+#define TAU_STATIC_TIMER_STOP TAU_STOP
+
 
 #ifdef DEBUG_PROF
 #define DEBUGPROFMSG(msg) { cout<< msg; }
@@ -457,6 +605,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.62 $   $Date: 2007/04/25 01:07:04 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.62 2007/04/25 01:07:04 sameer Exp $ 
+ * $Revision: 1.63 $   $Date: 2007/09/16 21:59:38 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.63 2007/09/16 21:59:38 sameer Exp $ 
  ***************************************************************************/
