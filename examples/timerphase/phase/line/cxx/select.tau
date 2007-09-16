@@ -1,0 +1,4 @@
+BEGIN_INSTRUMENT_SECTION
+static phase name="foo_bar" file="foo.cpp" line=17 to line=18
+dynamic phase name="foo1_bar" file="foo.cpp" line=26 to line=27
+END_INSTRUMENT_SECTION

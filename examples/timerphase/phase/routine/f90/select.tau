@@ -1,0 +1,6 @@
+BEGIN_INSTRUMENT_SECTION
+dynamic phase routine="FOO1"
+static phase routine="FOO"
+#static phase name="foo_bar" file="foo.f90" line=12 to line=13
+#dynamic phase name="foo1_bar" file="foo.f90" line=20 to line=21
+END_INSTRUMENT_SECTION
