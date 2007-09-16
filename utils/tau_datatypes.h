@@ -20,13 +20,14 @@ struct itemRef {
   itemRef(const pdbItem *i, bool isT);
   itemRef(const pdbItem *i, itemKind_t k, int l, int c);
   itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code, itemAttr_t);
-  itemRef(const pdbItem *i, itemKind_t k, itemQualifier_t q, string name);
-  itemRef(const pdbItem *i, itemKind_t k, itemQualifier_t q, string name, string file, int from, int to);
+  //itemRef(const pdbItem *i, itemKind_t k, itemQualifier_t q, string name);
   itemRef(const pdbItem *i, bool isT, int l, int c);
   itemRef(const pdbItem *i, itemKind_t k, pdbLoc start, pdbLoc stop);
   const pdbItem *item;
   itemKind_t kind; /* For C instrumentation */ 
   bool     isTarget;
+  bool     isDynamic;
+  bool     isPhase;
   int      line;
   int      col;
   pdbLoc   begin;
@@ -40,6 +41,6 @@ extern bool fuzzyMatch(const string& a, const string& b);
 
 /***************************************************************************
  * $RCSfile: tau_datatypes.h,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2007/09/04 19:28:54 $
- * VERSION_ID: $Id: tau_datatypes.h,v 1.10 2007/09/04 19:28:54 sameer Exp $
+ * $Revision: 1.11 $   $Date: 2007/09/16 22:04:29 $
+ * VERSION_ID: $Id: tau_datatypes.h,v 1.11 2007/09/16 22:04:29 sameer Exp $
  ***************************************************************************/

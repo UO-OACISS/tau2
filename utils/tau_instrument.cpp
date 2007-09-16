@@ -129,7 +129,8 @@ tauInstrument::tauInstrument(itemQualifier_t q, instrumentKind_t k, string n,
         string f, int linestart, int linestop) :
 	qualifier(q), kind(k), code(n), codeSpecified(true), 
         filename(f), fileSpecified(true), regionStart(linestart), 
-        regionStop(linestop), regionSpecified(true), qualifierSpecified(true)
+        regionStop(linestop), regionSpecified(true), qualifierSpecified(true),
+        lineSpecified(false) /* region, not line */
 {} 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1494,6 +1495,43 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 	printf("process memory allocate/de-allocate statements in C routine\n");
 #endif /* DEBUG */
       }
+      instrumentKind_t isPhaseOrTimer = (*it)->getKind(); 
+      if (isPhaseOrTimer == TAU_PHASE || isPhaseOrTimer == TAU_TIMER)
+      { /* we need to instrument this routine as a phase/timer */
+        /* We need to identify the itemRef record associated with this
+          routine and mark it as a phase/timer over there. 
+          Iterate over the list.
+        */
+        for(vector<itemRef *>::iterator iter = itemvec.begin();
+            iter != itemvec.end(); iter++)
+        {
+          if ((*iter)->item)
+          { /* item's pdbItem entry is not null */
+#ifdef DEBUG_PROF
+            printf("examining %s. id = %d. Current routine id = %d\n",
+            (*iter)->item->name(), (*iter)->item->id(), (*rit)->id());     
+#endif /* DEBUG_PROF */
+            if ((*iter)->item->id() == (*rit)->id()) 
+            { /* found it! We need to annotate this as a phase */
+              if (isPhaseOrTimer == TAU_PHASE) 
+              {
+#ifdef DEBUG
+	        printf("Routine %s is a PHASE \n", (*rit)->fullName());
+#endif /* DEBUG */
+                (*iter)->isPhase = true;
+              }
+              else 
+              {
+#ifdef DEBUG
+	        printf("Routine %s is a TIMER \n", (*rit)->fullName());
+#endif /* DEBUG */
+              }
+              if ((*it)->getQualifier() == DYNAMIC)               
+                (*iter)->isDynamic = true;
+            }
+          }
+        } 
+      }
     }
   }
 
@@ -1601,11 +1639,81 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #endif /* DEBUG */
 	processMemBlock((*rit)->body(), (*rit), itemvec, 1, NULL); /* level = 1 */
       }
+      instrumentKind_t isPhaseOrTimer = (*it)->getKind(); 
+      if (isPhaseOrTimer == TAU_PHASE || isPhaseOrTimer == TAU_TIMER)
+      { /* we need to instrument this routine as a phase/timer */
+       /* We need to identify the itemRef record associated with this
+          routine and mark it as a phase over there. Iterate over the list.
+       */
+        for(vector<itemRef *>::iterator iter = itemvec.begin();
+            iter != itemvec.end(); iter++)
+        {
+          if ((*iter)->item && (*iter)->kind == BODY_BEGIN)
+          { /* item's pdbItem entry is not null */
+#ifdef DEBUG_PROF
+            printf("examining %s. id = %d. Current routine id = %d\n",
+            (*iter)->item->name(), (*iter)->item->id(), (*rit)->id());     
+#endif /* DEBUG_PROF */
+            if ((*iter)->item->id() == (*rit)->id()) 
+            { /* found it! We need to annotate this as a phase */
+              if (isPhaseOrTimer == TAU_PHASE) 
+              {
+#ifdef DEBUG
+	        printf("Routine %s is a PHASE \n", (*rit)->fullName());
+#endif /* DEBUG */
+                (*iter)->isPhase = true;
+              }
+              if ((*it)->getQualifier() == DYNAMIC)
+              {
+                (*iter)->isDynamic = true;
+                /* Add a tau_iter declaration to this routine. */
+                list<string> dynamicDecls;
+                dynamicDecls.push_back(string("      integer tau_iter / 0 /"));
+                dynamicDecls.push_back(string("      save tau_iter"));
+
+                additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(),
+                dynamicDecls));
+
+              }
+            }
+          }
+        }
+      } /* dynamic timers are supported now */
     } /* end of match */
   } /* iterate over all routines */
 
   return true; /* everything is ok -- return true */
 }
+
+/* Process all routines from the given file and extract routine relevant to 
+   line*/
+pdbRoutine * getFRoutineFromFileAndLine(PDB& p, int line)
+{
+  PDB::froutinevec::const_iterator rit;
+  PDB::froutinevec froutines = p.getFRoutineVec();
+  pdbRoutine * result; 
+
+#ifdef DEBUG
+  printf("Inside getFRoutineFromFileAndLine!\n");
+#endif /* DEBUG */
+  pdbRoutine::locvec::iterator rlit;
+  for(rit = froutines.begin(); rit != froutines.end(); ++rit)
+  { /* iterate over all routines */
+#ifdef DEBUG
+    printf("Iterating... routine = %s, first stmt = %d, looking for line = %d\n", 
+
+       (*rit)->fullName(), 
+       (*rit)->firstExecStmtLocation().line(), line);
+#endif /* DEBUG */
+    if ((*rit)->firstExecStmtLocation().line() <= line) result = *rit; 
+    else break;
+  }
+  
+  return result;
+}
+
+/* Add file and routine based instrumentation requests to the itemRef vector
+   for C/C++ and Fortran */
 bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& itemvec)
 {
   /* Let us iterate over the list of instrumentation requests and see if 
@@ -1654,6 +1762,10 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
       cout <<"Matched the file names!"<<endl;
 #endif /* DEBUG */
       /* Now we must add the lines for instrumentation if a line is specified! */
+      /* process file = <name> line=<no> code=<code> request */
+      /* phases can also be specified in this manner, we need to distinguish 
+the two. With phases, line is not specified, rather a region is specified. So, 
+it will not enter here. */
       if ((*it)->getLineSpecified())
       { /* Yes, a line number was specified */
 #ifdef DEBUG
@@ -1672,6 +1784,71 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
 	 */
 	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*it)->getLineNo(), 1, (*it)->getCode(), BEFORE));
 			
+      }
+      /* is a region specified for phase/timer based instrumentation? */
+      if ((*it)->getRegionSpecified())
+      { 
+#ifdef DEBUG
+        cout <<"Region based instrumentation: start: "
+             <<(*it)->getRegionStart()<<" stop: "
+             <<(*it)->getRegionStop()<< " name: "
+             <<(*it)->getCode()<<endl;
+  #endif /* DEBUG */
+        string startRegionCode;
+        string stopRegionCode;
+        string regionKind, regionQualifier;
+        if ((*it)->getKind() == TAU_PHASE) regionKind=string("PHASE");
+        else regionKind=string("TIMER");
+        if ((*it)->getQualifier() == DYNAMIC) regionQualifier=string("DYNAMIC");
+          else regionQualifier=string("STATIC");
+        /* Fortran has a slightly different syntax and requirements 
+           compared to C/C++ */
+        if (p.language() != PDB::LA_FORTRAN)
+        { /* ASSUMPTION: If it is not Fortran it is C or C++ */
+          startRegionCode = string("  TAU_")+regionQualifier+string("_")+regionKind+"_START(\""+(*it)->getCode()+"\");";
+          stopRegionCode = string("  TAU_")+regionQualifier+string("_")+regionKind+"_STOP(\""+(*it)->getCode()+"\");";
+          
+        }
+        else 
+        { /* Fortran region based instrumentation */
+          if ((*it)->getQualifier() == STATIC) 
+          { /* great! it is easy to instrument static phases in Fortran */
+            startRegionCode = string("       call TAU_")+regionQualifier+string("_")+regionKind+"_START(\""+(*it)->getCode()+"\");"; 
+            stopRegionCode = string("       call TAU_")+regionQualifier+string("_")+regionKind+"_STOP(\""+(*it)->getCode()+"\");"; 
+          }
+          else
+          { /* To instrument dynamic phases, we need to determine what routine
+               the given region belongs to. */
+            pdbRoutine *r= getFRoutineFromFileAndLine(p, (*it)->getRegionStart());
+#ifdef DEBUG
+            cout <<"Instrumenting for dynamic phases at entry of routine "
+                 <<r->fullName()<<endl;
+            /* get routine entry line no. */
+            cout <<"at line: "<<r->bodyBegin().line()<<", col"<< r->bodyBegin().col()<<"code = "<<endl;
+#endif /* DEBUG */
+            list<string> dynamicDecls;
+            dynamicDecls.push_back(string("      integer tau_iteration / 0 /"));
+            dynamicDecls.push_back(string("      save tau_iteration"));
+
+            additionalDeclarations.push_back(pair<int, list<string> >(r->id(), 
+                dynamicDecls)); 
+            /* this takes care of the entry based declarations. Now we need to
+               take care of the start/stop code */
+            startRegionCode = string("      tau_iteration = tau_iteration + 1");
+  	    itemvec.push_back( new itemRef((pdbItem *)NULL, 
+              INSTRUMENTATION_POINT, (*it)->getRegionStart(), 1, 
+              startRegionCode, BEFORE));
+
+            startRegionCode = string("call TAU_")+regionQualifier+string("_")+regionKind+"_START(tau_iteration,\""+(*it)->getCode()+"\");"; 
+            stopRegionCode = string("       call TAU_")+regionQualifier+string("_")+regionKind+"_STOP(tau_iteration,\""+(*it)->getCode()+"\");"; 
+
+          }
+        }
+        /* the region start/stop code goes in here as an instrumentation 
+           point for either language. Stop region is one line after the end 
+           of the given region.*/
+  	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*it)->getRegionStart(), 1, startRegionCode, BEFORE));
+  	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*it)->getRegionStop()+1, 1, stopRegionCode, BEFORE));
       }
     }
     /* What else is specified with the instrumentation request? Are routines
@@ -1748,6 +1925,6 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.46 $   $Date: 2007/09/04 19:28:54 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.46 2007/09/04 19:28:54 sameer Exp $
+ * $Revision: 1.47 $   $Date: 2007/09/16 22:04:29 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.47 2007/09/16 22:04:29 sameer Exp $
  ***************************************************************************/

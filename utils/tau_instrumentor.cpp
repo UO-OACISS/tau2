@@ -81,6 +81,8 @@ itemRef::itemRef(const pdbItem *i, bool isT) : item(i), isTarget(isT) {
     col  = i->location().col();
     kind = ROUTINE; /* for C++, only routines are listed */ 
     attribute = NOT_APPLICABLE;
+    isPhase = false; /* timer by default */ 
+    isDynamic = false; /* static by default */ 
   }
 itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c) : 
 	line (l), col(c), item(i), kind(k) {
@@ -90,6 +92,8 @@ itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c) :
 #endif /* DEBUG */
     isTarget = true; 
     attribute = NOT_APPLICABLE;
+    isPhase = false; /* timer by default */ 
+    isDynamic = false; /* static by default */ 
   }
 itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code, itemAttr_t a) : 
 	line (l), col(c), item(i), kind(k), snippet(code), attribute(a) {
@@ -100,19 +104,24 @@ itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code, item
     if (a == BEFORE) cout <<"BEFORE"<<endl;
 #endif /* DEBUG */
     isTarget = true; 
+    isPhase = false; /* timer by default */ 
+    isDynamic = false; /* static by default */ 
   }
 itemRef::itemRef(const pdbItem *i, bool isT, int l, int c)
          : item(i), isTarget(isT), line(l), col(c) {
     kind = ROUTINE; 
     attribute = NOT_APPLICABLE;
+    isPhase = false; /* timer by default */ 
+    isDynamic = false; /* static by default */ 
   }
 itemRef::itemRef(const pdbItem *i, itemKind_t k, pdbLoc start, pdbLoc stop)
-   : item(i), kind(k), begin(start), end(stop) 
-{
-  attribute = NOT_APPLICABLE;  
-  line = begin.line();
-  col = begin.col();
-}
+   : item(i), kind(k), begin(start), end(stop) {
+    attribute = NOT_APPLICABLE;  
+    line = begin.line();
+    col = begin.col();
+    isPhase = false; /* timer by default */ 
+    isDynamic = false; /* static by default */ 
+  }
 /* not needed anymore */
 #ifdef OLD
   const pdbItem *item;
@@ -243,17 +252,83 @@ bool identicalBeginEnd(const pdbCRoutine *rit)
 }
   
 /* -------------------------------------------------------------------------- */
+/* -- getMeasurementEntity(i) returns TAU_PROFILE/TAU_PHASE based on i  ----- */
+/* -------------------------------------------------------------------------- */
+const char * getMeasurementEntity(itemRef *i)
+{ /* for C++ */
+  if (i->isPhase) { /* static or dynamic phase */
+     if (i->isDynamic) {
+       return "TAU_DYNAMIC_PHASE";
+     } else { /* ! dynamic phase */
+       return "TAU_PHASE";
+     }
+  } else {  /* timer */
+     if (i->isDynamic) {
+       return "TAU_DYNAMIC_PROFILE";  
+     } else { /* ! dynamic timer -- plain old static timer */
+       return "TAU_PROFILE";
+     }
+  } /* phase/timer */
+}
+
+/* -------------------------------------------------------------------------- */
+/* -- getCreateMeasurementEntity(i) returns TAU_PROFILE_TIMER/TAU_PHASE_TIMER */
+/* -------------------------------------------------------------------------- */
+const char * getCreateMeasurementEntity(itemRef *i)
+{ /* NOTE: THIS ROUTINE IS ONLY MEANT FOR C/C++. See writeFortranTimer for F90. */
+  if (i && i->isPhase) { /* static or dynamic phase */
+     if (i->isDynamic) {
+       return "TAU_PHASE_CREATE_DYNAMIC_AUTO";  /* NOTE: Change this! */
+     } else { /* ! dynamic phase */
+       return "TAU_PHASE_CREATE_STATIC";
+     }
+  } else {  /* timer. We currently do not support a dynamic timer for the 
+               full routine. Hence, we use the default static timer.*/
+     if (i->isDynamic) {
+       return "TAU_PROFILE_CREATE_DYNAMIC_AUTO"; /* NOTE: Change this! */
+     } else { /* ! dynamic timer */
+       return "TAU_PROFILE_TIMER";
+     }
+  }
+   
+}
+
+/* -------------------------------------------------------------------------- */
+/* -- getStartMeasurementEntity(i) returns TAU_PROFILE_START/TAU_PHASE_START */
+/* -------------------------------------------------------------------------- */
+const char * getStartMeasurementEntity(itemRef *i)
+{
+
+   if (i && i->isPhase) 
+     return "TAU_PHASE_START";
+   else 
+     return "TAU_PROFILE_START";
+}
+
+/* -------------------------------------------------------------------------- */
+/* -- getStopMeasurementEntity(i) returns TAU_PROFILE_STOP/TAU_PHASE_STOP --- */
+/* -------------------------------------------------------------------------- */
+const char * getStopMeasurementEntity(itemRef *i)
+{
+
+   if (i && i->isPhase) 
+     return "TAU_PHASE_STOP";
+   else 
+     return "TAU_PROFILE_STOP";
+}
+
+/* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
 bool getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
 bool retval;
 
-  if (!isInstrumentListEmpty()) 
-  { /* there are finite instrumentation requests, add requests for this file */
-    retval = addFileInstrumentationRequests(pdb, file, itemvec);
-    if (!retval) return retval; /* if there's an error, propagate it up */
-  }
+  /* we used to keep the selective instrumentation file processing at the
+     entry. But, when a routine is specified as a phase, we need to annotate
+     its itemRef accordingly. This needs the entry/exit records to be created
+     prior to processing the selective instrumentation file. */
+  
 
   PDB::croutinevec routines = pdb.getCRoutineVec();
   for (PDB::croutinevec::const_iterator rit=routines.begin();
@@ -364,6 +439,15 @@ bool retval;
       }
     }
   }
+
+  /* moved selective instrumentation file processing here */
+  if (!isInstrumentListEmpty()) 
+  { /* there are finite instrumentation requests, add requests for this file */
+    retval = addFileInstrumentationRequests(pdb, file, itemvec);
+    if (!retval) return retval; /* if there's an error, propagate it up */
+  }
+
+  /* All instrumentation requests are in. Sort these now and remove duplicates */
   stable_sort(itemvec.begin(), itemvec.end(), locCmp);
   itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
 #ifdef DEBUG
@@ -382,10 +466,11 @@ bool retval;
 /* Create a vector of items that need action: such as BODY_BEGIN, RETURN etc.*/
 void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 
-  if (!isInstrumentListEmpty()) 
-  { /* there are finite instrumentation requests, add requests for this file */
-    addFileInstrumentationRequests(pdb, file, itemvec);
-  }
+
+  /* we used to keep the selective instrumentation file processing at the
+     entry. But, when a routine is specified as a phase, we need to annotate
+     its itemRef accordingly. This needs the entry/exit records to be created
+     prior to processing the selective instrumentation file. */
 
   PDB::croutinevec routines = pdb.getCRoutineVec();
   for (PDB::croutinevec::const_iterator rit=routines.begin();
@@ -433,6 +518,13 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 	processExitOrAbort(itemvec, *rit, c); 
     }
   }
+
+  /* moved selective instrumentation file processing here */
+  if (!isInstrumentListEmpty()) 
+  { /* there are finite instrumentation requests, add requests for this file */
+    addFileInstrumentationRequests(pdb, file, itemvec);
+  }
+  /* All instrumentation requests are in. Sort these now and remove duplicates */
 #ifdef DEBUG
   for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
    iter++)
@@ -461,11 +553,10 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
   PDB::froutinevec routines = pdb.getFRoutineVec();
 
 
-  /* check if the given file has line/routine level instrumentation requests */
-  if (!isInstrumentListEmpty() || memory_flag) 
-  { /* there are finite instrumentation requests, add requests for this file */
-    addFileInstrumentationRequests(pdb, file, itemvec);
-  }
+  /* we used to keep the selective instrumentation file processing at the
+     entry. But, when a routine is specified as a phase, we need to annotate
+     its itemRef accordingly. This needs the entry/exit records to be created
+     prior to processing the selective instrumentation file. */
 
   for (PDB::froutinevec::const_iterator rit=routines.begin();
        rit!=routines.end(); ++rit) 
@@ -514,6 +605,14 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     }
 
   }
+
+  /* check if the given file has line/routine level instrumentation requests */
+  if (!isInstrumentListEmpty() || memory_flag) 
+  { /* there are finite instrumentation requests, add requests for this file */
+    addFileInstrumentationRequests(pdb, file, itemvec);
+  }
+
+  /* All instrumentation requests are in. Sort these now and remove duplicates */
 
 /* Now sort all these locations */
 #ifdef DEBUG 
@@ -768,7 +867,7 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
   #endif
   	      // leave some leading spaces for formatting...
   
-  	      ostr <<"  TAU_PROFILE(\"" << getInstrumentedName((*it)->item) ;
+  	      ostr <<"  "<<getMeasurementEntity((*it))<<"(\"" << getInstrumentedName((*it)->item) ;
   	      if (!((*it)->isTarget))
   	      { // it is a template member. Help it by giving an additional ()
   	      // if the item is a member function or a static member func give
@@ -1046,8 +1145,24 @@ void writeLongFortranStatement(ostream &ostr, string& prefix, string suffix) {
 /* -- writeFortranTimer writes the long timer name in two or more statements  */
 /* -- if necessary. It invokes writeLongFortranStatement -------------------  */
 /* -------------------------------------------------------------------------- */
-void writeFortranTimer(ostream &ostr, string timername) {
-  string prefix = string("      call TAU_PROFILE_TIMER(profiler, '");
+void writeFortranTimer(ostream &ostr, string timername, itemRef *i) {
+  string prefix;
+
+  if (i->isDynamic) {
+    ostr << "      tau_iter = tau_iter + 1"<<endl;
+    if (i->isPhase) { /* dynamic phase */
+      prefix = string("      call TAU_PHASE_DYNAMIC_ITER(tau_iter, profiler, '");
+      
+    } else { /* dynamic timer */
+      prefix = string("      call TAU_PROFILE_DYNAMIC_ITER(tau_iter, profiler, '");
+    } /* end of dynamic */
+  } else { /* it is static */
+      if (i->isPhase) { /* static phase */
+        prefix = string("      call TAU_PHASE_CREATE_STATIC(profiler, '");
+      } else { /* static timer */
+        prefix = string("      call TAU_PROFILE_TIMER(profiler, '");
+      }  /* static timer */
+  } /* is static? */
   writeLongFortranStatement(ostr, prefix, timername);
 }
 
@@ -1069,7 +1184,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
   }
   else
   {
-    ostr <<"\tTAU_PROFILE_TIMER(tautimer, \""<<
+    ostr <<"\t"<<getCreateMeasurementEntity(i)<<"(tautimer, \""<<
       getInstrumentedName(i->item) << "\", \" " << "\",";
       // ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
@@ -1093,7 +1208,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
       ostr <<group_name<<");" <<endl; // give an additional line
     }
 
-    ostr <<"\tTAU_PROFILE_START(tautimer); "<<endl;
+    ostr <<"\t"<<getStartMeasurementEntity(i)<<"(tautimer); "<<endl;
 	
   }
 }
@@ -1110,7 +1225,7 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
   }
   else
   {
-    ostr <<"{ \n\tTAU_PROFILE_TIMER(tautimer, \""<<
+    ostr <<"{ \n\t"<<getCreateMeasurementEntity(i)<<"(tautimer, \""<<
       getInstrumentedName(i->item) << "\", \" " << "\", ";
       //((pdbRoutine *)(i->item))->signature()->name() << "\", ";
   
@@ -1132,7 +1247,7 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
       ostr <<group_name<<");" <<endl; // give an additional line
     }
   
-    ostr <<"\tTAU_PROFILE_START(tautimer);"<<endl;
+    ostr <<"\t"<<getStartMeasurementEntity(i)<<"(tautimer);"<<endl;
   }
 }
 
@@ -1190,7 +1305,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
       ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);"<<use_string<<" " << (ret_expression)<<"; }"<<endl;
     }
     else
-      ostr <<"TAU_PROFILE_STOP(tautimer); " << use_string<<" "<< (ret_expression)<<"; }" <<endl;
+      ostr <<getStopMeasurementEntity(it)<<"(tautimer); " << use_string<<" "<< (ret_expression)<<"; }" <<endl;
   }
   else 
   {
@@ -1201,7 +1316,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
       ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);"<<use_string<<" " << "(tau_ret_val); }"<<endl;
     }
     else
-      ostr<<"TAU_PROFILE_STOP(tautimer); " << use_string<<" (tau_ret_val); }"<<endl;
+      ostr<<getStopMeasurementEntity(it)<<"(tautimer); " << use_string<<" (tau_ret_val); }"<<endl;
   }
 }
 
@@ -1416,7 +1531,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		      ostr<<"{ Perf_Update(\""<< ((pdbRoutine *)((*it)->item))->name()<<"\", 0);"<<use_return_void<<";}"<<endl;
 		    }
 		    else 
-		        ostr << "{ TAU_PROFILE_STOP(tautimer); "<<use_return_void<<"; }" <<endl;
+		        ostr << "{ "<<getStopMeasurementEntity(*it)<<"(tautimer); "<<use_return_void<<"; }" <<endl;
 		    for (k=((*it)->col)-1; inbuf[k] !=';'; k++)
 		     ;
 		    write_from = k+1;
@@ -1499,7 +1614,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		}
 		else 
 		{
-		  ostr<<"\n}\n\tTAU_PROFILE_STOP(tautimer);\n"<<endl; 
+		  ostr<<"\n}\n\t"<<getStopMeasurementEntity((*it))<<"(tautimer);\n"<<endl; 
 		}
 		instrumented = true; 
 		break;
@@ -3142,18 +3257,18 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG) {
 		  // main
 		  ostr << "      call TAU_PROFILE_INIT()"<<endl;
-		  writeFortranTimer(ostr, instrumentedName);
+		  writeFortranTimer(ostr, instrumentedName, (*it));
 		} else { 
 		  // For all routines
 		  
 		  if (!pure) {
 		    if (strcmp(group_name.c_str(), "TAU_USER") != 0) { 
 		      // Write the following lines only when -DTAU_GROUP=string is defined
-		      ostr << "      call TAU_PROFILE_TIMER(profiler,'" <<
-			group_name.substr(10)<<">"<< instrumentedName << "')"<<endl;
+                      string groupInstrumentedName = group_name.substr(10)+">"+instrumentedName;
+		      writeFortranTimer(ostr, groupInstrumentedName, (*it));
 		    } else { 
 		      /* group_name is not defined, write the default fullName of the routine */
-		      writeFortranTimer(ostr, instrumentedName);
+		      writeFortranTimer(ostr, instrumentedName, (*it));
 		    }
 		  }
   		}
@@ -3167,7 +3282,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		    ostr << "call TAU_PURE_START('" << instrumentedName << "')"<<endl;
 		  }
 		} else {
-		  ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
+		  ostr <<"call "<<getStartMeasurementEntity((*it))<<"(profiler)"<<endl;
 		}
                 writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
 
@@ -3293,7 +3408,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		    if (use_perflib)
 		      ostr <<"call f_perf_update('"<<stripModuleFromName((*it)->item->fullName())<<"', .false.)"<<endl;
 		    else
-		      ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
+		      ostr <<"call "<<getStopMeasurementEntity((*it))<<"(profiler)"<<endl;
 		  }
 		}
 
@@ -4059,8 +4174,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.180 $   $Date: 2007/08/19 04:53:30 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.180 2007/08/19 04:53:30 sameer Exp $
+ * $Revision: 1.181 $   $Date: 2007/09/16 22:04:29 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.181 2007/09/16 22:04:29 sameer Exp $
  ***************************************************************************/
 
 
