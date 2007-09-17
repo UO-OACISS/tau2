@@ -1,4 +1,4 @@
-include /home/sameer/tau2/include/Makefile
+include ../../../../../include/Makefile
 OPT=-optVerbose -optTauSelectFile=select.tau -optKeepFiles
 CC=$(TAU_COMPILER) $(OPT) $(TAU_CC)
 CXX=$(TAU_COMPILER) $(OPT) $(TAU_CXX)
