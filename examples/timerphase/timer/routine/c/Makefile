@@ -1,8 +1,8 @@
 include ../../../../../include/Makefile
 OPT=-optVerbose -optTauSelectFile=select.tau -optKeepFiles
-CC=$(TAU_COMPILER) $(OPT) icc
-CXX=$(TAU_COMPILER) $(OPT) icpc
-F90=$(TAU_COMPILER) $(OPT) ifort
+CC=$(TAU_COMPILER) $(OPT) $(TAU_CC)
+CXX=$(TAU_COMPILER) $(OPT) $(TAU_CXX)
+F90=$(TAU_COMPILER) $(OPT) $(TAU_F90)
 
 all: foo 
 
