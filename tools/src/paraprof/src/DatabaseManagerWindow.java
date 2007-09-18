@@ -510,7 +510,15 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         	this.driver.setText("org.gjt.mm.mysql.Driver");
             this.port.setText("3306");
             this.host.setText("localhost");
-            String jarlocation = ParaProf.tauHome + File.separator + ParaProf.tauArch + File.separator + "lib" + File.separator + "mysql.jar";
+            String jarlocation;
+            if (System.getProperty("os.name").startsWith("Windows"))
+            {
+            	jarlocation = ParaProf.tauHome + File.separator + "bin" + File.separator + "mysql.jar";
+            }
+            else
+            {
+            	jarlocation = ParaProf.tauHome + File.separator + ParaProf.tauArch + File.separator + "lib" + File.separator + "mysql.jar";
+            }
             File jar = new File(jarlocation);
             if (jar.exists())
             {
@@ -532,7 +540,15 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             this.driver.setText("org.postgresql.Driver");
             this.port.setText("5432");
             this.host.setText("localhost");
-            String jarlocation = ParaProf.tauHome + File.separator + ParaProf.tauArch + File.separator + "lib" + File.separator + "postgresql.jar";
+            String jarlocation;
+            if (System.getProperty("os.name").startsWith("Windows"))
+            {
+            	jarlocation = ParaProf.tauHome + File.separator + "bin" + File.separator + "postgresql.jar";
+            }
+            else
+            {
+            	jarlocation = ParaProf.tauHome + File.separator + ParaProf.tauArch + File.separator + "lib" + File.separator + "postgresql.jar";
+            }
             File jar = new File(jarlocation);
             if (jar.exists())
             {
@@ -568,7 +584,14 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         	download.setEnabled(false);
         	labelDatabaseName.setText("Path to Database:");
             this.driver.setText("org.apache.derby.jdbc.EmbeddedDriver");
-            this.jarfile.setText(ParaProf.tauHome + File.separator + "tools" + File.separator + "src" + File.separator + "contrib" + File.separator + "derby.jar");
+            if (System.getProperty("os.name").startsWith("Windows"))
+            {
+            	this.jarfile.setText(ParaProf.tauHome + File.separator + "bin" + File.separator + "derby.jar");
+            }
+            else
+            {
+            	this.jarfile.setText(ParaProf.tauHome + File.separator + "tools" + File.separator + "src" + File.separator + "contrib" + File.separator + "derby.jar");
+            }
         } else if (newAdapter.compareTo("db2") == 0) {
             download.setEnabled(false);
             host.setEnabled(true);
