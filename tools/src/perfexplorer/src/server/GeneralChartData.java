@@ -46,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.20 2007/06/26 23:53:30 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.21 2007/09/18 21:58:28 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -106,8 +106,9 @@ public class GeneralChartData extends RMIGeneralChartData {
 		// declare the statement here, so we can reference it in the catch
 		// region, if necessary
 		PreparedStatement statement = null;
+		DB db = null;
 		try {
-			DB db = PerfExplorerServer.getServer().getDB();
+			db = PerfExplorerServer.getServer().getDB();
 
 			Object object = model.getCurrentSelection();
 
@@ -610,73 +611,25 @@ public class GeneralChartData extends RMIGeneralChartData {
 			results.close();
 			statement.close();
 
-            if (db.getDBType().compareTo("oracle") == 0) {
-				statement = db.prepareStatement("truncate table temp_event");
-				//System.out.println(statement.toString());
-				statement.execute();
-				statement.close();
-            }
-
-			statement = db.prepareStatement("drop table temp_event");
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
-
-            if (db.getDBType().compareTo("oracle") == 0) {
-				statement = db.prepareStatement("truncate table temp_metric");
-				//System.out.println(statement.toString());
-				statement.execute();
-				statement.close();
-            }
-
-			statement = db.prepareStatement("drop table temp_metric");
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
-
-			if (gotXMLData) {
-                if (db.getDBType().compareTo("oracle") == 0) {
-					statement = db.prepareStatement("truncate table temp_xml_metadata");
-					//System.out.println(statement.toString());
-					statement.execute();
-					statement.close();
-                }
-
-				statement = db.prepareStatement("drop table temp_xml_metadata");
-				//System.out.println(statement.toString());
-				statement.execute();
-				statement.close();
-			}
-
-            if (db.getDBType().compareTo("oracle") == 0) {
-				statement = db.prepareStatement("truncate table temp_trial");
-				//System.out.println(statement.toString());
-				statement.execute();
-				statement.close();
-            }
-
-			statement = db.prepareStatement("drop table temp_trial");
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
 		} catch (Exception e) {
 			if (statement != null)
 				PerfExplorerOutput.println(statement.toString());
 			PerfExplorerOutput.println(buf.toString());
 			System.err.println(e.getMessage());
 			e.printStackTrace();
+		} finally {
+			dropTable(db, "temp_event");
+			dropTable(db, "temp_metric");
+			dropTable(db, "temp_xml_metadata");
+			dropTable(db, "temp_trial");
 		}
 	}
 
 	private static StringBuffer buildCreateTableStatement (String oldTableName, String tableName, DB db, boolean appendAs) {
+		// just in case, drop the table in case it is still hanging around.
+		// This sometimes happens with Derby.
 		// Have I ever mentioned that Derby sucks?
-		if (db.getDBType().equalsIgnoreCase("derby")) {
-			try {
-				PreparedStatement statement = db.prepareStatement("drop table "	+ tableName);
-				statement.execute();
-				statement.close();
-			} catch (SQLException e) {}
-		}		
+		dropTable(db, tableName);
 
 		StringBuffer buf = new StringBuffer();
 		if (db.getDBType().equalsIgnoreCase("oracle")) {
@@ -956,6 +909,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 				}
 
 			} 
+			xmlResults.close();
+			statement.close();
 
 		} catch (Exception e) {
 		// the user may have gotten here because they don't have XML data.
@@ -967,25 +922,33 @@ public class GeneralChartData extends RMIGeneralChartData {
 			e.printStackTrace();
 			*/
 		} finally {
-			try {
-                if (db.getDBType().compareTo("oracle") == 0) {
-	                statement = db.prepareStatement("truncate table temp_trial");
-					//System.out.println(statement.toString());
-					statement.execute();
-					statement.close();
-                }
-	
-				statement = db.prepareStatement("drop table temp_trial");
-				//System.out.println(statement.toString());
-				statement.execute();
-				statement.close();
-			} catch (Exception e2) {}
+			dropTable(db, "temp_trial");
 		}
 
 		List list = new ArrayList(set);
 		Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
 		return list;
 	}
+
+	private static void dropTable(DB db, String name) {
+		try {
+			PreparedStatement statement = null;
+			if (db.getDBType().compareTo("oracle") == 0) {
+				statement = db.prepareStatement("truncate table " + name);
+				//System.out.println(statement.toString());
+				statement.execute();
+				statement.close();
+			}
+			statement = db.prepareStatement("drop table " + name);
+			//System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
+		} catch (Exception e2) {
+			// do nothing, it's ok
+			// System.err.println(e2.getMessage());
+		}
+	}
+
 
 }
 
