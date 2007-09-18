@@ -108,7 +108,7 @@ extern "C" void Tau_static_phase_stop(char *name);
   Tau_dynamic_stop(name, tau_counter++, 1); \
 }
 #else
-#define TAU_DYNAMIC_PHASE TAU_PROFILE
+#define TAU_DYNAMIC_PHASE TAU_DYNAMIC_PROFILE
 #define TAU_STATIC_PHASE_START TAU_STATIC_TIMER_START
 #define TAU_STATIC_PHASE_STOP TAU_STATIC_TIMER_STOP
 #define TAU_DYNAMIC_PHASE_START TAU_DYNAMIC_TIMER_START
@@ -243,7 +243,7 @@ or tauFI->method();
   Tau_dynamic_stop(name, tau_counter++, 1); \
 }
 #else
-#define TAU_DYNAMIC_PHASE TAU_PROFILE
+#define TAU_DYNAMIC_PHASE TAU_DYNAMIC_PROFILE
 #define TAU_STATIC_PHASE_START TAU_STATIC_TIMER_START
 #define TAU_STATIC_PHASE_STOP TAU_STATIC_TIMER_STOP
 #define TAU_DYNAMIC_PHASE_START TAU_DYNAMIC_TIMER_START
@@ -605,6 +605,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.63 $   $Date: 2007/09/16 21:59:38 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.63 2007/09/16 21:59:38 sameer Exp $ 
+ * $Revision: 1.64 $   $Date: 2007/09/18 00:46:40 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.64 2007/09/18 00:46:40 sameer Exp $ 
  ***************************************************************************/
