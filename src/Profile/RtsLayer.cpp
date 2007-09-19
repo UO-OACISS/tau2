@@ -1094,7 +1094,12 @@ void RtsLayer::ProfileInit(int& argc, char**& argv)
 //////////////////////////////////////////////////////////////////////
 bool RtsLayer::isCtorDtor(const char *name)
 {
-  return false;
+  /* other threads are not affected by this logic. Only on thread 0, do not
+     call StoreData() when the name contains a :: and it is a top level routine */
+  if ((RtsLayer::myThread() == 0) && (strstr(name, "::")!= (char *)NULL))
+        return true; /* it is a ctor/dtor */
+  else 
+    return false;
   // For now, we always return false. So, no matter what, the profile file
   // is always created! 
 }
@@ -1434,7 +1439,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.88 $   $Date: 2007/05/21 22:41:51 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.88 2007/05/21 22:41:51 amorris Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.89 $   $Date: 2007/09/19 00:10:20 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.89 2007/09/19 00:10:20 sameer Exp $ 
  ***************************************************************************/
