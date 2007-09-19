@@ -46,6 +46,9 @@ abstract public class ConfigureFiles {
 		File paraprofDirectory = new File(System.getProperty("user.home") + File.separator + ".ParaProf");
 		String[] fileNames = paraprofDirectory.list();
 		List perfdmfConfigs  = new Vector();
+        if (fileNames == null) {
+            return perfdmfConfigs;
+        }
 		for (int i = 0; i<fileNames.length; i++)
 		{
 			
