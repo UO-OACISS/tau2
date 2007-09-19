@@ -1108,7 +1108,7 @@ do
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
-    echo "       options                      [xt3|bgl|ibm64|ibm64linux|sunx86_64"
+    echo "       options              [xt3|craycnl|bgl|ibm64|ibm64linux|sunx86_64"
     echo "                               |solaris2-64|mips32|sgin32|sgi64|sgio32]"
     echo ""
     echo "MPI Options:"
@@ -1202,7 +1202,7 @@ do
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
-    echo "       options                      [xt3|bgl|ibm64|ibm64linux|sunx86_64"
+    echo "       options              [xt3|craycnl|bgl|ibm64|ibm64linux|sunx86_64"
     echo "                               |solaris2-64|mips32|sgin32|sgi64|sgio32]"
     echo "-pthread .................................. Use pthread thread package."
     echo "-papithread .................................. Use PAPI thread package."
@@ -1551,6 +1551,15 @@ case $machine in
     fi
     ;;
 
+    craycnl)
+    if [ $cxx_compiler = default ]
+    then
+      cxx_compiler=CC
+      c_compiler=cc
+      fortran_compiler=pgi
+      catamount=no
+    fi
+    ;;
    hitachi)
      if [ $cxx_compiler = default ]
        then
@@ -2306,7 +2315,7 @@ case $fortran_compiler in
       ;;
 
    pgi)
-      echo "Default Fortran compiler will be PGI pgf90"
+      echo "Default Fortran compiler will be PGI"
       extradir=`which pgCC | sed s/pgCC/../`
       fixmakeargs="$fixmakeargs PGI_FORTRAN"
       ;;
@@ -2460,6 +2469,9 @@ then
   xt3)
 	mpiinc=/opt/xt-mpt/default/mpich2-64/P2/include
 	;;
+  craycnl)
+	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
+	;;
   solaris2*)
 	mpiinc=/opt/SUNWhpc/include
 	;;
@@ -2531,6 +2543,9 @@ then
 	;;
   xt3)
 	mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
+	;;
+  craycnl)
+	mpilib=/opt/xt-mpt/default/mpich2-64/P/lib
 	;;
   alpha)  
 	mpilib=/usr/lib 
@@ -3530,6 +3545,13 @@ fi
 
 
 ######################################################################
+if [ $machine = craycnl ] 
+then
+  #echo "This looks like a Cray Compute Node Linux (CNL) system..."
+  fixmakeargs="$fixmakeargs CRAYCNL"
+fi
+
+######################################################################
 if [ $catamount = yes ] 
 then
   #echo "This looks like a CATAMOUNT Cray RS system..."
@@ -3628,7 +3650,7 @@ case $machine in
 	    fixmakeargs="$fixmakeargs IA64PAPI"
 	fi
 	;;
-     x86_64|xt3)
+     x86_64|xt3|craycnl)
 	echo "Found an x86_64 configuration definition"
 	fixmakeargs="arch=$machine $fixmakeargs"
 	
@@ -4081,11 +4103,15 @@ if [ $papi = yes ] ; then
 	    if [ -f $p/cnos64/libpapi.so ] ; then
 		fixmakeargs="$fixmakeargs papisubdir=lib/cnos64"
 	    else
-		if [ -f $papidir/lib64/libpapi.so ] ; then 
+		if [ -f $p/xt-cnl/lib/libpapi.so ] ; then 
+		  fixmakeargs="$fixmakeargs papisubdir=xt-cnl/lib"
+                else 
+		  if [ -f $papidir/lib64/libpapi.so ] ; then 
 		    fixmakeargs="$fixmakeargs papisubdir=lib64"
-		else
+		  else
 		    fixmakeargs="$fixmakeargs papisubdir=src"
-		fi
+		  fi
+               fi
 	    fi
 	fi
     fi

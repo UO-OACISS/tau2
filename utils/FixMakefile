@@ -1152,6 +1152,10 @@ fi
 	echo "NOTE: Using Cray RS Catamount options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     CRAYCNL)
+	echo "NOTE: Using Cray Compute Node Linux options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      LINUXTIMERS)
 	echo "NOTE: Using Linux TSC Counters for low overhead wallclock time"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
