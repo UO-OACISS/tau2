@@ -39,6 +39,7 @@
 
 extern "C" void Tau_pure_start(char *name);
 extern "C" void Tau_pure_stop(char *name);
+extern "C" static char *getFortranName(char *name, int slen);
 
 /* 
 #define DEBUG_PROF
@@ -110,15 +111,14 @@ void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
 {
 
   if (*ptr == 0) {
-    char * fname = (char *) malloc((size_t) slen+1);
-    strncpy(fname, infname, slen);
-    fname[slen] = '\0';  
+    char *fname = getFortranName(infname, slen);
     
 #ifdef DEBUG_PROF
     printf("Inside tau_profile_timer_group_ fname=%s\n", fname);
 #endif /* DEBUG_PROF */
     
     *ptr = Tau_get_profiler(fname, (char *)" ", *group, fname);
+    free(fname);
   }
   
 #ifdef DEBUG_PROF 
@@ -650,13 +650,15 @@ void tau_dynamic_iter(int *iteration, void **ptr, char *infname, int slen, int i
      iteration number in the name. isPhase argument tells whether we
      choose phases or timers. */
 
-  char *newName = Tau_append_iteration_to_name(*iteration, infname);
+  char *fname = getFortranName(infname, slen);
+  char *newName = Tau_append_iteration_to_name(*iteration, fname);
   int newLength = strlen(newName);
   if (isPhase) 
     tau_phase_create_dynamic_(ptr, newName, newLength);
   else
     tau_profile_timer_dynamic_(ptr, newName, newLength);
 
+  free(fname);
 }
 
 void tau_phase_dynamic_iter_(int *iteration, void **ptr, char *infname, int slen)
@@ -1976,7 +1978,7 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.64 $   $Date: 2007/09/16 21:59:38 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.64 2007/09/16 21:59:38 sameer Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.65 $   $Date: 2007/09/19 01:00:08 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.65 2007/09/19 01:00:08 amorris Exp $ 
  ***************************************************************************/
