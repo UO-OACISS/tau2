@@ -39,7 +39,15 @@
 
 extern "C" void Tau_pure_start(char *name);
 extern "C" void Tau_pure_stop(char *name);
-extern "C" static char *getFortranName(char *name, int slen);
+
+/* Utility function to retrieve fortran strings */
+static char *getFortranName(char *name, int slen) {
+    char *fname = (char *) malloc((size_t) slen+1);
+    strncpy(fname, name, slen);
+    fname[slen] = '\0';  
+    return fname;
+}
+
 
 /* 
 #define DEBUG_PROF
@@ -1788,13 +1796,6 @@ void TAU_PROFILE_CALLSTACK(void)
 // Snapshot related routines
 //////////////////////////////////////////////////////////////////////
 
-static char *getFortranName(char *name, int slen) {
-    char *fname = (char *) malloc((size_t) slen+1);
-    strncpy(fname, name, slen);
-    fname[slen] = '\0';  
-    return fname;
-}
-
 void tau_profile_snapshot_1l_(char *name, int *number, int slen) {
   char *fname = getFortranName(name, slen);
   Tau_profile_snapshot_1l(fname, *number);
@@ -1979,6 +1980,6 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.65 $   $Date: 2007/09/19 01:00:08 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.65 2007/09/19 01:00:08 amorris Exp $ 
+ * $Revision: 1.66 $   $Date: 2007/09/19 20:56:08 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.66 2007/09/19 20:56:08 amorris Exp $ 
  ***************************************************************************/
