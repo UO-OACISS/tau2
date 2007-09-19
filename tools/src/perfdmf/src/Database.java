@@ -107,6 +107,9 @@ public class Database implements Serializable {
         File paraprofDirectory = new File(System.getProperty("user.home") + File.separator + ".ParaProf");
         String[] fileNames = paraprofDirectory.list();
         List perfdmfConfigs = new ArrayList();
+        if (fileNames == null) {
+            return perfdmfConfigs;
+        }
         for (int i = 0; i < fileNames.length; i++) {
             if (fileNames[i].compareTo("perfdmf.cfg") == 0) {
                 perfdmfConfigs.add(createDatabase("Default", paraprofDirectory + File.separator + fileNames[i]));
