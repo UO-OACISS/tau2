@@ -1096,12 +1096,35 @@ bool RtsLayer::isCtorDtor(const char *name)
 {
   /* other threads are not affected by this logic. Only on thread 0, do not
      call StoreData() when the name contains a :: and it is a top level routine */
-  if ((RtsLayer::myThread() == 0) && (strstr(name, "::")!= (char *)NULL))
-        return true; /* it is a ctor/dtor */
-  else 
+
+  if ((RtsLayer::myThread() != 0) || (strstr(name, "::") == (char *)NULL)) {
+    // if we're not thread 0, or there is no ::, this is definitely not a
+    // pre-main ctor/dtor
     return false;
-  // For now, we always return false. So, no matter what, the profile file
-  // is always created! 
+  }
+  
+  // RtsLayer::myThread() == 0 and there is a :: in the string
+
+  if (strstr(name, "::~") != (char *)NULL) {
+    // definitely a dtor
+    return true;
+  }
+
+  // check the left and right side of the :: and see if they match
+  char *loc = strstr(name, "::");
+  const char *pos1 = name;
+  const char *pos2 = loc+2;
+  while (pos1 != loc && *pos2 != 0 && *pos1 == *pos2) {
+    pos1++;
+    pos2++;
+  }
+
+  if (pos1 == loc) {
+    // probably a ctor (xyz::xyz)
+    return true;
+  }
+  
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1439,7 +1462,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.89 $   $Date: 2007/09/19 00:10:20 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.89 2007/09/19 00:10:20 sameer Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.90 $   $Date: 2007/09/20 01:42:22 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.90 2007/09/20 01:42:22 amorris Exp $ 
  ***************************************************************************/
