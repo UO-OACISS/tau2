@@ -19,9 +19,9 @@ contains
    end subroutine deallocate_scratch
 end module scratch
 
-program memory_leak
+program matrix
    use scratch
-   call allocate_scratch( 100 )
+   call allocate_scratch( 1000 )
    call use_scratch
    call deallocate_scratch
-end program memory_leak
+end program matrix
