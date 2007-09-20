@@ -2629,6 +2629,10 @@ bool getVariableName(char * &line, char * & varname)
 #endif /* DEBUG */
       }
     }
+#ifdef DEBUG 
+    printf("After IF token=%c, foundcompoundstmt=%d\n", token, foundcompoundstmt);
+#endif /* DEBUG */
+    if (foundcompoundstmt) break;
 
   } while (token == '%');
 #ifdef DEBUG
@@ -4177,8 +4181,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.182 $   $Date: 2007/09/20 02:32:20 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.182 2007/09/20 02:32:20 sameer Exp $
+ * $Revision: 1.183 $   $Date: 2007/09/20 17:45:50 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.183 2007/09/20 17:45:50 sameer Exp $
  ***************************************************************************/
 
 
