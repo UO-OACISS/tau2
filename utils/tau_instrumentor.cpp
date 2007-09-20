@@ -2563,6 +2563,19 @@ bool getVariableName(char * &line, char * & varname)
     varname[i] = '\0';
     lastptr ++; /* increment to the end of the variable name */
 
+    if (*line == ',') {
+#ifdef DEBUG
+      printf("HEY! Found a , when we were looking for a (, varname=%s\n", varname);
+#endif /* DEBUG */
+      /* go over the , and return from the routine. We have found what we were
+         looking for. e.g., ALLOCATE(tmp_a(ispin)%pw, tmp_b(ispin)%pw) or
+       ALLOCATE(pw1, b(23), stat=stat) 
+       in these cases we need to return tmp_a(ispin)% pw and pw1 respectively*/
+
+      line++;
+      break;
+    
+    }
     while (*line && *line != '(') line++; /* go to the first ( */
 
 #ifdef DEBUG 
@@ -4180,8 +4193,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.184 $   $Date: 2007/09/20 17:54:29 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.184 2007/09/20 17:54:29 sameer Exp $
+ * $Revision: 1.185 $   $Date: 2007/09/20 19:14:23 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.185 2007/09/20 19:14:23 sameer Exp $
  ***************************************************************************/
 
 
