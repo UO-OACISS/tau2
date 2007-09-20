@@ -311,6 +311,9 @@ const char * getStartMeasurementEntity(itemRef *i)
 const char * getStopMeasurementEntity(itemRef *i)
 {
 
+#ifdef DEBUG
+   printf("Inside getStopMeasurementEntity: isPhase = %d\n", i->isPhase);
+#endif /* DEBUG */
    if (i && i->isPhase) 
      return "TAU_PHASE_STOP";
    else 
@@ -4174,8 +4177,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.181 $   $Date: 2007/09/16 22:04:29 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.181 2007/09/16 22:04:29 sameer Exp $
+ * $Revision: 1.182 $   $Date: 2007/09/20 02:32:20 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.182 2007/09/20 02:32:20 sameer Exp $
  ***************************************************************************/
 
 

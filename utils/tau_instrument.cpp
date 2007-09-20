@@ -1648,12 +1648,13 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
         for(vector<itemRef *>::iterator iter = itemvec.begin();
             iter != itemvec.end(); iter++)
         {
-          if ((*iter)->item && (*iter)->kind == BODY_BEGIN)
+          if ((*iter)->item)
           { /* item's pdbItem entry is not null */
-#ifdef DEBUG_PROF
-            printf("examining %s. id = %d. Current routine id = %d\n",
-            (*iter)->item->name(), (*iter)->item->id(), (*rit)->id());     
-#endif /* DEBUG_PROF */
+#ifdef DEBUG
+            printf("examining %s. id = %d. Current routine id = %d, kind = %d\n",
+            (*iter)->item->name(), (*iter)->item->id(), (*rit)->id(), (*iter)->kind);     
+ 
+#endif /* DEBUG */
             if ((*iter)->item->id() == (*rit)->id()) 
             { /* found it! We need to annotate this as a phase */
               if (isPhaseOrTimer == TAU_PHASE) 
@@ -1663,7 +1664,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #endif /* DEBUG */
                 (*iter)->isPhase = true;
               }
-              if ((*it)->getQualifier() == DYNAMIC)
+              if ((*it)->getQualifier() == DYNAMIC && (*iter)->kind == BODY_BEGIN)
               {
                 (*iter)->isDynamic = true;
                 /* Add a tau_iter declaration to this routine. */
@@ -1925,6 +1926,6 @@ bool addMoreInvocations(int routine_id, string& snippet)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.47 $   $Date: 2007/09/16 22:04:29 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.47 2007/09/16 22:04:29 sameer Exp $
+ * $Revision: 1.48 $   $Date: 2007/09/20 02:32:31 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.48 2007/09/20 02:32:31 sameer Exp $
  ***************************************************************************/
