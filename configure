@@ -173,6 +173,7 @@ pythoninc=
 pythonlib=
 python=no
 extradir=
+extrashlibopts=
 awe=no
 pthread=no
 papithread=no
@@ -772,6 +773,13 @@ do
     shift
     ;;
 
+  -extrashlibopts=*)
+# Note you might be passed -g#-O3 which becomes -g -O3
+    extrashlibopts=`echo $arg | sed -e 's/-extrashlibopts=//' -e 's/ /#/g'`
+# Note you might be passed -g -O3 which becomes -g#-O3 here
+    shift
+    ;;
+
   -mpi)
     mpi=yes
     shift
@@ -1105,6 +1113,7 @@ do
     echo "          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
     echo "                                               icpc|scgcc|pathCC|orCC]."
     echo "-useropt='<parameters>' ... optional arguments to compilers (e.g. -O3)."
+    echo "-extrashlibopts='<parameters>' ...... arguments for building libTAU.so." 
     echo ""
     echo "Installation Options:"
     echo "-prefix=<dir> ................ Specify a target installation directory."
@@ -1201,6 +1210,7 @@ do
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]"
     echo "-useropt='<parameters>' ............... list of commandline parameters."
+    echo "-extrashlibopts='<parameters>' ...... arguments for building libTAU.so." 
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
@@ -3343,10 +3353,10 @@ then
   opt=`echo $useropt | sed -e 's/_/ /g' -e 's/^$/(none)/'`
   echo "Default compiler options for pC++ user programs are $opt"
 
-  fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt $fixmakeargs"
+  fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
 fi
 
-fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt extradir=$extradir extradircxx=$extradircxx $fixmakeargs"
+fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt extradir=$extradir extradircxx=$extradircxx extrashlibopts=$extrashlibopts $fixmakeargs"
 
 ######################################################################
 # discover the paths for standard system include directories

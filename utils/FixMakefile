@@ -287,6 +287,10 @@ fi
         useropt=`echo $1 | sed -e 's/^useropt=//' -e 's/#/ /g'`
 	echo "s@^USER_OPT=\(.*\)@USER_OPT=$useropt@g" >> $sedout
         ;;
+     extrashlibopts=*)
+        extrashlibopts=`echo $1 | sed -e 's/^extrashlibopts=//' -e 's/#/ /g'`
+	echo "s@^TAUEXTRASHLIBOPTS=\(.*\)@TAUEXTRASHLIBOPTS=$extrashlibopts@g" >> $sedout
+        ;;
 
      extradir=*)
         extradir=`echo $1 | sed -e 's/^extradir=//' `
