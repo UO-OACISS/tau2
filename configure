@@ -1113,7 +1113,6 @@ do
     echo "          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
     echo "                                               icpc|scgcc|pathCC|orCC]."
     echo "-useropt='<parameters>' ... optional arguments to compilers (e.g. -O3)."
-    echo "-extrashlibopts='<parameters>' ...... arguments for building libTAU.so." 
     echo ""
     echo "Installation Options:"
     echo "-prefix=<dir> ................ Specify a target installation directory."
