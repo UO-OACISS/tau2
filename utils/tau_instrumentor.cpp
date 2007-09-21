@@ -2001,6 +2001,15 @@ void removeCommentFromLine(char * & inbuf)
   return ;
 }
 
+void removeContinuation(char* &line) {
+  char *ptr = line + strlen(line) - 1;
+  while (*ptr == ' ') ptr--;
+  if (*ptr == '&') { 
+    // remove trailing continuation char
+    *ptr = 0;
+  }
+}
+
 
 /* -------------------------------------------------------------------------- */
 /* -- is it a continuation line? Checking the previous line for an &          */
@@ -2216,7 +2225,7 @@ bool isFreeFormat(char inbuf[])
 /* -- to process in the same line. Extracts variable name from line.        - */
 /* -------------------------------------------------------------------------- */
 
-bool getNextToken(char * &line, char * & varname)
+bool getNextToken(char* &line, char* &varname)
 { /* if I pass it
       "hi ", Ary(x,y)%b(2), B(2)
       it should return successively "hi "
@@ -2232,7 +2241,6 @@ bool getNextToken(char * &line, char * & varname)
    int len = 0;
 
    len = strlen(line);
-
    while (i < len) {
 
      if (*line == ',' && openparens == 0) {
@@ -2936,6 +2944,8 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
 #endif /* DEBUG */
 
   removeCommentFromLine(inbuf);
+  removeContinuation(inbuf);
+
   string nextline(inbuf);
   line = inbuf;
 
@@ -2957,7 +2967,8 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
 #endif /* DEBUG */
     removeCommentFromLine(iostmt);
     statements.push_back(iostmt);
-    /* if the file is in free format, start the next line by getting rid of the
+    removeContinuation(iostmt);
+    /* if the file is in fixed format, start the next line by getting rid of the
        first six columns */
     if (!isfree) start = &iostmt[6];
     else start = iostmt;
@@ -4192,9 +4203,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.185 $   $Date: 2007/09/20 19:14:23 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.185 2007/09/20 19:14:23 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.186 $   $Date: 2007/09/21 03:22:14 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.186 2007/09/21 03:22:14 amorris Exp $
  ***************************************************************************/
 
 
