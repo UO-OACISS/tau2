@@ -48,8 +48,18 @@ Version 2.16 changes (from 2.15):
 36. Updates for Epilog on Cray XT3 support using TAU.
 37. Updates for Lahey 64 bit Fortran under Linux. 
 38. Added support for generating and viewing profile snapshots.
-
-
+39. Added support for specifying phases and timers (static/dynamic) in the 
+    instrumentation specification file (see examples/timerphase).
+40. Updates for Eclipse/PTP plugin for supporting external tools such as 
+    VampirTrace, Kojak and Perfsuite using TAU's tool plugin. 
+41. Added Support for Cray Compute Node Kernel for XT4 (-arch=craycnl).
+42. Updates for tauex to include tau_load.sh functionality for generating
+    MPI performance data for shared library MPI. 
+43. Added signal handlers (SIGUSR1 and SIGUSR2) to dump performance data and
+    toggle instrumentation (enable/disable instrumentation) respectively.
+44. Full compiler names and -show option is available for compilers scripts. 
+45. Added support for reading in OMPP profiles in paraprof. 
+46. Added support for Intel 10.x compilers, NAGWare Fortran, and g95 compilers.
 
 
 Version 2.15 changes (from 2.14):
