@@ -176,6 +176,7 @@ extradir=
 awe=no
 pthread=no
 papithread=no
+papipfm=no
 charm=no
 muse=no
 muse_event=no
@@ -566,6 +567,7 @@ do
       if [ -f $papidir/lib/libpfm.a ]
 	  then 
 	  fixmakeargs="$fixmakeargs PAPIPFM"
+          papipfm=yes
       fi		
 
     shift
@@ -3235,6 +3237,12 @@ then
     #echo "mpiincargs= $mpiincargs"
     #echo "mpilibargs= $mpilibargs"
     #echo "mpiflibargs= $mpiflibargs"
+    if [ $papipfm = yes -a "x$mpilib" = "x/usr/lib" ]
+    then
+      echo "NOTE: Adding -L<papidir> before -L<mpidir> to use PAPI's libpfm"
+      mpilibargs="-L$papidir/$\(PAPISUBDIR\)#$mpilibargs"
+      mpiflibargs="-L$papidir/$\(PAPISUBDIR\)#$mpiflibargs"
+    fi
     fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
     
     # Check to see if the MPI library contains a _r 
