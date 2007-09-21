@@ -62,49 +62,34 @@ NOTE: tau_setup is a Java based GUI tool for installing TAU on your system.
 
 % ./configure -help 
 
-
 TAU Configuration Utility 
 ***********************************************************************
 Usage: configure [OPTIONS]
   where [OPTIONS] are:
+
+Compiler Options:
 -c++=<compiler>  ............................ specify the C++ compiler.
           options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
                                       icpc|scgcc|scpathCC|pathCC|orCC].
 -cc=<compiler> ................................ specify the C compiler.
           options [cc|gcc|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc].
--pdt_c++=<compiler>  ............ specify a different PDT C++ compiler.
-         options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
-                                               icpc|scgcc|pathCC|orCC].
--pdtcompdir=<compilerdir> . specify a different PDT compiler directory.
--pdtarchdir=<archdir> . specify a different PDT architecture directory.
 -fortran=<compiler> ..................... specify the Fortran compiler.
    options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
-           open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]
--useropt='<parameters>' ............... list of commandline parameters.
+       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]
+-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
+-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler.
+          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
+                                               icpc|scgcc|pathCC|orCC].
+-useropt='<parameters>' ... optional arguments to compilers (e.g. -O3).
+
+Installation Options:
 -prefix=<dir> ................ Specify a target installation directory.
 -exec-prefix=<arch> .......... Specify a target architecture directory.
 -arch=<architecture> ................... Specify a target architecture.
-       options         [xt3|bgl|ibm64|ibm64linux|sunx86_64             
-                        |solaris2-64|sgin32|sgi64|sgio32]              
--pthread .................................. Use pthread thread package.
--papithread .................................. Use PAPI thread package.
--charm=<dir> .............................. Use charm++ thread package.
--sproc .................................. Use SGI sproc thread package.
--tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
--smarts .................. Use SMARTS API for threads (use with above).
--openmp ........................................... Use OpenMP threads.
--opari=<dir>... Specify location of Opari OpenMP tool (use with above).
--opari_region ......... Report performance data for all OpenMP regions.
--opari_construct ... Report performance data for all OpenMP constructs.
--pcl=<dir> ..... Specify location of PCL (Performance Counter Library).
--papi=<dir> ............... Specify location of PAPI (Performance API).
--pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
--jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+).
--dyninst=<dir> ................... Specify location of DynInst Package.
--vtf=<dir> ......... Specify location of VTF3 Trace Generation Package.
--otf=<dir> ....... Specify location of Open Trace Format (OTF) Package.
--slog2=<dir> .......... Specify location of SLOG2 SDK/Jumpshot Package.
--slog2 ......... Specify use of TAU internal SLOG2 SDK/Jumpshot Package
+       options              [xt3|craycnl|bgl|ibm64|ibm64linux|sunx86_64
+                               |solaris2-64|mips32|sgin32|sgi64|sgio32]
+
+MPI Options:
 -mpi .......................... Specify use of TAU MPI wrapper library.
 -mpiinc=<dir> ............. Specify location of MPI include dir and use
                            the TAU MPI Profiling and Tracing Interface.
@@ -112,6 +97,14 @@ Usage: configure [OPTIONS]
                            the TAU MPI Profiling and Tracing Interface.
 -mpilibrary=<library> ................ Specify a different MPI library.
             e.g., -mpilibrary=-lmpi_r                                  
+
+OpenMP Options:
+-openmp ........................................... Use OpenMP threads.
+-opari=<dir>... Specify location of Opari OpenMP tool (use with above).
+-opari_region ......... Report performance data for all OpenMP regions.
+-opari_construct ... Report performance data for all OpenMP constructs.
+
+SHMEM Options:
 -shmem ...................... Specify use of TAU SHMEM wrapper library.
 -shmeminc=<dir> ......... Specify location of SHMEM include dir and use
                          the TAU SHMEM Profiling and Tracing Interface.
@@ -119,6 +112,15 @@ Usage: configure [OPTIONS]
                            the TAU MPI Profiling and Tracing Interface.
 -shmemlibrary=<library> ............ Specify a different SHMEM library.
             e.g., -shmemlibrary=-lsmac                                 
+
+Other Options:
+-pthread .................................. Use pthread thread package.
+-papithread .................................. Use PAPI thread package.
+-papi=<dir> ............... Specify location of PAPI (Performance API).
+-jdk=<dir>  Build a library for profiling Java code with specified jdk.
+-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package.
+-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package.
+-slog2 ........ Specify use of TAU internal SLOG2 SDK/Jumpshot Package.
 -nocomm  ........ Disable tracking communication events in MPI library.
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
 -epiloglib=<dir> ........... Specify full path to EPILOG lib directory.
@@ -128,22 +130,6 @@ Usage: configure [OPTIONS]
 -pythoninc=<dir> ........ Specify location of Python include directory.
 -pythonlib=<dir> ............ Specify location of Python lib directory.
 -tag=<unique name> ........ Specify a tag to identify the installation.
--perfinc=<dir> ............. Specify a Perflib[LANL] include directory.
--perflib=<dir> ................. Specify a Perflib[LANL] lib directory.
--perflibrary=<library> ... Specify a different perflib runtime library.
--ktau ........................................... Kernel TAU Profiling.
--ktau_merge ........................ Kernel TAU Profiling with merging.
-                                                    user-space profile.
--ktauinc=<dir> ............... Specify location of Linux Kernel source.
--ktausym=<path to System.map>  ...... Specify location of Linux Kernel.
-                                                          Symbol Table.
--muse ................................. Specify the use of MAGNET/MUSE.
--muse_event ............................Specify the use of MAGNET/MUSE.
-                                w/ non-monotonically increasing values.
--muse_multiple ........................ Specify the use of MAGNET/MUSE.
-                                    w/ monotonically increasing values.
--stff=<dir> .... Location of RENCI Scalable Time-series filter library.
--sddf=<dir> ...... SDDF library location; Only required for RENCI STFF.
 -TRACE ..................................... Generate TAU event traces.
 -MPITRACE ... Generate event traces for MPI events and their ancestors.
 -PROFILE ............ Generate profiles (summary statistics) (default).
@@ -161,12 +147,14 @@ Usage: configure [OPTIONS]
 -CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems.
 -LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time.
 -CPUTIME .......... Use usertime+system time instead of wallclock time.
--JAVACPUTIME ...................... Use JVMPI thread specific cpu time.
 -PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi.
 -PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation.
 -INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling.
 -noex .................. Use no exceptions while compiling the library.
 -help ...................................... display this help message.
+-fullhelp .............................. display the full help message.
+
+More advanced options are available, use -fullhelp to see them.
 ***********************************************************************
 
 The following  command-line options are available to configure:
@@ -636,6 +624,12 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    
    Specifies additional user options such as -g or -I.  For multiple options, 
    the options list should be enclosed in a single quote.
+
+-extrashlibopts=<options-list>
+   
+   Specifies additional libraries and options that may be passed to the linker 
+   while building TAU's shared object. e.g., for AIX -lmpi_r may be passed while
+   building libTAU.so with Python and MPI. 
    
 -help
    
@@ -692,6 +686,16 @@ iv) To configure TAU for Cray XT3 or IBM BGL,
 	Cray XT3. Then configure for the frontend using % ./configure 
 	This creates a backend library directory <taudir>/[bgl,xt3]/lib and a front-end 
         directory <taudir>/[rs6000,x86_64]/bin which should be put in your PATH. 
+
+   For Cray XT4 or systems running Cray Compute Node Linux (CNL) instead of 
+   Catamount on the backend nodes, you will need to configure TAU with the 
+   -arch=craycnl configuration option. e.g., 
+
+   % configure -arch=craycnl -mpi -pdt=<dir> -pdt_c++=pgCC -pdtarchdir=x86_64
+        Configures TAU with MPI and PDT on Cray XT3/4 with Cray CNL. 
+
+   TAU's -arch=xt3 configuration assumes Catamount and -arch=craycnl assumes 
+   Cray Compute Node Linux on the backend nodes respectively. 
 
 v) To configure TAU for SGI Altix system, you may use
    % ./configure -c++=icpc  -cc=icc -fortran=intel -mpi ...
@@ -767,6 +771,31 @@ Usage: installtau [OPTIONS]
 
    See the examples included with this distribution in the examples/ directory.
    The README file in examples directory describes the examples. 
+   
+   To verify that an installation is correct, please use the tau_validate tool:
+
+   % ./tau_validate -help
+     Usage: tau_validate [-v] [--html] [--build] [--run] <target>
+
+     -v           Verbose output
+     --html       Output results in HTML
+     --build      Only build
+     --run        Only run
+     <target>     Specify an arch directory (e.g. rs6000), or the lib
+                  directory (rs6000/lib), or a specific makefile.
+                  Relative or absolute paths are ok.
+
+      bash : ./tau_validate --html x86_64 &> results.html
+      tcsh : ./tau_validate --html x86_64 >& results.html
+
+
+   To upgrade from an older version of TAU, please use the tau_upgrade tool. 
+   ./upgradetau  <path/to/old/tau> [extra args]
+   e.g.,
+   ./upgradetau /usr/local/tau-2.16 -pdt=/usr/local/pdtoolkit-5.6
+   Upgrades the current configuration using older tau-2.16 configurations, but
+   uses the newer PDT v5.6. 
+ 
 
 3. Instrumentation.
 
