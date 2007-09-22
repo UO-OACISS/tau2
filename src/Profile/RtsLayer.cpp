@@ -1111,7 +1111,7 @@ bool RtsLayer::isCtorDtor(const char *name)
   }
 
   // check the left and right side of the :: and see if they match
-  char *loc = strstr(name, "::");
+  const char *loc = strstr(name, "::");
   const char *pos1 = name;
   const char *pos2 = loc+2;
   while (pos1 != loc && *pos2 != 0 && *pos1 == *pos2) {
@@ -1463,6 +1463,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.90 $   $Date: 2007/09/20 01:42:22 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.90 2007/09/20 01:42:22 amorris Exp $ 
+ * $Revision: 1.91 $   $Date: 2007/09/22 00:34:42 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.91 2007/09/22 00:34:42 amorris Exp $ 
  ***************************************************************************/
