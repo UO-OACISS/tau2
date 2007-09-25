@@ -46,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.21 2007/09/18 21:58:28 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.22 2007/09/25 18:52:00 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -538,6 +538,13 @@ public class GeneralChartData extends RMIGeneralChartData {
 			String seriesName = model.getChartSeriesName();
 			String xAxisName = model.getChartXAxisName();
 			String yAxisName = model.getChartYAxisName();
+			String tableName = "interval_mean_summary";
+			if (yAxisName.indexOf("interval_mean_summary") >= 0) {
+				tableName = "interval_mean_summary";
+			} else if (yAxisName.indexOf("interval_total_summary") >= 0) {
+				tableName = "interval_total_summary";
+			}
+
 			buf = new StringBuffer();
 			buf.append("select ");
 			if (db.getDBType().compareTo("derby") == 0) {
@@ -556,11 +563,11 @@ public class GeneralChartData extends RMIGeneralChartData {
 				buf.append(fixClause(yAxisName, db) + " as yaxis_value ");
 			}
 			// add the tables
-			buf.append("from interval_mean_summary ");
+			buf.append("from " + tableName + " ");
 			buf.append("inner join temp_metric ");
-			buf.append("on interval_mean_summary.metric = temp_metric.id ");
+			buf.append("on " + tableName + ".metric = temp_metric.id ");
 			buf.append("inner join temp_event ");
-			buf.append("on interval_mean_summary.interval_event = temp_event.id ");
+			buf.append("on " + tableName + ".interval_event = temp_event.id ");
 			buf.append("inner join temp_trial ");
 			buf.append("on temp_event.trial = temp_trial.id ");
 			if (gotXMLData) {
