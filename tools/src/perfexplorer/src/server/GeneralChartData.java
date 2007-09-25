@@ -46,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.22 2007/09/25 18:52:00 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.23 2007/09/25 23:14:20 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -937,24 +937,32 @@ public class GeneralChartData extends RMIGeneralChartData {
 		return list;
 	}
 
-	private static void dropTable(DB db, String name) {
-		try {
-			PreparedStatement statement = null;
-			if (db.getDBType().compareTo("oracle") == 0) {
-				statement = db.prepareStatement("truncate table " + name);
-				//System.out.println(statement.toString());
-				statement.execute();
-				statement.close();
-			}
-			statement = db.prepareStatement("drop table " + name);
-			//System.out.println(statement.toString());
-			statement.execute();
-			statement.close();
-		} catch (Exception e2) {
-			// do nothing, it's ok
-			// System.err.println(e2.getMessage());
-		}
-	}
+    private static void dropTable(DB db, String name) {
+        PreparedStatement statement = null;
+        try {
+            if (db.getDBType().compareTo("oracle") == 0) {
+                statement = db.prepareStatement("truncate table " + name);
+                //System.out.println(statement.toString());
+                statement.execute();
+                statement.close();
+            }
+            statement = db.prepareStatement("drop table " + name);
+            //System.out.println(statement.toString());
+            statement.execute();
+            statement.close();
+        } catch (Exception e) {
+            // do nothing, it's ok
+            //System.err.println("***************************************");
+            //System.err.println(e.getMessage());
+            //System.err.println("***************************************");
+        } finally {
+            // if we tried to truncate a table that doesn't exist,
+            // then we got an error.  We still need to close the statement.
+            try {
+                statement.close();
+            } catch (Exception e2) {}
+        }
+    }
 
 
 }
