@@ -13,11 +13,11 @@ import edu.uoregon.tau.perfdmf.database.ParseConfig;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.18 2007/06/25 23:03:17 khuck Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.19 2007/09/26 01:43:35 scottb Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  */
 public class DatabaseAPI {
 
@@ -84,7 +84,14 @@ public class DatabaseAPI {
     // Initialization / termination routines
 
     public void initialize(String configFile, boolean prompt) throws SQLException {
-        initialize(new Database(configFile), prompt);
+    	if (new java.io.File(configFile).exists())
+    	{
+    		initialize(new Database(configFile), prompt);
+    	}
+    	else
+    	{
+    		System.err.println("Could not find file: " + configFile);
+    	}
     }
     
     public void initialize(Database database, boolean prompt) throws SQLException {
