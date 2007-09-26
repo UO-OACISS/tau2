@@ -48,7 +48,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.60 2007/08/15 17:37:16 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.61 2007/09/26 18:50:24 scottb Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1323,16 +1323,16 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			PreparedStatement statement = null;
 			StringBuffer buf = new StringBuffer();
 			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("select id, stddev(excl) ");
+				buf.append("select interval_event.id, stddev(excl) ");
 			} else if (db.getDBType().compareTo("derby") == 0) {
 				//sttdev is unsupported in derby!
-				buf.append("select id, avg(exclusive) ");
+				buf.append("select interval_event.id, avg(exclusive) ");
 			} else {
-				buf.append("select id, stddev(exclusive) ");
+				buf.append("select interval_event.id, stddev(exclusive) ");
 			}
 			buf.append("from interval_location_profile ");
 			buf.append("inner join interval_event ");
-			buf.append("on interval_event = id ");
+			buf.append("on interval_event = interval_event.id ");
 			buf.append("where trial = ? and metric = ? ");
 			buf.append("and group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and group_name not like '%TAU_PHASE%' ");
@@ -1393,21 +1393,21 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 			} else {
 				if (db.getDBType().compareTo("oracle") == 0) {
-					buf.append("select id, name, (stddev(excl)/ ");
+					buf.append("select interval_event.id, name, (stddev(excl)/ ");
 					buf.append("(max(excl)-min(excl))) * ");
 					buf.append("avg(exclusive_percentage) ");
 				} else if (db.getDBType().compareTo("derby") == 0) {
 					// stddev is unsupported!
-					buf.append("select id, name, avg(exclusive) ");
+					buf.append("select interval_event.id, name, avg(exclusive) ");
 				} else {
-					buf.append("select id, name, (stddev(exclusive)/ ");
+					buf.append("select interval_event.id, name, (stddev(exclusive)/ ");
 					buf.append("(max(exclusive)-min(exclusive)))* ");
 					buf.append("avg(exclusive_percentage) ");
 				}
 				buf.append("from interval_location_profile ");
 				buf.append("inner join interval_event ");
-				buf.append("on interval_event = id ");
-				buf.append("where id in (" + idString.toString() + ") ");
+				buf.append("on interval_event = interval_event.id ");
+				buf.append("where interval_event.id in (" + idString.toString() + ") ");
 				buf.append("group by interval_event.id, name ");
 			}
 			buf.append("order by 3 desc");
@@ -1452,7 +1452,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			buf.append("from interval_location_profile ");
 			buf.append("inner join interval_event ");
-			buf.append("on interval_event = id ");
+			buf.append("on interval_event = interval_event.id ");
 			buf.append("where interval_event in (");
 			buf.append(ids[0]);
 			for (int i = 1 ; i < count ; i++) {
