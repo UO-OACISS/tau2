@@ -41,6 +41,7 @@ public class PSRunDataSource extends DataSource {
     private List v = null;
     boolean initialized = false;
     private Hashtable nodeHash = new Hashtable();
+    private int threadCounter = 0;
     
     public PSRunDataSource(Object initializeObject) {
         super();
@@ -84,15 +85,18 @@ public class PSRunDataSource extends DataSource {
                         String prefix = st.nextToken();
 
                         String tid = st.nextToken();
-                        threadID = Integer.parseInt(tid);
-
-                        String nid = st.nextToken();
-                        Integer tmpID = (Integer) nodeHash.get(nid);
-                        if (tmpID == null) {
-                            nodeID = nodeHash.size();
-                            nodeHash.put(nid, new Integer(nodeID));
-                        } else {
-                            nodeID = tmpID.intValue();
+                        try {
+                            threadID = Integer.parseInt(tid);
+                            String nid = st.nextToken();
+                            Integer tmpID = (Integer) nodeHash.get(nid);
+                            if (tmpID == null) {
+                                nodeID = nodeHash.size();
+                                nodeHash.put(nid, new Integer(nodeID));
+                            } else {
+                                nodeID = tmpID.intValue();
+                            }
+                        } catch (NumberFormatException nfe) {
+                            threadID = threadCounter++;
                         }
                     }
 
