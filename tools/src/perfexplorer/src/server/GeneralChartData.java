@@ -46,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.23 2007/09/25 23:14:20 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.24 2007/10/08 16:35:52 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -320,9 +320,9 @@ public class GeneralChartData extends RMIGeneralChartData {
 					}
 				} 
 				db.commit();
-				db.setAutoCommit(true);
 				xmlResults.close();
 				statement.close();
+				db.setAutoCommit(true);
 				}
 			}
 
@@ -621,14 +621,18 @@ public class GeneralChartData extends RMIGeneralChartData {
 		} catch (Exception e) {
 			if (statement != null)
 				PerfExplorerOutput.println(statement.toString());
-			PerfExplorerOutput.println(buf.toString());
+			else 
+				PerfExplorerOutput.println(buf.toString());
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 		} finally {
-			dropTable(db, "temp_event");
-			dropTable(db, "temp_metric");
-			dropTable(db, "temp_xml_metadata");
-			dropTable(db, "temp_trial");
+			try {
+				db.setAutoCommit(true);
+				dropTable(db, "temp_event");
+				dropTable(db, "temp_metric");
+				dropTable(db, "temp_xml_metadata");
+				dropTable(db, "temp_trial");
+			} catch (Exception e) {}
 		}
 	}
 
@@ -826,6 +830,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
+			statement = null;
 
 /////////////////////////
 
@@ -841,8 +846,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			// ask the factory for the document builder
 			DocumentBuilder builder = factory.newDocumentBuilder();
-
-			db.setAutoCommit(false);
 
 			while (xmlResults.next() != false) {
 				// get the uncompressed string first...
@@ -918,6 +921,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			} 
 			xmlResults.close();
 			statement.close();
+			statement = null;
 
 		} catch (Exception e) {
 		// the user may have gotten here because they don't have XML data.
@@ -928,7 +932,19 @@ public class GeneralChartData extends RMIGeneralChartData {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 			*/
+            // System.err.println("***************************************");
+            // System.err.println(e.getMessage());
+            // System.err.println("***************************************");
 		} finally {
+			if (statement != null) {
+				try {
+					statement.close();
+				} catch (Exception e) {
+            		// System.err.println("***************************************");
+            		// System.err.println(e.getMessage());
+            		// System.err.println("***************************************");
+				}
+			}
 			dropTable(db, "temp_trial");
 		}
 
@@ -952,15 +968,19 @@ public class GeneralChartData extends RMIGeneralChartData {
             statement.close();
         } catch (Exception e) {
             // do nothing, it's ok
-            //System.err.println("***************************************");
-            //System.err.println(e.getMessage());
-            //System.err.println("***************************************");
+            // System.err.println("***************************************");
+            // System.err.println(e.getMessage());
+            // System.err.println("***************************************");
         } finally {
             // if we tried to truncate a table that doesn't exist,
             // then we got an error.  We still need to close the statement.
             try {
                 statement.close();
-            } catch (Exception e2) {}
+            } catch (Exception e2) {
+            	//System.err.println("***************************************");
+            	//System.err.println(e2.getMessage());
+            	//System.err.println("***************************************");
+			}
         }
     }
 
