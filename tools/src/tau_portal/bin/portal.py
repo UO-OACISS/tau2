@@ -21,7 +21,18 @@ else:
 """
 def sync(username, password, workspace, application, experiment,
 transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
+  if (experiment is None):
+    for exp in os.popen("perfdmfdb.py list_experiments '" + application + "'").readlines():
+      sync_by_experiment(username, password, workspace, application, exp.strip(),
+      transfer_to_perfdmf, transfer_to_portal, host) 
+  else:
+    sync_by_experiment(username, password, workspace, application, experiment,
+    transfer_to_perfdmf, transfer_to_portal, host)     
+
+def sync_by_experiment(username, password, workspace, application, experiment,
+transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):  
   #global variables for thread communication.
+  print "Transfering Experiment: ", experiment
 
   global threads_running, threads_running_lock
   threads_running_lock = thread.allocate_lock()
@@ -33,7 +44,8 @@ transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
         diff.append(l)
     return diff
   
-  portal_trials = get_trials(username, password, workspace, host)
+  portal_trials = get_trials(username, password, workspace, experiment, host,
+    True)
   if (portal_trials is None ):
     return "Error authenticating with TAU Portal, check username, password, and workspace."
   perfdmf_trials = []
@@ -57,11 +69,12 @@ transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
       #print "after: ", to_portal
       print len(to_portal), "trial(s) to be upload to the TAU Portal."
       to_portal_list = []
+      #print to_portal
       for trial in to_portal:
         os.popen("perfdmfdb.py download '" + application + "' '" + experiment +
         "' " + trial)
         to_portal_list.append(open("/tmp/" + trial, 'r')) 
-      upload(username, password, workspace, to_portal_list, host)
+      upload(username, password, workspace, experiment, to_portal_list, host)
 
       threads_running_lock.acquire()
       threads_running = False
@@ -83,7 +96,7 @@ transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
     print len(to_perfdmf), "trial(s) to be upload to the PerfDMF Database."
     to_perfdmf_list = ""
     for trial in to_perfdmf:
-      file = download(username, password, workspace, trial, host)
+      file = download(username, password, workspace, experiment, trial, host)
       #print file
       name = "/tmp/" + trial
       filewriter = open(name, 'w')
@@ -98,7 +111,8 @@ transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
   #wait for threads to finnish
   while threads_running: pass
 
-def get_trials(username, password, workspace, host = "tau.nic.uoregon.edu"):
+def get_trials(username, password, workspace, experiment, 
+  host = "tau.nic.uoregon.edu", ignore_unfound_experiment = False):
 
   params = {}
   #find all trials
@@ -118,6 +132,8 @@ def get_trials(username, password, workspace, host = "tau.nic.uoregon.edu"):
   #print "workspace: " + workspace
   params['workspace'] = workspace
   #print params
+  if (not experiment is None):
+    params['experiment'] = experiment  
 
 
   encoded_params = urllib.urlencode(params)
@@ -139,10 +155,13 @@ def get_trials(username, password, workspace, host = "tau.nic.uoregon.edu"):
   #print response.status, response.reason
   #filename = response.readline()
   list = response.read()
-  if (list.startswith("PORTAL UPLOAD")):
+  if (list == "PORTAL UPLOAD ERROR: Unknown experiment.\n" and
+    ignore_unfound_experiment):
+    return []
+  elif (list.startswith("PORTAL UPLOAD")):
     print list
     return None
-  list = list.split(',')[:-1]
+  list = list.split(',')
   final_list = []
   for l in list:
     final_list.append(l.strip())
@@ -195,7 +214,7 @@ def get_workspaces(username, password, host = "tau.nic.uoregon.edu"):
   #filewriter.close()
   return final_list
 
-def upload(username, password, workspace, iostreams, host =
+def upload(username, password, workspace, experiment, iostreams, host =
 "tau.nic.uoregon.edu"):
 
   params = {}
@@ -218,6 +237,8 @@ def upload(username, password, workspace, iostreams, host =
   #print "workspace: " + workspace
   params['workspace'] = workspace
   #print params
+  if (not experiment is None):
+    params['experiment'] = experiment  
   encoded_params = urllib.urlencode(params)
 
   #{'simple example': file2.read(), 'username': 'scottb',
@@ -238,7 +259,8 @@ def upload(username, password, workspace, iostreams, host =
 
   return a string stating either a success or the cause of any errors.
 """
-def download(username, password, workspace, trial, host = "tau.nic.uoregon.edu"):
+def download(username, password, workspace, experiment, trial, 
+  host = "tau.nic.uoregon.edu"):
   params = {}
   
   #files will form basis for the http parameters
@@ -259,8 +281,8 @@ def download(username, password, workspace, trial, host = "tau.nic.uoregon.edu")
   #print "workspace: " + workspace
   params['workspace'] = workspace
   #print params
-
-
+  if (not experiment is None):
+    params['experiment'] = experiment  
   encoded_params = urllib.urlencode(params)
 
   #{'simple example': file2.read(), 'username': 'scottb',

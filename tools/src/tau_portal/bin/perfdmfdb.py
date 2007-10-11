@@ -38,10 +38,16 @@ def main():
       list = list_trials()
     for l in list:
       print l
+  elif (arg[0] == 'list_experiments'):
+    list = []
+    if (not arg[1] is None):
+      list = list_experiments(arg[1])
+    for l in list:
+      print l
 
 def downloaddb(trial, filename = "", appName = 'Portal', expName = 'Portal',
  perfdmf = java.lang.System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg"):
-
+  print "download args: ", appName, expName, trial, filename, perfdmf
   dbApi = DatabaseAPI()
   dbApi.initialize(perfdmf, 0)
 
@@ -142,7 +148,6 @@ def uploaddb(files, appName = "Portal", expName = "Portal"):
 
 
 def list_trials(appName = 'Portal', expName = 'Portal'):
-
   perfdmf = java.lang.System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
   dbApi = DatabaseAPI()
   dbApi.initialize(perfdmf, 0)
@@ -174,5 +179,28 @@ def list_trials(appName = 'Portal', expName = 'Portal'):
     
   return list
 
+def list_experiments(appName = 'Portal'):
+
+  perfdmf = java.lang.System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg";
+  dbApi = DatabaseAPI()
+  dbApi.initialize(perfdmf, 0)
+  
+  appID = 0
+  expID = 0
+  for app in dbApi.getApplicationList():
+    if (app.getName() == appName):
+      appID = app.getID()
+      break
+
+  if (appID == 0):
+    print "Could not find Appplication named " + appName
+    sys.exit(1)
+  
+  list = []
+  for exp in dbApi.getExperimentList():
+    if (exp.getApplicationID() == appID):
+      list.append(exp.getName())
+    
+  return list
 #print list_trials()
 main()
