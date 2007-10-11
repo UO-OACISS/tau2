@@ -4718,10 +4718,18 @@ fi
 
 if [ $tauprefix = unknown ]
 then
+  # install paraprof
   cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
   sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@OLDJDK@,'$oldjdk',' > ${tauroot}/${architecture}/bin/paraprof
   chmod a+rx ${tauroot}/${architecture}/bin/paraprof
+
+  # install ppscript
+  cat ${tauroot}/tools/src/ppscript.skel | 
+  sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+	-e 's,@OLDJDK@,'$oldjdk',' > ${tauroot}/${architecture}/bin/ppscript
+  chmod a+rx ${tauroot}/${architecture}/bin/ppscript
+
   if [ ! -f ${tauroot}/${architecture}/bin/jracy ]
   then 
     cd ${tauroot}/${architecture}/bin/; ln -s paraprof jracy; cd ${tauroot}; 
@@ -4800,10 +4808,18 @@ else
     fi
   fi
 
+  # install paraprof
   cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
   sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@OLDJDK@,'$oldjdk',' > ${tauprefix}/${architecture}/bin/paraprof
   chmod a+rx ${tauprefix}/${architecture}/bin/paraprof
+
+  # install ppscript
+  cat ${tauroot}/tools/src/ppscript.skel | 
+  sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+	-e 's,@OLDJDK@,'$oldjdk',' > ${tauprefix}/${architecture}/bin/ppscript
+  chmod a+rx ${tauprefix}/${architecture}/bin/ppscript
+
   if [ ! -f ${tauprefix}/${architecture}/bin/jracy ]
   then 
     cd ${tauprefix}/${architecture}/bin/; ln -s paraprof jracy; cd ${tauroot}; 
