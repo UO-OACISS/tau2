@@ -1,6 +1,6 @@
 #!/bin/sh
-TAUROOT=/home/khuck/tau2
-MACHINE=x86_64
+TAUROOT=@TAUROOTDIR@
+MACHINE=@ARCH@
 LIBDIR=${TAUROOT}/${MACHINE}/lib
 
 PERFDMF_JAR=${LIBDIR}/perfdmf.jar
