@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.72 2007/08/01 02:45:10 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.73 2007/10/12 23:14:09 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.72 $
+ * @version $Revision: 1.73 $
  */
 public class ParaProf implements ActionListener {
 
@@ -117,6 +117,7 @@ public class ParaProf implements ActionListener {
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
+                + "                                    snap, perixml\n"
                 + "  -h, --help                      Display this help message\n"
                 + "  -p                              Use `pprof` to compute derived data\n"
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n"
@@ -445,6 +446,8 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = DataSource.SNAP;
             } else if (fileTypeString.equals("ompp")) {
                 ParaProf.fileType = DataSource.OMPP;
+            } else if (fileTypeString.equals("perixml")) {
+                ParaProf.fileType = DataSource.PERIXML;
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();
