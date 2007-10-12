@@ -24,7 +24,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.24 2007/08/03 22:38:14 amorris Exp $
+ * CVS $Id: Trial.java,v 1.25 2007/10/12 21:31:01 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -403,9 +403,9 @@ public class Trial implements Serializable {
     }
 
     public static void getMetaData(DB db) {
-    	getMetaData(db, false);
+        getMetaData(db, false);
     }
-    
+
     public static void getMetaData(DB db, boolean allColumns) {
         // see if we've already have them
         // need to load each time in case we are working with a new database. 
@@ -434,8 +434,8 @@ public class Trial implements Serializable {
             boolean seenID = false;
 
             ResultSetMetaData md = resultSet.getMetaData();
-            for (int i = 0 ; i < md.getColumnCount() ; i++) {
-            	//System.out.println(md.getColumnName(i));
+            for (int i = 0; i < md.getColumnCount(); i++) {
+                //System.out.println(md.getColumnName(i));
             }
 
             while (resultSet.next() != false) {
@@ -456,9 +456,11 @@ public class Trial implements Serializable {
                 // only integer and string types (for now)
                 // don't do name and id, we already know about them
 
-                if (allColumns || (DBConnector.isReadAbleType(ctype) && cname.toUpperCase().compareTo("ID") != 0
-                        && cname.toUpperCase().compareTo("NAME") != 0 && cname.toUpperCase().compareTo("APPLICATION") != 0
-                        && cname.toUpperCase().compareTo("EXPERIMENT") != 0)) {
+                if (allColumns
+                        || (DBConnector.isReadAbleType(ctype) && cname.toUpperCase().compareTo("ID") != 0
+                                && cname.toUpperCase().compareTo("NAME") != 0
+                                && cname.toUpperCase().compareTo("APPLICATION") != 0 && cname.toUpperCase().compareTo(
+                                "EXPERIMENT") != 0)) {
 
                     nameList.add(resultSet.getString("COLUMN_NAME"));
                     typeList.add(new Integer(ctype));
@@ -474,7 +476,7 @@ public class Trial implements Serializable {
             for (int i = 0; i < typeList.size(); i++) {
                 fieldNames[i] = (String) nameList.get(i);
                 fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
-                if (((Integer)columnSizes.get(i)).intValue() > 255) {
+                if (((Integer) columnSizes.get(i)).intValue() > 255) {
                     fieldTypeNames[i] = (String) typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
                 } else {
                     fieldTypeNames[i] = (String) typeNames.get(i);
@@ -522,6 +524,7 @@ public class Trial implements Serializable {
                 trial.setApplicationID(resultSet.getInt(pos++));
                 trial.setName(resultSet.getString(pos++));
 
+                boolean xmlSet = false;
                 for (int i = 0; i < database.getTrialFieldNames().length; i++) {
                     if (database.getTrialFieldNames()[i].equalsIgnoreCase(XML_METADATA_GZ)) {
                         InputStream compressedStream = resultSet.getBinaryStream(pos++);
@@ -531,9 +534,16 @@ public class Trial implements Serializable {
                             trial.setField(XML_METADATA, tmp);
                             trial.parseMetaData(tmp);
                         }
+                        xmlSet = true;
 
                     } else {
-                        trial.setField(i, resultSet.getString(pos++));
+                        if (database.getTrialFieldNames()[i].equalsIgnoreCase(XML_METADATA)) {
+                            if (xmlSet == false) {
+                                trial.setField(i, resultSet.getString(pos++));
+                            }
+                        } else {
+                            trial.setField(i, resultSet.getString(pos++));
+                        }
                     }
                 }
 
@@ -1012,6 +1022,4 @@ public class Trial implements Serializable {
         this.uncommonMetaData = uncommonMetaData;
     }
 
-    
-    
 }
