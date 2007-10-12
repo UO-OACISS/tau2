@@ -4730,11 +4730,19 @@ then
 	-e 's,@OLDJDK@,'$oldjdk',' > ${tauroot}/${architecture}/bin/ppscript
   chmod a+rx ${tauroot}/${architecture}/bin/ppscript
 
+
   if [ ! -f ${tauroot}/${architecture}/bin/jracy ]
   then 
     cd ${tauroot}/${architecture}/bin/; ln -s paraprof jracy; cd ${tauroot}; 
   fi
-  echo "TAU: installed paraprof in ${tauroot}/${architecture}/bin"
+
+  # install portal utils
+  BINDIR=$tauroot/$architecture/bin
+  cat ${tauroot}/tools/src/tau_portal/bin/perfdmfdb.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/perfdmfdb.py
+  cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/portal.py
+  cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINDIR
+  chmod a+rx $BINDIR/tau_portal.py $BINDIR/portal.py $BINDIR/perfdmfdb.py
+
   cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar ${tauroot}/${architecture}/lib
@@ -4752,7 +4760,8 @@ then
   cp ${tauroot}/tools/src/contrib/derby.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/src/Profile/TAU.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/common/resources/tau-medium.png ${tauroot}/${architecture}/lib
-  echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in ${tauroot}/${architecture}/lib"
+  echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in:"
+  echo "${tauroot}/${architecture}/lib"
 
 # Now we look at the installation of tau_compiler.sh 
    if [ ! -f /bin/bash ] 
@@ -4820,11 +4829,17 @@ else
 	-e 's,@OLDJDK@,'$oldjdk',' > ${tauprefix}/${architecture}/bin/ppscript
   chmod a+rx ${tauprefix}/${architecture}/bin/ppscript
 
+  # install portal utils
+  BINDIR=$tauprefix/$architecture/bin
+  cat ${tauroot}/tools/src/tau_portal/bin/perfdmfdb.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/perfdmfdb.py
+  cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/portal.py
+  cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINDIR
+  chmod a+rx $BINDIR/tau_portal.py $BINDIR/portal.py $BINDIR/perfdmfdb.py
+
   if [ ! -f ${tauprefix}/${architecture}/bin/jracy ]
   then 
     cd ${tauprefix}/${architecture}/bin/; ln -s paraprof jracy; cd ${tauroot}; 
   fi
-  echo "TAU: installed paraprof in ${tauprefix}/${architecture}/bin"
   cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar ${tauprefix}/${architecture}/lib
@@ -4840,7 +4855,8 @@ else
   cp ${tauroot}/tools/src/contrib/jogl/jogl.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/common/resources/tau16x16.gif ${tauroot}/${architecture}/lib
-  echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in ${tauprefix}/${architecture}/lib"
+  echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in:"
+  echo "${tauprefix}/${architecture}/lib"
 # Now we look at the installation of tau_compiler.sh 
    if [ ! -f /bin/bash ] 
    then
