@@ -533,13 +533,16 @@ public class UtilFncs {
             dataSource = new OmppDataSource(sourceFiles[0]);
             break;
 
+        case DataSource.PERIXML:
+            dataSource = new PeriXMLDataSource(sourceFiles[0]);
+            break;
         
         case DataSource.GYRO:
             v.add(sourceFiles);
             dataSource = new GyroDataSource(v);
             break;
         default:
-            break;
+            throw new RuntimeException ("Programming error: unknown format id = " + fileType);
         }
 
         return dataSource;
