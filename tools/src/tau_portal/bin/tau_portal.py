@@ -35,6 +35,11 @@ def main():
 #    usage()
 #    sys.exit(2)
 
+  if len(sys.argv[1:]) < 1:
+    print usage()
+    sys.exit(-1)
+  
+
   parser = OptionParser(usage()) 
   parser.add_option('-u','--username', help="TAU portal username", default="")
   parser.add_option('-p','--password', help="TAU portal password", default="")

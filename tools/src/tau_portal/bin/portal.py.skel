@@ -22,7 +22,7 @@ else:
 def sync(username, password, workspace, application, experiment,
 transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
   if (experiment is None):
-    for exp in os.popen("perfdmfdb.py list_experiments '" + application + "'").readlines():
+    for exp in os.popen("@BINDIR@/perfdmfdb.py list_experiments '" + application + "'").readlines():
       sync_by_experiment(username, password, workspace, application, exp.strip(),
       transfer_to_perfdmf, transfer_to_portal, host) 
   else:
@@ -49,7 +49,7 @@ transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
   if (portal_trials is None ):
     return "Error authenticating with TAU Portal, check username, password, and workspace."
   perfdmf_trials = []
-  for trial in os.popen("perfdmfdb.py list '" + application + "' '" + experiment
+  for trial in os.popen("@BINDIR@/perfdmfdb.py list '" + application + "' '" + experiment
   + "'").readlines():
     perfdmf_trials.append(trial.strip())
   #print perfdmf_trials
@@ -71,7 +71,7 @@ transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
       to_portal_list = []
       #print to_portal
       for trial in to_portal:
-        os.popen("perfdmfdb.py download '" + application + "' '" + experiment +
+        os.popen("@BINDIR@/perfdmfdb.py download '" + application + "' '" + experiment +
         "' " + trial)
         to_portal_list.append(open("/tmp/" + trial, 'r')) 
       upload(username, password, workspace, experiment, to_portal_list, host)
@@ -105,8 +105,8 @@ transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
       filewriter.close()
 
     #print to_perfdmf_list
-    #print "perfdmfdb.py upload " + application + " " + experiment + " " + to_perfdmf_list 
-    os.popen("perfdmfdb.py upload '" + application + "' '" + experiment + "' " + to_perfdmf_list) 
+    #print "@BINDIR@/perfdmfdb.py upload " + application + " " + experiment + " " + to_perfdmf_list 
+    os.popen("@BINDIR@/perfdmfdb.py upload '" + application + "' '" + experiment + "' " + to_perfdmf_list) 
 
   #wait for threads to finnish
   while threads_running: pass
