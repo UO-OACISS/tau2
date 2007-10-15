@@ -58,7 +58,7 @@ tau-callpath.dll : $(TAU_CALLPATH_OBJS) $(TAU_JAVA_OBJS)
 tau-trace.dll : $(TAU_TRACE_OBJS) $(TAU_JAVA_OBJS)
 	link /dll /OUT:"win32\java\tau-trace.dll" $(TAU_TRACE_OBJS) $(TAU_JAVA_OBJS) $(JDK)/lib/jvm.lib
 
-libs : 
+libs : win32
 	-del $(TAU_PROFILE_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON" tau-profile.lib
 	-del $(TAU_PROFILE_OBJS)
@@ -91,6 +91,9 @@ win32 :
 	md win32
 	md win32\bin
 	md win32\lib
+	copy tools\src\windows\etc\tau_config.h include
+	copy tools\src\windows\etc\tauarch.h include
+	copy tools\src\windows\trace_impl.h include
 
 
 
