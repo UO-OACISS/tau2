@@ -1,4 +1,4 @@
-#!@BINDIR@/ppscript
+#!/usr/bin/env sh @BINDIR@/ppscript
 
 # ParaProf PyScript
 
