@@ -2553,6 +2553,8 @@ int main (int argc, char *argv[]){
 	  break;
 	}//switch
     }//for
+  // just for windows
+  optind = argc;
 #else  
   /* -- parse command line arguments ---------------------------------------- */
   int ch;       //to hold option character from command line
@@ -2773,6 +2775,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: amorris $
- * $Revision: 1.50 $   $Date: 2007/02/22 19:57:11 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.50 2007/02/22 19:57:11 amorris Exp $                                
+ * $Revision: 1.51 $   $Date: 2007/10/16 22:01:47 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.51 2007/10/16 22:01:47 amorris Exp $                                
  ***************************************************************************/
