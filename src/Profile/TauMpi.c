@@ -183,18 +183,9 @@ static int translateRankToWorld(MPI_Comm comm, int rank) {
 */
 
 
-
-
-
-
-
-
-
-
-
   
 
-extern int tau_totalnodes(int set_or_get, int value);
+int TAUDECL tau_totalnodes(int set_or_get, int value);
 
 
 #ifdef TAU_TRACK_MSG

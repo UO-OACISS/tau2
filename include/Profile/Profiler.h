@@ -30,6 +30,9 @@
 
 #if (defined(TAU_WINDOWS))
 #pragma warning( disable : 4786 )
+#define TAUDECL __cdecl
+#else
+#define TAUDECL
 #endif /* TAU_WINDOWS */
 
 #if (!defined(TAU_LIBRARY_SOURCE) && !defined(TAU_WINDOWS))
@@ -323,7 +326,7 @@ using tau::Profiler;
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.77 $   $Date: 2007/04/25 01:07:04 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.77 2007/04/25 01:07:04 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: amorris $
+ * $Revision: 1.78 $   $Date: 2007/10/16 19:09:10 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.78 2007/10/16 19:09:10 amorris Exp $ 
  ***************************************************************************/
