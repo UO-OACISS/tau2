@@ -40,7 +40,7 @@ TAU_TRACE_OBJS= $(TAU_TRACE_SRCS:.cpp=.obj)
 TAU_JAVA_OBJS= $(TAU_JAVA_SRC:.cpp=.obj)
 #TAU_MPI_OBJS= $(TAU_MPI_SRC:.c=.obj)
 
-all : win32 pprof tau_convert tau_merge tau_reduce libs
+all : win32 pprof tau_convert tau_merge tau_reduce libs mpi
 
 
 java :
