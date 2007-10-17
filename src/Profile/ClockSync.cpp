@@ -50,6 +50,8 @@ double& TAUDECL TheTauTraceBeginningOffset();
 bool& TAUDECL TheTauTraceSyncOffsetSet();
 double& TAUDECL TheTauTraceSyncOffset();
 double TAUDECL TauSyncAdjustTimeStamp(double timestamp);
+double TAUDECL TAUClockTime(int tid);
+
 
 // We're probably going to have to change this for some platforms
 #ifdef TAU_WINDOWS
@@ -88,7 +90,7 @@ static double getPreSyncTime(int tid = 0) {
   // counter 0 is the one we use
   double value = MultipleCounterLayer::getSingleCounter(tid, 0);
 #else
-  double value = RtsLayer::getUSecD(tid);
+  double value = TAUClockTime(tid);
 #endif
   return value - TheTauTraceBeginningOffset();
 }

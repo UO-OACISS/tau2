@@ -39,28 +39,7 @@
 #endif
 
 #ifdef TAU_SYNCHRONIZE_CLOCKS
-double& TheTauTraceBeginningOffset() {
-  static double offset = 0.0;
-  return offset;
-}
-bool& TheTauTraceSyncOffsetSet() {
-  static bool value = false;
-  return value;
-}
-
-double& TheTauTraceSyncOffset() {
-  static double offset = -1.0;
-  return offset;
-}
-
-double TauSyncAdjustTimeStamp(double timestamp) {
-  if (TheTauTraceSyncOffsetSet() == false) {
-    // return 0 until sync'd
-    return 0.0;
-  }
-  timestamp = timestamp - TheTauTraceBeginningOffset() + TheTauTraceSyncOffset();
-  return timestamp;
-}
+extern double TauSyncAdjustTimeStamp(double timestamp);
 #endif
 
 # define PCXX_EVENT_SRC 

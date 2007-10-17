@@ -880,11 +880,37 @@ extern "C" void Tau_profile_snapshot(char *name) {
   Profiler::Snapshot(name);
 }
 
+double& TheTauTraceBeginningOffset() {
+  static double offset = 0.0;
+  return offset;
+}
+bool& TheTauTraceSyncOffsetSet() {
+  static bool value = false;
+  return value;
+}
+
+double& TheTauTraceSyncOffset() {
+  static double offset = -1.0;
+  return offset;
+}
+
+double TauSyncAdjustTimeStamp(double timestamp) {
+  if (TheTauTraceSyncOffsetSet() == false) {
+    // return 0 until sync'd
+    return 0.0;
+  }
+  timestamp = timestamp - TheTauTraceBeginningOffset() + TheTauTraceSyncOffset();
+  return timestamp;
+}
+
+double TAUClockTime(int tid) {
+	return RtsLayer::getUSecD(tid);
+}
 
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.63 $   $Date: 2007/09/16 21:59:38 $
- * VERSION: $Id: TauCAPI.cpp,v 1.63 2007/09/16 21:59:38 sameer Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.64 $   $Date: 2007/10/17 01:25:19 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.64 2007/10/17 01:25:19 amorris Exp $
  ***************************************************************************/
 
