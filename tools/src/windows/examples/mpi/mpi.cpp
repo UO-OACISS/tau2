@@ -27,7 +27,6 @@ int main(int argc, char **argv) {
   int size;
 
   TAU_PROFILE_INIT(argc, argv);
-  TAU_PROFILE_SET_NODE(0);
   TAU_PROFILE("main", "", TAU_DEFAULT);
 
   MPI_Init(&argc, &argv);
