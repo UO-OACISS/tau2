@@ -86,12 +86,7 @@ static long getUniqueMachineIdentifier() {
 }
 
 static double getPreSyncTime(int tid = 0) { 
-#ifdef TAU_MULTIPLE_COUNTERS
-  // counter 0 is the one we use
-  double value = MultipleCounterLayer::getSingleCounter(tid, 0);
-#else
   double value = TAUClockTime(tid);
-#endif
   return value - TheTauTraceBeginningOffset();
 }
 

@@ -904,13 +904,19 @@ double TauSyncAdjustTimeStamp(double timestamp) {
 }
 
 double TAUClockTime(int tid) {
-	return RtsLayer::getUSecD(tid);
+#ifdef TAU_MULTIPLE_COUNTERS
+  // counter 0 is the one we use
+  double value = MultipleCounterLayer::getSingleCounter(tid, 0);
+#else
+  value = RtsLayer::getUSecD(tid);
+#endif
+  return value;
 }
 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.64 $   $Date: 2007/10/17 01:25:19 $
- * VERSION: $Id: TauCAPI.cpp,v 1.64 2007/10/17 01:25:19 amorris Exp $
+ * $Revision: 1.65 $   $Date: 2007/10/17 15:31:04 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.65 2007/10/17 15:31:04 amorris Exp $
  ***************************************************************************/
 
