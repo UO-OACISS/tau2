@@ -46,10 +46,10 @@
 
 #define SYNC_LOOP_COUNT 10
 
-double& TheTauTraceBeginningOffset();
-bool& TheTauTraceSyncOffsetSet();
-double& TheTauTraceSyncOffset();
-double TauSyncAdjustTimeStamp(double timestamp);
+double& TAUDECL TheTauTraceBeginningOffset();
+bool& TAUDECL TheTauTraceSyncOffsetSet();
+double& TAUDECL TheTauTraceSyncOffset();
+double TAUDECL TauSyncAdjustTimeStamp(double timestamp);
 
 // We're probably going to have to change this for some platforms
 #ifdef TAU_WINDOWS
