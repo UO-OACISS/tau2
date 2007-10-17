@@ -46,36 +46,41 @@
 
 #define SYNC_LOOP_COUNT 10
 
-double& TheTauTraceBeginningOffset() {
-  static double offset = 0.0;
-  return offset;
-}
-
-double& TheTauTraceSyncOffset() {
-  static double offset = -1.0;
-  return offset;
-}
-
-bool& TheTauTraceSyncOffsetSet() {
-  static bool value = false;
-  return value;
-}
-
+double& TheTauTraceBeginningOffset();
+bool& TheTauTraceSyncOffsetSet();
+double& TheTauTraceSyncOffset();
+double TauSyncAdjustTimeStamp(double timestamp);
 
 // We're probably going to have to change this for some platforms
+#ifdef TAU_WINDOWS
+static long gethostid() {
+  int id;
+  char hostname[256];/* 255 is max legal DNS name */
+  size_t hostname_size = 256;
+  struct hostent *hostp;
+  struct in_addr addru;/* union for conversion */
+  
+  (void) gethostname(hostname, hostname_size);
+  hostname[hostname_size] = '\0'; /* make sure it is null-terminated */
+  
+  hostp = gethostbyname(hostname);
+  if(hostp == NULL) {
+    /* our own name was not found!  punt. */
+    id = 0;
+  } else {
+    /* return first address of host */
+    memcpy(&(addru.s_addr), hostp->h_addr_list[0], 4);
+    id = addru.s_addr;
+  }
+  
+  return id;
+}
+#else
 #include <unistd.h>
+#endif /* TAU_WINDOWS */
+
 static long getUniqueMachineIdentifier() {
   return gethostid();
-}
-
-double TauSyncAdjustTimeStamp(double timestamp) {
-  if (TheTauTraceSyncOffsetSet() == false) {
-    // return 0 until sync'd
-    return 0.0;
-  }
-
-  timestamp = timestamp - TheTauTraceBeginningOffset() + TheTauTraceSyncOffset();
-  return timestamp;
 }
 
 static double getPreSyncTime(int tid = 0) { 
