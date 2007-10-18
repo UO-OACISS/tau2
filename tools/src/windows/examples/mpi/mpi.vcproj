@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="TauMpi.lib tau-profile-static.lib msmpi.lib"
+				AdditionalDependencies="TauMpi.lib msmpi.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../lib/vc8;&quot;C:\Program Files\Microsoft Compute Cluster Pack\Lib\i386&quot;"
 				GenerateDebugInformation="true"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="TauMpi.lib tau-profile-static.lib msmpi.lib"
+				AdditionalDependencies="TauMpi.lib msmpi.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../lib/vc8;&quot;C:\Program Files\Microsoft Compute Cluster Pack\Lib\i386&quot;"
 				GenerateDebugInformation="true"
