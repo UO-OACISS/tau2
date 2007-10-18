@@ -908,7 +908,7 @@ double TAUClockTime(int tid) {
   // counter 0 is the one we use
   double value = MultipleCounterLayer::getSingleCounter(tid, 0);
 #else
-  value = RtsLayer::getUSecD(tid);
+  double value = RtsLayer::getUSecD(tid);
 #endif
   return value;
 }
@@ -916,7 +916,7 @@ double TAUClockTime(int tid) {
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.65 $   $Date: 2007/10/17 15:31:04 $
- * VERSION: $Id: TauCAPI.cpp,v 1.65 2007/10/17 15:31:04 amorris Exp $
+ * $Revision: 1.66 $   $Date: 2007/10/18 00:16:49 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.66 2007/10/18 00:16:49 amorris Exp $
  ***************************************************************************/
 
