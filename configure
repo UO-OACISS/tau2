@@ -2368,7 +2368,7 @@ case $fortran_compiler in
 
    pathscale)
       echo "Default Fortran compiler will be Pathscale pathf90"
-      if [ $cxx_compiler = scpathCC ] 
+      if [ $cxx_compiler = scpathCC -o $cxx_compiler = scg++ ] 
       then
         extradir=`which scpathf90 | sed s@\/scpathf90@\/..@`
         fixmakeargs="$fixmakeargs SC_PATHSCALE"
