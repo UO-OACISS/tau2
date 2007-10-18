@@ -107,9 +107,9 @@ if [ $invoke_without_tau = yes ] ; then
 cat <<EOF > /tmp/makefile.tau.$USER.$$
   include $MAKEFILE
   all:
-	@\$(TAU_CC) $NON_TAUARGS
+	@\$(TAU_RUN_CC) $NON_TAUARGS
   show:
-	@echo \$(FULL_CC) \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_LDFLAGS) \$(TAU_CXXLIBS)
+	@echo \$(TAU_RUN_CC) \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_LDFLAGS) \$(TAU_CXXLIBS)
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$ $SHOW
 /bin/rm -f /tmp/makefile.tau.$USER.$$
@@ -120,7 +120,7 @@ if [ $invoke_with_tau = yes ] ; then
 cat <<EOF > /tmp/makefile.tau.$USER.$$
 include $MAKEFILE
 all:
-	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(FULL_CC) $TAUARGS
+	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_RUN_CC) $TAUARGS
 
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$ 

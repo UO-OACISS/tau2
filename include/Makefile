@@ -130,6 +130,8 @@ F90_ABI	= $(ABI)
 ############# Standard Defines ##############
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
 TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA) $(USER_OPT)
+TAU_RUN_CC = $(FULL_CC) $(ABI) $(ISA)
+TAU_RUN_CXX = $(FULL_CXX) $(ABI) $(ISA)
 TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
 LSX = .a
