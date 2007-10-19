@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.28 2007/10/12 22:11:24 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.29 2007/10/19 18:33:13 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.28 $
+ * @version $Revision: 1.29 $
  */
 public abstract class DataSource {
 
@@ -1193,6 +1193,8 @@ public abstract class DataSource {
             document.appendChild(root);
 
             Element master = null;
+            List nodeProfiles = new ArrayList();
+			List profilesAdded = new ArrayList();
 
             // create the common attribute node
             if (metaData.size() > 0) {
@@ -1247,12 +1249,16 @@ public abstract class DataSource {
                         addit = true;
                     }
                 }
+				nodeProfiles.add(delta);
 
                 if (addit) {
                     // don't add it to the tree, unless it has items that differ from
                     // the master record
                     root.appendChild(delta);
-                }
+					profilesAdded.add(new Boolean(true));
+                } else {
+					profilesAdded.add(new Boolean(false));
+				}
 
             }
 
@@ -1270,6 +1276,7 @@ public abstract class DataSource {
                         && imported.getNodeName().equals("tau:metadata")) {
                     // extract it out, and add it to our tree!
                     NodeList nodes = imported.getChildNodes();
+					int nodeIndex = 0;
                     for (int i = 0; i < nodes.getLength(); i++) {
                         org.w3c.dom.Node cpa = nodes.item(i);
                         // System.out.println("\t" + cpa.getNodeName());
@@ -1290,6 +1297,27 @@ public abstract class DataSource {
                             }
 
                             //root.appendChild(cpa);
+                        } else if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+                                && cpa.getNodeName().equals("tau:ProfileAttributes")) {
+							Element currentDelta = (Element)nodeProfiles.get(nodeIndex);
+							if (((Boolean)profilesAdded.get(nodeIndex)).booleanValue()) {
+
+                            	NodeList attrs = cpa.getChildNodes();
+                            	// System.out.println("length: " + attrs.getLength());
+                            	for (int j = 0; j < attrs.getLength(); j++) {
+                                	// System.out.println("\t\tj:" + j);
+                                	org.w3c.dom.Node tmp = attrs.item(j);
+                                	if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+                                        	&& tmp.getNodeName().equals("tau:attribute")) {
+                                    	// System.out.println("\t\tname:" + tmp.getNodeName());
+                                    	currentDelta.appendChild(tmp);
+                                	}
+                                	// System.out.println("\t\tend j:" + j);
+                            	}
+							} else {
+                            	root.appendChild(cpa);
+							}
+							nodeIndex++;
                         }
                     }
                 } else {
