@@ -48,7 +48,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.61 2007/09/26 18:50:24 scottb Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.62 2007/10/19 18:35:39 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -113,7 +113,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		int i = 0;
 		List configFiles = ConfigureFiles.getConfigurationNames();
 		if (configFile != null && configFile.length() > 0) {
-			configFiles.add(configFile);
+			if (!configFiles.contains(configFile))
+				configFiles.add(configFile);
 		}
 		for (Iterator iter = configFiles.iterator() ; iter.hasNext() ; ) {
 			DatabaseAPI api = null;

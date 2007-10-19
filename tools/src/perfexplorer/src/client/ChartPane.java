@@ -205,11 +205,20 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			if (getMetrics) {
 				List metrics = server.getPotentialMetrics(theModel);
 				//this.metric.setSelectedIndex(0);
+				boolean gotTime = false;
 				for (Iterator itr = metrics.iterator() ; itr.hasNext() ; ) {
 					String next = (String)itr.next();
+					if (next.toUpperCase().indexOf("TIME") > 0) {
+						gotTime = true;
+					}
 					this.metric.addItem(next);
 					if (oldMetric.equals(next))
 						this.metric.setSelectedItem(next);
+				}
+				if (!gotTime) {
+					this.metric.addItem("TIME");
+					if (oldMetric.equals("TIME"))
+						this.metric.setSelectedItem("TIME");
 				}
 			} 
 			if (getEvents && !this.mainOnly.isSelected()) {
@@ -501,7 +510,10 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		// metric name
 		obj = metric.getSelectedItem();
 		tmp = (String)obj;
-    	facade.setMetricName(tmp);
+		if (tmp.equals("TIME"))
+    		facade.setMetricName("%TIME%");
+		else
+    		facade.setMetricName(tmp);
 
 		// units name
 		obj = units.getSelectedItem();
