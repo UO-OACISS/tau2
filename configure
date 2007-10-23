@@ -2794,6 +2794,10 @@ EOF
     then 
       # Wait. LAM MPI's MPI2 PMPI interface is broken. 
       echo "LAM MPI detected. Disabling MPI2 wrappers for LAM MPI"
+    elif [ "$mpilibrary" = "-lscmpi" ] 
+    then 
+      # Wait. SiCortex's MPI2 interface is broken. 
+      echo "SiCortex detected. Disabling MPI2 wrappers"
     else 
       fixmakeargs="$fixmakeargs MPI2"
       mpi2=yes
