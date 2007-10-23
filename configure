@@ -1775,7 +1775,7 @@ if [ $trace = yes ]
   }
 EOF
     
-    if [ $catamount = no -a ! $machine = bgl ] ; then
+    if [ $catamount = no -a ! $machine = bgl -a ! $machine = mips -a ! $machine = mips32 ] ; then
 	$echo "Checking type sizes... ${nnl}"
 	if $c_compiler -I. $orig_useropt tau_type_test.c -o tau_type_test 1> /dev/null 2>&1 ; then
 	    if ./tau_type_test 1> /dev/null 2>&1 ; then
