@@ -9,9 +9,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.15 2007/03/02 04:11:13 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.16 2007/10/23 17:52:43 khuck Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		FunctionProfile
  */
 /**
@@ -103,106 +103,114 @@ public class Function implements Serializable, Comparable {
     }
 
     public SourceRegion getSourceLink() {
-        if (sourceLink == null) {
-            sourceLink = new SourceRegion();
+        if (this.sourceLink == null) {
+        	this.sourceLink = getSourceLink(this.name);
+        }
+        return sourceLink;
+	}
 
-            if (name.indexOf("file:") != -1 && name.indexOf("line:") != -1) {
-                // MpiP source information
-                String name = this.name;
+    public static SourceRegion getSourceLink(String name) {
+        SourceRegion sourceLink = new SourceRegion();
+        if (name.indexOf("file:") != -1 && name.indexOf("line:") != -1) {
+            // MpiP source information
 
-                // start with the last section of location information
-                // we may have: "main [file:ring.c line:37] =>  func [file:ring.c line:19] => MPI_Recv"
-                // and we want the last section (for now)
-                name = name.substring(name.lastIndexOf("["));
-                int fileIndex = name.indexOf("file:");
-                int lineIndex = name.indexOf("line:");
-                String filename = name.substring(fileIndex + 5, lineIndex).trim();
-
-                sourceLink.setFilename(filename);
-                int lineNumber;
-                if (name.indexOf("]", lineIndex) != -1) {
-                    // new mpiP
-                    lineNumber = Integer.parseInt(name.substring(lineIndex + 5, name.indexOf("]")));
-                } else {
-                    // old mpiP
-                    lineNumber = Integer.parseInt(name.substring(lineIndex + 5).trim());
-                }
-                sourceLink.setStartLine(lineNumber);
-                sourceLink.setEndLine(lineNumber);
-                return sourceLink;
-            }
-
-            // for TAU, look at the leaf location information
-            String name = this.name;
-            if (isCallPathFunction()) {
-                name = name.substring(name.lastIndexOf("=>") + 2);
-            }
-
-            int filenameStart = name.indexOf("[{");
-            if (filenameStart == -1) {
-                return sourceLink;
-            }
-            int filenameEnd = name.indexOf("}", filenameStart);
-            if (filenameEnd == -1) {
-                // quit, it's not valid
-                return sourceLink;
-            }
-
-            int openbracket1 = name.indexOf("{", filenameEnd + 1);
-            int comma1 = name.indexOf(",", filenameEnd + 1);
-            int closebracket1 = name.indexOf("}", filenameEnd + 1);
-            int dash = name.indexOf("-", closebracket1 + 1);
-            int openbracket2 = name.indexOf("{", openbracket1 + 1);
-            int comma2 = name.indexOf(",", comma1 + 1);
-            int closebracket2 = name.indexOf("}", closebracket1 + 1);
-
-            String filename = name.substring(filenameStart + 2, filenameEnd);
-            filename = filename.substring(filename.lastIndexOf("/") + 1);
+            // start with the last section of location information
+            // we may have: "main [file:ring.c line:37] =>  func [file:ring.c line:19] => MPI_Recv"
+            // and we want the last section (for now)
+            name = name.substring(name.lastIndexOf("["));
+            int fileIndex = name.indexOf("file:");
+            int lineIndex = name.indexOf("line:");
+            String filename = name.substring(fileIndex + 5, lineIndex).trim();
 
             sourceLink.setFilename(filename);
-
-            if (openbracket1 == -1) {
-                return sourceLink;
-            }
-
-            if (dash == -1) {
-                // fortran (e.g. "foo [{foo.cpp} {1,1}]")
-                if (comma1 == -1) {
-                    if (closebracket1 != -1) {
-                        int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, closebracket1));
-                        sourceLink.setStartLine(linenumber);
-                        sourceLink.setEndLine(linenumber);
-                        return sourceLink;
-                    } else {
-                        return sourceLink;
-                    }
-                }
-                int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, comma1));
-                sourceLink.setStartLine(linenumber);
-                sourceLink.setEndLine(linenumber);
-                return sourceLink;
+            int lineNumber;
+            if (name.indexOf("]", lineIndex) != -1) {
+                // new mpiP
+                lineNumber = Integer.parseInt(name.substring(lineIndex + 5, name.indexOf("]")));
             } else {
-                // loop or c/c++ (e.g. "foo [{foo.cpp} {1,1}-{5,5}]")
-                if (openbracket1 == -1 || openbracket2 == -1 || comma1 == -1 || comma2 == -1 || closebracket1 == -1
-                        || closebracket2 == -1) {
+                // old mpiP
+                lineNumber = Integer.parseInt(name.substring(lineIndex + 5).trim());
+            }
+            sourceLink.setStartLine(lineNumber);
+            sourceLink.setEndLine(lineNumber);
+            return sourceLink;
+        }
+
+        // for TAU, look at the leaf location information
+        if (isCallPathFunction(name)) {
+            name = name.substring(name.lastIndexOf("=>") + 2);
+        }
+
+        int filenameStart = name.indexOf("[{");
+        if (filenameStart == -1) {
+            return sourceLink;
+        }
+        int filenameEnd = name.indexOf("}", filenameStart);
+        if (filenameEnd == -1) {
+            // quit, it's not valid
+            return sourceLink;
+        }
+
+        int openbracket1 = name.indexOf("{", filenameEnd + 1);
+        int comma1 = name.indexOf(",", filenameEnd + 1);
+        int closebracket1 = name.indexOf("}", filenameEnd + 1);
+        int dash = name.indexOf("-", closebracket1 + 1);
+        int openbracket2 = name.indexOf("{", openbracket1 + 1);
+        int comma2 = name.indexOf(",", comma1 + 1);
+        int closebracket2 = name.indexOf("}", closebracket1 + 1);
+
+        String filename = name.substring(filenameStart + 2, filenameEnd);
+        filename = filename.substring(filename.lastIndexOf("/") + 1);
+
+        sourceLink.setFilename(filename);
+
+        if (openbracket1 == -1) {
+            return sourceLink;
+        }
+
+        if (dash == -1) {
+            // fortran (e.g. "foo [{foo.cpp} {1,1}]")
+            if (comma1 == -1) {
+                if (closebracket1 != -1) {
+                    int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, closebracket1));
+                    sourceLink.setStartLine(linenumber);
+                    sourceLink.setEndLine(linenumber);
+                    return sourceLink;
+                } else {
                     return sourceLink;
                 }
-                int startLine = Integer.parseInt(name.substring(openbracket1 + 1, comma1));
-                int startColumn = Integer.parseInt(name.substring(comma1 + 1, closebracket1));
-                int endLine = Integer.parseInt(name.substring(openbracket2 + 1, comma2));
-                int endColumn = Integer.parseInt(name.substring(comma2 + 1, closebracket2));
-
-                sourceLink.setStartLine(startLine);
-                sourceLink.setStartColumn(startColumn);
-                sourceLink.setEndLine(endLine);
-                sourceLink.setEndColumn(endColumn);
             }
+            int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, comma1));
+            sourceLink.setStartLine(linenumber);
+            sourceLink.setEndLine(linenumber);
+            return sourceLink;
+        } else {
+            // loop or c/c++ (e.g. "foo [{foo.cpp} {1,1}-{5,5}]")
+            if (openbracket1 == -1 || openbracket2 == -1 || comma1 == -1 || comma2 == -1 || closebracket1 == -1
+                    || closebracket2 == -1) {
+                return sourceLink;
+            }
+            int startLine = Integer.parseInt(name.substring(openbracket1 + 1, comma1));
+            int startColumn = Integer.parseInt(name.substring(comma1 + 1, closebracket1));
+            int endLine = Integer.parseInt(name.substring(openbracket2 + 1, comma2));
+            int endColumn = Integer.parseInt(name.substring(comma2 + 1, closebracket2));
 
+            sourceLink.setStartLine(startLine);
+            sourceLink.setStartColumn(startColumn);
+            sourceLink.setEndLine(endLine);
+            sourceLink.setEndColumn(endColumn);
         }
         return sourceLink;
     }
 
-    // Group section
+    public static boolean isCallPathFunction(String name) {
+        if (name.indexOf("=>") > 0) {
+            return true;
+        }
+        return false;
+	}
+
+	// Group section
     public void addGroup(Group group) {
         //Don't add group if already a member.
         if (this.isGroupMember(group))
@@ -257,9 +265,7 @@ public class Function implements Serializable, Comparable {
 
     public boolean isCallPathFunction() {
         if (!callpathFunctionSet) {
-            if (name.indexOf("=>") > 0) {
-                callpathFunction = true;
-            }
+            callpathFunction = isCallPathFunction(this.name);
             callpathFunctionSet = true;
         }
         return callpathFunction;
