@@ -13,11 +13,11 @@ if [ $# = 0 ] ; then
   echo "If -tau_makefile option is not used, "
   echo "TAU uses the file specified in the TAU_MAKEFILE environment variable"
   echo "e.g., "
-  echo "% tau_f90.sh -tau_makefile=/usr/local/tau-2.x/ia64/lib/Makefile.tau-mpi-pdt  -tau_options=-optVerbose -c foo.f90"
+  echo "% $0 -tau_makefile=/usr/local/tau-2.x/ia64/lib/Makefile.tau-mpi-pdt  -tau_options=-optVerbose -c foo.f90"
   echo " 	or"
   echo "% setenv TAU_MAKEFILE /usr/local/tau-2.x/include/Makefile"
   echo "% setenv TAU_OPTIONS -optVerbose -optTauSelectFile=select.tau"
-  echo "% tau_f90.sh -c foo.f90"
+  echo "% $0 -c foo.f90"
   exit 1
 fi
 
