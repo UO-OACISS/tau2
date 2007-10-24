@@ -3033,7 +3033,7 @@ then
   fi
      
   mpilibargs=$wrapperlib
-
+  wrapperC=$wrapperlib
 
   if [ -d $mpilib ]
   then
@@ -3257,7 +3257,16 @@ then
       mpiflibargs="-L$papidir/$\(PAPISUBDIR\)#$mpiflibargs"
     fi
     fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
-    
+
+
+    # now throw in non-wrapped MPI library lines
+    wrapperF=$wrapperlib
+    nowrapC=`echo $wrapperC | sed  -e 's/ /#/g'`
+    nowrapF=`echo $wrapperF | sed  -e 's/ /#/g'`
+    notaumpilibargs=`echo $mpilibargs | sed -e "s@$nowrapC@@"`
+    notaumpiflibargs=`echo $mpiflibargs | sed -e "s@$nowrapF@@"`
+    fixmakeargs="$fixmakeargs mpinowraplibargs=$notaumpilibargs mpinowrapflibargs=$notaumpiflibargs mpilib=$mpilib"
+
     # Check to see if the MPI library contains a _r 
     mpithreadtest=`echo $mpilibrary | sed -e 's/_r//'`
     if [ "y$mpithreadtest" = "y$mpilibrary" ] 
