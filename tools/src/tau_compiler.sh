@@ -486,7 +486,12 @@ for arg in "$@" ; do
 
 			-optSharedLinking*)
 				optSharedLinking="${arg#"-optSharedLinking="} $optSharedLinking"
-				echoIfDebug "\tLinking Options are: $optLinking"
+				echoIfDebug "\tShared Linking Options are: $optSharedLinking"
+				;;
+
+			-optSharedLinkReset*)
+				optSharedLinking=${arg#"-optSharedLinking="}
+				echoIfDebug "\tShared Linking Options are: $optSharedLinking"
 				;;
 
 			-optShared)
