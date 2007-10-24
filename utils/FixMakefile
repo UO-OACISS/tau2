@@ -1461,6 +1461,10 @@ ALPHATIMERS)
 	echo "NOTE: Using -cxxlib-gcc and gcc libraries to link with ifort"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     FORCESHARED)
+	echo "NOTE: Using Shared Libraries by default"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
 
      *)
 	echo "ERROR: Unknown argument directive \`$1' to FixMakefile"

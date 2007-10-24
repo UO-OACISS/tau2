@@ -450,6 +450,13 @@ do
     shift
     ;;
 
+
+  -forceshared)
+     fixmakeargs="$fixmakeargs FORCESHARED"
+    shift
+    ;;
+
+
   -ktau)
       ktau=yes
     shift
@@ -3257,7 +3264,6 @@ then
       mpiflibargs="-L$papidir/$\(PAPISUBDIR\)#$mpiflibargs"
     fi
     fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
-
 
     # now throw in non-wrapped MPI library lines
     wrapperF=$wrapperlib
