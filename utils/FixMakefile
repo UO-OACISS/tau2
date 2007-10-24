@@ -464,6 +464,16 @@ fi
         #echo "MPIFLIB=$mpiflib" 
         ;;
 
+     mpinowraplibargs=*)
+        mpilib=`echo $1 | sed -e 's/^mpinowraplibargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_MPI_NOWRAP_LIB=\(.*\)@TAU_MPI_NOWRAP_LIB=$mpilib@g" >> $sedout
+        ;;
+
+     mpinowrapflibargs=*)
+        mpiflib=`echo $1 | sed -e 's/^mpinowrapflibargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_MPI_NOWRAP_FLIB=\(.*\)@TAU_MPI_NOWRAP_FLIB=$mpiflib@g" >> $sedout
+        ;;
+
      mpilib=*)
         mpilibdir=`echo $1 | sed -e 's/^mpilib=//'`
 	echo "s@^TAU_MPILIB_DIR=\(.*\)@TAU_MPILIB_DIR=$mpilibdir@g" >> $sedout

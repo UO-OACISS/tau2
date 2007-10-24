@@ -21,7 +21,7 @@ include ../../include/Makefile
 
 
 
-CONFIG_ARCH=i386_linux
+CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 CXX=$(CONFIG_CXX)  $(ABI) $(ISA)
