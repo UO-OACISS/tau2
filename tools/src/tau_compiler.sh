@@ -490,7 +490,7 @@ for arg in "$@" ; do
 				;;
 
 			-optSharedLinkReset*)
-				optSharedLinking=${arg#"-optSharedLinking="}
+				optSharedLinking=${arg#"-optSharedLinkReset="}
 				echoIfDebug "\tShared Linking Options are: $optSharedLinking"
 				;;
 
