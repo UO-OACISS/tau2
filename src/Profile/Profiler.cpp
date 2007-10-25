@@ -2658,6 +2658,12 @@ int Profiler::StoreData(int tid){
   TauDetectMemoryLeaks();
 
 #ifdef TRACING_ON
+#ifdef TAU_VAMPIRTRACE
+  DEBUGPROFMSG("Calling vt_close()"<<endl;);
+  if (RtsLayer::myThread() == 0) {
+    vt_close();
+  }
+#else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG 
 	DEBUGPROFMSG("Calling elg_close()"<<endl;);
  	if (RtsLayer::myThread() == 0)
@@ -2667,6 +2673,7 @@ int Profiler::StoreData(int tid){
 	RtsLayer::DumpEDF(tid);
 	RtsLayer::MergeAndConvertTracesIfNecessary();
 #endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON
 
 #ifdef PROFILING_ON
@@ -3410,8 +3417,8 @@ double& Profiler::TheTauThrottlePerCall(void)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.167 $   $Date: 2007/05/24 18:58:40 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.167 2007/05/24 18:58:40 amorris Exp $ 
+ * $Revision: 1.168 $   $Date: 2007/10/25 22:04:46 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.168 2007/10/25 22:04:46 amorris Exp $ 
  ***************************************************************************/
 
 	
