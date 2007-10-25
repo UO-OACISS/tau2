@@ -834,7 +834,9 @@ extern "C" void Tau_metadata(char *name, char *value) {
   // make copies
   char *myName = strdup(name);
   char *myValue = strdup(value);
+  RtsLayer::LockDB();
   TheMetaData()[myName] = myValue;
+  RtsLayer::UnLockDB();
 }
 
 
@@ -842,7 +844,11 @@ int Tau_writeProfileMetaData(FILE *fp, int counter) {
 #ifdef TAU_DISABLE_METADATA
   return 0;
 #endif
-  return writeMetaData(fp, false, counter);
+  int retval;
+  RtsLayer::LockDB();
+  retval = writeMetaData(fp, false, counter);
+  RtsLayer::UnLockDB();
+  return retval;
 }
 
 
