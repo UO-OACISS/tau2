@@ -1910,7 +1910,7 @@ fi
     
 if [ $machine = apple ]
   then
-  if [ $cxx_compiler = g++ -o $cxx_compiler = c++ ]
+  if [ $cxx_compiler = g++ -o $cxx_compiler = c++  -o $cxx_compiler = icpc ]
     then
       fixmakeargs="$fixmakeargs APPLECXX"
   fi
