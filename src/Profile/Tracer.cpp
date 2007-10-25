@@ -55,7 +55,8 @@ unsigned long int pcxx_ev_class = PCXX_EC_TRACER | PCXX_EC_TIMER;
 #define TAU_BUFFER_SIZE sizeof(PCXX_EV)*TAU_MAX_RECORDS
 
 /* -- buffer that holds the events before they are flushed to disk -- */
-static PCXX_EV TraceBuffer[TAU_MAX_THREADS][TAU_MAX_RECORDS]; 
+//static PCXX_EV TraceBuffer[TAU_MAX_THREADS][TAU_MAX_RECORDS]; 
+static PCXX_EV *TraceBuffer[TAU_MAX_THREADS]; 
 /* The second dimension shouldn't be TAU_BUFFER_SIZE ! */
 
 /* -- id of the last record for each thread --- */
@@ -225,11 +226,32 @@ static void init_wrap_up()
   sighdlr[SIGSEGV] = signal (SIGSEGV, wrap_up);
 # endif
 }
+
+
+
+/* -- current record pointer for each thread -- */
+
+bool *TauBufferAllocated() {
+  static bool flag = true;
+  static bool allocated[TAU_MAX_THREADS];
+  if (flag) {
+    for (int i=0; i < TAU_MAX_THREADS; i++) {
+      allocated[i] = false;
+    }
+    flag = false;
+  }
+  return allocated;
+}
+
 /* -- initialize SW monitor and open trace file(s) ----------- */
 /* -- TraceEvInit should be called in every trace routine to ensure that 
    the trace file is initialized -- */
 int TraceEvInit(int tid)
 {
+   if (!TauBufferAllocated()[tid]) {
+     TraceBuffer[tid] = (PCXX_EV*) malloc(TAU_BUFFER_SIZE);
+     TauBufferAllocated()[tid] = true;
+   }
   int retvalue = 0; 
   /* by default this is what is returned. No trace records were generated */
    
