@@ -845,9 +845,7 @@ int Tau_writeProfileMetaData(FILE *fp, int counter) {
   return 0;
 #endif
   int retval;
-  RtsLayer::LockDB();
   retval = writeMetaData(fp, false, counter);
-  RtsLayer::UnLockDB();
   return retval;
 }
 
