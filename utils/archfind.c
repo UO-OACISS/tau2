@@ -175,6 +175,11 @@ ARCHminix
 ARCHi386_linux
 #endif
 
+#if defined(__x86_64) && defined(linux)
+# define _havehosttype_
+ARCHx86_64
+#endif
+
 #if defined(i386) && defined(__EMX__)
 # define _havehosttype_
 ARCHi386_emx
