@@ -110,6 +110,9 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 	private JButton apply = null;
 	private JButton reset = null;
+	private static final String INTERVAL_EVENT_NAME = "interval_event.name";
+	private static final String MEAN_INCLUSIVE = "mean.inclusive";
+	private static final String MEAN_EXCLUSIVE = "mean.exclusive";
 
 	public static ChartPane getPane () {
 		if (thePane == null) {
@@ -236,6 +239,8 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 							this.event.setSelectedItem(next);
 					}
 				} else {
+					series.setSelectedItem(INTERVAL_EVENT_NAME);
+					yaxisValue.setSelectedItem(MEAN_EXCLUSIVE);
 					List events = server.getPotentialEvents(theModel);
 					this.event.addItem("All Events");
 					this.eventLabel.setText("Event:");
@@ -323,7 +328,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		// series name
 		left.add(seriesLabel);
 		series = new MyJComboBox(tableColumns);
-		series.addItem("interval_event.name");
+		series.addItem(INTERVAL_EVENT_NAME);
 		series.addItem("interval_event.group_name");
 		series.addActionListener(this);
 		left.add(series);
@@ -341,8 +346,8 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		// y axis value
 		left.add(yaxisValueLabel);
 		String[] valueOptions = {
-					"mean.inclusive", 
-					"mean.exclusive", 
+					MEAN_INCLUSIVE,
+					MEAN_EXCLUSIVE,
 					"mean.inclusive_percentage", 
 					"mean.exclusive_percentage", 
 					"mean.call", 
