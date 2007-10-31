@@ -74,7 +74,28 @@ int processInstrumentationRequests(char *fname)
 	if (strcmp(inbuf, END_EXCLUDE_TOKEN) == 0)
 	  break; /* Found the end of exclude list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
-        excludelist.push_back(string(inbuf)); 
+        if (inbuf[0] == '"') 
+        { /* What if the string begins with "? In that case remove quotes from
+             the string. "#foo" becomes #foo and is passed on to the 
+             exclude list. */
+          char *exclude = strdup(&inbuf[1]);
+          int i;
+          for (i = 0; i < strlen(exclude); i++)
+          {
+            if (exclude[i] == '"') 
+            {
+              exclude[i]='\0'; 
+              break; /* out of the loop */
+            }
+          }
+#ifdef DEBUG
+          printf("Passing %s as exclude string\n", exclude);
+#endif /* DEBUG */
+          excludelist.push_back(string(exclude));
+          /* free(exclude); */
+        }
+        else
+          excludelist.push_back(string(inbuf)); 
       }
     }
     if (strcmp(inbuf,BEGIN_INCLUDE_TOKEN) == 0) 
@@ -400,7 +421,7 @@ bool processFileForInstrumentation(const string& file_name)
 
 
 /***************************************************************************
- * $RCSfile: tau_selective.cpp,v $   $Author: amorris $
- * $Revision: 1.13 $   $Date: 2006/11/09 00:13:15 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.13 2006/11/09 00:13:15 amorris Exp $
+ * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
+ * $Revision: 1.14 $   $Date: 2007/10/31 22:31:07 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.14 2007/10/31 22:31:07 sameer Exp $
  ***************************************************************************/
