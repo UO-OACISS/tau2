@@ -36,6 +36,7 @@
 typedef unsigned int TauGroup_t;
 
 extern "C" {
+
 void tau_profile_timer_(void **ptr, char *fname, int *flen, char *type, int *tlen, unsigned int *group)
 {
 }
@@ -686,11 +687,13 @@ void tau_dealloc__(void ** ptr, int* line, char *name, int slen)
 {
 }
 
+void Tau_init_ref(int* argc, char ***argv) {}
+
 ////////////////////////////////////////////////////////////////////////////
 } /* extern "C" */
 
 /***************************************************************************
- * $RCSfile: TauDisable.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2007/07/11 20:21:34 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.9 2007/07/11 20:21:34 sameer Exp $ 
+ * $RCSfile: TauDisable.cpp,v $   $Author: amorris $
+ * $Revision: 1.10 $   $Date: 2007/10/31 23:33:19 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.10 2007/10/31 23:33:19 amorris Exp $ 
  ***************************************************************************/
