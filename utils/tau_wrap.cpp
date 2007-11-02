@@ -286,7 +286,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 
   /* The macro goes in header file, the implementation goes in the other file */
   header <<macro<<endl;  
-  header <<"extern "<<r->signature()->returnType()->name()<<" tau_"<<proto<<";"<<endl;
+  header <<"extern "<<r->signature()->returnType()->name()<<" tau_"<<proto<<";"<<endl<<endl;
 
 
 }
@@ -312,6 +312,9 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   cout << "Processing " << file << " in instrumentCFile..." << endl;
 #endif
 
+  header <<"#ifndef _TAU_"<<file<<"_H_"<<endl;
+  header <<"#define _TAU_"<<file<<"_H_"<<endl<<endl;
+  header <<"#include <../"<<file<<">"<<endl<<endl;
   memset(inbuf, INBUF_SIZE, 0); // reset to zero
   // initialize reference vector
   vector<itemRef *> itemvec;
@@ -327,6 +330,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 
     }
   }
+  header <<"#endif /*  _TAU_"<<file<<"_H_ */"<<endl;
 
 
 
@@ -463,7 +467,7 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2007/11/02 18:55:24 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.2 2007/11/02 18:55:24 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2007/11/02 23:33:31 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.3 2007/11/02 23:33:31 sameer Exp $
  ***************************************************************************/
 
