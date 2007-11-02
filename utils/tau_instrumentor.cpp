@@ -75,53 +75,6 @@ bool use_perflib = false;   /* by default, do not insert calls for perflib packa
 
 list<string> current_timer; /* for Fortran loop level instrumentation. */
 
-/* implementation of struct itemRef */
-itemRef::itemRef(const pdbItem *i, bool isT) : item(i), isTarget(isT) {
-    line = i->location().line();
-    col  = i->location().col();
-    kind = ROUTINE; /* for C++, only routines are listed */ 
-    attribute = NOT_APPLICABLE;
-    isPhase = false; /* timer by default */ 
-    isDynamic = false; /* static by default */ 
-  }
-itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c) : 
-	line (l), col(c), item(i), kind(k) {
-#ifdef DEBUG
-    cout <<"Added: "<<i->name() <<" line " << l << " col "<< c <<" kind " 
-	 << k <<endl;
-#endif /* DEBUG */
-    isTarget = true; 
-    attribute = NOT_APPLICABLE;
-    isPhase = false; /* timer by default */ 
-    isDynamic = false; /* static by default */ 
-  }
-itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code, itemAttr_t a) : 
-	line (l), col(c), item(i), kind(k), snippet(code), attribute(a) {
-#ifdef DEBUG
-    if (i)
-      cout <<"Added: "<<i->name() <<" line " << l << " col "<< c <<" kind " 
-	 << k << " snippet " << snippet << endl;
-    if (a == BEFORE) cout <<"BEFORE"<<endl;
-#endif /* DEBUG */
-    isTarget = true; 
-    isPhase = false; /* timer by default */ 
-    isDynamic = false; /* static by default */ 
-  }
-itemRef::itemRef(const pdbItem *i, bool isT, int l, int c)
-         : item(i), isTarget(isT), line(l), col(c) {
-    kind = ROUTINE; 
-    attribute = NOT_APPLICABLE;
-    isPhase = false; /* timer by default */ 
-    isDynamic = false; /* static by default */ 
-  }
-itemRef::itemRef(const pdbItem *i, itemKind_t k, pdbLoc start, pdbLoc stop)
-   : item(i), kind(k), begin(start), end(stop) {
-    attribute = NOT_APPLICABLE;  
-    line = begin.line();
-    col = begin.col();
-    isPhase = false; /* timer by default */ 
-    isDynamic = false; /* static by default */ 
-  }
 /* not needed anymore */
 #ifdef OLD
   const pdbItem *item;
@@ -4203,9 +4156,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.186 $   $Date: 2007/09/21 03:22:14 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.186 2007/09/21 03:22:14 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.187 $   $Date: 2007/11/02 02:23:21 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.187 2007/11/02 02:23:21 sameer Exp $
  ***************************************************************************/
 
 
